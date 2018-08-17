@@ -352,7 +352,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
           throw new RuntimeException("Illegal value for sdkProguardConfig: " + sdkProguardConfig);
       }
       for (Path proguardConfig : customProguardConfigs) {
-        args.add("-include").add(proguardConfig.toString());
+        args.add("-include").add("\"" + proguardConfig.toString() + "\"");
       }
 
       // -injars and -outjars paired together for each input.
