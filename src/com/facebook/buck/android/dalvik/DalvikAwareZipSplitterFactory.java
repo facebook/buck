@@ -48,7 +48,6 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
       APKModule rootAPKModule,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
-      ZipSplitter.CanaryStrategy canaryStrategy,
       Path reportDir) {
     return DalvikAwareZipSplitter.splitZip(
         filesystem,
@@ -65,7 +64,6 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
         additionalDexStoreSets,
         rootAPKModule,
         dexSplitStrategy,
-        canaryStrategy,
         reportDir);
   }
 }

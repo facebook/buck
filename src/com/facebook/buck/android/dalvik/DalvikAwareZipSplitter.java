@@ -98,7 +98,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
       APKModule rootAPKModule,
       DexSplitStrategy dexSplitStrategy,
-      CanaryStrategy canaryStrategy,
       Path reportDir) {
     if (linearAllocLimit <= 0) {
       throw new HumanReadableException("linear_alloc_hard_limit must be greater than zero.");
@@ -107,7 +106,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     this.inFiles = ImmutableSet.copyOf(inFiles);
     this.outPrimary = outPrimary;
     this.secondaryDexWriter =
-        new MySecondaryDexHelper("secondary", outSecondaryDir, secondaryPattern, canaryStrategy);
+        new MySecondaryDexHelper("secondary", outSecondaryDir, secondaryPattern);
     this.additionalDexWriters = new HashMap<>();
     this.requiredInPrimaryZip = requiredInPrimaryZip;
     this.wantedInPrimaryZip = ImmutableSet.copyOf(wantedInPrimaryZip);
@@ -121,8 +120,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
             new MySecondaryDexHelper(
                 dexStore.getCanaryClassName(),
                 outDexStoresDir.resolve(dexStore.getName()),
-                secondaryPattern,
-                CanaryStrategy.INCLUDE_CANARIES));
+                secondaryPattern));
       }
     }
     this.rootModule = rootAPKModule;
@@ -147,7 +145,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
       APKModule rootAPKModule,
       DexSplitStrategy dexSplitStrategy,
-      CanaryStrategy canaryStrategy,
       Path reportDir) {
     return new DalvikAwareZipSplitter(
         filesystem,
@@ -164,7 +161,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         additionalDexStoreSets,
         rootAPKModule,
         dexSplitStrategy,
-        canaryStrategy,
         reportDir);
   }
 
@@ -315,12 +311,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
 
   private class MySecondaryDexHelper extends SecondaryDexHelper<DalvikAwareOutputStreamHelper> {
 
-    MySecondaryDexHelper(
-        String storeName,
-        Path outSecondaryDir,
-        String secondaryPattern,
-        CanaryStrategy canaryStrategy) {
-      super(storeName, outSecondaryDir, secondaryPattern, canaryStrategy);
+    MySecondaryDexHelper(String storeName, Path outSecondaryDir, String secondaryPattern) {
+      super(storeName, outSecondaryDir, secondaryPattern);
     }
 
     @Override

@@ -29,12 +29,6 @@ public interface ZipSplitter {
     ;
   }
 
-  enum CanaryStrategy {
-    INCLUDE_CANARIES,
-    DONT_INCLUDE_CANARIES,
-    ;
-  }
-
   /**
    * Writes the primary zip file and if necessary, the secondary zip files.
    *

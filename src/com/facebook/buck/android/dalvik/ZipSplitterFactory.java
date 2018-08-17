@@ -54,7 +54,6 @@ public interface ZipSplitterFactory {
    * @param additionalDexStores mapping of APKModules to module names for creating additional dex
    *     stores beyond the primary and secondary dex
    * @param rootAPKModule
-   * @param canaryStrategy Determine whether to include canary classes for easy verification.
    * @param reportDir Directory where to publish a report of which classes were written to which zip
    *     files with a corresponding size estimate.
    */
@@ -71,6 +70,5 @@ public interface ZipSplitterFactory {
       ImmutableMultimap<APKModule, String> additionalDexStores,
       APKModule rootAPKModule,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
-      ZipSplitter.CanaryStrategy canaryStrategy,
       Path reportDir);
 }

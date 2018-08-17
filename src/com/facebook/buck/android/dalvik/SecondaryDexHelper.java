@@ -29,7 +29,6 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
   private final String storeName;
   private final Path outSecondaryDir;
   private final String secondaryPattern;
-  private final ZipSplitter.CanaryStrategy canaryStrategy;
 
   private int currentSecondaryIndex;
 
@@ -37,15 +36,10 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
   private boolean newSecondaryOutOnNextEntry;
   private ImmutableList.Builder<Path> secondaryFiles;
 
-  SecondaryDexHelper(
-      String storeName,
-      Path outSecondaryDir,
-      String secondaryPattern,
-      ZipSplitter.CanaryStrategy canaryStrategy) {
+  SecondaryDexHelper(String storeName, Path outSecondaryDir, String secondaryPattern) {
     this.storeName = storeName;
     this.outSecondaryDir = outSecondaryDir;
     this.secondaryPattern = secondaryPattern;
-    this.canaryStrategy = canaryStrategy;
     this.secondaryFiles = ImmutableList.builder();
   }
 
@@ -69,11 +63,9 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
       secondaryFiles.add(newSecondaryFile);
       currentSecondaryOut = newZipOutput(newSecondaryFile);
       newSecondaryOutOnNextEntry = false;
-      if (canaryStrategy == ZipSplitter.CanaryStrategy.INCLUDE_CANARIES) {
-        // Make sure the first class in the new secondary dex can be safely loaded.
-        FileLike canaryFile = CanaryFactory.create(storeName, currentSecondaryIndex);
-        currentSecondaryOut.putEntry(canaryFile);
-      }
+      // Make sure the first class in the new secondary dex can be safely loaded.
+      FileLike canaryFile = CanaryFactory.create(storeName, currentSecondaryIndex);
+      currentSecondaryOut.putEntry(canaryFile);
       // We've already tested for this. It really shouldn't happen.
       Preconditions.checkState(currentSecondaryOut.canPutEntry(entry));
     }
