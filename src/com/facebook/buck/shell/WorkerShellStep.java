@@ -182,8 +182,4 @@ public class WorkerShellStep implements Step {
             .map(Escaper.SHELL_ESCAPER)
             .collect(Collectors.joining(" ")));
   }
-
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
-  }
 }

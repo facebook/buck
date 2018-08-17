@@ -39,11 +39,6 @@ public final class WorkThreadTrackingFutureDecorator<T, FUTURE extends Future<T>
     this.delegate = futureFactory.apply(new WorkThreadTracker());
   }
 
-  /** Returns the underlying delegate. */
-  public FUTURE getDelegate() {
-    return delegate;
-  }
-
   @Override
   public T get() throws InterruptedException, ExecutionException {
     if (isBeingWorkedOnByCurrentThread()) {

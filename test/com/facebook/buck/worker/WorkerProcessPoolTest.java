@@ -493,16 +493,6 @@ public class WorkerProcessPoolTest {
       }
     }
 
-    void join(int millis) throws InterruptedException {
-      for (Thread thread : threads) {
-        thread.join(millis);
-      }
-    }
-
-    Set<Thread> threads() {
-      return Collections.unmodifiableSet(threads);
-    }
-
     @Override
     public void close() {
       isClosed = true;
