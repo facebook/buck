@@ -65,7 +65,7 @@
     glob_handler = watchman
     embedded_cell_buck_out_enabled = true
 [test]
-    ; Maximum timeout of 1 minute per test.
+    ; Maximum timeout of 90 seconds per test.
     timeout = 90000
 [resources]
     resource_aware_scheduling_enabled = true
