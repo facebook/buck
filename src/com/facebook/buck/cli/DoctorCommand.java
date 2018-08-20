@@ -93,7 +93,7 @@ public class DoctorCommand extends AbstractCommand {
 
     Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector =
         WatchmanDiagReportCollector.newInstanceIfWatchmanUsed(
-            params.getCell(),
+            params.getWatchman(),
             params.getCell().getFilesystem(),
             new DefaultProcessExecutor(params.getConsole()),
             new ExecutableFinder(),

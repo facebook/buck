@@ -47,7 +47,6 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
-import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
@@ -606,7 +605,6 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
     return LocalCellProviderFactory.create(
             filesystem,
-            WatchmanFactory.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
             rootCellCellPathResolver.getPathMapping(),

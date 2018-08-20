@@ -846,7 +846,8 @@ public class TargetsCommand extends AbstractCommand {
                 new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
-                    params.getCell().getBuckConfig(), params.getExecutableFinder()))
+                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                params.getWatchman())
             .create(
                 params.getParser().getPermState(),
                 params.getBuckEventBus(),

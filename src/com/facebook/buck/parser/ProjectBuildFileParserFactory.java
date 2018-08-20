@@ -18,8 +18,9 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 
 public interface ProjectBuildFileParserFactory {
-  ProjectBuildFileParser createBuildFileParser(BuckEventBus eventBus, Cell cell);
+  ProjectBuildFileParser createBuildFileParser(BuckEventBus eventBus, Cell cell, Watchman watchman);
 }

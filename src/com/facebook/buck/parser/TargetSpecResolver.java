@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
@@ -59,6 +60,7 @@ public class TargetSpecResolver {
   public <T extends HasBuildTarget> ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
       BuckEventBus eventBus,
       Cell rootCell,
+      Watchman watchman,
       Iterable<? extends TargetNodeSpec> specs,
       FlavorEnhancer<T> flavorEnhancer,
       TargetNodeProviderForSpecResolver<T> targetNodeProvider,
@@ -70,7 +72,7 @@ public class TargetSpecResolver {
     ImmutableList<TargetNodeSpec> orderedSpecs = ImmutableList.copyOf(specs);
 
     Multimap<Path, Integer> perBuildFileSpecs =
-        groupSpecsByBuildFile(eventBus, rootCell, orderedSpecs);
+        groupSpecsByBuildFile(eventBus, rootCell, watchman, orderedSpecs);
 
     // Kick off parse futures for each build file.
     ArrayList<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures =
@@ -106,7 +108,10 @@ public class TargetSpecResolver {
   // Resolve all the build files from all the target specs.  We store these into a multi-map which
   // maps the path to the build file to the index of it's spec file in the ordered spec list.
   private Multimap<Path, Integer> groupSpecsByBuildFile(
-      BuckEventBus eventBus, Cell rootCell, ImmutableList<TargetNodeSpec> orderedSpecs)
+      BuckEventBus eventBus,
+      Cell rootCell,
+      Watchman watchman,
+      ImmutableList<TargetNodeSpec> orderedSpecs)
       throws IOException, InterruptedException {
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     ParserConfig.BuildFileSearchMethod buildFileSearchMethod =
@@ -121,7 +126,7 @@ public class TargetSpecResolver {
           SimplePerfEvent.scope(
               eventBus, PerfEventId.of("FindBuildFiles"), "targetNodeSpec", spec)) {
         // Iterate over the build files the given target node spec returns.
-        buildFiles = spec.getBuildFileSpec().findBuildFiles(cell, buildFileSearchMethod);
+        buildFiles = spec.getBuildFileSpec().findBuildFiles(cell, watchman, buildFileSearchMethod);
       }
       for (Path buildFile : buildFiles) {
         perBuildFileSpecs.put(buildFile, index);

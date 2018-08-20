@@ -41,6 +41,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -292,10 +293,12 @@ public class OwnersReportTest {
             coercerFactory,
             new ConstructorArgMarshaller(coercerFactory),
             knownRuleTypesProvider,
-            new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
+            new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
+            WatchmanFactory.NULL_WATCHMAN),
         parserConfig,
         coercerFactory,
-        new TargetSpecResolver());
+        new TargetSpecResolver(),
+        WatchmanFactory.NULL_WATCHMAN);
   }
 
   private ImmutableMap<Cell, BuildFileTree> getBuildFileTrees(Cell rootCell) {

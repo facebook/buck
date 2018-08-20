@@ -39,6 +39,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.ParserConfig;
@@ -301,6 +302,7 @@ public class CleanCommandTest {
         new TestConsole(),
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         cell,
+        WatchmanFactory.NULL_WATCHMAN,
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
         new SingletonArtifactCacheFactory(new NoopArtifactCache()),
@@ -310,10 +312,12 @@ public class CleanCommandTest {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
+                new ParserPythonInterpreterProvider(parserConfig, executableFinder),
+                WatchmanFactory.NULL_WATCHMAN),
             parserConfig,
             typeCoercerFactory,
-            new TargetSpecResolver()),
+            new TargetSpecResolver(),
+            WatchmanFactory.NULL_WATCHMAN),
         BuckEventBusForTests.newInstance(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),

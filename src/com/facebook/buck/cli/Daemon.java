@@ -30,6 +30,7 @@ import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanCursor;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.DefaultParser;
@@ -89,6 +90,7 @@ final class Daemon implements Closeable {
       Cell rootCell,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ExecutableFinder executableFinder,
+      Watchman watchman,
       Optional<WebServer> webServerToReuse) {
     this.rootCell = rootCell;
     this.fileEventBus = new EventBus("file-change-events");
@@ -123,10 +125,12 @@ final class Daemon implements Closeable {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
+                new ParserPythonInterpreterProvider(parserConfig, executableFinder),
+                watchman),
             parserConfig,
             typeCoercerFactory,
-            new TargetSpecResolver());
+            new TargetSpecResolver(),
+            watchman);
     parser.register(fileEventBus);
 
     // Build the the rule key cache recycler.
@@ -146,11 +150,11 @@ final class Daemon implements Closeable {
     }
     if (rootCell.getBuckConfig().getView(ParserConfig.class).getWatchmanCursor()
             == WatchmanWatcher.CursorType.CLOCK_ID
-        && !rootCell.getWatchman().getClockIds().isEmpty()) {
-      cursor = rootCell.getWatchman().buildClockWatchmanCursorMap();
+        && !watchman.getClockIds().isEmpty()) {
+      cursor = watchman.buildClockWatchmanCursorMap();
     } else {
-      LOG.debug("Falling back to named cursors: %s", rootCell.getWatchman().getProjectWatches());
-      cursor = rootCell.getWatchman().buildNamedWatchmanCursorMap();
+      LOG.debug("Falling back to named cursors: %s", watchman.getProjectWatches());
+      cursor = watchman.buildNamedWatchmanCursorMap();
     }
     LOG.debug("Using Watchman Cursor: %s", cursor);
     persistentWorkerPools = new ConcurrentHashMap<>();

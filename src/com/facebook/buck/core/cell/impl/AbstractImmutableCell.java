@@ -26,7 +26,6 @@ import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -52,10 +51,6 @@ abstract class AbstractImmutableCell implements Cell {
   @Override
   @Value.Auxiliary
   public abstract Optional<String> getCanonicalName();
-
-  @Override
-  @Value.Auxiliary
-  public abstract Watchman getWatchman();
 
   @Override
   @Value.Auxiliary

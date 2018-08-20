@@ -16,8 +16,6 @@
 
 package com.facebook.buck.core.cell;
 
-import static com.facebook.buck.io.watchman.WatchmanFactory.NULL_WATCHMAN;
-
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
@@ -31,7 +29,6 @@ import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
-import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -46,7 +43,6 @@ public class TestCellBuilder {
 
   private ProjectFilesystem filesystem;
   private BuckConfig buckConfig;
-  private Watchman watchman = NULL_WATCHMAN;
   private CellConfig cellConfig;
   private Map<String, String> environment = new HashMap<>();
   @Nullable private ToolchainProvider toolchainProvider = null;
@@ -63,11 +59,6 @@ public class TestCellBuilder {
 
   public TestCellBuilder setBuckConfig(BuckConfig buckConfig) {
     this.buckConfig = buckConfig;
-    return this;
-  }
-
-  public TestCellBuilder setWatchman(Watchman watchman) {
-    this.watchman = watchman;
     return this;
   }
 
@@ -109,7 +100,6 @@ public class TestCellBuilder {
 
     return LocalCellProviderFactory.create(
             filesystem,
-            watchman,
             config,
             cellConfig,
             rootCellCellPathResolver.getPathMapping(),

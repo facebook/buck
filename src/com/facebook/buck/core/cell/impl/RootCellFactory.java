@@ -26,7 +26,6 @@ import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.util.ProcessExecutor;
@@ -54,8 +53,7 @@ class RootCellFactory {
       BuckConfig rootConfig,
       ImmutableMap<String, String> environment,
       ProcessExecutor processExecutor,
-      ExecutableFinder executableFinder,
-      Watchman watchman) {
+      ExecutableFinder executableFinder) {
     Preconditions.checkState(
         !rootCellCellPathResolver.getCanonicalCellName(rootFilesystem.getRootPath()).isPresent(),
         "Root cell should be nameless");
@@ -73,7 +71,6 @@ class RootCellFactory {
     return ImmutableCell.of(
         rootCellCellPathResolver.getKnownRoots(),
         Optional.empty(),
-        watchman,
         cellProvider,
         toolchainProvider,
         ruleKeyConfiguration,
@@ -88,8 +85,7 @@ class RootCellFactory {
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystem rootFilesystem,
       BuckModuleManager moduleManager,
-      BuckConfig rootConfig,
-      Watchman watchman) {
+      BuckConfig rootConfig) {
     Preconditions.checkState(
         !rootCellCellPathResolver.getCanonicalCellName(rootFilesystem.getRootPath()).isPresent(),
         "Root cell should be nameless");
@@ -100,7 +96,6 @@ class RootCellFactory {
     return ImmutableCell.of(
         rootCellCellPathResolver.getKnownRoots(),
         Optional.empty(),
-        watchman,
         cellProvider,
         toolchainProvider,
         ruleKeyConfiguration,

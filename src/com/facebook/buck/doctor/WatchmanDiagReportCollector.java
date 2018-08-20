@@ -16,12 +16,11 @@
 
 package com.facebook.buck.doctor;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -61,23 +60,13 @@ public class WatchmanDiagReportCollector {
   }
 
   public static Optional<WatchmanDiagReportCollector> newInstanceIfWatchmanUsed(
-      Cell rootCell,
+      Watchman watchman,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment) {
 
-    // We only want to gather watchman diagnostics if any of the cells are actually using Watchman.
-    ImmutableCollection<Path> allCellRoots = rootCell.getCellPathResolver().getCellPaths().values();
-    boolean watchmanEverUsed = rootCell.getWatchman() != WatchmanFactory.NULL_WATCHMAN;
-    for (Path cellRoot : allCellRoots) {
-      if (watchmanEverUsed) {
-        break;
-      }
-      watchmanEverUsed =
-          watchmanEverUsed
-              || rootCell.getCell(cellRoot).getWatchman() != WatchmanFactory.NULL_WATCHMAN;
-    }
+    boolean watchmanEverUsed = watchman != WatchmanFactory.NULL_WATCHMAN;
     if (!watchmanEverUsed) {
       return Optional.empty();
     }

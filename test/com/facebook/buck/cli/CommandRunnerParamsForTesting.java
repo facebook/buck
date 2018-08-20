@@ -35,6 +35,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.DefaultParser;
@@ -110,6 +111,7 @@ public class CommandRunnerParamsForTesting {
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         cell,
+        WatchmanFactory.NULL_WATCHMAN,
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
         new SingletonArtifactCacheFactory(artifactCache),
@@ -119,10 +121,12 @@ public class CommandRunnerParamsForTesting {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
+                new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
+                WatchmanFactory.NULL_WATCHMAN),
             parserConfig,
             typeCoercerFactory,
-            new TargetSpecResolver()),
+            new TargetSpecResolver(),
+            WatchmanFactory.NULL_WATCHMAN),
         eventBus,
         platform,
         environment,

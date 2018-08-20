@@ -263,7 +263,7 @@ abstract class AbstractBuildFileSpec {
 
   /** @return paths to build files that this spec match in the given {@link ProjectFilesystem}. */
   public ImmutableSet<Path> findBuildFiles(
-      Cell cell, ParserConfig.BuildFileSearchMethod buildFileSearchMethod)
+      Cell cell, Watchman watchman, ParserConfig.BuildFileSearchMethod buildFileSearchMethod)
       throws IOException, InterruptedException {
     ImmutableSet.Builder<Path> buildFiles = ImmutableSet.builder();
 
@@ -271,7 +271,7 @@ abstract class AbstractBuildFileSpec {
         cell.getFilesystem(),
         cell.getBuildFileName(),
         buildFileSearchMethod,
-        cell.getWatchman(),
+        watchman,
         buildFiles::add);
 
     return buildFiles.build();

@@ -34,6 +34,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.TargetSpecResolver.FlavorEnhancer;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -100,14 +101,16 @@ public class TargetSpecResolverTest {
             typeCoercerFactory,
             constructorArgMarshaller,
             knownRuleTypesProvider,
-            parserPythonInterpreterProvider);
+            parserPythonInterpreterProvider,
+            WatchmanFactory.NULL_WATCHMAN);
     targetNodeTargetSpecResolver = new TargetSpecResolver();
     parser =
         new DefaultParser(
             perBuildStateFactory,
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
-            targetNodeTargetSpecResolver);
+            targetNodeTargetSpecResolver,
+            WatchmanFactory.NULL_WATCHMAN);
     flavorEnhancer = (target, targetNode, targetType) -> target;
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
   }
@@ -201,6 +204,7 @@ public class TargetSpecResolverTest {
     return targetNodeTargetSpecResolver.resolveTargetSpecs(
         eventBus,
         cell,
+        WatchmanFactory.NULL_WATCHMAN,
         specs,
         flavorEnhancer,
         state.getTargetNodeProviderForSpecResolver(),

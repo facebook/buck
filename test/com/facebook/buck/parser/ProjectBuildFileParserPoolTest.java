@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
@@ -82,7 +83,7 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             maxParsers,
-            (eventBus, input) -> {
+            (eventBus, input, watchman) -> {
               createCount.incrementAndGet();
               return createMockParser(
                   () -> {
@@ -138,7 +139,7 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             parsersCount,
-            (eventBus, input) -> {
+            (eventBus, input, watchman) -> {
               parserCount.incrementAndGet();
 
               ProjectBuildFileParser parser = EasyMock.createMock(ProjectBuildFileParser.class);
@@ -198,7 +199,7 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             parsersCount,
-            (eventBus, input) -> {
+            (eventBus, input, watchman) -> {
               AtomicInteger sleepCallCount = new AtomicInteger(0);
               return createMockParser(
                   () -> {
@@ -354,6 +355,7 @@ public class ProjectBuildFileParserPoolTest {
           pool.getBuildFileManifest(
               BuckEventBusForTests.newInstance(),
               cell,
+              WatchmanFactory.NULL_WATCHMAN,
               Paths.get("BUCK"),
               new AtomicLong(),
               executorService));
@@ -381,7 +383,7 @@ public class ProjectBuildFileParserPoolTest {
 
   private ProjectBuildFileParserFactory createMockParserFactory(
       IAnswer<BuildFileManifest> parseFn) {
-    return (eventBus, input) -> {
+    return (eventBus, input, watchman) -> {
       AssertScopeExclusiveAccess exclusiveAccess = new AssertScopeExclusiveAccess();
       return createMockParser(
           () -> {

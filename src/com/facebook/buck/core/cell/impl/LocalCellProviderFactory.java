@@ -31,7 +31,6 @@ import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -53,7 +52,6 @@ public class LocalCellProviderFactory {
   /** Create a cell provider at a given root. */
   public static CellProvider create(
       ProjectFilesystem rootFilesystem,
-      Watchman watchman,
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
       ImmutableMap<RelativeCellName, Path> cellPathMapping,
@@ -158,7 +156,6 @@ public class LocalCellProviderFactory {
                 return ImmutableCell.of(
                     cellPathResolver.getKnownRoots(),
                     canonicalCellName,
-                    watchman,
                     cellProvider,
                     toolchainProvider,
                     ruleKeyConfiguration,
@@ -174,7 +171,6 @@ public class LocalCellProviderFactory {
                 toolchainProviderFactory,
                 rootFilesystem,
                 moduleManager,
-                rootConfig,
-                watchman));
+                rootConfig));
   }
 }

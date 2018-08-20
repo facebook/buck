@@ -28,6 +28,7 @@ import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPatternFactory;
@@ -41,16 +42,19 @@ public class PerBuildStateFactory {
   private final ConstructorArgMarshaller marshaller;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
+  private final Watchman watchman;
 
   public PerBuildStateFactory(
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      ParserPythonInterpreterProvider parserPythonInterpreterProvider) {
+      ParserPythonInterpreterProvider parserPythonInterpreterProvider,
+      Watchman watchman) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
+    this.watchman = watchman;
   }
 
   public PerBuildState create(
@@ -84,7 +88,8 @@ public class PerBuildStateFactory {
             daemonicParserState.getRawNodeCache(),
             projectBuildFileParserPool,
             executorService,
-            eventBus);
+            eventBus,
+            watchman);
 
     AtomicLong parseProcessedBytes = new AtomicLong();
 

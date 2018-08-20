@@ -29,6 +29,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.parser.Parser;
@@ -69,6 +70,9 @@ public abstract class AbstractCommandRunnerParams {
 
   @Value.Parameter
   public abstract Cell getCell();
+
+  @Value.Parameter
+  public abstract Watchman getWatchman();
 
   @Value.Parameter
   public abstract InstrumentedVersionedTargetGraphCache getVersionedTargetGraphCache();

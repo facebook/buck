@@ -31,6 +31,7 @@ import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
@@ -68,13 +69,16 @@ public class DefaultParser implements Parser {
   private final PerBuildStateFactory perBuildStateFactory;
   private final DaemonicParserState permState;
   private final TargetSpecResolver targetSpecResolver;
+  private final Watchman watchman;
 
   public DefaultParser(
       PerBuildStateFactory perBuildStateFactory,
       ParserConfig parserConfig,
       TypeCoercerFactory typeCoercerFactory,
-      TargetSpecResolver targetSpecResolver) {
+      TargetSpecResolver targetSpecResolver,
+      Watchman watchman) {
     this.perBuildStateFactory = perBuildStateFactory;
+    this.watchman = watchman;
     this.permState =
         new DaemonicParserState(
             typeCoercerFactory,
@@ -354,6 +358,7 @@ public class DefaultParser implements Parser {
                   targetSpecResolver.resolveTargetSpecs(
                       eventBus,
                       rootCell,
+                      watchman,
                       targetNodeSpecs,
                       (buildTarget, targetNode, targetType) ->
                           applyDefaultFlavors(
@@ -391,6 +396,7 @@ public class DefaultParser implements Parser {
       return targetSpecResolver.resolveTargetSpecs(
           eventBus,
           rootCell,
+          watchman,
           specs,
           (buildTarget, targetNode, targetType) ->
               applyDefaultFlavors(buildTarget, targetNode, targetType, applyDefaultFlavorsMode),

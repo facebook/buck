@@ -23,7 +23,6 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProvider;
-import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -103,7 +102,6 @@ public class DistributedCellProviderFactory {
                       // Distributed builds don't care about cell names, use a sentinel value that
                       // will show up if it actually does care about them.
                       cellParam.getCanonicalName(),
-                      WatchmanFactory.NULL_WATCHMAN,
                       cellProvider,
                       toolchainProvider,
                       ruleKeyConfiguration,
@@ -122,7 +120,6 @@ public class DistributedCellProviderFactory {
                 rootCell.getConfig(),
                 rootCell.getEnvironment(),
                 rootCell.getProcessExecutor(),
-                rootCell.getExecutableFinder(),
-                WatchmanFactory.NULL_WATCHMAN));
+                rootCell.getExecutableFinder()));
   }
 }

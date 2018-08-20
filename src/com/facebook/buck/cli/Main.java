@@ -762,7 +762,6 @@ public final class Main {
       Cell rootCell =
           LocalCellProviderFactory.create(
                   filesystem,
-                  watchman,
                   buckConfig,
                   command.getConfigOverrides(rootCellMapping),
                   rootCellCellPathResolver.getPathMapping(),
@@ -776,7 +775,7 @@ public final class Main {
           context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)
               ? Optional.of(
                   daemonLifecycleManager.getDaemon(
-                      rootCell, knownRuleTypesProvider, executableFinder, console))
+                      rootCell, knownRuleTypesProvider, executableFinder, watchman, console))
               : Optional.empty();
 
       if (!daemon.isPresent() && shouldCleanUpTrash) {
@@ -1203,6 +1202,7 @@ public final class Main {
                         console,
                         stdIn,
                         rootCell,
+                        watchman,
                         parserAndCaches.getVersionedTargetGraphCache(),
                         artifactCacheFactory,
                         parserAndCaches.getTypeCoercerFactory(),
@@ -1368,10 +1368,12 @@ public final class Main {
                       typeCoercerFactory,
                       new ConstructorArgMarshaller(typeCoercerFactory),
                       knownRuleTypesProvider,
-                      new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
+                      new ParserPythonInterpreterProvider(parserConfig, executableFinder),
+                      watchman),
                   parserConfig,
                   typeCoercerFactory,
-                  new TargetSpecResolver()),
+                  new TargetSpecResolver(),
+                  watchman),
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),

@@ -28,6 +28,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -105,7 +106,8 @@ public class QueryCommandTest {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 params.getKnownRuleTypesProvider(),
-                new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()))
+                new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
+                WatchmanFactory.NULL_WATCHMAN)
             .create(
                 params.getParser().getPermState(),
                 eventBus,

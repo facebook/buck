@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
@@ -82,22 +83,23 @@ class ProjectBuildFileParserPool implements AutoCloseable {
   public ListenableFuture<BuildFileManifest> getBuildFileManifest(
       BuckEventBus buckEventBus,
       Cell cell,
+      Watchman watchman,
       Path buildFile,
       AtomicLong processedBytes,
       ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
     if (shouldUsePoolForCell(cell)) {
-      return getResourcePoolForCell(buckEventBus, cell)
+      return getResourcePoolForCell(buckEventBus, cell, watchman)
           .scheduleOperationWithResource(
               parser -> parser.getBuildFileManifest(buildFile, processedBytes), executorService);
     }
-    ProjectBuildFileParser parser = getParserForCell(buckEventBus, cell);
+    ProjectBuildFileParser parser = getParserForCell(buckEventBus, cell, watchman);
     return executorService.submit(() -> parser.getBuildFileManifest(buildFile, processedBytes));
   }
 
   private synchronized ResourcePool<ProjectBuildFileParser> getResourcePoolForCell(
-      BuckEventBus buckEventBus, Cell cell) {
+      BuckEventBus buckEventBus, Cell cell, Watchman watchman) {
     return parserResourcePools.computeIfAbsent(
         cell,
         c ->
@@ -107,13 +109,15 @@ class ProjectBuildFileParserPool implements AutoCloseable {
                 // always
                 // recover and subsequent attempts at invoking the parser will fail.
                 ResourcePool.ResourceUsageErrorPolicy.RETIRE,
-                () -> projectBuildFileParserFactory.createBuildFileParser(buckEventBus, c)));
+                () ->
+                    projectBuildFileParserFactory.createBuildFileParser(
+                        buckEventBus, c, watchman)));
   }
 
   private synchronized ProjectBuildFileParser getParserForCell(
-      BuckEventBus buckEventBus, Cell cell) {
+      BuckEventBus buckEventBus, Cell cell, Watchman watchman) {
     return nonPooledCells.computeIfAbsent(
-        cell, c -> projectBuildFileParserFactory.createBuildFileParser(buckEventBus, c));
+        cell, c -> projectBuildFileParserFactory.createBuildFileParser(buckEventBus, c, watchman));
   }
 
   private void reportProfile() {

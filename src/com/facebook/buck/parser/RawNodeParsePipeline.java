@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -39,16 +40,19 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
   private final PipelineNodeCache<Path, ImmutableSet<Map<String, Object>>> cache;
   private final ListeningExecutorService executorService;
   private final ProjectBuildFileParserPool projectBuildFileParserPool;
+  private final Watchman watchman;
 
   public RawNodeParsePipeline(
       Cache<Path, ImmutableSet<Map<String, Object>>> cache,
       ProjectBuildFileParserPool projectBuildFileParserPool,
       ListeningExecutorService executorService,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      Watchman watchman) {
     super(eventBus);
     this.executorService = executorService;
     this.cache = new PipelineNodeCache<>(cache);
     this.projectBuildFileParserPool = projectBuildFileParserPool;
+    this.watchman = watchman;
   }
 
   /**
@@ -100,7 +104,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
           return Futures.transform(
               projectBuildFileParserPool.getBuildFileManifest(
-                  eventBus, cell, buildFile, processedBytes, executorService),
+                  eventBus, cell, watchman, buildFile, processedBytes, executorService),
               buildFileManifest -> buildFileManifest.toRawNodes(),
               executorService);
         },
