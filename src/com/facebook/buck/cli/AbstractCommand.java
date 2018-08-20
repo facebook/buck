@@ -449,24 +449,36 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     if (filename == null) {
       return;
     }
-    BuckCellArg filenameArg = BuckCellArg.of(filename);
-    RelativeCellName cellName;
-    if (!filenameArg.getCellName().isPresent() && filename.startsWith("//")) {
-      cellName = RelativeCellName.ROOT_CELL_NAME;
-    } else {
-      cellName =
-          filenameArg.getCellName().isPresent()
-              ? RelativeCellName.of(ImmutableSet.of(filenameArg.getCellName().get()))
-              : RelativeCellName.ALL_CELLS_SPECIAL_NAME;
+
+    // See if the filename argument specifies the cell.
+    String[] matches = filename.split("=", 2);
+
+    // By default, this config file applies to all cells.
+    RelativeCellName configCellName = RelativeCellName.ALL_CELLS_SPECIAL_NAME;
+
+    if (matches.length == 2) {
+      // Filename argument specified the cell to which this config applies.
+      filename = matches[1];
+      if (matches[0].equals("//")) {
+        // Config applies only to the current cell .
+        configCellName = RelativeCellName.ROOT_CELL_NAME;
+      } else if (!matches[0].equals("*")) { // '*' is the default.
+        if (!cellMapping.containsKey(matches[0])) {
+          throw new HumanReadableException("Unknown cell: %s", matches[0]);
+        }
+        configCellName = RelativeCellName.of(ImmutableSet.of(matches[0]));
+      }
     }
 
-    filename = filenameArg.getArg();
-
+    // Filename may also contain the cell name, so resolve the path to the file.
+    BuckCellArg filenameArg = BuckCellArg.of(filename);
+    filename = BuckCellArg.of(filename).getArg();
     Path projectRoot =
         cellMapping.get(
-            cellName.equals(RelativeCellName.ALL_CELLS_SPECIAL_NAME)
-                ? RelativeCellName.ROOT_CELL_NAME
-                : cellName);
+            filenameArg.getCellName().isPresent()
+                ? RelativeCellName.of(ImmutableSet.of(filenameArg.getCellName().get()))
+                : RelativeCellName.ROOT_CELL_NAME);
+
     Path path = projectRoot.resolve(filename);
     ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
 
@@ -481,7 +493,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       for (Map.Entry<String, String> sectionEntry : entry.getValue().entrySet()) {
         String field = sectionEntry.getKey();
         String value = sectionEntry.getValue();
-        builder.put(cellName, section, field, value);
+        builder.put(configCellName, section, field, value);
       }
     }
     LOG.debug("Loaded a configuration file %s, %s", filename, sectionsToEntries.toString());
