@@ -10,6 +10,7 @@
 !/inspectionProfiles/Project_Default.xml
 !/libraries
 !/encodings.xml
+!/fileTemplates
 !/google-java-format.xml
 !/kotlinc.xml
 !/misc.xml
