@@ -50,7 +50,7 @@ public class KotlinLibraryIntegrationTest {
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
-  @Test
+  @Test(timeout = 100000)
   public void shouldAnnotationProcessClassesUsingKapt() throws Exception {
     ProcessResult buildResult =
         workspace.runBuckCommand(
