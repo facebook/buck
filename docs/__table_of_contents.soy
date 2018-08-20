@@ -268,6 +268,9 @@
       {param text: 'Skylark' /}
     {/call}
   </ul>
+  {call .tocCommands}
+    {param navid: $navid /}
+  {/call}
   <h3>Build Rules</h3>
   <ul>
     // Ugh, closure doesn't have the concept of sorting, so we cannot control the order without
@@ -394,6 +397,34 @@
   {call skylark.tableOfContents}
     {param navid: $navid /}
   {/call}
+  <h3>Extending Buck</h3>
+  <ul>
+    {call navigation.link}
+      {param currentnavid: $navid /}
+      {param folder: 'extending' /}
+      {param page: 'macros' /}
+      {param text: 'Custom Macros' /}
+    {/call}
+    {call navigation.link}
+      {param currentnavid: $navid /}
+      {param folder: 'extending' /}
+      {param page: 'rules' /}
+      {param text: 'Custom Rules' /}
+    {/call}
+    {call navigation.link}
+      {param currentnavid: $navid /}
+      {param folder: 'extending' /}
+      {param page: 'e2e_tests' /}
+      {param text: 'Building E2E Tests for Buck' /}
+    {/call}
+  </ul>
+{/template}
+
+/**
+ * Table of contents for Buck commands section.
+ * @param navid The current page's navigation id.
+ */
+{template .tocCommands}
   <h3>Commands</h3>
   <ul>
     {call navigation.link}
@@ -442,27 +473,6 @@
       {param folder: 'command' /}
       {param page: 'exit_codes' /}
       {param text: 'Exit Codes' /}
-    {/call}
-  </ul>
-  <h3>Extending Buck</h3>
-  <ul>
-    {call navigation.link}
-      {param currentnavid: $navid /}
-      {param folder: 'extending' /}
-      {param page: 'macros' /}
-      {param text: 'Custom Macros' /}
-    {/call}
-    {call navigation.link}
-      {param currentnavid: $navid /}
-      {param folder: 'extending' /}
-      {param page: 'rules' /}
-      {param text: 'Custom Rules' /}
-    {/call}
-    {call navigation.link}
-      {param currentnavid: $navid /}
-      {param folder: 'extending' /}
-      {param page: 'e2e_tests' /}
-      {param text: 'Building E2E Tests for Buck' /}
     {/call}
   </ul>
 {/template}
