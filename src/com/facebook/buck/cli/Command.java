@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.CellConfig;
-import com.facebook.buck.core.cell.name.RelativeCellName;
+import com.facebook.buck.core.cell.RelativeCellName;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.step.ExecutorPool;

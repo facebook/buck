@@ -4,7 +4,6 @@ standard_java_test(
     name = "parser",
     deps = [
         "//src/com/facebook/buck/core/cell:cell",
-        "//src/com/facebook/buck/core/cell/name:name",
         "//src/com/facebook/buck/core/exceptions/handler:handler",
         "//src/com/facebook/buck/core/plugin/impl:impl",
         "//src/com/facebook/buck/core/rulekey:rulekey",

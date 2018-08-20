@@ -19,7 +19,7 @@ package com.facebook.buck.core.cell.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.name.RelativeCellName;
+import com.facebook.buck.core.cell.RelativeCellName;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;

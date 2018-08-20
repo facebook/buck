@@ -5,7 +5,6 @@ java_test(
     srcs = glob(["*Test.java"]),
     deps = [
         "//src/com/facebook/buck/core/cell/impl:impl",
-        "//src/com/facebook/buck/core/cell/name:name",
         "//test/com/facebook/buck/util:testutil",
         "//test/com/facebook/buck/util/config:testutil",
         "//third-party/java/guava:guava",

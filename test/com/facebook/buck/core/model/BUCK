@@ -13,6 +13,7 @@ java_library(
     ],
     visibility = ["//test/..."],
     deps = [
+        "//src/com/facebook/buck/support/cli/args:args",
         "//src/com/facebook/buck/util:util",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/jsr:jsr305",

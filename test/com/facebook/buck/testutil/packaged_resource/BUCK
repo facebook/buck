@@ -11,7 +11,6 @@ java_library(
         "//test/...",
     ],
     deps = [
-        "//src/com/facebook/buck/core/cell/name:name",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/event:interfaces",

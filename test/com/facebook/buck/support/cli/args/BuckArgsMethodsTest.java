@@ -14,15 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.support.cli.args;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.name.RelativeCellName;
+import com.facebook.buck.core.cell.RelativeCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.BuckArgsMethods;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

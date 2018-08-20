@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.core.cell;
 
-import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.config.Config;

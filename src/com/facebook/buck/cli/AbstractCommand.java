@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.name.RelativeCellName;
+import com.facebook.buck.core.cell.RelativeCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -41,8 +41,8 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
-import com.facebook.buck.util.BuckCellArg;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;

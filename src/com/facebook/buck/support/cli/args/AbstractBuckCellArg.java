@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.support.cli.args;
 
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.util.Optional;

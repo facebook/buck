@@ -3,7 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "classes",
     deps = [
-        "//src/com/facebook/buck/core/cell/name:name",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/event:interfaces",
