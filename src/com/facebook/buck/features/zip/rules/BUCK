@@ -7,7 +7,6 @@ buck_module(
         "//src/com/facebook/buck/features/filebundler:filebundler",
     ],
     provided_deps = [
-        "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",

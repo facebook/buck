@@ -28,7 +28,6 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         ":types",
-        "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
@@ -54,7 +53,6 @@ java_library_with_plugins(
     deps = [
         ":translator",
         ":types",
-        "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",

@@ -5,7 +5,6 @@ buck_module(
     srcs = glob(["*.java"]),
     provided_deps = [
         "//src/com/facebook/buck/android/packageable:packageable",
-        "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/model:model",

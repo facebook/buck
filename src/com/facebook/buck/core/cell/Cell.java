@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.cell;
 
-import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.toolchain.ToolchainProvider;

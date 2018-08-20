@@ -18,7 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;

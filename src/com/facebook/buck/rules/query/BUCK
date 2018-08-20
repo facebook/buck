@@ -28,7 +28,6 @@ java_immutables_library(
     deps = [
         ":query",
         ":types",
-        "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
@@ -62,7 +61,6 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         ":types",
-        "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",

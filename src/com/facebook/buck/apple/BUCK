@@ -22,7 +22,6 @@ java_library_with_plugins(
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/apple/platform_type:type",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
-        "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/description/impl:impl",
         "//src/com/facebook/buck/core/macros:macros",

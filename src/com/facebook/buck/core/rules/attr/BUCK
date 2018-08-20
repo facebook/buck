@@ -2,7 +2,6 @@ java_library(
     name = "attr",
     srcs = glob(["*.java"]),
     exported_deps = [
-        "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/rules:rules",
     ],
     visibility = [

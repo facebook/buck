@@ -11,11 +11,11 @@ java_immutables_library(
     name = "types",
     srcs = TYPES_SRCS,
     exported_deps = [
+        "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/versions:translator",
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules/query:types",
