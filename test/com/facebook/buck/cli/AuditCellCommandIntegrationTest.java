@@ -94,4 +94,59 @@ public class AuditCellCommandIntegrationTest {
     assertTrue("Expected to find secondary in the map", cellMap.containsKey("secondary"));
     assertEquals(secondary.getDestPath().toString(), cellMap.get("secondary"));
   }
+
+  @Test
+  public void testBuckCellPathsOnly() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "crosscell_file_watching/primary", tmp.newFolder());
+    workspace.setUp();
+    ProjectWorkspace secondary =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "crosscell_file_watching/secondary", tmp.newFolder());
+    secondary.setUp();
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of(
+            "repositories",
+            ImmutableMap.of("secondary", secondary.getPath(".").normalize().toString())));
+
+    ProcessResult result = workspace.runBuckCommand("audit", "cell", "--paths-only");
+    result.assertSuccess();
+
+    // Remove trailing newline from stdout before passing to Splitter.
+    String stdout = result.getStdout();
+    stdout = withoutSuffix(stdout, System.lineSeparator());
+
+    List<String> cells = Splitter.on(System.lineSeparator()).splitToList(stdout);
+    assertEquals("Cells that appear in both .buckconfig should appear.", 1, cells.size());
+    assertEquals(ImmutableSet.of(secondary.getDestPath().toString()), ImmutableSet.copyOf(cells));
+  }
+
+  @Test
+  public void testBuckCellJsonPathsOnly() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "crosscell_file_watching/primary", tmp.newFolder());
+    workspace.setUp();
+    ProjectWorkspace secondary =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "crosscell_file_watching/secondary", tmp.newFolder());
+    secondary.setUp();
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of(
+            "repositories",
+            ImmutableMap.of("secondary", secondary.getPath(".").normalize().toString())));
+
+    ProcessResult result = workspace.runBuckCommand("audit", "cell", "--paths-only", "--json");
+    result.assertSuccess();
+
+    List<String> cellList =
+        ObjectMappers.readValue(result.getStdout(), new TypeReference<List<String>>() {});
+    assertEquals("Cells that appear in both .buckconfig should appear.", 1, cellList.size());
+    assertTrue(
+        "Expected to find secondary in the map",
+        cellList.contains(secondary.getDestPath().toString()));
+  }
 }
