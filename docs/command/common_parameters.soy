@@ -1,5 +1,24 @@
 {namespace buck.commonparameters}
 
+/**
+ * @param value The numeric value for the verbosity level.
+ * @param bool The Java boolean function for the verbosity level. 
+ * @param description A description of what the verbosity level means.
+ */
+{template .verbose_levels}
+  <tr> 
+    <td class="verbose-levels">  
+      <code style="border: none">{$value}</code>
+    </td>
+    <td class="verbose-levels"> 
+      <code style="border: none">{$bool}</code>
+    </td>
+    <td class="verbose-levels"> 
+      {$description|noAutoescape}
+    </td>
+  </tr>
+{/template}
+
 /***/
 {template .soyweb}
   {call buck.page}
@@ -15,8 +34,8 @@
 {param overview}
 
 <p>
-Some command-line parameters affect the operation of Buck itself,
-regardless of which subcommand is being run.
+  Some command-line parameters affect the operation of Buck itself,
+  regardless of which subcommand is being run.
 </p>
 
 {/param}
@@ -27,19 +46,110 @@ regardless of which subcommand is being run.
   {param name: 'verbose' /}
   {param desc}
   <p>
-  Set the verbosity level of the console output. For example:
+    Set the verbosity level of the console output.  The verbosity level
+    is a single numeric value between <code>1</code> and <code>8</code>
+    inclusive. For example:
   </p>
 
 <p>
 <pre>
 {literal}
-buck targets --verbose 10
+buck targets --verbose 8
 {/literal}
 </pre>
 </p>
 
+  <p>
+    Higher verbosity levels include all the output for lower
+    levels. 
+  </p>
+
+  <p>
+    The output that Buck produces is affected by factors in addition to
+    the verbosity level. Such factors include, for example, the
+    subcommand (<code>build</code>, <code>install</code>, <code>test</code>, etc), 
+    the types of rules being built, and the degree to which artifacts 
+    from previous builds have been cached.
+  </p>
+
+  <p>
+    Buck has not yet implemented differences between all levels. For
+    example, there are currently no differences in verbosity between
+    levels <code>5</code> and <code>7</code> inclusive.
+  </p>
+
+<table>
+
+<tr>
+  <th>Numeric level</th><th>Boolean</th><th>Description</th>
+</tr>
+
+{call .verbose_levels}
+  {param value: '1' /}
+  {param bool: 'shouldPrintStandardInformation()' /}
+  {param description}
+    Print warnings from build steps and summary information for tests.
+  {/param}
+  {/call}
+
+{call .verbose_levels}
+  {param value: '2' /}
+  {param bool: 'shouldPrintBinaryRunInformation()' /}
+  {param description}
+    Print additional output for generated binaries or tests.
+  {/param}
+  {/call}
+
+{call .verbose_levels}
+  {param value: '3' /}
+  {param bool: 'shouldPrintCommand()' /}
+  {param description}
+    Print commands that Buck runs during the build process.
+  {/param}
+  {/call}
+
+{call .verbose_levels}
+  {param value: '4' /}
+  {param bool: 'shouldPrintSelectCommandOutput()' /}
+  {param description}
+    Print output for selected commands that Buck runs.
+  {/param}
+  {/call}
+
+{call .verbose_levels}
+  {param value: '5 - 7' /}
+  {param bool: 'shouldPrintOutput()' /}
+  {param description}
+    Print output for all commands that Buck runs.
+  {/param}
+  {/call}
+
+{call .verbose_levels}
+  {param value: '8' /}
+  {param bool: 'shouldUseVerbosityFlagIfAvailable()' /}
+  {param description}
+    Print all available diagnostic/logging information.
+  {/param}
+  {/call}
+
   {/param}
 {/call}
+
+</table>
+
+  <p>
+    For more precise information about how a particular verbosity level
+    affects output, you can search the Buck source code for the
+    corresponding boolean function. For example:
+  </p>
+
+<p>
+<pre>
+{literal}
+grep --recursive "getVerbosity().shouldPrintOutput()" ~/local/buck/src 
+{/literal}
+</pre>
+</p>
 
 {call buck.param}
   {param name: 'no-cache' /}
