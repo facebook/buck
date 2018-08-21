@@ -39,7 +39,7 @@ import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.packages.Info;
+import com.google.devtools.build.lib.packages.SkylarkInfo;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
@@ -62,11 +62,11 @@ public class HostInfoTest {
     root = fileSystem.getPath(projectFilesystem.getRootPath().toString());
   }
 
-  private void validateSkylarkStruct(Info struct, String topLevel, String trueKey)
+  private void validateSkylarkStruct(SkylarkInfo struct, String topLevel, String trueKey)
       throws EvalException {
     // Assert that all keys are false except the one specified by {@code trueKey}
 
-    Info topLevelStruct = struct.getValue(topLevel, Info.class);
+    SkylarkInfo topLevelStruct = struct.getValue(topLevel, SkylarkInfo.class);
     for (String key : topLevelStruct.getFieldNames()) {
       if (key.equals(trueKey)) {
         continue;
@@ -160,7 +160,8 @@ public class HostInfoTest {
   public void isUseableInBuildFile() throws EvalException, InterruptedException, IOException {
     String expectedOutput = "";
     String macroFile = "";
-    Info realHostInfo = HostInfo.createHostInfoStruct(Platform::detect, Architecture::detect);
+    SkylarkInfo realHostInfo =
+        HostInfo.createHostInfoStruct(Platform::detect, Architecture::detect);
 
     macroFile =
         "def printer():\n"
@@ -201,8 +202,8 @@ public class HostInfoTest {
             + "arch.is_unknown: False\n"
             + "arch.is_x86_64: False\n";
     // Make sure we set the current system's os/arch to True
-    Info realHostOs = realHostInfo.getValue("os", Info.class);
-    Info realHostArch = realHostInfo.getValue("arch", Info.class);
+    SkylarkInfo realHostOs = realHostInfo.getValue("os", SkylarkInfo.class);
+    SkylarkInfo realHostArch = realHostInfo.getValue("arch", SkylarkInfo.class);
     String trueOsKey =
         realHostOs
             .getFieldNames()

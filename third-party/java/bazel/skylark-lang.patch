@@ -1,8 +1,8 @@
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 1c9d30a6bc..d73399a183 100644
+index 07d8281e03..38563ded7c 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -315,16 +315,54 @@ java_library(
+@@ -328,16 +328,56 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
@@ -19,6 +19,7 @@ index 1c9d30a6bc..d73399a183 100644
 +        "packages/BuiltinProvider.java",
 +        "packages/Globber.java",
 +        "packages/Info.java",
++        "packages/InfoInterface.java",
 +        "packages/NativeProvider.java",
 +        "packages/Provider.java",
 +        "packages/ProviderFromFunction.java",
@@ -26,6 +27,7 @@ index 1c9d30a6bc..d73399a183 100644
 +        "packages/SkylarkInfo.java",
 +        "packages/SkylarkProvider.java",
 +        "packages/SkylarkProviderIdentifier.java",
++        "packages/StructImpl.java",
 +        "packages/StructProvider.java",
 +    ],
      visibility = ["//visibility:public"],

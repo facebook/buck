@@ -21,6 +21,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.packages.Info;
+import com.google.devtools.build.lib.packages.SkylarkInfo;
 import com.google.devtools.build.lib.packages.StructProvider;
 import java.util.function.Supplier;
 
@@ -31,7 +32,7 @@ public class HostInfo {
   private HostInfo() {}
 
   @VisibleForTesting
-  static Info createHostInfoStruct(
+  static SkylarkInfo createHostInfoStruct(
       Supplier<Platform> platformSupplier, Supplier<Architecture> architectureSupplier) {
     Platform hostPlatform = platformSupplier.get();
     Architecture hostArchitecture = architectureSupplier.get();
