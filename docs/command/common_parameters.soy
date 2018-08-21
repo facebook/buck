@@ -154,9 +154,28 @@ grep --recursive "getVerbosity().shouldPrintOutput()" ~/local/buck/src
 {call buck.param}
   {param name: 'no-cache' /}
   {param desc}
-  <p>
-  Disable the build artifact cache.
-  </p>
+    <p>
+      Disable the build artifact caches. If this parameter is specified, Buck
+      ignores any artifacts in any of the caches specified in 
+      the <code>[cache]</code> section 
+      of {call buck.concept_link_heading}{param page : 'buckconfig' /}{param heading : 'cache' /}{param name : '.buckconfig' /}{/call}.
+      These include the filesystem cache (<code>dir</code>), remote cache (<code>http</code>), 
+      and SQLite cache (<code>sqlite</code>). 
+    </p>
+
+    <p>
+      The contents of the caches are unaffected, but Buck does not use
+      them for the specified command.
+    </p>
+
+    <p>
+      Note that if there is an output file in the <code>buck-out</code> directory 
+      for a previously-built and unchanged rule, Buck will still
+      use that output file in your build&mdash;even if <code>--no-cache</code> is specified. 
+      If you don't want to use these existing and valid artifacts, 
+      run the {call buck.cmd_link}{param name: 'clean' /}{/call} command 
+      to delete them from <code>buck-out</code>.
+    </p>
   {/param}
 {/call}
 
