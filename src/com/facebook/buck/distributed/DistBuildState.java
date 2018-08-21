@@ -21,9 +21,7 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellProvider;
-import com.facebook.buck.core.cell.DistBuildCellParams;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
-import com.facebook.buck.core.cell.impl.DistributedCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.cell;
+package com.facebook.buck.distributed;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.module.BuckModuleManager;

@@ -41,9 +41,9 @@ import org.pf4j.PluginManager;
  * directory since the root of the provided filesystem is considered to be the root of the cell. Its
  * name is also empty.
  */
-class RootCellFactory {
+public class RootCellFactory {
 
-  static Cell create(
+  public static Cell create(
       CellProvider cellProvider,
       CellPathResolver rootCellCellPathResolver,
       CellPathResolver rootCellPathResolver,

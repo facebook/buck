@@ -14,12 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.core.cell.impl;
+package com.facebook.buck.distributed;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.CellProvider;
-import com.facebook.buck.core.cell.DistBuildCellParams;
+import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.impl.ImmutableCell;
+import com.facebook.buck.core.cell.impl.RootCellFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProvider;
