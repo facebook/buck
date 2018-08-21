@@ -99,7 +99,7 @@ public class AndroidBinaryFilesInfo {
   ResourceFilesInfo getResourceFilesInfo() {
     return new ResourceFilesInfo(
         ImmutableSortedSet.copyOf(
-            enhancementResult.getPackageableCollection().getPathsToThirdPartyJars()),
+            enhancementResult.getPackageableCollection().getPathsToThirdPartyJars().values()),
         enhancementResult.getPrimaryResourcesApkPath(),
         enhancementResult.getPrimaryApkAssetZips());
   }

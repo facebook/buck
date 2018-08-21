@@ -47,12 +47,7 @@ public class AndroidPackageableCollector {
   private final AndroidPackageableCollection.Builder collectionBuilder =
       AndroidPackageableCollection.builder();
 
-  private final ResourceDetails.Builder resourceDetailsBuilder = ResourceDetails.builder();
-
-  private final ImmutableList.Builder<BuildTarget> resourcesWithNonEmptyResDir =
-      ImmutableList.builder();
-  private final ImmutableList.Builder<BuildTarget> resourcesWithAssets = ImmutableList.builder();
-  private final ImmutableList.Builder<SourcePath> resourceDirectories = ImmutableList.builder();
+  private final Map<APKModule, ResourceCollector> resourceCollector = new HashMap<>();
 
   // Map is used instead of ImmutableMap.Builder for its containsKey() method.
   private final Map<String, BuildConfigFields> buildConfigs = new HashMap<>();
@@ -88,6 +83,13 @@ public class AndroidPackageableCollector {
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
     this.apkModuleGraph = apkModuleGraph;
+    apkModuleGraph
+        .getAPKModules()
+        .stream()
+        .forEach(
+            module -> {
+              resourceCollector.put(module, new ResourceCollector());
+            });
   }
 
   /** Add packageables */
@@ -130,8 +132,9 @@ public class AndroidPackageableCollector {
       return this;
     }
 
-    resourceDetailsBuilder.addWhitelistedStringDirectories(resourceDir);
-    doAddResourceDirectory(owner, resourceDir);
+    ResourceCollector collector = getResourceCollector(owner);
+    collector.addWhitelistedStringDirectories(resourceDir);
+    collector.doAddResourceDirectory(owner, resourceDir);
     return this;
   }
 
@@ -140,14 +143,9 @@ public class AndroidPackageableCollector {
     if (resourcesToExclude.contains(owner)) {
       return this;
     }
-
-    doAddResourceDirectory(owner, resourceDir);
+    ResourceCollector collector = getResourceCollector(owner);
+    collector.doAddResourceDirectory(owner, resourceDir);
     return this;
-  }
-
-  private void doAddResourceDirectory(BuildTarget owner, SourcePath resourceDir) {
-    resourcesWithNonEmptyResDir.add(owner);
-    resourceDirectories.add(resourceDir);
   }
 
   public AndroidPackageableCollector addNativeLibsDirectory(
@@ -191,8 +189,11 @@ public class AndroidPackageableCollector {
       return this;
     }
 
-    resourcesWithAssets.add(owner);
-    collectionBuilder.addAssetsDirectories(assetsDirectory);
+    ResourceCollector collector = getResourceCollector(owner);
+    collector.addResourcesWithAssets(owner);
+
+    APKModule module = apkModuleGraph.findResourceModuleForTarget(owner);
+    collectionBuilder.putAssetsDirectories(module, assetsDirectory);
     return this;
   }
 
@@ -218,8 +219,17 @@ public class AndroidPackageableCollector {
     return this;
   }
 
-  public AndroidPackageableCollector addManifestPiece(SourcePath manifest) {
-    collectionBuilder.addAndroidManifestPieces(manifest);
+  /**
+   * add a manifest piece associated with the target owner. If part of a module the manifest pieces
+   * will be included in both the module manifest and the base apk manifest
+   *
+   * @param owner target that owns the manifest piece
+   * @param manifest the sourcepath to the manifest piece
+   * @return this
+   */
+  public AndroidPackageableCollector addManifestPiece(BuildTarget owner, SourcePath manifest) {
+    collectionBuilder.putAndroidManifestPieces(
+        apkModuleGraph.findResourceModuleForTarget(owner), manifest);
     return this;
   }
 
@@ -228,7 +238,8 @@ public class AndroidPackageableCollector {
     if (buildTargetsToExcludeFromDex.contains(owner)) {
       collectionBuilder.addNoDxClasspathEntries(pathToThirdPartyJar);
     } else {
-      collectionBuilder.addPathsToThirdPartyJars(pathToThirdPartyJar);
+      collectionBuilder.putPathsToThirdPartyJars(
+          apkModuleGraph.findModuleForTarget(owner), pathToThirdPartyJar);
     }
     return this;
   }
@@ -262,22 +273,68 @@ public class AndroidPackageableCollector {
                 })
             ::get);
 
-    ImmutableSet<BuildTarget> resources = ImmutableSet.copyOf(resourcesWithNonEmptyResDir.build());
-    for (BuildTarget buildTarget : resourcesWithAssets.build()) {
-      if (!resources.contains(buildTarget)) {
-        resourceDetailsBuilder.addResourcesWithEmptyResButNonEmptyAssetsDir(buildTarget);
-      }
+    apkModuleGraph
+        .getAPKModules()
+        .stream()
+        .forEach(
+            apkModule -> {
+              collectionBuilder.putResourceDetails(
+                  apkModule, resourceCollector.get(apkModule).getResourceDetails());
+            });
+    return collectionBuilder.build();
+  }
+
+  private ResourceCollector getResourceCollector(BuildTarget owner) {
+    APKModule module = apkModuleGraph.findResourceModuleForTarget(owner);
+    ResourceCollector collector = resourceCollector.get(module);
+    if (collector == null) {
+      throw new RuntimeException(
+          String.format(
+              "Unable to find collector for target %s in module %s",
+              owner.getFullyQualifiedName(), module.getName()));
+    }
+    return collector;
+  }
+
+  private class ResourceCollector {
+    private final ResourceDetails.Builder resourceDetailsBuilder = ResourceDetails.builder();
+
+    private final ImmutableList.Builder<BuildTarget> resourcesWithNonEmptyResDir =
+        ImmutableList.builder();
+    private final ImmutableList.Builder<BuildTarget> resourcesWithAssets = ImmutableList.builder();
+    private final ImmutableList.Builder<SourcePath> resourceDirectories = ImmutableList.builder();
+
+    public void addWhitelistedStringDirectories(SourcePath resourceDir) {
+      resourceDetailsBuilder.addWhitelistedStringDirectories(resourceDir);
     }
 
-    // Reverse the resource directories/targets collections because we perform a post-order
-    // traversal of the action graph, and we need to return these collections topologically
-    // sorted.
-    resourceDetailsBuilder.setResourceDirectories(
-        resourceDirectories.build().reverse().stream().distinct().collect(Collectors.toList()));
-    resourceDetailsBuilder.setResourcesWithNonEmptyResDir(
-        resourcesWithNonEmptyResDir.build().reverse());
+    public ResourceDetails getResourceDetails() {
+      ImmutableSet<BuildTarget> resources =
+          ImmutableSet.copyOf(resourcesWithNonEmptyResDir.build());
+      for (BuildTarget buildTarget : resourcesWithAssets.build()) {
+        if (!resources.contains(buildTarget)) {
+          resourceDetailsBuilder.addResourcesWithEmptyResButNonEmptyAssetsDir(buildTarget);
+        }
+      }
 
-    collectionBuilder.setResourceDetails(resourceDetailsBuilder.build());
-    return collectionBuilder.build();
+      // Reverse the resource directories/targets collections because we perform a post-order
+      // traversal of the action graph, and we need to return these collections topologically
+      // sorted.
+      resourceDetailsBuilder.setResourceDirectories(
+          resourceDirectories.build().reverse().stream().distinct().collect(Collectors.toList()));
+      resourceDetailsBuilder.setResourcesWithNonEmptyResDir(
+          resourcesWithNonEmptyResDir.build().reverse());
+
+      return resourceDetailsBuilder.build();
+    }
+
+    public void addResourcesWithAssets(BuildTarget owner) {
+      resourcesWithAssets.add(owner);
+    }
+
+    public void doAddResourceDirectory(BuildTarget owner, SourcePath resourceDir) {
+      resourcesWithNonEmptyResDir.add(owner);
+      resourceDirectories.add(resourceDir);
+    }
   }
 }

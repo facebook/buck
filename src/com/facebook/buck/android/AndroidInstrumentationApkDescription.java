@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.JavaLibraryClasspathProvider.getClasspa
 
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
@@ -112,7 +113,10 @@ public class AndroidInstrumentationApkDescription
     // TODO(natthu): Instrumentation APKs should also exclude native libraries and assets from the
     // apk under test.
     AndroidPackageableCollection.ResourceDetails resourceDetails =
-        apkUnderTest.getAndroidPackageableCollection().getResourceDetails();
+        apkUnderTest
+            .getAndroidPackageableCollection()
+            .getResourceDetails()
+            .get(APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true));
     ImmutableSet<BuildTarget> resourcesToExclude =
         ImmutableSet.copyOf(
             Iterables.concat(

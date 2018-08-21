@@ -33,6 +33,8 @@ import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.android.PrebuiltNativeLibraryBuilder;
 import com.facebook.buck.android.TestAndroidPlatformTargetFactory;
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
@@ -214,7 +216,11 @@ public class AndroidPackageableCollectorTest {
             + "substantial regression in the startup time for the fb4a app.",
         pathResolver,
         ImmutableSet.of(graphBuilder.getRule(jsr305Target).getSourcePathToOutput()),
-        packageableCollection.getPathsToThirdPartyJars());
+        packageableCollection
+            .getPathsToThirdPartyJars()
+            .values()
+            .stream()
+            .collect(ImmutableSet.toImmutableSet()));
     assertResolvedEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the "
             + "transitive dependencies",
@@ -223,7 +229,11 @@ public class AndroidPackageableCollectorTest {
             DefaultBuildTargetSourcePath.of(
                 manifestTarget.withAppendedFlavors(
                     AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))),
-        packageableCollection.getAssetsDirectories());
+        packageableCollection
+            .getAssetsDirectories()
+            .values()
+            .stream()
+            .collect(ImmutableSet.toImmutableSet()));
     assertResolvedEquals(
         "Because a native library was declared as a dependency, it should be added to the "
             + "transitive dependencies.",
@@ -317,10 +327,12 @@ public class AndroidPackageableCollectorTest {
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableList.toImmutableList());
 
+    APKModule rootModule = APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true);
+
     assertEquals(
         "Android resources should be topologically sorted.",
         result,
-        collector.build().getResourceDetails().getResourcesWithNonEmptyResDir());
+        collector.build().getResourceDetails().get(rootModule).getResourcesWithNonEmptyResDir());
 
     // Introduce an AndroidBinaryRule that depends on A and C and verify that the same topological
     // sort results. This verifies that both AndroidResourceRule.getAndroidResourceDeps does the
@@ -346,6 +358,7 @@ public class AndroidPackageableCollectorTest {
         androidBinary
             .getAndroidPackageableCollection()
             .getResourceDetails()
+            .get(rootModule)
             .getResourcesWithNonEmptyResDir());
   }
 
@@ -398,7 +411,9 @@ public class AndroidPackageableCollectorTest {
 
     AndroidPackageableCollection androidPackageableCollection = collector.build();
     AndroidPackageableCollection.ResourceDetails resourceDetails =
-        androidPackageableCollection.getResourceDetails();
+        androidPackageableCollection
+            .getResourceDetails()
+            .get(APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true));
     assertThat(
         resourceDetails.getResourceDirectories(), Matchers.contains(resAPath, resPath, resBPath));
   }

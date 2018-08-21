@@ -69,7 +69,7 @@ interface AbstractAndroidPackageableCollection {
     }
   }
 
-  AndroidPackageableCollection.ResourceDetails getResourceDetails();
+  ImmutableMap<APKModule, AndroidPackageableCollection.ResourceDetails> getResourceDetails();
 
   /** Native libraries mapped from modules. */
   ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkables();
@@ -86,7 +86,7 @@ interface AbstractAndroidPackageableCollection {
   /**
    * Directories containing assets to be included directly in the apk, under the "assets" directory.
    */
-  ImmutableSet<SourcePath> getAssetsDirectories();
+  ImmutableMultimap<APKModule, SourcePath> getAssetsDirectories();
 
   /** Proguard configurations to include when running release builds. */
   ImmutableSet<SourcePath> getProguardConfigs();
@@ -95,7 +95,7 @@ interface AbstractAndroidPackageableCollection {
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
 
   /** Android manifests to merge with the manifest skeleton. */
-  ImmutableSet<SourcePath> getAndroidManifestPieces();
+  ImmutableMultimap<APKModule, SourcePath> getAndroidManifestPieces();
 
   /** Java classes to include in the package sorted into modules */
   ImmutableMultimap<APKModule, SourcePath> getModuleMappedClasspathEntriesToDex();
@@ -113,7 +113,7 @@ interface AbstractAndroidPackageableCollection {
    * Prebuilt/third-party jars to be included in the package. For apks, their resources will be
    * placed directly in the apk.
    */
-  ImmutableSet<SourcePath> getPathsToThirdPartyJars();
+  ImmutableMultimap<APKModule, SourcePath> getPathsToThirdPartyJars();
 
   /** {@link JavaLibrary} rules whose output will be dexed and included in the package. */
   Set<BuildTarget> getJavaLibrariesToDex();

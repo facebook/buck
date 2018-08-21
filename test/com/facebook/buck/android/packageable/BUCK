@@ -4,6 +4,7 @@ standard_java_test(
     name = "packageable",
     deps = [
         "//src/com/facebook/buck/android:rules",
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules/impl:impl",

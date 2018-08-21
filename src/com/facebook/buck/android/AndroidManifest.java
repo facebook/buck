@@ -36,7 +36,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Set;
+import java.util.Collection;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 
@@ -85,7 +85,7 @@ public class AndroidManifest extends AbstractBuildRule {
       SourcePathRuleFinder finder,
       SourcePath skeletonFile,
       APKModule module,
-      Set<SourcePath> manifestFiles) {
+      Collection<SourcePath> manifestFiles) {
     super(buildTarget, projectFilesystem);
     this.skeletonFile = skeletonFile;
     this.module = module;

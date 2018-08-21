@@ -135,7 +135,7 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
     AndroidPackageableCollection packageableCollection = collector.build();
 
     ImmutableCollection<SourcePath> assetsDirectories =
-        packageableCollection.getAssetsDirectories();
+        packageableCollection.getAssetsDirectories().values();
     AssembleDirectories assembleAssetsDirectories =
         new AssembleDirectories(
             buildTarget.withAppendedFlavors(AAR_ASSEMBLE_ASSETS_FLAVOR),
@@ -145,7 +145,12 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
     aarExtraDepsBuilder.add(graphBuilder.addToIndex(assembleAssetsDirectories));
 
     ImmutableCollection<SourcePath> resDirectories =
-        packageableCollection.getResourceDetails().getResourceDirectories();
+        packageableCollection
+            .getResourceDetails()
+            .values()
+            .stream()
+            .flatMap(resourceDetails -> resourceDetails.getResourceDirectories().stream())
+            .collect(ImmutableList.toImmutableList());
     MergeAndroidResourceSources assembleResourceDirectories =
         new MergeAndroidResourceSources(
             buildTarget.withAppendedFlavors(AAR_ASSEMBLE_RESOURCE_FLAVOR),

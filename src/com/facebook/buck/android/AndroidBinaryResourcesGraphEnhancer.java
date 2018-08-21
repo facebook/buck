@@ -179,7 +179,10 @@ class AndroidBinaryResourcesGraphEnhancer {
   AndroidBinaryResourcesGraphEnhancementResult enhance(
       AndroidPackageableCollection packageableCollection) {
     AndroidPackageableCollection.ResourceDetails resourceDetails =
-        packageableCollection.getResourceDetails();
+        packageableCollection.getResourceDetails().get(apkModuleGraph.getRootAPKModule());
+    if (resourceDetails == null) {
+      throw new HumanReadableException("Resource details for the base APK were not found.");
+    }
 
     ImmutableSortedSet<BuildRule> resourceRules =
         getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir());
@@ -220,7 +223,9 @@ class AndroidBinaryResourcesGraphEnhancer {
               ruleFinder,
               manifestSkeleton.get(),
               apkModuleGraph.getRootAPKModule(),
-              packageableCollection.getAndroidManifestPieces());
+              packageableCollection
+                  .getAndroidManifestPieces()
+                  .get(apkModuleGraph.getRootAPKModule()));
       graphBuilder.addToIndex(manifestMergeRule);
       realManifest = manifestMergeRule.getSourcePathToOutput();
     } else {
@@ -369,12 +374,14 @@ class AndroidBinaryResourcesGraphEnhancer {
     ImmutableList<ExopackagePathAndHash> exoResources;
     if (exopackageForResources) {
       MergeAssets mergeAssets =
-          createMergeAssetsRule(packageableCollection.getAssetsDirectories(), Optional.empty());
+          createMergeAssetsRule(
+              packageableCollection.getAssetsDirectories().values(), Optional.empty());
       SplitResources splitResources =
           createSplitResourcesRule(
               aaptOutputInfo.getPrimaryResourcesApkPath(), aaptOutputInfo.getPathToRDotTxt());
       MergeThirdPartyJarResources mergeThirdPartyJarResource =
-          createMergeThirdPartyJarResources(packageableCollection.getPathsToThirdPartyJars());
+          createMergeThirdPartyJarResources(
+              packageableCollection.getPathsToThirdPartyJars().values());
 
       graphBuilder.addToIndex(mergeAssets);
       graphBuilder.addToIndex(splitResources);
@@ -395,7 +402,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     } else {
       MergeAssets mergeAssets =
           createMergeAssetsRule(
-              packageableCollection.getAssetsDirectories(),
+              packageableCollection.getAssetsDirectories().values(),
               Optional.of(aaptOutputInfo.getPrimaryResourcesApkPath()));
       graphBuilder.addToIndex(mergeAssets);
 
@@ -460,7 +467,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   private MergeThirdPartyJarResources createMergeThirdPartyJarResources(
-      ImmutableSet<SourcePath> pathsToThirdPartyJars) {
+      ImmutableCollection<SourcePath> pathsToThirdPartyJars) {
     return new MergeThirdPartyJarResources(
         buildTarget.withAppendedFlavors(MERGE_THIRD_PARTY_JAR_RESOURCES_FLAVOR),
         projectFilesystem,
@@ -631,7 +638,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   private MergeAssets createMergeAssetsRule(
-      ImmutableSet<SourcePath> assetsDirectories, Optional<SourcePath> baseApk) {
+      ImmutableCollection<SourcePath> assetsDirectories, Optional<SourcePath> baseApk) {
     MergeAssets mergeAssets =
         new MergeAssets(
             buildTarget.withAppendedFlavors(MERGE_ASSETS_FLAVOR),
