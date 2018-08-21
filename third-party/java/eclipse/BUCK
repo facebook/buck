@@ -18,7 +18,7 @@ java_library(
 
 prebuilt_jar(
     name = "contenttype",
-    binary_jar = "org.eclipse.core.contenttype_3.5.100.v20160418-1621.jar",
+    binary_jar = "org.eclipse.core.contenttype_3.7.0.v20180426-1644.jar",
     licenses = [
         "LICENSE.html",
     ],
@@ -26,7 +26,7 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "jobs",
-    binary_jar = "org.eclipse.core.jobs_3.8.0.v20160319-0610.jar",
+    binary_jar = "org.eclipse.core.jobs_3.10.0.v20180427-1454.jar",
     licenses = [
         "LICENSE.html",
     ],
@@ -34,7 +34,7 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "resources",
-    binary_jar = "org.eclipse.core.resources_3.11.0.v20160422-0304.jar",
+    binary_jar = "org.eclipse.core.resources_3.13.0.v20180512-1138.jar",
     licenses = [
         "LICENSE.html",
     ],
@@ -42,7 +42,7 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "runtime",
-    binary_jar = "org.eclipse.core.runtime_3.12.0.v20160427-1901.jar",
+    binary_jar = "org.eclipse.core.runtime_3.14.0.v20180417-0825.jar",
     licenses = [
         "LICENSE.html",
     ],
@@ -50,7 +50,7 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "equinox-common",
-    binary_jar = "org.eclipse.equinox.common_3.8.0.v20160422-1942.jar",
+    binary_jar = "org.eclipse.equinox.common_3.10.0.v20180412-1130.jar",
     licenses = [
         "LICENSE.html",
     ],
@@ -58,7 +58,7 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "equinox-preferences",
-    binary_jar = "org.eclipse.equinox.preferences_3.6.0.v20160120-1756.jar",
+    binary_jar = "org.eclipse.equinox.preferences_3.7.100.v20180510-1129.jar",
     licenses = [
         "LICENSE.html",
     ],
@@ -66,7 +66,7 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "jdt",
-    binary_jar = "org.eclipse.jdt.core_3.12.0.v20160426-1326.jar",
+    binary_jar = "org.eclipse.jdt.core_3.14.0.v20180528-0519.jar",
     licenses = [
         "LICENSE.html",
     ],
@@ -74,7 +74,7 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "osgi",
-    binary_jar = "org.eclipse.osgi_3.11.0.v20160427-2120.jar",
+    binary_jar = "org.eclipse.osgi_3.13.0.v20180409-1500.jar",
     licenses = [
         "LICENSE.html",
     ],

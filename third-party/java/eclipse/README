@@ -2,36 +2,34 @@ These jars are extracted from the Eclipse project. Here's how you get them.
 
 ---
 
-file="eclipse-standard-luna-R-macosx-cocoa-x86_64.tar.gz"
+file="eclipse-java-photon-R-linux-gtk-x86_64.tar.gz"
 
-wget "http://mirrors.ibiblio.org/eclipse/technology/epp/downloads/release/luna/R/$file"
+wget "http://mirrors.ibiblio.org/eclipse/technology/epp/downloads/release/photon/R/$file"
 
 sha1sum $file
-# 36518f4d635622f8e0d23b08e4baec1b317279f5
+# 433998aeaab2b9fb13a092e2edf87166e7d404f5
 
 tar xf $file
 
 cd eclipse/plugins
 
 jars=(
-  org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar
-  org.eclipse.core.jobs_3.6.1.v20141014-1248.jar
-  org.eclipse.core.resources_3.9.1.v20140825-1431.jar
-  org.eclipse.core.runtime_3.10.0.v20140318-2214.jar
-  org.eclipse.equinox.common_3.6.200.v20130402-1505.jar
-  org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar
-  org.eclipse.jdt.core.prefs
-  org.eclipse.jdt.core_3.10.2.v20150120-1634.jar
-  org.eclipse.osgi_3.10.2.v20150203-1939.jar
+  org.eclipse.core.contenttype_3.7.0.v20180426-1644.jar
+  org.eclipse.core.jobs_3.10.0.v20180427-1454.jar 
+  org.eclipse.core.resources_3.13.0.v20180512-1138.jar
+  org.eclipse.core.runtime_3.14.0.v20180417-0825.jar
+  org.eclipse.equinox.common_3.10.0.v20180412-1130.jar
+  org.eclipse.equinox.preferences_3.7.100.v20180510-1129.jar
+  org.eclipse.jdt.core_3.14.0.v20180528-0519.jar
+  org.eclipse.osgi_3.13.0.v20180409-1500.jar
 )
 
 sha1sum "${jars[@]}"
-# db44eacfdced003f806846810b1a62a1066bb8fd  org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar
-# 53b9a5826d0f0564f9652c05d2b5f69bf4a1cc1e  org.eclipse.core.jobs_3.6.1.v20141014-1248.jar
-# 24a0e4b809d9cb102e7bf8123a2844657b916090  org.eclipse.core.resources_3.9.1.v20140825-1431.jar
-# a537de26c1e322a68536a3a2c3cb2389d5dbcb00  org.eclipse.core.runtime_3.10.0.v20140318-2214.jar
-# 5354112138f6e420a8152fc9526b15f25ed5f163  org.eclipse.equinox.common_3.6.200.v20130402-1505.jar
-# 9ea0f3c0b18d0a1e904743b19c2f7c0c7163c61e  org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar
-# c6a4c0c0bc6eb03bd3778d8f4737060d9b3e7562  org.eclipse.jdt.core.prefs
-# 75a5b85a4ed68d9d6dad499ad2b48936a647327d  org.eclipse.jdt.core_3.10.2.v20150120-1634.jar
-# 6dfc2f30f29e426dcc6b86826bd6d59f905bb01e  org.eclipse.osgi_3.10.2.v20150203-1939.jar
+# ee111d57c3fb5fd287f0dbadd3e8bb24f41ba710  org.eclipse.core.contenttype_3.7.0.v20180426-1644.jar
+# f7c872a52c86a304a17f6d2902c645e98cfa2dcc  org.eclipse.core.jobs_3.10.0.v20180427-1454.jar
+# 582ea9b37aafb39450825f82ef3a0f5867e4015c  org.eclipse.core.resources_3.13.0.v20180512-1138.jar
+# 5018d6e829f976519ccf94cf4519486b2e93edfb  org.eclipse.core.runtime_3.14.0.v20180417-0825.jar
+# 8758736e97bb84bf59f73013073abdc44a4e5602  org.eclipse.equinox.common_3.10.0.v20180412-1130.jar
+# 1d47bf96df31261867e9ed88367790aeb8d143f3  org.eclipse.equinox.preferences_3.7.100.v20180510-1129.jar
+# 16ec8157b196520fcf1ed9d7c9b63c770eda278d  org.eclipse.jdt.core_3.14.0.v20180528-0519.jar
+# a71aec640e47045636f9263cc4696af7005d16e2  org.eclipse.osgi_3.13.0.v20180409-1500.jar
