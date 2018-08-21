@@ -16,7 +16,7 @@ standard_java_test(
         "//test/com/facebook/buck/util/timing:testutil",
         "//third-party/java/easymock:easymock",
         "//third-party/java/eden:eden-thrift-bindings",
-        "//third-party/java/eden:java-thrift",
+        "//third-party/java/fbthrift:fbthrift",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
         "//third-party/java/jackson:jackson-annotations",

@@ -11,7 +11,7 @@ java_library(
         "//src/com/facebook/buck/util/sha1:sha1",
         "//third-party/java/args4j:args4j",
         "//third-party/java/eden:eden-thrift-bindings",
-        "//third-party/java/eden:java-thrift",
+        "//third-party/java/fbthrift:fbthrift",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
         "//third-party/java/infer-annotations:infer-annotations",

@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="java-thrift-dependencies">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/eden/java-thrift-dependencies.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/fbthrift/java-thrift-dependencies.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
