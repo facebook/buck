@@ -159,8 +159,8 @@ public class CellTest {
             .setFilesystem(filesystem1)
             .setCellConfigOverride(
                 CellConfig.builder()
-                    .put(RelativeCellName.fromComponents("second"), "test", "value", "cell2")
-                    .put(RelativeCellName.ALL_CELLS_SPECIAL_NAME, "test", "common_value", "all")
+                    .put(CellName.of("second"), "test", "value", "cell2")
+                    .put(CellName.ALL_CELLS_SPECIAL_NAME, "test", "common_value", "all")
                     .build())
             .build();
     BuildTarget target =

@@ -26,7 +26,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.RelativeCellName;
+import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -266,7 +266,7 @@ public class CleanCommandTest {
       mergeConfigBuilder.putAll(
           command
               .getConfigOverrides(ImmutableMap.of())
-              .getForCell(RelativeCellName.ROOT_CELL_NAME)
+              .getForCell(CellName.ROOT_CELL_NAME)
               .getValues());
       mergeConfigBuilder.put(
           "cache", ImmutableMap.of("dir_cache_names", "testcache, warmtestcache"));
@@ -278,9 +278,7 @@ public class CleanCommandTest {
       buckConfigBuilder.setSections(mergeConfigBuilder.build());
     } else {
       buckConfigBuilder.setSections(
-          command
-              .getConfigOverrides(ImmutableMap.of())
-              .getForCell(RelativeCellName.ROOT_CELL_NAME));
+          command.getConfigOverrides(ImmutableMap.of()).getForCell(CellName.ROOT_CELL_NAME));
     }
     BuckConfig buckConfig = buckConfigBuilder.build();
     Cell cell =

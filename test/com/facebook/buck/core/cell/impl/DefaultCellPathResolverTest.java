@@ -19,7 +19,7 @@ package com.facebook.buck.core.cell.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.RelativeCellName;
+import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
@@ -46,7 +46,7 @@ public class DefaultCellPathResolverTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void transtiveMappingForSimpleSetup() throws Exception {
+  public void transitiveMappingForSimpleSetup() throws Exception {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
 
     Path root = vfs.getPath("/opt/local/");
@@ -63,11 +63,7 @@ public class DefaultCellPathResolverTest {
     assertThat(
         cellPathResolver.getPathMapping(),
         Matchers.equalTo(
-            ImmutableMap.of(
-                RelativeCellName.ROOT_CELL_NAME,
-                cell1Root,
-                RelativeCellName.of(ImmutableList.of("simple")),
-                cell2Root)));
+            ImmutableMap.of(CellName.ROOT_CELL_NAME, cell1Root, CellName.of("simple"), cell2Root)));
   }
 
   @Test
@@ -89,15 +85,11 @@ public class DefaultCellPathResolverTest {
     assertThat(
         cellPathResolver.getPathMapping(),
         Matchers.equalTo(
-            ImmutableMap.of(
-                RelativeCellName.ROOT_CELL_NAME,
-                cell1Root,
-                RelativeCellName.of(ImmutableList.of("simple")),
-                cell2Root)));
+            ImmutableMap.of(CellName.ROOT_CELL_NAME, cell1Root, CellName.of("simple"), cell2Root)));
   }
 
   @Test
-  public void transtiveMappingForSymlinkCycle() throws Exception {
+  public void transitiveMappingForSymlinkCycle() throws Exception {
     Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
@@ -124,11 +116,7 @@ public class DefaultCellPathResolverTest {
     assertThat(
         cellPathResolver.getPathMapping(),
         Matchers.equalTo(
-            ImmutableMap.of(
-                RelativeCellName.ROOT_CELL_NAME,
-                cell1Root,
-                RelativeCellName.of(ImmutableList.of("two")),
-                cell2Root)));
+            ImmutableMap.of(CellName.ROOT_CELL_NAME, cell1Root, CellName.of("two"), cell2Root)));
   }
 
   @Test
@@ -167,11 +155,11 @@ public class DefaultCellPathResolverTest {
     assertThat(
         cellPathResolver.getPathMapping(),
         Matchers.equalTo(
-            ImmutableMap.<RelativeCellName, Path>builder()
-                .put(RelativeCellName.ROOT_CELL_NAME, cell1Root)
-                .put(RelativeCellName.of(ImmutableList.of("center")), cellCenterRoot)
-                .put(RelativeCellName.of(ImmutableList.of("left")), cellLeftRoot)
-                .put(RelativeCellName.of(ImmutableList.of("right")), cellRightRoot)
+            ImmutableMap.<CellName, Path>builder()
+                .put(CellName.ROOT_CELL_NAME, cell1Root)
+                .put(CellName.of("center"), cellCenterRoot)
+                .put(CellName.of("left"), cellLeftRoot)
+                .put(CellName.of("right"), cellRightRoot)
                 .build()));
   }
 

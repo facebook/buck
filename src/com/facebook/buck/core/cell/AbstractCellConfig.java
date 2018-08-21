@@ -45,17 +45,17 @@ import org.immutables.value.Value;
 @Value.Immutable(singleton = true, builder = false, copy = false)
 @BuckStyleTuple
 abstract class AbstractCellConfig {
-  public abstract ImmutableMap<RelativeCellName, RawConfig> getValues();
+  public abstract ImmutableMap<CellName, RawConfig> getValues();
 
   /**
    * Retrieve the Cell-view of the raw config.
    *
    * @return The contents of the raw config with the cell-view filter
    */
-  public RawConfig getForCell(RelativeCellName cellName) {
+  public RawConfig getForCell(CellName cellName) {
     RawConfig config = Optional.ofNullable(getValues().get(cellName)).orElse(RawConfig.of());
     RawConfig starConfig =
-        Optional.ofNullable(getValues().get(RelativeCellName.ALL_CELLS_SPECIAL_NAME))
+        Optional.ofNullable(getValues().get(CellName.ALL_CELLS_SPECIAL_NAME))
             .orElse(RawConfig.of());
     return RawConfig.builder().putAll(starConfig).putAll(config).build();
   }
@@ -66,15 +66,15 @@ abstract class AbstractCellConfig {
    * @param pathMapping a map containing paths to all of the cells we want to query.
    * @return 'Path'->override map
    */
-  public ImmutableMap<Path, RawConfig> getOverridesByPath(
-      ImmutableMap<RelativeCellName, Path> pathMapping) throws InvalidCellOverrideException {
+  public ImmutableMap<Path, RawConfig> getOverridesByPath(ImmutableMap<CellName, Path> pathMapping)
+      throws InvalidCellOverrideException {
 
-    ImmutableSet<RelativeCellName> relativeNamesOfCellsWithOverrides =
+    ImmutableSet<CellName> relativeNamesOfCellsWithOverrides =
         FluentIterable.from(getValues().keySet())
-            .filter(Predicates.not(RelativeCellName.ALL_CELLS_SPECIAL_NAME::equals))
+            .filter(Predicates.not(CellName.ALL_CELLS_SPECIAL_NAME::equals))
             .toSet();
     ImmutableSet.Builder<Path> pathsWithOverrides = ImmutableSet.builder();
-    for (RelativeCellName cellWithOverride : relativeNamesOfCellsWithOverrides) {
+    for (CellName cellWithOverride : relativeNamesOfCellsWithOverrides) {
       if (!pathMapping.containsKey(cellWithOverride)) {
         throw new InvalidCellOverrideException(
             String.format("Trying to override settings for unknown cell %s", cellWithOverride));
@@ -82,11 +82,11 @@ abstract class AbstractCellConfig {
       pathsWithOverrides.add(pathMapping.get(cellWithOverride));
     }
 
-    ImmutableMultimap<Path, RelativeCellName> pathToRelativeName =
+    ImmutableMultimap<Path, CellName> pathToRelativeName =
         Multimaps.index(pathMapping.keySet(), Functions.forMap(pathMapping));
 
     for (Path pathWithOverrides : pathsWithOverrides.build()) {
-      ImmutableList<RelativeCellName> namesForPath =
+      ImmutableList<CellName> namesForPath =
           RichStream.from(pathToRelativeName.get(pathWithOverrides))
               .filter(name -> name.getLegacyName().isPresent())
               .toImmutableList();
@@ -101,8 +101,8 @@ abstract class AbstractCellConfig {
     }
 
     Map<Path, RawConfig> overridesByPath = new HashMap<>();
-    for (Map.Entry<RelativeCellName, Path> entry : pathMapping.entrySet()) {
-      RelativeCellName cellRelativeName = entry.getKey();
+    for (Map.Entry<CellName, Path> entry : pathMapping.entrySet()) {
+      CellName cellRelativeName = entry.getKey();
       Path cellPath = entry.getValue();
       RawConfig configFromOtherRelativeName = overridesByPath.get(cellPath);
       RawConfig config = getForCell(cellRelativeName);
@@ -129,10 +129,10 @@ abstract class AbstractCellConfig {
    * <p>Unless otherwise stated, duplicate keys overwrites earlier ones.
    */
   public static class Builder {
-    private Map<RelativeCellName, RawConfig.Builder> values = new LinkedHashMap<>();
+    private Map<CellName, RawConfig.Builder> values = new LinkedHashMap<>();
 
     /** Put a single value. */
-    public Builder put(RelativeCellName cell, String section, String key, String value) {
+    public Builder put(CellName cell, String section, String key, String value) {
       requireCell(cell).put(section, key, value);
       return this;
     }
@@ -148,7 +148,7 @@ abstract class AbstractCellConfig {
     }
 
     /** Get a section or create it if it doesn't exist. */
-    private RawConfig.Builder requireCell(RelativeCellName cellName) {
+    private RawConfig.Builder requireCell(CellName cellName) {
       RawConfig.Builder cell = values.get(cellName);
       if (cell == null) {
         cell = RawConfig.builder();

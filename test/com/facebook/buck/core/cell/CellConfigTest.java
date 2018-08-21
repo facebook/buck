@@ -36,17 +36,17 @@ public class CellConfigTest {
     String section = "section";
     CellConfig cellConfig =
         CellConfig.builder()
-            .put(RelativeCellName.ROOT_CELL_NAME, section, "root_cell", "root")
-            .put(RelativeCellName.ALL_CELLS_SPECIAL_NAME, section, "all_cells", "all")
-            .put(RelativeCellName.fromComponents("cell"), section, "cell", "cell")
+            .put(CellName.ROOT_CELL_NAME, section, "root_cell", "root")
+            .put(CellName.ALL_CELLS_SPECIAL_NAME, section, "all_cells", "all")
+            .put(CellName.of("cell"), section, "cell", "cell")
             .build();
 
     ImmutableMap<Path, RawConfig> overridesByPath =
         cellConfig.getOverridesByPath(
             ImmutableMap.of(
-                RelativeCellName.ROOT_CELL_NAME,
+                CellName.ROOT_CELL_NAME,
                 Paths.get("root"),
-                RelativeCellName.fromComponents("cell"),
+                CellName.of("cell"),
                 Paths.get("cell")));
 
     assertThat(
@@ -69,20 +69,18 @@ public class CellConfigTest {
   public void throwsOnAmbiguousOverrides() throws Exception {
     String section = "section";
     CellConfig cellConfig =
-        CellConfig.builder()
-            .put(RelativeCellName.fromComponents("firstpath"), section, "cell", "cell")
-            .build();
+        CellConfig.builder().put(CellName.of("firstpath"), section, "cell", "cell").build();
 
     expectedException.expect(InvalidCellOverrideException.class);
     expectedException.expectMessage(
         Matchers.stringContainsInOrder("root", "firstpath", "secondpath"));
     cellConfig.getOverridesByPath(
         ImmutableMap.of(
-            RelativeCellName.ROOT_CELL_NAME,
+            CellName.ROOT_CELL_NAME,
             Paths.get("root"),
-            RelativeCellName.fromComponents("firstpath"),
+            CellName.of("firstpath"),
             Paths.get("cell"),
-            RelativeCellName.fromComponents("root", "secondpath"),
+            CellName.of("secondpath"),
             Paths.get("cell")));
   }
 
@@ -90,19 +88,17 @@ public class CellConfigTest {
   public void doesNotThrowWhenAmbiguousCellNotOverridden() throws Exception {
     String section = "section";
     CellConfig cellConfig =
-        CellConfig.builder()
-            .put(RelativeCellName.fromComponents("ok"), section, "cell", "cell")
-            .build();
+        CellConfig.builder().put(CellName.of("ok"), section, "cell", "cell").build();
 
     cellConfig.getOverridesByPath(
         ImmutableMap.of(
-            RelativeCellName.ROOT_CELL_NAME,
+            CellName.ROOT_CELL_NAME,
             Paths.get("root"),
-            RelativeCellName.fromComponents("ok"),
+            CellName.of("ok"),
             Paths.get("cell"),
-            RelativeCellName.fromComponents("root", "firstpath"),
+            CellName.of("firstpath"),
             Paths.get("bad"),
-            RelativeCellName.fromComponents("root", "secondpath"),
+            CellName.of("secondpath"),
             Paths.get("bad")));
   }
 
@@ -110,17 +106,15 @@ public class CellConfigTest {
   public void testThrowsOnUnknownCell() throws Exception {
     String section = "section";
     CellConfig cellConfig =
-        CellConfig.builder()
-            .put(RelativeCellName.fromComponents("unknown"), section, "cell", "cell")
-            .build();
+        CellConfig.builder().put(CellName.of("unknown"), section, "cell", "cell").build();
 
     expectedException.expect(InvalidCellOverrideException.class);
     expectedException.expectMessage(Matchers.stringContainsInOrder("unknown"));
     cellConfig.getOverridesByPath(
         ImmutableMap.of(
-            RelativeCellName.ROOT_CELL_NAME,
+            CellName.ROOT_CELL_NAME,
             Paths.get("root"),
-            RelativeCellName.fromComponents("somecell"),
+            CellName.of("somecell"),
             Paths.get("cell")));
   }
 }

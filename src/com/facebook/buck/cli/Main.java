@@ -26,8 +26,8 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.InvalidCellOverrideException;
-import com.facebook.buck.core.cell.RelativeCellName;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
@@ -512,15 +512,14 @@ public final class Main {
     }
   }
 
-  private ImmutableMap<RelativeCellName, Path> getCellMapping(Path canonicalRootPath)
-      throws IOException {
+  private ImmutableMap<CellName, Path> getCellMapping(Path canonicalRootPath) throws IOException {
     return DefaultCellPathResolver.bootstrapPathMapping(
         canonicalRootPath, Configs.createDefaultConfig(canonicalRootPath));
   }
 
-  private Config setupDefaultConfig(
-      ImmutableMap<RelativeCellName, Path> cellMapping, BuckCommand command) throws IOException {
-    Path rootPath = cellMapping.get(RelativeCellName.ROOT_CELL_NAME);
+  private Config setupDefaultConfig(ImmutableMap<CellName, Path> cellMapping, BuckCommand command)
+      throws IOException {
+    Path rootPath = cellMapping.get(CellName.ROOT_CELL_NAME);
     Preconditions.checkNotNull(rootPath, "Root cell should be implicitly added");
     RawConfig rootCellConfigOverrides;
 
@@ -531,7 +530,7 @@ public final class Main {
           Optional.ofNullable(overridesByPath.get(rootPath)).orElse(RawConfig.of());
     } catch (InvalidCellOverrideException exception) {
       rootCellConfigOverrides =
-          command.getConfigOverrides(cellMapping).getForCell(RelativeCellName.ROOT_CELL_NAME);
+          command.getConfigOverrides(cellMapping).getForCell(CellName.ROOT_CELL_NAME);
     }
     return Configs.createDefaultConfig(rootPath, rootCellConfigOverrides);
   }
@@ -585,7 +584,7 @@ public final class Main {
 
     // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
-    ImmutableMap<RelativeCellName, Path> rootCellMapping = getCellMapping(canonicalRootPath);
+    ImmutableMap<CellName, Path> rootCellMapping = getCellMapping(canonicalRootPath);
     ImmutableList<String> args =
         BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, rootCellMapping);
 

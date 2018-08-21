@@ -17,8 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.CellConfig;
+import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.RelativeCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -406,15 +406,15 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   private void parseConfigOption(CellConfig.Builder builder, Pair<String, String> config) {
     // Parse command-line config overrides.
     List<String> key = Splitter.on("//").limit(2).splitToList(config.getFirst());
-    RelativeCellName cellName = RelativeCellName.ALL_CELLS_SPECIAL_NAME;
+    CellName cellName = CellName.ALL_CELLS_SPECIAL_NAME;
     String configKey = key.get(0);
     if (key.size() == 2) {
       // Here we explicitly take the whole string as the cell name. We don't support transitive
       // path overrides for cells.
       if (key.get(0).length() == 0) {
-        cellName = RelativeCellName.ROOT_CELL_NAME;
+        cellName = CellName.ROOT_CELL_NAME;
       } else {
-        cellName = RelativeCellName.of(ImmutableSet.of(key.get(0)));
+        cellName = CellName.of(key.get(0));
       }
       configKey = key.get(1);
     }
@@ -443,9 +443,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   private void parseConfigFileOption(
-      ImmutableMap<RelativeCellName, Path> cellMapping,
-      CellConfig.Builder builder,
-      String filename) {
+      ImmutableMap<CellName, Path> cellMapping, CellConfig.Builder builder, String filename) {
     if (filename == null) {
       return;
     }
@@ -454,19 +452,19 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     String[] matches = filename.split("=", 2);
 
     // By default, this config file applies to all cells.
-    RelativeCellName configCellName = RelativeCellName.ALL_CELLS_SPECIAL_NAME;
+    CellName configCellName = CellName.ALL_CELLS_SPECIAL_NAME;
 
     if (matches.length == 2) {
       // Filename argument specified the cell to which this config applies.
       filename = matches[1];
       if (matches[0].equals("//")) {
         // Config applies only to the current cell .
-        configCellName = RelativeCellName.ROOT_CELL_NAME;
+        configCellName = CellName.ROOT_CELL_NAME;
       } else if (!matches[0].equals("*")) { // '*' is the default.
         if (!cellMapping.containsKey(matches[0])) {
           throw new HumanReadableException("Unknown cell: %s", matches[0]);
         }
-        configCellName = RelativeCellName.of(ImmutableSet.of(matches[0]));
+        configCellName = CellName.of(matches[0]);
       }
     }
 
@@ -476,8 +474,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     Path projectRoot =
         cellMapping.get(
             filenameArg.getCellName().isPresent()
-                ? RelativeCellName.of(ImmutableSet.of(filenameArg.getCellName().get()))
-                : RelativeCellName.ROOT_CELL_NAME);
+                ? CellName.of(filenameArg.getCellName().get())
+                : CellName.ROOT_CELL_NAME);
 
     Path path = projectRoot.resolve(filename);
     ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
@@ -524,7 +522,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
 
   @Override
   @SuppressWarnings("unchecked")
-  public CellConfig getConfigOverrides(ImmutableMap<RelativeCellName, Path> cellMapping) {
+  public CellConfig getConfigOverrides(ImmutableMap<CellName, Path> cellMapping) {
     CellConfig.Builder builder = CellConfig.builder();
 
     for (Object option : configOverrides) {
@@ -535,11 +533,10 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       }
     }
     if (numThreads != null) {
-      builder.put(
-          RelativeCellName.ALL_CELLS_SPECIAL_NAME, "build", "threads", String.valueOf(numThreads));
+      builder.put(CellName.ALL_CELLS_SPECIAL_NAME, "build", "threads", String.valueOf(numThreads));
     }
     if (noCache) {
-      builder.put(RelativeCellName.ALL_CELLS_SPECIAL_NAME, "cache", "mode", "");
+      builder.put(CellName.ALL_CELLS_SPECIAL_NAME, "cache", "mode", "");
     }
 
     return builder.build();

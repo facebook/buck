@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.CellConfig;
-import com.facebook.buck.core.cell.RelativeCellName;
+import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.step.ExecutorPool;
@@ -57,7 +57,7 @@ public interface Command {
 
   String getShortDescription();
 
-  CellConfig getConfigOverrides(ImmutableMap<RelativeCellName, Path> cellMapping);
+  CellConfig getConfigOverrides(ImmutableMap<CellName, Path> cellMapping);
 
   /** @return how we want logging to be configured for the the command. */
   LogConfigSetup getLogConfig();

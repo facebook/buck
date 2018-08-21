@@ -16,7 +16,7 @@
 
 package com.facebook.buck.support.cli.args;
 
-import com.facebook.buck.core.cell.RelativeCellName;
+import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -95,7 +95,7 @@ public class BuckArgsMethods {
    * @return args array with AT-files expanded.
    */
   public static ImmutableList<String> expandAtFiles(
-      Iterable<String> args, ImmutableMap<RelativeCellName, Path> cellMapping) {
+      Iterable<String> args, ImmutableMap<CellName, Path> cellMapping) {
     // LinkedHashSet is used to preserve insertion order, so that a path can be printed
     Set<String> expansionPath = new LinkedHashSet<>();
     return expandFlagFilesRecursively(args, cellMapping, expansionPath);
@@ -107,9 +107,7 @@ public class BuckArgsMethods {
    * <p>Loops are not allowed and result in runtime exception.
    */
   private static ImmutableList<String> expandFlagFilesRecursively(
-      Iterable<String> args,
-      ImmutableMap<RelativeCellName, Path> cellMapping,
-      Set<String> expansionPath) {
+      Iterable<String> args, ImmutableMap<CellName, Path> cellMapping, Set<String> expansionPath) {
     Iterator<String> argsIterator = args.iterator();
     ImmutableList.Builder<String> argumentsBuilder = ImmutableList.builder();
     while (argsIterator.hasNext()) {
@@ -137,9 +135,7 @@ public class BuckArgsMethods {
 
   /** Recursively expands flag files into a list of command line flags. */
   private static ImmutableList<String> expandFlagFile(
-      String nextFlagFile,
-      ImmutableMap<RelativeCellName, Path> cellMapping,
-      Set<String> expansionPath) {
+      String nextFlagFile, ImmutableMap<CellName, Path> cellMapping, Set<String> expansionPath) {
     if (expansionPath.contains(nextFlagFile)) {
       // expansion path is a linked hash set, so it preserves order
       throw new HumanReadableException(
@@ -158,8 +154,7 @@ public class BuckArgsMethods {
   }
 
   /** Extracts command line options from a file identified by {@code arg} with AT-file syntax. */
-  private static Iterable<String> expandFile(
-      String arg, ImmutableMap<RelativeCellName, Path> cellMapping) {
+  private static Iterable<String> expandFile(String arg, ImmutableMap<CellName, Path> cellMapping) {
     BuckCellArg argfile = BuckCellArg.of(arg);
     String[] parts = argfile.getArg().split("#", 2);
     String unresolvedArgsPath = parts[0];
@@ -167,7 +162,7 @@ public class BuckArgsMethods {
 
     // Try to resolve the name to a path if present
     if (argfile.getCellName().isPresent()) {
-      projectRoot = cellMapping.get(RelativeCellName.fromComponents(argfile.getCellName().get()));
+      projectRoot = cellMapping.get(CellName.of(argfile.getCellName().get()));
       if (projectRoot == null) {
         String cellName = argfile.getCellName().get();
         throw new HumanReadableException(
@@ -176,7 +171,7 @@ public class BuckArgsMethods {
                 cellName, cellName, unresolvedArgsPath));
       }
     } else {
-      projectRoot = cellMapping.get(RelativeCellName.ROOT_CELL_NAME);
+      projectRoot = cellMapping.get(CellName.ROOT_CELL_NAME);
     }
     Preconditions.checkNotNull(projectRoot, "Project root not resolved");
     Path argsPath = projectRoot.resolve(Paths.get(unresolvedArgsPath));
