@@ -19,18 +19,19 @@ package com.facebook.buck.rules.modern.builders.thrift;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
+import com.facebook.remoteexecution.cas.ContentAddressableStorage.AsyncClient.findMissingBlobs_call;
 import com.facebook.remoteexecution.cas.Digest;
 import com.facebook.remoteexecution.cas.FindMissingBlobsRequest;
 import com.facebook.remoteexecution.cas.FindMissingBlobsResponse;
+import com.facebook.thrift.TException;
+import com.facebook.thrift.async.TAsyncMethodCall;
+import com.facebook.thrift.transport.TTransportException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import org.apache.thrift.TException;
-import org.apache.thrift.async.AsyncMethodCallback;
-import org.apache.thrift.transport.TTransportException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -49,7 +50,7 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
   // $ ssh -L $LOCAL_PORT:$HOST:$REMOTE_PORT -N $HOST
 
   private static final String host = "localhost";
-  private static final int port = 9001;
+  private static final int port = 9003;
   private static final String casHost = "localhost";
   private static final int casPort = 9002;
   private static final Digest digest = new Digest("missing-hash", 123);
@@ -83,12 +84,21 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
 
     asyncClient.findMissingBlobs(
         request,
-        new AsyncMethodCallback<FindMissingBlobsResponse>() {
-
+        new com.facebook.thrift.async.AsyncMethodCallback() {
           @Override
-          public void onComplete(FindMissingBlobsResponse r) {
-            response.set(r);
-            latch.countDown();
+          public void onComplete(TAsyncMethodCall tAsyncMethodCall) {
+            if (tAsyncMethodCall instanceof findMissingBlobs_call) {
+              FindMissingBlobsResponse r = null;
+              try {
+                r = ((findMissingBlobs_call) tAsyncMethodCall).getResult();
+              } catch (TException e) {
+                onError(e);
+              }
+              response.set(r);
+              latch.countDown();
+            } else {
+              throw new RuntimeException("Method callback type wasn't findMissingBlobs_call");
+            }
           }
 
           @Override
@@ -98,7 +108,6 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
         });
 
     latch.await(1, TimeUnit.SECONDS);
-
     Digest missingDigest = response.get().missing_blob_digests.get(0);
     assertEquals(digest.hash, missingDigest.hash);
     assertEquals(digest.size_bytes, missingDigest.size_bytes);

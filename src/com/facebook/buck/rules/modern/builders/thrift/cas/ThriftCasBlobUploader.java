@@ -31,17 +31,16 @@ import com.facebook.remoteexecution.cas.Digest;
 import com.facebook.remoteexecution.cas.FindMissingBlobsRequest;
 import com.facebook.remoteexecution.cas.UpdateBlobRequest;
 import com.facebook.remoteexecution.cas.UpdateBlobResponse;
+import com.facebook.thrift.TException;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.apache.thrift.TException;
 
 /** A Thrift-based implementation of uploading inputs/outputs to the CAS. */
 public class ThriftCasBlobUploader implements CasBlobUploader {
@@ -67,7 +66,9 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
           .map(Digest::getHash)
           .collect(ImmutableSet.toImmutableSet());
     } catch (TException e) {
-      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
+      if (e.getCause() != null) {
+        Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
+      }
       e.printStackTrace();
       throw new BuckUncheckedExecutionException(e);
     }
@@ -83,8 +84,7 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
         try (InputStream dataStream = blob.data.get()) {
           UpdateBlobRequest individualRequest =
               new UpdateBlobRequest(
-                  ThriftProtocol.get(blob.digest),
-                  ByteBuffer.wrap(ByteStreams.toByteArray(dataStream)));
+                  ThriftProtocol.get(blob.digest), ByteStreams.toByteArray(dataStream));
           individualBlobRequests.add(individualRequest);
         }
       }

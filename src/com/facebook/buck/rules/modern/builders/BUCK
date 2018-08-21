@@ -44,6 +44,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util/hashing:hashing",
         "//src/com/facebook/buck/util/timing:timing",
         "//src/com/facebook/buck/worker:worker_process",
+        "//third-party/java/fbthrift:fbthrift",
         "//third-party/java/googleapis:googleapis",
         # Nothing in here explicitly uses netty, but grpc picks it up dynamically when trying to
         # connect to a remote server.

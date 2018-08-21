@@ -1,0 +1,13 @@
+prebuilt_jar(
+    name = "fbthrift",
+    binary_jar = "java-thrift-dependencies.jar",
+    visibility = [
+        "//src/com/facebook/buck/rules/modern/builders/...",
+        "//test/com/facebook/buck/rules/modern/builders/...",
+        "//src-gen/com/facebook/remoteexecution/...",
+        "//src-gen:thrift",
+    ],
+    deps = [
+        "//third-party/java/slf4j:slf4j-api",
+    ],
+)

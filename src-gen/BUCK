@@ -10,5 +10,6 @@ java_library(
         # This dep is looked up at runtime by reflection.
         "//third-party/java/slf4j:slf4j",
         "//third-party/java/slf4j:slf4j-api",
+        "//third-party/java/fbthrift:fbthrift",
     ],
 )

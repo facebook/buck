@@ -17,10 +17,13 @@
 package com.facebook.buck.rules.modern.builders.thrift;
 
 import com.facebook.buck.rules.modern.builders.Protocol;
-import com.facebook.buck.slb.ThriftException;
-import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.remoteexecution.executionengine.EnvironmentVariable;
+import com.facebook.thrift.TBase;
+import com.facebook.thrift.TDeserializer;
+import com.facebook.thrift.TException;
+import com.facebook.thrift.TSerializer;
+import com.facebook.thrift.protocol.TCompactProtocol;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -33,7 +36,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.apache.thrift.TBase;
 
 /** A Thrift-based Protocol implementation. */
 public class ThriftProtocol implements Protocol {
@@ -160,9 +162,9 @@ public class ThriftProtocol implements Protocol {
     }
   }
 
-  private void parseStruct(ByteBuffer data, TBase<?, ?> command) throws IOException {
+  private void parseStruct(ByteBuffer data, TBase command) throws IOException {
     try {
-      ThriftUtil.deserialize(com.facebook.buck.slb.ThriftProtocol.COMPACT, data, command);
+      deserialize(data, command);
     } catch (ThriftException e) {
       throw new IOException(e);
     }
@@ -319,7 +321,7 @@ public class ThriftProtocol implements Protocol {
     @Override
     @Nullable
     public ByteBuffer getContent() {
-      return outputFile.content;
+      return ByteBuffer.wrap(outputFile.content);
     }
 
     @Override
@@ -378,14 +380,6 @@ public class ThriftProtocol implements Protocol {
     return computeDigest(serialize(((ThriftDirectory) directory).directory));
   }
 
-  private byte[] serialize(TBase<?, ?> struct) {
-    try {
-      return ThriftUtil.serialize(com.facebook.buck.slb.ThriftProtocol.COMPACT, struct);
-    } catch (ThriftException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   @Override
   public DirectoryNode newDirectoryNode(String name, Digest child) {
     return new ThriftDirectoryNode(
@@ -413,5 +407,23 @@ public class ThriftProtocol implements Protocol {
     return new ThriftDigest(
         new com.facebook.remoteexecution.cas.Digest(
             HASHER.hashBytes(data).toString(), data.length));
+  }
+
+  private static byte[] serialize(TBase source) {
+    TSerializer deserializer = new TSerializer(new TCompactProtocol.Factory());
+    try {
+      return deserializer.serialize(source);
+    } catch (TException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static void deserialize(ByteBuffer source, TBase dest) throws ThriftException {
+    TDeserializer deserializer = new TDeserializer(new TCompactProtocol.Factory());
+    try {
+      deserializer.deserialize(dest, source.array());
+    } catch (TException e) {
+      throw new ThriftException(e);
+    }
   }
 }

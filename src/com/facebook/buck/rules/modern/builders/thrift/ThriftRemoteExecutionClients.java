@@ -18,25 +18,25 @@ package com.facebook.buck.rules.modern.builders.thrift;
 
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
 import com.facebook.remoteexecution.executionengine.ExecutionEngine;
+import com.facebook.thrift.async.TAsyncClientManager;
+import com.facebook.thrift.protocol.TCompactProtocol;
+import com.facebook.thrift.protocol.THeaderProtocol;
+import com.facebook.thrift.transport.THeaderTransport;
+import com.facebook.thrift.transport.TNonblockingSocket;
+import com.facebook.thrift.transport.TNonblockingTransport;
+import com.facebook.thrift.transport.TSocket;
+import com.facebook.thrift.transport.TTransportException;
 import java.io.Closeable;
 import java.io.IOException;
-import org.apache.thrift.async.TAsyncClientManager;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.protocol.TProtocolFactory;
-import org.apache.thrift.transport.TFramedTransport;
-import org.apache.thrift.transport.TNonblockingSocket;
-import org.apache.thrift.transport.TNonblockingTransport;
-import org.apache.thrift.transport.TSocket;
-import org.apache.thrift.transport.TTransportException;
 
 /** Thrift clients for the Thrift-based remote execution services. */
 class ThriftRemoteExecutionClients implements Closeable {
 
   private static final int SOCKET_TIMEOUT_MILLIS = 1000 * 10; // 10 seconds
+  private static final int CONNECTION_TIMEOUT_MILLIS = 1000 * 10; // 10 seconds
 
-  private final TFramedTransport casTransport;
-  private final TFramedTransport remoteExecutionTransport;
+  private final THeaderTransport casTransport;
+  private final THeaderTransport remoteExecutionTransport;
   private final TNonblockingTransport nonblockingCasTransport;
   private final TAsyncClientManager clientManager;
 
@@ -47,28 +47,34 @@ class ThriftRemoteExecutionClients implements Closeable {
   ThriftRemoteExecutionClients(
       String remoteExecutionEngineHost, int remoteExecutionEnginePort, String casHost, int casPort)
       throws TTransportException, IOException {
+
     // RE client
     remoteExecutionTransport =
-        new TFramedTransport(
+        new THeaderTransport(
             new TSocket(
-                remoteExecutionEngineHost, remoteExecutionEnginePort, SOCKET_TIMEOUT_MILLIS));
+                remoteExecutionEngineHost,
+                remoteExecutionEnginePort,
+                SOCKET_TIMEOUT_MILLIS,
+                CONNECTION_TIMEOUT_MILLIS));
+
+    remoteExecutionTransport.setHeader(
+        "request_timeout", Integer.toString((int) (CONNECTION_TIMEOUT_MILLIS * 0.8)));
+
     remoteExecutionTransport.open();
-    TProtocol protocol = new TBinaryProtocol(remoteExecutionTransport);
-    executionEngineClient = new ExecutionEngine.Client(protocol);
+    executionEngineClient =
+        new ExecutionEngine.Client(new THeaderProtocol(remoteExecutionTransport));
 
     // CAS Sync client
-    casTransport = new TFramedTransport(new TSocket(casHost, casPort, SOCKET_TIMEOUT_MILLIS));
+    casTransport = new THeaderTransport(new TSocket(casHost, casPort, SOCKET_TIMEOUT_MILLIS));
     casTransport.open();
-    protocol = new TBinaryProtocol(casTransport);
-    casClient = new ContentAddressableStorage.Client(protocol);
+    casClient = new ContentAddressableStorage.Client(new THeaderProtocol(casTransport));
 
     // CAS Async client
     clientManager = new TAsyncClientManager();
     nonblockingCasTransport = new TNonblockingSocket(casHost, casPort, SOCKET_TIMEOUT_MILLIS);
-    TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
     asyncCasClient =
         new ContentAddressableStorage.AsyncClient(
-            protocolFactory, clientManager, nonblockingCasTransport);
+            new TCompactProtocol.Factory(), clientManager, nonblockingCasTransport);
   }
 
   @Override
@@ -76,7 +82,13 @@ class ThriftRemoteExecutionClients implements Closeable {
     casTransport.close();
     nonblockingCasTransport.close();
     remoteExecutionTransport.close();
-    clientManager.stop();
+
+    try {
+      clientManager.stop();
+    } catch (InterruptedException e) {
+      // TODO(orr): How should we handle interrupted exception here? Probably swallow it.
+      e.printStackTrace();
+    }
   }
 
   public ContentAddressableStorage.Client getCasClient() {

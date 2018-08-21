@@ -36,16 +36,19 @@ import com.facebook.remoteexecution.executionengine.ExecutionEngine.Client;
 import com.facebook.remoteexecution.executionengine.ExecutionState;
 import com.facebook.remoteexecution.executionengine.GetExecutionStateRequest;
 import com.facebook.remoteexecution.executionengine.GetExecutionStateResponse;
+import com.facebook.remoteexecution.executionengine.NonUniqueExecutionIdException;
+import com.facebook.remoteexecution.executionengine.RejectedActionException;
 import com.facebook.remoteexecution.executionengine.Requirements;
+import com.facebook.remoteexecution.executionengine.ServiceOverloadedException;
+import com.facebook.remoteexecution.executionengine.UnknownExecutionIdException;
+import com.facebook.thrift.TException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.apache.thrift.TException;
 
 /** A Thrift-based remote execution (execution engine) implementation. */
 public class ThriftExecutionEngine implements RemoteExecutionService {
@@ -93,7 +96,10 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
       com.facebook.remoteexecution.executionengine.ExecutionResult result = waitForResult(response);
       ActionResult actionResult = result.action_result;
       return actionResultToExecutionResult(actionResult);
-    } catch (TException e) {
+    } catch (TException
+        | RejectedActionException
+        | NonUniqueExecutionIdException
+        | ServiceOverloadedException e) {
       throw new RuntimeException(e);
     }
   }
@@ -105,7 +111,13 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
     ExecutionState state = response.state;
     while (!state.done) {
       GetExecutionStateRequest request = new GetExecutionStateRequest(response.state.execution_id);
-      GetExecutionStateResponse stateResponse = client.getExecutionState(request);
+      GetExecutionStateResponse stateResponse;
+
+      try {
+        stateResponse = client.getExecutionState(request);
+      } catch (UnknownExecutionIdException e) {
+        throw new RuntimeException(e);
+      }
       state = stateResponse.state;
     }
     return state.result;
@@ -138,21 +150,20 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
 
       @Override
       public Optional<String> getStderr() {
-        ByteBuffer stderrRaw = actionResult.stderr_raw;
+        byte[] stderrRaw = actionResult.stderr_raw;
 
-        // TODO(orr): is hasRemaining the correct way to check if a ByteBuffer is empty?
         if (stderrRaw == null
-            || (!stderrRaw.hasRemaining() && actionResult.stderr_digest.size_bytes > 0)) {
+            || (stderrRaw.length == 0 && actionResult.stderr_digest.size_bytes > 0)) {
           System.err.println("Got stderr digest.");
           try {
             ReadBlobRequest request = new ReadBlobRequest(actionResult.stderr_digest);
             ReadBlobResponse response = casClient.readBlob(request);
-            return Optional.of(new String(response.data.array(), CHARSET));
+            return Optional.of(new String(response.data, CHARSET));
           } catch (TException e) {
             throw new RuntimeException(e);
           }
         } else {
-          String stderr = new String(stderrRaw.array(), CHARSET);
+          String stderr = new String(stderrRaw, CHARSET);
           System.err.println("Got raw stderr: " + stderr);
           return Optional.of(stderr);
         }

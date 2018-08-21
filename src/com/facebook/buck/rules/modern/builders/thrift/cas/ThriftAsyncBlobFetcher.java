@@ -21,14 +21,15 @@ import com.facebook.buck.rules.modern.builders.Protocol;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
+import com.facebook.remoteexecution.cas.ContentAddressableStorage.AsyncClient.readBlob_call;
 import com.facebook.remoteexecution.cas.ReadBlobRequest;
-import com.facebook.remoteexecution.cas.ReadBlobResponse;
+import com.facebook.thrift.TException;
+import com.facebook.thrift.async.AsyncMethodCallback;
+import com.facebook.thrift.async.TAsyncMethodCall;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import org.apache.thrift.TException;
-import org.apache.thrift.async.AsyncMethodCallback;
 
 /** A Thrift-based implementation of fetching outputs from the CAS. */
 public class ThriftAsyncBlobFetcher implements AsyncBlobFetcher {
@@ -47,15 +48,24 @@ public class ThriftAsyncBlobFetcher implements AsyncBlobFetcher {
     try {
       client.readBlob(
           request,
-          new AsyncMethodCallback<ReadBlobResponse>() {
+          new AsyncMethodCallback() {
+
             @Override
-            public void onComplete(ReadBlobResponse response) {
-              future.set(response.data);
+            public void onComplete(TAsyncMethodCall tAsyncMethodCall) {
+              if (tAsyncMethodCall instanceof readBlob_call) {
+                byte[] data = new byte[0];
+                try {
+                  data = ((readBlob_call) tAsyncMethodCall).getResult().data;
+                } catch (TException e) {
+                  onError(e);
+                }
+                future.set(ByteBuffer.wrap(data));
+              }
             }
 
             @Override
-            public void onError(Exception exception) {
-              future.setException(exception);
+            public void onError(Exception e) {
+              future.setException(e);
             }
           });
     } catch (TException e) {

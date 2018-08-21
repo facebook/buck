@@ -18,8 +18,8 @@ package com.facebook.buck.rules.modern.builders.thrift;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.modern.builders.IsolatedExecution;
+import com.facebook.thrift.transport.TTransportException;
 import java.io.IOException;
-import org.apache.thrift.transport.TTransportException;
 
 /** Factory for creating thrift-based strategies. */
 public class ThriftRemoteExecutionFactory {
