@@ -25,6 +25,7 @@ import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.UnmodifiableIterator;
 import java.nio.file.Path;
 
 /**
@@ -175,8 +176,13 @@ public class AaptStep extends ShellStep {
       builder.add("--no-version-vectors");
     }
 
-    for (Path path : pathToDependecyResourceApks) {
-      builder.add("--feature-of", path.toString());
+    UnmodifiableIterator<Path> iterator = pathToDependecyResourceApks.iterator();
+    if (iterator.hasNext()) {
+      builder.add("--feature-of", iterator.next().toString());
+    }
+
+    while (iterator.hasNext()) {
+      builder.add("--feature-after", iterator.next().toString());
     }
 
     return builder.build();

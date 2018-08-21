@@ -1,0 +1,10 @@
+android_library(
+    name = "app_with_module_loader",
+    srcs = glob(["*.java"]),
+    manifest = "AndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
+)

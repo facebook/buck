@@ -70,7 +70,7 @@ public class MergeAndroidResourcesStep implements Step {
   private final ProjectFilesystem filesystem;
   private final SourcePathResolver pathResolver;
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
-  private final Optional<Path> uberRDotTxt;
+  private final ImmutableList<Path> uberRDotTxt;
   private final Path outputDir;
   private final boolean forceFinalResourceIds;
   private final EnumSet<RType> bannedDuplicateResourceTypes;
@@ -92,7 +92,7 @@ public class MergeAndroidResourcesStep implements Step {
       ProjectFilesystem filesystem,
       SourcePathResolver pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
-      Optional<Path> uberRDotTxt,
+      ImmutableList<Path> uberRDotTxt,
       Path outputDir,
       boolean forceFinalResourceIds,
       EnumSet<RType> bannedDuplicateResourceTypes,
@@ -131,7 +131,7 @@ public class MergeAndroidResourcesStep implements Step {
         filesystem,
         pathResolver,
         androidResourceDeps,
-        /* uberRDotTxt */ Optional.empty(),
+        /* uberRDotTxt */ ImmutableList.of(),
         outputDir,
         forceFinalResourceIds,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -147,7 +147,7 @@ public class MergeAndroidResourcesStep implements Step {
       ProjectFilesystem filesystem,
       SourcePathResolver pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
-      Path uberRDotTxt,
+      ImmutableList<Path> uberRDotTxt,
       Path outputDir,
       EnumSet<RType> bannedDuplicateResourceTypes,
       Optional<Path> duplicateResourceWhitelistPath,
@@ -157,7 +157,7 @@ public class MergeAndroidResourcesStep implements Step {
         filesystem,
         pathResolver,
         androidResourceDeps,
-        Optional.of(uberRDotTxt),
+        uberRDotTxt,
         outputDir,
         /* forceFinalResourceIds */ true,
         bannedDuplicateResourceTypes,
@@ -211,14 +211,24 @@ public class MergeAndroidResourcesStep implements Step {
         symbolsFileToResourceDeps.put(rDotTxtPath, res);
       }
       Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds;
-      if (uberRDotTxt.isPresent()) {
+      if (uberRDotTxt.isEmpty()) {
+        uberRDotTxtIds = Optional.empty();
+      } else {
         // re-assign Ids
         uberRDotTxtIds =
             Optional.of(
-                FluentIterable.from(RDotTxtEntry.readResources(filesystem, uberRDotTxt.get()))
-                    .toMap(input -> input.idValue));
-      } else {
-        uberRDotTxtIds = Optional.empty();
+                FluentIterable.from(uberRDotTxt)
+                    .stream()
+                    .flatMap(
+                        rDot -> {
+                          try {
+                            return RDotTxtEntry.readResources(filesystem, rDot).stream();
+                          } catch (IOException e) {
+                            throw new RuntimeException(e);
+                          }
+                        })
+                    .distinct()
+                    .collect(ImmutableMap.toImmutableMap(input -> input, b -> b.idValue)));
       }
 
       ImmutableMap<Path, String> symbolsFileToRDotJavaPackage = rDotTxtToPackage.build();

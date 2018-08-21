@@ -45,8 +45,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -178,6 +180,7 @@ class AndroidBinaryResourcesGraphEnhancer {
 
   AndroidBinaryResourcesGraphEnhancementResult enhance(
       AndroidPackageableCollection packageableCollection) {
+
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         packageableCollection.getResourceDetails().get(apkModuleGraph.getRootAPKModule());
     if (resourceDetails == null) {
@@ -199,7 +202,11 @@ class AndroidBinaryResourcesGraphEnhancer {
 
     if (needsResourceFiltering) {
       ResourcesFilter resourcesFilter =
-          createResourcesFilter(resourceDetails, resourceRules, rulesWithResourceDirectories);
+          createResourcesFilter(
+              InternalFlavor.of(apkModuleGraph.getRootAPKModule().getName()),
+              resourceDetails,
+              resourceRules,
+              rulesWithResourceDirectories);
       graphBuilder.addToIndex(resourcesFilter);
       filteredResourcesProvider = resourcesFilter;
       resourceRules = ImmutableSortedSet.of(resourcesFilter);
@@ -223,15 +230,15 @@ class AndroidBinaryResourcesGraphEnhancer {
               ruleFinder,
               manifestSkeleton.get(),
               apkModuleGraph.getRootAPKModule(),
-              packageableCollection
-                  .getAndroidManifestPieces()
-                  .get(apkModuleGraph.getRootAPKModule()));
+              packageableCollection.getAndroidManifestPieces().values());
       graphBuilder.addToIndex(manifestMergeRule);
       realManifest = manifestMergeRule.getSourcePathToOutput();
     } else {
       throw new HumanReadableException(
           "android_binary " + buildTarget + " did not specify manifest or manifest_skeleton.");
     }
+
+    List<SourcePath> apkResourceDependencyList = new ArrayList<>();
 
     AaptOutputInfo aaptOutputInfo;
     switch (aaptMode) {
@@ -242,6 +249,7 @@ class AndroidBinaryResourcesGraphEnhancer {
               createAaptPackageResources(realManifest, resourceDetails, filteredResourcesProvider);
           graphBuilder.addToIndex(aaptPackageResources);
           aaptOutputInfo = aaptPackageResources.getAaptOutputInfo();
+          apkResourceDependencyList.add(aaptOutputInfo.getPrimaryResourcesApkPath());
         }
         break;
 
@@ -249,13 +257,35 @@ class AndroidBinaryResourcesGraphEnhancer {
         {
           Aapt2Link aapt2Link =
               createAapt2Link(
+                  0,
+                  InternalFlavor.of(apkModuleGraph.getRootAPKModule().getName()),
                   realManifest,
                   resourceDetails,
                   needsResourceFiltering
                       ? Optional.of(filteredResourcesProvider)
                       : Optional.empty(),
-                  true);
+                  ImmutableList.of(),
+                  useProtoFormat);
           graphBuilder.addToIndex(aapt2Link);
+          if (useProtoFormat) {
+            Aapt2Link aapt2LinkArsc =
+                createAapt2Link(
+                    0,
+                    InternalFlavor.of(apkModuleGraph.getRootAPKModule().getName()),
+                    realManifest,
+                    resourceDetails,
+                    needsResourceFiltering
+                        ? Optional.of(filteredResourcesProvider)
+                        : Optional.empty(),
+                    ImmutableList.of(),
+                    false);
+            graphBuilder.addToIndex(aapt2LinkArsc);
+            apkResourceDependencyList.add(
+                aapt2LinkArsc.getAaptOutputInfo().getPrimaryResourcesApkPath());
+          } else {
+            apkResourceDependencyList.add(
+                aapt2Link.getAaptOutputInfo().getPrimaryResourcesApkPath());
+          }
           aaptOutputInfo = aapt2Link.getAaptOutputInfo();
         }
         break;
@@ -267,13 +297,46 @@ class AndroidBinaryResourcesGraphEnhancer {
     AndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder =
         AndroidBinaryResourcesGraphEnhancementResult.builder();
 
+    ImmutableSet.Builder<SourcePath> pathToRDotTxtFiles = ImmutableSet.builder();
+
+    int packageIdOffset = 1;
     if (moduleManifestSkeleton.isPresent()) {
       for (APKModule module : apkModuleGraph.getAPKModules()) {
         if (module.isRootModule()) {
           continue;
         }
 
+        AndroidPackageableCollection.ResourceDetails moduleResourceDetails =
+            packageableCollection.getResourceDetails().get(module);
+        if (moduleResourceDetails == null) {
+          throw new RuntimeException(
+              String.format("Missing resource details for module %s", module.getName()));
+        }
+
         InternalFlavor moduleFlavor = InternalFlavor.of(module.getName());
+
+        ImmutableSortedSet<BuildRule> moduleResourceRules =
+            getTargetsAsRules(moduleResourceDetails.getResourcesWithNonEmptyResDir());
+
+        ImmutableCollection<BuildRule> moduleRulesWithResourceDirectories =
+            ruleFinder.filterBuildRuleInputs(moduleResourceDetails.getResourceDirectories());
+
+        FilteredResourcesProvider moduleFilteredResourcesProvider;
+
+        if (needsResourceFiltering) {
+          ResourcesFilter resourcesFilter =
+              createResourcesFilter(
+                  moduleFlavor,
+                  moduleResourceDetails,
+                  moduleResourceRules,
+                  moduleRulesWithResourceDirectories);
+          graphBuilder.addToIndex(resourcesFilter);
+          moduleFilteredResourcesProvider = resourcesFilter;
+          moduleResourceRules = ImmutableSortedSet.of(resourcesFilter);
+        } else {
+          moduleFilteredResourcesProvider =
+              new IdentityResourcesProvider(moduleResourceDetails.getResourceDirectories());
+        }
 
         AndroidManifest moduleManifestMergeRule =
             new AndroidManifest(
@@ -282,12 +345,18 @@ class AndroidBinaryResourcesGraphEnhancer {
                 ruleFinder,
                 moduleManifestSkeleton.get(),
                 module,
-                ImmutableSet.of());
+                packageableCollection.getAndroidManifestPieces().get(module));
         graphBuilder.addToIndex(moduleManifestMergeRule);
 
         switch (aaptMode) {
           case AAPT1:
             {
+              if (module.hasResources()) {
+                throw new HumanReadableException(
+                    "Resources in modules is only supported with aapt_mode=\"aapt2\". %s is"
+                        + " declared to have resources",
+                    module.getName());
+              }
               AaptPackageResources aaptModule =
                   new AaptPackageResources(
                       buildTarget.withAppendedFlavors(AAPT_PACKAGE_FLAVOR, moduleFlavor),
@@ -296,7 +365,7 @@ class AndroidBinaryResourcesGraphEnhancer {
                       ruleFinder,
                       graphBuilder,
                       moduleManifestMergeRule.getSourcePathToOutput(),
-                      ImmutableList.of(aaptOutputInfo.getPrimaryResourcesApkPath()),
+                      ImmutableList.copyOf(apkResourceDependencyList),
                       new IdentityResourcesProvider(ImmutableList.of()),
                       ImmutableList.of(),
                       true,
@@ -305,30 +374,30 @@ class AndroidBinaryResourcesGraphEnhancer {
               graphBuilder.addToIndex(aaptModule);
               resultBuilder.putModuleResourceApkPaths(
                   module, aaptModule.getAaptOutputInfo().getPrimaryResourcesApkPath());
+              apkResourceDependencyList.add(
+                  aaptModule.getAaptOutputInfo().getPrimaryResourcesApkPath());
             }
             break;
 
           case AAPT2:
             {
               Aapt2Link aapt2ModuleLink =
-                  new Aapt2Link(
-                      buildTarget.withAppendedFlavors(AAPT2_LINK_FLAVOR, moduleFlavor),
-                      projectFilesystem,
-                      ruleFinder,
-                      ImmutableList.of(),
-                      ImmutableList.of(),
+                  createAapt2Link(
+                      packageIdOffset++,
+                      moduleFlavor,
                       moduleManifestMergeRule.getSourcePathToOutput(),
-                      ManifestEntries.empty(),
-                      ImmutableList.of(aaptOutputInfo.getPrimaryResourcesApkPath()),
-                      includesVectorDrawables,
-                      noAutoVersionResources,
-                      noVersionTransitionsResources,
-                      noAutoAddOverlayResources,
-                      useProtoFormat,
-                      androidPlatformTarget);
+                      moduleResourceDetails,
+                      needsResourceFiltering
+                          ? Optional.of(moduleFilteredResourcesProvider)
+                          : Optional.empty(),
+                      ImmutableList.copyOf(apkResourceDependencyList),
+                      useProtoFormat);
               graphBuilder.addToIndex(aapt2ModuleLink);
-              resultBuilder.putModuleResourceApkPaths(
-                  module, aapt2ModuleLink.getAaptOutputInfo().getPrimaryResourcesApkPath());
+              SourcePath moduleResourceApk =
+                  aapt2ModuleLink.getAaptOutputInfo().getPrimaryResourcesApkPath();
+              pathToRDotTxtFiles.add(aapt2ModuleLink.getAaptOutputInfo().getPathToRDotTxt());
+              resultBuilder.putModuleResourceApkPaths(module, moduleResourceApk);
+              apkResourceDependencyList.add(moduleResourceApk);
             }
             break;
 
@@ -336,17 +405,6 @@ class AndroidBinaryResourcesGraphEnhancer {
             throw new RuntimeException("Unexpected aaptMode: " + aaptMode);
         }
       }
-    }
-
-    if (aaptMode == AaptMode.AAPT2 && useProtoFormat) {
-      Aapt2Link aapt2Link =
-          createAapt2Link(
-              realManifest,
-              resourceDetails,
-              needsResourceFiltering ? Optional.of(filteredResourcesProvider) : Optional.empty(),
-              false);
-      graphBuilder.addToIndex(aapt2Link);
-      aaptOutputInfo = aapt2Link.getAaptOutputInfo();
     }
 
     Optional<PackageStringAssets> packageStringAssets = Optional.empty();
@@ -415,15 +473,23 @@ class AndroidBinaryResourcesGraphEnhancer {
       exoResources = ImmutableList.of();
     }
     resultBuilder.setExoResources(exoResources);
+    pathToRDotTxtFiles.add(pathToRDotTxt);
 
     Optional<GenerateRDotJava> generateRDotJava = Optional.empty();
     if (filteredResourcesProvider.hasResources()) {
       generateRDotJava =
           Optional.of(
               createGenerateRDotJava(
-                  pathToRDotTxt,
-                  getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir()),
+                  pathToRDotTxtFiles.build(),
+                  getTargetsAsRules(
+                      packageableCollection
+                          .getResourceDetails()
+                          .values()
+                          .stream()
+                          .flatMap(r -> r.getResourcesWithNonEmptyResDir().stream())
+                          .collect(ImmutableList.toImmutableList())),
                   filteredResourcesProvider));
+
       graphBuilder.addToIndex(generateRDotJava.get());
 
       if (shouldBuildStringSourceMap) {
@@ -487,10 +553,14 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   private Aapt2Link createAapt2Link(
+      int packageId,
+      InternalFlavor flavor,
       SourcePath realManifest,
       AndroidPackageableCollection.ResourceDetails resourceDetails,
       Optional<FilteredResourcesProvider> filteredResourcesProvider,
-      boolean linkBundleModules) {
+      ImmutableList<SourcePath> dependencyResourceApks,
+      boolean isProtoFormat) {
+
     ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
     if (filteredResourcesProvider.isPresent()) {
       Optional<BuildRule> resourceFilterRule =
@@ -504,7 +574,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       for (SourcePath resDir : filteredResourcesProvider.get().getResDirectories()) {
         Aapt2Compile compileRule =
             new Aapt2Compile(
-                buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_compile_" + index)),
+                buildTarget.withAppendedFlavors(
+                    InternalFlavor.of("aapt2_compile_" + index), flavor),
                 projectFilesystem,
                 androidPlatformTarget,
                 compileDeps,
@@ -522,43 +593,27 @@ class AndroidBinaryResourcesGraphEnhancer {
                         AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)));
       }
     }
-    if (linkBundleModules && useProtoFormat) {
-      return new Aapt2Link(
-          buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_link_arsc")),
-          projectFilesystem,
-          ruleFinder,
-          compileListBuilder.build(),
-          getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
-          realManifest,
-          manifestEntries,
-          ImmutableList.of(),
-          includesVectorDrawables,
-          noAutoVersionResources,
-          noVersionTransitionsResources,
-          noAutoAddOverlayResources,
-          false,
-          androidPlatformTarget);
-    } else {
-      return new Aapt2Link(
-          buildTarget.withAppendedFlavors(AAPT2_LINK_FLAVOR),
-          projectFilesystem,
-          ruleFinder,
-          compileListBuilder.build(),
-          getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
-          realManifest,
-          manifestEntries,
-          ImmutableList.of(),
-          includesVectorDrawables,
-          noAutoVersionResources,
-          noVersionTransitionsResources,
-          noAutoAddOverlayResources,
-          useProtoFormat,
-          androidPlatformTarget);
-    }
+    return new Aapt2Link(
+        buildTarget.withAppendedFlavors(
+            AAPT2_LINK_FLAVOR, flavor, InternalFlavor.of(isProtoFormat ? "proto" : "arsc")),
+        projectFilesystem,
+        ruleFinder,
+        compileListBuilder.build(),
+        getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
+        realManifest,
+        manifestEntries,
+        packageId,
+        dependencyResourceApks,
+        includesVectorDrawables,
+        noAutoVersionResources,
+        noVersionTransitionsResources,
+        noAutoAddOverlayResources,
+        isProtoFormat,
+        androidPlatformTarget);
   }
 
   private GenerateRDotJava createGenerateRDotJava(
-      SourcePath pathToRDotTxtFile,
+      ImmutableCollection<SourcePath> pathToRDotTxtFiles,
       ImmutableSortedSet<BuildRule> resourceDeps,
       FilteredResourcesProvider resourcesProvider) {
     return new GenerateRDotJava(
@@ -567,7 +622,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         ruleFinder,
         bannedDuplicateResourceTypes,
         duplicateResourceWhitelistPath,
-        pathToRDotTxtFile,
+        pathToRDotTxtFiles,
         resourceUnionPackage,
         resourceDeps,
         resourcesProvider);
@@ -583,11 +638,12 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   private ResourcesFilter createResourcesFilter(
+      InternalFlavor flavor,
       AndroidPackageableCollection.ResourceDetails resourceDetails,
       ImmutableSortedSet<BuildRule> resourceRules,
       ImmutableCollection<BuildRule> rulesWithResourceDirectories) {
     return new ResourcesFilter(
-        buildTarget.withAppendedFlavors(RESOURCES_FILTER_FLAVOR),
+        buildTarget.withAppendedFlavors(RESOURCES_FILTER_FLAVOR, flavor),
         projectFilesystem,
         resourceRules,
         rulesWithResourceDirectories,

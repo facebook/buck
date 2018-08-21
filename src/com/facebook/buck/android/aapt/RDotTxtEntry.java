@@ -24,6 +24,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -242,8 +243,16 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     return Optional.of(new RDotTxtEntry(idType, type, name, idValue, customType));
   }
 
-  public static Iterable<RDotTxtEntry> readResources(
-      ProjectFilesystem owningFilesystem, Path rDotTxt) throws IOException {
+  /**
+   * Read resource IDs from a R.txt file and add them to a list of entries
+   *
+   * @param owningFilesystem The project filesystem to use
+   * @param rDotTxt the path to the R.txt file to read
+   * @return a list of RDotTxtEntry objects read from the file
+   * @throws IOException
+   */
+  public static List<RDotTxtEntry> readResources(ProjectFilesystem owningFilesystem, Path rDotTxt)
+      throws IOException {
     return owningFilesystem
         .readLines(rDotTxt)
         .stream()

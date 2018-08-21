@@ -227,6 +227,27 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   }
 
   @Test
+  public void testMultidexModularWithResources() throws IOException {
+    String target = "//apps/multidex:app_modular_resources_debug";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    zipInspector.assertFileExists("assets/feature1/feature12.dex");
+    zipInspector.assertFileExists("assets/feature1/AndroidManifest.xml");
+    zipInspector.assertFileExists("assets/feature1/resources.arsc");
+    zipInspector.assertFileExists("assets/feature1/res/layout/feature1.xml");
+    zipInspector.assertFileDoesNotExist("res/layout/feature1.xml");
+
+    zipInspector.assertFileExists("assets/feature2/AndroidManifest.xml");
+    zipInspector.assertFileExists("assets/feature2/resources.arsc");
+    zipInspector.assertFileExists("res/layout/feature2.xml");
+    zipInspector.assertFileDoesNotExist("assets/feature2/res/layout/feature2.xml");
+  }
+
+  @Test
   public void testMultidexModularWithManifestAapt2() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();

@@ -61,10 +61,13 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
+  @AddToRuleKey private final int packageIdOffset;
   @AddToRuleKey private final ImmutableList<SourcePath> dependencyResourceApks;
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
+
+  private static final int BASE_PACKAGE_ID = 0x7f;
 
   Aapt2Link(
       BuildTarget buildTarget,
@@ -74,6 +77,7 @@ public class Aapt2Link extends AbstractBuildRule {
       ImmutableList<HasAndroidResourceDeps> resourceRules,
       SourcePath manifest,
       ManifestEntries manifestEntries,
+      int packageIdOffset,
       ImmutableList<SourcePath> dependencyResourceApks,
       boolean includesVectorDrawables,
       boolean noAutoVersion,
@@ -86,6 +90,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.compileRules = compileRules;
     this.manifest = manifest;
     this.manifestEntries = manifestEntries;
+    this.packageIdOffset = packageIdOffset;
     this.dependencyResourceApks = dependencyResourceApks;
     this.includesVectorDrawables = includesVectorDrawables;
     this.noAutoVersion = noAutoVersion;
@@ -271,6 +276,10 @@ public class Aapt2Link extends AbstractBuildRule {
 
       if (useProtoFormat) {
         builder.add("--proto-format");
+      }
+
+      if (packageIdOffset != 0) {
+        builder.add("--package-id", String.format("0x%x", BASE_PACKAGE_ID + packageIdOffset));
       }
 
       ProjectFilesystem pf = getProjectFilesystem();

@@ -64,7 +64,7 @@ android_binary(
         "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
     },
     keystore = "//keystores:debug",
-    manifest = "AndroidManifest.xml",
+    manifest_skeleton = "AndroidManifest.xml",
     module_manifest_skeleton = "ModuleManifest.xml",
     package_type = "debug",
     primary_dex_patterns = [
@@ -170,6 +170,34 @@ android_binary(
         "//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps",
         "//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps",
         "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_modular_resources_debug",
+    aapt_mode = "aapt2",
+    application_module_configs = {
+        "feature1": ["//java/com/sample/features/activity_with_resources:activity_with_resources"],
+        "feature2": ["//java/com/sample/features/feature2:feature2"],
+    },
+    application_modules_with_resources = [
+        "feature1",
+    ],
+    keystore = "//keystores:debug",
+    manifest_skeleton = "AndroidManifest.xml",
+    module_manifest_skeleton = "ModuleManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/ApplicationWithModuleLoader^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app_with_module_loader:app_with_module_loader",
+        "//java/com/sample/features/activity_with_resources:activity_with_resources",
+        "//java/com/sample/features/feature2:feature2",
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+        "//res/com/sample/features/base:base",
     ],
 )
 

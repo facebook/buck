@@ -1,0 +1,10 @@
+android_resource(
+    name = "activity_with_resources",
+    package = "com.sample.feature1",
+    res = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
+)

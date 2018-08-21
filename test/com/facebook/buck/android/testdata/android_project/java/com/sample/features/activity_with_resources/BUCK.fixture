@@ -1,0 +1,11 @@
+android_library(
+    name = "activity_with_resources",
+    srcs = glob(["*.java"]),
+    manifest = "AndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/features/activity_with_resources:activity_with_resources",
+    ],
+)
