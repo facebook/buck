@@ -18,6 +18,7 @@ package com.facebook.buck.distributed.testutil;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -27,7 +28,6 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -62,9 +62,9 @@ public class CustomActiongGraphBuilderFactory {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
-            JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(ROOT_TARGET))
+            FakeTargetNodeBuilder.newBuilder(BuildTargetFactory.newInstance(ROOT_TARGET))
                 .build(graphBuilder),
-            JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:two"))
+            FakeTargetNodeBuilder.newBuilder(BuildTargetFactory.newInstance("//foo:two"))
                 .build(graphBuilder));
     buildRules.forEach(graphBuilder::addToIndex);
     return graphBuilder;
@@ -84,10 +84,10 @@ public class CustomActiongGraphBuilderFactory {
 
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
-            JavaLibraryBuilder.createBuilder(leaf).build(graphBuilder),
-            JavaLibraryBuilder.createBuilder(left).addDep(leaf).build(graphBuilder),
-            JavaLibraryBuilder.createBuilder(right).addDep(leaf).build(graphBuilder),
-            JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(graphBuilder));
+            FakeTargetNodeBuilder.newBuilder(leaf).build(graphBuilder),
+            FakeTargetNodeBuilder.newBuilder(left).setDeps(leaf).build(graphBuilder),
+            FakeTargetNodeBuilder.newBuilder(right).setDeps(leaf).build(graphBuilder),
+            FakeTargetNodeBuilder.newBuilder(root).setDeps(left, right).build(graphBuilder));
     buildRules.forEach(graphBuilder::addToIndex);
     return graphBuilder;
   }
@@ -108,11 +108,11 @@ public class CustomActiongGraphBuilderFactory {
 
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
-            JavaLibraryBuilder.createBuilder(leaf).build(graphBuilder),
-            JavaLibraryBuilder.createBuilder(chainTop).addDep(leaf).build(graphBuilder),
-            JavaLibraryBuilder.createBuilder(left).addDep(chainTop).build(graphBuilder),
-            JavaLibraryBuilder.createBuilder(right).addDep(chainTop).build(graphBuilder),
-            JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(graphBuilder));
+            FakeTargetNodeBuilder.newBuilder(leaf).build(graphBuilder),
+            FakeTargetNodeBuilder.newBuilder(chainTop).setDeps(leaf).build(graphBuilder),
+            FakeTargetNodeBuilder.newBuilder(left).setDeps(chainTop).build(graphBuilder),
+            FakeTargetNodeBuilder.newBuilder(right).setDeps(chainTop).build(graphBuilder),
+            FakeTargetNodeBuilder.newBuilder(root).setDeps(left, right).build(graphBuilder));
     buildRules.forEach(graphBuilder::addToIndex);
     return graphBuilder;
   }
@@ -241,7 +241,7 @@ public class CustomActiongGraphBuilderFactory {
 
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
-            JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(graphBuilder));
+            FakeTargetNodeBuilder.newBuilder(root).setDeps(left, right).build(graphBuilder));
     buildRules.forEach(graphBuilder::addToIndex);
     return graphBuilder;
   }

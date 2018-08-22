@@ -22,7 +22,6 @@ java_library(
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
-        "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",

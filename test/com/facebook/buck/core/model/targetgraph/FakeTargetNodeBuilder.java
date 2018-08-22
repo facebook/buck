@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.google.common.collect.ImmutableCollection;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,10 +46,13 @@ public class FakeTargetNodeBuilder
     return this;
   }
 
-  public FakeTargetNodeBuilder setDeps(TargetNode<?>... deps) {
-    getArgForPopulating()
-        .setDeps(Stream.of(deps).map(x -> x.getBuildTarget()).collect(Collectors.toList()));
+  public FakeTargetNodeBuilder setDeps(BuildTarget... deps) {
+    getArgForPopulating().setDeps(Arrays.asList(deps));
     return this;
+  }
+
+  public FakeTargetNodeBuilder setDeps(TargetNode<?>... deps) {
+    return setDeps(Stream.of(deps).map(x -> x.getBuildTarget()).toArray(BuildTarget[]::new));
   }
 
   public FakeTargetNodeBuilder setExtraDeps(TargetNode<?>... deps) {
