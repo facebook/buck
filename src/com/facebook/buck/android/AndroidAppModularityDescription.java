@@ -73,10 +73,12 @@ public class AndroidAppModularityDescription
   interface AbstractAndroidAppModularityDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps {
 
+    @Hint(isDep = false)
     Map<String, List<BuildTarget>> getApplicationModuleConfigs();
 
     Optional<Map<String, List<String>>> getApplicationModuleDependencies();
 
+    @Hint(isDep = false)
     Optional<List<BuildTarget>> getApplicationModuleBlacklist();
 
     @Hint(isDep = false)
