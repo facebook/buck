@@ -56,6 +56,7 @@ java_library(
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/rules/attr:attr",
+        "//src/com/facebook/buck/core/rules/common:common",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/rules/modern:modern",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",

@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -303,7 +304,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
    * Records the outputs of this buildrule. An output will only be recorded once (i.e. no duplicates
    * and if a directory is recorded, none of its contents will be).
    */
-  public static <T extends Buildable> void recordOutputs(
+  public static <T extends AddsToRuleKey> void recordOutputs(
       BuildableContext buildableContext,
       OutputPathResolver outputPathResolver,
       ClassInfo<T> classInfo,
@@ -333,6 +334,19 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
         buildableContext.recordArtifact(path);
       }
     }
+  }
+
+  /**
+   * Records the outputs of this buildrule. An output will only be recorded once (i.e. no duplicates
+   * and if a directory is recorded, none of its contents will be).
+   */
+  public static <T extends AddsToRuleKey> void recordOutputs(
+      BuildableContext buildableContext, OutputPathResolver outputPathResolver, T buildable) {
+    recordOutputs(
+        buildableContext,
+        outputPathResolver,
+        DefaultClassInfoFactory.forInstance(buildable),
+        buildable);
   }
 
   private static boolean shouldRecord(Set<Path> outputs, Path path) {

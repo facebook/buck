@@ -309,6 +309,7 @@ java_library_with_plugins(
         "CompileAgainstLibraryType.java",
         "ConfiguredCompilerFactory.java",
         "DefaultJavaLibrary.java",
+        "DefaultJavaLibraryBuildable.java",
         "DefaultJavaLibraryRules.java",
         "DefaultSourceOnlyAbiRuleInfo.java",
         "DefaultSourceOnlyAbiRuleInfoFactory.java",

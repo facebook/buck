@@ -83,7 +83,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     String expectedResult =
         Joiner.on('\n')
             .join(
-                "Change details for [//:java_lib_1->jarBuildStepsFactory]",
+                "Change details for [//:java_lib_1->buildable->jarBuildStepsFactory]",
                 "  (srcs):",
                 "    -[path(JavaLib1.java:fc76b6367ddddc08ff2fb46d8f22676c09c95be5)]",
                 "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]",
@@ -104,7 +104,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     String expectedResult =
         Joiner.on('\n')
             .join(
-                "Change details for [//:java_lib_2->jarBuildStepsFactory]",
+                "Change details for [//:java_lib_2->buildable->jarBuildStepsFactory]",
                 "  (srcs):",
                 "    -[<missing>]",
                 "    -[container(LIST,len=1)]",
@@ -129,7 +129,7 @@ public class DiffRuleKeysScriptIntegrationTest {
         Joiner.on('\n')
             .join(
                 "Change details for "
-                    + "[//:java_lib_2->jarBuildStepsFactory->configuredCompiler->javacOptions]",
+                    + "[//:java_lib_2->buildable->jarBuildStepsFactory->configuredCompiler->javacOptions]",
                 "  (sourceLevel):",
                 "    -[string(\"6\")]",
                 "    +[string(\"7\")]",
@@ -202,7 +202,7 @@ public class DiffRuleKeysScriptIntegrationTest {
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */
             ")]",
             "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
-            "Change details for [//:java_lib_2->jarBuildStepsFactory->abiClasspath]",
+            "Change details for [//:java_lib_2->buildable->jarBuildStepsFactory->abiClasspath]",
             "  (zipFiles):",
             "    -[<missing>]",
             "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
@@ -226,17 +226,17 @@ public class DiffRuleKeysScriptIntegrationTest {
         // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
         // rather than the change in the srcs property of that class is a bug in the differ.
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_2->jarBuildStepsFactory]\n",
+            "Change details for [//:java_lib_2->buildable->jarBuildStepsFactory]\n",
             "  (srcs):\n",
             "    -[<missing>]\n",
             "    -[container(LIST,len=1)]\n",
             "    +[container(LIST,len=2)]\n",
             "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]\n",
-            "Change details for [//:java_lib_1->jarBuildStepsFactory]\n",
+            "Change details for [//:java_lib_1->buildable->jarBuildStepsFactory]\n",
             "  (srcs):\n",
             "    -[path(JavaLib1.java:fc76b6367ddddc08ff2fb46d8f22676c09c95be5)]\n",
             "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]\n",
-            "Change details for [//:java_lib_all]\n",
+            "Change details for [//:java_lib_all->buildable]\n",
             "  (jarBuildStepsFactory):\n",
             "    -[ruleKey(sha1=" /* some rulekey */,
             "    +[ruleKey(sha1=" /* some other rulekey */));
