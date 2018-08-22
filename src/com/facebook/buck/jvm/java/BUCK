@@ -351,6 +351,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/core/rules/pipeline:pipeline",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/util/types:types",
     ],
     resources = [

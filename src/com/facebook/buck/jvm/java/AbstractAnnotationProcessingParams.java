@@ -64,8 +64,8 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
   @Value.NaturalOrder
   protected abstract ImmutableSortedSet<String> getLegacyAnnotationProcessorNames();
 
-  @Value.Derived
   @AddToRuleKey
+  @Value.Derived
   protected ImmutableList<JavacPluginProperties> getLegacyProcessors() {
     JavacPluginProperties.Builder legacySafeProcessorsBuilder =
         JavacPluginProperties.builder()

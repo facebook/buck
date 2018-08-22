@@ -18,12 +18,10 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -34,16 +32,11 @@ import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
-import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.rules.common.BuildableSupport.DepsSupplier;
-import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
-import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.EmptyJavaAbiInfo;
@@ -52,11 +45,7 @@ import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
-import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.OutputPathResolver;
-import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.rules.modern.PipelinedModernBuildRule;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -94,7 +83,8 @@ import javax.annotation.Nullable;
  * Then this would compile {@code FeedStoryRenderer.java} against Guava and the classes generated
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
-public class DefaultJavaLibrary extends AbstractBuildRule
+public class DefaultJavaLibrary
+    extends PipelinedModernBuildRule<JavacPipelineState, DefaultJavaLibraryBuildable>
     implements JavaLibrary,
         HasClasspathEntries,
         HasClasspathDeps,
@@ -104,7 +94,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         MaybeRequiredForSourceOnlyAbi,
         SupportsInputBasedRuleKey,
         SupportsDependencyFileRuleKey,
-        SupportsPipelining<JavacPipelineState>,
         JavaLibraryWithTests {
 
   private final Optional<String> mavenCoords;
@@ -132,9 +121,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Nullable private CalculateSourceAbi sourceAbi;
   private SourcePathRuleFinder ruleFinder;
   private final Optional<SourcePath> sourcePathForOutputJar;
-  private final DepsSupplier buildDepsSupplier;
-
-  @AddToRuleKey private final DefaultJavaLibraryBuildable buildable;
 
   public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
@@ -181,15 +167,17 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi) {
-    super(buildTarget, projectFilesystem);
-    this.buildable =
+    super(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
         new DefaultJavaLibraryBuildable(
             buildTarget,
-            getProjectFilesystem(),
+            projectFilesystem,
             jarBuildStepsFactory,
             unusedDependenciesAction,
             unusedDependenciesFinderFactory,
-            sourceAbi);
+            sourceAbi));
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =
         Optional.ofNullable(
@@ -240,20 +228,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(DefaultJavaLibrary.this));
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
-    this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
-  }
-
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return buildDepsSupplier.get();
-  }
-
-  @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
-    buildDepsSupplier.updateRuleFinder(ruleFinder);
   }
 
   private static void validateExportedDepsType(
@@ -283,17 +257,17 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public ImmutableSortedSet<SourcePath> getJavaSrcs() {
-    return buildable.getSources();
+    return getBuildable().getSources();
   }
 
   @Override
   public ImmutableSortedSet<SourcePath> getSources() {
-    return buildable.getSources();
+    return getBuildable().getSources();
   }
 
   @Override
   public ImmutableSortedSet<SourcePath> getResources() {
-    return buildable.getResources();
+    return getBuildable().getResources();
   }
 
   @Override
@@ -338,7 +312,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @VisibleForTesting
   public ImmutableSortedSet<SourcePath> getCompileTimeClasspathSourcePaths() {
-    return buildable.getCompileTimeClasspathSourcePaths();
+    return getBuildable().getCompileTimeClasspathSourcePaths();
   }
 
   @Override
@@ -354,63 +328,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public SortedSet<BuildRule> getExportedProvidedDeps() {
     return fullJarExportedProvidedDeps;
-  }
-
-  /**
-   * Building a java_library() rule entails compiling the .java files specified in the srcs
-   * attribute. They are compiled into a directory under {@link BuckPaths#getScratchDir()}.
-   */
-  @Override
-  public final ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    // ModernBuildRule will create this directory automatically once we switch to it.
-    OutputPathResolver outputPathResolver =
-        ModernBuildableSupport.newOutputPathResolver(getBuildTarget(), getProjectFilesystem());
-    BuildCellRelativePathFactory cellRelativePathFactory =
-        ModernBuildableSupport.newCellRelativePathFactory(
-            context.getBuildCellRootPath(), getProjectFilesystem());
-
-    return ImmutableList.<Step>builder()
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                cellRelativePathFactory.from(outputPathResolver.getRootPath())))
-        .addAll(
-            buildable.getBuildSteps(
-                context,
-                getProjectFilesystem(),
-                getArtifactVerifier(buildableContext),
-                outputPathResolver))
-        .build();
-  }
-
-  private RecordArtifactVerifier getArtifactVerifier(BuildableContext buildableContext) {
-    return ModernBuildableSupport.getDerivedArtifactVerifier(
-        getBuildTarget(), getProjectFilesystem(), buildable, buildableContext);
-  }
-
-  @Override
-  public ImmutableList<? extends Step> getPipelinedBuildSteps(
-      BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
-    // ModernBuildRule will create this directory automatically once we switch to it.
-    OutputPathResolver outputPathResolver =
-        ModernBuildableSupport.newOutputPathResolver(getBuildTarget(), getProjectFilesystem());
-    BuildCellRelativePathFactory cellRelativePathFactory =
-        ModernBuildableSupport.newCellRelativePathFactory(
-            context.getBuildCellRootPath(), getProjectFilesystem());
-
-    return ImmutableList.<Step>builder()
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                cellRelativePathFactory.from(outputPathResolver.getRootPath())))
-        .addAll(
-            buildable.getPipelinedBuildStepsForLibraryJar(
-                context,
-                getProjectFilesystem(),
-                getArtifactVerifier(buildableContext),
-                state,
-                ModernBuildableSupport.newOutputPathResolver(
-                    getBuildTarget(), getProjectFilesystem())))
-        .build();
   }
 
   @Override
@@ -493,34 +410,35 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public boolean useDependencyFileRuleKeys() {
-    return buildable.useDependencyFileRuleKeys();
+    return getBuildable().useDependencyFileRuleKeys();
   }
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    return buildable.getCoveredByDepFilePredicate(pathResolver, ruleFinder);
+    return getBuildable().getCoveredByDepFilePredicate(pathResolver, ruleFinder);
   }
 
   @Override
   public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
-    return buildable.getExistenceOfInterestPredicate(pathResolver);
+    return getBuildable().getExistenceOfInterestPredicate(pathResolver);
   }
 
   @Override
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) {
-    return buildable.getInputsAfterBuildingLocally(
-        context, getProjectFilesystem(), ruleFinder, cellPathResolver);
+    return getBuildable()
+        .getInputsAfterBuildingLocally(
+            context, getProjectFilesystem(), ruleFinder, cellPathResolver);
   }
 
   @Override
   public boolean useRulePipelining() {
-    return buildable.useRulePipelining();
+    return getBuildable().useRulePipelining();
   }
 
   @Override
   public RulePipelineStateFactory<JavacPipelineState> getPipelineStateFactory() {
-    return buildable.getPipelineStateFactory();
+    return getBuildable().getPipelineStateFactory();
   }
 
   @Nullable

@@ -61,4 +61,9 @@ public class ModernBuildableSupport {
         allowedPathsBuilder::add, newOutputPathResolver(target, filesystem), buildable);
     return new RecordArtifactVerifier(allowedPathsBuilder.build(), buildableContext);
   }
+
+  public static RecordArtifactVerifier getDerivedArtifactVerifier(
+      BuildTarget buildTarget, ProjectFilesystem filesystem, AddsToRuleKey buildable) {
+    return getDerivedArtifactVerifier(buildTarget, filesystem, buildable, path -> {});
+  }
 }
