@@ -29,6 +29,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -51,7 +52,6 @@ import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.log.ConsoleHandler;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.keys.AbstractRuleKeyBuilder;
@@ -123,25 +123,21 @@ public class RuleKeyTest {
             hashCache, DefaultSourcePathResolver.from(ruleFinder2), ruleFinder2);
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
-    JavaLibraryBuilder builder =
-        JavaLibraryBuilder.createBuilder(
+    FakeTargetNodeBuilder builder =
+        FakeTargetNodeBuilder.newBuilder(
             BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"));
     BuildRule commonJavaLibrary = builder.build(graphBuilder1);
     builder.build(graphBuilder2);
 
     // Create a java_library() rule with no deps.
-    Path mainSrc = Paths.get("src/com/facebook/buck/cli/Main.java");
-    filesystem.mkdirs(mainSrc.getParent());
-    filesystem.writeContentsToPath("hello", mainSrc);
-    JavaLibraryBuilder javaLibraryBuilder =
-        JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:cli"))
-            .addSrc(mainSrc);
-    BuildRule libraryNoCommon = javaLibraryBuilder.build(graphBuilder1, filesystem);
+    FakeTargetNodeBuilder dependentBuilder =
+        FakeTargetNodeBuilder.newBuilder(
+            BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:cli"));
+    BuildRule libraryNoCommon = dependentBuilder.build(graphBuilder1, filesystem);
 
     // Create the same java_library() rule, but with a dep on //src/com/facebook/buck/cli:common.
-    javaLibraryBuilder.addDep(commonJavaLibrary.getBuildTarget());
-    BuildRule libraryWithCommon = javaLibraryBuilder.build(graphBuilder2, filesystem);
+    dependentBuilder.setDeps(commonJavaLibrary.getBuildTarget());
+    BuildRule libraryWithCommon = dependentBuilder.build(graphBuilder2, filesystem);
 
     // Assert that the RuleKeys are distinct.
     RuleKey r1 = ruleKeyFactory.build(libraryNoCommon);
