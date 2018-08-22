@@ -452,7 +452,6 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
 
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
-    workspace.getBuildLog().assertTargetBuiltLocally("//:annotation_processor");
     workspace.getBuildLog().assertTargetBuiltLocally("//:util");
 
     // Edit a dependency of the annotation processor in a way that doesn't change the ABI
@@ -467,7 +466,6 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     workspace.getBuildLog().assertTargetBuiltLocally("//:util");
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
     workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:annotation_processor_lib");
-    workspace.getBuildLog().assertTargetBuiltLocally("//:annotation_processor");
   }
 
   @Test
@@ -483,7 +481,6 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
 
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
-    workspace.getBuildLog().assertTargetBuiltLocally("//:annotation_processor");
     workspace.getBuildLog().assertTargetBuiltLocally("//:util");
 
     // Edit a source file in the annotation processor in a way that doesn't change the ABI
@@ -497,7 +494,6 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     // and then rebuild //:main because the code of the annotation processor has changed
     workspace.getBuildLog().assertTargetHadMatchingRuleKey("//:util");
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
-    workspace.getBuildLog().assertTargetBuiltLocally("//:annotation_processor");
   }
 
   @Test
@@ -513,7 +509,6 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
 
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
-    workspace.getBuildLog().assertTargetBuiltLocally("//:annotation_processor");
     workspace.getBuildLog().assertTargetBuiltLocally("//:util");
 
     // Edit a source file in the annotation processor in a way that doesn't change the ABI
@@ -527,7 +522,6 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     // and then rebuild //:main because the code of the annotation processor has changed
     workspace.getBuildLog().assertTargetHadMatchingRuleKey("//:util");
     workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:main");
-    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:annotation_processor");
     workspace.getBuildLog().assertTargetBuiltLocally("//:annotation_processor_lib");
   }
 

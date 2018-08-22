@@ -581,7 +581,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     Set<BuildRule> expectedDeps = new TreeSet<>();
     addAbiAndMaybeFullJar(depLibraryTarget, expectedDeps);
     addAbiAndMaybeFullJar(depProvidedDepLibraryTarget, expectedDeps);
-    expectedDeps.add(graphBuilder.getRule(depExportFileTarget));
     addAbiAndMaybeFullJar(depLibraryExportedDepTarget, expectedDeps);
     addAbiAndMaybeFullJar(providedDepLibraryTarget, expectedDeps);
     addAbiAndMaybeFullJar(providedDepLibraryExportedDepTarget, expectedDeps);

@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -39,7 +40,6 @@ import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -112,35 +112,34 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
     TargetNode<JavaLibraryDescriptionArg> bottomNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:bottom"), javaBuckConfig)
+            .addSrc(FakeSourcePath.of("Src.java"))
             .build();
     TargetNode<JavaLibraryDescriptionArg> sublibNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:sublib"), javaBuckConfig)
             .addDep(bottomNode.getBuildTarget())
+            .addSrc(FakeSourcePath.of("Src.java"))
             .build();
     TargetNode<JavaLibraryDescriptionArg> libNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"), javaBuckConfig)
             .addDep(sublibNode.getBuildTarget())
+            .addSrc(FakeSourcePath.of("Src.java"))
             .build();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     AndroidLibraryBuilder ruleBuilder =
         AndroidLibraryBuilder.createBuilder(target, javaBuckConfig)
             .addDep(libNode.getBuildTarget())
+            .addSrc(Paths.get("Src.java"))
             .setDepsQuery(Query.of("filter('.*lib', deps($declared_deps))"));
     TargetNode<AndroidLibraryDescriptionArg> rule = ruleBuilder.build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode, rule);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
-    FakeBuildRule bottomRule =
-        graphBuilder.addToIndex(new FakeBuildRule(bottomNode.getBuildTarget()));
-    FakeBuildRule sublibRule =
-        graphBuilder.addToIndex(
-            new FakeBuildRule(sublibNode.getBuildTarget(), ImmutableSortedSet.of(bottomRule)));
-    FakeBuildRule libRule =
-        graphBuilder.addToIndex(
-            new FakeBuildRule(libNode.getBuildTarget(), ImmutableSortedSet.of(sublibRule)));
+    BuildRule bottomRule = graphBuilder.requireRule(bottomNode.getBuildTarget());
+    BuildRule sublibRule = graphBuilder.requireRule(sublibNode.getBuildTarget());
+    BuildRule libRule = graphBuilder.requireRule(libNode.getBuildTarget());
 
     BuildRule javaLibrary = ruleBuilder.build(graphBuilder, targetGraph);
 

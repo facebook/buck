@@ -82,9 +82,9 @@ public class JavaLibraryRules {
         graphBuilder,
         deps,
         r ->
-            r instanceof JavaLibrary || r instanceof CalculateAbi
-                ? Optional.of(r.getBuildDeps())
-                : Optional.empty(),
+            r instanceof JavaLibrary
+                ? Optional.of(((JavaLibrary) r).getDepsForTransitiveClasspathEntries())
+                : r instanceof CalculateAbi ? Optional.of(r.getBuildDeps()) : Optional.empty(),
         true);
   }
 

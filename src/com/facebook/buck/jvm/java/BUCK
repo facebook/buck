@@ -373,6 +373,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/common:common",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/toolchain:toolchain",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",

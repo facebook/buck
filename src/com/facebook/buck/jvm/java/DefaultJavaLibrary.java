@@ -34,11 +34,13 @@ import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
-import com.facebook.buck.core.rules.common.BuildDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.common.BuildableSupport.DepsSupplier;
 import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
+import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -103,16 +105,15 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         JavaLibraryWithTests {
 
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
-  @AddToRuleKey private final Optional<String> mavenCoords;
-  @Nullable private final BuildTarget abiJar;
-  @Nullable private final BuildTarget sourceOnlyAbiJar;
-  @AddToRuleKey private final Optional<SourcePath> proguardConfig;
-  @AddToRuleKey private final boolean requiredForSourceOnlyAbi;
   @AddToRuleKey private final UnusedDependenciesAction unusedDependenciesAction;
   private final Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory;
+  @AddToRuleKey private final Optional<NonHashableSourcePathContainer> sourceAbiOutput;
 
-  // This is automatically added to the rule key by virtue of being returned from getBuildDeps.
-  private final BuildDeps buildDeps;
+  private final Optional<String> mavenCoords;
+  @Nullable private final BuildTarget abiJar;
+  @Nullable private final BuildTarget sourceOnlyAbiJar;
+  private final Optional<SourcePath> proguardConfig;
+  private final boolean requiredForSourceOnlyAbi;
 
   // It's very important that these deps are non-ABI rules, even if compiling against ABIs is turned
   // on. This is because various methods in this class perform dependency traversal that rely on
@@ -133,6 +134,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Nullable private CalculateSourceAbi sourceAbi;
   private SourcePathRuleFinder ruleFinder;
   private final Optional<SourcePath> sourcePathForOutputJar;
+  private final DepsSupplier buildDepsSupplier;
 
   public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
@@ -164,7 +166,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   protected DefaultJavaLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildDeps buildDeps,
       JarBuildStepsFactory jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> proguardConfig,
@@ -178,9 +179,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildTarget> tests,
       boolean requiredForSourceOnlyAbi,
       UnusedDependenciesAction unusedDependenciesAction,
-      Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory) {
+      Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
+      @Nullable CalculateSourceAbi sourceAbi) {
     super(buildTarget, projectFilesystem);
-    this.buildDeps = buildDeps;
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.unusedDependenciesFinderFactory = unusedDependenciesFinderFactory;
@@ -188,6 +189,15 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.sourcePathForOutputJar =
         Optional.ofNullable(
             jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget(), getProjectFilesystem()));
+
+    this.sourceAbi = sourceAbi;
+
+    this.sourceAbiOutput =
+        Optional.ofNullable(sourceAbi)
+            .map(
+                rule ->
+                    new NonHashableSourcePathContainer(
+                        Preconditions.checkNotNull(sourceAbi.getSourcePathToOutput())));
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -232,6 +242,20 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(DefaultJavaLibrary.this));
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get();
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    buildDepsSupplier.updateRuleFinder(ruleFinder);
   }
 
   private static void validateExportedDepsType(
@@ -251,17 +275,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return buildDeps;
-  }
-
-  @Override
   public boolean getRequiredForSourceOnlyAbi() {
     return requiredForSourceOnlyAbi;
-  }
-
-  public void setSourceAbi(CalculateSourceAbi sourceAbi) {
-    this.sourceAbi = sourceAbi;
   }
 
   private Optional<SourcePath> sourcePathForOutputJar() {
