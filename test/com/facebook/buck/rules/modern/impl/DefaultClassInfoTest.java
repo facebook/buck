@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -36,6 +37,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
@@ -48,14 +50,18 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.ErrorLogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.hamcrest.Matchers;
+import org.immutables.value.Value;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -312,6 +318,67 @@ public class DefaultClassInfoTest {
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of();
+    }
+  }
+
+  @Test(expected = Exception.class)
+  public void testLazyImmutable() {
+    SourcePath path = FakeSourcePath.of("some.path");
+    DefaultClassInfoFactory.forInstance(LazyImmutable.builder().setPath(path).build());
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  interface AbstractLazyImmutable extends AddsToRuleKey {
+    SourcePath getPath();
+
+    @AddToRuleKey
+    @Value.Lazy
+    default SourcePath getLazyPath() {
+      return getPath();
+    }
+  }
+
+  @Test
+  public void testExcludedLazyImmutable() {
+    SourcePath path = FakeSourcePath.of("some.path");
+    ExcludedLazyImmutable excludedLazy = ExcludedLazyImmutable.builder().setPath(path).build();
+    List<SourcePath> inputs = new ArrayList<>();
+    ClassInfo<ExcludedLazyImmutable> classInfo = DefaultClassInfoFactory.forInstance(excludedLazy);
+    classInfo.visit(excludedLazy, new InputsVisitor(inputs::add));
+    MoreAsserts.assertListEquals(ImmutableList.of(), inputs);
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  interface AbstractExcludedLazyImmutable extends AddsToRuleKey {
+    SourcePath getPath();
+
+    @Value.Lazy
+    default SourcePath getLazyPath() {
+      return getPath();
+    }
+  }
+
+  @Test
+  public void testDerivedImmutable() {
+    SourcePath path = FakeSourcePath.of("some.path");
+    DerivedImmutable derived = DerivedImmutable.builder().setPath(path).build();
+    List<SourcePath> inputs = new ArrayList<>();
+    ClassInfo<DerivedImmutable> classInfo = DefaultClassInfoFactory.forInstance(derived);
+    classInfo.visit(derived, new InputsVisitor(inputs::add));
+    MoreAsserts.assertListEquals(ImmutableList.of(path), inputs);
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  interface AbstractDerivedImmutable extends AddsToRuleKey {
+    SourcePath getPath();
+
+    @AddToRuleKey
+    @Value.Derived
+    default SourcePath getLazyPath() {
+      return getPath();
     }
   }
 }

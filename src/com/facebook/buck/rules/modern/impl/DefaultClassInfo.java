@@ -34,15 +34,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.google.common.reflect.TypeToken;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -74,23 +72,25 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
     Optional<Class<?>> immutableBase = findImmutableBase(clazz);
     ImmutableList.Builder<FieldInfo<?>> fieldsBuilder = ImmutableList.builder();
     if (immutableBase.isPresent()) {
-      Optional<Class<?>> builder = findImmutableBuilder(clazz);
-      ImmutableList<Field> parameterFields;
-      if (builder.isPresent()) {
-        parameterFields = parameterFieldsFromBuilder(builder.get(), clazz);
-      } else {
-        parameterFields = parameterFieldsFromConstructor(clazz);
-      }
-      ImmutableMap<Field, Method> parameterMethods = findMethodsForFields(parameterFields, clazz);
+      ImmutableMap<Field, Boolean> parameterFields = parameterFieldsFromFields(clazz);
+      ImmutableMap<Field, Method> parameterMethods =
+          findMethodsForFields(parameterFields.keySet(), clazz);
       parameterFields.forEach(
-          (field) -> {
-            Method method = Preconditions.checkNotNull(parameterMethods.get(field));
+          (field, isLazy) -> {
+            Method method = parameterMethods.get(field);
+            if (method == null) {
+              return;
+            }
             AddToRuleKey addAnnotation = method.getAnnotation(AddToRuleKey.class);
             // TODO(cjhopman): Add @ExcludeFromRuleKey annotation and require that all fields are
             // either explicitly added or explicitly excluded.
             Optional<CustomFieldBehavior> customBehavior =
                 Optional.ofNullable(method.getDeclaredAnnotation(CustomFieldBehavior.class));
             if (addAnnotation != null && !addAnnotation.stringify()) {
+              if (isLazy) {
+                throw new RuntimeException(
+                    "@Value.Lazy fields cannot be @AddToRuleKey, change it to @Value.Derived.");
+              }
               Nullable methodNullable = method.getAnnotation(Nullable.class);
               boolean methodOptional = Optional.class.isAssignableFrom(method.getReturnType());
               fieldsBuilder.add(
@@ -155,7 +155,7 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
   }
 
   private ImmutableMap<Field, Method> findMethodsForFields(
-      List<Field> parameterFields, Class<?> clazz) {
+      Iterable<Field> parameterFields, Class<?> clazz) {
     Map<String, Field> possibleNamesMap = new LinkedHashMap<>();
     for (Field field : parameterFields) {
       String name = field.getName();
@@ -190,67 +190,49 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
       }
     }
     ImmutableMap<Field, Method> result = builder.build();
-    Set<Field> missing = Sets.difference(ImmutableSet.copyOf(parameterFields), result.keySet());
+    List<Field> badFields = new ArrayList<>();
+    for (Field field : parameterFields) {
+      if (result.containsKey(field)) {
+        // Found a match.
+        continue;
+      }
+      if (field.getName().equals("hashCode")) {
+        // From prehash=true.
+        continue;
+      }
+      badFields.add(field);
+    }
+
     Preconditions.checkState(
-        missing.isEmpty(),
+        badFields.isEmpty(),
         new Object() {
           @Override
           public String toString() {
             return String.format(
                 "Could not find methods for fields of class %s: <%s>",
                 clazz.getName(),
-                Joiner.on(", ").join(missing.stream().map(Field::getName).iterator()));
+                Joiner.on(", ").join(badFields.stream().map(Field::getName).iterator()));
           }
         });
     return result;
   }
 
-  private ImmutableList<Field> parameterFieldsFromConstructor(Class<?> clazz) {
-    Constructor<?>[] constructors = clazz.getDeclaredConstructors();
-    Preconditions.checkState(constructors.length > 0);
-    for (Constructor<?> candidate : constructors) {
-      candidate.setAccessible(true);
-      Class<?>[] parameterTypes = candidate.getParameterTypes();
-      Field[] declaredFields = clazz.getDeclaredFields();
-      if (parameterTypes.length <= declaredFields.length) {
-        ImmutableList.Builder<Field> fieldsBuilder = ImmutableList.builder();
-        for (int i = 0; i < parameterTypes.length; i++) {
-          Field field = declaredFields[i];
-          field.setAccessible(true);
-          fieldsBuilder.add(field);
-        }
-        return fieldsBuilder.build();
+  private ImmutableMap<Field, Boolean> parameterFieldsFromFields(Class<?> clazz) {
+    Field[] fields = clazz.getDeclaredFields();
+    ImmutableMap.Builder<Field, Boolean> fieldsBuilder =
+        ImmutableMap.builderWithExpectedSize(fields.length);
+    Field ignoredField = null;
+    for (Field field : fields) {
+      field.setAccessible(true);
+      // static fields can be ignored and volatile fields are used for handling lazy field states.
+      if (Modifier.isStatic(field.getModifiers()) || Modifier.isVolatile(field.getModifiers())) {
+        ignoredField = field;
+        continue;
       }
-    }
-    throw new IllegalStateException();
-  }
-
-  private ImmutableList<Field> parameterFieldsFromBuilder(Class<?> builder, Class<?> clazz) {
-    ImmutableList.Builder<Field> fieldsBuilder = ImmutableList.builder();
-    for (final Field field : builder.getDeclaredFields()) {
-      if (!Modifier.isStatic(field.getModifiers())
-          && !field.getName().equals("initBits")
-          && !field.getName().equals("optBits")) {
-        try {
-          Field classField = clazz.getDeclaredField(field.getName());
-          classField.setAccessible(true);
-          fieldsBuilder.add(classField);
-        } catch (NoSuchFieldException e) {
-          throw new IllegalStateException(e);
-        }
-      }
+      boolean isLazy = ignoredField != null && ignoredField.getName().endsWith("LAZY_INIT_BIT");
+      fieldsBuilder.put(field, isLazy);
     }
     return fieldsBuilder.build();
-  }
-
-  private Optional<Class<?>> findImmutableBuilder(Class<?> clazz) {
-    Class<?>[] classes = clazz.getDeclaredClasses();
-    for (Class<?> inner : classes) {
-      if (inner.getSimpleName().equals("Builder")) {
-        return Optional.of(inner);
-      }
-    }
-    return Optional.empty();
   }
 
   private static Optional<Class<?>> findImmutableBase(Class<?> clazz) {
