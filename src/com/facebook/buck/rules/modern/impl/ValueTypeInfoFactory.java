@@ -24,7 +24,6 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableListValueTypeInfo;
-import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableSortedSetValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OptionalValueTypeInfo;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.types.Either;
@@ -153,13 +152,7 @@ public class ValueTypeInfoFactory {
       Class<?> rawClass = (Class<?>) rawType;
 
       Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
-      if (((Class<?>) rawType).isAssignableFrom(ImmutableSet.class)) {
-        throw new IllegalArgumentException(
-            "Don't use ImmutableSet in Buildables. Use ImmutableSortedSet instead.");
-      } else if (((Class<?>) rawType).isAssignableFrom(ImmutableMap.class)) {
-        throw new IllegalArgumentException(
-            "Don't use ImmutableMap in Buildables. Use ImmutableSortedMap instead.");
-      } else if (rawClass.equals(Either.class)) {
+      if (rawClass.equals(Either.class)) {
         Preconditions.checkState(typeArguments.length == 2);
         return new EitherValueTypeInfo<>(forType(typeArguments[0]), forType(typeArguments[1]));
       } else if (rawClass.equals(Pair.class)) {
@@ -172,13 +165,18 @@ public class ValueTypeInfoFactory {
         Preconditions.checkState(typeArguments.length == 1);
         return new ImmutableListValueTypeInfo<>(forType(typeArguments[0]));
       } else if (rawClass.equals(ImmutableSortedSet.class)) {
-        // SortedSet is tested second because it is a subclass of Set, and therefore can
-        // be assigned to something of type Set, but not vice versa.
         Preconditions.checkState(typeArguments.length == 1);
         return new ImmutableSortedSetValueTypeInfo<>(forType(typeArguments[0]));
       } else if (rawClass.equals(ImmutableSortedMap.class)) {
         Preconditions.checkState(typeArguments.length == 2);
         return new ImmutableSortedMapValueTypeInfo<>(
+            forType(typeArguments[0]), forType(typeArguments[1]));
+      } else if (rawClass.equals(ImmutableSet.class)) {
+        Preconditions.checkState(typeArguments.length == 1);
+        return new ImmutableSetValueTypeInfo<>(forType(typeArguments[0]));
+      } else if (rawClass.equals(ImmutableMap.class)) {
+        Preconditions.checkState(typeArguments.length == 2);
+        return new ImmutableMapValueTypeInfo<>(
             forType(typeArguments[0]), forType(typeArguments[1]));
       } else if (rawClass.equals(Optional.class)) {
         Preconditions.checkState(typeArguments.length == 1);

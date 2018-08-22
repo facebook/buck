@@ -22,13 +22,13 @@ import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.primitives.Primitives;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.OptionalInt;
 
-class ValueTypeInfos {
+/** Some utilities and simple implementations for ValueTypeInfo. */
+public class ValueTypeInfos {
   static ValueTypeInfo<?> forSimpleType(Type type) {
     Preconditions.checkState(type instanceof Class<?>);
     Class<?> rawClass = Primitives.wrap((Class<?>) type);
@@ -90,32 +90,13 @@ class ValueTypeInfos {
     }
   }
 
-  private abstract static class IterableValueTypeInfo<T, C extends Iterable<T>>
+  /** Base class for simple ValueTypeInfos for iterable types. */
+  abstract static class IterableValueTypeInfo<T, C extends Iterable<T>>
       implements ValueTypeInfo<C> {
-
     protected final ValueTypeInfo<T> innerType;
 
     IterableValueTypeInfo(ValueTypeInfo<T> innerType) {
       this.innerType = innerType;
-    }
-  }
-
-  /** ValueTypeInfo for ImmutableSortedSets. */
-  static class ImmutableSortedSetValueTypeInfo<T>
-      extends IterableValueTypeInfo<T, ImmutableSortedSet<T>> {
-    ImmutableSortedSetValueTypeInfo(ValueTypeInfo<T> innerType) {
-      super(innerType);
-    }
-
-    @Override
-    public <E extends Exception> void visit(ImmutableSortedSet<T> value, ValueVisitor<E> visitor)
-        throws E {
-      visitor.visitSet(value, innerType);
-    }
-
-    @Override
-    public <E extends Exception> ImmutableSortedSet<T> create(ValueCreator<E> creator) throws E {
-      return creator.createSet(innerType);
     }
   }
 

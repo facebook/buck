@@ -71,6 +71,12 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
+  public void sortedSet() {
+    apply(new WithSortedSet());
+  }
+
+  @Override
+  @Test
   public void addsToRuleKey() {
     inputsConsumer.accept(anyObject());
     expectLastCall().times(3);
@@ -95,6 +101,14 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
     WithNonHashableSourcePathContainer value = new WithNonHashableSourcePathContainer();
     inputsConsumer.accept(value.container.getSourcePath());
     apply(value);
+  }
+
+  @Override
+  @Test
+  public void map() throws Exception {
+    inputsConsumer.accept(anyObject());
+    expectLastCall().times(2);
+    apply(new WithMap());
   }
 
   @Override

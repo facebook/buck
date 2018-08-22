@@ -41,6 +41,8 @@ import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
@@ -74,6 +76,9 @@ public abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void set() throws Exception;
+
+  @Test
+  public abstract void sortedSet() throws Exception;
 
   @Test
   public abstract void list() throws Exception;
@@ -110,6 +115,9 @@ public abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void nonHashableSourcePathContainer() throws Exception;
+
+  @Test
+  public abstract void map() throws Exception;
 
   @Test
   public abstract void sortedMap() throws Exception;
@@ -180,6 +188,18 @@ public abstract class AbstractValueVisitorTest {
         MoreSuppliers.memoize(() -> FakeSourcePath.of(rootFilesystem, "some.path"));
   }
 
+  public static class WithMap implements FakeBuildable {
+    @AddToRuleKey final ImmutableMap<String, String> emptyMap = ImmutableMap.of();
+
+    @AddToRuleKey
+    final ImmutableMap<String, SourcePath> pathMap =
+        ImmutableMap.of(
+            "path",
+            FakeSourcePath.of(rootFilesystem, "some/path"),
+            "target",
+            ExplicitBuildTargetSourcePath.of(someBuildTarget, Paths.get("other.path")));
+  }
+
   public static class WithSortedMap implements FakeBuildable {
     @AddToRuleKey final ImmutableSortedMap<String, String> emptyMap = ImmutableSortedMap.of();
 
@@ -220,7 +240,15 @@ public abstract class AbstractValueVisitorTest {
 
   public static class WithSet implements FakeBuildable {
     @AddToRuleKey
-    private final ImmutableSortedSet<String> present = ImmutableSortedSet.of("hello", "world", "!");
+    private final ImmutableSet<String> present = ImmutableSet.of("hello", "world", "!");
+
+    @AddToRuleKey private final ImmutableSet<Integer> empty = ImmutableSet.of();
+  }
+
+  public static class WithSortedSet implements FakeBuildable {
+    @AddToRuleKey
+    private final ImmutableSortedSet<String> present =
+        ImmutableSortedSet.of("3hello", "1world", "2!");
 
     @AddToRuleKey private final ImmutableSortedSet<Integer> empty = ImmutableSortedSet.of();
   }

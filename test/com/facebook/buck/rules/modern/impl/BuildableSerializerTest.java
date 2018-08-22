@@ -185,6 +185,12 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     test(new WithSet());
   }
 
+  @Override
+  @Test
+  public void sortedSet() throws Exception {
+    test(new WithSortedSet());
+  }
+
   @Test
   @Override
   public void list() throws IOException {
@@ -268,6 +274,12 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Test
   public void nonHashableSourcePathContainer() throws Exception {
     test(new WithNonHashableSourcePathContainer());
+  }
+
+  @Override
+  @Test
+  public void map() throws Exception {
+    test(new WithMap());
   }
 
   @Override

@@ -19,27 +19,23 @@ package com.facebook.buck.rules.modern.impl;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
-import com.google.common.collect.ImmutableSortedMap;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfos.IterableValueTypeInfo;
+import com.google.common.collect.ImmutableSortedSet;
 
-/** ValueTypeInfo for ImmutableSortedMaps. */
-public class ImmutableSortedMapValueTypeInfo<K, V>
-    implements ValueTypeInfo<ImmutableSortedMap<K, V>> {
-  private final ValueTypeInfo<K> keyType;
-  private final ValueTypeInfo<V> valueType;
-
-  public ImmutableSortedMapValueTypeInfo(ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType) {
-    this.keyType = keyType;
-    this.valueType = valueType;
+/** ValueTypeInfo for ImmutableSortedSets. */
+class ImmutableSortedSetValueTypeInfo<T> extends IterableValueTypeInfo<T, ImmutableSortedSet<T>> {
+  ImmutableSortedSetValueTypeInfo(ValueTypeInfo<T> innerType) {
+    super(innerType);
   }
 
   @Override
-  public <E extends Exception> void visit(ImmutableSortedMap<K, V> value, ValueVisitor<E> visitor)
+  public <E extends Exception> void visit(ImmutableSortedSet<T> value, ValueVisitor<E> visitor)
       throws E {
-    visitor.visitSortedMap(value, keyType, valueType);
+    visitor.visitSortedSet(value, innerType);
   }
 
   @Override
-  public <E extends Exception> ImmutableSortedMap<K, V> create(ValueCreator<E> creator) throws E {
-    return creator.createSortedMap(keyType, valueType);
+  public <E extends Exception> ImmutableSortedSet<T> create(ValueCreator<E> creator) throws E {
+    return creator.createSortedSet(innerType);
   }
 }

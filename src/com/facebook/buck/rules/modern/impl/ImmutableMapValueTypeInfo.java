@@ -19,27 +19,26 @@ package com.facebook.buck.rules.modern.impl;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
-import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableMap;
 
 /** ValueTypeInfo for ImmutableSortedMaps. */
-public class ImmutableSortedMapValueTypeInfo<K, V>
-    implements ValueTypeInfo<ImmutableSortedMap<K, V>> {
+public class ImmutableMapValueTypeInfo<K, V> implements ValueTypeInfo<ImmutableMap<K, V>> {
   private final ValueTypeInfo<K> keyType;
   private final ValueTypeInfo<V> valueType;
 
-  public ImmutableSortedMapValueTypeInfo(ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType) {
+  public ImmutableMapValueTypeInfo(ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType) {
     this.keyType = keyType;
     this.valueType = valueType;
   }
 
   @Override
-  public <E extends Exception> void visit(ImmutableSortedMap<K, V> value, ValueVisitor<E> visitor)
+  public <E extends Exception> void visit(ImmutableMap<K, V> value, ValueVisitor<E> visitor)
       throws E {
-    visitor.visitSortedMap(value, keyType, valueType);
+    visitor.visitMap(value, keyType, valueType);
   }
 
   @Override
-  public <E extends Exception> ImmutableSortedMap<K, V> create(ValueCreator<E> creator) throws E {
-    return creator.createSortedMap(keyType, valueType);
+  public <E extends Exception> ImmutableMap<K, V> create(ValueCreator<E> creator) throws E {
+    return creator.createMap(keyType, valueType);
   }
 }

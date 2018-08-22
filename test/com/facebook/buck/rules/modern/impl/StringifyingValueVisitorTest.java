@@ -43,13 +43,27 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   public void set() {
     assertEquals(
         "present:Set<\n"
-            + "  string(!)\n"
             + "  string(hello)\n"
             + "  string(world)\n"
+            + "  string(!)\n"
             + ">\n"
             + "empty:Set<\n"
             + ">",
         stringify(new WithSet()));
+  }
+
+  @Override
+  @Test
+  public void sortedSet() {
+    assertEquals(
+        "present:SortedSet<\n"
+            + "  string(1world)\n"
+            + "  string(2!)\n"
+            + "  string(3hello)\n"
+            + ">\n"
+            + "empty:SortedSet<\n"
+            + ">",
+        stringify(new WithSortedSet()));
   }
 
   @Override
@@ -150,9 +164,9 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
     assertEquals(
         "value:Optional<\n"
             + "  List<\n"
-            + "    Set<\n"
+            + "    SortedSet<\n"
             + "    >\n"
-            + "    Set<\n"
+            + "    SortedSet<\n"
             + "      SourcePath(//some/build:target)\n"
             + "      SourcePath(/project/root/some/path)\n"
             + "    >\n"
@@ -177,7 +191,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
     assertEquals(
         "target:path(/project/other)Optional<\n"
             + "  string(other)\n"
-            + ">string(//some)string(target)Set<\n"
+            + ">string(//some)string(target)SortedSet<\n"
             + "  string(flavor1)\n"
             + "  string(flavor2)\n"
             + ">",
@@ -214,11 +228,34 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void sortedMap() throws Exception {
+  public void map() {
     assertEquals(
         "emptyMap:Map<\n"
             + ">\n"
             + "pathMap:Map<\n"
+            + "  key<\n"
+            + "    string(path)\n"
+            + "  >\n"
+            + "  value<\n"
+            + "    SourcePath(/project/root/some/path)\n"
+            + "  >\n"
+            + "  key<\n"
+            + "    string(target)\n"
+            + "  >\n"
+            + "  value<\n"
+            + "    SourcePath(Pair(other//some:target#flavor1,flavor2, other.path))\n"
+            + "  >\n"
+            + ">",
+        stringify(new WithMap()));
+  }
+
+  @Override
+  @Test
+  public void sortedMap() {
+    assertEquals(
+        "emptyMap:SortedMap<\n"
+            + ">\n"
+            + "pathMap:SortedMap<\n"
             + "  key<\n"
             + "    string(path)\n"
             + "  >\n"

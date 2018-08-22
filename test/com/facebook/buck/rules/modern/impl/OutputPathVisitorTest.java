@@ -56,6 +56,12 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
+  public void sortedSet() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithSortedSet()));
+  }
+
+  @Override
+  @Test
   public void addsToRuleKey() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithAddsToRuleKey()));
   }
@@ -77,6 +83,12 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
   public void nonHashableSourcePathContainer() throws Exception {
     MoreAsserts.assertIterablesEquals(
         ImmutableList.of(), getOutputs(new WithNonHashableSourcePathContainer()));
+  }
+
+  @Override
+  @Test
+  public void map() throws Exception {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithMap()));
   }
 
   @Override

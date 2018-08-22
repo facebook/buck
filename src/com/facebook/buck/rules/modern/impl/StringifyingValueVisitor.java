@@ -26,6 +26,8 @@ import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
@@ -61,53 +63,60 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
     valueTypeInfo.visit(value, this);
   }
 
+  private <T> void visitIterableValues(Iterable<T> value, ValueTypeInfo<T> innerType) {
+    for (T e : value) {
+      newline();
+      innerType.visit(e, this);
+    }
+  }
+
   @Override
-  public <T> void visitSet(ImmutableSortedSet<T> value, ValueTypeInfo<T> innerType) {
-    container(
-        "Set",
-        () -> {
-          for (T e : value) {
-            newline();
-            innerType.visit(e, this);
-          }
-        });
+  public <T> void visitSet(ImmutableSet<T> value, ValueTypeInfo<T> innerType)
+      throws RuntimeException {
+    container("Set", () -> visitIterableValues(value, innerType));
+  }
+
+  @Override
+  public <T> void visitSortedSet(ImmutableSortedSet<T> value, ValueTypeInfo<T> innerType) {
+    container("SortedSet", () -> visitIterableValues(value, innerType));
   }
 
   @Override
   public <K, V> void visitMap(
+      ImmutableMap<K, V> value, ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType)
+      throws RuntimeException {
+    container("Map", () -> visitMapValues(value, keyType, valueType));
+  }
+
+  @Override
+  public <K, V> void visitSortedMap(
       ImmutableSortedMap<K, V> value, ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType) {
-    container(
-        "Map",
-        () -> {
-          for (Map.Entry<K, V> e : value.entrySet()) {
+    container("SortedMap", () -> visitMapValues(value, keyType, valueType));
+  }
+
+  private <K, V> void visitMapValues(
+      ImmutableMap<K, V> value, ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType) {
+    for (Map.Entry<K, V> e : value.entrySet()) {
+      newline();
+      container(
+          "key",
+          () -> {
             newline();
-            container(
-                "key",
-                () -> {
-                  newline();
-                  keyType.visit(e.getKey(), this);
-                });
+            keyType.visit(e.getKey(), this);
+          });
+      newline();
+      container(
+          "value",
+          () -> {
             newline();
-            container(
-                "value",
-                () -> {
-                  newline();
-                  valueType.visit(e.getValue(), this);
-                });
-          }
-        });
+            valueType.visit(e.getValue(), this);
+          });
+    }
   }
 
   @Override
   public <T> void visitList(ImmutableList<T> value, ValueTypeInfo<T> innerType) {
-    container(
-        "List",
-        () -> {
-          for (T e : value) {
-            newline();
-            innerType.visit(e, this);
-          }
-        });
+    container("List", () -> visitIterableValues(value, innerType));
   }
 
   @Override

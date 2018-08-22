@@ -33,6 +33,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -164,7 +166,18 @@ public class Deserializer {
     }
 
     @Override
-    public <T> ImmutableSortedSet<T> createSet(ValueTypeInfo<T> innerType) throws IOException {
+    public <T> ImmutableSet<T> createSet(ValueTypeInfo<T> innerType) throws IOException {
+      int size = stream.readInt();
+      ImmutableSet.Builder<T> builder = ImmutableSet.builderWithExpectedSize(size);
+      for (int i = 0; i < size; i++) {
+        builder.add(innerType.createNotNull(this));
+      }
+      return builder.build();
+    }
+
+    @Override
+    public <T> ImmutableSortedSet<T> createSortedSet(ValueTypeInfo<T> innerType)
+        throws IOException {
       int size = stream.readInt();
       @SuppressWarnings("unchecked")
       ImmutableSortedSet.Builder<T> builder =
@@ -363,7 +376,18 @@ public class Deserializer {
     }
 
     @Override
-    public <K, V> ImmutableSortedMap<K, V> createMap(
+    public <K, V> ImmutableMap<K, V> createMap(ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType)
+        throws IOException {
+      int size = stream.readInt();
+      ImmutableMap.Builder<K, V> builder = ImmutableMap.builderWithExpectedSize(size);
+      for (int i = 0; i < size; i++) {
+        builder.put(keyType.createNotNull(this), valueType.createNotNull(this));
+      }
+      return builder.build();
+    }
+
+    @Override
+    public <K, V> ImmutableSortedMap<K, V> createSortedMap(
         ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType) throws IOException {
       int size = stream.readInt();
       @SuppressWarnings("unchecked")

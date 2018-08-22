@@ -22,6 +22,8 @@ import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
@@ -42,20 +44,31 @@ public abstract class AbstractValueVisitor<E extends Exception> implements Value
   }
 
   @Override
-  public <T> void visitSet(ImmutableSortedSet<T> value, ValueTypeInfo<T> innerType) throws E {
+  public <T> void visitSet(ImmutableSet<T> value, ValueTypeInfo<T> innerType) throws E {
     for (T e : value) {
       innerType.visit(e, this);
     }
   }
 
   @Override
+  public <T> void visitSortedSet(ImmutableSortedSet<T> value, ValueTypeInfo<T> innerType) throws E {
+    visitSet(value, innerType);
+  }
+
+  @Override
   public <K, V> void visitMap(
-      ImmutableSortedMap<K, V> value, ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType)
-      throws E {
+      ImmutableMap<K, V> value, ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType) throws E {
     for (Entry<K, V> entry : value.entrySet()) {
       keyType.visit(entry.getKey(), this);
       valueType.visit(entry.getValue(), this);
     }
+  }
+
+  @Override
+  public <K, V> void visitSortedMap(
+      ImmutableSortedMap<K, V> value, ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType)
+      throws E {
+    visitMap(value, keyType, valueType);
   }
 
   @Override

@@ -80,6 +80,12 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
+  public void sortedSet() {
+    apply(new WithSortedSet());
+  }
+
+  @Override
+  @Test
   public void addsToRuleKey() {
     WithAddsToRuleKey value = new WithAddsToRuleKey();
     expect(inputRuleResolver.resolve(FakeSourcePath.of(rootFilesystem, "appendable.path")))
@@ -105,6 +111,14 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
   public void nonHashableSourcePathContainer() throws Exception {
     WithNonHashableSourcePathContainer value = new WithNonHashableSourcePathContainer();
     expect(inputRuleResolver.resolve(value.container.getSourcePath())).andReturn(Optional.empty());
+    apply(value);
+  }
+
+  @Override
+  @Test
+  public void map() throws Exception {
+    WithMap value = new WithMap();
+    expect(inputRuleResolver.resolve(anyObject())).andReturn(Optional.empty()).times(2);
     apply(value);
   }
 
