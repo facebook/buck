@@ -444,10 +444,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
 
   private void parseConfigFileOption(
       ImmutableMap<CellName, Path> cellMapping, CellConfig.Builder builder, String filename) {
-    if (filename == null) {
-      return;
-    }
-
     // See if the filename argument specifies the cell.
     String[] matches = filename.split("=", 2);
 
