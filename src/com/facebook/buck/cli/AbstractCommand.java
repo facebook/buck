@@ -461,10 +461,11 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
         // Config applies only to the current cell .
         configCellName = CellName.ROOT_CELL_NAME;
       } else if (!matches[0].equals("*")) { // '*' is the default.
-        if (!cellMapping.containsKey(matches[0])) {
+        CellName cellName = CellName.of(matches[0]);
+        if (!cellMapping.containsKey(cellName)) {
           throw new HumanReadableException("Unknown cell: %s", matches[0]);
         }
-        configCellName = CellName.of(matches[0]);
+        configCellName = cellName;
       }
     }
 

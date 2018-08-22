@@ -132,6 +132,9 @@ public class MainIntegrationTest {
     workspace
         .runBuckCommand("targets", "--config-file", "*=repo//buckconfig", "//...")
         .assertSuccess();
+    workspace
+        .runBuckCommand("targets", "--config-file", "repo=repo//buckconfig", "//...")
+        .assertSuccess();
     // Apply config to current cell.
     workspace
         .runBuckCommand("targets", "--config-file", "//=repo//buckconfig", "//...")
