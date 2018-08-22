@@ -33,7 +33,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ResourcesParameters;
-import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -68,14 +67,13 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             ResourcesParameters.of(),
             /* manifest file */ Optional.empty(),
             /* postprocessClassesCommands */ ImmutableList.of(),
-            new ZipArchiveDependencySupplier(ImmutableSortedSet.of()),
             /* trackClassUsage */ javacOptions.trackClassUsage(),
             /* trackJavacPhaseEvents */ javacOptions.trackJavacPhaseEvents(),
-            ImmutableSortedSet.of(),
             /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY,
             AbiGenerationMode.CLASS,
             AbiGenerationMode.CLASS,
-            null),
+            ImmutableList.of(),
+            false),
         ruleFinder,
         Optional.empty(),
         ImmutableSortedSet.of(androidBuildConfig),

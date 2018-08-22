@@ -27,7 +27,6 @@ public interface SourceOnlyAbiRuleInfoFactory {
 
   /** Provides information related to source-only abi support. */
   interface SourceOnlyAbiRuleInfo {
-    void setFileManager(JavaFileManager fileManager);
 
     @Nullable
     String getOwningTarget(Elements elements, Element element);

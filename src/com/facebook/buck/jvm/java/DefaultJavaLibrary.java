@@ -45,6 +45,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
+import com.facebook.buck.jvm.core.EmptyJavaAbiInfo;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
@@ -127,7 +128,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
-  private final DefaultJavaAbiInfo javaAbiInfo;
+  private final JavaAbiInfo javaAbiInfo;
 
   @Nullable private CalculateSourceAbi sourceAbi;
   private SourcePathRuleFinder ruleFinder;
@@ -207,7 +208,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.tests = tests;
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
 
-    this.javaAbiInfo = new DefaultJavaAbiInfo(getBuildTarget(), getSourcePathToOutput());
+    this.javaAbiInfo =
+        getSourcePathToOutput() == null
+            ? new EmptyJavaAbiInfo(getBuildTarget())
+            : new DefaultJavaAbiInfo(getSourcePathToOutput());
     this.abiJar = abiJar;
     this.sourceOnlyAbiJar = sourceOnlyAbiJar;
 

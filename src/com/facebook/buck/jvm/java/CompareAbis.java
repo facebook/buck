@@ -49,7 +49,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final Path outputPath;
   private final BuildOutputInitializer<Object> buildOutputInitializer;
-  private final DefaultJavaAbiInfo javaAbiInfo;
+  private final JavaAbiInfo javaAbiInfo;
 
   public CompareAbis(
       BuildTarget buildTarget,
@@ -67,7 +67,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
         BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
             .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName()));
 
-    this.javaAbiInfo = new DefaultJavaAbiInfo(getBuildTarget(), getSourcePathToOutput());
+    this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 

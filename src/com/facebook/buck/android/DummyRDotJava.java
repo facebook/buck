@@ -87,7 +87,7 @@ public class DummyRDotJava extends AbstractBuildRule
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final ImmutableList<SourcePath> abiInputs;
 
-  private final DefaultJavaAbiInfo javaAbiInfo;
+  private final JavaAbiInfo javaAbiInfo;
 
   public DummyRDotJava(
       BuildTarget buildTarget,
@@ -149,7 +149,7 @@ public class DummyRDotJava extends AbstractBuildRule
     this.unionPackage = unionPackage;
     this.finalRName = finalRName;
     this.abiInputs = abiInputs;
-    this.javaAbiInfo = new DefaultJavaAbiInfo(getBuildTarget(), getSourcePathToOutput());
+    this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 

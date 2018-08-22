@@ -18,22 +18,19 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
+import com.facebook.buck.jvm.java.JarBuildStepsFactory.JavaDependencyInfo;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 import javax.lang.model.element.Element;
@@ -46,57 +43,34 @@ import javax.tools.StandardLocation;
 class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
   private final ImmutableList<JavaAbiInfo> fullJarInfos;
   private final ImmutableList<JavaAbiInfo> abiJarInfos;
-  private final ImmutableSet<String> targetsRequiredForSourceOnlyAbi;
   private final BuildTarget buildTarget;
   private final boolean ruleIsRequiredForSourceOnlyAbi;
-  private final Map<String, Set<String>> packagesContents = new HashMap<>();
 
-  @Nullable private JavaFileManager fileManager;
+  private final Map<String, Set<String>> packagesContents = new HashMap<>();
+  private final JavaFileManager fileManager;
 
   public DefaultSourceOnlyAbiRuleInfo(
-      SourcePathRuleFinder ruleFinder,
+      ImmutableList<JavaDependencyInfo> classPathInfo,
+      JavaFileManager fileManager,
       BuildTarget buildTarget,
-      boolean ruleIsRequiredForSourceOnlyAbi,
-      DefaultJavaLibraryClasspaths classpaths,
-      DefaultJavaLibraryClasspaths sourceOnlyAbiClasspaths) {
+      boolean ruleIsRequiredForSourceOnlyAbi) {
+
     this.buildTarget = buildTarget;
     this.ruleIsRequiredForSourceOnlyAbi = ruleIsRequiredForSourceOnlyAbi;
-    fullJarInfos =
-        classpaths
-            .getCompileTimeClasspathSourcePaths()
-            .stream()
-            .map(ruleFinder::getRule)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .filter(rule -> rule instanceof HasJavaAbi)
-            .map(rule -> ((HasJavaAbi) rule).getAbiInfo())
-            .collect(ImmutableList.toImmutableList());
+    this.fileManager = fileManager;
 
-    targetsRequiredForSourceOnlyAbi =
-        sourceOnlyAbiClasspaths
-            .getCompileTimeClasspathSourcePaths()
+    fullJarInfos =
+        classPathInfo
             .stream()
-            .map(ruleFinder::getRule)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .map(BuildRule::getBuildTarget)
-            .map(BuildTarget::getUnflavoredBuildTarget)
-            .map(Object::toString)
-            .collect(ImmutableSet.toImmutableSet());
+            .map(info -> new DefaultJavaAbiInfo(info.compileTimeJar))
+            .collect(ImmutableList.toImmutableList());
 
     abiJarInfos =
-        fullJarInfos
+        classPathInfo
             .stream()
-            .filter(
-                info ->
-                    targetsRequiredForSourceOnlyAbi.contains(
-                        info.getBuildTarget().getUnflavoredBuildTarget().toString()))
+            .filter(info -> info.isRequiredForSourceOnlyAbi)
+            .map(info -> new DefaultJavaAbiInfo(info.compileTimeJar))
             .collect(ImmutableList.toImmutableList());
-  }
-
-  @Override
-  public void setFileManager(JavaFileManager fileManager) {
-    this.fileManager = fileManager;
   }
 
   private JavaFileManager getFileManager() {

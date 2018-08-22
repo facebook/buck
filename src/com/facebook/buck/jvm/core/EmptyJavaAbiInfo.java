@@ -20,17 +20,33 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
 
-/** Provides information about a java abi. */
-public interface JavaAbiInfo {
-  BuildTarget getBuildTarget();
+/** The implementation of JavaAbiInfo for targets that have no sources. */
+public class EmptyJavaAbiInfo implements JavaAbiInfo {
+  private final BuildTarget buildTarget;
 
-  ImmutableSortedSet<SourcePath> getJarContents();
+  public EmptyJavaAbiInfo(BuildTarget buildTarget) {
+    this.buildTarget = buildTarget;
+  }
 
-  boolean jarContains(String path);
+  @Override
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
+  }
 
-  void load(SourcePathResolver pathResolver) throws IOException;
+  @Override
+  public ImmutableSortedSet<SourcePath> getJarContents() {
+    return ImmutableSortedSet.of();
+  }
 
-  void invalidate();
+  @Override
+  public boolean jarContains(String path) {
+    return false;
+  }
+
+  @Override
+  public void load(SourcePathResolver pathResolver) {}
+
+  @Override
+  public void invalidate() {}
 }

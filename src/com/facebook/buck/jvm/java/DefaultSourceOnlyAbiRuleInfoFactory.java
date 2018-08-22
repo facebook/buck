@@ -16,20 +16,30 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.jvm.java.JarBuildStepsFactory.JavaDependencyInfo;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
+import com.google.common.collect.ImmutableList;
 import javax.tools.JavaFileManager;
 
 /** Default factory for SourceOnlyAbiRuleInfos. */
 class DefaultSourceOnlyAbiRuleInfoFactory implements SourceOnlyAbiRuleInfoFactory {
-  private final DefaultSourceOnlyAbiRuleInfo ruleInfo;
+  private final ImmutableList<JavaDependencyInfo> classPathInfo;
+  private final BuildTarget buildTarget;
+  private final boolean ruleIsRequiredForSourceOnlyAbi;
 
-  public DefaultSourceOnlyAbiRuleInfoFactory(DefaultSourceOnlyAbiRuleInfo ruleInfo) {
-    this.ruleInfo = ruleInfo;
+  public DefaultSourceOnlyAbiRuleInfoFactory(
+      ImmutableList<JavaDependencyInfo> classPathInfo,
+      BuildTarget buildTarget,
+      boolean ruleIsRequiredForSourceOnlyAbi) {
+    this.classPathInfo = classPathInfo;
+    this.buildTarget = buildTarget;
+    this.ruleIsRequiredForSourceOnlyAbi = ruleIsRequiredForSourceOnlyAbi;
   }
 
   @Override
   public SourceOnlyAbiRuleInfo create(JavaFileManager fileManager) {
-    ruleInfo.setFileManager(fileManager);
-    return ruleInfo;
+    return new DefaultSourceOnlyAbiRuleInfo(
+        classPathInfo, fileManager, buildTarget, ruleIsRequiredForSourceOnlyAbi);
   }
 }

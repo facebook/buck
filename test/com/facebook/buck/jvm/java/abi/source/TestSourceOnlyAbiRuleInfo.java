@@ -25,7 +25,6 @@ import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-import javax.tools.JavaFileManager;
 
 public class TestSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
   private final String ruleName;
@@ -46,9 +45,6 @@ public class TestSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
     rulesAvailableForSourceOnlyAbi.add(ruleName);
     return this;
   }
-
-  @Override
-  public void setFileManager(JavaFileManager fileManager) {}
 
   @Override
   public boolean elementIsAvailableForSourceOnlyAbi(Elements elements, Element element) {

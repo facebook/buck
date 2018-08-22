@@ -38,13 +38,14 @@ import javax.annotation.Nullable;
 /** The default inmplementation of JavaAbiInfo. */
 public class DefaultJavaAbiInfo implements JavaAbiInfo {
   private final BuildTarget buildTarget;
-  @Nullable private final SourcePath jarSourcePath;
+  private final SourcePath jarSourcePath;
   @Nullable private volatile JarContents jarContents;
 
-  public DefaultJavaAbiInfo(BuildTarget buildTarget, @Nullable SourcePath jarPath) {
-    this.buildTarget = buildTarget;
-    this.jarSourcePath = jarPath;
-    this.jarContents = null;
+  public DefaultJavaAbiInfo(SourcePath jarPath) {
+    Preconditions.checkNotNull(jarPath);
+    Preconditions.checkState(jarPath instanceof BuildTargetSourcePath);
+    buildTarget = ((BuildTargetSourcePath) jarPath).getTarget();
+    jarSourcePath = jarPath;
   }
 
   @Override
@@ -64,6 +65,7 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
         .contains(Paths.get(path));
   }
 
+  @Override
   public void load(SourcePathResolver pathResolver) throws IOException {
     Preconditions.checkState(
         jarContents == null,
@@ -73,6 +75,7 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
     jarContents = JarContents.load(pathResolver, jarSourcePath);
   }
 
+  @Override
   public void invalidate() {
     jarContents = null;
   }
@@ -86,45 +89,41 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
       this.contentPaths = contentPaths;
     }
 
-    static JarContents load(SourcePathResolver resolver, @Nullable SourcePath jarSourcePath)
+    static JarContents load(SourcePathResolver resolver, SourcePath jarSourcePath)
         throws IOException {
-      if (jarSourcePath == null) {
-        return new JarContents(ImmutableSortedSet.of(), ImmutableSet.of());
-      } else {
-        ImmutableSortedSet<SourcePath> contents;
-        Path jarAbsolutePath = resolver.getAbsolutePath(jarSourcePath);
-        if (Files.isDirectory(jarAbsolutePath)) {
-          BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) jarSourcePath;
-          contents =
-              Files.walk(jarAbsolutePath)
-                  .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
-                  .map(
-                      path ->
-                          ExplicitBuildTargetSourcePath.of(buildTargetSourcePath.getTarget(), path))
-                  .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-        } else {
-          SourcePath nonNullJarSourcePath = Assertions.assertNotNull(jarSourcePath);
-          contents =
-              Unzip.getZipMembers(jarAbsolutePath)
-                  .stream()
-                  .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
-                  .map(path -> ArchiveMemberSourcePath.of(nonNullJarSourcePath, path))
-                  .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-        }
-        return new JarContents(
-            contents,
-            contents
-                .stream()
+      ImmutableSortedSet<SourcePath> contents;
+      Path jarAbsolutePath = resolver.getAbsolutePath(jarSourcePath);
+      if (Files.isDirectory(jarAbsolutePath)) {
+        BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) jarSourcePath;
+        contents =
+            Files.walk(jarAbsolutePath)
+                .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
                 .map(
-                    sourcePath -> {
-                      if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
-                        return ((ExplicitBuildTargetSourcePath) sourcePath).getResolvedPath();
-                      } else {
-                        return ((ArchiveMemberSourcePath) sourcePath).getMemberPath();
-                      }
-                    })
-                .collect(ImmutableSet.toImmutableSet()));
+                    path ->
+                        ExplicitBuildTargetSourcePath.of(buildTargetSourcePath.getTarget(), path))
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+      } else {
+        SourcePath nonNullJarSourcePath = Assertions.assertNotNull(jarSourcePath);
+        contents =
+            Unzip.getZipMembers(jarAbsolutePath)
+                .stream()
+                .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
+                .map(path -> ArchiveMemberSourcePath.of(nonNullJarSourcePath, path))
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       }
+      return new JarContents(
+          contents,
+          contents
+              .stream()
+              .map(
+                  sourcePath -> {
+                    if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
+                      return ((ExplicitBuildTargetSourcePath) sourcePath).getResolvedPath();
+                    } else {
+                      return ((ArchiveMemberSourcePath) sourcePath).getMemberPath();
+                    }
+                  })
+              .collect(ImmutableSet.toImmutableSet()));
     }
   }
 }

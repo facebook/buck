@@ -24,6 +24,6 @@ import java.util.Optional;
 public interface CalculateAbi extends HasJavaAbi {
   @Override
   default Optional<BuildTarget> getAbiJar() {
-    return Optional.of(getAbiInfo().getBuildTarget());
+    return Optional.ofNullable(getAbiInfo().getBuildTarget());
   }
 }

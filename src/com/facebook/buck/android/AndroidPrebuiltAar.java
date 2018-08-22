@@ -33,7 +33,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ResourcesParameters;
-import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -73,14 +72,13 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             ResourcesParameters.of(),
             /* manifestFile */ Optional.empty(), // Manifest means something else for Android rules
             /* postprocessClassesCommands */ ImmutableList.of(),
-            new ZipArchiveDependencySupplier(ImmutableSortedSet.of()),
             /* trackClassUsage */ false,
             /* trackJavacPhaseEvents */ false,
-            ImmutableSortedSet.of(),
             RemoveClassesPatternsMatcher.EMPTY,
             AbiGenerationMode.CLASS,
             AbiGenerationMode.CLASS,
-            null),
+            ImmutableList.of(),
+            requiredForSourceAbi),
         ruleFinder,
         Optional.of(proguardConfig),
         /* firstOrderPackageableDeps */ androidLibraryParams.getDeclaredDeps().get(),

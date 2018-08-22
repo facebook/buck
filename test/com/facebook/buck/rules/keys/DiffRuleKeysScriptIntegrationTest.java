@@ -223,24 +223,21 @@ public class DiffRuleKeysScriptIntegrationTest {
         runRuleKeyDiffer(workspace, ""),
         // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
         // rather than the change in the srcs property of that class is a bug in the differ.
-        Matchers.allOf(
-            Matchers.containsString(
-                "Change details for [//:java_lib_all]\n"
-                    + "  (jarBuildStepsFactory):\n"
-                    + "    -[ruleKey(sha1=3357093a6a6f24fe2f63fdfdb141553a6d0820e9)]\n"
-                    + "    +[ruleKey(sha1=75402ecb11ea28caac34fe86ed9d2dfdded2f063)]\n"),
-            Matchers.containsString(
-                "Change details for [//:java_lib_2->jarBuildStepsFactory]\n"
-                    + "  (srcs):\n"
-                    + "    -[<missing>]\n"
-                    + "    -[container(LIST,len=1)]\n"
-                    + "    +[container(LIST,len=2)]\n"
-                    + "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]\n"),
-            Matchers.containsString(
-                "Change details for [//:java_lib_1->jarBuildStepsFactory]\n"
-                    + "  (srcs):\n"
-                    + "    -[path(JavaLib1.java:fc76b6367ddddc08ff2fb46d8f22676c09c95be5)]\n"
-                    + "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]")));
+        Matchers.stringContainsInOrder(
+            "Change details for [//:java_lib_2->jarBuildStepsFactory]\n",
+            "  (srcs):\n",
+            "    -[<missing>]\n",
+            "    -[container(LIST,len=1)]\n",
+            "    +[container(LIST,len=2)]\n",
+            "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]\n",
+            "Change details for [//:java_lib_1->jarBuildStepsFactory]\n",
+            "  (srcs):\n",
+            "    -[path(JavaLib1.java:fc76b6367ddddc08ff2fb46d8f22676c09c95be5)]\n",
+            "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]\n",
+            "Change details for [//:java_lib_all]\n",
+            "  (jarBuildStepsFactory):\n",
+            "    -[ruleKey(sha1=" /* some rulekey */,
+            "    +[ruleKey(sha1=" /* some other rulekey */));
   }
 
   @Test

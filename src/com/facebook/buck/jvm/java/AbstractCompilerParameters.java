@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
+import java.util.Collection;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -87,13 +88,9 @@ abstract class AbstractCompilerParameters {
     }
 
     public CompilerParameters.Builder setClasspathEntriesSourcePaths(
-        ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
-        SourcePathResolver resolver) {
+        Collection<SourcePath> compileTimeClasspathSourcePaths, SourcePathResolver resolver) {
       ImmutableSortedSet<Path> compileTimeClasspathPaths =
-          compileTimeClasspathSourcePaths
-              .stream()
-              .map(resolver::getAbsolutePath)
-              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+          resolver.getAllAbsolutePaths(compileTimeClasspathSourcePaths);
       return ((CompilerParameters.Builder) this).setClasspathEntries(compileTimeClasspathPaths);
     }
   }

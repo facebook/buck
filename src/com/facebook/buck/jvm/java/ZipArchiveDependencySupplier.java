@@ -36,11 +36,6 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> get() {
-    return zipFiles;
-  }
-
-  @Override
   public Stream<SourcePath> getArchiveMembers(
       SourcePathResolver resolver, SourcePathRuleFinder ruleFinder) {
     return zipFiles
@@ -49,7 +44,8 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
             zipSourcePath -> {
               BuildRule rule = ruleFinder.getRule((BuildTargetSourcePath) zipSourcePath);
               HasJavaAbi hasJavaAbi = (HasJavaAbi) rule;
-              Preconditions.checkState(rule.getSourcePathToOutput().equals(zipSourcePath));
+              SourcePath ruleOutput = Preconditions.checkNotNull(rule.getSourcePathToOutput());
+              Preconditions.checkState(ruleOutput.equals(zipSourcePath));
               return hasJavaAbi.getAbiInfo().getJarContents().stream();
             });
   }

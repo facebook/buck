@@ -55,7 +55,7 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final Path outputPath;
   private BuildOutputInitializer<Object> buildOutputInitializer;
-  private final DefaultJavaAbiInfo javaAbiInfo;
+  private final JavaAbiInfo javaAbiInfo;
 
   public CalculateClassAbi(
       BuildTarget buildTarget,
@@ -67,7 +67,7 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.binaryJar = binaryJar;
     this.compatibilityMode = compatibilityMode;
     this.outputPath = getAbiJarPath(getProjectFilesystem(), getBuildTarget());
-    this.javaAbiInfo = new DefaultJavaAbiInfo(getBuildTarget(), getSourcePathToOutput());
+    this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 

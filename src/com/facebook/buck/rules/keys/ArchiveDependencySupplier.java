@@ -19,7 +19,6 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.stream.Stream;
 
 /**
@@ -28,8 +27,6 @@ import java.util.stream.Stream;
  * set of {@link SourcePath}s, one for each member of the archive.
  */
 public interface ArchiveDependencySupplier extends AddsToRuleKey {
-  ImmutableSortedSet<SourcePath> get();
-
   Stream<SourcePath> getArchiveMembers(
       SourcePathResolver resolver, SourcePathRuleFinder ruleFinder);
 }

@@ -72,7 +72,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final SourcePath binaryJar;
-  private final DefaultJavaAbiInfo javaAbiInfo;
+  private final JavaAbiInfo javaAbiInfo;
   private final Path copiedBinaryJar;
   @AddToRuleKey private final Optional<SourcePath> sourceJar;
 
@@ -137,7 +137,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     copiedBinaryJar =
         BuildTargetPaths.getGenPath(
             getProjectFilesystem(), getBuildTarget(), "__%s__/" + fileNameWithJarExtension);
-    this.javaAbiInfo = new DefaultJavaAbiInfo(getBuildTarget(), getSourcePathToOutput());
+    this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
 
     buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }

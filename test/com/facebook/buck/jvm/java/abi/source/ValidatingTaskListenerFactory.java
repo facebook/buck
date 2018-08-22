@@ -28,7 +28,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
-import javax.tools.JavaFileManager;
 
 class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerFactory {
   private final String ruleName;
@@ -61,9 +60,6 @@ class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerF
           public boolean ruleIsRequiredForSourceOnlyAbi() {
             return requiredForSourceAbi;
           }
-
-          @Override
-          public void setFileManager(JavaFileManager fileManager) {}
 
           @Override
           public boolean elementIsAvailableForSourceOnlyAbi(Elements elements, Element element) {
