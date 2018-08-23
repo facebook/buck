@@ -17,8 +17,11 @@
 package com.facebook.buck.support.bgtasks;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.google.common.annotations.VisibleForTesting;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 /**
  * Synchronous implementation of {@link BackgroundTaskManager}. Scheduled tasks are run
@@ -27,10 +30,10 @@ import java.util.List;
 public class SynchronousBackgroundTaskManager implements BackgroundTaskManager {
 
   private static final Logger LOG = Logger.get(SynchronousBackgroundTaskManager.class);
-  private List<ManagedBackgroundTask> scheduledTasks;
+  private final Queue<ManagedBackgroundTask> scheduledTasks;
 
   public SynchronousBackgroundTaskManager() {
-    this.scheduledTasks = new ArrayList<>();
+    this.scheduledTasks = new ArrayDeque<>();
   }
 
   @Override
@@ -68,13 +71,14 @@ public class SynchronousBackgroundTaskManager implements BackgroundTaskManager {
 
       case COMMAND_END:
         while (scheduledTasks.size() > 0) {
-          ManagedBackgroundTask task = scheduledTasks.remove(0);
+          ManagedBackgroundTask task = scheduledTasks.poll();
           runTask(task);
         }
     }
   }
 
-  protected List<ManagedBackgroundTask> getScheduledTasks() {
-    return scheduledTasks;
+  @VisibleForTesting
+  protected List<ManagedBackgroundTask> getScheduledTaskCount() {
+    return new ArrayList<>(scheduledTasks);
   }
 }

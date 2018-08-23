@@ -43,7 +43,7 @@ public class SynchronousBackgroundTaskManagerTest {
     String taskId = manager.schedule(task);
 
     assertTrue(taskId.contains("testTask"));
-    assertEquals(manager.getScheduledTasks().get(0).getTask(), task);
+    assertEquals(manager.getScheduledTaskCount().get(0).getTask(), task);
   }
 
   @Test
@@ -59,7 +59,7 @@ public class SynchronousBackgroundTaskManagerTest {
     manager.notify(Notification.COMMAND_END);
 
     assertEquals(task.getActionArgs().output, "succeeded");
-    assertEquals(manager.getScheduledTasks().size(), 0);
+    assertEquals(manager.getScheduledTaskCount().size(), 0);
     assertEquals(manager.getFinishedTasksToTest().size(), 1);
   }
 
@@ -76,7 +76,7 @@ public class SynchronousBackgroundTaskManagerTest {
     manager.notify(Notification.COMMAND_END);
 
     assertEquals(task.getActionArgs().output, "init");
-    assertEquals(manager.getScheduledTasks().size(), 0);
+    assertEquals(manager.getScheduledTaskCount().size(), 0);
     assertEquals(manager.getFinishedTasksToTest().size(), 1);
   }
 
