@@ -77,6 +77,7 @@ public class AndroidAppModularityDescription
 
     Optional<Map<String, List<String>>> getApplicationModuleDependencies();
 
+    @Hint(isDep = false)
     Optional<List<BuildTarget>> getApplicationModuleBlacklist();
 
     @Hint(isDep = false)
