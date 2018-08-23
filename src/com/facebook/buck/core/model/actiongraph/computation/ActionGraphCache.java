@@ -17,28 +17,20 @@
 package com.facebook.buck.core.model.actiongraph.computation;
 
 import com.facebook.buck.core.cell.CellProvider;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.impl.NoopBuildRule;
-import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
-import com.facebook.buck.event.ActionGraphPerfStatEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.PerfEventId;
@@ -48,26 +40,18 @@ import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
-import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
-import com.facebook.buck.util.timing.Clock;
-import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
-import java.util.stream.StreamSupport;
 
 /**
  * Class that transforms {@link TargetGraph} to {@link ActionGraph}. It also holds a cache for the
@@ -403,122 +387,30 @@ public class ActionGraphCache {
     }
     switch (parallelizationMode) {
       case ENABLED:
-        return createActionGraphInParallel(
-            transformer,
-            targetGraph,
-            cellProvider,
-            poolSupplier.get(),
-            actionGraphCreationLifecycleListener);
+        return new ParallelActionGraphFactory()
+            .create(
+                ParallelActionGraphCreationParameters.of(
+                    transformer,
+                    targetGraph,
+                    cellProvider,
+                    poolSupplier.get(),
+                    actionGraphCreationLifecycleListener));
       case DISABLED:
-        return createActionGraphSerially(
-            eventBus,
-            transformer,
-            targetGraph,
-            cellProvider,
-            shouldInstrumentGraphBuilding,
-            actionGraphCreationLifecycleListener);
+        return new SerialActionGraphFactory()
+            .create(
+                SerialActionGraphCreationParameters.of(
+                    eventBus,
+                    transformer,
+                    targetGraph,
+                    cellProvider,
+                    shouldInstrumentGraphBuilding,
+                    actionGraphCreationLifecycleListener));
       case EXPERIMENT_UNSTABLE:
       case EXPERIMENT:
         throw new AssertionError(
             "EXPERIMENT* values should have been resolved to ENABLED or DISABLED.");
     }
     throw new AssertionError("Unexpected parallelization mode value: " + parallelizationMode);
-  }
-
-  private ActionGraphAndBuilder createActionGraphInParallel(
-      TargetNodeToBuildRuleTransformer transformer,
-      TargetGraph targetGraph,
-      CellProvider cellProvider,
-      ForkJoinPool pool,
-      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
-    ActionGraphBuilder graphBuilder =
-        new MultiThreadedActionGraphBuilder(pool, targetGraph, transformer, cellProvider);
-    HashMap<BuildTarget, CompletableFuture<BuildRule>> futures = new HashMap<>();
-
-    actionGraphCreationLifecycleListener.onCreate(graphBuilder);
-
-    LOG.debug("start target graph walk");
-    new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
-      @Override
-      public void visit(TargetNode<?> node) {
-        // If we're loading this node from cache, we don't need to wait on our children, as the
-        // entire subgraph will be loaded from cache.
-        CompletableFuture<BuildRule>[] depFutures =
-            targetGraph
-                .getOutgoingNodesFor(node)
-                .stream()
-                .map(dep -> Preconditions.checkNotNull(futures.get(dep.getBuildTarget())))
-                .<CompletableFuture<BuildRule>>toArray(CompletableFuture[]::new);
-        futures.put(
-            node.getBuildTarget(),
-            CompletableFuture.allOf(depFutures)
-                .thenApplyAsync(ignored -> graphBuilder.requireRule(node.getBuildTarget()), pool));
-      }
-    }.traverse();
-
-    // Wait for completion. The results are ignored as we only care about the rules populated in
-    // the graphBuilder, which is a superset of the rules generated directly from target nodes.
-    try {
-      CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[futures.size()]))
-          .join();
-    } catch (CompletionException e) {
-      Throwables.throwIfUnchecked(e.getCause());
-      throw new IllegalStateException("unexpected checked exception", e);
-    }
-    LOG.debug("end target graph walk");
-
-    return ActionGraphAndBuilder.builder()
-        .setActionGraph(new ActionGraph(graphBuilder.getBuildRules()))
-        .setActionGraphBuilder(graphBuilder)
-        .build();
-  }
-
-  private ActionGraphAndBuilder createActionGraphSerially(
-      BuckEventBus eventBus,
-      TargetNodeToBuildRuleTransformer transformer,
-      TargetGraph targetGraph,
-      CellProvider cellProvider,
-      boolean shouldInstrumentGraphBuilding,
-      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
-    // TODO: Reduce duplication between the serial and parallel creation methods.
-    ActionGraphBuilder graphBuilder =
-        new SingleThreadedActionGraphBuilder(targetGraph, transformer, cellProvider);
-
-    actionGraphCreationLifecycleListener.onCreate(graphBuilder);
-
-    LOG.debug("start target graph walk");
-    new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
-      @Override
-      public void visit(TargetNode<?> node) {
-        if (shouldInstrumentGraphBuilding) {
-          Clock clock = new DefaultClock();
-          try (Scope ignored =
-              ActionGraphPerfStatEvent.start(
-                  clock,
-                  eventBus,
-                  () -> Iterables.size(graphBuilder.getBuildRules()),
-                  () ->
-                      StreamSupport.stream(graphBuilder.getBuildRules().spliterator(), true)
-                          .filter(
-                              rule ->
-                                  rule instanceof NoopBuildRule
-                                      || rule instanceof NoopBuildRuleWithDeclaredAndExtraDeps)
-                          .count(),
-                  node.getDescription().getClass().getName(),
-                  node.getBuildTarget().getFullyQualifiedName())) {
-            graphBuilder.requireRule(node.getBuildTarget());
-          }
-        } else {
-          graphBuilder.requireRule(node.getBuildTarget());
-        }
-      }
-    }.traverse();
-    LOG.debug("end target graph walk");
-
-    return ActionGraphAndBuilder.builder()
-        .setActionGraph(new ActionGraph(graphBuilder.getBuildRules()))
-        .setActionGraphBuilder(graphBuilder)
-        .build();
   }
 
   private static Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(
