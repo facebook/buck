@@ -26,16 +26,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class NonReentrantSystemExit {
 
-  private AtomicBoolean shutdownInitiated;
-  private AtomicInteger exitCode;
-  private CountDownLatch doExitLatch;
-  private Thread thread;
+  private final AtomicBoolean shutdownInitiated;
+  private final AtomicInteger exitCode;
+  private final CountDownLatch doExitLatch;
 
   public NonReentrantSystemExit() {
     this.shutdownInitiated = new AtomicBoolean(false);
     this.exitCode = new AtomicInteger(-1);
     this.doExitLatch = new CountDownLatch(1);
-    this.thread =
+    Thread thread =
         new Thread(NonReentrantSystemExit.class.getSimpleName()) {
           @Override
           public void run() {
@@ -53,7 +52,7 @@ public class NonReentrantSystemExit {
             System.exit(exitCode.get());
           }
         };
-    this.thread.start();
+    thread.start();
   }
 
   public void shutdownSoon(int exitCode) {
