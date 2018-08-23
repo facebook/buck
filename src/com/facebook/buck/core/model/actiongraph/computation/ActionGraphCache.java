@@ -336,6 +336,44 @@ public class ActionGraphCache {
               "incremental_action_graph", incrementalActionGraphMode.toString(), "", null, null));
     }
 
+    ActionGraphCreationLifecycleListener listener;
+    if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
+      listener =
+          graphBuilder -> {
+            // Any previously cached action graphs are no longer valid, as we may use build rules
+            // from those graphs to construct a new graph incrementally, and update those build
+            // rules to use a new BuildRuleResolver.
+            invalidateCache();
+
+            // Populate the new build rule graphBuilder with all of the usable rules from the last
+            // build rule graphBuilder for incremental action graph generation.
+            incrementalActionGraphGenerator.populateActionGraphBuilderWithCachedRules(
+                eventBus, targetGraph, graphBuilder);
+          };
+    } else {
+      listener = graphBuilder -> {};
+    }
+    return createActionGraph(
+        eventBus,
+        transformer,
+        targetGraph,
+        cellProvider,
+        parallelizationMode,
+        shouldInstrumentGraphBuilding,
+        poolSupplier,
+        listener);
+  }
+
+  private ActionGraphAndBuilder createActionGraph(
+      BuckEventBus eventBus,
+      TargetNodeToBuildRuleTransformer transformer,
+      TargetGraph targetGraph,
+      CellProvider cellProvider,
+      ActionGraphParallelizationMode parallelizationMode,
+      boolean shouldInstrumentGraphBuilding,
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
+      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
+
     switch (parallelizationMode) {
       case EXPERIMENT:
         parallelizationMode =
@@ -366,12 +404,11 @@ public class ActionGraphCache {
     switch (parallelizationMode) {
       case ENABLED:
         return createActionGraphInParallel(
-            eventBus,
             transformer,
             targetGraph,
             cellProvider,
-            incrementalActionGraphMode,
-            poolSupplier.get());
+            poolSupplier.get(),
+            actionGraphCreationLifecycleListener);
       case DISABLED:
         return createActionGraphSerially(
             eventBus,
@@ -379,7 +416,7 @@ public class ActionGraphCache {
             targetGraph,
             cellProvider,
             shouldInstrumentGraphBuilding,
-            incrementalActionGraphMode);
+            actionGraphCreationLifecycleListener);
       case EXPERIMENT_UNSTABLE:
       case EXPERIMENT:
         throw new AssertionError(
@@ -389,28 +426,16 @@ public class ActionGraphCache {
   }
 
   private ActionGraphAndBuilder createActionGraphInParallel(
-      BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       CellProvider cellProvider,
-      IncrementalActionGraphMode incrementalActionGraphMode,
-      ForkJoinPool pool) {
+      ForkJoinPool pool,
+      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
     ActionGraphBuilder graphBuilder =
         new MultiThreadedActionGraphBuilder(pool, targetGraph, transformer, cellProvider);
     HashMap<BuildTarget, CompletableFuture<BuildRule>> futures = new HashMap<>();
 
-    if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
-      // Any previously cached action graphs are no longer valid, as we may use build rules from
-      // those graphs to construct a new graph incrementally, and update those build rules to use a
-      // new BuildRuleResolver.
-      invalidateCache();
-
-      // Populate the new build rule graphBuilder with all of the usable rules from the last build
-      // rule
-      // graphBuilder for incremental action graph generation.
-      incrementalActionGraphGenerator.populateActionGraphBuilderWithCachedRules(
-          eventBus, targetGraph, graphBuilder);
-    }
+    actionGraphCreationLifecycleListener.onCreate(graphBuilder);
 
     LOG.debug("start target graph walk");
     new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
@@ -454,22 +479,12 @@ public class ActionGraphCache {
       TargetGraph targetGraph,
       CellProvider cellProvider,
       boolean shouldInstrumentGraphBuilding,
-      IncrementalActionGraphMode incrementalActionGraphMode) {
+      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
     // TODO: Reduce duplication between the serial and parallel creation methods.
     ActionGraphBuilder graphBuilder =
         new SingleThreadedActionGraphBuilder(targetGraph, transformer, cellProvider);
 
-    if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
-      // Any previously cached action graphs are no longer valid, as we may use build rules from
-      // those graphs to construct a new graph incrementally, and update those build rules to use a
-      // new BuildRuleResolver.
-      invalidateCache();
-
-      // Populate the new build rule graphBuilder with all of the usable rules from the last build
-      // rule graphBuilder for incremental action graph generation.
-      incrementalActionGraphGenerator.populateActionGraphBuilderWithCachedRules(
-          eventBus, targetGraph, graphBuilder);
-    }
+    actionGraphCreationLifecycleListener.onCreate(graphBuilder);
 
     LOG.debug("start target graph walk");
     new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
@@ -604,5 +619,9 @@ public class ActionGraphCache {
 
   private void invalidateCache() {
     previousActionGraphs.invalidateAll();
+  }
+
+  interface ActionGraphCreationLifecycleListener {
+    void onCreate(ActionGraphBuilder graphBuilder);
   }
 }
