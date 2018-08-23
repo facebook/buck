@@ -92,7 +92,6 @@ public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTyp
 
   Set<BuildTarget> getApplicationModuleTargets();
 
-  @Hint(isDep = false)
   Map<String, List<BuildTarget>> getApplicationModuleConfigs();
 
   @Value.Default
@@ -102,7 +101,6 @@ public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTyp
 
   Optional<Map<String, List<String>>> getApplicationModuleDependencies();
 
-  @Hint(isDep = false)
   Optional<List<BuildTarget>> getApplicationModuleBlacklist();
 
   @Value.Default

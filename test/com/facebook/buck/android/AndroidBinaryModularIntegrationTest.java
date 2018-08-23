@@ -367,24 +367,6 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     apkInspector.assertTypeExists("Lcom/facebook/sample/Shared;");
   }
 
-  @Test
-  public void testBlacklistedModuleWhenNotVisible() throws IOException {
-    String target = "//apps/multidex:app_modular_manifest_debug_blacklisted_no_visibility";
-    workspace.runBuckCommand("build", target).assertSuccess();
-
-    String module = "sample3";
-    String modulePath = "assets/" + module + "/" + module + "2.dex";
-    Path apkPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
-    DexInspector moduleInspector = new DexInspector(apkPath, modulePath);
-    moduleInspector.assertTypeDoesNotExist("Lcom/facebook/sample3/private_shared/Sample;");
-
-    DexInspector apkInspector = new DexInspector(apkPath, "classes2.dex");
-    apkInspector.assertTypeExists("Lcom/facebook/sample3/private_shared/Sample;");
-  }
-
   /* Disable @Test */
   public void testMultidexProguardModular() throws IOException {
     String target = "//apps/multidex:app_modular_proguard_dontobfuscate";
