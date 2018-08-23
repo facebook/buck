@@ -156,6 +156,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
   @AddToRuleKey private final ImmutableMap<SourcePath, String> extensionBundlePaths;
 
+  @AddToRuleKey private final boolean copySwiftStdlibToFrameworks;
+
   private final Optional<AppleAssetCatalog> assetCatalog;
   private final Optional<CoreDataModel> coreDataModel;
   private final Optional<SceneKitAssets> sceneKitAssets;
@@ -207,7 +209,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<String> codesignFlags,
       Optional<String> codesignIdentity,
       Optional<Boolean> ibtoolModuleFlag,
-      Duration codesignTimeout) {
+      Duration codesignTimeout,
+      boolean copySwiftStdlibToFrameworks) {
     super(buildTarget, projectFilesystem, params);
     this.extension =
         extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
@@ -277,6 +280,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             : Optional.empty();
 
     this.codesignTimeout = codesignTimeout;
+    this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -975,7 +979,11 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean isForPackaging) {
     // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
     // are copied over).
-    boolean shouldCopySwiftStdlib = !extension.equals(AppleBundleExtension.APPEX.toFileExtension());
+    boolean shouldCopySwiftStdlib =
+        !extension.equals(AppleBundleExtension.APPEX.toFileExtension())
+            && (!extension.equals(AppleBundleExtension.FRAMEWORK.toFileExtension())
+                || copySwiftStdlibToFrameworks);
+
     if (swiftStdlibTool.isPresent() && shouldCopySwiftStdlib) {
       ImmutableList.Builder<String> swiftStdlibCommand = ImmutableList.builder();
       swiftStdlibCommand.addAll(swiftStdlibTool.get().getCommandPrefix(resolver));

@@ -47,6 +47,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -75,18 +76,21 @@ public class AppleBundleDescription
   private final AppleBinaryDescription appleBinaryDescription;
   private final AppleLibraryDescription appleLibraryDescription;
   private final AppleConfig appleConfig;
+  private final SwiftBuckConfig swiftBuckConfig;
 
   public AppleBundleDescription(
       ToolchainProvider toolchainProvider,
       XCodeDescriptions xcodeDescriptions,
       AppleBinaryDescription appleBinaryDescription,
       AppleLibraryDescription appleLibraryDescription,
-      AppleConfig appleConfig) {
+      AppleConfig appleConfig,
+      SwiftBuckConfig swiftBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.xcodeDescriptions = xcodeDescriptions;
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.appleConfig = appleConfig;
+    this.swiftBuckConfig = swiftBuckConfig;
   }
 
   @Override
@@ -179,7 +183,8 @@ public class AppleBundleDescription
         args.getCodesignFlags(),
         args.getCodesignIdentity(),
         args.getIbtoolModuleFlag(),
-        appleConfig.getCodesignTimeout());
+        appleConfig.getCodesignTimeout(),
+        swiftBuckConfig.getCopyStdlibToFrameworks());
   }
 
   /**

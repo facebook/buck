@@ -17,11 +17,12 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
 import com.google.common.base.Splitter;
 import java.util.Optional;
 
 /** A Swift-specific "view" of BuckConfig. */
-public class SwiftBuckConfig {
+public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   private static final String SECTION_NAME = "swift";
   public static final String COMPILER_FLAGS_NAME = "compiler_flags";
   public static final String VERSION_NAME = "version";
@@ -31,11 +32,22 @@ public class SwiftBuckConfig {
   public static final String PROJECT_WMO = "project_wmo";
   public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
   public static final String PROJECT_ADD_AST_PATHS = "project_add_ast_paths";
+  public static final String COPY_STDLIB_TO_FRAMEWORKS = "copy_stdlib_to_frameworks";
 
   private final BuckConfig delegate;
 
+  @Override
+  public BuckConfig getDelegate() {
+    return delegate;
+  }
+
   public SwiftBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
+  }
+
+  // Reflection-based factory for ConfigView
+  public static SwiftBuckConfig of(BuckConfig delegate) {
+    return new SwiftBuckConfig(delegate);
   }
 
   private Optional<Iterable<String>> getFlags(String field) {
@@ -82,5 +94,16 @@ public class SwiftBuckConfig {
    */
   public boolean getProjectAddASTPaths() {
     return delegate.getBooleanValue(SECTION_NAME, PROJECT_ADD_AST_PATHS, false);
+  }
+
+  /**
+   * If enabled, swift-stdlib-tool will be run on .framework bundles, copying the Swift standard
+   * library into them. This is usually not what you want - it will lead to multiple redundant
+   * copies of the libraries being embedded in both the app bundle and any descendant framework
+   * bundles. Even if Swift is only used in a framework, and not in the app binary, Buck and
+   * swift-stdlib-tool will handle that correctly and embed the libraries.
+   */
+  public boolean getCopyStdlibToFrameworks() {
+    return delegate.getBooleanValue(SECTION_NAME, COPY_STDLIB_TO_FRAMEWORKS, false);
   }
 }

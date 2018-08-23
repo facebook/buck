@@ -69,6 +69,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftRuntimeNativeLinkable;
 import com.facebook.buck.unarchive.UnzipStep;
@@ -123,16 +124,19 @@ public class AppleTestDescription
   private final ToolchainProvider toolchainProvider;
   private final XCodeDescriptions xcodeDescriptions;
   private final AppleConfig appleConfig;
+  private final SwiftBuckConfig swiftBuckConfig;
   private final AppleLibraryDescription appleLibraryDescription;
 
   public AppleTestDescription(
       ToolchainProvider toolchainProvider,
       XCodeDescriptions xcodeDescriptions,
       AppleConfig appleConfig,
+      SwiftBuckConfig swiftBuckConfig,
       AppleLibraryDescription appleLibraryDescription) {
     this.toolchainProvider = toolchainProvider;
     this.xcodeDescriptions = xcodeDescriptions;
     this.appleConfig = appleConfig;
+    this.swiftBuckConfig = swiftBuckConfig;
     this.appleLibraryDescription = appleLibraryDescription;
   }
 
@@ -319,7 +323,8 @@ public class AppleTestDescription
             args.getCodesignFlags(),
             args.getCodesignIdentity(),
             Optional.empty(),
-            appleConfig.getCodesignTimeout());
+            appleConfig.getCodesignTimeout(),
+            swiftBuckConfig.getCopyStdlibToFrameworks());
     graphBuilder.addToIndex(bundle);
 
     Optional<SourcePath> xctool = getXctool(projectFilesystem, params, graphBuilder);

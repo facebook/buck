@@ -579,7 +579,8 @@ public class AppleDescriptions {
       ImmutableList<String> codesignFlags,
       Optional<String> codesignAdhocIdentity,
       Optional<Boolean> ibtoolModuleFlag,
-      Duration codesignTimeout) {
+      Duration codesignTimeout,
+      boolean copySwiftStdlibToFrameworks) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             cxxPlatformsProvider,
@@ -805,7 +806,8 @@ public class AppleDescriptions {
         codesignFlags,
         codesignAdhocIdentity,
         ibtoolModuleFlag,
-        codesignTimeout);
+        codesignTimeout,
+        copySwiftStdlibToFrameworks);
   }
 
   /**
