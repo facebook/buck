@@ -24,7 +24,6 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.util.Console;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -51,8 +50,7 @@ class DaemonLifecycleManager {
       KnownRuleTypesProvider knownRuleTypesProvider,
       ExecutableFinder executableFinder,
       Watchman watchman,
-      Console console)
-      throws IOException {
+      Console console) {
     Path rootPath = rootCell.getFilesystem().getRootPath();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
