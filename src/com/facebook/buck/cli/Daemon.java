@@ -273,13 +273,12 @@ final class Daemon implements Closeable {
         watchmanWatcher.postEvents(eventBus, watchmanFreshInstanceAction);
       } finally {
         eventBus.post(FileHashCacheEvent.invalidationFinished(started));
-        hashCaches.forEach(
-            hashCache -> {
-              if (hashCache instanceof WatchedFileHashCache) {
-                WatchedFileHashCache cache = (WatchedFileHashCache) hashCache;
-                cache.getStatsEvents().forEach(eventBus::post);
-              }
-            });
+        for (ProjectFileHashCache hashCache : hashCaches) {
+          if (hashCache instanceof WatchedFileHashCache) {
+            WatchedFileHashCache cache = (WatchedFileHashCache) hashCache;
+            cache.getStatsEvents().forEach(eventBus::post);
+          }
+        }
       }
     }
   }
