@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -32,7 +31,6 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
@@ -40,9 +38,7 @@ import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
-import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
@@ -310,107 +306,28 @@ public class ActionGraphCache {
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
 
-    if (incrementalActionGraphMode == IncrementalActionGraphMode.EXPERIMENT) {
-      incrementalActionGraphMode =
-          RandomizedTrial.getGroupStable(
-              "incremental_action_graph", incrementalActionGraphExperimentGroups);
-      Preconditions.checkState(incrementalActionGraphMode != IncrementalActionGraphMode.EXPERIMENT);
-      eventBus.post(
-          new ExperimentEvent(
-              "incremental_action_graph", incrementalActionGraphMode.toString(), "", null, null));
-    }
+    return new ActionGraphFactory()
+        .createActionGraph(
+            eventBus,
+            transformer,
+            targetGraph,
+            cellProvider,
+            parallelizationMode,
+            shouldInstrumentGraphBuilding,
+            incrementalActionGraphMode,
+            incrementalActionGraphExperimentGroups,
+            poolSupplier,
+            graphBuilder -> {
+              // Any previously cached action graphs are no longer valid, as we may use build rules
+              // from those graphs to construct a new graph incrementally, and update those build
+              // rules to use a new BuildRuleResolver.
+              invalidateCache();
 
-    ActionGraphCreationLifecycleListener listener;
-    if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
-      listener =
-          graphBuilder -> {
-            // Any previously cached action graphs are no longer valid, as we may use build rules
-            // from those graphs to construct a new graph incrementally, and update those build
-            // rules to use a new BuildRuleResolver.
-            invalidateCache();
-
-            // Populate the new build rule graphBuilder with all of the usable rules from the last
-            // build rule graphBuilder for incremental action graph generation.
-            incrementalActionGraphGenerator.populateActionGraphBuilderWithCachedRules(
-                eventBus, targetGraph, graphBuilder);
-          };
-    } else {
-      listener = graphBuilder -> {};
-    }
-    return createActionGraph(
-        eventBus,
-        transformer,
-        targetGraph,
-        cellProvider,
-        parallelizationMode,
-        shouldInstrumentGraphBuilding,
-        poolSupplier,
-        listener);
-  }
-
-  private ActionGraphAndBuilder createActionGraph(
-      BuckEventBus eventBus,
-      TargetNodeToBuildRuleTransformer transformer,
-      TargetGraph targetGraph,
-      CellProvider cellProvider,
-      ActionGraphParallelizationMode parallelizationMode,
-      boolean shouldInstrumentGraphBuilding,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
-      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
-
-    switch (parallelizationMode) {
-      case EXPERIMENT:
-        parallelizationMode =
-            RandomizedTrial.getGroupStable(
-                "action_graph_parallelization", ActionGraphParallelizationMode.class);
-        eventBus.post(
-            new ExperimentEvent(
-                "action_graph_parallelization", parallelizationMode.toString(), "", null, null));
-        break;
-      case EXPERIMENT_UNSTABLE:
-        parallelizationMode =
-            RandomizedTrial.getGroup(
-                "action_graph_parallelization",
-                eventBus.getBuildId().toString(),
-                ActionGraphParallelizationMode.class);
-        eventBus.post(
-            new ExperimentEvent(
-                "action_graph_parallelization_unstable",
-                parallelizationMode.toString(),
-                "",
-                null,
-                null));
-        break;
-      case ENABLED:
-      case DISABLED:
-        break;
-    }
-    switch (parallelizationMode) {
-      case ENABLED:
-        return new ParallelActionGraphFactory()
-            .create(
-                ParallelActionGraphCreationParameters.of(
-                    transformer,
-                    targetGraph,
-                    cellProvider,
-                    poolSupplier.get(),
-                    actionGraphCreationLifecycleListener));
-      case DISABLED:
-        return new SerialActionGraphFactory()
-            .create(
-                SerialActionGraphCreationParameters.of(
-                    eventBus,
-                    transformer,
-                    targetGraph,
-                    cellProvider,
-                    shouldInstrumentGraphBuilding,
-                    actionGraphCreationLifecycleListener));
-      case EXPERIMENT_UNSTABLE:
-      case EXPERIMENT:
-        throw new AssertionError(
-            "EXPERIMENT* values should have been resolved to ENABLED or DISABLED.");
-    }
-    throw new AssertionError("Unexpected parallelization mode value: " + parallelizationMode);
+              // Populate the new build rule graphBuilder with all of the usable rules from the last
+              // build rule graphBuilder for incremental action graph generation.
+              incrementalActionGraphGenerator.populateActionGraphBuilderWithCachedRules(
+                  eventBus, targetGraph, graphBuilder);
+            });
   }
 
   private static Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(
@@ -511,9 +428,5 @@ public class ActionGraphCache {
 
   private void invalidateCache() {
     previousActionGraphs.invalidateAll();
-  }
-
-  interface ActionGraphCreationLifecycleListener {
-    void onCreate(ActionGraphBuilder graphBuilder);
   }
 }
