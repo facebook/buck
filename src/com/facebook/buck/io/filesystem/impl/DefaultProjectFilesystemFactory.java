@@ -146,7 +146,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   @Override
-  public ProjectFilesystem createOrThrow(Path path) throws InterruptedException {
+  public ProjectFilesystem createOrThrow(Path path) {
     try {
       // toRealPath() is necessary to resolve symlinks, allowing us to later
       // check whether files are inside or outside of the project without issue.
