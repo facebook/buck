@@ -38,16 +38,14 @@ public class NonReentrantSystemExit {
         new Thread(NonReentrantSystemExit.class.getSimpleName()) {
           @Override
           public void run() {
-            while (doExitLatch.getCount() > 0) {
-              try {
-                doExitLatch.await();
-              } catch (InterruptedException e) {
-                // This is one of the rare cases where it's OK to ignore InterruptedException:
-                // - nobody should be joining on this thread, so it's not like the user will have
-                //   to wait longer or anything,
-                // - the shutdown hook depends on this thread running, exiting early will actually
-                //   break functionality.
-              }
+            try {
+              doExitLatch.await();
+            } catch (InterruptedException e) {
+              // This is one of the rare cases where it's OK to ignore InterruptedException:
+              // - nobody should be joining on this thread, so it's not like the user will have
+              //   to wait longer or anything,
+              // - the shutdown hook depends on this thread running, exiting early will actually
+              //   break functionality.
             }
             System.exit(exitCode.get());
           }
