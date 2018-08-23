@@ -99,14 +99,13 @@ final class Daemon implements Closeable {
 
     // Setup the stacked file hash cache from all cells.
     ImmutableList.Builder<ProjectFileHashCache> hashCachesBuilder = ImmutableList.builder();
-    allCells.forEach(
-        subCell -> {
-          WatchedFileHashCache watchedCache =
-              new WatchedFileHashCache(
-                  subCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode());
-          fileEventBus.register(watchedCache);
-          hashCachesBuilder.add(watchedCache);
-        });
+    for (Cell subCell : allCells) {
+      WatchedFileHashCache watchedCache =
+          new WatchedFileHashCache(
+              subCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode());
+      fileEventBus.register(watchedCache);
+      hashCachesBuilder.add(watchedCache);
+    }
     hashCachesBuilder.add(
         DefaultFileHashCache.createBuckOutFileHashCache(
             rootCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
