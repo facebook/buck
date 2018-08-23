@@ -97,7 +97,12 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
             );
 
     try {
-      ExecuteResponse response = client.execute(request);
+      ExecuteResponse response;
+      synchronized (client) {
+        // TODO(shivanker): Thrift client is not thread-safe. We *really* don't want this for the
+        // long-term. Will convert this to an async-client in the next diff.
+        response = client.execute(request);
+      }
       com.facebook.remoteexecution.executionengine.ExecutionResult result = waitForResult(response);
       ActionResult actionResult = result.action_result;
       return actionResultToExecutionResult(actionResult);
@@ -128,7 +133,9 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
       GetExecutionStateResponse stateResponse;
 
       try {
-        stateResponse = client.getExecutionState(request);
+        synchronized (client) {
+          stateResponse = client.getExecutionState(request);
+        }
       } catch (UnknownExecutionIdException e) {
         throw new RuntimeException(e);
       }
@@ -171,7 +178,10 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
           System.err.println("Got stderr digest.");
           try {
             ReadBlobRequest request = new ReadBlobRequest(actionResult.stderr_digest);
-            ReadBlobResponse response = casClient.readBlob(request);
+            ReadBlobResponse response;
+            synchronized (casClient) {
+              response = casClient.readBlob(request);
+            }
             return Optional.of(new String(response.data, CHARSET));
           } catch (TException e) {
             throw new RuntimeException(e);

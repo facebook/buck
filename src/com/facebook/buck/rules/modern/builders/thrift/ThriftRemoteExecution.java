@@ -23,18 +23,24 @@ import com.facebook.buck.rules.modern.builders.RemoteExecution;
 import com.facebook.buck.rules.modern.builders.RemoteExecutionService;
 import com.facebook.buck.rules.modern.builders.thrift.cas.ThriftContentAddressedStorage;
 import com.facebook.buck.rules.modern.builders.thrift.executionengine.ThriftExecutionEngine;
+import com.facebook.thrift.transport.TTransportException;
 import java.io.IOException;
 
 /** A RemoteExecution that sends jobs to a thrift-based remote execution service. */
 public class ThriftRemoteExecution extends RemoteExecution {
 
   private static final Protocol PROTOCOL = new ThriftProtocol();
-  private final ThriftRemoteExecutionClients clients;
+  private final ThriftContentAddressedStorage storage;
+  private final ThriftExecutionEngine remoteExecutionService;
 
   ThriftRemoteExecution(BuckEventBus eventBus, ThriftRemoteExecutionClients clients)
-      throws IOException {
+      throws IOException, TTransportException {
     super(eventBus);
-    this.clients = clients;
+    this.storage =
+        new ThriftContentAddressedStorage(
+            clients.createCasClient(), clients.createAsyncCasClientFactory());
+    this.remoteExecutionService =
+        new ThriftExecutionEngine(clients.createExecutionEngineClient(), clients.createCasClient());
   }
 
   @Override
@@ -44,11 +50,11 @@ public class ThriftRemoteExecution extends RemoteExecution {
 
   @Override
   protected ContentAddressedStorage getStorage() {
-    return new ThriftContentAddressedStorage(clients.getCasClient(), clients.getAsyncCasClient());
+    return storage;
   }
 
   @Override
   protected RemoteExecutionService getExecutionService() {
-    return new ThriftExecutionEngine(clients.getExecutionEngineClient(), clients.getCasClient());
+    return remoteExecutionService;
   }
 }

@@ -32,20 +32,18 @@ public class ThriftRemoteExecutionFactory {
       int casPort,
       BuckEventBus eventBus)
       throws IOException {
-    ThriftRemoteExecutionClients clients;
+    ThriftRemoteExecutionClients clients =
+        new ThriftRemoteExecutionClients(
+            remoteExecutionEngineHost, remoteExecutionEnginePort, casHost, casPort);
     try {
-      clients =
-          new ThriftRemoteExecutionClients(
-              remoteExecutionEngineHost, remoteExecutionEnginePort, casHost, casPort);
+      return new ThriftRemoteExecution(eventBus, clients) {
+        @Override
+        public void close() throws IOException {
+          clients.close();
+        }
+      };
     } catch (TTransportException e) {
       throw new IOException("Could not create ThriftRemoteExecutionClients.", e);
     }
-
-    return new ThriftRemoteExecution(eventBus, clients) {
-      @Override
-      public void close() throws IOException {
-        clients.close();
-      }
-    };
   }
 }

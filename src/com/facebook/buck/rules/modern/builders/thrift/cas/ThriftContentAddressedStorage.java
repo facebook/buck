@@ -20,6 +20,7 @@ import com.facebook.buck.rules.modern.builders.ContentAddressedStorage;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader;
 import com.facebook.buck.rules.modern.builders.OutputsMaterializer;
 import com.facebook.buck.rules.modern.builders.Protocol;
+import com.facebook.buck.rules.modern.builders.thrift.ThriftAsyncClientFactory;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.function.ThrowingSupplier;
@@ -38,7 +39,8 @@ public class ThriftContentAddressedStorage implements ContentAddressedStorage {
   private final OutputsMaterializer materializer;
 
   public ThriftContentAddressedStorage(
-      ContentAddressableStorage.Client client, ContentAddressableStorage.AsyncClient asyncClient) {
+      ContentAddressableStorage.Client client,
+      ThriftAsyncClientFactory<ContentAddressableStorage.AsyncClient> asyncClientFactory) {
     uploader =
         new MultiThreadedBlobUploader(
             1000,
@@ -46,7 +48,8 @@ public class ThriftContentAddressedStorage implements ContentAddressedStorage {
             MostExecutors.newMultiThreadExecutor("blob-uploader", 4),
             new ThriftCasBlobUploader(client));
 
-    materializer = new OutputsMaterializer(new ThriftAsyncBlobFetcher(asyncClient), PROTOCOL);
+    materializer =
+        new OutputsMaterializer(new ThriftAsyncBlobFetcher(asyncClientFactory), PROTOCOL);
   }
 
   @Override

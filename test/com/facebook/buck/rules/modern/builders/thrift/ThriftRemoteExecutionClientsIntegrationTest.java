@@ -65,7 +65,7 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
 
   @Test
   public void testSyncCasClient() throws TException {
-    ContentAddressableStorage.Client client = clients.getCasClient();
+    ContentAddressableStorage.Client client = clients.createCasClient();
     FindMissingBlobsRequest request = new FindMissingBlobsRequest(digests);
     FindMissingBlobsResponse response = client.findMissingBlobs(request);
 
@@ -75,8 +75,9 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
   }
 
   @Test
-  public void testAsyncCasClient() throws TException, InterruptedException {
-    ContentAddressableStorage.AsyncClient asyncClient = clients.getAsyncCasClient();
+  public void testAsyncCasClient() throws TException, InterruptedException, IOException {
+    ContentAddressableStorage.AsyncClient asyncClient =
+        clients.createAsyncCasClientFactory().getAsyncClient();
     FindMissingBlobsRequest request = new FindMissingBlobsRequest(digests);
 
     CountDownLatch latch = new CountDownLatch(1);
