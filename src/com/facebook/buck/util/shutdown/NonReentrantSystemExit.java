@@ -21,8 +21,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * If a shutdown hook causes an unhandled exception and the unhandled exception handler calls
- * System.exit we end up deadlocking. This exists solely to prevent that scenario.
+ * If a shutdown hook causes an unhandled exception and the unhandled exception handler calls {@link
+ * System#exit} we end up deadlocking. This exists solely to prevent that scenario.
  */
 public class NonReentrantSystemExit {
 
