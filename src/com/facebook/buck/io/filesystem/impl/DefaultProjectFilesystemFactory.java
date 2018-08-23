@@ -41,7 +41,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   @VisibleForTesting public static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
 
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
-  private static final Pattern GLOB_CHARS = Pattern.compile("[\\*\\?\\{\\[]");
+  private static final Pattern GLOB_CHARS = Pattern.compile("[*?{\\[]");
 
   // WindowsFS singleton instance
   @Nullable private static WindowsFS winFSInstance = null;
