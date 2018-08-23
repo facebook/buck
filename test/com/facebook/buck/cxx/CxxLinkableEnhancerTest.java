@@ -46,6 +46,7 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
@@ -110,9 +111,8 @@ public class CxxLinkableEnhancerTest {
     @Override
     public NativeLinkableInput getNativeLinkableInput(
         CxxPlatform cxxPlatform,
-        Linker.LinkableDepType type,
+        LinkableDepType type,
         boolean forceLinkWhole,
-        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions,
         ActionGraphBuilder graphBuilder) {
       return type == Linker.LinkableDepType.STATIC ? staticInput : sharedInput;
     }

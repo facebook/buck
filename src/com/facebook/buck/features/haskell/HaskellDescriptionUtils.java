@@ -304,7 +304,6 @@ public class HaskellDescriptionUtils {
               platform.getCxxPlatform(),
               NativeLinkables.getLinkStyle(link, depType),
               linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
-              ImmutableSet.of(),
               graphBuilder);
       linkerArgsBuilder.addAll(input.getArgs());
     }

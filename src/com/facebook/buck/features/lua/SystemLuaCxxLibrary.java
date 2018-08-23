@@ -32,7 +32,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
 
@@ -89,7 +88,6 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions,
       ActionGraphBuilder graphBuilder) {
     return NativeLinkableInput.builder().addAllArgs(StringArg.from("-llua")).build();
   }

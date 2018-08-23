@@ -24,7 +24,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Interface for {@link BuildRule} objects (e.g. C++ libraries) which can contribute to the
@@ -66,10 +65,6 @@ public interface NativeLinkable {
    */
   Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver);
 
-  enum LanguageExtensions {
-    HS_PROFILE
-  }
-
   /**
    * Return input that *dependents* should put on their link line when linking against this
    * linkable.
@@ -78,7 +73,6 @@ public interface NativeLinkable {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions,
       ActionGraphBuilder graphBuilder);
 
   /**
@@ -87,7 +81,7 @@ public interface NativeLinkable {
    */
   default NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform, Linker.LinkableDepType type, ActionGraphBuilder graphBuilder) {
-    return getNativeLinkableInput(cxxPlatform, type, false, ImmutableSet.of(), graphBuilder);
+    return getNativeLinkableInput(cxxPlatform, type, false, graphBuilder);
   }
 
   Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);

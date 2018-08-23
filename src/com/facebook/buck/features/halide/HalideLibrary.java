@@ -141,7 +141,6 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions,
       ActionGraphBuilder graphBuilder) {
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();

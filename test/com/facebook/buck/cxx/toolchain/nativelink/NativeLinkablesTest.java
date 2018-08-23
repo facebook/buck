@@ -84,7 +84,6 @@ public class NativeLinkablesTest {
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
-        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions,
         ActionGraphBuilder graphBuilder) {
       return nativeLinkableInput;
     }

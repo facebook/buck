@@ -224,7 +224,6 @@ public class HaskellGhciDescription
                 cxxPlatform,
                 NativeLinkables.getLinkStyle(link, Linker.LinkableDepType.STATIC_PIC),
                 true,
-                ImmutableSet.of(),
                 graphBuilder));
         LOG.verbose(
             "%s: linking C/C++ library %s whole into omnibus",

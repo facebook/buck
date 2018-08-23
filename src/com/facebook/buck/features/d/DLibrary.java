@@ -65,7 +65,6 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions,
       ActionGraphBuilder graphBuilder) {
     Archive archive =
         (Archive)

@@ -78,7 +78,6 @@ public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions,
       ActionGraphBuilder graphBuilder) {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 

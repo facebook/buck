@@ -147,7 +147,6 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions,
       ActionGraphBuilder graphBuilder) {
     return type == Linker.LinkableDepType.STATIC
         ? NativeLinkableInput.of(

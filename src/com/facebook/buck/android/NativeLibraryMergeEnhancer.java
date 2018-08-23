@@ -801,7 +801,6 @@ class NativeLibraryMergeEnhancer {
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
-        ImmutableSet<LanguageExtensions> languageExtensions,
         ActionGraphBuilder graphBuilder) {
 
       // This path gets taken for a force-static library.
