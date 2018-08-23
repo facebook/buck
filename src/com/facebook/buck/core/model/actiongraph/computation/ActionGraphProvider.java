@@ -39,8 +39,6 @@ import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
@@ -56,12 +54,10 @@ import java.util.concurrent.ForkJoinPool;
 public class ActionGraphProvider {
   private static final Logger LOG = Logger.get(ActionGraphProvider.class);
 
-  private Cache<TargetGraph, ActionGraphAndBuilder> previousActionGraphs;
-  private IncrementalActionGraphGenerator incrementalActionGraphGenerator;
+  private final ActionGraphCache actionGraphCache;
 
   public ActionGraphProvider(int maxEntries) {
-    previousActionGraphs = CacheBuilder.newBuilder().maximumSize(maxEntries).build();
-    incrementalActionGraphGenerator = new IncrementalActionGraphGenerator();
+    actionGraphCache = new ActionGraphCache(maxEntries);
   }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
@@ -170,7 +166,7 @@ public class ActionGraphProvider {
     ActionGraphEvent.Finished finished = ActionGraphEvent.finished(started);
     try {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
-      ActionGraphAndBuilder cachedActionGraph = previousActionGraphs.getIfPresent(targetGraph);
+      ActionGraphAndBuilder cachedActionGraph = actionGraphCache.getIfPresent(targetGraph);
       if (cachedActionGraph != null) {
         eventBus.post(ActionGraphEvent.Cache.hit());
         LOG.info("ActionGraph cache hit.");
@@ -188,15 +184,15 @@ public class ActionGraphProvider {
         }
         out = cachedActionGraph;
       } else {
-        eventBus.post(ActionGraphEvent.Cache.miss(previousActionGraphs.size() == 0));
+        eventBus.post(ActionGraphEvent.Cache.miss(actionGraphCache.isEmpty()));
         LOG.debug("Computing TargetGraph HashCode...");
-        if (previousActionGraphs.size() == 0) {
+        if (actionGraphCache.isEmpty()) {
           LOG.info("ActionGraph cache miss. Cache was empty.");
           eventBus.post(ActionGraphEvent.Cache.missWithEmptyCache());
         } else {
           // If we get here, that means the cache is not empty, but the target graph wasn't
           // in the cache.
-          LOG.info("ActionGraph cache miss against " + previousActionGraphs.size() + " entries.");
+          LOG.info("ActionGraph cache miss against " + actionGraphCache.size() + " entries.");
           eventBus.post(ActionGraphEvent.Cache.missWithTargetGraphDifference());
         }
         Pair<TargetGraph, ActionGraphAndBuilder> freshActionGraph =
@@ -217,7 +213,7 @@ public class ActionGraphProvider {
         out = freshActionGraph.getSecond();
         if (!skipActionGraphCache) {
           LOG.info("ActionGraph cache assignment.");
-          previousActionGraphs.put(freshActionGraph.getFirst(), freshActionGraph.getSecond());
+          actionGraphCache.put(freshActionGraph.getFirst(), freshActionGraph.getSecond());
         }
       }
       finished =
@@ -321,11 +317,11 @@ public class ActionGraphProvider {
               // Any previously cached action graphs are no longer valid, as we may use build rules
               // from those graphs to construct a new graph incrementally, and update those build
               // rules to use a new BuildRuleResolver.
-              invalidateCache();
+              actionGraphCache.invalidateCache();
 
               // Populate the new build rule graphBuilder with all of the usable rules from the last
               // build rule graphBuilder for incremental action graph generation.
-              incrementalActionGraphGenerator.populateActionGraphBuilderWithCachedRules(
+              actionGraphCache.populateActionGraphBuilderWithCachedRules(
                   eventBus, targetGraph, graphBuilder);
             });
   }
@@ -404,7 +400,7 @@ public class ActionGraphProvider {
               ruleKeyLogger);
 
       if (!lastActionGraphRuleKeys.equals(newActionGraphRuleKeys)) {
-        invalidateCache();
+        actionGraphCache.invalidateCache();
         String mismatchInfo = "RuleKeys of cached and new ActionGraph don't match:\n";
         MapDifference<BuildRule, RuleKey> mismatchedRules =
             Maps.difference(lastActionGraphRuleKeys, newActionGraphRuleKeys);
@@ -424,9 +420,5 @@ public class ActionGraphProvider {
         throw new RuntimeException(mismatchInfo);
       }
     }
-  }
-
-  private void invalidateCache() {
-    previousActionGraphs.invalidateAll();
   }
 }
