@@ -136,7 +136,7 @@ public class ActionGraphProviderTest {
 
   @Test
   public void hitOnCache() {
-    ActionGraphProvider cache = new ActionGraphProvider(1);
+    ActionGraphProvider cache = TestActionGraphProviderFactory.create(1);
 
     ActionGraphAndBuilder resultRun1 =
         cache.getActionGraph(
@@ -185,7 +185,7 @@ public class ActionGraphProviderTest {
 
   @Test
   public void hitOnMultiEntryCache() {
-    ActionGraphProvider cache = new ActionGraphProvider(2);
+    ActionGraphProvider cache = TestActionGraphProviderFactory.create(2);
 
     // List of (graph to run, (expected hit count, expected miss count))
     ArrayList<Pair<TargetGraph, Pair<Integer, Integer>>> runList = new ArrayList<>();
@@ -206,7 +206,7 @@ public class ActionGraphProviderTest {
 
   @Test
   public void testLruEvictionOrder() {
-    ActionGraphProvider cache = new ActionGraphProvider(2);
+    ActionGraphProvider cache = TestActionGraphProviderFactory.create(2);
 
     // List of (graph to run, (expected hit count, expected miss count))
     ArrayList<Pair<TargetGraph, Pair<Integer, Integer>>> runList = new ArrayList<>();
@@ -252,7 +252,7 @@ public class ActionGraphProviderTest {
 
   @Test
   public void missOnCache() {
-    ActionGraphProvider cache = new ActionGraphProvider(1);
+    ActionGraphProvider cache = TestActionGraphProviderFactory.create(1);
     ActionGraphAndBuilder resultRun1 =
         cache.getActionGraph(
             eventBus,
@@ -325,7 +325,7 @@ public class ActionGraphProviderTest {
   // If this breaks it probably means the ActionGraphProvider checking also breaks.
   @Test
   public void compareActionGraphsBasedOnRuleKeys() {
-    ActionGraphProvider actionGraphProvider = new ActionGraphProvider(1);
+    ActionGraphProvider actionGraphProvider = TestActionGraphProviderFactory.create(1);
     ActionGraphAndBuilder resultRun1 =
         actionGraphProvider.getFreshActionGraph(
             eventBus,
@@ -366,7 +366,7 @@ public class ActionGraphProviderTest {
       for (ActionGraphParallelizationMode mode :
           ImmutableSet.of(
               ActionGraphParallelizationMode.DISABLED, ActionGraphParallelizationMode.ENABLED)) {
-        new ActionGraphProvider(1)
+        TestActionGraphProviderFactory.create(1)
             .getActionGraph(
                 eventBus,
                 NOT_CHECK_GRAPHS, /* skipActionGraphCache */
@@ -388,7 +388,7 @@ public class ActionGraphProviderTest {
       }
 
       trackedEvents.clear();
-      new ActionGraphProvider(1)
+      TestActionGraphProviderFactory.create(1)
           .getActionGraph(
               eventBus,
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
@@ -414,7 +414,7 @@ public class ActionGraphProviderTest {
                   hasProperty("variant", anyOf(equalTo("ENABLED"), equalTo("DISABLED"))))));
 
       trackedEvents.clear();
-      new ActionGraphProvider(1)
+      TestActionGraphProviderFactory.create(1)
           .getActionGraph(
               eventBus,
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
@@ -446,7 +446,7 @@ public class ActionGraphProviderTest {
     List<ExperimentEvent> experimentEvents;
     for (IncrementalActionGraphMode mode :
         ImmutableSet.of(IncrementalActionGraphMode.DISABLED, IncrementalActionGraphMode.ENABLED)) {
-      new ActionGraphProvider(1)
+      TestActionGraphProviderFactory.create(1)
           .getActionGraph(
               eventBus,
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
@@ -473,7 +473,7 @@ public class ActionGraphProviderTest {
         ImmutableMap.builder();
     experimentGroups.put(IncrementalActionGraphMode.ENABLED, 0.5);
     experimentGroups.put(IncrementalActionGraphMode.DISABLED, 0.5);
-    new ActionGraphProvider(1)
+    TestActionGraphProviderFactory.create(1)
         .getActionGraph(
             eventBus,
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
@@ -520,7 +520,7 @@ public class ActionGraphProviderTest {
   private void runCachedSubgraphReturnedFromNodeCacheTest(
       ActionGraphParallelizationMode parallelizationMode,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
-    ActionGraphProvider cache = new ActionGraphProvider(1);
+    ActionGraphProvider cache = TestActionGraphProviderFactory.create(1);
 
     TargetNode<?> originalNode3 = createCacheableTargetNode("C");
     TargetNode<?> originalNode2 = createCacheableTargetNode("B", originalNode3);

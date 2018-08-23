@@ -1,10 +1,8 @@
 load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
-java_test(
+standard_java_test(
     name = "computation",
-    srcs = glob(
-        ["*Test.java"],
-    ),
+    with_test_data = True,
     deps = [
         "//src/com/facebook/buck/core/build/engine/impl:impl",
         "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
@@ -34,6 +32,7 @@ java_test(
         "//test/com/facebook/buck/cli:testutil",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/model/actiongraph/computation:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/cxx:testutil",
@@ -54,5 +53,21 @@ java_test(
         "//test/com/facebook/buck/versions:testutil",
         "//third-party/java/junit:junit",
         "//third-party/java/nailgun:nailgun",
+    ],
+)
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Test.java",
+        ],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
+    ],
+    visibility = ["//test/..."],
+    deps = [
     ],
 )

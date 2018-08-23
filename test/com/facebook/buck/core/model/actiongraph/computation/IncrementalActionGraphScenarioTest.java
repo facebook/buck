@@ -145,7 +145,7 @@ public class IncrementalActionGraphScenarioTest {
             },
             ignored -> {});
     fieldLoader = new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    cache = new ActionGraphProvider(0);
+    cache = TestActionGraphProviderFactory.create(0);
   }
 
   @Test
@@ -1057,7 +1057,7 @@ public class IncrementalActionGraphScenarioTest {
 
   @Test
   public void testBuildRuleResolverInActionGraphCacheNotInvalidated() {
-    cache = new ActionGraphProvider(2);
+    cache = TestActionGraphProviderFactory.create(2);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:bin");
     CxxBinaryBuilder builder =
@@ -1084,7 +1084,7 @@ public class IncrementalActionGraphScenarioTest {
   public void testBuildRuleResolverNotInActionGraphCacheInvalidated() {
     expectedException.expect(IllegalStateException.class);
 
-    cache = new ActionGraphProvider(2);
+    cache = TestActionGraphProviderFactory.create(2);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:bin");
     CxxBinaryBuilder builder =
