@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -95,7 +96,9 @@ public class FetchCommand extends BuildCommand {
         }
         actionGraphAndBuilder =
             Preconditions.checkNotNull(
-                new ActionGraphProvider(params.getBuckConfig().getMaxActionGraphCacheEntries())
+                new ActionGraphProvider(
+                        new ActionGraphCache(
+                            params.getBuckConfig().getMaxActionGraphCacheEntries()))
                     .getFreshActionGraph(
                         params.getBuckEventBus(),
                         ruleGenerator,

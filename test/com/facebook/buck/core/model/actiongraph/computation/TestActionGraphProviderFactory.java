@@ -17,6 +17,6 @@ package com.facebook.buck.core.model.actiongraph.computation;
 
 public class TestActionGraphProviderFactory {
   public static ActionGraphProvider create(int maxEntries) {
-    return new ActionGraphProvider(maxEntries);
+    return new ActionGraphProvider(new ActionGraphCache(maxEntries));
   }
 }

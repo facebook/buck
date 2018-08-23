@@ -56,8 +56,8 @@ public class ActionGraphProvider {
 
   private final ActionGraphCache actionGraphCache;
 
-  public ActionGraphProvider(int maxEntries) {
-    actionGraphCache = new ActionGraphCache(maxEntries);
+  public ActionGraphProvider(ActionGraphCache actionGraphCache) {
+    this.actionGraphCache = actionGraphCache;
   }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */

@@ -21,7 +21,7 @@ import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
@@ -79,7 +79,7 @@ final class Daemon implements Closeable {
   private final Optional<WebServer> webServer;
   private final ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools;
   private final VersionedTargetGraphCache versionedTargetGraphCache;
-  private final ActionGraphProvider actionGraphProvider;
+  private final ActionGraphCache actionGraphCache;
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
   private final ImmutableMap<Path, WatchmanCursor> cursor;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
@@ -112,8 +112,8 @@ final class Daemon implements Closeable {
             rootCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
     this.hashCaches = hashCachesBuilder.build();
 
-    this.actionGraphProvider =
-        new ActionGraphProvider(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
+    this.actionGraphCache =
+        new ActionGraphCache(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
     this.versionedTargetGraphCache = new VersionedTargetGraphCache();
     this.knownRuleTypesProvider = knownRuleTypesProvider;
 
@@ -223,8 +223,8 @@ final class Daemon implements Closeable {
     return versionedTargetGraphCache;
   }
 
-  ActionGraphProvider getActionGraphProvider() {
-    return actionGraphProvider;
+  ActionGraphCache getActionGraphCache() {
+    return actionGraphCache;
   }
 
   ImmutableList<ProjectFileHashCache> getFileHashCaches() {
