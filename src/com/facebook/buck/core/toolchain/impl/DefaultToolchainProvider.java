@@ -88,7 +88,7 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
         loadToolchainDescriptorsFromPlugins(pluginManager).collect(ImmutableList.toImmutableList());
 
     ImmutableMap.Builder<String, Class<? extends ToolchainFactory<?>>> toolchainFactoriesBuilder =
-        ImmutableMap.builder();
+        ImmutableMap.builderWithExpectedSize(toolchainDescriptors.size());
     for (ToolchainDescriptor<?> toolchainDescriptor : toolchainDescriptors) {
       toolchainFactoriesBuilder.put(
           toolchainDescriptor.getName(), toolchainDescriptor.getToolchainFactoryClass());
