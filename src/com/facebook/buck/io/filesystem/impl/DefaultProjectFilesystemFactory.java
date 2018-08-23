@@ -43,21 +43,11 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
   private static final Pattern GLOB_CHARS = Pattern.compile("[*?{\\[]");
 
-  // WindowsFS singleton instance
-  @Nullable private static WindowsFS winFSInstance = null;
+  @Nullable
+  private static final WindowsFS winFSInstance =
+      Platform.detect() == Platform.WINDOWS ? new WindowsFS() : null;
 
-  /** Intialize the winFSInstane singleton when on Windows. */
-  static {
-    if (Platform.detect().getType().isWindows()) {
-      winFSInstance = new WindowsFS();
-    }
-  }
-
-  /**
-   * Factory to get a WindowsFS instance.
-   *
-   * @return the WindowsFS instance.
-   */
+  /** @return the WindowsFS singleton. */
   @Nullable
   public static WindowsFS getWindowsFSInstance() {
     return winFSInstance;
