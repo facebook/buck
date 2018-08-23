@@ -76,7 +76,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class ActionGraphCacheTest {
+public class ActionGraphProviderTest {
 
   private static final boolean CHECK_GRAPHS = true;
   private static final boolean NOT_CHECK_GRAPHS = false;
@@ -136,7 +136,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void hitOnCache() {
-    ActionGraphCache cache = new ActionGraphCache(1);
+    ActionGraphProvider cache = new ActionGraphProvider(1);
 
     ActionGraphAndBuilder resultRun1 =
         cache.getActionGraph(
@@ -185,7 +185,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void hitOnMultiEntryCache() {
-    ActionGraphCache cache = new ActionGraphCache(2);
+    ActionGraphProvider cache = new ActionGraphProvider(2);
 
     // List of (graph to run, (expected hit count, expected miss count))
     ArrayList<Pair<TargetGraph, Pair<Integer, Integer>>> runList = new ArrayList<>();
@@ -206,7 +206,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void testLruEvictionOrder() {
-    ActionGraphCache cache = new ActionGraphCache(2);
+    ActionGraphProvider cache = new ActionGraphProvider(2);
 
     // List of (graph to run, (expected hit count, expected miss count))
     ArrayList<Pair<TargetGraph, Pair<Integer, Integer>>> runList = new ArrayList<>();
@@ -228,7 +228,7 @@ public class ActionGraphCacheTest {
   }
 
   private void runAndCheckExpectedHitMissCount(
-      ActionGraphCache cache, List<Pair<TargetGraph, Pair<Integer, Integer>>> runList) {
+      ActionGraphProvider cache, List<Pair<TargetGraph, Pair<Integer, Integer>>> runList) {
     for (Pair<TargetGraph, Pair<Integer, Integer>> run : runList) {
       cache.getActionGraph(
           eventBus,
@@ -252,7 +252,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void missOnCache() {
-    ActionGraphCache cache = new ActionGraphCache(1);
+    ActionGraphProvider cache = new ActionGraphProvider(1);
     ActionGraphAndBuilder resultRun1 =
         cache.getActionGraph(
             eventBus,
@@ -322,12 +322,12 @@ public class ActionGraphCacheTest {
     assertThat(resultRun1RuleKeys, equalTo(resultRun3RuleKeys));
   }
 
-  // If this breaks it probably means the ActionGraphCache checking also breaks.
+  // If this breaks it probably means the ActionGraphProvider checking also breaks.
   @Test
   public void compareActionGraphsBasedOnRuleKeys() {
-    ActionGraphCache actionGraphCache = new ActionGraphCache(1);
+    ActionGraphProvider actionGraphProvider = new ActionGraphProvider(1);
     ActionGraphAndBuilder resultRun1 =
-        actionGraphCache.getFreshActionGraph(
+        actionGraphProvider.getFreshActionGraph(
             eventBus,
             new DefaultTargetNodeToBuildRuleTransformer(),
             targetGraph1,
@@ -337,7 +337,7 @@ public class ActionGraphCacheTest {
             fakePoolSupplier);
 
     ActionGraphAndBuilder resultRun2 =
-        actionGraphCache.getFreshActionGraph(
+        actionGraphProvider.getFreshActionGraph(
             eventBus,
             new DefaultTargetNodeToBuildRuleTransformer(),
             targetGraph1,
@@ -366,7 +366,7 @@ public class ActionGraphCacheTest {
       for (ActionGraphParallelizationMode mode :
           ImmutableSet.of(
               ActionGraphParallelizationMode.DISABLED, ActionGraphParallelizationMode.ENABLED)) {
-        new ActionGraphCache(1)
+        new ActionGraphProvider(1)
             .getActionGraph(
                 eventBus,
                 NOT_CHECK_GRAPHS, /* skipActionGraphCache */
@@ -388,7 +388,7 @@ public class ActionGraphCacheTest {
       }
 
       trackedEvents.clear();
-      new ActionGraphCache(1)
+      new ActionGraphProvider(1)
           .getActionGraph(
               eventBus,
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
@@ -414,7 +414,7 @@ public class ActionGraphCacheTest {
                   hasProperty("variant", anyOf(equalTo("ENABLED"), equalTo("DISABLED"))))));
 
       trackedEvents.clear();
-      new ActionGraphCache(1)
+      new ActionGraphProvider(1)
           .getActionGraph(
               eventBus,
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
@@ -446,7 +446,7 @@ public class ActionGraphCacheTest {
     List<ExperimentEvent> experimentEvents;
     for (IncrementalActionGraphMode mode :
         ImmutableSet.of(IncrementalActionGraphMode.DISABLED, IncrementalActionGraphMode.ENABLED)) {
-      new ActionGraphCache(1)
+      new ActionGraphProvider(1)
           .getActionGraph(
               eventBus,
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
@@ -473,7 +473,7 @@ public class ActionGraphCacheTest {
         ImmutableMap.builder();
     experimentGroups.put(IncrementalActionGraphMode.ENABLED, 0.5);
     experimentGroups.put(IncrementalActionGraphMode.DISABLED, 0.5);
-    new ActionGraphCache(1)
+    new ActionGraphProvider(1)
         .getActionGraph(
             eventBus,
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
@@ -520,7 +520,7 @@ public class ActionGraphCacheTest {
   private void runCachedSubgraphReturnedFromNodeCacheTest(
       ActionGraphParallelizationMode parallelizationMode,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
-    ActionGraphCache cache = new ActionGraphCache(1);
+    ActionGraphProvider cache = new ActionGraphProvider(1);
 
     TargetNode<?> originalNode3 = createCacheableTargetNode("C");
     TargetNode<?> originalNode2 = createCacheableTargetNode("B", originalNode3);

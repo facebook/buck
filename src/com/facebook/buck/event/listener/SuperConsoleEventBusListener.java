@@ -142,7 +142,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private int lastNumLinesPrinted;
 
   private Optional<String> parsingStatus = Optional.empty();
-  // Save if Watchman reported zero file changes in case we receive an ActionGraphCache hit. This
+  // Save if Watchman reported zero file changes in case we receive an ActionGraphProvider hit. This
   // way the user can know that their changes, if they made any, were not picked up from Watchman.
   private boolean isZeroFileChanges = false;
 

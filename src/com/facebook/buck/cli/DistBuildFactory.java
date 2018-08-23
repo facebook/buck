@@ -185,7 +185,7 @@ public abstract class DistBuildFactory {
             .setState(state)
             .setParser(params.getParser())
             .setExecutorService(executorService)
-            .setActionGraphCache(params.getActionGraphCache())
+            .setActionGraphProvider(params.getActionGraphProvider())
             .setRuleKeyConfiguration(
                 ConfigRuleKeyConfigurationFactory.create(
                     state.getRemoteRootCellConfig(), params.getBuckModuleManager()))

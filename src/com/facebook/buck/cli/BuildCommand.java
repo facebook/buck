@@ -1371,7 +1371,7 @@ public class BuildCommand extends AbstractCommand {
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     ActionGraphAndBuilder actionGraphAndBuilder =
         params
-            .getActionGraphCache()
+            .getActionGraphProvider()
             .getActionGraph(
                 params.getBuckEventBus(),
                 targetGraphAndBuildTargets.getTargetGraph(),

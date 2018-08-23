@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class ActionGraphCacheIntegrationTest {
+public class ActionGraphProviderIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 

@@ -20,7 +20,7 @@ import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -129,7 +129,7 @@ public abstract class AbstractCommandRunnerParams {
   public abstract BuildEnvironmentDescription getBuildEnvironmentDescription();
 
   @Value.Parameter
-  public abstract ActionGraphCache getActionGraphCache();
+  public abstract ActionGraphProvider getActionGraphProvider();
 
   @Value.Parameter
   public abstract KnownRuleTypesProvider getKnownRuleTypesProvider();

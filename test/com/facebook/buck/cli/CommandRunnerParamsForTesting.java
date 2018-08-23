@@ -24,7 +24,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -141,7 +141,7 @@ public class CommandRunnerParamsForTesting {
         ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()),
         new FakeExecutor(),
         BUILD_ENVIRONMENT_DESCRIPTION,
-        new ActionGraphCache(config.getMaxActionGraphCacheEntries()),
+        new ActionGraphProvider(config.getMaxActionGraphCacheEntries()),
         knownRuleTypesProvider,
         new BuildInfoStoreManager(),
         Optional.empty(),

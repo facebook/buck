@@ -23,8 +23,8 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -82,7 +82,7 @@ public class IjProjectCommandHelper {
   private final ListeningExecutorService executor;
   private final Parser parser;
   private final BuckConfig buckConfig;
-  private final ActionGraphCache actionGraphCache;
+  private final ActionGraphProvider actionGraphProvider;
   private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
   private final Cell cell;
@@ -100,7 +100,7 @@ public class IjProjectCommandHelper {
       BuckEventBus buckEventBus,
       ListeningExecutorService executor,
       BuckConfig buckConfig,
-      ActionGraphCache actionGraphCache,
+      ActionGraphProvider actionGraphProvider,
       InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
       Cell cell,
@@ -117,7 +117,7 @@ public class IjProjectCommandHelper {
     this.executor = executor;
     this.parser = projectGeneratorParameters.getParser();
     this.buckConfig = buckConfig;
-    this.actionGraphCache = actionGraphCache;
+    this.actionGraphProvider = actionGraphProvider;
     this.versionedTargetGraphCache = versionedTargetGraphCache;
     this.typeCoercerFactory = typeCoercerFactory;
     this.cell = cell;
@@ -216,7 +216,7 @@ public class IjProjectCommandHelper {
 
       TargetNodeToBuildRuleTransformer transformer = new ShallowTargetNodeToBuildRuleTransformer();
       ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
-      return actionGraphCache.getFreshActionGraph(
+      return actionGraphProvider.getFreshActionGraph(
           buckEventBus,
           transformer,
           targetGraph,

@@ -127,7 +127,7 @@ public class IncrementalActionGraphScenarioTest {
   private BuckEventBus eventBus;
   private CloseableMemoizedSupplier<ForkJoinPool> fakePoolSupplier;
   private RuleKeyFieldLoader fieldLoader;
-  private ActionGraphCache cache;
+  private ActionGraphProvider cache;
 
   @Before
   public void setUp() {
@@ -145,7 +145,7 @@ public class IncrementalActionGraphScenarioTest {
             },
             ignored -> {});
     fieldLoader = new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    cache = new ActionGraphCache(0);
+    cache = new ActionGraphProvider(0);
   }
 
   @Test
@@ -1057,7 +1057,7 @@ public class IncrementalActionGraphScenarioTest {
 
   @Test
   public void testBuildRuleResolverInActionGraphCacheNotInvalidated() {
-    cache = new ActionGraphCache(2);
+    cache = new ActionGraphProvider(2);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:bin");
     CxxBinaryBuilder builder =
@@ -1084,7 +1084,7 @@ public class IncrementalActionGraphScenarioTest {
   public void testBuildRuleResolverNotInActionGraphCacheInvalidated() {
     expectedException.expect(IllegalStateException.class);
 
-    cache = new ActionGraphCache(2);
+    cache = new ActionGraphProvider(2);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:bin");
     CxxBinaryBuilder builder =

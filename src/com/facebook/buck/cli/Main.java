@@ -34,7 +34,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
@@ -1222,7 +1222,7 @@ public final class Main {
                         executors,
                         scheduledExecutorPool.get(),
                         buildEnvironmentDescription,
-                        parserAndCaches.getActionGraphCache(),
+                        parserAndCaches.getActionGraphProvider(),
                         knownRuleTypesProvider,
                         storeManager,
                         Optional.of(invocationInfo),
@@ -1288,7 +1288,7 @@ public final class Main {
 
     public abstract InstrumentedVersionedTargetGraphCache getVersionedTargetGraphCache();
 
-    public abstract ActionGraphCache getActionGraphCache();
+    public abstract ActionGraphProvider getActionGraphProvider();
 
     public abstract Optional<RuleKeyCacheRecycler<RuleKey>> getDefaultRuleKeyFactoryCacheRecycler();
   }
@@ -1355,7 +1355,7 @@ public final class Main {
               daemon.getTypeCoercerFactory(),
               new InstrumentedVersionedTargetGraphCache(
                   daemon.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
-              daemon.getActionGraphCache(),
+              daemon.getActionGraphProvider(),
               defaultRuleKeyFactoryCacheRecycler);
     } else {
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -1375,7 +1375,7 @@ public final class Main {
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
-              new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
+              new ActionGraphProvider(buckConfig.getMaxActionGraphCacheEntries()),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());
     }
     return parserAndCaches;

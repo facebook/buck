@@ -164,7 +164,7 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             params.getBuckEventBus(),
             executor,
             params.getBuckConfig(),
-            params.getActionGraphCache(),
+            params.getActionGraphProvider(),
             params.getVersionedTargetGraphCache(),
             params.getTypeCoercerFactory(),
             params.getCell(),

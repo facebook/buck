@@ -556,7 +556,7 @@ public class TestCommand extends BuildCommand {
 
       ActionGraphAndBuilder actionGraphAndBuilder =
           params
-              .getActionGraphCache()
+              .getActionGraphProvider()
               .getActionGraph(
                   params.getBuckEventBus(),
                   targetGraphAndBuildTargets.getTargetGraph(),

@@ -84,7 +84,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
       // Create the action graph.
       ActionGraphAndBuilder actionGraphAndBuilder =
           params
-              .getActionGraphCache()
+              .getActionGraphProvider()
               .getActionGraph(
                   params.getBuckEventBus(),
                   targetGraphAndBuildTargets.getTargetGraph(),

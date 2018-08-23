@@ -25,8 +25,8 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphMode;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -239,8 +239,8 @@ public class DistBuildFileHashesIntegrationTest {
 
   private DistBuildFileHashes createDistBuildFileHashes(TargetGraph targetGraph, Cell rootCell)
       throws InterruptedException {
-    ActionGraphCache cache =
-        new ActionGraphCache(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
+    ActionGraphProvider cache =
+        new ActionGraphProvider(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
     ActionGraphAndBuilder actionGraphAndBuilder =
         cache.getActionGraph(
             BuckEventBusForTests.newInstance(),

@@ -53,13 +53,13 @@ import java.util.concurrent.ForkJoinPool;
  * Class that transforms {@link TargetGraph} to {@link ActionGraph}. It also holds a cache for the
  * last ActionGraph it generated.
  */
-public class ActionGraphCache {
-  private static final Logger LOG = Logger.get(ActionGraphCache.class);
+public class ActionGraphProvider {
+  private static final Logger LOG = Logger.get(ActionGraphProvider.class);
 
   private Cache<TargetGraph, ActionGraphAndBuilder> previousActionGraphs;
   private IncrementalActionGraphGenerator incrementalActionGraphGenerator;
 
-  public ActionGraphCache(int maxEntries) {
+  public ActionGraphProvider(int maxEntries) {
     previousActionGraphs = CacheBuilder.newBuilder().maximumSize(maxEntries).build();
     incrementalActionGraphGenerator = new IncrementalActionGraphGenerator();
   }

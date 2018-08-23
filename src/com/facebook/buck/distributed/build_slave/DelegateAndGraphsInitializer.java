@@ -155,7 +155,7 @@ public class DelegateAndGraphsInitializer {
               "Parallel action graph mode: [%s]. Parallel action graph threads [%d]",
               args.getActionGraphParallelizationMode(), args.getMaxActionGraphParallelism()));
       ActionGraphAndBuilder actionGraphAndBuilder =
-          args.getActionGraphCache()
+          args.getActionGraphProvider()
               .getActionGraph(
                   args.getBuckEventBus(),
                   /* checkActionGraphs */ false,

@@ -20,9 +20,9 @@ import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -66,7 +66,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract WeightedListeningExecutorService getExecutorService();
 
-  public abstract ActionGraphCache getActionGraphCache();
+  public abstract ActionGraphProvider getActionGraphProvider();
 
   public abstract RuleKeyConfiguration getRuleKeyConfiguration();
 
@@ -158,7 +158,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setState(this.getState())
         .setTimingStatsTracker(this.getTimingStatsTracker())
         .setVersionedTargetGraphCache(this.getVersionedTargetGraphCache())
-        .setActionGraphCache(this.getActionGraphCache())
+        .setActionGraphProvider(this.getActionGraphProvider())
         .setParser(this.getParser())
         .setBuckEventBus(this.getBuckEventBus())
         .setRuleKeyConfiguration(this.getRuleKeyConfiguration())

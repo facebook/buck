@@ -452,7 +452,7 @@ public class TargetsCommand extends AbstractCommand {
         getSubgraphWithoutConfigurationNodes(targetGraphAndTargets.getTargetGraph());
     ActionGraphAndBuilder result =
         params
-            .getActionGraphCache()
+            .getActionGraphProvider()
             .getActionGraph(
                 params.getBuckEventBus(),
                 targetGraph,
@@ -968,7 +968,7 @@ public class TargetsCommand extends AbstractCommand {
       if (isShowRuleKey || isShowOutput || isShowFullOutput) {
         ActionGraphAndBuilder result =
             params
-                .getActionGraphCache()
+                .getActionGraphProvider()
                 .getActionGraph(
                     params.getBuckEventBus(),
                     getSubgraphWithoutConfigurationNodes(targetGraphAndTargetNodes.getFirst()),

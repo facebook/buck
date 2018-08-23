@@ -178,7 +178,7 @@ public class GoProjectCommandHelper {
                     16),
             ForkJoinPool::shutdownNow)) {
       return params
-          .getActionGraphCache()
+          .getActionGraphProvider()
           .getActionGraph(
               buckEventBus,
               targetGraph,

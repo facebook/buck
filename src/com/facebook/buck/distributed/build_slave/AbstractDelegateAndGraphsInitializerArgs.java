@@ -17,8 +17,8 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.core.cell.CellProvider;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphMode;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -46,7 +46,7 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
 
   public abstract InstrumentedVersionedTargetGraphCache getVersionedTargetGraphCache();
 
-  public abstract ActionGraphCache getActionGraphCache();
+  public abstract ActionGraphProvider getActionGraphProvider();
 
   public abstract Parser getParser();
 
