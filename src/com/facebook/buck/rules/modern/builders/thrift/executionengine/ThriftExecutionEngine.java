@@ -54,6 +54,10 @@ import java.util.stream.Collectors;
 /** A Thrift-based remote execution (execution engine) implementation. */
 public class ThriftExecutionEngine implements RemoteExecutionService {
 
+  private static final int TIMEOUT_SECS = 600;
+  private static final boolean DO_NOT_CACHE = false;
+  private static final String INSTANCE_NAME = "";
+  private static final boolean SKIP_CACHE_LOOKUP = false;
   private static Charset CHARSET = Charset.forName("UTF-8");
 
   private static int initialPollInterval = 50;
@@ -82,19 +86,14 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
     Action action =
         new Action(
             commandDigest,
+            ThriftProtocol.get(inputsRootDigest),
             outputFiles,
             outputFiles,
             requirements,
-            0, // timeout
-            false // do_not_cache
-            );
+            TIMEOUT_SECS,
+            DO_NOT_CACHE);
 
-    ExecuteRequest request =
-        new ExecuteRequest(
-            "", // instance_name
-            action,
-            false // skip_cache_lookup
-            );
+    ExecuteRequest request = new ExecuteRequest(INSTANCE_NAME, action, SKIP_CACHE_LOOKUP);
 
     try {
       ExecuteResponse response;
