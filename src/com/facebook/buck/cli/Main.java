@@ -178,7 +178,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
@@ -1586,8 +1585,8 @@ public final class Main {
     if (context.isPresent()) {
       return ImmutableMap.<String, String>copyOf((Map) context.get().getEnv());
     } else {
-
-      Builder<String, String> builder = ImmutableMap.builder();
+      ImmutableMap.Builder<String, String> builder =
+          ImmutableMap.builderWithExpectedSize(System.getenv().size());
       System.getenv()
           .entrySet()
           .stream()
