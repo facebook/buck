@@ -23,6 +23,7 @@ import com.facebook.buck.rules.modern.builders.RemoteExecutionService;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol.ThriftOutputDirectory;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol.ThriftOutputFile;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
 import com.facebook.remoteexecution.cas.Digest;
 import com.facebook.remoteexecution.cas.ReadBlobRequest;
@@ -54,6 +55,10 @@ import java.util.stream.Collectors;
 public class ThriftExecutionEngine implements RemoteExecutionService {
 
   private static Charset CHARSET = Charset.forName("UTF-8");
+
+  private static int initialPollInterval = 50;
+  private static float pollIntervalGrowth = 1.5f;
+  private static int maxPollInterval = 2000;
 
   private final Client client;
   private final ContentAddressableStorage.Client casClient;
@@ -109,7 +114,16 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
     // TODO(orr): This is currently blocking and infinite, like the Grpc implementation. This is
     // not a good long-term solution:
     ExecutionState state = response.state;
+    int pollInterval = initialPollInterval;
     while (!state.done) {
+      try {
+        Thread.sleep(pollInterval);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new BuckUncheckedExecutionException(e);
+      }
+      pollInterval = (int) Math.min(pollInterval * pollIntervalGrowth, maxPollInterval);
+
       GetExecutionStateRequest request = new GetExecutionStateRequest(response.state.execution_id);
       GetExecutionStateResponse stateResponse;
 
