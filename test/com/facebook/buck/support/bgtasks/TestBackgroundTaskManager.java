@@ -29,7 +29,7 @@ import java.util.Optional;
  */
 public class TestBackgroundTaskManager extends SynchronousBackgroundTaskManager {
 
-  private Map<ManagedBackgroundTask, Optional<Exception>> statuses;
+  private final Map<ManagedBackgroundTask, Optional<Exception>> statuses;
 
   public TestBackgroundTaskManager() {
     this.statuses = new HashMap<>();
@@ -66,8 +66,8 @@ public class TestBackgroundTaskManager extends SynchronousBackgroundTaskManager 
    * @return Task list
    */
   public List<BackgroundTask<?>> getFinishedTasksToTest() {
-    List<BackgroundTask<?>> output = new ArrayList<>();
-    for (ManagedBackgroundTask mTask : getFinishedTasks()) {
+    List<BackgroundTask<?>> output = new ArrayList<>(statuses.size());
+    for (ManagedBackgroundTask mTask : statuses.keySet()) {
       output.add(mTask.getTask());
     }
     return output;

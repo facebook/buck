@@ -28,11 +28,9 @@ public class SynchronousBackgroundTaskManager implements BackgroundTaskManager {
 
   private static final Logger LOG = Logger.get(SynchronousBackgroundTaskManager.class);
   private List<ManagedBackgroundTask> scheduledTasks;
-  private List<ManagedBackgroundTask> finishedTasks;
 
   public SynchronousBackgroundTaskManager() {
     this.scheduledTasks = new ArrayList<>();
-    this.finishedTasks = new ArrayList<>();
   }
 
   @Override
@@ -72,16 +70,11 @@ public class SynchronousBackgroundTaskManager implements BackgroundTaskManager {
         while (scheduledTasks.size() > 0) {
           ManagedBackgroundTask task = scheduledTasks.remove(0);
           runTask(task);
-          finishedTasks.add(task);
         }
     }
   }
 
   protected List<ManagedBackgroundTask> getScheduledTasks() {
     return scheduledTasks;
-  }
-
-  protected List<ManagedBackgroundTask> getFinishedTasks() {
-    return finishedTasks;
   }
 }
