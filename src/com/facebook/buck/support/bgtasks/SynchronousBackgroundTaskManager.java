@@ -29,16 +29,10 @@ public class SynchronousBackgroundTaskManager implements BackgroundTaskManager {
   private static final Logger LOG = Logger.get(SynchronousBackgroundTaskManager.class);
   private List<ManagedBackgroundTask> scheduledTasks;
   private List<ManagedBackgroundTask> finishedTasks;
-  private final boolean onDaemon;
 
-  public SynchronousBackgroundTaskManager(boolean onDaemon) {
-    this.onDaemon = onDaemon;
+  public SynchronousBackgroundTaskManager() {
     this.scheduledTasks = new ArrayList<>();
     this.finishedTasks = new ArrayList<>();
-  }
-
-  public boolean isOnDaemon() {
-    return onDaemon;
   }
 
   @Override

@@ -158,7 +158,7 @@ final class Daemon implements Closeable {
     LOG.debug("Using Watchman Cursor: %s", cursor);
     persistentWorkerPools = new ConcurrentHashMap<>();
 
-    this.bgTaskManager = new SynchronousBackgroundTaskManager(true);
+    this.bgTaskManager = new SynchronousBackgroundTaskManager();
   }
 
   Cell getRootCell() {

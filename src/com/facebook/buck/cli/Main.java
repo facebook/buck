@@ -788,7 +788,7 @@ public final class Main {
       BackgroundTaskManager bgTaskManager =
           daemon.isPresent()
               ? daemon.map(Daemon::getBgTaskManager).get()
-              : new SynchronousBackgroundTaskManager(false);
+              : new SynchronousBackgroundTaskManager();
       bgTaskManager.notify(Notification.COMMAND_START);
 
       ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();

@@ -32,7 +32,6 @@ public class TestBackgroundTaskManager extends SynchronousBackgroundTaskManager 
   private Map<ManagedBackgroundTask, Optional<Exception>> statuses;
 
   public TestBackgroundTaskManager() {
-    super(false);
     this.statuses = new HashMap<>();
   }
 

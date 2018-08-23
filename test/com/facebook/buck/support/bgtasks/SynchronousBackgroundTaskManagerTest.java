@@ -29,7 +29,7 @@ public class SynchronousBackgroundTaskManagerTest {
 
   @Before
   public void setUp() {
-    manager = new SynchronousBackgroundTaskManager(false);
+    manager = new SynchronousBackgroundTaskManager();
   }
 
   @Test
