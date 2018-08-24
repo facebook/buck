@@ -152,8 +152,7 @@ public class DelegateAndGraphsInitializer {
               .getActionGraph(
                   Preconditions.checkNotNull(targetGraph),
                   Optional.empty(),
-                  args.getIncrementalActionGraphMode(),
-                  args.getIncrementalActionGraphExperimentGroups());
+                  args.getIncrementalActionGraphMode());
       return actionGraphAndBuilder;
     } finally {
       args.getTimingStatsTracker().stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);

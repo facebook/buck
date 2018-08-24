@@ -65,7 +65,6 @@ import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
@@ -245,8 +244,7 @@ public class DistBuildFileHashesIntegrationTest {
             .withCheckActionGraphs()
             .build();
     ActionGraphAndBuilder actionGraphAndBuilder =
-        cache.getActionGraph(
-            targetGraph, Optional.empty(), IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
+        cache.getActionGraph(targetGraph, Optional.empty(), IncrementalActionGraphMode.DISABLED);
     BuildRuleResolver ruleResolver = actionGraphAndBuilder.getActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);

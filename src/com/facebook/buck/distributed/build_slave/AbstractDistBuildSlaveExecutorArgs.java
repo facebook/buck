@@ -167,11 +167,6 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
                 .getBuckConfig()
                 .getView(ActionGraphConfig.class)
                 .getIncrementalActionGraphMode())
-        .setIncrementalActionGraphExperimentGroups(
-            this.getDistBuildConfig()
-                .getBuckConfig()
-                .getView(ActionGraphConfig.class)
-                .getIncrementalActionGraphExperimentGroups())
         .setDistBuildConfig(this.getDistBuildConfig())
         .build();
   }

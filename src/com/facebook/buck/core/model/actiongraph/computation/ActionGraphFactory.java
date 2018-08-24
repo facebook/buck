@@ -36,12 +36,14 @@ public class ActionGraphFactory {
       CellProvider cellProvider,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
       ActionGraphParallelizationMode parallelizationMode,
-      boolean shouldInstrumentGraphBuilding) {
+      boolean shouldInstrumentGraphBuilding,
+      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
     return new ActionGraphFactory(
         eventBus,
         new ParallelActionGraphFactory(poolSupplier, cellProvider),
         new SerialActionGraphFactory(eventBus, cellProvider, shouldInstrumentGraphBuilding),
-        parallelizationMode);
+        parallelizationMode,
+        incrementalActionGraphExperimentGroups);
   }
 
   public static ActionGraphFactory create(
@@ -55,30 +57,33 @@ public class ActionGraphFactory {
         new ParallelActionGraphFactory(poolSupplier, cellProvider),
         new SerialActionGraphFactory(
             eventBus, cellProvider, actionGraphConfig.getShouldInstrumentActionGraph()),
-        actionGraphConfig.getActionGraphParallelizationMode());
+        actionGraphConfig.getActionGraphParallelizationMode(),
+        actionGraphConfig.getIncrementalActionGraphExperimentGroups());
   }
 
   private final BuckEventBus eventBus;
   private final ParallelActionGraphFactory parallelActionGraphFactory;
   private final SerialActionGraphFactory serialActionGraphFactory;
   private final ActionGraphParallelizationMode parallelizationMode;
+  private final Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups;
 
   ActionGraphFactory(
       BuckEventBus eventBus,
       ParallelActionGraphFactory parallelActionGraphFactory,
       SerialActionGraphFactory serialActionGraphFactory,
-      ActionGraphParallelizationMode parallelizationMode) {
+      ActionGraphParallelizationMode parallelizationMode,
+      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
     this.eventBus = eventBus;
     this.parallelActionGraphFactory = parallelActionGraphFactory;
     this.serialActionGraphFactory = serialActionGraphFactory;
     this.parallelizationMode = parallelizationMode;
+    this.incrementalActionGraphExperimentGroups = incrementalActionGraphExperimentGroups;
   }
 
   public ActionGraphAndBuilder createActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       IncrementalActionGraphMode incrementalActionGraphMode,
-      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
       ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.EXPERIMENT) {

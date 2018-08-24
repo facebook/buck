@@ -22,6 +22,8 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import javax.annotation.Nullable;
 
@@ -42,6 +44,8 @@ public class ActionGraphProviderBuilder {
   @Nullable private Boolean checkActionGraphs;
 
   @Nullable private Boolean skipActionGraphCache;
+
+  @Nullable private Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups;
 
   public ActionGraphProviderBuilder withMaxEntries(Integer maxEntries) {
     this.actionGraphCache = new ActionGraphCache(maxEntries);
@@ -91,6 +95,12 @@ public class ActionGraphProviderBuilder {
     return this;
   }
 
+  public ActionGraphProviderBuilder withIncrementalActionGraphExperimentGroups(
+      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
+    this.incrementalActionGraphExperimentGroups = incrementalActionGraphExperimentGroups;
+    return this;
+  }
+
   public ActionGraphProvider build() {
     ActionGraphCache actionGraphCache =
         this.actionGraphCache == null ? new ActionGraphCache(1) : this.actionGraphCache;
@@ -119,10 +129,20 @@ public class ActionGraphProviderBuilder {
             : this.parallelizationMode;
     boolean checkActionGraphs = this.checkActionGraphs != null && this.checkActionGraphs;
     boolean skipActionGraphCache = this.skipActionGraphCache != null && this.skipActionGraphCache;
+    Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups =
+        this.incrementalActionGraphExperimentGroups == null
+            ? ImmutableMap.of()
+            : this.incrementalActionGraphExperimentGroups;
 
     return new ActionGraphProvider(
         eventBus,
-        ActionGraphFactory.create(eventBus, cellProvider, poolSupplier, parallelizationMode, false),
+        ActionGraphFactory.create(
+            eventBus,
+            cellProvider,
+            poolSupplier,
+            parallelizationMode,
+            false,
+            incrementalActionGraphExperimentGroups),
         actionGraphCache,
         ruleKeyConfiguration,
         checkActionGraphs,

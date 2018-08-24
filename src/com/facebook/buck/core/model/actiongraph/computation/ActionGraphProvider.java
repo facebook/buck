@@ -38,7 +38,6 @@ import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import java.util.HashMap;
@@ -107,10 +106,7 @@ public class ActionGraphProvider {
   public ActionGraphAndBuilder getActionGraph(
       TargetGraph targetGraph, ActionGraphConfig actionGraphConfig) {
     return getActionGraph(
-        targetGraph,
-        Optional.empty(),
-        actionGraphConfig.getIncrementalActionGraphMode(),
-        actionGraphConfig.getIncrementalActionGraphExperimentGroups());
+        targetGraph, Optional.empty(), actionGraphConfig.getIncrementalActionGraphMode());
   }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
@@ -119,21 +115,12 @@ public class ActionGraphProvider {
       ActionGraphConfig actionGraphConfig,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     return getActionGraph(
-        targetGraph,
-        ruleKeyLogger,
-        actionGraphConfig.getIncrementalActionGraphMode(),
-        actionGraphConfig.getIncrementalActionGraphExperimentGroups());
+        targetGraph, ruleKeyLogger, actionGraphConfig.getIncrementalActionGraphMode());
   }
 
   public ActionGraphAndBuilder getActionGraph(
-      TargetGraph targetGraph,
-      IncrementalActionGraphMode incrementalActionGraphMode,
-      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
-    return getActionGraph(
-        targetGraph,
-        Optional.empty(),
-        incrementalActionGraphMode,
-        incrementalActionGraphExperimentGroups);
+      TargetGraph targetGraph, IncrementalActionGraphMode incrementalActionGraphMode) {
+    return getActionGraph(targetGraph, Optional.empty(), incrementalActionGraphMode);
   }
 
   /**
@@ -147,8 +134,7 @@ public class ActionGraphProvider {
   public ActionGraphAndBuilder getActionGraph(
       TargetGraph targetGraph,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      IncrementalActionGraphMode incrementalActionGraphMode,
-      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
+      IncrementalActionGraphMode incrementalActionGraphMode) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
     ActionGraphAndBuilder out;
@@ -183,8 +169,7 @@ public class ActionGraphProvider {
                     targetGraph,
                     skipActionGraphCache
                         ? IncrementalActionGraphMode.DISABLED
-                        : incrementalActionGraphMode,
-                    incrementalActionGraphExperimentGroups));
+                        : incrementalActionGraphMode));
         out = freshActionGraph.getSecond();
         if (!skipActionGraphCache) {
           LOG.info("ActionGraph cache assignment.");
@@ -226,8 +211,7 @@ public class ActionGraphProvider {
     eventBus.post(started);
 
     ActionGraphAndBuilder actionGraph =
-        createActionGraph(
-            transformer, targetGraph, IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
+        createActionGraph(transformer, targetGraph, IncrementalActionGraphMode.DISABLED);
 
     eventBus.post(
         ActionGraphEvent.finished(
@@ -238,14 +222,12 @@ public class ActionGraphProvider {
   private ActionGraphAndBuilder createActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      IncrementalActionGraphMode incrementalActionGraphMode,
-      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
+      IncrementalActionGraphMode incrementalActionGraphMode) {
 
     return actionGraphFactory.createActionGraph(
         transformer,
         targetGraph,
         incrementalActionGraphMode,
-        incrementalActionGraphExperimentGroups,
         graphBuilder -> {
           // Any previously cached action graphs are no longer valid, as we may use build rules
           // from those graphs to construct a new graph incrementally, and update those build
@@ -303,8 +285,7 @@ public class ActionGraphProvider {
               createActionGraph(
                   new DefaultTargetNodeToBuildRuleTransformer(),
                   targetGraph,
-                  IncrementalActionGraphMode.DISABLED,
-                  ImmutableMap.of()));
+                  IncrementalActionGraphMode.DISABLED));
 
       Map<BuildRule, RuleKey> lastActionGraphRuleKeys =
           getRuleKeysFromBuildRules(
