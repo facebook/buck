@@ -1058,7 +1058,7 @@ public class WorkspaceAndProjectGeneratorTest {
     return input ->
         new ActionGraphProviderBuilder()
             .build()
-            .getFreshActionGraph(targetGraph.getSubgraph(ImmutableSet.of(input)), false)
+            .getFreshActionGraph(targetGraph.getSubgraph(ImmutableSet.of(input)))
             .getActionGraphBuilder();
   }
 }

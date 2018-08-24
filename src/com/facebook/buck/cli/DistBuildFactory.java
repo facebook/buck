@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -196,10 +195,7 @@ public abstract class DistBuildFactory {
                         params.getBuckEventBus(),
                         state.getRootCell().getCellProvider(),
                         params.getPoolSupplier(),
-                        state
-                            .getRemoteRootCellConfig()
-                            .getView(ActionGraphConfig.class)
-                            .getActionGraphParallelizationMode()),
+                        state.getRemoteRootCellConfig()),
                     new ActionGraphCache(
                         state.getRemoteRootCellConfig().getMaxActionGraphCacheEntries()),
                     ruleKeyConfiguration,

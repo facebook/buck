@@ -62,8 +62,6 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
 
   public abstract KnownRuleTypesProvider getKnownRuleTypesProvider();
 
-  public abstract boolean getShouldInstrumentActionGraph();
-
   public abstract IncrementalActionGraphMode getIncrementalActionGraphMode();
 
   public abstract Map<IncrementalActionGraphMode, Double>

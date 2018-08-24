@@ -122,7 +122,7 @@ public class ActionGraphProviderBuilder {
 
     return new ActionGraphProvider(
         eventBus,
-        ActionGraphFactory.create(eventBus, cellProvider, poolSupplier, parallelizationMode),
+        ActionGraphFactory.create(eventBus, cellProvider, poolSupplier, parallelizationMode, false),
         actionGraphCache,
         ruleKeyConfiguration,
         checkActionGraphs,

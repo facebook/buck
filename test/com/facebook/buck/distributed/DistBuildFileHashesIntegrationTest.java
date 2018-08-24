@@ -246,11 +246,7 @@ public class DistBuildFileHashesIntegrationTest {
             .build();
     ActionGraphAndBuilder actionGraphAndBuilder =
         cache.getActionGraph(
-            targetGraph,
-            Optional.empty(),
-            false,
-            IncrementalActionGraphMode.DISABLED,
-            ImmutableMap.of());
+            targetGraph, Optional.empty(), IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
     BuildRuleResolver ruleResolver = actionGraphAndBuilder.getActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);

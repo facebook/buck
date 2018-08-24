@@ -152,7 +152,6 @@ public class DelegateAndGraphsInitializer {
               .getActionGraph(
                   Preconditions.checkNotNull(targetGraph),
                   Optional.empty(),
-                  args.getShouldInstrumentActionGraph(),
                   args.getIncrementalActionGraphMode(),
                   args.getIncrementalActionGraphExperimentGroups());
       return actionGraphAndBuilder;

@@ -2652,7 +2652,7 @@ public class DefaultParserTest {
                 .withEventBus(eventBus)
                 .withCellProvider(cell.getCellProvider())
                 .build()
-                .getFreshActionGraph(targetGraph, false))
+                .getFreshActionGraph(targetGraph))
         .getActionGraphBuilder();
   }
 

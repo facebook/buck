@@ -109,7 +109,6 @@ public class ActionGraphProvider {
     return getActionGraph(
         targetGraph,
         Optional.empty(),
-        actionGraphConfig.getShouldInstrumentActionGraph(),
         actionGraphConfig.getIncrementalActionGraphMode(),
         actionGraphConfig.getIncrementalActionGraphExperimentGroups());
   }
@@ -122,20 +121,17 @@ public class ActionGraphProvider {
     return getActionGraph(
         targetGraph,
         ruleKeyLogger,
-        actionGraphConfig.getShouldInstrumentActionGraph(),
         actionGraphConfig.getIncrementalActionGraphMode(),
         actionGraphConfig.getIncrementalActionGraphExperimentGroups());
   }
 
   public ActionGraphAndBuilder getActionGraph(
       TargetGraph targetGraph,
-      boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
     return getActionGraph(
         targetGraph,
         Optional.empty(),
-        shouldInstrumentGraphBuilding,
         incrementalActionGraphMode,
         incrementalActionGraphExperimentGroups);
   }
@@ -151,7 +147,6 @@ public class ActionGraphProvider {
   public ActionGraphAndBuilder getActionGraph(
       TargetGraph targetGraph,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
@@ -165,12 +160,7 @@ public class ActionGraphProvider {
         eventBus.post(ActionGraphEvent.Cache.hit());
         LOG.info("ActionGraph cache hit.");
         if (checkActionGraphs) {
-          compareActionGraphs(
-              cachedActionGraph,
-              targetGraph,
-              fieldLoader,
-              ruleKeyLogger,
-              shouldInstrumentGraphBuilding);
+          compareActionGraphs(cachedActionGraph, targetGraph, fieldLoader, ruleKeyLogger);
         }
         out = cachedActionGraph;
       } else {
@@ -191,7 +181,6 @@ public class ActionGraphProvider {
                 createActionGraph(
                     new DefaultTargetNodeToBuildRuleTransformer(),
                     targetGraph,
-                    shouldInstrumentGraphBuilding,
                     skipActionGraphCache
                         ? IncrementalActionGraphMode.DISABLED
                         : incrementalActionGraphMode,
@@ -217,10 +206,9 @@ public class ActionGraphProvider {
    * @param targetGraph the target graph that the action graph will be based on.
    * @return a {@link ActionGraphAndBuilder}
    */
-  public ActionGraphAndBuilder getFreshActionGraph(
-      TargetGraph targetGraph, boolean shouldInstrumentGraphBuilding) {
+  public ActionGraphAndBuilder getFreshActionGraph(TargetGraph targetGraph) {
     TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
-    return getFreshActionGraph(transformer, targetGraph, shouldInstrumentGraphBuilding);
+    return getFreshActionGraph(transformer, targetGraph);
   }
 
   /**
@@ -233,19 +221,13 @@ public class ActionGraphProvider {
    * @return It returns a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getFreshActionGraph(
-      TargetNodeToBuildRuleTransformer transformer,
-      TargetGraph targetGraph,
-      boolean shouldInstrumentGraphBuilding) {
+      TargetNodeToBuildRuleTransformer transformer, TargetGraph targetGraph) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
 
     ActionGraphAndBuilder actionGraph =
         createActionGraph(
-            transformer,
-            targetGraph,
-            shouldInstrumentGraphBuilding,
-            IncrementalActionGraphMode.DISABLED,
-            ImmutableMap.of());
+            transformer, targetGraph, IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
 
     eventBus.post(
         ActionGraphEvent.finished(
@@ -256,14 +238,12 @@ public class ActionGraphProvider {
   private ActionGraphAndBuilder createActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
 
     return actionGraphFactory.createActionGraph(
         transformer,
         targetGraph,
-        shouldInstrumentGraphBuilding,
         incrementalActionGraphMode,
         incrementalActionGraphExperimentGroups,
         graphBuilder -> {
@@ -311,8 +291,7 @@ public class ActionGraphProvider {
       ActionGraphAndBuilder lastActionGraphAndBuilder,
       TargetGraph targetGraph,
       RuleKeyFieldLoader fieldLoader,
-      Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      boolean shouldInstrumentGraphBuilding) {
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(eventBus, PerfEventId.of("ActionGraphCacheCheck"))) {
       // We check that the lastActionGraph is not null because it's possible we had a
@@ -324,7 +303,6 @@ public class ActionGraphProvider {
               createActionGraph(
                   new DefaultTargetNodeToBuildRuleTransformer(),
                   targetGraph,
-                  shouldInstrumentGraphBuilding,
                   IncrementalActionGraphMode.DISABLED,
                   ImmutableMap.of()));
 

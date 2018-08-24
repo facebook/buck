@@ -20,7 +20,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -187,12 +186,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                             params.getBuckConfig().getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration(),
                         params.getBuckConfig())
-                    .getFreshActionGraph(
-                        targetGraph,
-                        params
-                            .getBuckConfig()
-                            .getView(ActionGraphConfig.class)
-                            .getShouldInstrumentActionGraph()))
+                    .getFreshActionGraph(targetGraph))
             .getActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -241,12 +235,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                             params.getBuckConfig().getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration(),
                         params.getBuckConfig())
-                    .getFreshActionGraph(
-                        targetGraph,
-                        params
-                            .getBuckConfig()
-                            .getView(ActionGraphConfig.class)
-                            .getShouldInstrumentActionGraph()))
+                    .getFreshActionGraph(targetGraph))
             .getActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));

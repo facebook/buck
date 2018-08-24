@@ -35,11 +35,12 @@ public class ActionGraphFactory {
       BuckEventBus eventBus,
       CellProvider cellProvider,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
-      ActionGraphParallelizationMode parallelizationMode) {
+      ActionGraphParallelizationMode parallelizationMode,
+      boolean shouldInstrumentGraphBuilding) {
     return new ActionGraphFactory(
         eventBus,
         new ParallelActionGraphFactory(poolSupplier, cellProvider),
-        new SerialActionGraphFactory(eventBus, cellProvider),
+        new SerialActionGraphFactory(eventBus, cellProvider, shouldInstrumentGraphBuilding),
         parallelizationMode);
   }
 
@@ -52,7 +53,8 @@ public class ActionGraphFactory {
     return new ActionGraphFactory(
         eventBus,
         new ParallelActionGraphFactory(poolSupplier, cellProvider),
-        new SerialActionGraphFactory(eventBus, cellProvider),
+        new SerialActionGraphFactory(
+            eventBus, cellProvider, actionGraphConfig.getShouldInstrumentActionGraph()),
         actionGraphConfig.getActionGraphParallelizationMode());
   }
 
@@ -75,7 +77,6 @@ public class ActionGraphFactory {
   public ActionGraphAndBuilder createActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
       ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
@@ -96,13 +97,12 @@ public class ActionGraphFactory {
     } else {
       listener = graphBuilder -> {};
     }
-    return createActionGraph(transformer, targetGraph, shouldInstrumentGraphBuilding, listener);
+    return createActionGraph(transformer, targetGraph, listener);
   }
 
   private ActionGraphAndBuilder createActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      boolean shouldInstrumentGraphBuilding,
       ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
 
     ActionGraphParallelizationMode parallelizationMode = this.parallelizationMode;
@@ -142,10 +142,7 @@ public class ActionGraphFactory {
       case DISABLED:
         return serialActionGraphFactory.create(
             SerialActionGraphCreationParameters.of(
-                transformer,
-                targetGraph,
-                shouldInstrumentGraphBuilding,
-                actionGraphCreationLifecycleListener));
+                transformer, targetGraph, actionGraphCreationLifecycleListener));
       case EXPERIMENT_UNSTABLE:
       case EXPERIMENT:
         throw new AssertionError(

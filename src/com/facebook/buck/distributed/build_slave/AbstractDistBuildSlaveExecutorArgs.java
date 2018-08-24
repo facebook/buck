@@ -162,11 +162,6 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setExecutors(this.getExecutors())
         .setProvider(this.getProvider())
         .setKnownRuleTypesProvider(getKnownRuleTypesProvider())
-        .setShouldInstrumentActionGraph(
-            this.getDistBuildConfig()
-                .getBuckConfig()
-                .getView(ActionGraphConfig.class)
-                .getShouldInstrumentActionGraph())
         .setIncrementalActionGraphMode(
             this.getDistBuildConfig()
                 .getBuckConfig()

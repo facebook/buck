@@ -258,7 +258,7 @@ public class DuplicateResourcesTest {
                     .build()
                     .getCellProvider())
             .build()
-            .getFreshActionGraph(new DefaultTargetNodeToBuildRuleTransformer(), targetGraph, false);
+            .getFreshActionGraph(new DefaultTargetNodeToBuildRuleTransformer(), targetGraph);
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(

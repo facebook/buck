@@ -1279,8 +1279,7 @@ public class IncrementalActionGraphScenarioTest {
 
   private ActionGraphAndBuilder createActionGraph(TargetGraph targetGraph) {
     ActionGraphAndBuilder result =
-        provider.getActionGraph(
-            targetGraph, false, IncrementalActionGraphMode.ENABLED, ImmutableMap.of());
+        provider.getActionGraph(targetGraph, IncrementalActionGraphMode.ENABLED, ImmutableMap.of());
     // Grab a copy of the data since we invalidate the collections in previous BuildRuleResolvers.
     return ActionGraphAndBuilder.of(
         new ActionGraph(
