@@ -159,8 +159,6 @@ abstract class AbstractCxxSourceRuleFactory {
             getBaseBuildTarget(),
             getActionGraphBuilder(),
             getPathResolver(),
-            getRuleFinder(),
-            getCxxPlatform(),
             getPrefixHeader(),
             getPrecompiledHeader())
         .getPreInclude();
