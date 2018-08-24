@@ -203,6 +203,7 @@ public abstract class DistBuildFactory {
                     new ActionGraphCache(
                         state.getRemoteRootCellConfig().getMaxActionGraphCacheEntries()),
                     ruleKeyConfiguration,
+                    false,
                     false))
             .setRuleKeyConfiguration(ruleKeyConfiguration)
             .setConsole(params.getConsole())

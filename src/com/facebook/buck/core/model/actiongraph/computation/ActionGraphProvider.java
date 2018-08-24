@@ -57,18 +57,21 @@ public class ActionGraphProvider {
   private final ActionGraphCache actionGraphCache;
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final boolean checkActionGraphs;
+  private final boolean skipActionGraphCache;
 
   public ActionGraphProvider(
       BuckEventBus eventBus,
       ActionGraphFactory actionGraphFactory,
       ActionGraphCache actionGraphCache,
       RuleKeyConfiguration ruleKeyConfiguration,
-      boolean checkActionGraphs) {
+      boolean checkActionGraphs,
+      boolean skipActionGraphCache) {
     this.eventBus = eventBus;
     this.actionGraphFactory = actionGraphFactory;
     this.actionGraphCache = actionGraphCache;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.checkActionGraphs = checkActionGraphs;
+    this.skipActionGraphCache = skipActionGraphCache;
   }
 
   private ActionGraphProvider(
@@ -82,7 +85,8 @@ public class ActionGraphProvider {
         actionGraphFactory,
         actionGraphCache,
         ruleKeyConfiguration,
-        actionGraphConfig.isActionGraphCheckingEnabled());
+        actionGraphConfig.isActionGraphCheckingEnabled(),
+        actionGraphConfig.isSkipActionGraphCache());
   }
 
   public ActionGraphProvider(
@@ -103,7 +107,6 @@ public class ActionGraphProvider {
   public ActionGraphAndBuilder getActionGraph(
       TargetGraph targetGraph, ActionGraphConfig actionGraphConfig) {
     return getActionGraph(
-        actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
         Optional.empty(),
         actionGraphConfig.getShouldInstrumentActionGraph(),
@@ -117,7 +120,6 @@ public class ActionGraphProvider {
       ActionGraphConfig actionGraphConfig,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     return getActionGraph(
-        actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
         ruleKeyLogger,
         actionGraphConfig.getShouldInstrumentActionGraph(),
@@ -126,13 +128,11 @@ public class ActionGraphProvider {
   }
 
   public ActionGraphAndBuilder getActionGraph(
-      boolean skipActionGraphCache,
       TargetGraph targetGraph,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
     return getActionGraph(
-        skipActionGraphCache,
         targetGraph,
         Optional.empty(),
         shouldInstrumentGraphBuilding,
@@ -145,14 +145,10 @@ public class ActionGraphProvider {
    * returns a cached version of the {@link ActionGraphAndBuilder}, else returns a new one and
    * updates the cache.
    *
-   * @param skipActionGraphCache if true, do not invalidate the {@link ActionGraph} cached in
-   *     memory. Instead, create a new {@link ActionGraph} for this request, which should be
-   *     garbage-collected at the end of the request.
    * @param targetGraph the target graph that the action graph will be based on.
    * @return a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getActionGraph(
-      boolean skipActionGraphCache,
       TargetGraph targetGraph,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       boolean shouldInstrumentGraphBuilding,

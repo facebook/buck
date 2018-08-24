@@ -246,7 +246,6 @@ public class DistBuildFileHashesIntegrationTest {
             .build();
     ActionGraphAndBuilder actionGraphAndBuilder =
         cache.getActionGraph(
-            false,
             targetGraph,
             Optional.empty(),
             false,

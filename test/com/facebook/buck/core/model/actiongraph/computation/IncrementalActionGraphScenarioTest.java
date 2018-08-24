@@ -126,7 +126,8 @@ public class IncrementalActionGraphScenarioTest {
   private BuckEventBus eventBus;
   private CloseableMemoizedSupplier<ForkJoinPool> fakePoolSupplier;
   private RuleKeyFieldLoader fieldLoader;
-  private ActionGraphProvider cache;
+  private ActionGraphCache cache;
+  private ActionGraphProvider provider;
 
   @Before
   public void setUp() {
@@ -144,9 +145,10 @@ public class IncrementalActionGraphScenarioTest {
             },
             ignored -> {});
     fieldLoader = new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    cache =
+    cache = new ActionGraphCache(0);
+    provider =
         new ActionGraphProviderBuilder()
-            .withMaxEntries(0)
+            .withActionGraphCache(cache)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(0))
             .withEventBus(eventBus)
             .build();
@@ -1045,23 +1047,39 @@ public class IncrementalActionGraphScenarioTest {
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(FakeSourcePath.of("binary.cpp"), ImmutableList.of())));
 
-    createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), false);
+    createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)));
 
     CxxBinaryBuilder builder2 =
         new CxxBinaryBuilder(target)
             .setSrcs(
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(FakeSourcePath.of("binary2.cpp"), ImmutableList.of())));
-    createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder2)), true);
+
+    provider =
+        new ActionGraphProviderBuilder()
+            .withActionGraphCache(cache)
+            .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(0))
+            .withEventBus(eventBus)
+            .withSkipActionGraphCache()
+            .build();
+
+    createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder2)));
+
+    provider =
+        new ActionGraphProviderBuilder()
+            .withActionGraphCache(cache)
+            .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(0))
+            .withEventBus(eventBus)
+            .build();
 
     ActionGraphAndBuilder lastResult =
-        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), false);
+        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)));
     assertFalse(Iterables.isEmpty(lastResult.getActionGraphBuilder().getBuildRules()));
   }
 
   @Test
   public void testBuildRuleResolverInActionGraphCacheNotInvalidated() {
-    cache =
+    provider =
         new ActionGraphProviderBuilder()
             .withMaxEntries(2)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(0))
@@ -1074,7 +1092,7 @@ public class IncrementalActionGraphScenarioTest {
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(FakeSourcePath.of("binary.cpp"), ImmutableList.of())));
 
-    createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), false);
+    createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)));
 
     CxxBinaryBuilder builder2 =
         new CxxBinaryBuilder(target)
@@ -1084,7 +1102,7 @@ public class IncrementalActionGraphScenarioTest {
     createActionGraph(builder2);
 
     ActionGraphAndBuilder lastResult =
-        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), false);
+        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)));
     assertFalse(Iterables.isEmpty(lastResult.getActionGraphBuilder().getBuildRules()));
   }
 
@@ -1092,7 +1110,7 @@ public class IncrementalActionGraphScenarioTest {
   public void testBuildRuleResolverNotInActionGraphCacheInvalidated() {
     expectedException.expect(IllegalStateException.class);
 
-    cache =
+    provider =
         new ActionGraphProviderBuilder()
             .withMaxEntries(2)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(0))
@@ -1133,11 +1151,19 @@ public class IncrementalActionGraphScenarioTest {
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(FakeSourcePath.of("binary.cpp"), ImmutableList.of())));
 
+    provider =
+        new ActionGraphProviderBuilder()
+            .withActionGraphCache(cache)
+            .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(0))
+            .withEventBus(eventBus)
+            .withSkipActionGraphCache()
+            .build();
+
     ActionGraphAndBuilder firstResult =
-        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), true);
+        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)));
 
     ActionGraphAndBuilder lastResult =
-        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), true);
+        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)));
 
     assertCommonBuildRulesNotSame(firstResult, lastResult, target.getUnflavoredBuildTarget());
   }
@@ -1252,18 +1278,9 @@ public class IncrementalActionGraphScenarioTest {
   }
 
   private ActionGraphAndBuilder createActionGraph(TargetGraph targetGraph) {
-    return createActionGraph(targetGraph, false);
-  }
-
-  private ActionGraphAndBuilder createActionGraph(
-      TargetGraph targetGraph, boolean skipActionGraphCache) {
     ActionGraphAndBuilder result =
-        cache.getActionGraph(
-            skipActionGraphCache,
-            targetGraph,
-            false,
-            IncrementalActionGraphMode.ENABLED,
-            ImmutableMap.of());
+        provider.getActionGraph(
+            targetGraph, false, IncrementalActionGraphMode.ENABLED, ImmutableMap.of());
     // Grab a copy of the data since we invalidate the collections in previous BuildRuleResolvers.
     return ActionGraphAndBuilder.of(
         new ActionGraph(

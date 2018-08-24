@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 
 public class ActionGraphProviderBuilder {
 
-  @Nullable private Integer maxEntries;
+  @Nullable private ActionGraphCache actionGraphCache;
 
   @Nullable private CloseableMemoizedSupplier<ForkJoinPool> poolSupplier;
 
@@ -41,8 +41,15 @@ public class ActionGraphProviderBuilder {
 
   @Nullable private Boolean checkActionGraphs;
 
+  @Nullable private Boolean skipActionGraphCache;
+
   public ActionGraphProviderBuilder withMaxEntries(Integer maxEntries) {
-    this.maxEntries = maxEntries;
+    this.actionGraphCache = new ActionGraphCache(maxEntries);
+    return this;
+  }
+
+  public ActionGraphProviderBuilder withActionGraphCache(ActionGraphCache actionGraphCache) {
+    this.actionGraphCache = actionGraphCache;
     return this;
   }
 
@@ -79,8 +86,14 @@ public class ActionGraphProviderBuilder {
     return this;
   }
 
+  public ActionGraphProviderBuilder withSkipActionGraphCache() {
+    this.skipActionGraphCache = true;
+    return this;
+  }
+
   public ActionGraphProvider build() {
-    int maxEntries = this.maxEntries == null ? 1 : this.maxEntries;
+    ActionGraphCache actionGraphCache =
+        this.actionGraphCache == null ? new ActionGraphCache(1) : this.actionGraphCache;
     CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
         this.poolSupplier == null
             ? CloseableMemoizedSupplier.of(
@@ -105,12 +118,14 @@ public class ActionGraphProviderBuilder {
             ? ActionGraphParallelizationMode.DISABLED
             : this.parallelizationMode;
     boolean checkActionGraphs = this.checkActionGraphs != null && this.checkActionGraphs;
+    boolean skipActionGraphCache = this.skipActionGraphCache != null && this.skipActionGraphCache;
 
     return new ActionGraphProvider(
         eventBus,
         ActionGraphFactory.create(eventBus, cellProvider, poolSupplier, parallelizationMode),
-        new ActionGraphCache(maxEntries),
+        actionGraphCache,
         ruleKeyConfiguration,
-        checkActionGraphs);
+        checkActionGraphs,
+        skipActionGraphCache);
   }
 }
