@@ -51,7 +51,6 @@ import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
@@ -70,7 +69,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;
 
 public class IjProjectCommandHelper {
@@ -91,7 +89,6 @@ public class IjProjectCommandHelper {
   private final String outputDir;
   private final BuckBuildRunner buckBuildRunner;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
-  private final CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier;
 
   private final ProjectGeneratorParameters projectGeneratorParameters;
 
@@ -110,8 +107,7 @@ public class IjProjectCommandHelper {
       String outputDir,
       BuckBuildRunner buckBuildRunner,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
-      ProjectGeneratorParameters projectGeneratorParameters,
-      CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier) {
+      ProjectGeneratorParameters projectGeneratorParameters) {
     this.buckEventBus = buckEventBus;
     this.console = projectGeneratorParameters.getConsole();
     this.executor = executor;
@@ -130,7 +126,6 @@ public class IjProjectCommandHelper {
     this.argsParser = argsParser;
 
     this.projectGeneratorParameters = projectGeneratorParameters;
-    this.forkJoinPoolSupplier = forkJoinPoolSupplier;
   }
 
   public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments)
@@ -215,8 +210,7 @@ public class IjProjectCommandHelper {
         targetGraph,
         cell.getCellProvider(),
         actionGraphConfig.getActionGraphParallelizationMode(),
-        actionGraphConfig.getShouldInstrumentActionGraph(),
-        forkJoinPoolSupplier);
+        actionGraphConfig.getShouldInstrumentActionGraph());
   }
 
   private TargetGraph getProjectGraphForIde(

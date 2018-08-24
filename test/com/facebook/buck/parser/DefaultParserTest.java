@@ -88,7 +88,6 @@ import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -2656,13 +2655,7 @@ public class DefaultParserTest {
                     targetGraph,
                     cell.getCellProvider(),
                     ActionGraphParallelizationMode.DISABLED,
-                    false,
-                    CloseableMemoizedSupplier.of(
-                        () -> {
-                          throw new IllegalStateException(
-                              "should not use parallel executor for action graph construction in test");
-                        },
-                        ignored -> {})))
+                    false))
         .getActionGraphBuilder();
   }
 

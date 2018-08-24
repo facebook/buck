@@ -69,7 +69,6 @@ import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.types.Either;
@@ -1064,13 +1063,7 @@ public class WorkspaceAndProjectGeneratorTest {
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
                 new TestCellBuilder().build().getCellProvider(),
                 ActionGraphParallelizationMode.DISABLED,
-                false,
-                CloseableMemoizedSupplier.of(
-                    () -> {
-                      throw new IllegalStateException(
-                          "should not use parallel executor for single threaded action graph construction in test");
-                    },
-                    ignored -> {}))
+                false)
             .getActionGraphBuilder();
   }
 }

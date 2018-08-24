@@ -120,8 +120,7 @@ public class UninstallCommand extends AbstractCommand {
                   result.getTargetGraph(),
                   params.getCell().getCellProvider(),
                   params.getBuckConfig().getView(ActionGraphConfig.class),
-                  params.getRuleKeyConfiguration(),
-                  params.getPoolSupplier())
+                  params.getRuleKeyConfiguration())
               .getActionGraphBuilder();
     } catch (BuildFileParseException e) {
       params

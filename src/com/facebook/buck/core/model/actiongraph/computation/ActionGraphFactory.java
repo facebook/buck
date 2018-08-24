@@ -22,16 +22,14 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ExperimentEvent;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.google.common.base.Preconditions;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
 
 public class ActionGraphFactory {
 
-  public static ActionGraphFactory create() {
-    return new ActionGraphFactory(new ParallelActionGraphFactory(), new SerialActionGraphFactory());
+  public static ActionGraphFactory create(ParallelActionGraphFactory parallelActionGraphFactory) {
+    return new ActionGraphFactory(parallelActionGraphFactory, new SerialActionGraphFactory());
   }
 
   private final ParallelActionGraphFactory parallelActionGraphFactory;
@@ -53,7 +51,6 @@ public class ActionGraphFactory {
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
       ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.EXPERIMENT) {
@@ -79,7 +76,6 @@ public class ActionGraphFactory {
         cellProvider,
         parallelizationMode,
         shouldInstrumentGraphBuilding,
-        poolSupplier,
         listener);
   }
 
@@ -90,7 +86,6 @@ public class ActionGraphFactory {
       CellProvider cellProvider,
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
       ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
 
     switch (parallelizationMode) {
@@ -124,11 +119,7 @@ public class ActionGraphFactory {
       case ENABLED:
         return parallelActionGraphFactory.create(
             ParallelActionGraphCreationParameters.of(
-                transformer,
-                targetGraph,
-                cellProvider,
-                poolSupplier.get(),
-                actionGraphCreationLifecycleListener));
+                transformer, targetGraph, cellProvider, actionGraphCreationLifecycleListener));
       case DISABLED:
         return serialActionGraphFactory.create(
             SerialActionGraphCreationParameters.of(

@@ -37,6 +37,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.actiongraph.computation.ParallelActionGraphFactory;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
@@ -1150,6 +1151,9 @@ public final class Main {
                   getBuckPID());
           buildEventBus.post(startedEvent);
 
+          CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier =
+              getForkJoinPoolSupplier(buckConfig);
+
           ParserAndCaches parserAndCaches =
               getParserAndCaches(
                   context,
@@ -1161,6 +1165,7 @@ public final class Main {
                   rootCell,
                   daemon,
                   buildEventBus,
+                  forkJoinPoolSupplier,
                   executableFinder);
 
           // Because the Parser is potentially constructed before the CounterRegistry,
@@ -1235,7 +1240,7 @@ public final class Main {
                         executableFinder,
                         pluginManager,
                         moduleManager,
-                        getForkJoinPoolSupplier(buckConfig)));
+                        forkJoinPoolSupplier));
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
             throw e;
@@ -1305,6 +1310,7 @@ public final class Main {
       Cell rootCell,
       Optional<Daemon> daemonOptional,
       BuckEventBus buildEventBus,
+      CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier,
       ExecutableFinder executableFinder)
       throws IOException, InterruptedException {
     WatchmanWatcher watchmanWatcher = null;
@@ -1357,7 +1363,9 @@ public final class Main {
               daemon.getTypeCoercerFactory(),
               new InstrumentedVersionedTargetGraphCache(
                   daemon.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
-              new ActionGraphProvider(ActionGraphFactory.create(), daemon.getActionGraphCache()),
+              new ActionGraphProvider(
+                  ActionGraphFactory.create(new ParallelActionGraphFactory(forkJoinPoolSupplier)),
+                  daemon.getActionGraphCache()),
               defaultRuleKeyFactoryCacheRecycler);
     } else {
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -1378,7 +1386,7 @@ public final class Main {
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
               new ActionGraphProvider(
-                  ActionGraphFactory.create(),
+                  ActionGraphFactory.create(new ParallelActionGraphFactory(forkJoinPoolSupplier)),
                   new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries())),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());
     }

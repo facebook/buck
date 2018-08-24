@@ -330,7 +330,8 @@ public class CleanCommandTest {
         ImmutableMap.of(),
         new FakeExecutor(),
         CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
-        TestActionGraphProviderFactory.create(buckConfig.getMaxActionGraphCacheEntries()),
+        TestActionGraphProviderFactory.create(
+            buckConfig.getMaxActionGraphCacheEntries(), Main.getForkJoinPoolSupplier(buckConfig)),
         knownRuleTypesProvider,
         new BuildInfoStoreManager(),
         Optional.empty(),

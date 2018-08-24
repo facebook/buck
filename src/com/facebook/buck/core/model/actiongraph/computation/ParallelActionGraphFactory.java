@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer
 import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import java.util.HashMap;
@@ -40,12 +41,18 @@ import org.immutables.value.Value;
 public class ParallelActionGraphFactory {
   private static final Logger LOG = Logger.get(ParallelActionGraphFactory.class);
 
+  private final CloseableMemoizedSupplier<ForkJoinPool> poolSupplier;
+
+  public ParallelActionGraphFactory(CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+    this.poolSupplier = poolSupplier;
+  }
+
   public ActionGraphAndBuilder create(ParallelActionGraphCreationParameters parameters) {
     return createActionGraphInParallel(
         parameters.getTransformer(),
         parameters.getTargetGraph(),
         parameters.getCellProvider(),
-        parameters.getPool(),
+        poolSupplier.get(),
         parameters.getActionGraphCreationLifecycleListener());
   }
 
@@ -108,9 +115,6 @@ public class ParallelActionGraphFactory {
 
     @Value.Parameter
     public abstract CellProvider getCellProvider();
-
-    @Value.Parameter
-    public abstract ForkJoinPool getPool();
 
     @Value.Parameter
     public abstract ActionGraphCreationLifecycleListener getActionGraphCreationLifecycleListener();

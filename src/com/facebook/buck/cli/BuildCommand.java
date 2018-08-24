@@ -1378,8 +1378,7 @@ public class BuildCommand extends AbstractCommand {
                 params.getCell().getCellProvider(),
                 params.getBuckConfig().getView(ActionGraphConfig.class),
                 params.getRuleKeyConfiguration(),
-                ruleKeyLogger,
-                params.getPoolSupplier());
+                ruleKeyLogger);
     return actionGraphAndBuilder;
   }
 

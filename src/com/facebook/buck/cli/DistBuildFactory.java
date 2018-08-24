@@ -211,7 +211,6 @@ public abstract class DistBuildFactory {
                     .getBuckConfig()
                     .getView(ActionGraphConfig.class)
                     .getActionGraphParallelizationMode())
-            .setForkJoinPoolSupplier(params.getPoolSupplier())
             .build());
   }
 }

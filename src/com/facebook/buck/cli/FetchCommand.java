@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.actiongraph.computation.ParallelActionGraphFactory;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -98,7 +99,8 @@ public class FetchCommand extends BuildCommand {
         actionGraphAndBuilder =
             Preconditions.checkNotNull(
                 new ActionGraphProvider(
-                        ActionGraphFactory.create(),
+                        ActionGraphFactory.create(
+                            new ParallelActionGraphFactory(params.getPoolSupplier())),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()))
                     .getFreshActionGraph(
@@ -113,8 +115,7 @@ public class FetchCommand extends BuildCommand {
                         params
                             .getBuckConfig()
                             .getView(ActionGraphConfig.class)
-                            .getShouldInstrumentActionGraph(),
-                        params.getPoolSupplier()));
+                            .getShouldInstrumentActionGraph()));
         buildTargets = ruleGenerator.getDownloadableTargets();
       } catch (BuildFileParseException | VersionException e) {
         params

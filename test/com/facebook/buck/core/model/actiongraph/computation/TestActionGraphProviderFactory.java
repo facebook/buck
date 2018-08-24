@@ -15,8 +15,27 @@
  */
 package com.facebook.buck.core.model.actiongraph.computation;
 
+import com.facebook.buck.util.CloseableMemoizedSupplier;
+import java.util.concurrent.ForkJoinPool;
+
 public class TestActionGraphProviderFactory {
   public static ActionGraphProvider create(int maxEntries) {
-    return new ActionGraphProvider(ActionGraphFactory.create(), new ActionGraphCache(maxEntries));
+    CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
+        CloseableMemoizedSupplier.of(
+            () -> {
+              throw new IllegalStateException(
+                  "should not use parallel executor for action graph construction in test");
+            },
+            ignored -> {});
+    return new ActionGraphProvider(
+        ActionGraphFactory.create(new ParallelActionGraphFactory(poolSupplier)),
+        new ActionGraphCache(maxEntries));
+  }
+
+  public static ActionGraphProvider create(
+      int maxEntries, CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+    return new ActionGraphProvider(
+        ActionGraphFactory.create(new ParallelActionGraphFactory(poolSupplier)),
+        new ActionGraphCache(maxEntries));
   }
 }

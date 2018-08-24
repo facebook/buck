@@ -37,7 +37,6 @@ import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapDifference;
@@ -45,7 +44,6 @@ import com.google.common.collect.Maps;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * Class that transforms {@link TargetGraph} to {@link ActionGraph}. It also holds a cache for the
@@ -69,8 +67,7 @@ public class ActionGraphProvider {
       TargetGraph targetGraph,
       CellProvider cellProvider,
       ActionGraphConfig actionGraphConfig,
-      RuleKeyConfiguration ruleKeyConfiguration,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+      RuleKeyConfiguration ruleKeyConfiguration) {
     return getActionGraph(
         eventBus,
         actionGraphConfig.isActionGraphCheckingEnabled(),
@@ -82,8 +79,7 @@ public class ActionGraphProvider {
         Optional.empty(),
         actionGraphConfig.getShouldInstrumentActionGraph(),
         actionGraphConfig.getIncrementalActionGraphMode(),
-        actionGraphConfig.getIncrementalActionGraphExperimentGroups(),
-        poolSupplier);
+        actionGraphConfig.getIncrementalActionGraphExperimentGroups());
   }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
@@ -93,8 +89,7 @@ public class ActionGraphProvider {
       CellProvider cellProvider,
       ActionGraphConfig actionGraphConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
-      Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     return getActionGraph(
         eventBus,
         actionGraphConfig.isActionGraphCheckingEnabled(),
@@ -106,8 +101,7 @@ public class ActionGraphProvider {
         ruleKeyLogger,
         actionGraphConfig.getShouldInstrumentActionGraph(),
         actionGraphConfig.getIncrementalActionGraphMode(),
-        actionGraphConfig.getIncrementalActionGraphExperimentGroups(),
-        poolSupplier);
+        actionGraphConfig.getIncrementalActionGraphExperimentGroups());
   }
 
   public ActionGraphAndBuilder getActionGraph(
@@ -120,8 +114,7 @@ public class ActionGraphProvider {
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
-      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
     return getActionGraph(
         eventBus,
         checkActionGraphs,
@@ -133,8 +126,7 @@ public class ActionGraphProvider {
         Optional.empty(),
         shouldInstrumentGraphBuilding,
         incrementalActionGraphMode,
-        incrementalActionGraphExperimentGroups,
-        poolSupplier);
+        incrementalActionGraphExperimentGroups);
   }
 
   /**
@@ -147,7 +139,6 @@ public class ActionGraphProvider {
    *     memory. Instead, create a new {@link ActionGraph} for this request, which should be
    *     garbage-collected at the end of the request.
    * @param targetGraph the target graph that the action graph will be based on.
-   * @param poolSupplier the thread poolSupplier for parallel action graph construction
    * @return a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getActionGraph(
@@ -161,8 +152,7 @@ public class ActionGraphProvider {
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
-      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
     ActionGraphAndBuilder out;
@@ -182,8 +172,7 @@ public class ActionGraphProvider {
               fieldLoader,
               parallelizationMode,
               ruleKeyLogger,
-              shouldInstrumentGraphBuilding,
-              poolSupplier);
+              shouldInstrumentGraphBuilding);
         }
         out = cachedActionGraph;
       } else {
@@ -211,8 +200,7 @@ public class ActionGraphProvider {
                     skipActionGraphCache
                         ? IncrementalActionGraphMode.DISABLED
                         : incrementalActionGraphMode,
-                    incrementalActionGraphExperimentGroups,
-                    poolSupplier));
+                    incrementalActionGraphExperimentGroups));
         out = freshActionGraph.getSecond();
         if (!skipActionGraphCache) {
           LOG.info("ActionGraph cache assignment.");
@@ -241,8 +229,7 @@ public class ActionGraphProvider {
       TargetGraph targetGraph,
       CellProvider cellProvider,
       ActionGraphParallelizationMode parallelizationMode,
-      boolean shouldInstrumentGraphBuilding,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+      boolean shouldInstrumentGraphBuilding) {
     TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
     return getFreshActionGraph(
         eventBus,
@@ -250,8 +237,7 @@ public class ActionGraphProvider {
         targetGraph,
         cellProvider,
         parallelizationMode,
-        shouldInstrumentGraphBuilding,
-        poolSupplier);
+        shouldInstrumentGraphBuilding);
   }
 
   /**
@@ -271,8 +257,7 @@ public class ActionGraphProvider {
       TargetGraph targetGraph,
       CellProvider cellProvider,
       ActionGraphParallelizationMode parallelizationMode,
-      boolean shouldInstrumentGraphBuilding,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+      boolean shouldInstrumentGraphBuilding) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
 
@@ -285,8 +270,7 @@ public class ActionGraphProvider {
             parallelizationMode,
             shouldInstrumentGraphBuilding,
             IncrementalActionGraphMode.DISABLED,
-            ImmutableMap.of(),
-            poolSupplier);
+            ImmutableMap.of());
 
     eventBus.post(
         ActionGraphEvent.finished(
@@ -302,8 +286,7 @@ public class ActionGraphProvider {
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
-      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
 
     return actionGraphFactory.createActionGraph(
         eventBus,
@@ -314,7 +297,6 @@ public class ActionGraphProvider {
         shouldInstrumentGraphBuilding,
         incrementalActionGraphMode,
         incrementalActionGraphExperimentGroups,
-        poolSupplier,
         graphBuilder -> {
           // Any previously cached action graphs are no longer valid, as we may use build rules
           // from those graphs to construct a new graph incrementally, and update those build
@@ -357,7 +339,6 @@ public class ActionGraphProvider {
    * @param fieldLoader
    * @param parallelizationMode What mode to use when processing the action graphs
    * @param ruleKeyLogger The logger to use (if any) when computing the new action graph
-   * @param poolSupplier The thread poolSupplier to use for parallel action graph construction
    */
   private void compareActionGraphs(
       BuckEventBus eventBus,
@@ -367,8 +348,7 @@ public class ActionGraphProvider {
       RuleKeyFieldLoader fieldLoader,
       ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      boolean shouldInstrumentGraphBuilding,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+      boolean shouldInstrumentGraphBuilding) {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(eventBus, PerfEventId.of("ActionGraphCacheCheck"))) {
       // We check that the lastActionGraph is not null because it's possible we had a
@@ -385,8 +365,7 @@ public class ActionGraphProvider {
                   parallelizationMode,
                   shouldInstrumentGraphBuilding,
                   IncrementalActionGraphMode.DISABLED,
-                  ImmutableMap.of(),
-                  poolSupplier));
+                  ImmutableMap.of()));
 
       Map<BuildRule, RuleKey> lastActionGraphRuleKeys =
           getRuleKeysFromBuildRules(

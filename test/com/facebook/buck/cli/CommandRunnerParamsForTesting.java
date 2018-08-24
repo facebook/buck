@@ -141,7 +141,8 @@ public class CommandRunnerParamsForTesting {
         ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()),
         new FakeExecutor(),
         BUILD_ENVIRONMENT_DESCRIPTION,
-        TestActionGraphProviderFactory.create(config.getMaxActionGraphCacheEntries()),
+        TestActionGraphProviderFactory.create(
+            config.getMaxActionGraphCacheEntries(), Main.getForkJoinPoolSupplier(config)),
         knownRuleTypesProvider,
         new BuildInfoStoreManager(),
         Optional.empty(),

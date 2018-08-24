@@ -60,7 +60,6 @@ import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -255,13 +254,7 @@ public class DistBuildFileHashesIntegrationTest {
             Optional.empty(),
             false,
             IncrementalActionGraphMode.DISABLED,
-            ImmutableMap.of(),
-            CloseableMemoizedSupplier.of(
-                () -> {
-                  throw new IllegalStateException(
-                      "should not use parallel executor for action graph construction in test");
-                },
-                ignored -> {}));
+            ImmutableMap.of());
     BuildRuleResolver ruleResolver = actionGraphAndBuilder.getActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);

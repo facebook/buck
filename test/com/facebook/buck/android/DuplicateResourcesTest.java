@@ -44,7 +44,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
@@ -261,13 +260,7 @@ public class DuplicateResourcesTest {
                     .build()
                     .getCellProvider(),
                 ActionGraphParallelizationMode.DISABLED,
-                false,
-                CloseableMemoizedSupplier.of(
-                    () -> {
-                      throw new IllegalStateException(
-                          "should not use parallel executor for single threaded action graph construction in test");
-                    },
-                    ignored -> {}));
+                false);
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(

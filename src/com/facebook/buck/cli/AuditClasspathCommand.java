@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.actiongraph.computation.ParallelActionGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -177,7 +178,8 @@ public class AuditClasspathCommand extends AbstractCommand {
     ActionGraphBuilder graphBuilder =
         Preconditions.checkNotNull(
                 new ActionGraphProvider(
-                        ActionGraphFactory.create(),
+                        ActionGraphFactory.create(
+                            new ParallelActionGraphFactory(params.getPoolSupplier())),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()))
                     .getFreshActionGraph(
@@ -191,8 +193,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params
                             .getBuckConfig()
                             .getView(ActionGraphConfig.class)
-                            .getShouldInstrumentActionGraph(),
-                        params.getPoolSupplier()))
+                            .getShouldInstrumentActionGraph()))
             .getActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -231,7 +232,8 @@ public class AuditClasspathCommand extends AbstractCommand {
     ActionGraphBuilder graphBuilder =
         Preconditions.checkNotNull(
                 new ActionGraphProvider(
-                        ActionGraphFactory.create(),
+                        ActionGraphFactory.create(
+                            new ParallelActionGraphFactory(params.getPoolSupplier())),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()))
                     .getFreshActionGraph(
@@ -245,8 +247,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params
                             .getBuckConfig()
                             .getView(ActionGraphConfig.class)
-                            .getShouldInstrumentActionGraph(),
-                        params.getPoolSupplier()))
+                            .getShouldInstrumentActionGraph()))
             .getActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));

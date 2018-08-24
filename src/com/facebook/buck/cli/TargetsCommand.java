@@ -458,8 +458,7 @@ public class TargetsCommand extends AbstractCommand {
                 targetGraph,
                 params.getCell().getCellProvider(),
                 params.getBuckConfig().getView(ActionGraphConfig.class),
-                params.getRuleKeyConfiguration(),
-                params.getPoolSupplier());
+                params.getRuleKeyConfiguration());
 
     // construct real graph
     MutableDirectedGraph<BuildRule> actionGraphMutable = new MutableDirectedGraph<>();
@@ -974,8 +973,7 @@ public class TargetsCommand extends AbstractCommand {
                     getSubgraphWithoutConfigurationNodes(targetGraphAndTargetNodes.getFirst()),
                     params.getCell().getCellProvider(),
                     params.getBuckConfig().getView(ActionGraphConfig.class),
-                    params.getRuleKeyConfiguration(),
-                    params.getPoolSupplier());
+                    params.getRuleKeyConfiguration());
         actionGraph = Optional.of(result.getActionGraph());
         graphBuilder = Optional.of(result.getActionGraphBuilder());
         if (isShowRuleKey) {
