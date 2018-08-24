@@ -2805,6 +2805,12 @@ public class ProjectGenerator {
     HashSet<UnflavoredBuildTarget> frameworkTargets = new HashSet<UnflavoredBuildTarget>();
 
     for (TargetNode<?> targetNode : targetNodes) {
+      /*
+      Shared libraries with no sources will not produce an output file, so do not add
+      them to the copy phase since the Xcode build will fail for a missing file.
+       */
+      boolean shouldCopy = shouldCopyOutputFile(targetNode);
+
       PBXFileReference fileReference = getLibraryFileReference(targetNode);
       PBXBuildFile buildFile = new PBXBuildFile(fileReference);
       if (fileReference.getExplicitFileType().equals(Optional.of("wrapper.framework"))) {
@@ -2818,7 +2824,10 @@ public class ProjectGenerator {
         settings.put("ATTRIBUTES", new String[] {"CodeSignOnCopy", "RemoveHeadersOnCopy"});
         buildFile.setSettings(Optional.of(settings));
       }
-      copyFilesBuildPhase.getFiles().add(buildFile);
+
+      if (shouldCopy) {
+        copyFilesBuildPhase.getFiles().add(buildFile);
+      }
     }
     return copyFilesBuildPhase;
   }
@@ -3835,6 +3844,14 @@ public class ProjectGenerator {
     }
 
     return resolveSourcePath(src.get());
+  }
+
+  private boolean shouldCopyOutputFile(TargetNode<?> input) {
+    if (input.getDescription() instanceof CxxLibraryDescription
+        || input.getDescription() instanceof AppleLibraryDescription) {
+      return isLibraryWithSourcesToCompile(input);
+    }
+    return true;
   }
 
   private boolean isLibraryWithSourcesToCompile(TargetNode<?> input) {
