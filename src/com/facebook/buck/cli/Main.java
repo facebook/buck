@@ -1357,7 +1357,7 @@ public final class Main {
               daemon.getTypeCoercerFactory(),
               new InstrumentedVersionedTargetGraphCache(
                   daemon.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
-              new ActionGraphProvider(new ActionGraphFactory(), daemon.getActionGraphCache()),
+              new ActionGraphProvider(ActionGraphFactory.create(), daemon.getActionGraphCache()),
               defaultRuleKeyFactoryCacheRecycler);
     } else {
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -1378,7 +1378,7 @@ public final class Main {
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
               new ActionGraphProvider(
-                  new ActionGraphFactory(),
+                  ActionGraphFactory.create(),
                   new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries())),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());
     }

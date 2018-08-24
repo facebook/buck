@@ -105,7 +105,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
       ActionGraphBuilder graphBuilder =
           Preconditions.checkNotNull(
                   new ActionGraphProvider(
-                          new ActionGraphFactory(),
+                          ActionGraphFactory.create(),
                           new ActionGraphCache(
                               params.getBuckConfig().getMaxActionGraphCacheEntries()))
                       .getFreshActionGraph(

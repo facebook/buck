@@ -98,7 +98,7 @@ public class FetchCommand extends BuildCommand {
         actionGraphAndBuilder =
             Preconditions.checkNotNull(
                 new ActionGraphProvider(
-                        new ActionGraphFactory(),
+                        ActionGraphFactory.create(),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()))
                     .getFreshActionGraph(

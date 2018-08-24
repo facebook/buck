@@ -30,9 +30,19 @@ import java.util.concurrent.ForkJoinPool;
 
 public class ActionGraphFactory {
 
-  private final ParallelActionGraphFactory parallelActionGraphFactory =
-      new ParallelActionGraphFactory();
-  private final SerialActionGraphFactory serialActionGraphFactory = new SerialActionGraphFactory();
+  public static ActionGraphFactory create() {
+    return new ActionGraphFactory(new ParallelActionGraphFactory(), new SerialActionGraphFactory());
+  }
+
+  private final ParallelActionGraphFactory parallelActionGraphFactory;
+  private final SerialActionGraphFactory serialActionGraphFactory;
+
+  ActionGraphFactory(
+      ParallelActionGraphFactory parallelActionGraphFactory,
+      SerialActionGraphFactory serialActionGraphFactory) {
+    this.parallelActionGraphFactory = parallelActionGraphFactory;
+    this.serialActionGraphFactory = serialActionGraphFactory;
+  }
 
   public ActionGraphAndBuilder createActionGraph(
       BuckEventBus eventBus,
