@@ -146,6 +146,10 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Stream<BuildRule> getAppleDebugSymbolDeps() {
     return RichStream.from(getBuildDeps())
         .filter(HasAppleDebugSymbolDeps.class)
-        .flatMap(HasAppleDebugSymbolDeps::getAppleDebugSymbolDeps);
+        .flatMap(HasAppleDebugSymbolDeps::getAppleDebugSymbolDeps)
+        // Include the build deps themselves, which are the rules generating the thin binary.
+        // These rules may generate supplemental object files that are linked into the binary, and
+        // must be materialized in order for dsymutil to find them.
+        .concat(getBuildDeps().stream());
   }
 }

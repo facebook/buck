@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -46,12 +47,14 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
+import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -206,6 +209,32 @@ public class MultiarchFileTest {
           exception.getHumanReadableErrorMessage(),
           endsWith("Fat binaries is only supported when building an actual binary."));
     }
+  }
+
+  @Test
+  public void propagatesSingleArchRulesAndTheirDsymDepsAsDsymDeps() {
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64");
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
+            TargetGraphFactory.newInstance(new AppleLibraryBuilder(target).build()));
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    MultiarchFile multiarchRule =
+        (MultiarchFile) nodeBuilderFactory.getNodeBuilder(target).build(graphBuilder, filesystem);
+    ImmutableList<BuildRule> dsymDeps =
+        multiarchRule.getAppleDebugSymbolDeps().collect(ImmutableList.toImmutableList());
+    assertThat(
+        "dsym deps should contain single arch rules themselves",
+        dsymDeps,
+        hasItems(multiarchRule.getBuildDeps().toArray(new BuildRule[0])));
+    assertThat(
+        "dsym deps should contain dsym deps of single arch rules",
+        dsymDeps,
+        hasItems(
+            RichStream.from(multiarchRule.getBuildDeps())
+                .filter(HasAppleDebugSymbolDeps.class)
+                .flatMap(HasAppleDebugSymbolDeps::getAppleDebugSymbolDeps)
+                .toArray(BuildRule[]::new)));
   }
 
   /** Rule builders pass BuildTarget as a constructor arg, so this is unfortunately necessary. */
