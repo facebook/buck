@@ -37,7 +37,6 @@ import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import java.util.HashMap;
@@ -151,19 +150,16 @@ public class ActionGraphProvider {
           LOG.info("ActionGraph cache miss against " + actionGraphCache.size() + " entries.");
           eventBus.post(ActionGraphEvent.Cache.missWithTargetGraphDifference());
         }
-        Pair<TargetGraph, ActionGraphAndBuilder> freshActionGraph =
-            new Pair<TargetGraph, ActionGraphAndBuilder>(
+        out =
+            createActionGraph(
+                transformer,
                 targetGraph,
-                createActionGraph(
-                    transformer,
-                    targetGraph,
-                    skipActionGraphCache
-                        ? IncrementalActionGraphMode.DISABLED
-                        : incrementalActionGraphMode));
-        out = freshActionGraph.getSecond();
+                skipActionGraphCache
+                    ? IncrementalActionGraphMode.DISABLED
+                    : incrementalActionGraphMode);
         if (!skipActionGraphCache) {
           LOG.info("ActionGraph cache assignment.");
-          actionGraphCache.put(freshActionGraph.getFirst(), freshActionGraph.getSecond());
+          actionGraphCache.put(targetGraph, out);
         }
       }
       finished =
@@ -270,10 +266,8 @@ public class ActionGraphProvider {
       // We check that the lastActionGraph is not null because it's possible we had a
       // invalidateCache() between the scheduling and the execution of this task.
       LOG.info("ActionGraph integrity check spawned.");
-      Pair<TargetGraph, ActionGraphAndBuilder> newActionGraph =
-          new Pair<TargetGraph, ActionGraphAndBuilder>(
-              targetGraph,
-              createActionGraph(transformer, targetGraph, IncrementalActionGraphMode.DISABLED));
+      ActionGraphAndBuilder newActionGraph =
+          createActionGraph(transformer, targetGraph, IncrementalActionGraphMode.DISABLED);
 
       Map<BuildRule, RuleKey> lastActionGraphRuleKeys =
           getRuleKeysFromBuildRules(
@@ -283,8 +277,8 @@ public class ActionGraphProvider {
               Optional.empty() /* Only log once, and only for the new graph */);
       Map<BuildRule, RuleKey> newActionGraphRuleKeys =
           getRuleKeysFromBuildRules(
-              newActionGraph.getSecond().getActionGraph().getNodes(),
-              newActionGraph.getSecond().getActionGraphBuilder(),
+              newActionGraph.getActionGraph().getNodes(),
+              newActionGraph.getActionGraphBuilder(),
               fieldLoader,
               ruleKeyLogger);
 
