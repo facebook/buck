@@ -22,7 +22,6 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -115,8 +114,7 @@ public class UninstallCommand extends AbstractCommand {
       graphBuilder =
           params
               .getActionGraphProvider()
-              .getActionGraph(
-                  result.getTargetGraph(), params.getBuckConfig().getView(ActionGraphConfig.class))
+              .getActionGraph(result.getTargetGraph())
               .getActionGraphBuilder();
     } catch (BuildFileParseException e) {
       params

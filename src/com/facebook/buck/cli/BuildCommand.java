@@ -40,7 +40,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -1372,10 +1371,7 @@ public class BuildCommand extends AbstractCommand {
     ActionGraphAndBuilder actionGraphAndBuilder =
         params
             .getActionGraphProvider()
-            .getActionGraph(
-                targetGraphAndBuildTargets.getTargetGraph(),
-                params.getBuckConfig().getView(ActionGraphConfig.class),
-                ruleKeyLogger);
+            .getActionGraph(targetGraphAndBuildTargets.getTargetGraph(), ruleKeyLogger);
     return actionGraphAndBuilder;
   }
 

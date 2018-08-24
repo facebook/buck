@@ -26,7 +26,6 @@ import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -166,9 +165,7 @@ public class GoProjectCommandHelper {
   }
 
   private ActionGraphAndBuilder getActionGraph(TargetGraph targetGraph) {
-    return params
-        .getActionGraphProvider()
-        .getActionGraph(targetGraph, buckConfig.getView(ActionGraphConfig.class));
+    return params.getActionGraphProvider().getActionGraph(targetGraph);
   }
 
   private TargetGraph getProjectGraphForIde(

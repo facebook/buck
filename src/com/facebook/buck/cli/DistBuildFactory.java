@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -200,7 +201,11 @@ public abstract class DistBuildFactory {
                         state.getRemoteRootCellConfig().getMaxActionGraphCacheEntries()),
                     ruleKeyConfiguration,
                     false,
-                    false))
+                    false,
+                    state
+                        .getRemoteRootCellConfig()
+                        .getView(ActionGraphConfig.class)
+                        .getIncrementalActionGraphMode()))
             .setRuleKeyConfiguration(ruleKeyConfiguration)
             .setConsole(params.getConsole())
             .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())

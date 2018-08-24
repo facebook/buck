@@ -47,6 +47,8 @@ public class ActionGraphProviderBuilder {
 
   @Nullable private Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups;
 
+  @Nullable private IncrementalActionGraphMode incrementalActionGraphMode;
+
   public ActionGraphProviderBuilder withMaxEntries(Integer maxEntries) {
     this.actionGraphCache = new ActionGraphCache(maxEntries);
     return this;
@@ -101,6 +103,12 @@ public class ActionGraphProviderBuilder {
     return this;
   }
 
+  public ActionGraphProviderBuilder withIncrementalActionGraphMode(
+      IncrementalActionGraphMode incrementalActionGraphMode) {
+    this.incrementalActionGraphMode = incrementalActionGraphMode;
+    return this;
+  }
+
   public ActionGraphProvider build() {
     ActionGraphCache actionGraphCache =
         this.actionGraphCache == null ? new ActionGraphCache(1) : this.actionGraphCache;
@@ -133,6 +141,10 @@ public class ActionGraphProviderBuilder {
         this.incrementalActionGraphExperimentGroups == null
             ? ImmutableMap.of()
             : this.incrementalActionGraphExperimentGroups;
+    IncrementalActionGraphMode incrementalActionGraphMode =
+        this.incrementalActionGraphMode == null
+            ? IncrementalActionGraphMode.DISABLED
+            : this.incrementalActionGraphMode;
 
     return new ActionGraphProvider(
         eventBus,
@@ -146,6 +158,7 @@ public class ActionGraphProviderBuilder {
         actionGraphCache,
         ruleKeyConfiguration,
         checkActionGraphs,
-        skipActionGraphCache);
+        skipActionGraphCache,
+        incrementalActionGraphMode);
   }
 }

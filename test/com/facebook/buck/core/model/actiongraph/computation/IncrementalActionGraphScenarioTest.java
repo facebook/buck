@@ -151,6 +151,7 @@ public class IncrementalActionGraphScenarioTest {
             .withActionGraphCache(cache)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(0))
             .withEventBus(eventBus)
+            .withIncrementalActionGraphMode(IncrementalActionGraphMode.ENABLED)
             .build();
   }
 
@@ -1114,6 +1115,7 @@ public class IncrementalActionGraphScenarioTest {
         new ActionGraphProviderBuilder()
             .withMaxEntries(2)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(0))
+            .withIncrementalActionGraphMode(IncrementalActionGraphMode.ENABLED)
             .build();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:bin");
@@ -1278,8 +1280,7 @@ public class IncrementalActionGraphScenarioTest {
   }
 
   private ActionGraphAndBuilder createActionGraph(TargetGraph targetGraph) {
-    ActionGraphAndBuilder result =
-        provider.getActionGraph(targetGraph, IncrementalActionGraphMode.ENABLED);
+    ActionGraphAndBuilder result = provider.getActionGraph(targetGraph);
     // Grab a copy of the data since we invalidate the collections in previous BuildRuleResolvers.
     return ActionGraphAndBuilder.of(
         new ActionGraph(

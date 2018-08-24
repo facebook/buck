@@ -29,7 +29,6 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -557,9 +556,7 @@ public class TestCommand extends BuildCommand {
       ActionGraphAndBuilder actionGraphAndBuilder =
           params
               .getActionGraphProvider()
-              .getActionGraph(
-                  targetGraphAndBuildTargets.getTargetGraph(),
-                  params.getBuckConfig().getView(ActionGraphConfig.class));
+              .getActionGraph(targetGraphAndBuildTargets.getTargetGraph());
       // Look up all of the test rules in the action graph.
       Iterable<TestRule> testRules =
           Iterables.filter(actionGraphAndBuilder.getActionGraph().getNodes(), TestRule.class);

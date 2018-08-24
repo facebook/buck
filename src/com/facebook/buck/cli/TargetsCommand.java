@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.impl.InMemoryBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
@@ -450,10 +449,7 @@ public class TargetsCommand extends AbstractCommand {
     TargetGraphAndBuildTargets targetGraphAndTargets = buildTargetGraphAndTargets(params, executor);
     TargetGraph targetGraph =
         getSubgraphWithoutConfigurationNodes(targetGraphAndTargets.getTargetGraph());
-    ActionGraphAndBuilder result =
-        params
-            .getActionGraphProvider()
-            .getActionGraph(targetGraph, params.getBuckConfig().getView(ActionGraphConfig.class));
+    ActionGraphAndBuilder result = params.getActionGraphProvider().getActionGraph(targetGraph);
 
     // construct real graph
     MutableDirectedGraph<BuildRule> actionGraphMutable = new MutableDirectedGraph<>();
@@ -964,8 +960,7 @@ public class TargetsCommand extends AbstractCommand {
             params
                 .getActionGraphProvider()
                 .getActionGraph(
-                    getSubgraphWithoutConfigurationNodes(targetGraphAndTargetNodes.getFirst()),
-                    params.getBuckConfig().getView(ActionGraphConfig.class));
+                    getSubgraphWithoutConfigurationNodes(targetGraphAndTargetNodes.getFirst()));
         actionGraph = Optional.of(result.getActionGraph());
         graphBuilder = Optional.of(result.getActionGraphBuilder());
         if (isShowRuleKey) {

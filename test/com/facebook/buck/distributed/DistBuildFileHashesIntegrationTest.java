@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
-import com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphMode;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -243,8 +242,7 @@ public class DistBuildFileHashesIntegrationTest {
             .withCellProvider(rootCell.getCellProvider())
             .withCheckActionGraphs()
             .build();
-    ActionGraphAndBuilder actionGraphAndBuilder =
-        cache.getActionGraph(targetGraph, Optional.empty(), IncrementalActionGraphMode.DISABLED);
+    ActionGraphAndBuilder actionGraphAndBuilder = cache.getActionGraph(targetGraph);
     BuildRuleResolver ruleResolver = actionGraphAndBuilder.getActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);

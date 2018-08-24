@@ -57,6 +57,7 @@ public class ActionGraphProvider {
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final boolean checkActionGraphs;
   private final boolean skipActionGraphCache;
+  private final IncrementalActionGraphMode incrementalActionGraphMode;
 
   public ActionGraphProvider(
       BuckEventBus eventBus,
@@ -64,13 +65,15 @@ public class ActionGraphProvider {
       ActionGraphCache actionGraphCache,
       RuleKeyConfiguration ruleKeyConfiguration,
       boolean checkActionGraphs,
-      boolean skipActionGraphCache) {
+      boolean skipActionGraphCache,
+      IncrementalActionGraphMode incrementalActionGraphMode) {
     this.eventBus = eventBus;
     this.actionGraphFactory = actionGraphFactory;
     this.actionGraphCache = actionGraphCache;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.checkActionGraphs = checkActionGraphs;
     this.skipActionGraphCache = skipActionGraphCache;
+    this.incrementalActionGraphMode = incrementalActionGraphMode;
   }
 
   private ActionGraphProvider(
@@ -85,7 +88,8 @@ public class ActionGraphProvider {
         actionGraphCache,
         ruleKeyConfiguration,
         actionGraphConfig.isActionGraphCheckingEnabled(),
-        actionGraphConfig.isSkipActionGraphCache());
+        actionGraphConfig.isSkipActionGraphCache(),
+        actionGraphConfig.getIncrementalActionGraphMode());
   }
 
   public ActionGraphProvider(
@@ -103,24 +107,8 @@ public class ActionGraphProvider {
   }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
-  public ActionGraphAndBuilder getActionGraph(
-      TargetGraph targetGraph, ActionGraphConfig actionGraphConfig) {
-    return getActionGraph(
-        targetGraph, Optional.empty(), actionGraphConfig.getIncrementalActionGraphMode());
-  }
-
-  /** Create an ActionGraph, using options extracted from a BuckConfig. */
-  public ActionGraphAndBuilder getActionGraph(
-      TargetGraph targetGraph,
-      ActionGraphConfig actionGraphConfig,
-      Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
-    return getActionGraph(
-        targetGraph, ruleKeyLogger, actionGraphConfig.getIncrementalActionGraphMode());
-  }
-
-  public ActionGraphAndBuilder getActionGraph(
-      TargetGraph targetGraph, IncrementalActionGraphMode incrementalActionGraphMode) {
-    return getActionGraph(targetGraph, Optional.empty(), incrementalActionGraphMode);
+  public ActionGraphAndBuilder getActionGraph(TargetGraph targetGraph) {
+    return getActionGraph(targetGraph, Optional.empty());
   }
 
   /**
@@ -132,9 +120,7 @@ public class ActionGraphProvider {
    * @return a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getActionGraph(
-      TargetGraph targetGraph,
-      Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      IncrementalActionGraphMode incrementalActionGraphMode) {
+      TargetGraph targetGraph, Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
     ActionGraphAndBuilder out;

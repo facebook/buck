@@ -53,7 +53,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 
 /** Initializes the build engine delegate, the target graph and the action graph. */
 public class DelegateAndGraphsInitializer {
@@ -148,11 +147,7 @@ public class DelegateAndGraphsInitializer {
     args.getTimingStatsTracker().startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     try {
       ActionGraphAndBuilder actionGraphAndBuilder =
-          args.getActionGraphProvider()
-              .getActionGraph(
-                  Preconditions.checkNotNull(targetGraph),
-                  Optional.empty(),
-                  args.getIncrementalActionGraphMode());
+          args.getActionGraphProvider().getActionGraph(Preconditions.checkNotNull(targetGraph));
       return actionGraphAndBuilder;
     } finally {
       args.getTimingStatsTracker().stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);

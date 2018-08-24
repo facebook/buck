@@ -20,7 +20,6 @@ import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -162,11 +161,6 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setExecutors(this.getExecutors())
         .setProvider(this.getProvider())
         .setKnownRuleTypesProvider(getKnownRuleTypesProvider())
-        .setIncrementalActionGraphMode(
-            this.getDistBuildConfig()
-                .getBuckConfig()
-                .getView(ActionGraphConfig.class)
-                .getIncrementalActionGraphMode())
         .setDistBuildConfig(this.getDistBuildConfig())
         .build();
   }
