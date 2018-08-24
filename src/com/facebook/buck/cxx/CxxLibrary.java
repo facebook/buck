@@ -308,10 +308,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
     boolean delegateWantsArtifact =
         delegate
-            .map(
-                d ->
-                    d.getShouldProduceLibraryArtifact(
-                        getBuildTarget(), graphBuilder, cxxPlatform, type, forceLinkWhole))
+            .map(d -> d.getShouldProduceLibraryArtifact(getBuildTarget(), graphBuilder))
             .orElse(false);
     boolean headersOnly = headerOnly.test(cxxPlatform);
     boolean shouldProduceArtifact = (!headersOnly || delegateWantsArtifact) && propagateLinkables;

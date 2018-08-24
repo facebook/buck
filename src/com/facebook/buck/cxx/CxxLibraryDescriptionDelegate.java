@@ -22,7 +22,6 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
-import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
@@ -88,10 +87,5 @@ public interface CxxLibraryDescriptionDelegate {
    * not aware of other sources, it uses this method as an additional signal to determine whether it
    * should produce a final artifact, even it doesn't have to if looking at just its own sources.
    */
-  boolean getShouldProduceLibraryArtifact(
-      BuildTarget target,
-      ActionGraphBuilder graphBuilder,
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type,
-      boolean forceLinkWhole);
+  boolean getShouldProduceLibraryArtifact(BuildTarget target, ActionGraphBuilder graphBuilder);
 }

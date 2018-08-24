@@ -1150,11 +1150,7 @@ public class AppleLibraryDescription
 
   @Override
   public boolean getShouldProduceLibraryArtifact(
-      BuildTarget target,
-      ActionGraphBuilder graphBuilder,
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type,
-      boolean forceLinkWhole) {
+      BuildTarget target, ActionGraphBuilder graphBuilder) {
     return targetContainsSwift(target, graphBuilder);
   }
 
