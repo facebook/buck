@@ -30,7 +30,7 @@ import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.actiongraph.computation.TestActionGraphProviderFactory;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -330,8 +330,10 @@ public class CleanCommandTest {
         ImmutableMap.of(),
         new FakeExecutor(),
         CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
-        TestActionGraphProviderFactory.create(
-            buckConfig.getMaxActionGraphCacheEntries(), Main.getForkJoinPoolSupplier(buckConfig)),
+        new ActionGraphProviderBuilder()
+            .withMaxEntries(buckConfig.getMaxActionGraphCacheEntries())
+            .withPoolSupplier(Main.getForkJoinPoolSupplier(buckConfig))
+            .build(),
         knownRuleTypesProvider,
         new BuildInfoStoreManager(),
         Optional.empty(),

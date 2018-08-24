@@ -48,7 +48,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
-import com.facebook.buck.core.model.actiongraph.computation.TestActionGraphProviderFactory;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -1057,7 +1057,8 @@ public class WorkspaceAndProjectGeneratorTest {
   private Function<TargetNode<?>, ActionGraphBuilder> getActionGraphBuilderForNodeFunction(
       TargetGraph targetGraph) {
     return input ->
-        TestActionGraphProviderFactory.create(1)
+        new ActionGraphProviderBuilder()
+            .build()
             .getFreshActionGraph(
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
                 new TestCellBuilder().build().getCellProvider(),

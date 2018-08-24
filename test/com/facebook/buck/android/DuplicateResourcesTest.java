@@ -27,7 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
-import com.facebook.buck.core.model.actiongraph.computation.TestActionGraphProviderFactory;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -247,10 +247,11 @@ public class DuplicateResourcesTest {
             keystore);
 
     ActionGraphAndBuilder actionGraphAndBuilder =
-        TestActionGraphProviderFactory.create(
+        new ActionGraphProviderBuilder()
+            .withEventBus(
                 BuckEventBusForTests.newInstance(
-                    new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
-                1)
+                    new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))))
+            .build()
             .getFreshActionGraph(
                 new DefaultTargetNodeToBuildRuleTransformer(),
                 targetGraph,

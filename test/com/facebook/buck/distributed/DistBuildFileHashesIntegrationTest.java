@@ -27,8 +27,8 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphMode;
-import com.facebook.buck.core.model.actiongraph.computation.TestActionGraphProviderFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -240,8 +240,9 @@ public class DistBuildFileHashesIntegrationTest {
   private DistBuildFileHashes createDistBuildFileHashes(TargetGraph targetGraph, Cell rootCell)
       throws InterruptedException {
     ActionGraphProvider cache =
-        TestActionGraphProviderFactory.create(
-            rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
+        new ActionGraphProviderBuilder()
+            .withMaxEntries(rootCell.getBuckConfig().getMaxActionGraphCacheEntries())
+            .build();
     ActionGraphAndBuilder actionGraphAndBuilder =
         cache.getActionGraph(
             true,
