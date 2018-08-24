@@ -108,7 +108,8 @@ public class ActionGraphProvider {
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
   public ActionGraphAndBuilder getActionGraph(TargetGraph targetGraph) {
-    return getActionGraph(targetGraph, Optional.empty());
+    return getActionGraph(
+        new DefaultTargetNodeToBuildRuleTransformer(), targetGraph, Optional.empty());
   }
 
   /**
@@ -120,7 +121,9 @@ public class ActionGraphProvider {
    * @return a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getActionGraph(
-      TargetGraph targetGraph, Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
+      TargetNodeToBuildRuleTransformer transformer,
+      TargetGraph targetGraph,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
     ActionGraphAndBuilder out;
@@ -132,7 +135,8 @@ public class ActionGraphProvider {
         eventBus.post(ActionGraphEvent.Cache.hit());
         LOG.info("ActionGraph cache hit.");
         if (checkActionGraphs) {
-          compareActionGraphs(cachedActionGraph, targetGraph, fieldLoader, ruleKeyLogger);
+          compareActionGraphs(
+              cachedActionGraph, transformer, targetGraph, fieldLoader, ruleKeyLogger);
         }
         out = cachedActionGraph;
       } else {
@@ -151,7 +155,7 @@ public class ActionGraphProvider {
             new Pair<TargetGraph, ActionGraphAndBuilder>(
                 targetGraph,
                 createActionGraph(
-                    new DefaultTargetNodeToBuildRuleTransformer(),
+                    transformer,
                     targetGraph,
                     skipActionGraphCache
                         ? IncrementalActionGraphMode.DISABLED
@@ -257,6 +261,7 @@ public class ActionGraphProvider {
    */
   private void compareActionGraphs(
       ActionGraphAndBuilder lastActionGraphAndBuilder,
+      TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       RuleKeyFieldLoader fieldLoader,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
@@ -268,10 +273,7 @@ public class ActionGraphProvider {
       Pair<TargetGraph, ActionGraphAndBuilder> newActionGraph =
           new Pair<TargetGraph, ActionGraphAndBuilder>(
               targetGraph,
-              createActionGraph(
-                  new DefaultTargetNodeToBuildRuleTransformer(),
-                  targetGraph,
-                  IncrementalActionGraphMode.DISABLED));
+              createActionGraph(transformer, targetGraph, IncrementalActionGraphMode.DISABLED));
 
       Map<BuildRule, RuleKey> lastActionGraphRuleKeys =
           getRuleKeysFromBuildRules(

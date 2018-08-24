@@ -48,6 +48,7 @@ import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -1371,7 +1372,10 @@ public class BuildCommand extends AbstractCommand {
     ActionGraphAndBuilder actionGraphAndBuilder =
         params
             .getActionGraphProvider()
-            .getActionGraph(targetGraphAndBuildTargets.getTargetGraph(), ruleKeyLogger);
+            .getActionGraph(
+                new DefaultTargetNodeToBuildRuleTransformer(),
+                targetGraphAndBuildTargets.getTargetGraph(),
+                ruleKeyLogger);
     return actionGraphAndBuilder;
   }
 
