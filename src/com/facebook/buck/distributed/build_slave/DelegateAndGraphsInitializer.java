@@ -39,11 +39,9 @@ import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPatternFactory;
 import com.facebook.buck.step.ExecutorPool;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
-import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +54,6 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ForkJoinPool;
 
 /** Initializes the build engine delegate, the target graph and the action graph. */
 public class DelegateAndGraphsInitializer {
@@ -152,8 +149,7 @@ public class DelegateAndGraphsInitializer {
     try {
       LOG.info(
           String.format(
-              "Parallel action graph mode: [%s]. Parallel action graph threads [%d]",
-              args.getActionGraphParallelizationMode(), args.getMaxActionGraphParallelism()));
+              "Parallel action graph mode: [%s]", args.getActionGraphParallelizationMode()));
       ActionGraphAndBuilder actionGraphAndBuilder =
           args.getActionGraphProvider()
               .getActionGraph(
@@ -168,16 +164,7 @@ public class DelegateAndGraphsInitializer {
                   args.getShouldInstrumentActionGraph(),
                   args.getIncrementalActionGraphMode(),
                   args.getIncrementalActionGraphExperimentGroups(),
-                  CloseableMemoizedSupplier.of(
-                      () -> {
-                        int threadCount = args.getMaxActionGraphParallelism();
-                        LOG.info(
-                            String.format(
-                                "Creating parallel action graph construction pool with [%d] threads.",
-                                threadCount));
-                        return MostExecutors.forkJoinPoolWithThreadLimit(threadCount, 16);
-                      },
-                      ForkJoinPool::shutdownNow));
+                  args.getForkJoinPoolSupplier());
       return actionGraphAndBuilder;
     } finally {
       args.getTimingStatsTracker().stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);

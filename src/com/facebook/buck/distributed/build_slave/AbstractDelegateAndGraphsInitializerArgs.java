@@ -30,10 +30,12 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
 import org.immutables.value.Value;
 
 /** Constructor arguments for DelegateAndGraphsInitializer. */
@@ -73,9 +75,9 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
 
   public abstract DistBuildConfig getDistBuildConfig();
 
-  public abstract int getMaxActionGraphParallelism();
-
   public abstract ActionGraphParallelizationMode getActionGraphParallelizationMode();
 
   public abstract CellProvider getCellProvider();
+
+  public abstract CloseableMemoizedSupplier<ForkJoinPool> getForkJoinPoolSupplier();
 }

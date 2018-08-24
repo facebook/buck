@@ -41,6 +41,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
@@ -49,6 +50,7 @@ import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -118,11 +120,11 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract HealthCheckStatsTracker getHealthCheckStatsTracker();
 
-  public abstract int getMaxActionGraphParallelism();
-
   public abstract ActionGraphParallelizationMode getActionGraphParallelizationMode();
 
   public abstract RemoteCommand getRemoteCommand();
+
+  public abstract CloseableMemoizedSupplier<ForkJoinPool> getForkJoinPoolSupplier();
 
   public int getBuildThreadCount() {
     return getState()
@@ -183,9 +185,9 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
                 .getView(ActionGraphConfig.class)
                 .getIncrementalActionGraphExperimentGroups())
         .setDistBuildConfig(this.getDistBuildConfig())
-        .setMaxActionGraphParallelism(this.getMaxActionGraphParallelism())
         .setActionGraphParallelizationMode(this.getActionGraphParallelizationMode())
         .setCellProvider(this.getRootCell().getCellProvider())
+        .setForkJoinPoolSupplier(this.getForkJoinPoolSupplier())
         .build();
   }
 
