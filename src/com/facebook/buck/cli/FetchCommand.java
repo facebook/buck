@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
-import com.facebook.buck.core.model.actiongraph.computation.ParallelActionGraphFactory;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -102,14 +101,14 @@ public class FetchCommand extends BuildCommand {
                         params.getBuckEventBus(),
                         ActionGraphFactory.create(
                             params.getBuckEventBus(),
-                            new ParallelActionGraphFactory(params.getPoolSupplier())),
+                            params.getCell().getCellProvider(),
+                            params.getPoolSupplier()),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration())
                     .getFreshActionGraph(
                         ruleGenerator,
                         result.getTargetGraph(),
-                        params.getCell().getCellProvider(),
                         params
                             .getBuckConfig()
                             .getView(ActionGraphConfig.class)

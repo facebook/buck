@@ -72,5 +72,6 @@ java_library(
     ],
     visibility = ["//test/..."],
     deps = [
+        "//test/com/facebook/buck/core/cell:testutil",
     ],
 )

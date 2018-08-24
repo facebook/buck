@@ -168,8 +168,7 @@ public class GoProjectCommandHelper {
   private ActionGraphAndBuilder getActionGraph(TargetGraph targetGraph) {
     return params
         .getActionGraphProvider()
-        .getActionGraph(
-            targetGraph, cell.getCellProvider(), buckConfig.getView(ActionGraphConfig.class));
+        .getActionGraph(targetGraph, buckConfig.getView(ActionGraphConfig.class));
   }
 
   private TargetGraph getProjectGraphForIde(

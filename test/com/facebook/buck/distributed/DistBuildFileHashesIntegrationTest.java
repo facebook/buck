@@ -242,13 +242,13 @@ public class DistBuildFileHashesIntegrationTest {
     ActionGraphProvider cache =
         new ActionGraphProviderBuilder()
             .withMaxEntries(rootCell.getBuckConfig().getMaxActionGraphCacheEntries())
+            .withCellProvider(rootCell.getCellProvider())
             .build();
     ActionGraphAndBuilder actionGraphAndBuilder =
         cache.getActionGraph(
             true,
             false,
             targetGraph,
-            rootCell.getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             Optional.empty(),
             false,

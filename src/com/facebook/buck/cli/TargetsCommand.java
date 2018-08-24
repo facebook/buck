@@ -453,10 +453,7 @@ public class TargetsCommand extends AbstractCommand {
     ActionGraphAndBuilder result =
         params
             .getActionGraphProvider()
-            .getActionGraph(
-                targetGraph,
-                params.getCell().getCellProvider(),
-                params.getBuckConfig().getView(ActionGraphConfig.class));
+            .getActionGraph(targetGraph, params.getBuckConfig().getView(ActionGraphConfig.class));
 
     // construct real graph
     MutableDirectedGraph<BuildRule> actionGraphMutable = new MutableDirectedGraph<>();
@@ -968,7 +965,6 @@ public class TargetsCommand extends AbstractCommand {
                 .getActionGraphProvider()
                 .getActionGraph(
                     getSubgraphWithoutConfigurationNodes(targetGraphAndTargetNodes.getFirst()),
-                    params.getCell().getCellProvider(),
                     params.getBuckConfig().getView(ActionGraphConfig.class));
         actionGraph = Optional.of(result.getActionGraph());
         graphBuilder = Optional.of(result.getActionGraphBuilder());

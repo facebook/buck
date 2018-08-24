@@ -207,7 +207,6 @@ public class IjProjectCommandHelper {
     return actionGraphProvider.getFreshActionGraph(
         transformer,
         targetGraph,
-        cell.getCellProvider(),
         actionGraphConfig.getActionGraphParallelizationMode(),
         actionGraphConfig.getShouldInstrumentActionGraph());
   }

@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.core.model.actiongraph.computation;
 
+import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -32,6 +34,8 @@ public class ActionGraphProviderBuilder {
   @Nullable private BuckEventBus eventBus;
 
   @Nullable private RuleKeyConfiguration ruleKeyConfiguration;
+
+  @Nullable private CellProvider cellProvider;
 
   public ActionGraphProviderBuilder withMaxEntries(Integer maxEntries) {
     this.maxEntries = maxEntries;
@@ -55,6 +59,11 @@ public class ActionGraphProviderBuilder {
     return this;
   }
 
+  public ActionGraphProviderBuilder withCellProvider(CellProvider cellProvider) {
+    this.cellProvider = cellProvider;
+    return this;
+  }
+
   public ActionGraphProvider build() {
     int maxEntries = this.maxEntries == null ? 1 : this.maxEntries;
     CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
@@ -72,10 +81,14 @@ public class ActionGraphProviderBuilder {
         this.ruleKeyConfiguration == null
             ? TestRuleKeyConfigurationFactory.create()
             : this.ruleKeyConfiguration;
+    CellProvider cellProvider =
+        this.cellProvider == null
+            ? new TestCellBuilder().build().getCellProvider()
+            : this.cellProvider;
 
     return new ActionGraphProvider(
         eventBus,
-        ActionGraphFactory.create(eventBus, new ParallelActionGraphFactory(poolSupplier)),
+        ActionGraphFactory.create(eventBus, cellProvider, poolSupplier),
         new ActionGraphCache(maxEntries),
         ruleKeyConfiguration);
   }

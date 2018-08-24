@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.model.actiongraph.computation;
 
-import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -70,12 +69,11 @@ public class ActionGraphProvider {
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
   public ActionGraphAndBuilder getActionGraph(
-      TargetGraph targetGraph, CellProvider cellProvider, ActionGraphConfig actionGraphConfig) {
+      TargetGraph targetGraph, ActionGraphConfig actionGraphConfig) {
     return getActionGraph(
         actionGraphConfig.isActionGraphCheckingEnabled(),
         actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
-        cellProvider,
         actionGraphConfig.getActionGraphParallelizationMode(),
         Optional.empty(),
         actionGraphConfig.getShouldInstrumentActionGraph(),
@@ -86,14 +84,12 @@ public class ActionGraphProvider {
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
   public ActionGraphAndBuilder getActionGraph(
       TargetGraph targetGraph,
-      CellProvider cellProvider,
       ActionGraphConfig actionGraphConfig,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     return getActionGraph(
         actionGraphConfig.isActionGraphCheckingEnabled(),
         actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
-        cellProvider,
         actionGraphConfig.getActionGraphParallelizationMode(),
         ruleKeyLogger,
         actionGraphConfig.getShouldInstrumentActionGraph(),
@@ -105,7 +101,6 @@ public class ActionGraphProvider {
       boolean checkActionGraphs,
       boolean skipActionGraphCache,
       TargetGraph targetGraph,
-      CellProvider cellProvider,
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
@@ -114,7 +109,6 @@ public class ActionGraphProvider {
         checkActionGraphs,
         skipActionGraphCache,
         targetGraph,
-        cellProvider,
         parallelizationMode,
         Optional.empty(),
         shouldInstrumentGraphBuilding,
@@ -137,7 +131,6 @@ public class ActionGraphProvider {
       boolean checkActionGraphs,
       boolean skipActionGraphCache,
       TargetGraph targetGraph,
-      CellProvider cellProvider,
       ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       boolean shouldInstrumentGraphBuilding,
@@ -157,7 +150,6 @@ public class ActionGraphProvider {
           compareActionGraphs(
               cachedActionGraph,
               targetGraph,
-              cellProvider,
               fieldLoader,
               parallelizationMode,
               ruleKeyLogger,
@@ -182,7 +174,6 @@ public class ActionGraphProvider {
                 createActionGraph(
                     new DefaultTargetNodeToBuildRuleTransformer(),
                     targetGraph,
-                    cellProvider,
                     parallelizationMode,
                     shouldInstrumentGraphBuilding,
                     skipActionGraphCache
@@ -213,12 +204,11 @@ public class ActionGraphProvider {
    */
   public ActionGraphAndBuilder getFreshActionGraph(
       TargetGraph targetGraph,
-      CellProvider cellProvider,
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding) {
     TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
     return getFreshActionGraph(
-        transformer, targetGraph, cellProvider, parallelizationMode, shouldInstrumentGraphBuilding);
+        transformer, targetGraph, parallelizationMode, shouldInstrumentGraphBuilding);
   }
 
   /**
@@ -234,7 +224,6 @@ public class ActionGraphProvider {
   public ActionGraphAndBuilder getFreshActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      CellProvider cellProvider,
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
@@ -244,7 +233,6 @@ public class ActionGraphProvider {
         createActionGraph(
             transformer,
             targetGraph,
-            cellProvider,
             parallelizationMode,
             shouldInstrumentGraphBuilding,
             IncrementalActionGraphMode.DISABLED,
@@ -259,7 +247,6 @@ public class ActionGraphProvider {
   private ActionGraphAndBuilder createActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      CellProvider cellProvider,
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
@@ -268,7 +255,6 @@ public class ActionGraphProvider {
     return actionGraphFactory.createActionGraph(
         transformer,
         targetGraph,
-        cellProvider,
         parallelizationMode,
         shouldInstrumentGraphBuilding,
         incrementalActionGraphMode,
@@ -318,7 +304,6 @@ public class ActionGraphProvider {
   private void compareActionGraphs(
       ActionGraphAndBuilder lastActionGraphAndBuilder,
       TargetGraph targetGraph,
-      CellProvider cellProvider,
       RuleKeyFieldLoader fieldLoader,
       ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
@@ -334,7 +319,6 @@ public class ActionGraphProvider {
               createActionGraph(
                   new DefaultTargetNodeToBuildRuleTransformer(),
                   targetGraph,
-                  cellProvider,
                   parallelizationMode,
                   shouldInstrumentGraphBuilding,
                   IncrementalActionGraphMode.DISABLED,

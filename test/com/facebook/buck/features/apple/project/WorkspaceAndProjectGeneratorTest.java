@@ -1061,7 +1061,6 @@ public class WorkspaceAndProjectGeneratorTest {
             .build()
             .getFreshActionGraph(
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
-                new TestCellBuilder().build().getCellProvider(),
                 ActionGraphParallelizationMode.DISABLED,
                 false)
             .getActionGraphBuilder();

@@ -25,7 +25,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
-import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
@@ -1263,7 +1262,6 @@ public class IncrementalActionGraphScenarioTest {
             false, /* checkActionGraphs */
             skipActionGraphCache,
             targetGraph,
-            new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.ENABLED,

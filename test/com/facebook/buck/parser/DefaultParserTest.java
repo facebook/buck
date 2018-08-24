@@ -2651,12 +2651,9 @@ public class DefaultParserTest {
     return Preconditions.checkNotNull(
             new ActionGraphProviderBuilder()
                 .withEventBus(eventBus)
+                .withCellProvider(cell.getCellProvider())
                 .build()
-                .getFreshActionGraph(
-                    targetGraph,
-                    cell.getCellProvider(),
-                    ActionGraphParallelizationMode.DISABLED,
-                    false))
+                .getFreshActionGraph(targetGraph, ActionGraphParallelizationMode.DISABLED, false))
         .getActionGraphBuilder();
   }
 

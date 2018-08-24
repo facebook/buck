@@ -27,7 +27,6 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -148,7 +147,6 @@ public class ActionGraphProviderTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -162,7 +160,6 @@ public class ActionGraphProviderTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -243,7 +240,6 @@ public class ActionGraphProviderTest {
           CHECK_GRAPHS, /* skipActionGraphCache */
           false,
           run.getFirst(),
-          new TestCellBuilder().build().getCellProvider(),
           ActionGraphParallelizationMode.DISABLED,
           false,
           IncrementalActionGraphMode.DISABLED,
@@ -269,7 +265,6 @@ public class ActionGraphProviderTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -284,7 +279,6 @@ public class ActionGraphProviderTest {
             CHECK_GRAPHS,
             /* skipActionGraphCache */ false,
             targetGraph1.getSubgraph(ImmutableSet.of(nodeB)),
-            new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -299,7 +293,6 @@ public class ActionGraphProviderTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -336,7 +329,6 @@ public class ActionGraphProviderTest {
         actionGraphProvider.getFreshActionGraph(
             new DefaultTargetNodeToBuildRuleTransformer(),
             targetGraph1,
-            new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false);
 
@@ -344,7 +336,6 @@ public class ActionGraphProviderTest {
         actionGraphProvider.getFreshActionGraph(
             new DefaultTargetNodeToBuildRuleTransformer(),
             targetGraph1,
-            new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false);
 
@@ -377,7 +368,6 @@ public class ActionGraphProviderTest {
                 NOT_CHECK_GRAPHS, /* skipActionGraphCache */
                 false,
                 targetGraph1,
-                new TestCellBuilder().build().getCellProvider(),
                 mode,
                 false,
                 IncrementalActionGraphMode.DISABLED,
@@ -399,7 +389,6 @@ public class ActionGraphProviderTest {
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
-              new TestCellBuilder().build().getCellProvider(),
               ActionGraphParallelizationMode.EXPERIMENT,
               false,
               IncrementalActionGraphMode.DISABLED,
@@ -426,7 +415,6 @@ public class ActionGraphProviderTest {
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
-              new TestCellBuilder().build().getCellProvider(),
               ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE,
               false,
               IncrementalActionGraphMode.DISABLED,
@@ -459,7 +447,6 @@ public class ActionGraphProviderTest {
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
-              new TestCellBuilder().build().getCellProvider(),
               ActionGraphParallelizationMode.DISABLED,
               false,
               mode,
@@ -487,7 +474,6 @@ public class ActionGraphProviderTest {
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.EXPERIMENT,
@@ -543,7 +529,6 @@ public class ActionGraphProviderTest {
             NOT_CHECK_GRAPHS,
             false,
             targetGraph1,
-            new TestCellBuilder().build().getCellProvider(),
             parallelizationMode,
             false,
             IncrementalActionGraphMode.ENABLED,
@@ -567,7 +552,6 @@ public class ActionGraphProviderTest {
             NOT_CHECK_GRAPHS,
             false,
             targetGraph2,
-            new TestCellBuilder().build().getCellProvider(),
             parallelizationMode,
             false,
             IncrementalActionGraphMode.ENABLED,

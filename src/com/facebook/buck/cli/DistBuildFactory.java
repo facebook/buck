@@ -17,7 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildMode;
@@ -42,6 +45,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.HttpService;
@@ -172,6 +176,10 @@ public abstract class DistBuildFactory {
     ArtifactCacheFactory distBuildArtifactCacheFactory =
         params.getArtifactCacheFactory().cloneWith(state.getRemoteRootCellConfig());
 
+    RuleKeyConfiguration ruleKeyConfiguration =
+        ConfigRuleKeyConfigurationFactory.create(
+            state.getRemoteRootCellConfig(), params.getBuckModuleManager());
+
     return new DistBuildSlaveExecutor(
         DistBuildSlaveExecutorArgs.builder()
             .setBuckEventBus(params.getBuckEventBus())
@@ -181,10 +189,17 @@ public abstract class DistBuildFactory {
             .setState(state)
             .setParser(params.getParser())
             .setExecutorService(executorService)
-            .setActionGraphProvider(params.getActionGraphProvider())
-            .setRuleKeyConfiguration(
-                ConfigRuleKeyConfigurationFactory.create(
-                    state.getRemoteRootCellConfig(), params.getBuckModuleManager()))
+            .setActionGraphProvider(
+                new ActionGraphProvider(
+                    params.getBuckEventBus(),
+                    ActionGraphFactory.create(
+                        params.getBuckEventBus(),
+                        state.getRootCell().getCellProvider(),
+                        params.getPoolSupplier()),
+                    new ActionGraphCache(
+                        state.getRemoteRootCellConfig().getMaxActionGraphCacheEntries()),
+                    ruleKeyConfiguration))
+            .setRuleKeyConfiguration(ruleKeyConfiguration)
             .setConsole(params.getConsole())
             .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
             .setProvider(fileContentsProvider)

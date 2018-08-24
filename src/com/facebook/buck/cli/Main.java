@@ -37,7 +37,6 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
-import com.facebook.buck.core.model.actiongraph.computation.ParallelActionGraphFactory;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
@@ -1368,7 +1367,7 @@ public final class Main {
               new ActionGraphProvider(
                   buildEventBus,
                   ActionGraphFactory.create(
-                      buildEventBus, new ParallelActionGraphFactory(forkJoinPoolSupplier)),
+                      buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier),
                   daemon.getActionGraphCache(),
                   ruleKeyConfiguration),
               defaultRuleKeyFactoryCacheRecycler);
@@ -1393,7 +1392,7 @@ public final class Main {
               new ActionGraphProvider(
                   buildEventBus,
                   ActionGraphFactory.create(
-                      buildEventBus, new ParallelActionGraphFactory(forkJoinPoolSupplier)),
+                      buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier),
                   new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
                   ruleKeyConfiguration),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());

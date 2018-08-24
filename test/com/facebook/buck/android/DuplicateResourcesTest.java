@@ -251,16 +251,17 @@ public class DuplicateResourcesTest {
             .withEventBus(
                 BuckEventBusForTests.newInstance(
                     new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))))
-            .build()
-            .getFreshActionGraph(
-                new DefaultTargetNodeToBuildRuleTransformer(),
-                targetGraph,
+            .withCellProvider(
                 new TestCellBuilder()
                     .setToolchainProvider(
                         AndroidBinaryBuilder.createToolchainProviderForAndroidBinary())
                     .setFilesystem(filesystem)
                     .build()
-                    .getCellProvider(),
+                    .getCellProvider())
+            .build()
+            .getFreshActionGraph(
+                new DefaultTargetNodeToBuildRuleTransformer(),
+                targetGraph,
                 ActionGraphParallelizationMode.DISABLED,
                 false);
 

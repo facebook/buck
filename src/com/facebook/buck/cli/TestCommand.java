@@ -559,7 +559,6 @@ public class TestCommand extends BuildCommand {
               .getActionGraphProvider()
               .getActionGraph(
                   targetGraphAndBuildTargets.getTargetGraph(),
-                  params.getCell().getCellProvider(),
                   params.getBuckConfig().getView(ActionGraphConfig.class));
       // Look up all of the test rules in the action graph.
       Iterable<TestRule> testRules =

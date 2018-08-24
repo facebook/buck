@@ -182,7 +182,6 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
                 .getIncrementalActionGraphExperimentGroups())
         .setDistBuildConfig(this.getDistBuildConfig())
         .setActionGraphParallelizationMode(this.getActionGraphParallelizationMode())
-        .setCellProvider(this.getRootCell().getCellProvider())
         .build();
   }
 

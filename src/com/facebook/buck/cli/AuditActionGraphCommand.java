@@ -87,7 +87,6 @@ public class AuditActionGraphCommand extends AbstractCommand {
               .getActionGraphProvider()
               .getActionGraph(
                   targetGraphAndBuildTargets.getTargetGraph(),
-                  params.getCell().getCellProvider(),
                   params.getBuckConfig().getView(ActionGraphConfig.class));
       SourcePathRuleFinder ruleFinder =
           new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());

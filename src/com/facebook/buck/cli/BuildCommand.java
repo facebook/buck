@@ -1374,7 +1374,6 @@ public class BuildCommand extends AbstractCommand {
             .getActionGraphProvider()
             .getActionGraph(
                 targetGraphAndBuildTargets.getTargetGraph(),
-                params.getCell().getCellProvider(),
                 params.getBuckConfig().getView(ActionGraphConfig.class),
                 ruleKeyLogger);
     return actionGraphAndBuilder;

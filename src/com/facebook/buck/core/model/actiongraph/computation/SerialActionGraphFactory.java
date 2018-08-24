@@ -42,16 +42,17 @@ public class SerialActionGraphFactory {
   private static final Logger LOG = Logger.get(SerialActionGraphFactory.class);
 
   private final BuckEventBus eventBus;
+  private final CellProvider cellProvider;
 
-  public SerialActionGraphFactory(BuckEventBus eventBus) {
+  public SerialActionGraphFactory(BuckEventBus eventBus, CellProvider cellProvider) {
     this.eventBus = eventBus;
+    this.cellProvider = cellProvider;
   }
 
   public ActionGraphAndBuilder create(SerialActionGraphCreationParameters parameters) {
     return createActionGraphSerially(
         parameters.getTransformer(),
         parameters.getTargetGraph(),
-        parameters.getCellProvider(),
         parameters.getShouldInstrumentGraphBuilding(),
         parameters.getActionGraphCreationLifecycleListener());
   }
@@ -59,7 +60,6 @@ public class SerialActionGraphFactory {
   private ActionGraphAndBuilder createActionGraphSerially(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      CellProvider cellProvider,
       boolean shouldInstrumentGraphBuilding,
       ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
     // TODO: Reduce duplication between the serial and parallel creation methods.
@@ -111,9 +111,6 @@ public class SerialActionGraphFactory {
 
     @Value.Parameter
     public abstract TargetGraph getTargetGraph();
-
-    @Value.Parameter
-    public abstract CellProvider getCellProvider();
 
     @Value.Parameter
     public abstract boolean getShouldInstrumentGraphBuilding();

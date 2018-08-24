@@ -42,16 +42,18 @@ public class ParallelActionGraphFactory {
   private static final Logger LOG = Logger.get(ParallelActionGraphFactory.class);
 
   private final CloseableMemoizedSupplier<ForkJoinPool> poolSupplier;
+  private final CellProvider cellProvider;
 
-  public ParallelActionGraphFactory(CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+  public ParallelActionGraphFactory(
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier, CellProvider cellProvider) {
     this.poolSupplier = poolSupplier;
+    this.cellProvider = cellProvider;
   }
 
   public ActionGraphAndBuilder create(ParallelActionGraphCreationParameters parameters) {
     return createActionGraphInParallel(
         parameters.getTransformer(),
         parameters.getTargetGraph(),
-        parameters.getCellProvider(),
         poolSupplier.get(),
         parameters.getActionGraphCreationLifecycleListener());
   }
@@ -59,7 +61,6 @@ public class ParallelActionGraphFactory {
   private ActionGraphAndBuilder createActionGraphInParallel(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      CellProvider cellProvider,
       ForkJoinPool pool,
       ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
     ActionGraphBuilder graphBuilder =
@@ -112,9 +113,6 @@ public class ParallelActionGraphFactory {
 
     @Value.Parameter
     public abstract TargetGraph getTargetGraph();
-
-    @Value.Parameter
-    public abstract CellProvider getCellProvider();
 
     @Value.Parameter
     public abstract ActionGraphCreationLifecycleListener getActionGraphCreationLifecycleListener();
