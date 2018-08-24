@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
@@ -97,6 +98,7 @@ public class FetchCommand extends BuildCommand {
         actionGraphAndBuilder =
             Preconditions.checkNotNull(
                 new ActionGraphProvider(
+                        new ActionGraphFactory(),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()))
                     .getFreshActionGraph(

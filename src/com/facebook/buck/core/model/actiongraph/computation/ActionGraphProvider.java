@@ -54,9 +54,12 @@ import java.util.concurrent.ForkJoinPool;
 public class ActionGraphProvider {
   private static final Logger LOG = Logger.get(ActionGraphProvider.class);
 
+  private final ActionGraphFactory actionGraphFactory;
   private final ActionGraphCache actionGraphCache;
 
-  public ActionGraphProvider(ActionGraphCache actionGraphCache) {
+  public ActionGraphProvider(
+      ActionGraphFactory actionGraphFactory, ActionGraphCache actionGraphCache) {
+    this.actionGraphFactory = actionGraphFactory;
     this.actionGraphCache = actionGraphCache;
   }
 
@@ -302,28 +305,27 @@ public class ActionGraphProvider {
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
 
-    return new ActionGraphFactory()
-        .createActionGraph(
-            eventBus,
-            transformer,
-            targetGraph,
-            cellProvider,
-            parallelizationMode,
-            shouldInstrumentGraphBuilding,
-            incrementalActionGraphMode,
-            incrementalActionGraphExperimentGroups,
-            poolSupplier,
-            graphBuilder -> {
-              // Any previously cached action graphs are no longer valid, as we may use build rules
-              // from those graphs to construct a new graph incrementally, and update those build
-              // rules to use a new BuildRuleResolver.
-              actionGraphCache.invalidateCache();
+    return actionGraphFactory.createActionGraph(
+        eventBus,
+        transformer,
+        targetGraph,
+        cellProvider,
+        parallelizationMode,
+        shouldInstrumentGraphBuilding,
+        incrementalActionGraphMode,
+        incrementalActionGraphExperimentGroups,
+        poolSupplier,
+        graphBuilder -> {
+          // Any previously cached action graphs are no longer valid, as we may use build rules
+          // from those graphs to construct a new graph incrementally, and update those build
+          // rules to use a new BuildRuleResolver.
+          actionGraphCache.invalidateCache();
 
-              // Populate the new build rule graphBuilder with all of the usable rules from the last
-              // build rule graphBuilder for incremental action graph generation.
-              actionGraphCache.populateActionGraphBuilderWithCachedRules(
-                  eventBus, targetGraph, graphBuilder);
-            });
+          // Populate the new build rule graphBuilder with all of the usable rules from the last
+          // build rule graphBuilder for incremental action graph generation.
+          actionGraphCache.populateActionGraphBuilderWithCachedRules(
+              eventBus, targetGraph, graphBuilder);
+        });
   }
 
   private static Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(

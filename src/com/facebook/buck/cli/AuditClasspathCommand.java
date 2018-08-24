@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
@@ -176,6 +177,7 @@ public class AuditClasspathCommand extends AbstractCommand {
     ActionGraphBuilder graphBuilder =
         Preconditions.checkNotNull(
                 new ActionGraphProvider(
+                        new ActionGraphFactory(),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()))
                     .getFreshActionGraph(
@@ -229,6 +231,7 @@ public class AuditClasspathCommand extends AbstractCommand {
     ActionGraphBuilder graphBuilder =
         Preconditions.checkNotNull(
                 new ActionGraphProvider(
+                        new ActionGraphFactory(),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()))
                     .getFreshActionGraph(
