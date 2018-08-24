@@ -88,7 +88,6 @@ import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionUniverse;
@@ -124,7 +123,6 @@ public class IncrementalActionGraphScenarioTest {
   private PythonBuckConfig pythonBuckConfig;
   private FlavorDomain<PythonPlatform> pythonPlatforms;
   private BuckEventBus eventBus;
-  private CloseableMemoizedSupplier<ForkJoinPool> fakePoolSupplier;
   private RuleKeyFieldLoader fieldLoader;
   private ActionGraphCache cache;
   private ActionGraphProvider provider;
@@ -137,13 +135,6 @@ public class IncrementalActionGraphScenarioTest {
     pythonBuckConfig = new PythonBuckConfig(buckConfig);
     pythonPlatforms = FlavorDomain.of("Python Platform", PY2, PY3);
     eventBus = BuckEventBusForTests.newInstance();
-    fakePoolSupplier =
-        CloseableMemoizedSupplier.of(
-            () -> {
-              throw new IllegalStateException(
-                  "should not use parallel executor for single threaded action graph construction in test");
-            },
-            ignored -> {});
     fieldLoader = new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     cache = new ActionGraphCache(0);
     provider =
