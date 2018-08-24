@@ -49,6 +49,22 @@ public class TestNGIntegrationTest {
   }
 
   @Test
+  public void testThatFailingBeforeTestFailsTest() throws IOException {
+    ProcessResult simpleTestNGTestResult =
+        workspace.runBuckCommand("test", "//test:simple-before-test-fail");
+    simpleTestNGTestResult.assertTestFailure();
+  }
+
+  @Test
+  public void testThatSkipInBeforeTestWorks() throws IOException {
+    ProcessResult skippedTestNGTestResult =
+        workspace.runBuckCommand("test", "//test:simple-before-test-skip");
+    assertThat(
+        skippedTestNGTestResult.getStderr(),
+        containsString("NO TESTS RAN (assumption violations)"));
+  }
+
+  @Test
   public void testThatFailingTestNGTestWorks() throws IOException {
     ProcessResult failingTestNGTestResult =
         workspace.runBuckCommand("test", "//test:simple-failing-test");

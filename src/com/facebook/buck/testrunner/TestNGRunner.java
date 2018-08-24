@@ -27,9 +27,14 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.testng.IAnnotationTransformer;
+import org.testng.IClass;
+import org.testng.IConfigurationListener;
 import org.testng.IReporter;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
@@ -192,11 +197,12 @@ public final class TestNGRunner extends BaseRunner {
     }
   }
 
-  private static class TestListener implements ITestListener {
+  private static class TestListener implements ITestListener, IConfigurationListener {
     private final List<TestResult> results;
     private boolean mustRestoreStdoutAndStderr;
     private PrintStream originalOut, originalErr, stdOutStream, stdErrStream;
     private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
+    private Map<IClass, Throwable> failedConfigurationTestClasses = new HashMap<>();
 
     public TestListener(List<TestResult> results) {
       this.results = results;
@@ -212,7 +218,12 @@ public final class TestNGRunner extends BaseRunner {
 
     @Override
     public void onTestSkipped(ITestResult result) {
-      recordResult(result, ResultType.ASSUMPTION_VIOLATION, result.getThrowable());
+      @Nullable Throwable throwable = failedConfigurationTestClasses.get(result.getTestClass());
+      if (throwable == null) {
+        recordResult(result, ResultType.ASSUMPTION_VIOLATION, result.getThrowable());
+      } else {
+        recordResult(result, ResultType.FAILURE, throwable);
+      }
     }
 
     @Override
@@ -281,6 +292,17 @@ public final class TestNGRunner extends BaseRunner {
         return fallback;
       }
     }
+
+    @Override
+    public void onConfigurationSuccess(ITestResult iTestResult) {}
+
+    @Override
+    public void onConfigurationFailure(ITestResult iTestResult) {
+      failedConfigurationTestClasses.put(iTestResult.getTestClass(), iTestResult.getThrowable());
+    }
+
+    @Override
+    public void onConfigurationSkip(ITestResult iTestResult) {}
   }
 
   private static class JUnitReportReporterWithMethodParameters extends JUnitReportReporter {

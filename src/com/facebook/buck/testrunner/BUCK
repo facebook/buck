@@ -72,6 +72,7 @@ java_library(
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
         "//third-party/java/guice:guice",
+        "//third-party/java/jsr:jsr305",
         "//third-party/java/testng:testng",
     ],
 )

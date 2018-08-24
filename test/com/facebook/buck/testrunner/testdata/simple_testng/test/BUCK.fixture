@@ -27,6 +27,24 @@ java_test(
 )
 
 java_test(
+    name = "simple-before-test-skip",
+    srcs = ["SimpleBeforeTestSkip.java"],
+    test_type = "testng",
+    deps = [
+        "buck//third-party/java/testng:testng",
+    ],
+)
+
+java_test(
+    name = "simple-before-test-fail",
+    srcs = ["SimpleBeforeTestFail.java"],
+    test_type = "testng",
+    deps = [
+        "buck//third-party/java/testng:testng",
+    ],
+)
+
+java_test(
     name = "injection-test",
     srcs = ["InjectionTest.java"],
     test_type = "testng",
