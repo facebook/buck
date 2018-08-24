@@ -213,7 +213,7 @@ public class RobolectricTestDescription
     return new RobolectricTest(
         buildTarget,
         projectFilesystem,
-        params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
+        params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary)),
         androidPlatformTarget,
         testsLibrary,
         args.getLabels(),
