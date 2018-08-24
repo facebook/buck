@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
-import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
@@ -57,7 +56,6 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.buck.versions.VersionedTargetGraphAndTargets;
@@ -93,6 +91,7 @@ public class IjProjectCommandHelper {
   private final String outputDir;
   private final BuckBuildRunner buckBuildRunner;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
+  private final CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier;
 
   private final ProjectGeneratorParameters projectGeneratorParameters;
 
@@ -111,7 +110,8 @@ public class IjProjectCommandHelper {
       String outputDir,
       BuckBuildRunner buckBuildRunner,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
-      ProjectGeneratorParameters projectGeneratorParameters) {
+      ProjectGeneratorParameters projectGeneratorParameters,
+      CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier) {
     this.buckEventBus = buckEventBus;
     this.console = projectGeneratorParameters.getConsole();
     this.executor = executor;
@@ -130,6 +130,7 @@ public class IjProjectCommandHelper {
     this.argsParser = argsParser;
 
     this.projectGeneratorParameters = projectGeneratorParameters;
+    this.forkJoinPoolSupplier = forkJoinPoolSupplier;
   }
 
   public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments)
@@ -206,25 +207,16 @@ public class IjProjectCommandHelper {
   }
 
   private ActionGraphAndBuilder getActionGraph(TargetGraph targetGraph) {
-    try (CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier =
-        CloseableMemoizedSupplier.of(
-            () ->
-                MostExecutors.forkJoinPoolWithThreadLimit(
-                    buckConfig.getView(ResourcesConfig.class).getMaximumResourceAmounts().getCpu(),
-                    16),
-            ForkJoinPool::shutdownNow)) {
-
-      TargetNodeToBuildRuleTransformer transformer = new ShallowTargetNodeToBuildRuleTransformer();
-      ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
-      return actionGraphProvider.getFreshActionGraph(
-          buckEventBus,
-          transformer,
-          targetGraph,
-          cell.getCellProvider(),
-          actionGraphConfig.getActionGraphParallelizationMode(),
-          actionGraphConfig.getShouldInstrumentActionGraph(),
-          forkJoinPoolSupplier);
-    }
+    TargetNodeToBuildRuleTransformer transformer = new ShallowTargetNodeToBuildRuleTransformer();
+    ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
+    return actionGraphProvider.getFreshActionGraph(
+        buckEventBus,
+        transformer,
+        targetGraph,
+        cell.getCellProvider(),
+        actionGraphConfig.getActionGraphParallelizationMode(),
+        actionGraphConfig.getShouldInstrumentActionGraph(),
+        forkJoinPoolSupplier);
   }
 
   private TargetGraph getProjectGraphForIde(
