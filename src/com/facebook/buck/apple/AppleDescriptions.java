@@ -20,6 +20,7 @@ import static com.facebook.buck.apple.AppleAssetCatalog.validateAssetCatalogs;
 import static com.facebook.buck.swift.SwiftDescriptions.SWIFT_EXTENSION;
 
 import com.facebook.buck.apple.AppleAssetCatalog.ValidationType;
+import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -341,7 +342,11 @@ public class AppleDescriptions {
 
     ImmutableSet<AppleAssetCatalogDescriptionArg> assetCatalogArgs =
         AppleBuildRules.collectRecursiveAssetCatalogs(
-            xcodeDescriptions, targetGraph, Optional.empty(), ImmutableList.of(targetNode));
+            xcodeDescriptions,
+            targetGraph,
+            Optional.empty(),
+            ImmutableList.of(targetNode),
+            RecursiveDependenciesMode.COPYING);
 
     ImmutableSortedSet.Builder<SourcePath> assetCatalogDirsBuilder =
         ImmutableSortedSet.naturalOrder();
@@ -423,7 +428,8 @@ public class AppleDescriptions {
             targetGraph,
             Optional.empty(),
             AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
-            ImmutableList.of(targetNode));
+            ImmutableList.of(targetNode),
+            RecursiveDependenciesMode.COPYING);
 
     BuildTarget coreDataModelBuildTarget = buildTarget.withAppendedFlavors(CoreDataModel.FLAVOR);
 
@@ -459,7 +465,8 @@ public class AppleDescriptions {
             targetGraph,
             Optional.empty(),
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
-            ImmutableList.of(targetNode));
+            ImmutableList.of(targetNode),
+            RecursiveDependenciesMode.COPYING);
 
     BuildTarget sceneKitAssetsBuildTarget = buildTarget.withAppendedFlavors(SceneKitAssets.FLAVOR);
 
@@ -609,7 +616,8 @@ public class AppleDescriptions {
             graphBuilder,
             Optional.empty(),
             targetGraph.get(buildTarget),
-            appleCxxPlatform);
+            appleCxxPlatform,
+            RecursiveDependenciesMode.COPYING);
 
     ImmutableSet.Builder<SourcePath> frameworksBuilder = ImmutableSet.builder();
     if (INCLUDE_FRAMEWORKS.getRequiredValue(buildTarget)) {

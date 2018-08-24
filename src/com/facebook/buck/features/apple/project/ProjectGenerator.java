@@ -24,6 +24,7 @@ import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBinaryDescriptionArg;
 import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleDescriptionArg;
@@ -729,7 +730,9 @@ public class ProjectGenerator {
             xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
-            AppleBuildRules.RecursiveDependenciesMode.COPYING,
+            appleConfig.shouldIncludeSharedLibraryResources()
+                ? RecursiveDependenciesMode.COPYING_INCLUDE_SHARED_RESOURCES
+                : AppleBuildRules.RecursiveDependenciesMode.COPYING,
             targetNode,
             Optional.of(xcodeDescriptions.getXCodeDescriptions()));
     if (bundleRequiresRemovalOfAllTransitiveFrameworks(targetNode)) {
@@ -748,6 +751,10 @@ public class ProjectGenerator {
 
     ImmutableList<PBXBuildPhase> copyFilesBuildPhases = getCopyFilesBuildPhases(copiedRules);
 
+    RecursiveDependenciesMode mode =
+        appleConfig.shouldIncludeSharedLibraryResources()
+            ? RecursiveDependenciesMode.COPYING_INCLUDE_SHARED_RESOURCES
+            : RecursiveDependenciesMode.COPYING;
     PBXNativeTarget target =
         generateBinaryTarget(
             project,
@@ -758,19 +765,21 @@ public class ProjectGenerator {
             Optional.of(infoPlistPath),
             /* includeFrameworks */ true,
             AppleResources.collectRecursiveResources(
-                xcodeDescriptions, targetGraph, Optional.of(dependenciesCache), targetNode),
+                xcodeDescriptions, targetGraph, Optional.of(dependenciesCache), targetNode, mode),
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectRecursiveAssetCatalogs(
                 xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
-                ImmutableList.of(targetNode)),
+                ImmutableList.of(targetNode),
+                mode),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
             AppleBuildRules.collectRecursiveWrapperResources(
                 xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
-                ImmutableList.of(targetNode)),
+                ImmutableList.of(targetNode),
+                mode),
             Optional.of(copyFilesBuildPhases),
             bundleLoaderNode);
 
@@ -912,6 +921,7 @@ public class ProjectGenerator {
       throws IOException {
     boolean isShared =
         targetNode.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
+
     ProductType productType = isShared ? ProductTypes.DYNAMIC_LIBRARY : ProductTypes.STATIC_LIBRARY;
     PBXNativeTarget target =
         generateBinaryTarget(
@@ -2171,7 +2181,8 @@ public class ProjectGenerator {
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
-            ImmutableList.of(targetNode)));
+            ImmutableList.of(targetNode),
+            RecursiveDependenciesMode.COPYING));
   }
 
   private void addSceneKitAssetsIntoTarget(
@@ -2182,7 +2193,8 @@ public class ProjectGenerator {
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
-            ImmutableList.of(targetNode));
+            ImmutableList.of(targetNode),
+            RecursiveDependenciesMode.COPYING);
 
     for (AppleWrapperResourceArg sceneKitAssets : allSceneKitAssets) {
       PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
@@ -3710,7 +3722,7 @@ public class ProjectGenerator {
 
   private String getXcodeTargetName(BuildTarget target) {
     return options.shouldUseShortNamesForTargets()
-        ? target.getShortName()
+        ? target.getShortNameAndFlavorPostfix() // make sure Xcode UI shows unique names by flavor
         : target.getFullyQualifiedName();
   }
 

@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -73,7 +74,8 @@ public class AppleResourcesTest {
             XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager()),
             targetGraph,
             Optional.empty(),
-            libNode),
+            libNode,
+            RecursiveDependenciesMode.COPYING),
         hasItem(resourceNode.getConstructorArg()));
   }
 
@@ -109,7 +111,8 @@ public class AppleResourcesTest {
             XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager()),
             targetGraph,
             Optional.empty(),
-            barLibNode),
+            barLibNode,
+            RecursiveDependenciesMode.COPYING),
         hasItems(fooResourceNode.getConstructorArg(), barResourceNode.getConstructorArg()));
   }
 }

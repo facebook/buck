@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -47,13 +48,14 @@ public class AppleResources {
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
-      TargetNode<?> targetNode) {
+      TargetNode<?> targetNode,
+      RecursiveDependenciesMode mode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 xcodeDescriptions,
                 targetGraph,
                 cache,
-                AppleBuildRules.RecursiveDependenciesMode.COPYING,
+                mode,
                 targetNode,
                 ImmutableSet.of(AppleResourceDescription.class)))
         .transform(input -> (AppleResourceDescriptionArg) input.getConstructorArg())
@@ -66,7 +68,8 @@ public class AppleResources {
       BuildRuleResolver resolver,
       Optional<AppleDependenciesCache> cache,
       TargetNode<T> targetNode,
-      AppleCxxPlatform appleCxxPlatform) {
+      AppleCxxPlatform appleCxxPlatform,
+      RecursiveDependenciesMode mode) {
     AppleBundleResources.Builder builder = AppleBundleResources.builder();
 
     Iterable<TargetNode<?>> resourceNodes =
@@ -74,7 +77,7 @@ public class AppleResources {
             xcodeDescriptions,
             targetGraph,
             cache,
-            AppleBuildRules.RecursiveDependenciesMode.COPYING,
+            mode,
             targetNode,
             IS_APPLE_BUNDLE_RESOURCE_NODE,
             Optional.of(appleCxxPlatform));

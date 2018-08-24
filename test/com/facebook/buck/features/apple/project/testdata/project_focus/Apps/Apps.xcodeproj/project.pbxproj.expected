@@ -129,12 +129,12 @@
 				<string>1DD70E2906C06BEE00000000</string>
 			</array>
 		</dict>
-		<key>B401C9790E6F340F00000000</key>
+		<key>B401C979FEC3CBA900000000</key>
 		<dict>
 			<key>isa</key>
 			<string>PBXGroup</string>
 			<key>name</key>
-			<string>TestApp</string>
+			<string>TestApp#iphonesimulator-x86_64</string>
 			<key>sourceTree</key>
 			<string><![CDATA[<group>]]></string>
 			<key>children</key>
@@ -155,7 +155,7 @@
 			<array>
 				<string>B401C979B781F65D00000000</string>
 				<string>B401C979C806358400000000</string>
-				<string>B401C9790E6F340F00000000</string>
+				<string>B401C979FEC3CBA900000000</string>
 			</array>
 		</dict>
 		<key>4952437303EDA63300000000</key>
@@ -194,12 +194,12 @@
 			<key>defaultConfigurationIsVisible</key>
 			<false/>
 		</dict>
-		<key>E66DC04E0E6F340F00000000</key>
+		<key>E66DC04EFEC3CBA900000000</key>
 		<dict>
 			<key>isa</key>
 			<string>PBXNativeTarget</string>
 			<key>name</key>
-			<string>TestApp</string>
+			<string>TestApp#iphonesimulator-x86_64</string>
 			<key>productName</key>
 			<string>TestApp</string>
 			<key>productReference</key>
@@ -255,7 +255,7 @@
 			<string>B401C979EFB6AC4600000000</string>
 			<key>targets</key>
 			<array>
-				<string>E66DC04E0E6F340F00000000</string>
+				<string>E66DC04EFEC3CBA900000000</string>
 			</array>
 			<key>buildConfigurationList</key>
 			<string>218C37090000000000000001</string>

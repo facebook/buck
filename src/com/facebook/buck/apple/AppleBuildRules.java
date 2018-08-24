@@ -89,6 +89,13 @@ public final class AppleBuildRules {
      * Will also not traverse the dependencies of bundles, as those are copied inside the bundle.
      */
     COPYING,
+
+    /**
+     * Will traverse the dependencies of #shared libraries since the library may not be contained in
+     * a bundle.
+     */
+    COPYING_INCLUDE_SHARED_RESOURCES,
+
     /** Will also not traverse the dependencies of shared libraries, as those are linked already. */
     LINKING,
   }
@@ -241,19 +248,29 @@ public final class AppleBuildRules {
                   break;
                 }
               case COPYING:
+              case COPYING_INCLUDE_SHARED_RESOURCES:
                 {
                   // When traversing dependencies for resources, we get resources attached to
                   // libraries that are statically linked, and resources attached to the initial
                   // bundle. This heuristic is based on the idea that the bundle holding the
                   // compiled code of a library also holds the resources.
+
+                  // When the resource is dynamically linked (#shared) - it may be contained within
+                  // a framework or it may be a standalone .dylib. In the latter case we want these
+                  // resources to still be included in the app binary, so give the option to
+                  // override
+                  // the default behavior - this is really only needed for Xcode project since BUCK
+                  // doesn't correctly support embeddedFramework targets.
                   boolean nodeIsAppleLibrary =
                       node.getDescription() instanceof AppleLibraryDescription;
                   boolean nodeIsCxxLibrary = node.getDescription() instanceof CxxLibraryDescription;
                   if (nodeIsAppleLibrary || nodeIsCxxLibrary) {
-                    if (!AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(
-                        (TargetNode<CxxLibraryDescription.CommonArg>) node)) {
+                    if (mode == RecursiveDependenciesMode.COPYING_INCLUDE_SHARED_RESOURCES
+                        || !AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(
+                            (TargetNode<CxxLibraryDescription.CommonArg>) node)) {
                       deps = defaultDeps;
                     }
+
                   } else if (!shouldStopRecursiveDependenciesTraversalAtNodeType(
                       node.getDescription())) {
                     deps = defaultDeps;
@@ -360,7 +377,8 @@ public final class AppleBuildRules {
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
-      Iterable<TargetNode<T>> targetNodes) {
+      Iterable<TargetNode<T>> targetNodes,
+      RecursiveDependenciesMode mode) {
     return RichStream.from(targetNodes)
         .flatMap(
             input ->
@@ -368,7 +386,7 @@ public final class AppleBuildRules {
                         xcodeDescriptions,
                         targetGraph,
                         cache,
-                        RecursiveDependenciesMode.COPYING,
+                        mode,
                         input,
                         APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES)
                     .stream())
@@ -380,7 +398,9 @@ public final class AppleBuildRules {
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
-      Iterable<TargetNode<T>> targetNodes) {
+      Iterable<TargetNode<T>> targetNodes,
+      RecursiveDependenciesMode mode) {
+
     return RichStream.from(targetNodes)
         .flatMap(
             input ->
@@ -388,7 +408,7 @@ public final class AppleBuildRules {
                         xcodeDescriptions,
                         targetGraph,
                         cache,
-                        RecursiveDependenciesMode.COPYING,
+                        mode,
                         input,
                         WRAPPER_RESOURCE_DESCRIPTION_CLASSES)
                     .stream())
@@ -402,17 +422,14 @@ public final class AppleBuildRules {
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
       ImmutableSet<Class<? extends BaseDescription<?>>> descriptionClasses,
-      Collection<TargetNode<?>> targetNodes) {
+      Collection<TargetNode<?>> targetNodes,
+      RecursiveDependenciesMode mode) {
+
     return RichStream.from(targetNodes)
         .flatMap(
             targetNode ->
                 getRecursiveTargetNodeDependenciesOfTypes(
-                        xcodeDescriptions,
-                        targetGraph,
-                        cache,
-                        RecursiveDependenciesMode.COPYING,
-                        targetNode,
-                        descriptionClasses)
+                        xcodeDescriptions, targetGraph, cache, mode, targetNode, descriptionClasses)
                     .stream())
         .map(input -> (T) input.getConstructorArg())
         .toImmutableSet();
