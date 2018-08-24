@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.core.model.actiongraph.computation;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
@@ -29,16 +31,44 @@ public class TestActionGraphProviderFactory {
                   "should not use parallel executor for action graph construction in test");
             },
             ignored -> {});
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     return new ActionGraphProvider(
-        ActionGraphFactory.create(new ParallelActionGraphFactory(poolSupplier)),
+        eventBus,
+        ActionGraphFactory.create(eventBus, new ParallelActionGraphFactory(poolSupplier)),
+        new ActionGraphCache(maxEntries),
+        TestRuleKeyConfigurationFactory.create());
+  }
+
+  public static ActionGraphProvider create(BuckEventBus eventBus, int maxEntries) {
+    CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
+        CloseableMemoizedSupplier.of(
+            () -> {
+              throw new IllegalStateException(
+                  "should not use parallel executor for action graph construction in test");
+            },
+            ignored -> {});
+    return new ActionGraphProvider(
+        eventBus,
+        ActionGraphFactory.create(eventBus, new ParallelActionGraphFactory(poolSupplier)),
         new ActionGraphCache(maxEntries),
         TestRuleKeyConfigurationFactory.create());
   }
 
   public static ActionGraphProvider create(
       int maxEntries, CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     return new ActionGraphProvider(
-        ActionGraphFactory.create(new ParallelActionGraphFactory(poolSupplier)),
+        eventBus,
+        ActionGraphFactory.create(eventBus, new ParallelActionGraphFactory(poolSupplier)),
+        new ActionGraphCache(maxEntries),
+        TestRuleKeyConfigurationFactory.create());
+  }
+
+  public static ActionGraphProvider create(
+      BuckEventBus eventBus, int maxEntries, CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+    return new ActionGraphProvider(
+        eventBus,
+        ActionGraphFactory.create(eventBus, new ParallelActionGraphFactory(poolSupplier)),
         new ActionGraphCache(maxEntries),
         TestRuleKeyConfigurationFactory.create());
   }
@@ -47,8 +77,22 @@ public class TestActionGraphProviderFactory {
       int maxEntries,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
       RuleKeyConfiguration ruleKeyConfiguration) {
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     return new ActionGraphProvider(
-        ActionGraphFactory.create(new ParallelActionGraphFactory(poolSupplier)),
+        eventBus,
+        ActionGraphFactory.create(eventBus, new ParallelActionGraphFactory(poolSupplier)),
+        new ActionGraphCache(maxEntries),
+        ruleKeyConfiguration);
+  }
+
+  public static ActionGraphProvider create(
+      BuckEventBus eventBus,
+      int maxEntries,
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
+      RuleKeyConfiguration ruleKeyConfiguration) {
+    return new ActionGraphProvider(
+        eventBus,
+        ActionGraphFactory.create(eventBus, new ParallelActionGraphFactory(poolSupplier)),
         new ActionGraphCache(maxEntries),
         ruleKeyConfiguration);
   }
@@ -62,8 +106,26 @@ public class TestActionGraphProviderFactory {
                   "should not use parallel executor for action graph construction in test");
             },
             ignored -> {});
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     return new ActionGraphProvider(
-        ActionGraphFactory.create(new ParallelActionGraphFactory(poolSupplier)),
+        eventBus,
+        ActionGraphFactory.create(eventBus, new ParallelActionGraphFactory(poolSupplier)),
+        new ActionGraphCache(maxEntries),
+        ruleKeyConfiguration);
+  }
+
+  public static ActionGraphProvider create(
+      BuckEventBus eventBus, int maxEntries, RuleKeyConfiguration ruleKeyConfiguration) {
+    CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
+        CloseableMemoizedSupplier.of(
+            () -> {
+              throw new IllegalStateException(
+                  "should not use parallel executor for action graph construction in test");
+            },
+            ignored -> {});
+    return new ActionGraphProvider(
+        eventBus,
+        ActionGraphFactory.create(eventBus, new ParallelActionGraphFactory(poolSupplier)),
         new ActionGraphCache(maxEntries),
         ruleKeyConfiguration);
   }

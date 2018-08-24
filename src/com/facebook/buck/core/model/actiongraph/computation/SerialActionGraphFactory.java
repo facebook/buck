@@ -41,9 +41,14 @@ import org.immutables.value.Value;
 public class SerialActionGraphFactory {
   private static final Logger LOG = Logger.get(SerialActionGraphFactory.class);
 
+  private final BuckEventBus eventBus;
+
+  public SerialActionGraphFactory(BuckEventBus eventBus) {
+    this.eventBus = eventBus;
+  }
+
   public ActionGraphAndBuilder create(SerialActionGraphCreationParameters parameters) {
     return createActionGraphSerially(
-        parameters.getEventBus(),
         parameters.getTransformer(),
         parameters.getTargetGraph(),
         parameters.getCellProvider(),
@@ -52,7 +57,6 @@ public class SerialActionGraphFactory {
   }
 
   private ActionGraphAndBuilder createActionGraphSerially(
-      BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       CellProvider cellProvider,
@@ -102,9 +106,6 @@ public class SerialActionGraphFactory {
   @BuckStyleImmutable
   @Value.Immutable(builder = false, copy = false)
   abstract static class AbstractSerialActionGraphCreationParameters {
-    @Value.Parameter
-    public abstract BuckEventBus getEventBus();
-
     @Value.Parameter
     public abstract TargetNodeToBuildRuleTransformer getTransformer();
 

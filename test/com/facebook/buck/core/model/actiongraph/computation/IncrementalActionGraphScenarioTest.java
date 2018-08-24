@@ -146,7 +146,8 @@ public class IncrementalActionGraphScenarioTest {
             ignored -> {});
     fieldLoader = new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     cache =
-        TestActionGraphProviderFactory.create(0, TestRuleKeyConfigurationFactory.createWithSeed(0));
+        TestActionGraphProviderFactory.create(
+            eventBus, 0, TestRuleKeyConfigurationFactory.createWithSeed(0));
   }
 
   @Test
@@ -1250,7 +1251,6 @@ public class IncrementalActionGraphScenarioTest {
       TargetGraph targetGraph, boolean skipActionGraphCache) {
     ActionGraphAndBuilder result =
         cache.getActionGraph(
-            eventBus,
             false, /* checkActionGraphs */
             skipActionGraphCache,
             targetGraph,

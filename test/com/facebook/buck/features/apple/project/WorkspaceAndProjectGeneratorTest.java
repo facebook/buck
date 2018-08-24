@@ -1059,7 +1059,6 @@ public class WorkspaceAndProjectGeneratorTest {
     return input ->
         TestActionGraphProviderFactory.create(1)
             .getFreshActionGraph(
-                BuckEventBusForTests.newInstance(),
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
                 new TestCellBuilder().build().getCellProvider(),
                 ActionGraphParallelizationMode.DISABLED,

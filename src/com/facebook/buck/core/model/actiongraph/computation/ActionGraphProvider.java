@@ -52,14 +52,17 @@ import java.util.Optional;
 public class ActionGraphProvider {
   private static final Logger LOG = Logger.get(ActionGraphProvider.class);
 
+  private final BuckEventBus eventBus;
   private final ActionGraphFactory actionGraphFactory;
   private final ActionGraphCache actionGraphCache;
   private final RuleKeyConfiguration ruleKeyConfiguration;
 
   public ActionGraphProvider(
+      BuckEventBus eventBus,
       ActionGraphFactory actionGraphFactory,
       ActionGraphCache actionGraphCache,
       RuleKeyConfiguration ruleKeyConfiguration) {
+    this.eventBus = eventBus;
     this.actionGraphFactory = actionGraphFactory;
     this.actionGraphCache = actionGraphCache;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
@@ -67,12 +70,8 @@ public class ActionGraphProvider {
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
   public ActionGraphAndBuilder getActionGraph(
-      BuckEventBus eventBus,
-      TargetGraph targetGraph,
-      CellProvider cellProvider,
-      ActionGraphConfig actionGraphConfig) {
+      TargetGraph targetGraph, CellProvider cellProvider, ActionGraphConfig actionGraphConfig) {
     return getActionGraph(
-        eventBus,
         actionGraphConfig.isActionGraphCheckingEnabled(),
         actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
@@ -86,13 +85,11 @@ public class ActionGraphProvider {
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
   public ActionGraphAndBuilder getActionGraph(
-      BuckEventBus eventBus,
       TargetGraph targetGraph,
       CellProvider cellProvider,
       ActionGraphConfig actionGraphConfig,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     return getActionGraph(
-        eventBus,
         actionGraphConfig.isActionGraphCheckingEnabled(),
         actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
@@ -105,7 +102,6 @@ public class ActionGraphProvider {
   }
 
   public ActionGraphAndBuilder getActionGraph(
-      BuckEventBus eventBus,
       boolean checkActionGraphs,
       boolean skipActionGraphCache,
       TargetGraph targetGraph,
@@ -115,7 +111,6 @@ public class ActionGraphProvider {
       IncrementalActionGraphMode incrementalActionGraphMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
     return getActionGraph(
-        eventBus,
         checkActionGraphs,
         skipActionGraphCache,
         targetGraph,
@@ -132,7 +127,6 @@ public class ActionGraphProvider {
    * returns a cached version of the {@link ActionGraphAndBuilder}, else returns a new one and
    * updates the cache.
    *
-   * @param eventBus the {@link BuckEventBus} to post the events of the processing.
    * @param skipActionGraphCache if true, do not invalidate the {@link ActionGraph} cached in
    *     memory. Instead, create a new {@link ActionGraph} for this request, which should be
    *     garbage-collected at the end of the request.
@@ -140,7 +134,6 @@ public class ActionGraphProvider {
    * @return a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getActionGraph(
-      BuckEventBus eventBus,
       boolean checkActionGraphs,
       boolean skipActionGraphCache,
       TargetGraph targetGraph,
@@ -162,7 +155,6 @@ public class ActionGraphProvider {
         LOG.info("ActionGraph cache hit.");
         if (checkActionGraphs) {
           compareActionGraphs(
-              eventBus,
               cachedActionGraph,
               targetGraph,
               cellProvider,
@@ -188,7 +180,6 @@ public class ActionGraphProvider {
             new Pair<TargetGraph, ActionGraphAndBuilder>(
                 targetGraph,
                 createActionGraph(
-                    eventBus,
                     new DefaultTargetNodeToBuildRuleTransformer(),
                     targetGraph,
                     cellProvider,
@@ -216,32 +207,24 @@ public class ActionGraphProvider {
    * * It returns a new {@link ActionGraphAndBuilder} based on the targetGraph without checking the
    * cache. It uses a {@link DefaultTargetNodeToBuildRuleTransformer}.
    *
-   * @param eventBus the {@link BuckEventBus} to post the events of the processing.
    * @param targetGraph the target graph that the action graph will be based on.
    * @param parallelizationMode
    * @return a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getFreshActionGraph(
-      BuckEventBus eventBus,
       TargetGraph targetGraph,
       CellProvider cellProvider,
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding) {
     TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
     return getFreshActionGraph(
-        eventBus,
-        transformer,
-        targetGraph,
-        cellProvider,
-        parallelizationMode,
-        shouldInstrumentGraphBuilding);
+        transformer, targetGraph, cellProvider, parallelizationMode, shouldInstrumentGraphBuilding);
   }
 
   /**
    * It returns a new {@link ActionGraphAndBuilder} based on the targetGraph without checking the
    * cache. It uses a custom {@link TargetNodeToBuildRuleTransformer}.
    *
-   * @param eventBus The {@link BuckEventBus} to post the events of the processing.
    * @param transformer Custom {@link TargetNodeToBuildRuleTransformer} that the transformation will
    *     be based on.
    * @param targetGraph The target graph that the action graph will be based on.
@@ -249,7 +232,6 @@ public class ActionGraphProvider {
    * @return It returns a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getFreshActionGraph(
-      BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       CellProvider cellProvider,
@@ -260,7 +242,6 @@ public class ActionGraphProvider {
 
     ActionGraphAndBuilder actionGraph =
         createActionGraph(
-            eventBus,
             transformer,
             targetGraph,
             cellProvider,
@@ -276,7 +257,6 @@ public class ActionGraphProvider {
   }
 
   private ActionGraphAndBuilder createActionGraph(
-      BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       CellProvider cellProvider,
@@ -286,7 +266,6 @@ public class ActionGraphProvider {
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
 
     return actionGraphFactory.createActionGraph(
-        eventBus,
         transformer,
         targetGraph,
         cellProvider,
@@ -330,7 +309,6 @@ public class ActionGraphProvider {
    * done by generating and comparing content agnostic RuleKeys. In case of mismatch, the
    * mismatching BuildRules are printed and the building process is stopped.
    *
-   * @param eventBus Buck's event bus.
    * @param lastActionGraphAndBuilder The cached version of the graph that gets compared.
    * @param targetGraph Used to generate the actionGraph that gets compared with lastActionGraph.
    * @param fieldLoader
@@ -338,7 +316,6 @@ public class ActionGraphProvider {
    * @param ruleKeyLogger The logger to use (if any) when computing the new action graph
    */
   private void compareActionGraphs(
-      BuckEventBus eventBus,
       ActionGraphAndBuilder lastActionGraphAndBuilder,
       TargetGraph targetGraph,
       CellProvider cellProvider,
@@ -355,7 +332,6 @@ public class ActionGraphProvider {
           new Pair<TargetGraph, ActionGraphAndBuilder>(
               targetGraph,
               createActionGraph(
-                  eventBus,
                   new DefaultTargetNodeToBuildRuleTransformer(),
                   targetGraph,
                   cellProvider,

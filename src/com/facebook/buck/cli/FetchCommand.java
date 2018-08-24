@@ -99,13 +99,14 @@ public class FetchCommand extends BuildCommand {
         actionGraphAndBuilder =
             Preconditions.checkNotNull(
                 new ActionGraphProvider(
+                        params.getBuckEventBus(),
                         ActionGraphFactory.create(
+                            params.getBuckEventBus(),
                             new ParallelActionGraphFactory(params.getPoolSupplier())),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration())
                     .getFreshActionGraph(
-                        params.getBuckEventBus(),
                         ruleGenerator,
                         result.getTargetGraph(),
                         params.getCell().getCellProvider(),

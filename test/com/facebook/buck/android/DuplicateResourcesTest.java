@@ -247,10 +247,11 @@ public class DuplicateResourcesTest {
             keystore);
 
     ActionGraphAndBuilder actionGraphAndBuilder =
-        TestActionGraphProviderFactory.create(1)
-            .getFreshActionGraph(
+        TestActionGraphProviderFactory.create(
                 BuckEventBusForTests.newInstance(
                     new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
+                1)
+            .getFreshActionGraph(
                 new DefaultTargetNodeToBuildRuleTransformer(),
                 targetGraph,
                 new TestCellBuilder()

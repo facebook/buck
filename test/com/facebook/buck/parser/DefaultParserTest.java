@@ -2649,9 +2649,8 @@ public class DefaultParserTest {
   private ActionGraphBuilder buildActionGraph(
       BuckEventBus eventBus, TargetGraph targetGraph, Cell cell) {
     return Preconditions.checkNotNull(
-            TestActionGraphProviderFactory.create(1)
+            TestActionGraphProviderFactory.create(eventBus, 1)
                 .getFreshActionGraph(
-                    eventBus,
                     targetGraph,
                     cell.getCellProvider(),
                     ActionGraphParallelizationMode.DISABLED,

@@ -205,7 +205,6 @@ public class IjProjectCommandHelper {
     TargetNodeToBuildRuleTransformer transformer = new ShallowTargetNodeToBuildRuleTransformer();
     ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
     return actionGraphProvider.getFreshActionGraph(
-        buckEventBus,
         transformer,
         targetGraph,
         cell.getCellProvider(),

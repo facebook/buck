@@ -67,6 +67,7 @@ java_library(
     exported_deps = [
         "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
         "//src/com/facebook/buck/util:util",
+        "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
     ],
     visibility = ["//test/..."],

@@ -454,7 +454,6 @@ public class TargetsCommand extends AbstractCommand {
         params
             .getActionGraphProvider()
             .getActionGraph(
-                params.getBuckEventBus(),
                 targetGraph,
                 params.getCell().getCellProvider(),
                 params.getBuckConfig().getView(ActionGraphConfig.class));
@@ -968,7 +967,6 @@ public class TargetsCommand extends AbstractCommand {
             params
                 .getActionGraphProvider()
                 .getActionGraph(
-                    params.getBuckEventBus(),
                     getSubgraphWithoutConfigurationNodes(targetGraphAndTargetNodes.getFirst()),
                     params.getCell().getCellProvider(),
                     params.getBuckConfig().getView(ActionGraphConfig.class));

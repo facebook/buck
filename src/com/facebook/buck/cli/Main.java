@@ -1366,7 +1366,9 @@ public final class Main {
               new InstrumentedVersionedTargetGraphCache(
                   daemon.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
               new ActionGraphProvider(
-                  ActionGraphFactory.create(new ParallelActionGraphFactory(forkJoinPoolSupplier)),
+                  buildEventBus,
+                  ActionGraphFactory.create(
+                      buildEventBus, new ParallelActionGraphFactory(forkJoinPoolSupplier)),
                   daemon.getActionGraphCache(),
                   ruleKeyConfiguration),
               defaultRuleKeyFactoryCacheRecycler);
@@ -1389,7 +1391,9 @@ public final class Main {
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
               new ActionGraphProvider(
-                  ActionGraphFactory.create(new ParallelActionGraphFactory(forkJoinPoolSupplier)),
+                  buildEventBus,
+                  ActionGraphFactory.create(
+                      buildEventBus, new ParallelActionGraphFactory(forkJoinPoolSupplier)),
                   new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
                   ruleKeyConfiguration),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());

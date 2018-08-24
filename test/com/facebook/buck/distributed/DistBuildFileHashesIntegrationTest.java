@@ -244,7 +244,6 @@ public class DistBuildFileHashesIntegrationTest {
             rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
     ActionGraphAndBuilder actionGraphAndBuilder =
         cache.getActionGraph(
-            BuckEventBusForTests.newInstance(),
             true,
             false,
             targetGraph,

@@ -28,22 +28,26 @@ import java.util.Map;
 
 public class ActionGraphFactory {
 
-  public static ActionGraphFactory create(ParallelActionGraphFactory parallelActionGraphFactory) {
-    return new ActionGraphFactory(parallelActionGraphFactory, new SerialActionGraphFactory());
+  public static ActionGraphFactory create(
+      BuckEventBus eventBus, ParallelActionGraphFactory parallelActionGraphFactory) {
+    return new ActionGraphFactory(
+        eventBus, parallelActionGraphFactory, new SerialActionGraphFactory(eventBus));
   }
 
+  private final BuckEventBus eventBus;
   private final ParallelActionGraphFactory parallelActionGraphFactory;
   private final SerialActionGraphFactory serialActionGraphFactory;
 
   ActionGraphFactory(
+      BuckEventBus eventBus,
       ParallelActionGraphFactory parallelActionGraphFactory,
       SerialActionGraphFactory serialActionGraphFactory) {
+    this.eventBus = eventBus;
     this.parallelActionGraphFactory = parallelActionGraphFactory;
     this.serialActionGraphFactory = serialActionGraphFactory;
   }
 
   public ActionGraphAndBuilder createActionGraph(
-      BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       CellProvider cellProvider,
@@ -70,7 +74,6 @@ public class ActionGraphFactory {
       listener = graphBuilder -> {};
     }
     return createActionGraph(
-        eventBus,
         transformer,
         targetGraph,
         cellProvider,
@@ -80,7 +83,6 @@ public class ActionGraphFactory {
   }
 
   private ActionGraphAndBuilder createActionGraph(
-      BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       CellProvider cellProvider,
@@ -123,7 +125,6 @@ public class ActionGraphFactory {
       case DISABLED:
         return serialActionGraphFactory.create(
             SerialActionGraphCreationParameters.of(
-                eventBus,
                 transformer,
                 targetGraph,
                 cellProvider,

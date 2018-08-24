@@ -153,7 +153,6 @@ public class DelegateAndGraphsInitializer {
       ActionGraphAndBuilder actionGraphAndBuilder =
           args.getActionGraphProvider()
               .getActionGraph(
-                  args.getBuckEventBus(),
                   /* checkActionGraphs */ false,
                   /* skipActionGraphCache */ false,
                   Preconditions.checkNotNull(targetGraph),
