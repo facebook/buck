@@ -185,7 +185,8 @@ public class AuditClasspathCommand extends AbstractCommand {
                             params.getBuckConfig()),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()),
-                        params.getRuleKeyConfiguration())
+                        params.getRuleKeyConfiguration(),
+                        params.getBuckConfig())
                     .getFreshActionGraph(
                         targetGraph,
                         params
@@ -238,7 +239,8 @@ public class AuditClasspathCommand extends AbstractCommand {
                             params.getBuckConfig()),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()),
-                        params.getRuleKeyConfiguration())
+                        params.getRuleKeyConfiguration(),
+                        params.getBuckConfig())
                     .getFreshActionGraph(
                         targetGraph,
                         params

@@ -77,9 +77,6 @@ import org.junit.rules.ExpectedException;
 
 public class ActionGraphProviderTest {
 
-  private static final boolean CHECK_GRAPHS = true;
-  private static final boolean NOT_CHECK_GRAPHS = false;
-
   private TargetNode<?> nodeA;
   private TargetNode<?> nodeB;
   private TargetGraph targetGraph1;
@@ -140,28 +137,19 @@ public class ActionGraphProviderTest {
             .withPoolSupplier(fakePoolSupplier)
             .withEventBus(eventBus)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
+            .withCheckActionGraphs()
             .build();
 
     ActionGraphAndBuilder resultRun1 =
         cache.getActionGraph(
-            CHECK_GRAPHS, /* skipActionGraphCache */
-            false,
-            targetGraph1,
-            false,
-            IncrementalActionGraphMode.DISABLED,
-            ImmutableMap.of());
+            false, targetGraph1, false, IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
     // The 1st time you query the ActionGraph it's a cache miss.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
 
     ActionGraphAndBuilder resultRun2 =
         cache.getActionGraph(
-            CHECK_GRAPHS, /* skipActionGraphCache */
-            false,
-            targetGraph1,
-            false,
-            IncrementalActionGraphMode.DISABLED,
-            ImmutableMap.of());
+            false, targetGraph1, false, IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
     // The 2nd time it should be a cache hit and the ActionGraphs should be exactly the same.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 1);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
@@ -184,6 +172,7 @@ public class ActionGraphProviderTest {
             .withPoolSupplier(fakePoolSupplier)
             .withMaxEntries(2)
             .withEventBus(eventBus)
+            .withCheckActionGraphs()
             .build();
 
     // List of (graph to run, (expected hit count, expected miss count))
@@ -210,6 +199,7 @@ public class ActionGraphProviderTest {
             .withPoolSupplier(fakePoolSupplier)
             .withMaxEntries(2)
             .withEventBus(eventBus)
+            .withCheckActionGraphs()
             .build();
 
     // List of (graph to run, (expected hit count, expected miss count))
@@ -235,12 +225,7 @@ public class ActionGraphProviderTest {
       ActionGraphProvider cache, List<Pair<TargetGraph, Pair<Integer, Integer>>> runList) {
     for (Pair<TargetGraph, Pair<Integer, Integer>> run : runList) {
       cache.getActionGraph(
-          CHECK_GRAPHS, /* skipActionGraphCache */
-          false,
-          run.getFirst(),
-          false,
-          IncrementalActionGraphMode.DISABLED,
-          ImmutableMap.of());
+          false, run.getFirst(), false, IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
 
       assertEquals(
           countEventsOf(ActionGraphEvent.Cache.Hit.class), (int) run.getSecond().getFirst());
@@ -256,15 +241,11 @@ public class ActionGraphProviderTest {
             .withPoolSupplier(fakePoolSupplier)
             .withEventBus(eventBus)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
+            .withCheckActionGraphs()
             .build();
     ActionGraphAndBuilder resultRun1 =
         cache.getActionGraph(
-            CHECK_GRAPHS, /* skipActionGraphCache */
-            false,
-            targetGraph1,
-            false,
-            IncrementalActionGraphMode.DISABLED,
-            ImmutableMap.of());
+            false, targetGraph1, false, IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
     // Each time you call it for a different TargetGraph so all calls should be misses.
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
@@ -272,7 +253,6 @@ public class ActionGraphProviderTest {
     trackedEvents.clear();
     ActionGraphAndBuilder resultRun2 =
         cache.getActionGraph(
-            CHECK_GRAPHS,
             /* skipActionGraphCache */ false,
             targetGraph1.getSubgraph(ImmutableSet.of(nodeB)),
             false,
@@ -285,12 +265,7 @@ public class ActionGraphProviderTest {
     trackedEvents.clear();
     ActionGraphAndBuilder resultRun3 =
         cache.getActionGraph(
-            CHECK_GRAPHS, /* skipActionGraphCache */
-            false,
-            targetGraph1,
-            false,
-            IncrementalActionGraphMode.DISABLED,
-            ImmutableMap.of());
+            false, targetGraph1, false, IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
 
@@ -354,12 +329,7 @@ public class ActionGraphProviderTest {
             .withParallelizationMode(mode)
             .build()
             .getActionGraph(
-                NOT_CHECK_GRAPHS, /* skipActionGraphCache */
-                false,
-                targetGraph1,
-                false,
-                IncrementalActionGraphMode.DISABLED,
-                ImmutableMap.of());
+                false, targetGraph1, false, IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
         experimentEvents =
             RichStream.from(trackedEvents.stream())
                 .filter(ExperimentEvent.class)
@@ -375,12 +345,7 @@ public class ActionGraphProviderTest {
           .withParallelizationMode(ActionGraphParallelizationMode.EXPERIMENT)
           .build()
           .getActionGraph(
-              NOT_CHECK_GRAPHS, /* skipActionGraphCache */
-              false,
-              targetGraph1,
-              false,
-              IncrementalActionGraphMode.DISABLED,
-              ImmutableMap.of());
+              false, targetGraph1, false, IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
       experimentEvents =
           RichStream.from(trackedEvents.stream())
               .filter(ExperimentEvent.class)
@@ -401,12 +366,7 @@ public class ActionGraphProviderTest {
           .withParallelizationMode(ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE)
           .build()
           .getActionGraph(
-              NOT_CHECK_GRAPHS, /* skipActionGraphCache */
-              false,
-              targetGraph1,
-              false,
-              IncrementalActionGraphMode.DISABLED,
-              ImmutableMap.of());
+              false, targetGraph1, false, IncrementalActionGraphMode.DISABLED, ImmutableMap.of());
       experimentEvents =
           RichStream.from(trackedEvents.stream())
               .filter(ExperimentEvent.class)
@@ -431,13 +391,7 @@ public class ActionGraphProviderTest {
           .withEventBus(eventBus)
           .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
           .build()
-          .getActionGraph(
-              NOT_CHECK_GRAPHS, /* skipActionGraphCache */
-              false,
-              targetGraph1,
-              false,
-              mode,
-              ImmutableMap.of());
+          .getActionGraph(false, targetGraph1, false, mode, ImmutableMap.of());
       experimentEvents =
           RichStream.from(trackedEvents.stream())
               .filter(ExperimentEvent.class)
@@ -458,7 +412,6 @@ public class ActionGraphProviderTest {
         .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
         .build()
         .getActionGraph(
-            NOT_CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
             false,
@@ -513,12 +466,7 @@ public class ActionGraphProviderTest {
 
     ActionGraphAndBuilder originalResult =
         cache.getActionGraph(
-            NOT_CHECK_GRAPHS,
-            false,
-            targetGraph1,
-            false,
-            IncrementalActionGraphMode.ENABLED,
-            ImmutableMap.of());
+            false, targetGraph1, false, IncrementalActionGraphMode.ENABLED, ImmutableMap.of());
 
     BuildRule originalBuildRule1 =
         originalResult.getActionGraphBuilder().getRule(originalNode1.getBuildTarget());
@@ -535,12 +483,7 @@ public class ActionGraphProviderTest {
 
     ActionGraphAndBuilder newResult =
         cache.getActionGraph(
-            NOT_CHECK_GRAPHS,
-            false,
-            targetGraph2,
-            false,
-            IncrementalActionGraphMode.ENABLED,
-            ImmutableMap.of());
+            false, targetGraph2, false, IncrementalActionGraphMode.ENABLED, ImmutableMap.of());
 
     assertNotSame(
         originalBuildRule1, newResult.getActionGraphBuilder().getRule(newNode1.getBuildTarget()));

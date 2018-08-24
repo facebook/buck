@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.actiongraph.computation;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -55,23 +56,53 @@ public class ActionGraphProvider {
   private final ActionGraphFactory actionGraphFactory;
   private final ActionGraphCache actionGraphCache;
   private final RuleKeyConfiguration ruleKeyConfiguration;
+  private final boolean checkActionGraphs;
 
   public ActionGraphProvider(
       BuckEventBus eventBus,
       ActionGraphFactory actionGraphFactory,
       ActionGraphCache actionGraphCache,
-      RuleKeyConfiguration ruleKeyConfiguration) {
+      RuleKeyConfiguration ruleKeyConfiguration,
+      boolean checkActionGraphs) {
     this.eventBus = eventBus;
     this.actionGraphFactory = actionGraphFactory;
     this.actionGraphCache = actionGraphCache;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
+    this.checkActionGraphs = checkActionGraphs;
+  }
+
+  private ActionGraphProvider(
+      BuckEventBus eventBus,
+      ActionGraphFactory actionGraphFactory,
+      ActionGraphCache actionGraphCache,
+      RuleKeyConfiguration ruleKeyConfiguration,
+      ActionGraphConfig actionGraphConfig) {
+    this(
+        eventBus,
+        actionGraphFactory,
+        actionGraphCache,
+        ruleKeyConfiguration,
+        actionGraphConfig.isActionGraphCheckingEnabled());
+  }
+
+  public ActionGraphProvider(
+      BuckEventBus eventBus,
+      ActionGraphFactory actionGraphFactory,
+      ActionGraphCache actionGraphCache,
+      RuleKeyConfiguration ruleKeyConfiguration,
+      BuckConfig buckConfig) {
+    this(
+        eventBus,
+        actionGraphFactory,
+        actionGraphCache,
+        ruleKeyConfiguration,
+        buckConfig.getView(ActionGraphConfig.class));
   }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
   public ActionGraphAndBuilder getActionGraph(
       TargetGraph targetGraph, ActionGraphConfig actionGraphConfig) {
     return getActionGraph(
-        actionGraphConfig.isActionGraphCheckingEnabled(),
         actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
         Optional.empty(),
@@ -86,7 +117,6 @@ public class ActionGraphProvider {
       ActionGraphConfig actionGraphConfig,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     return getActionGraph(
-        actionGraphConfig.isActionGraphCheckingEnabled(),
         actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
         ruleKeyLogger,
@@ -96,14 +126,12 @@ public class ActionGraphProvider {
   }
 
   public ActionGraphAndBuilder getActionGraph(
-      boolean checkActionGraphs,
       boolean skipActionGraphCache,
       TargetGraph targetGraph,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
     return getActionGraph(
-        checkActionGraphs,
         skipActionGraphCache,
         targetGraph,
         Optional.empty(),
@@ -124,7 +152,6 @@ public class ActionGraphProvider {
    * @return a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getActionGraph(
-      boolean checkActionGraphs,
       boolean skipActionGraphCache,
       TargetGraph targetGraph,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,

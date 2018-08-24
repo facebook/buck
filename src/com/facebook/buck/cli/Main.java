@@ -1369,7 +1369,8 @@ public final class Main {
                   ActionGraphFactory.create(
                       buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier, buckConfig),
                   daemon.getActionGraphCache(),
-                  ruleKeyConfiguration),
+                  ruleKeyConfiguration,
+                  buckConfig),
               defaultRuleKeyFactoryCacheRecycler);
     } else {
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -1394,7 +1395,8 @@ public final class Main {
                   ActionGraphFactory.create(
                       buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier, buckConfig),
                   new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
-                  ruleKeyConfiguration),
+                  ruleKeyConfiguration,
+                  buckConfig),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());
     }
     return parserAndCaches;

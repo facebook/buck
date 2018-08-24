@@ -106,7 +106,8 @@ public class FetchCommand extends BuildCommand {
                             params.getBuckConfig()),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()),
-                        params.getRuleKeyConfiguration())
+                        params.getRuleKeyConfiguration(),
+                        params.getBuckConfig())
                     .getFreshActionGraph(
                         ruleGenerator,
                         result.getTargetGraph(),

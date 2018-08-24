@@ -1259,7 +1259,6 @@ public class IncrementalActionGraphScenarioTest {
       TargetGraph targetGraph, boolean skipActionGraphCache) {
     ActionGraphAndBuilder result =
         cache.getActionGraph(
-            false, /* checkActionGraphs */
             skipActionGraphCache,
             targetGraph,
             false,

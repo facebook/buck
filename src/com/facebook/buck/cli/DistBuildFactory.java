@@ -202,7 +202,8 @@ public abstract class DistBuildFactory {
                             .getActionGraphParallelizationMode()),
                     new ActionGraphCache(
                         state.getRemoteRootCellConfig().getMaxActionGraphCacheEntries()),
-                    ruleKeyConfiguration))
+                    ruleKeyConfiguration,
+                    false))
             .setRuleKeyConfiguration(ruleKeyConfiguration)
             .setConsole(params.getConsole())
             .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())

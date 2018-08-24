@@ -39,6 +39,8 @@ public class ActionGraphProviderBuilder {
 
   @Nullable private ActionGraphParallelizationMode parallelizationMode;
 
+  @Nullable private Boolean checkActionGraphs;
+
   public ActionGraphProviderBuilder withMaxEntries(Integer maxEntries) {
     this.maxEntries = maxEntries;
     return this;
@@ -72,6 +74,11 @@ public class ActionGraphProviderBuilder {
     return this;
   }
 
+  public ActionGraphProviderBuilder withCheckActionGraphs() {
+    this.checkActionGraphs = true;
+    return this;
+  }
+
   public ActionGraphProvider build() {
     int maxEntries = this.maxEntries == null ? 1 : this.maxEntries;
     CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
@@ -97,11 +104,13 @@ public class ActionGraphProviderBuilder {
         this.parallelizationMode == null
             ? ActionGraphParallelizationMode.DISABLED
             : this.parallelizationMode;
+    boolean checkActionGraphs = this.checkActionGraphs != null && this.checkActionGraphs;
 
     return new ActionGraphProvider(
         eventBus,
         ActionGraphFactory.create(eventBus, cellProvider, poolSupplier, parallelizationMode),
         new ActionGraphCache(maxEntries),
-        ruleKeyConfiguration);
+        ruleKeyConfiguration,
+        checkActionGraphs);
   }
 }
