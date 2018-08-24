@@ -1048,20 +1048,5 @@ public class PrebuiltCxxLibraryDescription
     }
 
     Optional<Boolean> getSupportsMergedLinking();
-
-    default boolean isNewApiUsed() {
-      return getHeaderDirs().isPresent()
-          || getPlatformHeaderDirs().isPresent()
-          || getVersionedHeaderDirs().isPresent()
-          || getSharedLib().isPresent()
-          || getPlatformSharedLib().isPresent()
-          || getVersionedSharedLib().isPresent()
-          || getStaticLib().isPresent()
-          || getPlatformStaticLib().isPresent()
-          || getVersionedStaticLib().isPresent()
-          || getStaticPicLib().isPresent()
-          || getPlatformStaticPicLib().isPresent()
-          || getVersionedStaticPicLib().isPresent();
-    }
   }
 }
