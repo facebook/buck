@@ -46,6 +46,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   public void setUp() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
+    AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             new AndroidBinaryModularIntegrationTest(), "android_project", tmpFolder);
