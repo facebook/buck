@@ -36,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
 
-public class ParallelActionGraphFactory {
+public class ParallelActionGraphFactory implements ActionGraphFactoryDelegate {
   private static final Logger LOG = Logger.get(ParallelActionGraphFactory.class);
 
   private final CloseableMemoizedSupplier<ForkJoinPool> poolSupplier;
@@ -48,6 +48,7 @@ public class ParallelActionGraphFactory {
     this.cellProvider = cellProvider;
   }
 
+  @Override
   public ActionGraphAndBuilder create(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,

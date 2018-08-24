@@ -36,7 +36,7 @@ import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.Iterables;
 import java.util.stream.StreamSupport;
 
-public class SerialActionGraphFactory {
+public class SerialActionGraphFactory implements ActionGraphFactoryDelegate {
   private static final Logger LOG = Logger.get(SerialActionGraphFactory.class);
 
   private final BuckEventBus eventBus;
@@ -50,6 +50,7 @@ public class SerialActionGraphFactory {
     this.shouldInstrumentGraphBuilding = shouldInstrumentGraphBuilding;
   }
 
+  @Override
   public ActionGraphAndBuilder create(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,

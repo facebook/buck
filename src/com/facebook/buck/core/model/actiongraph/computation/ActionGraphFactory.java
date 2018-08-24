@@ -39,10 +39,13 @@ public class ActionGraphFactory {
       boolean shouldInstrumentGraphBuilding,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
     return new ActionGraphFactory(
+        createDelegate(
+            eventBus,
+            cellProvider,
+            poolSupplier,
+            parallelizationMode,
+            shouldInstrumentGraphBuilding),
         eventBus,
-        new ParallelActionGraphFactory(poolSupplier, cellProvider),
-        new SerialActionGraphFactory(eventBus, cellProvider, shouldInstrumentGraphBuilding),
-        parallelizationMode,
         incrementalActionGraphExperimentGroups);
   }
 
@@ -52,31 +55,25 @@ public class ActionGraphFactory {
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
       BuckConfig buckConfig) {
     ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
-    return new ActionGraphFactory(
+    return create(
         eventBus,
-        new ParallelActionGraphFactory(poolSupplier, cellProvider),
-        new SerialActionGraphFactory(
-            eventBus, cellProvider, actionGraphConfig.getShouldInstrumentActionGraph()),
+        cellProvider,
+        poolSupplier,
         actionGraphConfig.getActionGraphParallelizationMode(),
+        actionGraphConfig.getShouldInstrumentActionGraph(),
         actionGraphConfig.getIncrementalActionGraphExperimentGroups());
   }
 
+  private final ActionGraphFactoryDelegate delegate;
   private final BuckEventBus eventBus;
-  private final ParallelActionGraphFactory parallelActionGraphFactory;
-  private final SerialActionGraphFactory serialActionGraphFactory;
-  private final ActionGraphParallelizationMode parallelizationMode;
   private final Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups;
 
   ActionGraphFactory(
+      ActionGraphFactoryDelegate delegate,
       BuckEventBus eventBus,
-      ParallelActionGraphFactory parallelActionGraphFactory,
-      SerialActionGraphFactory serialActionGraphFactory,
-      ActionGraphParallelizationMode parallelizationMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
+    this.delegate = delegate;
     this.eventBus = eventBus;
-    this.parallelActionGraphFactory = parallelActionGraphFactory;
-    this.serialActionGraphFactory = serialActionGraphFactory;
-    this.parallelizationMode = parallelizationMode;
     this.incrementalActionGraphExperimentGroups = incrementalActionGraphExperimentGroups;
   }
 
@@ -102,15 +99,15 @@ public class ActionGraphFactory {
     } else {
       listener = graphBuilder -> {};
     }
-    return createActionGraph(transformer, targetGraph, listener);
+    return delegate.create(transformer, targetGraph, listener);
   }
 
-  private ActionGraphAndBuilder createActionGraph(
-      TargetNodeToBuildRuleTransformer transformer,
-      TargetGraph targetGraph,
-      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
-
-    ActionGraphParallelizationMode parallelizationMode = this.parallelizationMode;
+  private static ActionGraphFactoryDelegate createDelegate(
+      BuckEventBus eventBus,
+      CellProvider cellProvider,
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
+      ActionGraphParallelizationMode parallelizationMode,
+      boolean shouldInstrumentGraphBuilding) {
 
     switch (parallelizationMode) {
       case EXPERIMENT:
@@ -141,11 +138,9 @@ public class ActionGraphFactory {
     }
     switch (parallelizationMode) {
       case ENABLED:
-        return parallelActionGraphFactory.create(
-            transformer, targetGraph, actionGraphCreationLifecycleListener);
+        return new ParallelActionGraphFactory(poolSupplier, cellProvider);
       case DISABLED:
-        return serialActionGraphFactory.create(
-            transformer, targetGraph, actionGraphCreationLifecycleListener);
+        return new SerialActionGraphFactory(eventBus, cellProvider, shouldInstrumentGraphBuilding);
       case EXPERIMENT_UNSTABLE:
       case EXPERIMENT:
         throw new AssertionError(
