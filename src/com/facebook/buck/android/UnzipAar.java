@@ -225,7 +225,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToTextSymbolsDir);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), unpackDirectory);
   }
 
   Path getPathToClassesJar() {
