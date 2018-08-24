@@ -158,7 +158,6 @@ public class DelegateAndGraphsInitializer {
                   /* skipActionGraphCache */ false,
                   Preconditions.checkNotNull(targetGraph),
                   args.getCellProvider(),
-                  args.getRuleKeyConfiguration(),
                   args.getActionGraphParallelizationMode(),
                   Optional.empty(),
                   args.getShouldInstrumentActionGraph(),

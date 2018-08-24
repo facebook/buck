@@ -249,7 +249,6 @@ public class DistBuildFileHashesIntegrationTest {
             false,
             targetGraph,
             rootCell.getCellProvider(),
-            TestRuleKeyConfigurationFactory.create(),
             ActionGraphParallelizationMode.DISABLED,
             Optional.empty(),
             false,

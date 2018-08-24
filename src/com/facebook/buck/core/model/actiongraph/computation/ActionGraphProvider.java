@@ -54,11 +54,15 @@ public class ActionGraphProvider {
 
   private final ActionGraphFactory actionGraphFactory;
   private final ActionGraphCache actionGraphCache;
+  private final RuleKeyConfiguration ruleKeyConfiguration;
 
   public ActionGraphProvider(
-      ActionGraphFactory actionGraphFactory, ActionGraphCache actionGraphCache) {
+      ActionGraphFactory actionGraphFactory,
+      ActionGraphCache actionGraphCache,
+      RuleKeyConfiguration ruleKeyConfiguration) {
     this.actionGraphFactory = actionGraphFactory;
     this.actionGraphCache = actionGraphCache;
+    this.ruleKeyConfiguration = ruleKeyConfiguration;
   }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
@@ -66,15 +70,13 @@ public class ActionGraphProvider {
       BuckEventBus eventBus,
       TargetGraph targetGraph,
       CellProvider cellProvider,
-      ActionGraphConfig actionGraphConfig,
-      RuleKeyConfiguration ruleKeyConfiguration) {
+      ActionGraphConfig actionGraphConfig) {
     return getActionGraph(
         eventBus,
         actionGraphConfig.isActionGraphCheckingEnabled(),
         actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
         cellProvider,
-        ruleKeyConfiguration,
         actionGraphConfig.getActionGraphParallelizationMode(),
         Optional.empty(),
         actionGraphConfig.getShouldInstrumentActionGraph(),
@@ -88,7 +90,6 @@ public class ActionGraphProvider {
       TargetGraph targetGraph,
       CellProvider cellProvider,
       ActionGraphConfig actionGraphConfig,
-      RuleKeyConfiguration ruleKeyConfiguration,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     return getActionGraph(
         eventBus,
@@ -96,7 +97,6 @@ public class ActionGraphProvider {
         actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
         cellProvider,
-        ruleKeyConfiguration,
         actionGraphConfig.getActionGraphParallelizationMode(),
         ruleKeyLogger,
         actionGraphConfig.getShouldInstrumentActionGraph(),
@@ -110,7 +110,6 @@ public class ActionGraphProvider {
       boolean skipActionGraphCache,
       TargetGraph targetGraph,
       CellProvider cellProvider,
-      RuleKeyConfiguration ruleKeyConfiguration,
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
@@ -121,7 +120,6 @@ public class ActionGraphProvider {
         skipActionGraphCache,
         targetGraph,
         cellProvider,
-        ruleKeyConfiguration,
         parallelizationMode,
         Optional.empty(),
         shouldInstrumentGraphBuilding,
@@ -147,7 +145,6 @@ public class ActionGraphProvider {
       boolean skipActionGraphCache,
       TargetGraph targetGraph,
       CellProvider cellProvider,
-      RuleKeyConfiguration ruleKeyConfiguration,
       ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       boolean shouldInstrumentGraphBuilding,

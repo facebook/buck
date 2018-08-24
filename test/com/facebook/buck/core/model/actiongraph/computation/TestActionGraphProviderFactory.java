@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.core.model.actiongraph.computation;
 
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import java.util.concurrent.ForkJoinPool;
 
@@ -29,13 +31,40 @@ public class TestActionGraphProviderFactory {
             ignored -> {});
     return new ActionGraphProvider(
         ActionGraphFactory.create(new ParallelActionGraphFactory(poolSupplier)),
-        new ActionGraphCache(maxEntries));
+        new ActionGraphCache(maxEntries),
+        TestRuleKeyConfigurationFactory.create());
   }
 
   public static ActionGraphProvider create(
       int maxEntries, CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     return new ActionGraphProvider(
         ActionGraphFactory.create(new ParallelActionGraphFactory(poolSupplier)),
-        new ActionGraphCache(maxEntries));
+        new ActionGraphCache(maxEntries),
+        TestRuleKeyConfigurationFactory.create());
+  }
+
+  public static ActionGraphProvider create(
+      int maxEntries,
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
+      RuleKeyConfiguration ruleKeyConfiguration) {
+    return new ActionGraphProvider(
+        ActionGraphFactory.create(new ParallelActionGraphFactory(poolSupplier)),
+        new ActionGraphCache(maxEntries),
+        ruleKeyConfiguration);
+  }
+
+  public static ActionGraphProvider create(
+      int maxEntries, RuleKeyConfiguration ruleKeyConfiguration) {
+    CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
+        CloseableMemoizedSupplier.of(
+            () -> {
+              throw new IllegalStateException(
+                  "should not use parallel executor for action graph construction in test");
+            },
+            ignored -> {});
+    return new ActionGraphProvider(
+        ActionGraphFactory.create(new ParallelActionGraphFactory(poolSupplier)),
+        new ActionGraphCache(maxEntries),
+        ruleKeyConfiguration);
   }
 }

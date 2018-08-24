@@ -136,7 +136,9 @@ public class ActionGraphProviderTest {
 
   @Test
   public void hitOnCache() {
-    ActionGraphProvider cache = TestActionGraphProviderFactory.create(1, fakePoolSupplier);
+    ActionGraphProvider cache =
+        TestActionGraphProviderFactory.create(
+            1, fakePoolSupplier, TestRuleKeyConfigurationFactory.createWithSeed(keySeed));
 
     ActionGraphAndBuilder resultRun1 =
         cache.getActionGraph(
@@ -145,7 +147,6 @@ public class ActionGraphProviderTest {
             false,
             targetGraph1,
             new TestCellBuilder().build().getCellProvider(),
-            TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -161,7 +162,6 @@ public class ActionGraphProviderTest {
             false,
             targetGraph1,
             new TestCellBuilder().build().getCellProvider(),
-            TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -234,7 +234,6 @@ public class ActionGraphProviderTest {
           false,
           run.getFirst(),
           new TestCellBuilder().build().getCellProvider(),
-          TestRuleKeyConfigurationFactory.create(),
           ActionGraphParallelizationMode.DISABLED,
           false,
           IncrementalActionGraphMode.DISABLED,
@@ -249,7 +248,9 @@ public class ActionGraphProviderTest {
 
   @Test
   public void missOnCache() {
-    ActionGraphProvider cache = TestActionGraphProviderFactory.create(1, fakePoolSupplier);
+    ActionGraphProvider cache =
+        TestActionGraphProviderFactory.create(
+            1, fakePoolSupplier, TestRuleKeyConfigurationFactory.createWithSeed(keySeed));
     ActionGraphAndBuilder resultRun1 =
         cache.getActionGraph(
             eventBus,
@@ -257,7 +258,6 @@ public class ActionGraphProviderTest {
             false,
             targetGraph1,
             new TestCellBuilder().build().getCellProvider(),
-            TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -274,7 +274,6 @@ public class ActionGraphProviderTest {
             /* skipActionGraphCache */ false,
             targetGraph1.getSubgraph(ImmutableSet.of(nodeB)),
             new TestCellBuilder().build().getCellProvider(),
-            TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -291,7 +290,6 @@ public class ActionGraphProviderTest {
             false,
             targetGraph1,
             new TestCellBuilder().build().getCellProvider(),
-            TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -359,14 +357,14 @@ public class ActionGraphProviderTest {
       for (ActionGraphParallelizationMode mode :
           ImmutableSet.of(
               ActionGraphParallelizationMode.DISABLED, ActionGraphParallelizationMode.ENABLED)) {
-        TestActionGraphProviderFactory.create(1, poolSupplier)
+        TestActionGraphProviderFactory.create(
+                1, poolSupplier, TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
             .getActionGraph(
                 eventBus,
                 NOT_CHECK_GRAPHS, /* skipActionGraphCache */
                 false,
                 targetGraph1,
                 new TestCellBuilder().build().getCellProvider(),
-                TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
                 mode,
                 false,
                 IncrementalActionGraphMode.DISABLED,
@@ -387,7 +385,6 @@ public class ActionGraphProviderTest {
               false,
               targetGraph1,
               new TestCellBuilder().build().getCellProvider(),
-              TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
               ActionGraphParallelizationMode.EXPERIMENT,
               false,
               IncrementalActionGraphMode.DISABLED,
@@ -405,14 +402,14 @@ public class ActionGraphProviderTest {
                   hasProperty("variant", anyOf(equalTo("ENABLED"), equalTo("DISABLED"))))));
 
       trackedEvents.clear();
-      TestActionGraphProviderFactory.create(1, poolSupplier)
+      TestActionGraphProviderFactory.create(
+              1, poolSupplier, TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
           .getActionGraph(
               eventBus,
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
               new TestCellBuilder().build().getCellProvider(),
-              TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
               ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE,
               false,
               IncrementalActionGraphMode.DISABLED,
@@ -436,14 +433,14 @@ public class ActionGraphProviderTest {
     List<ExperimentEvent> experimentEvents;
     for (IncrementalActionGraphMode mode :
         ImmutableSet.of(IncrementalActionGraphMode.DISABLED, IncrementalActionGraphMode.ENABLED)) {
-      TestActionGraphProviderFactory.create(1, fakePoolSupplier)
+      TestActionGraphProviderFactory.create(
+              1, fakePoolSupplier, TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
           .getActionGraph(
               eventBus,
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
               new TestCellBuilder().build().getCellProvider(),
-              TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
               ActionGraphParallelizationMode.DISABLED,
               false,
               mode,
@@ -462,14 +459,14 @@ public class ActionGraphProviderTest {
         ImmutableMap.builder();
     experimentGroups.put(IncrementalActionGraphMode.ENABLED, 0.5);
     experimentGroups.put(IncrementalActionGraphMode.DISABLED, 0.5);
-    TestActionGraphProviderFactory.create(1, fakePoolSupplier)
+    TestActionGraphProviderFactory.create(
+            1, fakePoolSupplier, TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
         .getActionGraph(
             eventBus,
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
             new TestCellBuilder().build().getCellProvider(),
-            TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.EXPERIMENT,
@@ -508,7 +505,9 @@ public class ActionGraphProviderTest {
   private void runCachedSubgraphReturnedFromNodeCacheTest(
       ActionGraphParallelizationMode parallelizationMode,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
-    ActionGraphProvider cache = TestActionGraphProviderFactory.create(1, poolSupplier);
+    ActionGraphProvider cache =
+        TestActionGraphProviderFactory.create(
+            1, poolSupplier, TestRuleKeyConfigurationFactory.createWithSeed(keySeed));
 
     TargetNode<?> originalNode3 = createCacheableTargetNode("C");
     TargetNode<?> originalNode2 = createCacheableTargetNode("B", originalNode3);
@@ -522,7 +521,6 @@ public class ActionGraphProviderTest {
             false,
             targetGraph1,
             new TestCellBuilder().build().getCellProvider(),
-            TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             parallelizationMode,
             false,
             IncrementalActionGraphMode.ENABLED,
@@ -548,7 +546,6 @@ public class ActionGraphProviderTest {
             false,
             targetGraph2,
             new TestCellBuilder().build().getCellProvider(),
-            TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             parallelizationMode,
             false,
             IncrementalActionGraphMode.ENABLED,

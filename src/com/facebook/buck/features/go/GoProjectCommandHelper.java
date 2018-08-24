@@ -172,8 +172,7 @@ public class GoProjectCommandHelper {
             buckEventBus,
             targetGraph,
             cell.getCellProvider(),
-            buckConfig.getView(ActionGraphConfig.class),
-            params.getRuleKeyConfiguration());
+            buckConfig.getView(ActionGraphConfig.class));
   }
 
   private TargetGraph getProjectGraphForIde(

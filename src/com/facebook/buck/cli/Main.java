@@ -1166,6 +1166,7 @@ public final class Main {
                   daemon,
                   buildEventBus,
                   forkJoinPoolSupplier,
+                  ruleKeyConfiguration,
                   executableFinder);
 
           // Because the Parser is potentially constructed before the CounterRegistry,
@@ -1311,6 +1312,7 @@ public final class Main {
       Optional<Daemon> daemonOptional,
       BuckEventBus buildEventBus,
       CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier,
+      RuleKeyConfiguration ruleKeyConfiguration,
       ExecutableFinder executableFinder)
       throws IOException, InterruptedException {
     WatchmanWatcher watchmanWatcher = null;
@@ -1365,7 +1367,8 @@ public final class Main {
                   daemon.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
               new ActionGraphProvider(
                   ActionGraphFactory.create(new ParallelActionGraphFactory(forkJoinPoolSupplier)),
-                  daemon.getActionGraphCache()),
+                  daemon.getActionGraphCache(),
+                  ruleKeyConfiguration),
               defaultRuleKeyFactoryCacheRecycler);
     } else {
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -1387,7 +1390,8 @@ public final class Main {
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
               new ActionGraphProvider(
                   ActionGraphFactory.create(new ParallelActionGraphFactory(forkJoinPoolSupplier)),
-                  new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries())),
+                  new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
+                  ruleKeyConfiguration),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());
     }
     return parserAndCaches;
