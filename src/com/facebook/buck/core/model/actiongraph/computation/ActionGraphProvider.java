@@ -74,7 +74,6 @@ public class ActionGraphProvider {
         actionGraphConfig.isActionGraphCheckingEnabled(),
         actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
-        actionGraphConfig.getActionGraphParallelizationMode(),
         Optional.empty(),
         actionGraphConfig.getShouldInstrumentActionGraph(),
         actionGraphConfig.getIncrementalActionGraphMode(),
@@ -90,7 +89,6 @@ public class ActionGraphProvider {
         actionGraphConfig.isActionGraphCheckingEnabled(),
         actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
-        actionGraphConfig.getActionGraphParallelizationMode(),
         ruleKeyLogger,
         actionGraphConfig.getShouldInstrumentActionGraph(),
         actionGraphConfig.getIncrementalActionGraphMode(),
@@ -101,7 +99,6 @@ public class ActionGraphProvider {
       boolean checkActionGraphs,
       boolean skipActionGraphCache,
       TargetGraph targetGraph,
-      ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
@@ -109,7 +106,6 @@ public class ActionGraphProvider {
         checkActionGraphs,
         skipActionGraphCache,
         targetGraph,
-        parallelizationMode,
         Optional.empty(),
         shouldInstrumentGraphBuilding,
         incrementalActionGraphMode,
@@ -131,7 +127,6 @@ public class ActionGraphProvider {
       boolean checkActionGraphs,
       boolean skipActionGraphCache,
       TargetGraph targetGraph,
-      ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
@@ -151,7 +146,6 @@ public class ActionGraphProvider {
               cachedActionGraph,
               targetGraph,
               fieldLoader,
-              parallelizationMode,
               ruleKeyLogger,
               shouldInstrumentGraphBuilding);
         }
@@ -174,7 +168,6 @@ public class ActionGraphProvider {
                 createActionGraph(
                     new DefaultTargetNodeToBuildRuleTransformer(),
                     targetGraph,
-                    parallelizationMode,
                     shouldInstrumentGraphBuilding,
                     skipActionGraphCache
                         ? IncrementalActionGraphMode.DISABLED
@@ -199,16 +192,12 @@ public class ActionGraphProvider {
    * cache. It uses a {@link DefaultTargetNodeToBuildRuleTransformer}.
    *
    * @param targetGraph the target graph that the action graph will be based on.
-   * @param parallelizationMode
    * @return a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getFreshActionGraph(
-      TargetGraph targetGraph,
-      ActionGraphParallelizationMode parallelizationMode,
-      boolean shouldInstrumentGraphBuilding) {
+      TargetGraph targetGraph, boolean shouldInstrumentGraphBuilding) {
     TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
-    return getFreshActionGraph(
-        transformer, targetGraph, parallelizationMode, shouldInstrumentGraphBuilding);
+    return getFreshActionGraph(transformer, targetGraph, shouldInstrumentGraphBuilding);
   }
 
   /**
@@ -218,13 +207,11 @@ public class ActionGraphProvider {
    * @param transformer Custom {@link TargetNodeToBuildRuleTransformer} that the transformation will
    *     be based on.
    * @param targetGraph The target graph that the action graph will be based on.
-   * @param parallelizationMode
    * @return It returns a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getFreshActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
@@ -233,7 +220,6 @@ public class ActionGraphProvider {
         createActionGraph(
             transformer,
             targetGraph,
-            parallelizationMode,
             shouldInstrumentGraphBuilding,
             IncrementalActionGraphMode.DISABLED,
             ImmutableMap.of());
@@ -247,7 +233,6 @@ public class ActionGraphProvider {
   private ActionGraphAndBuilder createActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
@@ -255,7 +240,6 @@ public class ActionGraphProvider {
     return actionGraphFactory.createActionGraph(
         transformer,
         targetGraph,
-        parallelizationMode,
         shouldInstrumentGraphBuilding,
         incrementalActionGraphMode,
         incrementalActionGraphExperimentGroups,
@@ -298,14 +282,12 @@ public class ActionGraphProvider {
    * @param lastActionGraphAndBuilder The cached version of the graph that gets compared.
    * @param targetGraph Used to generate the actionGraph that gets compared with lastActionGraph.
    * @param fieldLoader
-   * @param parallelizationMode What mode to use when processing the action graphs
    * @param ruleKeyLogger The logger to use (if any) when computing the new action graph
    */
   private void compareActionGraphs(
       ActionGraphAndBuilder lastActionGraphAndBuilder,
       TargetGraph targetGraph,
       RuleKeyFieldLoader fieldLoader,
-      ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       boolean shouldInstrumentGraphBuilding) {
     try (SimplePerfEvent.Scope scope =
@@ -319,7 +301,6 @@ public class ActionGraphProvider {
               createActionGraph(
                   new DefaultTargetNodeToBuildRuleTransformer(),
                   targetGraph,
-                  parallelizationMode,
                   shouldInstrumentGraphBuilding,
                   IncrementalActionGraphMode.DISABLED,
                   ImmutableMap.of()));

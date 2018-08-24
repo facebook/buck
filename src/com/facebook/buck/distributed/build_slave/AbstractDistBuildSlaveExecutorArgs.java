@@ -21,7 +21,6 @@ import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -118,8 +117,6 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract HealthCheckStatsTracker getHealthCheckStatsTracker();
 
-  public abstract ActionGraphParallelizationMode getActionGraphParallelizationMode();
-
   public abstract RemoteCommand getRemoteCommand();
 
   public int getBuildThreadCount() {
@@ -181,7 +178,6 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
                 .getView(ActionGraphConfig.class)
                 .getIncrementalActionGraphExperimentGroups())
         .setDistBuildConfig(this.getDistBuildConfig())
-        .setActionGraphParallelizationMode(this.getActionGraphParallelizationMode())
         .build();
   }
 

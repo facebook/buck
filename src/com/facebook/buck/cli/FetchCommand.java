@@ -102,17 +102,14 @@ public class FetchCommand extends BuildCommand {
                         ActionGraphFactory.create(
                             params.getBuckEventBus(),
                             params.getCell().getCellProvider(),
-                            params.getPoolSupplier()),
+                            params.getPoolSupplier(),
+                            params.getBuckConfig()),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration())
                     .getFreshActionGraph(
                         ruleGenerator,
                         result.getTargetGraph(),
-                        params
-                            .getBuckConfig()
-                            .getView(ActionGraphConfig.class)
-                            .getActionGraphParallelizationMode(),
                         params
                             .getBuckConfig()
                             .getView(ActionGraphConfig.class)

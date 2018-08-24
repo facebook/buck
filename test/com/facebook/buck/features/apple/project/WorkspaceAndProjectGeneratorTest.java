@@ -47,7 +47,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -1059,10 +1058,7 @@ public class WorkspaceAndProjectGeneratorTest {
     return input ->
         new ActionGraphProviderBuilder()
             .build()
-            .getFreshActionGraph(
-                targetGraph.getSubgraph(ImmutableSet.of(input)),
-                ActionGraphParallelizationMode.DISABLED,
-                false)
+            .getFreshActionGraph(targetGraph.getSubgraph(ImmutableSet.of(input)), false)
             .getActionGraphBuilder();
   }
 }

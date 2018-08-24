@@ -205,10 +205,7 @@ public class IjProjectCommandHelper {
     TargetNodeToBuildRuleTransformer transformer = new ShallowTargetNodeToBuildRuleTransformer();
     ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
     return actionGraphProvider.getFreshActionGraph(
-        transformer,
-        targetGraph,
-        actionGraphConfig.getActionGraphParallelizationMode(),
-        actionGraphConfig.getShouldInstrumentActionGraph());
+        transformer, targetGraph, actionGraphConfig.getShouldInstrumentActionGraph());
   }
 
   private TargetGraph getProjectGraphForIde(

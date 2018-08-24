@@ -181,16 +181,13 @@ public class AuditClasspathCommand extends AbstractCommand {
                         ActionGraphFactory.create(
                             params.getBuckEventBus(),
                             params.getCell().getCellProvider(),
-                            params.getPoolSupplier()),
+                            params.getPoolSupplier(),
+                            params.getBuckConfig()),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration())
                     .getFreshActionGraph(
                         targetGraph,
-                        params
-                            .getBuckConfig()
-                            .getView(ActionGraphConfig.class)
-                            .getActionGraphParallelizationMode(),
                         params
                             .getBuckConfig()
                             .getView(ActionGraphConfig.class)
@@ -237,16 +234,13 @@ public class AuditClasspathCommand extends AbstractCommand {
                         ActionGraphFactory.create(
                             params.getBuckEventBus(),
                             params.getCell().getCellProvider(),
-                            params.getPoolSupplier()),
+                            params.getPoolSupplier(),
+                            params.getBuckConfig()),
                         new ActionGraphCache(
                             params.getBuckConfig().getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration())
                     .getFreshActionGraph(
                         targetGraph,
-                        params
-                            .getBuckConfig()
-                            .getView(ActionGraphConfig.class)
-                            .getActionGraphParallelizationMode(),
                         params
                             .getBuckConfig()
                             .getView(ActionGraphConfig.class)

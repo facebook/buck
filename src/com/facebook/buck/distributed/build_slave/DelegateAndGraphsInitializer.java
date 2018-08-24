@@ -147,16 +147,12 @@ public class DelegateAndGraphsInitializer {
   private ActionGraphAndBuilder createActionGraphAndResolver(TargetGraph targetGraph) {
     args.getTimingStatsTracker().startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     try {
-      LOG.info(
-          String.format(
-              "Parallel action graph mode: [%s]", args.getActionGraphParallelizationMode()));
       ActionGraphAndBuilder actionGraphAndBuilder =
           args.getActionGraphProvider()
               .getActionGraph(
                   /* checkActionGraphs */ false,
                   /* skipActionGraphCache */ false,
                   Preconditions.checkNotNull(targetGraph),
-                  args.getActionGraphParallelizationMode(),
                   Optional.empty(),
                   args.getShouldInstrumentActionGraph(),
                   args.getIncrementalActionGraphMode(),

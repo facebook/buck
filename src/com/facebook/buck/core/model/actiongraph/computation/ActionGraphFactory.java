@@ -16,6 +16,7 @@
 package com.facebook.buck.core.model.actiongraph.computation;
 
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -33,30 +34,47 @@ public class ActionGraphFactory {
   public static ActionGraphFactory create(
       BuckEventBus eventBus,
       CellProvider cellProvider,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
+      ActionGraphParallelizationMode parallelizationMode) {
     return new ActionGraphFactory(
         eventBus,
         new ParallelActionGraphFactory(poolSupplier, cellProvider),
-        new SerialActionGraphFactory(eventBus, cellProvider));
+        new SerialActionGraphFactory(eventBus, cellProvider),
+        parallelizationMode);
+  }
+
+  public static ActionGraphFactory create(
+      BuckEventBus eventBus,
+      CellProvider cellProvider,
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
+      BuckConfig buckConfig) {
+    ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
+    return new ActionGraphFactory(
+        eventBus,
+        new ParallelActionGraphFactory(poolSupplier, cellProvider),
+        new SerialActionGraphFactory(eventBus, cellProvider),
+        actionGraphConfig.getActionGraphParallelizationMode());
   }
 
   private final BuckEventBus eventBus;
   private final ParallelActionGraphFactory parallelActionGraphFactory;
   private final SerialActionGraphFactory serialActionGraphFactory;
+  private final ActionGraphParallelizationMode parallelizationMode;
 
   ActionGraphFactory(
       BuckEventBus eventBus,
       ParallelActionGraphFactory parallelActionGraphFactory,
-      SerialActionGraphFactory serialActionGraphFactory) {
+      SerialActionGraphFactory serialActionGraphFactory,
+      ActionGraphParallelizationMode parallelizationMode) {
     this.eventBus = eventBus;
     this.parallelActionGraphFactory = parallelActionGraphFactory;
     this.serialActionGraphFactory = serialActionGraphFactory;
+    this.parallelizationMode = parallelizationMode;
   }
 
   public ActionGraphAndBuilder createActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
@@ -78,16 +96,16 @@ public class ActionGraphFactory {
     } else {
       listener = graphBuilder -> {};
     }
-    return createActionGraph(
-        transformer, targetGraph, parallelizationMode, shouldInstrumentGraphBuilding, listener);
+    return createActionGraph(transformer, targetGraph, shouldInstrumentGraphBuilding, listener);
   }
 
   private ActionGraphAndBuilder createActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
+
+    ActionGraphParallelizationMode parallelizationMode = this.parallelizationMode;
 
     switch (parallelizationMode) {
       case EXPERIMENT:

@@ -26,7 +26,6 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -259,11 +258,7 @@ public class DuplicateResourcesTest {
                     .build()
                     .getCellProvider())
             .build()
-            .getFreshActionGraph(
-                new DefaultTargetNodeToBuildRuleTransformer(),
-                targetGraph,
-                ActionGraphParallelizationMode.DISABLED,
-                false);
+            .getFreshActionGraph(new DefaultTargetNodeToBuildRuleTransformer(), targetGraph, false);
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(

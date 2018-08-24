@@ -49,7 +49,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
@@ -2653,7 +2652,7 @@ public class DefaultParserTest {
                 .withEventBus(eventBus)
                 .withCellProvider(cell.getCellProvider())
                 .build()
-                .getFreshActionGraph(targetGraph, ActionGraphParallelizationMode.DISABLED, false))
+                .getFreshActionGraph(targetGraph, false))
         .getActionGraphBuilder();
   }
 

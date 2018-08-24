@@ -195,7 +195,11 @@ public abstract class DistBuildFactory {
                     ActionGraphFactory.create(
                         params.getBuckEventBus(),
                         state.getRootCell().getCellProvider(),
-                        params.getPoolSupplier()),
+                        params.getPoolSupplier(),
+                        state
+                            .getRemoteRootCellConfig()
+                            .getView(ActionGraphConfig.class)
+                            .getActionGraphParallelizationMode()),
                     new ActionGraphCache(
                         state.getRemoteRootCellConfig().getMaxActionGraphCacheEntries()),
                     ruleKeyConfiguration))
@@ -221,11 +225,6 @@ public abstract class DistBuildFactory {
             .setHealthCheckStatsTracker(healthCheckStatsTracker)
             .setRuleKeyCacheScope(ruleKeyCacheScope)
             .setRemoteCommand(state.getRemoteState().getCommand())
-            .setActionGraphParallelizationMode(
-                params
-                    .getBuckConfig()
-                    .getView(ActionGraphConfig.class)
-                    .getActionGraphParallelizationMode())
             .build());
   }
 }

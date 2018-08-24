@@ -37,6 +37,8 @@ public class ActionGraphProviderBuilder {
 
   @Nullable private CellProvider cellProvider;
 
+  @Nullable private ActionGraphParallelizationMode parallelizationMode;
+
   public ActionGraphProviderBuilder withMaxEntries(Integer maxEntries) {
     this.maxEntries = maxEntries;
     return this;
@@ -64,6 +66,12 @@ public class ActionGraphProviderBuilder {
     return this;
   }
 
+  public ActionGraphProviderBuilder withParallelizationMode(
+      ActionGraphParallelizationMode parallelizationMode) {
+    this.parallelizationMode = parallelizationMode;
+    return this;
+  }
+
   public ActionGraphProvider build() {
     int maxEntries = this.maxEntries == null ? 1 : this.maxEntries;
     CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
@@ -85,10 +93,14 @@ public class ActionGraphProviderBuilder {
         this.cellProvider == null
             ? new TestCellBuilder().build().getCellProvider()
             : this.cellProvider;
+    ActionGraphParallelizationMode parallelizationMode =
+        this.parallelizationMode == null
+            ? ActionGraphParallelizationMode.DISABLED
+            : this.parallelizationMode;
 
     return new ActionGraphProvider(
         eventBus,
-        ActionGraphFactory.create(eventBus, cellProvider, poolSupplier),
+        ActionGraphFactory.create(eventBus, cellProvider, poolSupplier, parallelizationMode),
         new ActionGraphCache(maxEntries),
         ruleKeyConfiguration);
   }

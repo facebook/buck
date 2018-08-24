@@ -16,7 +16,6 @@
 
 package com.facebook.buck.distributed.build_slave;
 
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphMode;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -71,6 +70,4 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
       getIncrementalActionGraphExperimentGroups();
 
   public abstract DistBuildConfig getDistBuildConfig();
-
-  public abstract ActionGraphParallelizationMode getActionGraphParallelizationMode();
 }

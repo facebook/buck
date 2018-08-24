@@ -1367,7 +1367,7 @@ public final class Main {
               new ActionGraphProvider(
                   buildEventBus,
                   ActionGraphFactory.create(
-                      buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier),
+                      buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier, buckConfig),
                   daemon.getActionGraphCache(),
                   ruleKeyConfiguration),
               defaultRuleKeyFactoryCacheRecycler);
@@ -1392,7 +1392,7 @@ public final class Main {
               new ActionGraphProvider(
                   buildEventBus,
                   ActionGraphFactory.create(
-                      buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier),
+                      buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier, buckConfig),
                   new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
                   ruleKeyConfiguration),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());

@@ -25,7 +25,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphMode;
@@ -249,7 +248,6 @@ public class DistBuildFileHashesIntegrationTest {
             true,
             false,
             targetGraph,
-            ActionGraphParallelizationMode.DISABLED,
             Optional.empty(),
             false,
             IncrementalActionGraphMode.DISABLED,

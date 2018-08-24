@@ -1262,7 +1262,6 @@ public class IncrementalActionGraphScenarioTest {
             false, /* checkActionGraphs */
             skipActionGraphCache,
             targetGraph,
-            ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.ENABLED,
             ImmutableMap.of());

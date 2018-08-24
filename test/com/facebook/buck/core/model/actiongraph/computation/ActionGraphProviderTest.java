@@ -147,7 +147,6 @@ public class ActionGraphProviderTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
             ImmutableMap.of());
@@ -160,7 +159,6 @@ public class ActionGraphProviderTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
             ImmutableMap.of());
@@ -240,7 +238,6 @@ public class ActionGraphProviderTest {
           CHECK_GRAPHS, /* skipActionGraphCache */
           false,
           run.getFirst(),
-          ActionGraphParallelizationMode.DISABLED,
           false,
           IncrementalActionGraphMode.DISABLED,
           ImmutableMap.of());
@@ -265,7 +262,6 @@ public class ActionGraphProviderTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
             ImmutableMap.of());
@@ -279,7 +275,6 @@ public class ActionGraphProviderTest {
             CHECK_GRAPHS,
             /* skipActionGraphCache */ false,
             targetGraph1.getSubgraph(ImmutableSet.of(nodeB)),
-            ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
             ImmutableMap.of());
@@ -293,7 +288,6 @@ public class ActionGraphProviderTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
             ImmutableMap.of());
@@ -327,17 +321,11 @@ public class ActionGraphProviderTest {
             .build();
     ActionGraphAndBuilder resultRun1 =
         actionGraphProvider.getFreshActionGraph(
-            new DefaultTargetNodeToBuildRuleTransformer(),
-            targetGraph1,
-            ActionGraphParallelizationMode.DISABLED,
-            false);
+            new DefaultTargetNodeToBuildRuleTransformer(), targetGraph1, false);
 
     ActionGraphAndBuilder resultRun2 =
         actionGraphProvider.getFreshActionGraph(
-            new DefaultTargetNodeToBuildRuleTransformer(),
-            targetGraph1,
-            ActionGraphParallelizationMode.DISABLED,
-            false);
+            new DefaultTargetNodeToBuildRuleTransformer(), targetGraph1, false);
 
     // Check all the RuleKeys are the same between the 2 ActionGraphs.
     Map<BuildRule, RuleKey> resultRun1RuleKeys =
@@ -363,12 +351,12 @@ public class ActionGraphProviderTest {
             .withPoolSupplier(poolSupplier)
             .withEventBus(eventBus)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
+            .withParallelizationMode(mode)
             .build()
             .getActionGraph(
                 NOT_CHECK_GRAPHS, /* skipActionGraphCache */
                 false,
                 targetGraph1,
-                mode,
                 false,
                 IncrementalActionGraphMode.DISABLED,
                 ImmutableMap.of());
@@ -384,12 +372,12 @@ public class ActionGraphProviderTest {
       new ActionGraphProviderBuilder()
           .withPoolSupplier(poolSupplier)
           .withEventBus(eventBus)
+          .withParallelizationMode(ActionGraphParallelizationMode.EXPERIMENT)
           .build()
           .getActionGraph(
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
-              ActionGraphParallelizationMode.EXPERIMENT,
               false,
               IncrementalActionGraphMode.DISABLED,
               ImmutableMap.of());
@@ -410,12 +398,12 @@ public class ActionGraphProviderTest {
           .withPoolSupplier(poolSupplier)
           .withEventBus(eventBus)
           .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
+          .withParallelizationMode(ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE)
           .build()
           .getActionGraph(
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
-              ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE,
               false,
               IncrementalActionGraphMode.DISABLED,
               ImmutableMap.of());
@@ -447,7 +435,6 @@ public class ActionGraphProviderTest {
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
-              ActionGraphParallelizationMode.DISABLED,
               false,
               mode,
               ImmutableMap.of());
@@ -474,7 +461,6 @@ public class ActionGraphProviderTest {
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.EXPERIMENT,
             experimentGroups.build());
@@ -517,6 +503,7 @@ public class ActionGraphProviderTest {
             .withPoolSupplier(poolSupplier)
             .withEventBus(eventBus)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
+            .withParallelizationMode(parallelizationMode)
             .build();
 
     TargetNode<?> originalNode3 = createCacheableTargetNode("C");
@@ -529,7 +516,6 @@ public class ActionGraphProviderTest {
             NOT_CHECK_GRAPHS,
             false,
             targetGraph1,
-            parallelizationMode,
             false,
             IncrementalActionGraphMode.ENABLED,
             ImmutableMap.of());
@@ -552,7 +538,6 @@ public class ActionGraphProviderTest {
             NOT_CHECK_GRAPHS,
             false,
             targetGraph2,
-            parallelizationMode,
             false,
             IncrementalActionGraphMode.ENABLED,
             ImmutableMap.of());
