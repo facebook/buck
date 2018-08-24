@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.google.common.base.Preconditions;
@@ -36,7 +35,6 @@ import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
-import org.immutables.value.Value;
 
 public class ParallelActionGraphFactory {
   private static final Logger LOG = Logger.get(ParallelActionGraphFactory.class);
@@ -50,19 +48,11 @@ public class ParallelActionGraphFactory {
     this.cellProvider = cellProvider;
   }
 
-  public ActionGraphAndBuilder create(ParallelActionGraphCreationParameters parameters) {
-    return createActionGraphInParallel(
-        parameters.getTransformer(),
-        parameters.getTargetGraph(),
-        poolSupplier.get(),
-        parameters.getActionGraphCreationLifecycleListener());
-  }
-
-  private ActionGraphAndBuilder createActionGraphInParallel(
+  public ActionGraphAndBuilder create(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      ForkJoinPool pool,
       ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
+    ForkJoinPool pool = poolSupplier.get();
     ActionGraphBuilder graphBuilder =
         new MultiThreadedActionGraphBuilder(pool, targetGraph, transformer, cellProvider);
     HashMap<BuildTarget, CompletableFuture<BuildRule>> futures = new HashMap<>();
@@ -103,18 +93,5 @@ public class ParallelActionGraphFactory {
         .setActionGraph(new ActionGraph(graphBuilder.getBuildRules()))
         .setActionGraphBuilder(graphBuilder)
         .build();
-  }
-
-  @BuckStyleImmutable
-  @Value.Immutable(builder = false, copy = false)
-  abstract static class AbstractParallelActionGraphCreationParameters {
-    @Value.Parameter
-    public abstract TargetNodeToBuildRuleTransformer getTransformer();
-
-    @Value.Parameter
-    public abstract TargetGraph getTargetGraph();
-
-    @Value.Parameter
-    public abstract ActionGraphCreationLifecycleListener getActionGraphCreationLifecycleListener();
   }
 }

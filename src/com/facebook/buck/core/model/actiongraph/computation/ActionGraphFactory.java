@@ -142,12 +142,10 @@ public class ActionGraphFactory {
     switch (parallelizationMode) {
       case ENABLED:
         return parallelActionGraphFactory.create(
-            ParallelActionGraphCreationParameters.of(
-                transformer, targetGraph, actionGraphCreationLifecycleListener));
+            transformer, targetGraph, actionGraphCreationLifecycleListener);
       case DISABLED:
         return serialActionGraphFactory.create(
-            SerialActionGraphCreationParameters.of(
-                transformer, targetGraph, actionGraphCreationLifecycleListener));
+            transformer, targetGraph, actionGraphCreationLifecycleListener);
       case EXPERIMENT_UNSTABLE:
       case EXPERIMENT:
         throw new AssertionError(

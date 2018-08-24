@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphPerfStatEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -36,7 +35,6 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.Iterables;
 import java.util.stream.StreamSupport;
-import org.immutables.value.Value;
 
 public class SerialActionGraphFactory {
   private static final Logger LOG = Logger.get(SerialActionGraphFactory.class);
@@ -52,14 +50,7 @@ public class SerialActionGraphFactory {
     this.shouldInstrumentGraphBuilding = shouldInstrumentGraphBuilding;
   }
 
-  public ActionGraphAndBuilder create(SerialActionGraphCreationParameters parameters) {
-    return createActionGraphSerially(
-        parameters.getTransformer(),
-        parameters.getTargetGraph(),
-        parameters.getActionGraphCreationLifecycleListener());
-  }
-
-  private ActionGraphAndBuilder createActionGraphSerially(
+  public ActionGraphAndBuilder create(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
@@ -102,18 +93,5 @@ public class SerialActionGraphFactory {
         .setActionGraph(new ActionGraph(graphBuilder.getBuildRules()))
         .setActionGraphBuilder(graphBuilder)
         .build();
-  }
-
-  @BuckStyleImmutable
-  @Value.Immutable(builder = false, copy = false)
-  abstract static class AbstractSerialActionGraphCreationParameters {
-    @Value.Parameter
-    public abstract TargetNodeToBuildRuleTransformer getTransformer();
-
-    @Value.Parameter
-    public abstract TargetGraph getTargetGraph();
-
-    @Value.Parameter
-    public abstract ActionGraphCreationLifecycleListener getActionGraphCreationLifecycleListener();
   }
 }
