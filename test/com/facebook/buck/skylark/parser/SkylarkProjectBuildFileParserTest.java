@@ -821,7 +821,7 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(buildFileManifest.getTargets(), Matchers.hasSize(1));
     Map<String, Object> prebuiltJarRule = buildFileManifest.getTargets().get(0);
     assertThat(prebuiltJarRule.get("name"), equalTo("foo"));
-    ImmutableSet<String> includes = buildFileManifest.getIncludes();
+    ImmutableList<String> includes = buildFileManifest.getIncludes();
     assertThat(
         includes
             .stream()

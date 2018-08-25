@@ -20,8 +20,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.vfs.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -44,7 +42,7 @@ abstract class AbstractParseResult {
    * current build file.
    */
   @Value.Parameter
-  public abstract ImmutableSortedSet<Path> getLoadedPaths();
+  public abstract ImmutableList<String> getLoadedPaths();
 
   /**
    * Returns all configuration options accessed during parsing of the build file.

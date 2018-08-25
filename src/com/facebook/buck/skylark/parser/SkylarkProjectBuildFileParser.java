@@ -203,12 +203,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableList<ImmutableMap<String, Object>> rules = parseContext.getRecordedRules();
       LOG.verbose("Got rules: %s", rules);
       LOG.verbose("Parsed %d rules from %s", rules.size(), buildFile);
+      ImmutableList.Builder<String> loadedPaths =
+          ImmutableList.builderWithExpectedSize(envData.getLoadedPaths().size() + 1);
+      loadedPaths.add(buildFilePath.toString());
+      loadedPaths.addAll(envData.getLoadedPaths());
       return ParseResult.of(
           rules,
-          ImmutableSortedSet.<com.google.devtools.build.lib.vfs.Path>naturalOrder()
-              .addAll(envData.getLoadedPaths())
-              .add(buildFilePath)
-              .build(),
+          loadedPaths.build(),
           parseContext.getAccessedConfigurationOptions(),
           globber.createGlobManifest());
     }
@@ -266,17 +267,16 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         eventHandler);
   }
 
-  private ImmutableList<com.google.devtools.build.lib.vfs.Path> toLoadedPaths(
-      ImmutableList<ExtensionData> dependencies) {
+  private ImmutableList<String> toLoadedPaths(ImmutableList<ExtensionData> dependencies) {
     // expected size is used to reduce the number of unnecessary resize invocations
     int expectedSize = 0;
     for (int i = 0; i < dependencies.size(); ++i) {
       expectedSize += dependencies.get(i).getLoadTransitiveClosureSize();
     }
-    ImmutableList.Builder<com.google.devtools.build.lib.vfs.Path> loadedPathsBuilder =
+    ImmutableList.Builder<String> loadedPathsBuilder =
         ImmutableList.builderWithExpectedSize(expectedSize);
     for (ExtensionData extensionData : dependencies) {
-      loadedPathsBuilder.add(extensionData.getPath());
+      loadedPathsBuilder.add(extensionData.getPath().toString());
       loadedPathsBuilder.addAll(toLoadedPaths(extensionData.getDependencies()));
     }
     return loadedPathsBuilder.build();

@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -38,7 +37,7 @@ abstract class AbstractBuildFileManifest {
 
   /** @return a set of extension files read during parsing. */
   @Value.Parameter
-  public abstract ImmutableSortedSet<String> getIncludes();
+  public abstract ImmutableList<String> getIncludes();
 
   /**
    * @return a map from configuration section to configuration key to the value returned during

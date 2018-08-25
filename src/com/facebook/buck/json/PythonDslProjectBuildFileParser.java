@@ -426,7 +426,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> values) {
     return BuildFileManifest.of(
         values.subList(0, values.size() - 3).asList(),
-        ImmutableSortedSet.copyOf(
+        ImmutableList.copyOf(
             Preconditions.checkNotNull(
                 (List<String>) values.get(values.size() - 3).get("__includes"))),
         Preconditions.checkNotNull(
