@@ -2049,7 +2049,7 @@ public final class Main {
       NGServer server =
           new NGServer(
               new NGListeningAddress(socketPath),
-              NGServer.DEFAULT_SESSIONPOOLSIZE,
+              1, // store only 1 NGSession in a pool to avoid excessive memory usage
               heartbeatTimeout);
       daemonKillers = new DaemonKillers(housekeepingExecutorService, server, Paths.get(socketPath));
       server.run();
