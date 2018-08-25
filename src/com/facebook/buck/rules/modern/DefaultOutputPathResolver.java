@@ -21,12 +21,11 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
-/** Default OutputPathResolver implementation. */
-public class DefaultOutputPathResolver implements OutputPathResolver {
+class DefaultOutputPathResolver implements OutputPathResolver {
   private final Path scratchRoot;
   private final Path genRoot;
 
-  public DefaultOutputPathResolver(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
+  DefaultOutputPathResolver(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
     String format = buildTarget.isFlavored() ? "%s" : "%s__";
     this.scratchRoot = BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, format);
     this.genRoot = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, format);

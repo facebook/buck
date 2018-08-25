@@ -22,14 +22,12 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
-import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.rules.common.BuildableSupport.DepsSupplier;
+import com.facebook.buck.core.rules.common.BuildDeps;
 import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
@@ -57,7 +55,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
 
   // This will be added to the rule key by virtue of being returned from getBuildDeps.
-  private final DepsSupplier buildDepsSupplier;
+  private final BuildDeps buildDeps;
   private final BuildOutputInitializer<Object> buildOutputInitializer;
   private final SourcePathRuleFinder ruleFinder;
   private final JavaAbiInfo javaAbiInfo;
@@ -67,10 +65,11 @@ public class CalculateSourceAbi extends AbstractBuildRule
   public CalculateSourceAbi(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      BuildDeps buildDeps,
       JarBuildStepsFactory jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder) {
     super(buildTarget, projectFilesystem);
-    this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
+    this.buildDeps = buildDeps;
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.ruleFinder = ruleFinder;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
@@ -82,15 +81,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return buildDepsSupplier.get();
-  }
-
-  @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
-    buildDepsSupplier.updateRuleFinder(ruleFinder);
+    return buildDeps;
   }
 
   @Override

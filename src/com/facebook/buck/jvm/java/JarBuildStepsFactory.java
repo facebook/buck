@@ -70,7 +70,7 @@ public class JarBuildStepsFactory
 
   private final boolean trackClassUsage;
   private final boolean trackJavacPhaseEvents;
-  @AddToRuleKey private final boolean isRequiredForSourceOnlyAbi;
+  private final boolean isRequiredForSourceOnlyAbi;
   @AddToRuleKey private final RemoveClassesPatternsMatcher classesToRemoveFromJar;
 
   @AddToRuleKey private final AbiGenerationMode abiGenerationMode;

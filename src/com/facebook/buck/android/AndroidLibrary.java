@@ -21,15 +21,16 @@ import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
-import com.facebook.buck.jvm.java.CalculateSourceAbi;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
@@ -50,6 +51,13 @@ import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
+
+  /**
+   * Manifest to associate with this rule. Ultimately, this will be used with the upcoming manifest
+   * generation logic.
+   */
+  @AddToRuleKey private final Optional<SourcePath> manifestFile;
+
   public static Builder builder(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -80,6 +88,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   AndroidLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      BuildDeps buildDeps,
       JarBuildStepsFactory jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> proguardConfig,
@@ -94,11 +103,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSortedSet<BuildTarget> tests,
       boolean requiredForSourceOnlyAbi,
       UnusedDependenciesAction unusedDependenciesAction,
-      Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
-      @Nullable CalculateSourceAbi sourceAbi) {
+      Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory) {
     super(
         buildTarget,
         projectFilesystem,
+        buildDeps,
         jarBuildStepsFactory,
         ruleFinder,
         proguardConfig,
@@ -112,16 +121,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         tests,
         requiredForSourceOnlyAbi,
         unusedDependenciesAction,
-        unusedDependenciesFinderFactory,
-        sourceAbi);
+        unusedDependenciesFinderFactory);
     this.manifestFile = manifestFile;
   }
-
-  /**
-   * Manifest to associate with this rule. Ultimately, this will be used with the upcoming manifest
-   * generation logic.
-   */
-  private final Optional<SourcePath> manifestFile;
 
   public Optional<SourcePath> getManifestFile() {
     return manifestFile;
@@ -170,6 +172,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             public DefaultJavaLibrary newInstance(
                 BuildTarget buildTarget,
                 ProjectFilesystem projectFilesystem,
+                BuildDeps buildDeps,
                 JarBuildStepsFactory jarBuildStepsFactory,
                 SourcePathRuleFinder ruleFinder,
                 Optional<SourcePath> proguardConfig,
@@ -183,11 +186,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 ImmutableSortedSet<BuildTarget> tests,
                 boolean requiredForSourceOnlyAbi,
                 UnusedDependenciesAction unusedDependenciesAction,
-                Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
-                @Nullable CalculateSourceAbi sourceAbi) {
+                Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory) {
               return new AndroidLibrary(
                   buildTarget,
                   projectFilesystem,
+                  buildDeps,
                   jarBuildStepsFactory,
                   ruleFinder,
                   proguardConfig,
@@ -202,8 +205,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   tests,
                   requiredForSourceOnlyAbi,
                   unusedDependenciesAction,
-                  unusedDependenciesFinderFactory,
-                  sourceAbi);
+                  unusedDependenciesFinderFactory);
             }
           });
       delegateBuilder.setJavacOptions(javacOptions);

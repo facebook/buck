@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.rules.common.BuildDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -62,6 +63,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
+        new BuildDeps(ImmutableSortedSet.copyOf(androidLibraryParams.getBuildDeps())),
         new JarBuildStepsFactory(
             androidLibraryBuildTarget,
             configuredCompiler,
@@ -95,8 +97,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         /* tests */ ImmutableSortedSet.of(),
         /* requiredForSourceAbi */ requiredForSourceAbi,
         UnusedDependenciesAction.IGNORE,
-        Optional.empty(),
-        null);
+        Optional.empty());
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;
