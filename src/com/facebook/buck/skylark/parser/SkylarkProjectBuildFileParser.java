@@ -270,7 +270,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     }
     ImmutableList.Builder<String> loadedPathsBuilder =
         ImmutableList.builderWithExpectedSize(expectedSize);
-    for (ExtensionData extensionData : dependencies) {
+    // for loop is used instead of foreach to avoid iterator overhead, since it's a hot spot
+    for (int i = 0; i < dependencies.size(); ++i) {
+      ExtensionData extensionData = dependencies.get(i);
       loadedPathsBuilder.add(extensionData.getPath().toString());
       loadedPathsBuilder.addAll(toLoadedPaths(extensionData.getDependencies()));
     }
