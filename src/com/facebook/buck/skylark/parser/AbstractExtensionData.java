@@ -46,6 +46,7 @@ abstract class AbstractExtensionData {
   public abstract String getImportString();
 
   /** @return the number of files loaded in order to parse this extension. */
+  @Value.Lazy
   public int getLoadTransitiveClosureSize() {
     // Stream.mapToInt(...).sum() is not used because it's ~4X slower
     int count = 1; // path of the extension itself
