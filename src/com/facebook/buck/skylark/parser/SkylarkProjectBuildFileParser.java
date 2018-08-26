@@ -37,8 +37,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
@@ -133,11 +132,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ParseResult parseResult = parseBuildFile(buildFile);
     return BuildFileManifest.of(
         parseResult.getRawRules(),
-        parseResult
-            .getLoadedPaths()
-            .stream()
-            .map(Object::toString)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
+        ImmutableSet.copyOf(parseResult.getLoadedPaths()),
         parseResult.getReadConfigurationOptions(),
         Optional.empty(),
         parseResult.getGlobManifest());
