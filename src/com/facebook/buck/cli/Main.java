@@ -1371,7 +1371,7 @@ public final class Main {
                   watchman),
               new TargetSpecResolver(),
               watchman);
-      parser.register(daemon.getFileEventBus());
+      daemon.getFileEventBus().register(daemon.getDaemonicParserState());
 
       parserAndCaches =
           ParserAndCaches.of(

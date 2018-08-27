@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -429,10 +428,5 @@ public class DefaultParser implements Parser {
     }
 
     return target.withFlavors(defaultFlavors);
-  }
-
-  @Override
-  public void register(EventBus eventBus) {
-    eventBus.register(permState);
   }
 }
