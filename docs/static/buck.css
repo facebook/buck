@@ -86,6 +86,23 @@ code {
     padding: 0.1em;
 }
 
+/*
+ *  
+ *  Use this class for code-formatted text that is not inline and also
+ *  not in a code block, for example, code-formatted text in a table
+ *  cell, where drawing a box around the code--as in the standard `code`
+ *  style above--looks redundant and somewhat strange: boxes inside
+ *  boxes.
+ *  
+ */
+code.not-inline {
+    background: #fff;
+    letter-spacing: 0.02em;
+    border: none;
+    border-radius: 3px;
+    padding: 0.1em;
+}
+
 pre, code {
     font-size: 14px;
 }
