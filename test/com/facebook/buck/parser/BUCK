@@ -118,6 +118,7 @@ java_test(
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/parser:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/sandbox:testutil",
         "//test/com/facebook/buck/testutil:testutil",
@@ -149,6 +150,32 @@ java_test(
         "//third-party/java/okio:okio",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
+    ],
+)
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Test.java",
+            "ParserBenchmark.java",
+        ],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/parser:parser",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/plugin/impl:impl",
+        "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/io/watchman:watchman",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//test/com/facebook/buck/core/rules/knowntypes:testutil",
     ],
 )
 
@@ -272,6 +299,7 @@ java_test(
         "//test/com/facebook/buck/io:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/io/watchman:testutil",
+        "//test/com/facebook/buck/parser:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/sandbox:testutil",
@@ -533,6 +561,7 @@ java_library(
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/parser:testutil",
         "//test/com/facebook/buck/sandbox:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",

@@ -305,21 +305,9 @@ public class DefaultParserTest {
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
-    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser =
-        new DefaultParser(
-            new PerBuildStateFactory(
-                typeCoercerFactory,
-                new ConstructorArgMarshaller(typeCoercerFactory),
-                knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-                WatchmanFactory.NULL_WATCHMAN),
-            parserConfig,
-            typeCoercerFactory,
-            new TargetSpecResolver(),
-            WatchmanFactory.NULL_WATCHMAN);
+    parser = TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider);
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -1662,20 +1650,7 @@ public class DefaultParserTest {
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
-    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser =
-        new DefaultParser(
-            new PerBuildStateFactory(
-                typeCoercerFactory,
-                new ConstructorArgMarshaller(typeCoercerFactory),
-                knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-                WatchmanFactory.NULL_WATCHMAN),
-            parserConfig,
-            typeCoercerFactory,
-            new TargetSpecResolver(),
-            WatchmanFactory.NULL_WATCHMAN);
+    parser = TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider);
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1786,20 +1761,7 @@ public class DefaultParserTest {
     HashCode libKey = hashes.get(fooLibTarget);
     HashCode lib2Key = hashes.get(fooLib2Target);
 
-    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
-    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser =
-        new DefaultParser(
-            new PerBuildStateFactory(
-                typeCoercerFactory,
-                new ConstructorArgMarshaller(typeCoercerFactory),
-                knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-                WatchmanFactory.NULL_WATCHMAN),
-            cell.getBuckConfig().getView(ParserConfig.class),
-            typeCoercerFactory,
-            new TargetSpecResolver(),
-            WatchmanFactory.NULL_WATCHMAN);
+    parser = TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider);
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\njava_library("
@@ -2076,21 +2038,8 @@ public class DefaultParserTest {
     assertTrue(remote.isSetCellPaths());
     assertEquals(remote.cellPaths.size(), 1);
 
-    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     // Reset parser to square one.
-    parser =
-        new DefaultParser(
-            new PerBuildStateFactory(
-                typeCoercerFactory,
-                new ConstructorArgMarshaller(typeCoercerFactory),
-                knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-                WatchmanFactory.NULL_WATCHMAN),
-            parserConfig,
-            typeCoercerFactory,
-            new TargetSpecResolver(),
-            WatchmanFactory.NULL_WATCHMAN);
+    parser = TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider);
     // Restore state.
     parser.getPermState().restoreState(remote, cell);
     // Try to use the restored target graph.

@@ -28,32 +28,20 @@ import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
-import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
-import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.ParserPythonInterpreterProvider;
-import com.facebook.buck.parser.PerBuildStateFactory;
-import com.facebook.buck.parser.TargetSpecResolver;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -75,7 +63,6 @@ import java.util.stream.Collectors;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
-import org.pf4j.PluginManager;
 
 public class DistBuildFileHashesIntegrationTest {
 
@@ -101,26 +88,8 @@ public class DistBuildFileHashesIntegrationTest {
     BuckConfig rootCellConfig = FakeBuckConfig.builder().setFilesystem(rootFs).build();
     Cell rootCell =
         new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
-    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-    KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(pluginManager);
 
-    ParserConfig parserConfig = rootCellConfig.getView(ParserConfig.class);
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ConstructorArgMarshaller constructorArgMarshaller =
-        new ConstructorArgMarshaller(typeCoercerFactory);
-    Parser parser =
-        new DefaultParser(
-            new PerBuildStateFactory(
-                typeCoercerFactory,
-                constructorArgMarshaller,
-                knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
-                WatchmanFactory.NULL_WATCHMAN),
-            rootCellConfig.getView(ParserConfig.class),
-            typeCoercerFactory,
-            new TargetSpecResolver(),
-            WatchmanFactory.NULL_WATCHMAN);
+    Parser parser = TestParserFactory.create(rootCellConfig);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             BuckEventBusForTests.newInstance(),
@@ -179,26 +148,8 @@ public class DistBuildFileHashesIntegrationTest {
             .build();
     Cell rootCell =
         new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
-    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-    KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(pluginManager);
 
-    ParserConfig parserConfig = rootCellConfig.getView(ParserConfig.class);
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ConstructorArgMarshaller constructorArgMarshaller =
-        new ConstructorArgMarshaller(typeCoercerFactory);
-    Parser parser =
-        new DefaultParser(
-            new PerBuildStateFactory(
-                typeCoercerFactory,
-                constructorArgMarshaller,
-                knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
-                WatchmanFactory.NULL_WATCHMAN),
-            parserConfig,
-            typeCoercerFactory,
-            new TargetSpecResolver(),
-            WatchmanFactory.NULL_WATCHMAN);
+    Parser parser = TestParserFactory.create(rootCellConfig);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             BuckEventBusForTests.newInstance(),

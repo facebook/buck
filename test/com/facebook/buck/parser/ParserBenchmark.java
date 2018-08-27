@@ -20,18 +20,10 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
-import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.caliper.AfterExperiment;
 import com.google.caliper.BeforeExperiment;
@@ -49,7 +41,6 @@ import java.util.concurrent.Executors;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.pf4j.PluginManager;
 
 public class ParserBenchmark {
   @Param({"10", "100", "500"})
@@ -114,28 +105,9 @@ public class ParserBenchmark {
             .build();
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-    KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(pluginManager);
-
     eventBus = BuckEventBusForTests.newInstance();
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
-
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(typeCoercerFactory);
-    ParserConfig parserConfig = config.getView(ParserConfig.class);
-    parser =
-        new DefaultParser(
-            new PerBuildStateFactory(
-                typeCoercerFactory,
-                marshaller,
-                knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
-                WatchmanFactory.NULL_WATCHMAN),
-            parserConfig,
-            typeCoercerFactory,
-            new TargetSpecResolver(),
-            WatchmanFactory.NULL_WATCHMAN);
+    parser = TestParserFactory.create(config);
   }
 
   @After

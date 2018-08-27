@@ -104,13 +104,7 @@ public class TargetSpecResolverTest {
             parserPythonInterpreterProvider,
             WatchmanFactory.NULL_WATCHMAN);
     targetNodeTargetSpecResolver = new TargetSpecResolver();
-    parser =
-        new DefaultParser(
-            perBuildStateFactory,
-            cell.getBuckConfig().getView(ParserConfig.class),
-            typeCoercerFactory,
-            targetNodeTargetSpecResolver,
-            WatchmanFactory.NULL_WATCHMAN);
+    parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory);
     flavorEnhancer = (target, targetNode, targetType) -> target;
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
   }
