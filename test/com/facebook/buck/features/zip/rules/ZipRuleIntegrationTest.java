@@ -31,10 +31,12 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class ZipRuleIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void shouldZipSources() throws IOException {
@@ -128,6 +130,53 @@ public class ZipRuleIntegrationTest {
 
       item = zipFile.getEntry("cake.txt");
       assertThat(item, Matchers.notNullValue());
+    }
+  }
+
+  @Test
+  public void shouldUnpackContentsOfZipSources() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    Path zip = workspace.buildAndReturnOutput("//example:zipsources");
+
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      ZipArchiveEntry menu = zipFile.getEntry("menu.txt");
+      assertThat(menu, Matchers.notNullValue());
+      assertFalse(menu.isUnixSymlink());
+      assertFalse(menu.isDirectory());
+      ZipArchiveEntry cake = zipFile.getEntry("cake.txt");
+      assertThat(cake, Matchers.notNullValue());
+      assertFalse(cake.isUnixSymlink());
+      assertFalse(cake.isDirectory());
+    }
+  }
+
+  @Test
+  public void shouldThrowExceptionWhenZipSourcesAndMergeSourcesDefined() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    expectedException.expect(java.lang.IllegalArgumentException.class);
+    expectedException.expectMessage(
+        Matchers.containsString("Illegal to define merge_source_zips when zip_srcs is present"));
+
+    workspace.runBuckBuild("//example:zipbreak");
+  }
+
+  @Test
+  public void shouldOnlyUnpackContentsOfZipSources() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    Path zip = workspace.buildAndReturnOutput("//example:zipsources");
+
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      ZipInspector inspector = new ZipInspector(zip);
+      inspector.assertFileDoesNotExist("taco.txt");
     }
   }
 }

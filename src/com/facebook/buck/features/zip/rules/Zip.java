@@ -37,13 +37,15 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildable {
   @AddToRuleKey private final String name;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> zipSources;
   @AddToRuleKey private final OutputPath output;
   @AddToRuleKey private final boolean flatten;
-  @AddToRuleKey private final boolean mergeSourceZips;
+  @AddToRuleKey private final Optional<Boolean> mergeSourceZips;
 
   public Zip(
       SourcePathRuleFinder ruleFinder,
@@ -51,12 +53,14 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       ProjectFilesystem projectFilesystem,
       String outputName,
       ImmutableSortedSet<SourcePath> sources,
+      ImmutableSortedSet<SourcePath> zipSources,
       boolean flatten,
-      boolean mergeSourceZips) {
+      Optional<Boolean> mergeSourceZips) {
     super(buildTarget, projectFilesystem, ruleFinder, Zip.class);
 
     this.name = outputName;
     this.sources = sources;
+    this.zipSources = zipSources;
     this.output = new OutputPath(name);
     this.flatten = flatten;
     this.mergeSourceZips = mergeSourceZips;
@@ -73,13 +77,22 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path scratchDir = outputPathResolver.getTempPath();
-
     FileBundler bundler;
-    if (mergeSourceZips) {
+    if (!zipSources.isEmpty()) {
       bundler = new SrcZipAwareFileBundler(getBuildTarget());
-    } else {
+      bundler.copy(
+          filesystem,
+          buildCellPathFactory,
+          steps,
+          scratchDir,
+          zipSources,
+          buildContext.getSourcePathResolver());
+    } else if (!mergeSourceZips.orElse(true)) {
       bundler = new CopyingFileBundler(getBuildTarget());
+    } else {
+      bundler = new SrcZipAwareFileBundler(getBuildTarget());
     }
+
     bundler.copy(
         filesystem,
         buildCellPathFactory,

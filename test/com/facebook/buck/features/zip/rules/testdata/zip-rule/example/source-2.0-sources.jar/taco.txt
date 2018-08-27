@@ -1,0 +1,16 @@
+== Shell ==
+
+* Hard
+* Soft
+
+== Meat ==
+
+* Steak Fajitas
+* Chicken Fajitas
+* Tofu Fajitas
+
+== Toppings ==
+
+* Cheese
+* Beans
+* Lettuce

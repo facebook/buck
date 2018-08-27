@@ -26,3 +26,22 @@ zip_file(
     name = "unrolled",
     srcs = [":source-jar"],
 )
+
+zip_file(
+    name = "zipsources",
+    srcs = [
+        "cake.txt",
+        "source-2.0-sources.jar",
+    ],
+    zip_srcs = ["source-1.0-sources.jar"],
+)
+
+zip_file(
+    name = "zipbreak",
+    srcs = [
+        "cake.txt",
+        "source-1.0-sources.jar",
+    ],
+    merge_source_zips = False,
+    zip_srcs = [":source-jar"],
+)
