@@ -84,7 +84,7 @@ public class HangMonitorTest {
   }
 
   @Test
-  public void workAdvanceEventsSuppressReport() throws Exception {
+  public void workAdvanceEventsSuppressReport() {
     AtomicBoolean didGetReport = new AtomicBoolean(false);
     HangMonitor hangMonitor =
         new HangMonitor(input -> didGetReport.set(true), Duration.ofMillis(10));
