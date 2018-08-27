@@ -18,10 +18,12 @@ package com.facebook.buck.support.bgtasks;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Synchronous implementation of {@link BackgroundTaskManager}. Scheduled tasks are run
@@ -41,6 +43,15 @@ public class SynchronousBackgroundTaskManager implements BackgroundTaskManager {
     ManagedBackgroundTask managedTask = ManagedBackgroundTask.of(task);
     scheduledTasks.add(managedTask);
     return managedTask.getTaskId();
+  }
+
+  @Override
+  public ImmutableList<String> schedule(ImmutableList<? extends BackgroundTask<?>> taskList) {
+    ImmutableList.Builder<String> ids = ImmutableList.builderWithExpectedSize(taskList.size());
+    for (BackgroundTask<?> task : taskList) {
+      ids.add(schedule(task));
+    }
+    return ids.build();
   }
 
   /**
@@ -76,6 +87,12 @@ public class SynchronousBackgroundTaskManager implements BackgroundTaskManager {
         }
     }
   }
+
+  @Override
+  public void shutdownNow() {}
+
+  @Override
+  public void shutdown(long timeout, TimeUnit units) {}
 
   @VisibleForTesting
   protected List<ManagedBackgroundTask> getScheduledTaskCount() {

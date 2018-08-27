@@ -708,9 +708,9 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(3, false),
             bgTaskManager);
     listener.close();
+    BackgroundTask<?> closeTask = bgTaskManager.getScheduledTasksToTest().get(0);
     bgTaskManager.notify(Notification.COMMAND_END);
 
-    BackgroundTask<?> closeTask = bgTaskManager.getFinishedTasksToTest().get(0);
     Optional<Exception> exc = bgTaskManager.getTaskErrors().get(closeTask);
     assertTrue(exc.isPresent());
     assertTrue(exc.get() instanceof IOException);

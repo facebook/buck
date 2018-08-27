@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Test implementation of {@link BackgroundTaskManager}. Behaves same as {@link
+ * Test implementation of {@link BackgroundTaskManager}. Behaves same as blocking mode on {@link
  * SynchronousBackgroundTaskManager} except that exceptions are caught and saved internally.
  * Internal list of tasks is also accessible.
  */
@@ -65,9 +65,9 @@ public class TestBackgroundTaskManager extends SynchronousBackgroundTaskManager 
    *
    * @return Task list
    */
-  public List<BackgroundTask<?>> getFinishedTasksToTest() {
-    List<BackgroundTask<?>> output = new ArrayList<>(statuses.size());
-    for (ManagedBackgroundTask mTask : statuses.keySet()) {
+  public List<BackgroundTask<?>> getScheduledTasksToTest() {
+    List<BackgroundTask<?>> output = new ArrayList<>();
+    for (ManagedBackgroundTask mTask : getScheduledTaskCount()) {
       output.add(mTask.getTask());
     }
     return output;

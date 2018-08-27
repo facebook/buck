@@ -48,7 +48,6 @@ public class SynchronousBackgroundTaskManagerTest {
 
   @Test
   public void testRunSuccessPath() {
-    TestBackgroundTaskManager manager = new TestBackgroundTaskManager(); // track statuses
     BackgroundTask<FakeArgs> task =
         ImmutableBackgroundTask.<FakeArgs>builder()
             .setAction(new FakeAction())
@@ -60,12 +59,10 @@ public class SynchronousBackgroundTaskManagerTest {
 
     assertEquals(task.getActionArgs().output, "succeeded");
     assertEquals(manager.getScheduledTaskCount().size(), 0);
-    assertEquals(manager.getFinishedTasksToTest().size(), 1);
   }
 
   @Test
   public void testRunFailurePath() {
-    TestBackgroundTaskManager manager = new TestBackgroundTaskManager(); // track statuses
     BackgroundTask<FakeArgs> task =
         ImmutableBackgroundTask.<FakeArgs>builder()
             .setAction(new FakeAction())
@@ -77,7 +74,6 @@ public class SynchronousBackgroundTaskManagerTest {
 
     assertEquals(task.getActionArgs().output, "init");
     assertEquals(manager.getScheduledTaskCount().size(), 0);
-    assertEquals(manager.getFinishedTasksToTest().size(), 1);
   }
 
   static class FakeAction implements TaskAction<FakeArgs> {

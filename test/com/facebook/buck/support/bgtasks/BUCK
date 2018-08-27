@@ -5,6 +5,7 @@ java_test(
     srcs = glob(["*Test.java"]),
     deps = [
         ":testutil",
+        "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],
 )
@@ -19,4 +20,7 @@ java_library(
         "//src/com/facebook/buck/support/bgtasks:bgtasks",
     ],
     visibility = ["//test/..."],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
 )
