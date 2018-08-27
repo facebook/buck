@@ -68,7 +68,6 @@ public class AuditActionGraphCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphForTargetNodeSpecs(
-                  params.getBuckEventBus(),
                   params.getCell(),
                   getEnableParserProfiling(),
                   pool.getListeningExecutorService(),

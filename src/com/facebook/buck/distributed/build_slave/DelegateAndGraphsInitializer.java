@@ -225,7 +225,6 @@ public class DelegateAndGraphsInitializer {
           try {
             return args.getParser()
                 .getTargetNodeRawAttributes(
-                    args.getBuckEventBus(),
                     args.getState().getRootCell().getCell(input.getBuildTarget()),
                     /* enableProfiling */ false,
                     args.getExecutorService(),

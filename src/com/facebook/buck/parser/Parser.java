@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.collect.ImmutableList;
@@ -43,19 +42,11 @@ public interface Parser {
   DaemonicParserState getPermState();
 
   ImmutableSet<TargetNode<?>> getAllTargetNodes(
-      BuckEventBus eventBus,
-      Cell cell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      Path buildFile)
+      Cell cell, boolean enableProfiling, ListeningExecutorService executor, Path buildFile)
       throws BuildFileParseException;
 
   TargetNode<?> getTargetNode(
-      BuckEventBus eventBus,
-      Cell cell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      BuildTarget target)
+      Cell cell, boolean enableProfiling, ListeningExecutorService executor, BuildTarget target)
       throws BuildFileParseException;
 
   TargetNode<?> getTargetNode(PerBuildState perBuildState, BuildTarget target)
@@ -75,7 +66,6 @@ public interface Parser {
   @Nullable
   @Deprecated
   SortedMap<String, Object> getTargetNodeRawAttributes(
-      BuckEventBus eventBus,
       Cell cell,
       boolean enableProfiling,
       ListeningExecutorService executor,
@@ -83,7 +73,6 @@ public interface Parser {
       throws BuildFileParseException;
 
   TargetGraph buildTargetGraph(
-      BuckEventBus eventBus,
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,
@@ -96,7 +85,6 @@ public interface Parser {
    * @return the target graph containing the build targets and their related targets.
    */
   TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
-      BuckEventBus eventBus,
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,
@@ -109,7 +97,6 @@ public interface Parser {
    * @return the target graph containing the build targets and their related targets.
    */
   TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
-      BuckEventBus eventBus,
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,
@@ -118,7 +105,6 @@ public interface Parser {
       throws BuildFileParseException, IOException, InterruptedException;
 
   ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      BuckEventBus eventBus,
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,

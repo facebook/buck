@@ -20,8 +20,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -54,7 +52,6 @@ public class ParserBenchmark {
   private Parser parser;
   private ProjectFilesystem filesystem;
   private Cell cell;
-  private BuckEventBus eventBus;
   private ListeningExecutorService executorService;
 
   @Before
@@ -105,7 +102,6 @@ public class ParserBenchmark {
             .build();
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-    eventBus = BuckEventBusForTests.newInstance();
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
     parser = TestParserFactory.create(config);
   }
@@ -125,7 +121,6 @@ public class ParserBenchmark {
   @Benchmark
   public void parseMultipleTargets() throws Exception {
     parser.buildTargetGraphForTargetNodeSpecs(
-        eventBus,
         cell,
         /* enableProfiling */ false,
         executorService,

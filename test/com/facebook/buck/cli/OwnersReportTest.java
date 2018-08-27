@@ -35,7 +35,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -43,7 +42,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -258,10 +256,7 @@ public class OwnersReportTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     OwnersReport report =
-        OwnersReport.builder(
-                cell,
-                TestParserFactory.create(cell.getBuckConfig()),
-                BuckEventBusForTests.newInstance(FakeClock.doNotCare()))
+        OwnersReport.builder(cell, TestParserFactory.create(cell.getBuckConfig()))
             .build(
                 getBuildFileTrees(cell),
                 MoreExecutors.newDirectExecutorService(),

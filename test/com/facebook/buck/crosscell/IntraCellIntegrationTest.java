@@ -22,7 +22,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -60,7 +59,6 @@ public class IntraCellIntegrationTest {
 
     // This parses cleanly
     parser.buildTargetGraph(
-        BuckEventBusForTests.newInstance(),
         cell,
         false,
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
@@ -76,7 +74,6 @@ public class IntraCellIntegrationTest {
     try {
       // Whereas, because visibility is limited to the same cell, this won't.
       parser.buildTargetGraph(
-          BuckEventBusForTests.newInstance(),
           childCell,
           false,
           MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),

@@ -21,7 +21,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -50,7 +49,6 @@ public class TargetPatternEvaluator {
   private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
 
   private final Parser parser;
-  private final BuckEventBus eventBus;
   private final boolean enableProfiling;
   private final Path projectRoot;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
@@ -60,14 +58,9 @@ public class TargetPatternEvaluator {
   private Map<String, ImmutableSet<QueryTarget>> resolvedTargets = new HashMap<>();
 
   public TargetPatternEvaluator(
-      Cell rootCell,
-      BuckConfig buckConfig,
-      Parser parser,
-      BuckEventBus eventBus,
-      boolean enableProfiling) {
+      Cell rootCell, BuckConfig buckConfig, Parser parser, boolean enableProfiling) {
     this.rootCell = rootCell;
     this.parser = parser;
-    this.eventBus = eventBus;
     this.enableProfiling = enableProfiling;
     this.buckConfig = buckConfig;
     this.projectRoot = rootCell.getFilesystem().getRootPath();
@@ -149,7 +142,6 @@ public class TargetPatternEvaluator {
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
         parser.resolveTargetSpecs(
-            eventBus,
             rootCell,
             enableProfiling,
             executor,

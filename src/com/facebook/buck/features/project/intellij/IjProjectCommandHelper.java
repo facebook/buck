@@ -149,7 +149,6 @@ public class IjProjectCommandHelper {
           ImmutableSet.copyOf(
               Iterables.concat(
                   parser.resolveTargetSpecs(
-                      buckEventBus,
                       cell,
                       enableParserProfiling,
                       executor,
@@ -212,7 +211,6 @@ public class IjProjectCommandHelper {
     if (passedInTargets.isEmpty()) {
       return parser
           .buildTargetGraphForTargetNodeSpecs(
-              buckEventBus,
               cell,
               enableParserProfiling,
               executor,
@@ -222,8 +220,7 @@ public class IjProjectCommandHelper {
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
-    return parser.buildTargetGraph(
-        buckEventBus, cell, enableParserProfiling, executor, passedInTargets);
+    return parser.buildTargetGraph(cell, enableParserProfiling, executor, passedInTargets);
   }
 
   /** Run intellij specific project generation actions. */
@@ -392,11 +389,7 @@ public class IjProjectCommandHelper {
       explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
       projectGraph =
           parser.buildTargetGraph(
-              buckEventBus,
-              cell,
-              enableParserProfiling,
-              executor,
-              Sets.union(graphRoots, explicitTestTargets));
+              cell, enableParserProfiling, executor, Sets.union(graphRoots, explicitTestTargets));
     }
 
     TargetGraphAndTargets targetGraphAndTargets =

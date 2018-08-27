@@ -354,7 +354,6 @@ public class InstallCommand extends BuildCommand {
                   params
                       .getParser()
                       .resolveTargetSpecs(
-                          params.getBuckEventBus(),
                           params.getCell(),
                           getEnableParserProfiling(),
                           executor,
@@ -368,12 +367,7 @@ public class InstallCommand extends BuildCommand {
       TargetNode<?> node =
           params
               .getParser()
-              .getTargetNode(
-                  params.getBuckEventBus(),
-                  params.getCell(),
-                  getEnableParserProfiling(),
-                  executor,
-                  target);
+              .getTargetNode(params.getCell(), getEnableParserProfiling(), executor, target);
 
       if (node != null
           && node.getRuleType()

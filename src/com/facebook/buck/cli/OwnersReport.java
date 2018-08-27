@@ -19,7 +19,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -149,19 +148,17 @@ final class OwnersReport {
     }
   }
 
-  static Builder builder(Cell rootCell, Parser parser, BuckEventBus eventBus) {
-    return new Builder(rootCell, parser, eventBus);
+  static Builder builder(Cell rootCell, Parser parser) {
+    return new Builder(rootCell, parser);
   }
 
   static final class Builder {
     private final Cell rootCell;
     private final Parser parser;
-    private final BuckEventBus eventBus;
 
-    private Builder(Cell rootCell, Parser parser, BuckEventBus eventBus) {
+    private Builder(Cell rootCell, Parser parser) {
       this.rootCell = rootCell;
       this.parser = parser;
-      this.eventBus = eventBus;
     }
 
     private OwnersReport getReportForBasePath(
@@ -177,7 +174,7 @@ final class OwnersReport {
               basePath1 -> {
                 try {
                   return parser.getAllTargetNodes(
-                      eventBus, cell, /* enable profiling */ false, executor, basePath1);
+                      cell, /* enable profiling */ false, executor, basePath1);
                 } catch (BuildFileParseException e) {
                   throw new HumanReadableException(e);
                 }

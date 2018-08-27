@@ -84,7 +84,6 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
             params
                 .getParser()
                 .buildTargetGraph(
-                    params.getBuckEventBus(),
                     params.getCell(),
                     getEnableParserProfiling(),
                     pool.getListeningExecutorService(),

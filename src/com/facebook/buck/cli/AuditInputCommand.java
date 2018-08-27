@@ -102,7 +102,6 @@ public class AuditInputCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraph(
-                  params.getBuckEventBus(),
                   params.getCell(),
                   getEnableParserProfiling(),
                   pool.getListeningExecutorService(),

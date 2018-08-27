@@ -40,8 +40,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -372,7 +370,6 @@ public class InterCellIntegrationTest {
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
     Parser parser = TestParserFactory.create(primary.asCell().getBuckConfig());
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
     Cell primaryCell = primary.asCell();
     BuildTarget namedTarget =
@@ -380,7 +377,6 @@ public class InterCellIntegrationTest {
 
     // It's enough that this parses cleanly.
     parser.buildTargetGraph(
-        eventBus,
         primaryCell,
         false,
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),

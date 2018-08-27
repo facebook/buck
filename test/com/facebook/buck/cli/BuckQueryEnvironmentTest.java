@@ -108,12 +108,12 @@ public class BuckQueryEnvironmentTest {
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-            WatchmanFactory.NULL_WATCHMAN);
-    Parser parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory);
+            WatchmanFactory.NULL_WATCHMAN,
+            eventBus);
+    Parser parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory, eventBus);
     parserState =
         perBuildStateFactory.create(
             parser.getPermState(),
-            eventBus,
             executor,
             cell,
             /* enableProfiling */ false,
@@ -121,8 +121,8 @@ public class BuckQueryEnvironmentTest {
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
-            cell, FakeBuckConfig.builder().build(), parser, eventBus, /* enableProfiling */ false);
-    OwnersReport.Builder ownersReportBuilder = OwnersReport.builder(cell, parser, eventBus);
+            cell, FakeBuckConfig.builder().build(), parser, /* enableProfiling */ false);
+    OwnersReport.Builder ownersReportBuilder = OwnersReport.builder(cell, parser);
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     buckQueryEnvironment =
         BuckQueryEnvironment.from(

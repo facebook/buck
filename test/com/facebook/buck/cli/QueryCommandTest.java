@@ -107,10 +107,10 @@ public class QueryCommandTest {
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
-                WatchmanFactory.NULL_WATCHMAN)
+                WatchmanFactory.NULL_WATCHMAN,
+                eventBus)
             .create(
                 params.getParser().getPermState(),
-                eventBus,
                 executorService,
                 cell,
                 false,
@@ -118,16 +118,12 @@ public class QueryCommandTest {
     env =
         new FakeBuckQueryEnvironment(
             cell,
-            OwnersReport.builder(params.getCell(), params.getParser(), params.getBuckEventBus()),
+            OwnersReport.builder(params.getCell(), params.getParser()),
             params.getParser(),
             perBuildState,
             executorService,
             new TargetPatternEvaluator(
-                params.getCell(),
-                params.getBuckConfig(),
-                params.getParser(),
-                params.getBuckEventBus(),
-                false),
+                params.getCell(), params.getBuckConfig(), params.getParser(), false),
             eventBus,
             typeCoercerFactory);
   }

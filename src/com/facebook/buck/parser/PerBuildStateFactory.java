@@ -43,23 +43,25 @@ public class PerBuildStateFactory {
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
   private final Watchman watchman;
+  private final BuckEventBus eventBus;
 
   public PerBuildStateFactory(
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
-      Watchman watchman) {
+      Watchman watchman,
+      BuckEventBus eventBus) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
     this.watchman = watchman;
+    this.eventBus = eventBus;
   }
 
   public PerBuildState create(
       DaemonicParserState daemonicParserState,
-      BuckEventBus eventBus,
       ListeningExecutorService executorService,
       Cell rootCell,
       boolean enableProfiling,

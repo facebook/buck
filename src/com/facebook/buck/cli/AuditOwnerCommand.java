@@ -69,10 +69,10 @@ public class AuditOwnerCommand extends AbstractCommand {
                     params.getKnownRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
                         params.getCell().getBuckConfig(), params.getExecutableFinder()),
-                    params.getWatchman())
+                    params.getWatchman(),
+                    params.getBuckEventBus())
                 .create(
                     params.getParser().getPermState(),
-                    params.getBuckEventBus(),
                     pool.getListeningExecutorService(),
                     params.getCell(),
                     getEnableParserProfiling(),

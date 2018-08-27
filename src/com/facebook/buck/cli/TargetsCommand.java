@@ -504,7 +504,6 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphForTargetNodeSpecs(
-                  params.getBuckEventBus(),
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,
@@ -528,7 +527,6 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphForTargetNodeSpecs(
-                  params.getBuckEventBus(),
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,
@@ -634,7 +632,6 @@ public class TargetsCommand extends AbstractCommand {
                   params
                       .getParser()
                       .buildTargetGraphForTargetNodeSpecs(
-                          params.getBuckEventBus(),
                           params.getCell(),
                           getEnableParserProfiling(),
                           executor,
@@ -650,7 +647,6 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphForTargetNodeSpecs(
-                  params.getBuckEventBus(),
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,
@@ -837,10 +833,10 @@ public class TargetsCommand extends AbstractCommand {
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
                     params.getCell().getBuckConfig(), params.getExecutableFinder()),
-                params.getWatchman())
+                params.getWatchman(),
+                params.getBuckEventBus())
             .create(
                 params.getParser().getPermState(),
-                params.getBuckEventBus(),
                 executor,
                 params.getCell(),
                 getEnableParserProfiling(),
@@ -1123,7 +1119,6 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraph(
-                  params.getBuckEventBus(),
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,

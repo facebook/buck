@@ -35,7 +35,6 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
-import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -92,7 +91,6 @@ public class DistBuildFileHashesIntegrationTest {
     Parser parser = TestParserFactory.create(rootCellConfig);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
-            BuckEventBusForTests.newInstance(),
             rootCell,
             /* enableProfiling */ false,
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
@@ -152,7 +150,6 @@ public class DistBuildFileHashesIntegrationTest {
     Parser parser = TestParserFactory.create(rootCellConfig);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
-            BuckEventBusForTests.newInstance(),
             rootCell,
             /* enableProfiling */ false,
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),

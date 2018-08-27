@@ -480,7 +480,6 @@ public class TestCommand extends BuildCommand {
               params
                   .getParser()
                   .buildTargetGraphForTargetNodeSpecs(
-                      params.getBuckEventBus(),
                       params.getCell(),
                       getEnableParserProfiling(),
                       pool.getListeningExecutorService(),
@@ -501,7 +500,6 @@ public class TestCommand extends BuildCommand {
               params
                   .getParser()
                   .buildTargetGraphForTargetNodeSpecs(
-                      params.getBuckEventBus(),
                       params.getCell(),
                       getEnableParserProfiling(),
                       pool.getListeningExecutorService(),
@@ -532,7 +530,6 @@ public class TestCommand extends BuildCommand {
                 params
                     .getParser()
                     .buildTargetGraph(
-                        params.getBuckEventBus(),
                         params.getCell(),
                         getEnableParserProfiling(),
                         pool.getListeningExecutorService(),

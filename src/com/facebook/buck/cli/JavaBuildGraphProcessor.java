@@ -106,7 +106,6 @@ final class JavaBuildGraphProcessor {
             params
                 .getParser()
                 .buildTargetGraphForTargetNodeSpecs(
-                    params.getBuckEventBus(),
                     cell,
                     command.getEnableParserProfiling(),
                     pool.getListeningExecutorService(),

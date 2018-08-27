@@ -193,7 +193,6 @@ public class XCodeProjectCommandHelper {
           ImmutableSet.copyOf(
               Iterables.concat(
                   parser.resolveTargetSpecs(
-                      buckEventBus,
                       cell,
                       enableParserProfiling,
                       executor,
@@ -510,7 +509,6 @@ public class XCodeProjectCommandHelper {
       passedInTargetsSet =
           parser
               .resolveTargetSpecs(
-                  buckEventBus,
                   cell,
                   enableParserProfiling,
                   executor,
@@ -658,7 +656,6 @@ public class XCodeProjectCommandHelper {
     if (passedInTargets.isEmpty()) {
       return parser
           .buildTargetGraphForTargetNodeSpecs(
-              buckEventBus,
               cell,
               enableParserProfiling,
               executor,
@@ -668,8 +665,7 @@ public class XCodeProjectCommandHelper {
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
-    return parser.buildTargetGraph(
-        buckEventBus, cell, enableParserProfiling, executor, passedInTargets);
+    return parser.buildTargetGraph(cell, enableParserProfiling, executor, passedInTargets);
   }
 
   private TargetGraphAndTargets createTargetGraph(
@@ -694,15 +690,10 @@ public class XCodeProjectCommandHelper {
       if (!needsFullRecursiveParse) {
         projectGraph =
             parser.buildTargetGraph(
-                buckEventBus,
-                cell,
-                enableParserProfiling,
-                executor,
-                Sets.union(graphRoots, explicitTestTargets));
+                cell, enableParserProfiling, executor, Sets.union(graphRoots, explicitTestTargets));
       } else {
         projectGraph =
             parser.buildTargetGraph(
-                buckEventBus,
                 cell,
                 enableParserProfiling,
                 executor,

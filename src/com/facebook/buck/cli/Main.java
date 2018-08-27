@@ -1368,9 +1368,11 @@ public final class Main {
                   new ConstructorArgMarshaller(typeCoercerFactory),
                   knownRuleTypesProvider,
                   new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-                  watchman),
+                  watchman,
+                  buildEventBus),
               new TargetSpecResolver(),
-              watchman);
+              watchman,
+              buildEventBus);
       daemon.getFileEventBus().register(daemon.getDaemonicParserState());
 
       parserAndCaches =
@@ -1401,9 +1403,11 @@ public final class Main {
                       new ConstructorArgMarshaller(typeCoercerFactory),
                       knownRuleTypesProvider,
                       new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-                      watchman),
+                      watchman,
+                      buildEventBus),
                   new TargetSpecResolver(),
-                  watchman),
+                  watchman,
+                  buildEventBus),
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),

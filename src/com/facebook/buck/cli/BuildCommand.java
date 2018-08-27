@@ -774,7 +774,6 @@ public class BuildCommand extends AbstractCommand {
               return params
                   .getParser()
                   .getTargetNodeRawAttributes(
-                      params.getBuckEventBus(),
                       params.getCell().getCell(input.getBuildTarget()),
                       false /* enableProfiling */,
                       executorService,
@@ -1353,7 +1352,6 @@ public class BuildCommand extends AbstractCommand {
       return params
           .getParser()
           .buildTargetGraphForTargetNodeSpecs(
-              params.getBuckEventBus(),
               params.getCell(),
               getEnableParserProfiling(),
               executor,

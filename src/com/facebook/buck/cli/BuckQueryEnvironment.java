@@ -162,16 +162,12 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       boolean enableProfiling) {
     return from(
         params.getCell(),
-        OwnersReport.builder(params.getCell(), params.getParser(), params.getBuckEventBus()),
+        OwnersReport.builder(params.getCell(), params.getParser()),
         params.getParser(),
         parserState,
         executor,
         new TargetPatternEvaluator(
-            params.getCell(),
-            params.getBuckConfig(),
-            params.getParser(),
-            params.getBuckEventBus(),
-            enableProfiling),
+            params.getCell(), params.getBuckConfig(), params.getParser(), enableProfiling),
         params.getBuckEventBus(),
         params.getTypeCoercerFactory());
   }

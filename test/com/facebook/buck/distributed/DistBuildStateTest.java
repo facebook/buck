@@ -47,8 +47,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.distributed.thrift.BuildJobState;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -241,7 +239,6 @@ public class DistBuildStateTest {
     Parser parser = TestParserFactory.create(buckConfig);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
-            BuckEventBusForTests.newInstance(),
             cell,
             /* enableProfiling */ false,
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
@@ -400,8 +397,6 @@ public class DistBuildStateTest {
   }
 
   public static DistBuildTargetGraphCodec createDefaultCodec(Cell cell, Optional<Parser> parser) {
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-
     Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
     if (parser.isPresent()) {
       nodeToRawNode =
@@ -410,7 +405,6 @@ public class DistBuildStateTest {
               return parser
                   .get()
                   .getTargetNodeRawAttributes(
-                      eventBus,
                       cell.getCell(input.getBuildTarget()),
                       /* enableProfiling */ false,
                       MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService()),

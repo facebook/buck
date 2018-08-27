@@ -176,6 +176,7 @@ java_library(
         "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//test/com/facebook/buck/core/rules/knowntypes:testutil",
+        "//test/com/facebook/buck/event:testutil",
     ],
 )
 

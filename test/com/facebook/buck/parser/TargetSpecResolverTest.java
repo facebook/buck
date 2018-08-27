@@ -102,7 +102,8 @@ public class TargetSpecResolverTest {
             constructorArgMarshaller,
             knownRuleTypesProvider,
             parserPythonInterpreterProvider,
-            WatchmanFactory.NULL_WATCHMAN);
+            WatchmanFactory.NULL_WATCHMAN,
+            eventBus);
     targetNodeTargetSpecResolver = new TargetSpecResolver();
     parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory);
     flavorEnhancer = (target, targetNode, targetType) -> target;
@@ -189,12 +190,7 @@ public class TargetSpecResolverTest {
       throws IOException, InterruptedException {
     PerBuildState state =
         perBuildStateFactory.create(
-            parser.getPermState(),
-            eventBus,
-            executorService,
-            cell,
-            false,
-            SpeculativeParsing.DISABLED);
+            parser.getPermState(), executorService, cell, false, SpeculativeParsing.DISABLED);
     return targetNodeTargetSpecResolver.resolveTargetSpecs(
         eventBus,
         cell,

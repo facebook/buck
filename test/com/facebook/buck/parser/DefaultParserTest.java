@@ -193,10 +193,10 @@ public class DefaultParserTest {
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
-                WatchmanFactory.NULL_WATCHMAN)
+                WatchmanFactory.NULL_WATCHMAN,
+                eventBus)
             .create(
                 parser.getPermState(),
-                eventBus,
                 executor,
                 cell,
                 enableProfiling,
@@ -307,7 +307,7 @@ public class DefaultParserTest {
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser = TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider);
+    parser = TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider, eventBus);
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -333,8 +333,7 @@ public class DefaultParserTest {
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
-    TargetGraph targetGraph =
-        parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+    TargetGraph targetGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
     ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
     BuildRule fooRule = graphBuilder.requireRule(fooTarget);
     assertNotNull(fooRule);
@@ -363,7 +362,7 @@ public class DefaultParserTest {
         "The rule //java/com/facebook:raz could not be found.\nPlease check the spelling and whether it exists in "
             + filesystem.resolve(razTarget.getBasePath()).resolve(DEFAULT_BUILD_FILE_NAME));
 
-    parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(cell, false, executorService, buildTargets);
   }
 
   @Test
@@ -378,7 +377,7 @@ public class DefaultParserTest {
             "No build file at %s when resolving target //path/to/nowhere:nowhere",
             Paths.get("path", "to", "nowhere", "BUCK").toString()));
 
-    parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(cell, false, executorService, buildTargets);
   }
 
   @Test
@@ -393,7 +392,7 @@ public class DefaultParserTest {
         "genrule(name = 'cake', out = 'file.txt', cmd = '$(exe ////cake:walk) > $OUT')"
             .getBytes(UTF_8));
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
   }
 
   @Test
@@ -412,7 +411,6 @@ public class DefaultParserTest {
     Files.write(buckFile, "I do not parse as python".getBytes(UTF_8));
 
     parser.buildTargetGraph(
-        eventBus,
         cell,
         false,
         executorService,
@@ -433,7 +431,7 @@ public class DefaultParserTest {
                 + "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')\n")
             .getBytes(UTF_8));
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
   }
 
   @Test
@@ -443,7 +441,7 @@ public class DefaultParserTest {
         "def foo(name): native.export_file(name=name)\n".getBytes(UTF_8),
         StandardOpenOption.APPEND);
     Files.write(testBuildFile, "foo(name='BUCK')\n".getBytes(UTF_8), StandardOpenOption.APPEND);
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, testBuildFile);
+    parser.getAllTargetNodes(cell, false, executorService, testBuildFile);
   }
 
   @Test
@@ -455,7 +453,7 @@ public class DefaultParserTest {
     Files.write(
         buckFile, ("genrule(name = None, out = 'file.txt', cmd = 'touch $OUT')\n").getBytes(UTF_8));
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
   }
 
   @Test
@@ -470,8 +468,7 @@ public class DefaultParserTest {
         containsString(
             "The following flavor(s) are not supported on target "
                 + "//java/com/facebook:foo#doesNotExist"));
-    parser.buildTargetGraph(
-        eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));
+    parser.buildTargetGraph(cell, false, executorService, ImmutableSortedSet.of(flavored));
   }
 
   @Test
@@ -491,8 +488,7 @@ public class DefaultParserTest {
             "android-unknown: Please make sure you have the Android SDK/NDK "
                 + "installed and set up. "
                 + "See https://buckbuild.com/setup/install.html#locate-android-sdk"));
-    parser.buildTargetGraph(
-        eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));
+    parser.buildTargetGraph(cell, false, executorService, ImmutableSortedSet.of(flavored));
   }
 
   @Test
@@ -510,8 +506,7 @@ public class DefaultParserTest {
     thrown.expectMessage(
         containsString("macosx109sdk: This is an error message read by the .buckconfig"));
 
-    parser.buildTargetGraph(
-        eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));
+    parser.buildTargetGraph(cell, false, executorService, ImmutableSortedSet.of(flavored));
   }
 
   @Test
@@ -523,8 +518,7 @@ public class DefaultParserTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "The following flavor(s) are not supported on target //java/com/facebook:baz:\n" + "src.");
-    parser.buildTargetGraph(
-        eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));
+    parser.buildTargetGraph(cell, false, executorService, ImmutableSortedSet.of(flavored));
   }
 
   @Test
@@ -552,14 +546,14 @@ public class DefaultParserTest {
         BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook/invalid", "foo");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
 
-    parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(cell, false, executorService, buildTargets);
   }
 
   @Test
   public void whenAllRulesAreRequestedMultipleTimesThenRulesAreOnlyParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     assertEquals("Should have cached build rules.", 1, counter.calls);
   }
@@ -568,13 +562,13 @@ public class DefaultParserTest {
   public void whenNotifiedOfNonPathEventThenCacheRulesAreInvalidated()
       throws BuildFileParseException, IOException, InterruptedException {
     // Call filterAllTargetsInProject to populate the cache.
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     // Process event.
     parser.getPermState().invalidateBasedOn(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -583,13 +577,13 @@ public class DefaultParserTest {
   @Test
   public void pathInvalidationWorksAfterOverflow() throws Exception {
     // Call filterAllTargetsInProject to populate the cache.
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     // Send overflow event.
     parser.getPermState().invalidateBasedOn(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -604,7 +598,7 @@ public class DefaultParserTest {
                 Paths.get("java/com/facebook/Something.java")));
 
     // Call filterAllTargetsInProject to request cached rules.
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     // Test that the third parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 3, counter.calls);
@@ -623,10 +617,10 @@ public class DefaultParserTest {
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     // Call filterAllTargetsInProject to populate the cache.
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     // Call filterAllTargetsInProject to request cached rules with identical environment.
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
@@ -1512,7 +1506,7 @@ public class DefaultParserTest {
   @Test
   public void whenAllRulesAreRequestedWithDifferingIncludesThenRulesAreParsedTwice()
       throws BuildFileParseException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     BuckConfig config =
         FakeBuckConfig.builder()
@@ -1524,7 +1518,7 @@ public class DefaultParserTest {
             .build();
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     assertEquals("Should have invalidated cache.", 2, counter.calls);
   }
@@ -1532,7 +1526,7 @@ public class DefaultParserTest {
   @Test
   public void whenAllRulesAreRequestedWithDifferingCellsThenRulesAreParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     assertEquals("Should have parsed once.", 1, counter.calls);
 
@@ -1549,7 +1543,7 @@ public class DefaultParserTest {
             .build();
     Cell cell = new TestCellBuilder().setFilesystem(newFilesystem).setBuckConfig(config).build();
 
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
 
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
   }
@@ -1557,9 +1551,9 @@ public class DefaultParserTest {
   @Test
   public void whenAllRulesThenSingleTargetRequestedThenRulesAreParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, executorService);
     BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
-    parser.buildTargetGraph(eventBus, cell, false, executorService, ImmutableList.of(foo));
+    parser.buildTargetGraph(cell, false, executorService, ImmutableList.of(foo));
 
     assertEquals("Should have cached build rules.", 1, counter.calls);
   }
@@ -1568,8 +1562,8 @@ public class DefaultParserTest {
   public void whenSingleTargetThenAllRulesRequestedThenRulesAreParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
     BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
-    parser.buildTargetGraph(eventBus, cell, false, executorService, ImmutableList.of(foo));
-    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    parser.buildTargetGraph(cell, false, executorService, ImmutableList.of(foo));
+    filterAllTargetsInProject(parser, cell, executorService);
 
     assertEquals("Should have replaced build rules", 1, counter.calls);
   }
@@ -1593,7 +1587,7 @@ public class DefaultParserTest {
         BuildTargetFactory.newInstance(cellRoot, "//bar", "bar", InternalFlavor.of("src"));
     Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
 
-    parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(cell, false, executorService, buildTargets);
 
     // Rewrite //bar:bar so it doesn't depend on //foo:foo any more.
     // Delete foo/BUCK and invalidate the cache, which should invalidate
@@ -1613,7 +1607,7 @@ public class DefaultParserTest {
             Paths.get("bar").resolve("BUCK"));
     parser.getPermState().invalidateBasedOn(modifyEvent);
 
-    parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(cell, false, executorService, buildTargets);
   }
 
   @Test
@@ -1635,7 +1629,7 @@ public class DefaultParserTest {
         BuildTargetFactory.newInstance(cellRoot, "//bar", "bar", InternalFlavor.of("src"));
     Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
 
-    parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(cell, false, executorService, buildTargets);
   }
 
   @Test
@@ -1788,13 +1782,12 @@ public class DefaultParserTest {
 
     // First, only load one target from the build file so the file is parsed, but only one of the
     // TargetNodes will be cached.
-    TargetNode<?> targetNode =
-        parser.getTargetNode(eventBus, cell, false, executorService, fooLib1Target);
+    TargetNode<?> targetNode = parser.getTargetNode(cell, false, executorService, fooLib1Target);
     assertThat(targetNode.getBuildTarget(), equalTo(fooLib1Target));
 
     // Now, try to load the entire build file and get all TargetNodes.
     ImmutableSet<TargetNode<?>> targetNodes =
-        parser.getAllTargetNodes(eventBus, cell, false, executorService, testFooBuckFile);
+        parser.getAllTargetNodes(cell, false, executorService, testFooBuckFile);
     assertThat(targetNodes.size(), equalTo(2));
     assertThat(
         targetNodes
@@ -1812,12 +1805,11 @@ public class DefaultParserTest {
     Files.write(testFooBuckFile, "java_library(name = 'lib')\n".getBytes(UTF_8));
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
 
-    TargetNode<?> targetNode =
-        parser.getTargetNode(eventBus, cell, false, executorService, fooLibTarget);
+    TargetNode<?> targetNode = parser.getTargetNode(cell, false, executorService, fooLibTarget);
     assertThat(targetNode.getBuildTarget(), equalTo(fooLibTarget));
 
     SortedMap<String, Object> targetNodeAttributes =
-        parser.getTargetNodeRawAttributes(eventBus, cell, false, executorService, targetNode);
+        parser.getTargetNodeRawAttributes(cell, false, executorService, targetNode);
     assertThat(targetNodeAttributes, Matchers.hasKey("name"));
     assertThat(
         targetNodeAttributes.get("name"), equalTo(targetNode.getBuildTarget().getShortName()));
@@ -1844,8 +1836,7 @@ public class DefaultParserTest {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
     {
-      TargetGraph targetGraph =
-          parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+      TargetGraph targetGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -1861,8 +1852,7 @@ public class DefaultParserTest {
     parser.getPermState().invalidateBasedOn(createEvent);
 
     {
-      TargetGraph targetGraph =
-          parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+      TargetGraph targetGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -1896,8 +1886,7 @@ public class DefaultParserTest {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
     {
-      TargetGraph targetGraph =
-          parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+      TargetGraph targetGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -1916,8 +1905,7 @@ public class DefaultParserTest {
     parser.getPermState().invalidateBasedOn(deleteEvent);
 
     {
-      TargetGraph targetGraph =
-          parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+      TargetGraph targetGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -1958,7 +1946,7 @@ public class DefaultParserTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
-    parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(cell, false, executorService, buildTargets);
   }
 
   @Test
@@ -1987,7 +1975,7 @@ public class DefaultParserTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
-    parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(cell, false, executorService, buildTargets);
 
     DaemonicParserState permState = parser.getPermState();
     for (BuildTarget target : buildTargets) {
@@ -2018,8 +2006,7 @@ public class DefaultParserTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
-    TargetGraph oldGraph =
-        parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+    TargetGraph oldGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
 
     // Serialize target graph information.
     RemoteDaemonicParserState remote = parser.getPermState().serializeDaemonicParserState(cell);
@@ -2046,7 +2033,6 @@ public class DefaultParserTest {
     TargetGraph newGraph =
         parser
             .buildTargetGraphForTargetNodeSpecs(
-                eventBus,
                 cell,
                 false,
                 executorService,
@@ -2102,7 +2088,7 @@ public class DefaultParserTest {
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     TargetNode<GenruleDescriptionArg> node =
         TargetNodes.castArg(
-                parser.getTargetNode(eventBus, cell, false, executorService, buildTarget),
+                parser.getTargetNode(cell, false, executorService, buildTarget),
                 GenruleDescriptionArg.class)
             .get();
 
@@ -2129,11 +2115,11 @@ public class DefaultParserTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated.", 1, counter.calls);
@@ -2159,7 +2145,6 @@ public class DefaultParserTest {
     ImmutableSet<BuildTarget> result =
         parser
             .buildTargetGraphForTargetNodeSpecs(
-                eventBus,
                 cell,
                 false,
                 executorService,
@@ -2206,7 +2191,6 @@ public class DefaultParserTest {
     ImmutableSet<BuildTarget> result =
         parser
             .buildTargetGraphForTargetNodeSpecs(
-                eventBus,
                 cell,
                 false,
                 executorService,
@@ -2257,7 +2241,6 @@ public class DefaultParserTest {
     ImmutableSet<BuildTarget> result =
         parser
             .buildTargetGraphForTargetNodeSpecs(
-                eventBus,
                 cell,
                 false,
                 executorService,
@@ -2299,7 +2282,6 @@ public class DefaultParserTest {
     eventBus.register(eventListener);
 
     parser.buildTargetGraphForTargetNodeSpecs(
-        eventBus,
         cell,
         false,
         executorService,
@@ -2317,7 +2299,6 @@ public class DefaultParserTest {
     // The value should be cached, so no bytes are read when re-computing.
     events.clear();
     parser.buildTargetGraphForTargetNodeSpecs(
-        eventBus,
         cell,
         false,
         executorService,
@@ -2348,20 +2329,17 @@ public class DefaultParserTest {
     Files.copy(visibilityData.resolve("sub/BUCK.fixture"), visibilitySubBuckFile);
 
     parser.buildTargetGraph(
-        eventBus,
         cell,
         false,
         executorService,
         ImmutableSet.of(BuildTargetFactory.newInstance(cellRoot, "//:should_pass")));
     parser.buildTargetGraph(
-        eventBus,
         cell,
         false,
         executorService,
         ImmutableSet.of(BuildTargetFactory.newInstance(cellRoot, "//:should_pass2")));
     try {
       parser.buildTargetGraph(
-          eventBus,
           cell,
           false,
           executorService,
@@ -2400,7 +2378,7 @@ public class DefaultParserTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
 
     // Call filterAllTargetsInProject to request cached rules.
     config =
@@ -2415,7 +2393,7 @@ public class DefaultParserTest {
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated.", 2, counter.calls);
@@ -2438,7 +2416,7 @@ public class DefaultParserTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
 
     // Call filterAllTargetsInProject to request cached rules.
     config =
@@ -2453,7 +2431,7 @@ public class DefaultParserTest {
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated.", 2, counter.calls);
@@ -2484,14 +2462,14 @@ public class DefaultParserTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
 
     // Call filterAllTargetsInProject to request cached rules.
     config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated.", 2, counter.calls);
@@ -2523,7 +2501,7 @@ public class DefaultParserTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
 
     // Call filterAllTargetsInProject to request cached rules.
     config =
@@ -2539,7 +2517,7 @@ public class DefaultParserTest {
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated.", 1, counter.calls);
@@ -2566,7 +2544,7 @@ public class DefaultParserTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    parser.getAllTargetNodes(cell, false, executorService, buckFile);
   }
 
   @Test
@@ -2588,7 +2566,7 @@ public class DefaultParserTest {
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     ImmutableSet<TargetNode<?>> targetNodes =
-        parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+        parser.getAllTargetNodes(cell, false, executorService, buckFile);
     assertEquals(1, targetNodes.size());
     // in Skylark the type of str is "string" and in Python DSL it's "<type 'str'>"
     assertEquals(targetNodes.iterator().next().getBuildTarget().getShortName(), "string");
@@ -2613,12 +2591,11 @@ public class DefaultParserTest {
    * @return The build targets in the project filtered by the given filter.
    */
   public static synchronized ImmutableSet<BuildTarget> filterAllTargetsInProject(
-      Parser parser, Cell cell, BuckEventBus buckEventBus, ListeningExecutorService executor)
+      Parser parser, Cell cell, ListeningExecutorService executor)
       throws BuildFileParseException, IOException, InterruptedException {
     return FluentIterable.from(
             parser
                 .buildTargetGraphForTargetNodeSpecs(
-                    buckEventBus,
                     cell,
                     false,
                     executor,
@@ -2637,7 +2614,7 @@ public class DefaultParserTest {
 
     ImmutableList<BuildTarget> buildTargetsList = ImmutableList.copyOf(buildTargets);
     TargetGraph targetGraph =
-        parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargetsList);
+        parser.buildTargetGraph(cell, false, executorService, buildTargetsList);
 
     ImmutableMap.Builder<BuildTarget, HashCode> toReturn = ImmutableMap.builder();
     for (TargetNode<?> node : targetGraph.getNodes()) {
