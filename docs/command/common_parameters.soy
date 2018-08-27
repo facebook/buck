@@ -248,7 +248,7 @@ buck build --config-file debug.buckconfig
 </p>
 
 <p>
-This <code>--config-file</code> parameter provides functionality similar 
+The <code>--config-file</code> parameter provides functionality similar 
 to <code>--flagfile</code>, but with <code>.buckconfig</code> syntax 
 rather than command-line parameter syntax.
 </p>
@@ -256,6 +256,81 @@ rather than command-line parameter syntax.
 <p>
 Any values specified using <code>--config-file</code> override values
 specified in <code>.buckconfig</code> and <code>.buckconfig.local</code>.
+</p>
+
+<p>
+  You can specify the path to the configuration file in one of three
+  ways.
+</p>
+
+<h5>
+  Use a path that is relative to the directory that contains the current
+  cell's <code>.buckconfig</code>.
+</h5>
+
+<p>
+<pre>
+{literal}
+--config-file relative/path/to/file.buckconfig
+{/literal}
+</pre>
+</p>
+
+<h5>
+  Use a path that is relative to the directory that contains 
+  a <em>specified</em> cell's <code>.buckconfig</code>.
+</h5>
+
+<p>
+<pre>
+{literal}
+--config-file cell&#x2F;&#x2F;path/to/file.buckconfig
+{/literal}
+</pre>
+</p>
+
+<h5>
+  Use an absolute path from the root of your file system.
+</h5>
+
+<p>
+<pre>
+{literal}
+--config-file /absolute/path/to/file.buckconfig
+{/literal}
+</pre>
+</p>
+
+<p>
+  You can also specify a particular cell to which to apply the
+  configuration.  By default, the settings in the configuration file
+  apply to <em>all</em> cells in the current build. 
+</p>
+
+<h5>Apply the configuration only to the current cell.</h5>
+
+<p>
+<pre>
+{literal}
+--config-file &#x2F;&#x2F;=&lt;path-to-config-file>
+{/literal}
+</pre>
+</p>
+
+<h5>Apply the configuration only to a specified target cell.</h5>
+
+<p>
+<pre>
+{literal}
+--config-file &lt;target-cell>=&lt;path-to-config-file>
+{/literal}
+</pre>
+</p>
+
+<p>
+  If you specify <code>*</code> as the target cell, the configuration is
+  applied to <em>all</em> the cells in the build. This is the default,
+  but this syntax enables you to be explicit.
 </p>
 
   {/param}
@@ -359,7 +434,7 @@ Lines in flag files must not have any leading or trailing white space.
 
 <p>
 The equals sign (<code>=</code>) separates the specified property and
-value. There should be no whitespace between the property and
+value. There should be no white space between the property and
 equals sign, nor between the equals sign and the value. 
 <p>
 
