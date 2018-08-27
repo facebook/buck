@@ -21,7 +21,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.httpserver.WebServer;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.util.Console;
 import java.nio.file.Path;
@@ -48,15 +47,12 @@ class DaemonLifecycleManager {
   synchronized Daemon getDaemon(
       Cell rootCell,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      ExecutableFinder executableFinder,
       Watchman watchman,
       Console console) {
     Path rootPath = rootCell.getFilesystem().getRootPath();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon =
-          new Daemon(
-              rootCell, knownRuleTypesProvider, executableFinder, watchman, Optional.empty());
+      daemon = new Daemon(rootCell, knownRuleTypesProvider, watchman, Optional.empty());
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -97,8 +93,7 @@ class DaemonLifecycleManager {
           webServer = Optional.empty();
           daemon.close();
         }
-        daemon =
-            new Daemon(rootCell, knownRuleTypesProvider, executableFinder, watchman, webServer);
+        daemon = new Daemon(rootCell, knownRuleTypesProvider, watchman, webServer);
       }
     }
     return daemon;

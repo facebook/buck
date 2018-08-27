@@ -35,7 +35,6 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -72,18 +71,13 @@ public class DefaultParser implements Parser {
   private final Watchman watchman;
 
   public DefaultParser(
+      DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
-      ParserConfig parserConfig,
-      TypeCoercerFactory typeCoercerFactory,
       TargetSpecResolver targetSpecResolver,
       Watchman watchman) {
     this.perBuildStateFactory = perBuildStateFactory;
     this.watchman = watchman;
-    this.permState =
-        new DaemonicParserState(
-            typeCoercerFactory,
-            parserConfig.getNumParsingThreads(),
-            parserConfig.shouldIgnoreEnvironmentVariablesChanges());
+    this.permState = daemonicParserState;
     this.targetSpecResolver = targetSpecResolver;
   }
 

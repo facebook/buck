@@ -104,6 +104,7 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.DaemonicParserState;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -775,7 +776,7 @@ public final class Main {
           context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)
               ? Optional.of(
                   daemonLifecycleManager.getDaemon(
-                      rootCell, knownRuleTypesProvider, executableFinder, watchman, console))
+                      rootCell, knownRuleTypesProvider, watchman, console))
               : Optional.empty();
 
       if (!daemon.isPresent() && shouldCleanUpTrash) {
@@ -1358,9 +1359,23 @@ public final class Main {
       } else {
         defaultRuleKeyFactoryCacheRecycler = Optional.empty();
       }
+      TypeCoercerFactory typeCoercerFactory = daemon.getTypeCoercerFactory();
+      Parser parser =
+          new DefaultParser(
+              daemon.getDaemonicParserState(),
+              new PerBuildStateFactory(
+                  typeCoercerFactory,
+                  new ConstructorArgMarshaller(typeCoercerFactory),
+                  knownRuleTypesProvider,
+                  new ParserPythonInterpreterProvider(parserConfig, executableFinder),
+                  watchman),
+              new TargetSpecResolver(),
+              watchman);
+      parser.register(daemon.getFileEventBus());
+
       parserAndCaches =
           ParserAndCaches.of(
-              daemon.getParser(),
+              parser,
               daemon.getTypeCoercerFactory(),
               new InstrumentedVersionedTargetGraphCache(
                   daemon.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
@@ -1377,14 +1392,16 @@ public final class Main {
       parserAndCaches =
           ParserAndCaches.of(
               new DefaultParser(
+                  new DaemonicParserState(
+                      typeCoercerFactory,
+                      parserConfig.getNumParsingThreads(),
+                      parserConfig.shouldIgnoreEnvironmentVariablesChanges()),
                   new PerBuildStateFactory(
                       typeCoercerFactory,
                       new ConstructorArgMarshaller(typeCoercerFactory),
                       knownRuleTypesProvider,
                       new ParserPythonInterpreterProvider(parserConfig, executableFinder),
                       watchman),
-                  parserConfig,
-                  typeCoercerFactory,
                   new TargetSpecResolver(),
                   watchman),
               typeCoercerFactory,
