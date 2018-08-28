@@ -91,11 +91,12 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
     // TODO(jkeljo): When creating source-only ABIs, *some* non-classpath deps can be omitted
     // (basically anything that's not either source, resources, or a source-only-ABI-compatible
     // annotation processor).
+    ImmutableSortedSet<BuildRule> compileTimeClasspathFullDeps = getCompileTimeClasspathFullDeps();
     return ImmutableList.copyOf(
         Iterables.concat(
-            Sets.difference(getBuildRuleParams().getBuildDeps(), getCompileTimeClasspathFullDeps()),
+            Sets.difference(getBuildRuleParams().getBuildDeps(), compileTimeClasspathFullDeps),
             Sets.difference(
-                getCompileTimeClasspathUnfilteredFullDeps(), getCompileTimeClasspathFullDeps())));
+                getCompileTimeClasspathUnfilteredFullDeps(), compileTimeClasspathFullDeps)));
   }
 
   @Value.Lazy
