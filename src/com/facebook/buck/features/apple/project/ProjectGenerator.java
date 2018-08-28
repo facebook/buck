@@ -2952,11 +2952,15 @@ public class ProjectGenerator {
   }
 
   /** @param targetNode Must have a header symlink tree or an exception will be thrown. */
-  private Path getHeaderSymlinkTreeRelativePath(
+  private Path getHeaderSymlinkTreePath(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
       HeaderVisibility headerVisibility) {
     Path treeRoot = getAbsolutePathToHeaderSymlinkTree(targetNode, headerVisibility);
-    return projectFilesystem.resolve(outputDirectory).relativize(treeRoot);
+    if (options.shouldUseAbsoluteHeaderMapPaths()) {
+      return treeRoot;
+    } else {
+      return projectFilesystem.resolve(outputDirectory).relativize(treeRoot);
+    }
   }
 
   private Path getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
@@ -3063,14 +3067,14 @@ public class ProjectGenerator {
     if (shouldMergeHeaderMaps()) {
       builder.add(
           getHeaderSearchPathFromSymlinkTreeRoot(
-              getHeaderSymlinkTreeRelativePath(targetNode, HeaderVisibility.PRIVATE)));
+              getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
       builder.add(getHeaderSearchPathFromSymlinkTreeRoot(getRelativePathToMergedHeaderMap()));
       visitRecursivePrivateHeaderSymlinkTreesForTests(
           targetNode,
           (nativeNode, headerVisibility) -> {
             builder.add(
                 getHeaderSearchPathFromSymlinkTreeRoot(
-                    getHeaderSymlinkTreeRelativePath(nativeNode, headerVisibility)));
+                    getHeaderSymlinkTreePath(nativeNode, headerVisibility)));
           });
     } else {
       for (Path headerSymlinkTreePath : collectRecursiveHeaderSymlinkTrees(targetNode)) {
@@ -3094,15 +3098,28 @@ public class ProjectGenerator {
       visitRecursiveHeaderSymlinkTrees(
           targetNode,
           (nativeNode, headerVisibility) -> {
-            builder.add(
-                targetNode
-                    .getFilesystem()
-                    .resolve(outputDirectory)
-                    .relativize(
-                        nativeNode
-                            .getFilesystem()
-                            .resolve(
-                                nativeNode.getFilesystem().getBuckPaths().getConfiguredBuckOut())));
+            if (options.shouldUseAbsoluteHeaderMapPaths()) {
+              builder.add(
+                  nativeNode
+                      .getFilesystem()
+                      .getBuckPaths()
+                      .getConfiguredBuckOut()
+                      .toAbsolutePath()
+                      .normalize());
+            } else {
+              builder.add(
+                  targetNode
+                      .getFilesystem()
+                      .resolve(outputDirectory)
+                      .relativize(
+                          nativeNode
+                              .getFilesystem()
+                              .resolve(
+                                  nativeNode
+                                      .getFilesystem()
+                                      .getBuckPaths()
+                                      .getConfiguredBuckOut())));
+            }
           });
     }
     return builder.build();
@@ -3180,7 +3197,7 @@ public class ProjectGenerator {
     visitRecursiveHeaderSymlinkTrees(
         targetNode,
         (nativeNode, headerVisibility) -> {
-          builder.add(getHeaderSymlinkTreeRelativePath(nativeNode, headerVisibility));
+          builder.add(getHeaderSymlinkTreePath(nativeNode, headerVisibility));
         });
     return builder.build();
   }

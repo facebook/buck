@@ -59,6 +59,12 @@ interface AbstractProjectGeneratorOptions {
     return true;
   }
 
+  /** Use absolute header map paths in .xcconfig files */
+  @Value.Default
+  default boolean shouldUseAbsoluteHeaderMapPaths() {
+    return false;
+  }
+
   /**
    * Generate one header map containing all the headers it's using and reference only this header
    * map in the header search paths.

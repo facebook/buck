@@ -1332,6 +1332,77 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testAbsoluteHeaderMapPaths() throws IOException {
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
+
+    TargetNode<?> libraryNode =
+        AppleLibraryBuilder.createBuilder(libraryTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
+                    SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
+            .setTests(ImmutableSortedSet.of(testTarget))
+            .build();
+
+    TargetNode<?> testNode =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setConfigs(ImmutableSortedMap.of("Default", ImmutableMap.of()))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setDeps(ImmutableSortedSet.of(libraryTarget))
+            .build();
+
+    ImmutableSet<TargetNode<?>> allNodes = ImmutableSet.of(libraryNode, testNode);
+
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(
+            allNodes,
+            allNodes,
+            ProjectGeneratorOptions.builder().setShouldUseAbsoluteHeaderMapPaths(true).build(),
+            ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
+
+    ImmutableMap<String, String> buildSettings =
+        getBuildSettings(testTarget, testPBXTarget, "Default");
+
+    Path currentDirectory = Paths.get(".").toAbsolutePath();
+    assertEquals(
+        "test binary should use header symlink trees for both public and non-public headers "
+            + "of the tested library in HEADER_SEARCH_PATHS",
+        "$(inherited) "
+            + currentDirectory
+                .resolve("buck-out/gen/_p/LpygK8zq5F-priv/.hmap")
+                .normalize()
+                .toString()
+            + " "
+            + currentDirectory
+                .resolve("buck-out/gen/_p/LpygK8zq5F-pub/.hmap")
+                .normalize()
+                .toString()
+            + " "
+            + currentDirectory
+                .resolve("buck-out/gen/_p/CwkbTNOBmb-pub/.hmap")
+                .normalize()
+                .toString()
+            + " "
+            + currentDirectory
+                .resolve("buck-out/gen/_p/CwkbTNOBmb-priv/.hmap")
+                .normalize()
+                .toString()
+            + " "
+            + currentDirectory.resolve("buck-out").normalize().toString(),
+        buildSettings.get("HEADER_SEARCH_PATHS"));
+    assertEquals(
+        "USER_HEADER_SEARCH_PATHS should not be set",
+        null,
+        buildSettings.get("USER_HEADER_SEARCH_PATHS"));
+  }
+
+  @Test
   public void testHeaderSymlinkTreesWithHeadersVisibleForTestingWithModuleOverrides()
       throws IOException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
