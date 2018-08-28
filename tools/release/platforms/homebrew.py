@@ -179,7 +179,7 @@ def build_bottle_file(
     )
     bottle_path = os.path.join(output_dir, bottle_filename)
     bottles = glob.glob(
-        os.path.join(tap_path, "buck-{}*.bottle.tar.gz".format(release_version))
+        os.path.join(tap_path, "buck--{}*.bottle.tar.gz".format(release_version))
     )
     if len(bottles) != 1:
         raise ReleaseException(

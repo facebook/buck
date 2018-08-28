@@ -103,14 +103,15 @@ def build_chocolatey(repository, release, windows_host, output_dir):
     return nupkg_path
 
 
-def publish_chocolatey(chocolatey_file, chocolatey_api_key):
+def publish_chocolatey(chocolatey_file, chocolatey_api_key, insecure_chocolatey_upload):
     """ Publish a nupkg to chocolatey """
     url = "https://push.chocolatey.org/api/v2/package"
     headers = {"X-NuGet-ApiKey": chocolatey_api_key}
+    verify = not insecure_chocolatey_upload
 
     logging.info("Publishing chocolatey package at {}".format(chocolatey_file))
     with open(chocolatey_file, "rb") as fin:
-        response = requests.put(url, headers=headers, data=fin)
+        response = requests.put(url, headers=headers, data=fin, verify=verify)
     if response.status_code == 409:
         raise ReleaseException("Package and version already exists on chocolatey")
     response.raise_for_status()

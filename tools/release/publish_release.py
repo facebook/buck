@@ -168,6 +168,15 @@ def parse_args(args):
             "building (unless --keep-temp-files is specified)"
         ),
     )
+    parser.add_argument(
+        "--insecure-chocolatey-upload",
+        action="store_true",
+        help=(
+            "Do less certificate verification when uploading to chocolatey. "
+            "This is a workaround for "
+            "https://github.com/chocolatey/chocolatey.org/issues/584"
+        ),
+    )
     parsed_kwargs = dict(parser.parse_args(args)._get_kwargs())
     if parsed_kwargs["deb_file"]:
         parsed_kwargs["build_deb"] = False
@@ -319,7 +328,9 @@ def publish(
         if chocolatey_file:
             add_assets(release, github_token, chocolatey_file)
             if args.chocolatey_publish:
-                publish_chocolatey(chocolatey_file, chocolatey_token)
+                publish_chocolatey(
+                    chocolatey_file, chocolatey_token, args.insecure_chocolatey_upload
+                )
         if homebrew_file:
             add_assets(release, github_token, homebrew_file)
             validate_tap(homebrew_dir, args.tap_repository, args.version)
