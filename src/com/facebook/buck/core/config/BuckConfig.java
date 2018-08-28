@@ -474,6 +474,10 @@ public class BuckConfig {
     return getBooleanValue("adb", "multi_install_mode", false);
   }
 
+  public boolean getUseSynchronousTaskManager() {
+    return getBooleanValue("daemon", "use_synchronous_task_manager", true);
+  }
+
   public boolean getFlushEventsBeforeExit() {
     return getBooleanValue("daemon", "flush_events_before_exit", false);
   }

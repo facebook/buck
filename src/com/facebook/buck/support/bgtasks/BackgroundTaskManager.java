@@ -68,5 +68,5 @@ public interface BackgroundTaskManager {
    * @param timeout timeout for tasks to finish
    * @param units units of timeout
    */
-  void shutdown(long timeout, TimeUnit units);
+  void shutdown(long timeout, TimeUnit units) throws InterruptedException;
 }

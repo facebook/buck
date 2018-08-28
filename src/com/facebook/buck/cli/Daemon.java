@@ -38,6 +38,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
+import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.SynchronousBackgroundTaskManager;
 import com.facebook.buck.util.RichStream;
@@ -144,7 +145,12 @@ final class Daemon implements Closeable {
     LOG.debug("Using Watchman Cursor: %s", cursor);
     persistentWorkerPools = new ConcurrentHashMap<>();
 
-    this.bgTaskManager = new SynchronousBackgroundTaskManager();
+    if (rootCell.getBuckConfig().getUseSynchronousTaskManager()) {
+      this.bgTaskManager = new SynchronousBackgroundTaskManager();
+    } else {
+      boolean blocking = rootCell.getBuckConfig().getFlushEventsBeforeExit();
+      this.bgTaskManager = new AsyncBackgroundTaskManager(blocking);
+    }
   }
 
   Cell getRootCell() {
@@ -294,6 +300,7 @@ final class Daemon implements Closeable {
 
   @Override
   public void close() {
+    bgTaskManager.shutdownNow();
     shutdownPersistentWorkerPools();
     shutdownWebServer();
   }

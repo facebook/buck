@@ -120,6 +120,7 @@ import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactor
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
 import com.facebook.buck.support.bgtasks.SynchronousBackgroundTaskManager;
@@ -787,10 +788,19 @@ public final class Main {
         TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
       }
 
-      BackgroundTaskManager bgTaskManager =
-          daemon.isPresent()
-              ? daemon.map(Daemon::getBgTaskManager).get()
-              : new SynchronousBackgroundTaskManager();
+      BackgroundTaskManager bgTaskManager;
+      if (rootCell.getBuckConfig().getUseSynchronousTaskManager()) {
+        bgTaskManager =
+            daemon.map((d) -> d.getBgTaskManager()).orElse(new SynchronousBackgroundTaskManager());
+      } else {
+        boolean blocking = rootCell.getBuckConfig().getFlushEventsBeforeExit();
+        if (!blocking && !daemon.isPresent()) {
+          LOG.warn(
+              "Manager cannot be async (as currently set in config) when not on daemon. Initializing blocking manager.");
+        }
+        bgTaskManager =
+            daemon.map((d) -> d.getBgTaskManager()).orElse(new AsyncBackgroundTaskManager(true));
+      }
       bgTaskManager.notify(Notification.COMMAND_START);
 
       ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
