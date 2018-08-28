@@ -21,7 +21,6 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.AbstractSet;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.SortedSet;
@@ -49,10 +48,12 @@ public class BuildDeps extends AbstractSet<BuildRule>
     this.additionalDeps = additionalDeps;
 
     totalDeps =
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(previousRuleBuildDeps != null ? previousRuleBuildDeps : Collections.emptySet())
-            .addAll(additionalDeps)
-            .build();
+        previousRuleBuildDeps != null && !previousRuleBuildDeps.isEmpty()
+            ? ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(previousRuleBuildDeps)
+                .addAll(additionalDeps)
+                .build()
+            : additionalDeps;
   }
 
   @Override
