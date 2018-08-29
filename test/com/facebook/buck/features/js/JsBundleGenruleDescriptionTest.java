@@ -370,20 +370,23 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
-  public void addAppleBundleResourcesExposesNothingWithSkipResources() {
+  public void addAppleBundleWithSkipResourcesExposesOnlyJS() {
     setupWithSkipResources();
 
-    AppleBundleResources.Builder genruleBuilder = AppleBundleResources.builder();
+    AppleBundleResources.Builder resourcesBuilder = AppleBundleResources.builder();
     new JsBundleGenruleDescription(
             new ToolchainProviderBuilder().build(), new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
-            genruleBuilder,
+            resourcesBuilder,
             setup.targetNode(),
             setup.rule().getProjectFilesystem(),
             setup.graphBuilder());
 
-    AppleBundleResources expected = AppleBundleResources.builder().build();
-    assertEquals(expected, genruleBuilder.build());
+    AppleBundleResources expected =
+        AppleBundleResources.builder()
+            .addDirsContainingResourceDirs(setup.rule().getSourcePathToOutput())
+            .build();
+    assertEquals(expected, resourcesBuilder.build());
   }
 
   @Test

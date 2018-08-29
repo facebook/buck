@@ -332,10 +332,15 @@ public class JsBundleDescription
     addAppleBundleResources(builder, bundle);
   }
 
+  static void addAppleBundleResourcesJSOutputOnly(
+      AppleBundleResources.Builder builder, JsBundleOutputs bundle) {
+    builder.addDirsContainingResourceDirs(bundle.getSourcePathToOutput());
+  }
+
   static void addAppleBundleResources(
       AppleBundleResources.Builder builder, JsBundleOutputs bundle) {
-    builder.addDirsContainingResourceDirs(
-        bundle.getSourcePathToOutput(), bundle.getSourcePathToResources());
+    addAppleBundleResourcesJSOutputOnly(builder, bundle);
+    builder.addDirsContainingResourceDirs(bundle.getSourcePathToResources());
   }
 
   @BuckStyleImmutable

@@ -164,9 +164,11 @@ public class JsBundleGenruleDescription
       TargetNode<JsBundleGenruleDescriptionArg> targetNode,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver) {
-    if (!targetNode.getConstructorArg().getSkipResources()) {
-      JsBundleGenrule genrule =
-          resolver.getRuleWithType(targetNode.getBuildTarget(), JsBundleGenrule.class);
+    JsBundleGenrule genrule =
+        resolver.getRuleWithType(targetNode.getBuildTarget(), JsBundleGenrule.class);
+    if (targetNode.getConstructorArg().getSkipResources()) {
+      JsBundleDescription.addAppleBundleResourcesJSOutputOnly(builder, genrule);
+    } else {
       JsBundleDescription.addAppleBundleResources(builder, genrule);
     }
   }
