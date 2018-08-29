@@ -16,6 +16,19 @@
 
 package com.facebook.buck.rules.modern.builders.grpc;
 
+import build.bazel.remote.execution.v2.ActionResult;
+import build.bazel.remote.execution.v2.BatchUpdateBlobsRequest;
+import build.bazel.remote.execution.v2.BatchUpdateBlobsResponse;
+import build.bazel.remote.execution.v2.BatchUpdateBlobsResponse.Response;
+import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc.ContentAddressableStorageImplBase;
+import build.bazel.remote.execution.v2.Digest;
+import build.bazel.remote.execution.v2.ExecuteRequest;
+import build.bazel.remote.execution.v2.ExecuteResponse;
+import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionImplBase;
+import build.bazel.remote.execution.v2.FindMissingBlobsRequest;
+import build.bazel.remote.execution.v2.FindMissingBlobsResponse;
+import build.bazel.remote.execution.v2.GetTreeRequest;
+import build.bazel.remote.execution.v2.GetTreeResponse;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.file.MostFiles;
@@ -24,6 +37,7 @@ import com.facebook.buck.rules.modern.builders.LocalContentAddressedStorage;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadData;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadResult;
 import com.facebook.buck.rules.modern.builders.Protocol;
+import com.facebook.buck.rules.modern.builders.Protocol.Action;
 import com.facebook.buck.rules.modern.builders.Protocol.Command;
 import com.facebook.buck.rules.modern.builders.grpc.GrpcProtocol.GrpcDigest;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -37,20 +51,6 @@ import com.google.bytestream.ByteStreamProto.WriteResponse;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.remoteexecution.v1test.Action;
-import com.google.devtools.remoteexecution.v1test.ActionResult;
-import com.google.devtools.remoteexecution.v1test.BatchUpdateBlobsRequest;
-import com.google.devtools.remoteexecution.v1test.BatchUpdateBlobsResponse;
-import com.google.devtools.remoteexecution.v1test.BatchUpdateBlobsResponse.Response;
-import com.google.devtools.remoteexecution.v1test.ContentAddressableStorageGrpc.ContentAddressableStorageImplBase;
-import com.google.devtools.remoteexecution.v1test.Digest;
-import com.google.devtools.remoteexecution.v1test.ExecuteRequest;
-import com.google.devtools.remoteexecution.v1test.ExecuteResponse;
-import com.google.devtools.remoteexecution.v1test.ExecutionGrpc.ExecutionImplBase;
-import com.google.devtools.remoteexecution.v1test.FindMissingBlobsRequest;
-import com.google.devtools.remoteexecution.v1test.FindMissingBlobsResponse;
-import com.google.devtools.remoteexecution.v1test.GetTreeRequest;
-import com.google.devtools.remoteexecution.v1test.GetTreeResponse;
 import com.google.longrunning.CancelOperationRequest;
 import com.google.longrunning.DeleteOperationRequest;
 import com.google.longrunning.GetOperationRequest;
@@ -144,7 +144,7 @@ public class GrpcRemoteExecutionServiceImpl {
                     .map(
                         blobRequest ->
                             new UploadData(
-                                new GrpcDigest(blobRequest.getContentDigest()),
+                                new GrpcDigest(blobRequest.getDigest()),
                                 () ->
                                     new ByteArrayInputStream(blobRequest.getData().toByteArray())))
                     .collect(ImmutableList.toImmutableList()));
@@ -158,7 +158,7 @@ public class GrpcRemoteExecutionServiceImpl {
           }
           responseBuilder.addResponses(
               Response.newBuilder()
-                  .setBlobDigest(GrpcProtocol.get(uploadResult.digest))
+                  .setDigest(GrpcProtocol.get(uploadResult.digest))
                   .setStatus(statusBuilder.build())
                   .build());
         }
@@ -237,7 +237,7 @@ public class GrpcRemoteExecutionServiceImpl {
     public void execute(ExecuteRequest request, StreamObserver<Operation> responseObserver) {
       try {
         // Don't really need to be too careful here about constructing a unique directory.
-        Action action = request.getAction();
+        Action action = storage.materializeAction(new GrpcDigest(request.getActionDigest()));
         String name =
             String.format("%s-%d", action.getInputRootDigest().getHash(), new Random().nextLong());
         Path buildDir = workDir.resolve(name);
@@ -246,9 +246,7 @@ public class GrpcRemoteExecutionServiceImpl {
           Command command =
               storage
                   .materializeInputs(
-                      buildDir,
-                      new GrpcDigest(action.getInputRootDigest()),
-                      Optional.of(new GrpcDigest(action.getCommandDigest())))
+                      buildDir, action.getInputRootDigest(), Optional.of(action.getCommandDigest()))
                   .get();
 
           ActionRunner.ActionResult actionResult =
@@ -258,11 +256,9 @@ public class GrpcRemoteExecutionServiceImpl {
                   .runAction(
                       command.getCommand(),
                       command.getEnvironment(),
-                      action
-                          .getOutputDirectoriesList()
-                          .asByteStringList()
+                      command
+                          .getOutputDirectories()
                           .stream()
-                          .map(ByteString::toStringUtf8)
                           .map(Paths::get)
                           .collect(ImmutableSet.toImmutableSet()),
                       buildDir);

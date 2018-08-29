@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.modern.builders.grpc;
 
+import build.bazel.remote.execution.v2.Command.EnvironmentVariable;
+import build.bazel.remote.execution.v2.OutputFile.Builder;
 import com.facebook.buck.rules.modern.builders.Protocol;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableList;
@@ -23,16 +25,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import com.google.devtools.remoteexecution.v1test.Command.EnvironmentVariable;
-import com.google.devtools.remoteexecution.v1test.OutputFile.Builder;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 /** A Grpc-based Protocol implementation. */
 public class GrpcProtocol implements Protocol {
@@ -40,13 +40,12 @@ public class GrpcProtocol implements Protocol {
   // We still use the FileHashCache to compute hashes of source files. So until that is switched
   // over to SHA256, we cannot really change this.
   private static final HashFunction HASHER = Hashing.sha1();
-  private static final int MAX_INLINED_OUTPUT_FILE_SIZE = 64 * 1024;
 
   /** Wrapped Grpc Digest. */
   static class GrpcDigest implements Digest {
-    private final com.google.devtools.remoteexecution.v1test.Digest digest;
+    private final build.bazel.remote.execution.v2.Digest digest;
 
-    public GrpcDigest(com.google.devtools.remoteexecution.v1test.Digest digest) {
+    public GrpcDigest(build.bazel.remote.execution.v2.Digest digest) {
       this.digest = digest;
     }
 
@@ -75,9 +74,9 @@ public class GrpcProtocol implements Protocol {
   }
 
   private static class GrpcCommand implements Command {
-    private final com.google.devtools.remoteexecution.v1test.Command command;
+    private final build.bazel.remote.execution.v2.Command command;
 
-    GrpcCommand(com.google.devtools.remoteexecution.v1test.Command command) {
+    GrpcCommand(build.bazel.remote.execution.v2.Command command) {
       this.command = command;
     }
 
@@ -100,12 +99,50 @@ public class GrpcProtocol implements Protocol {
               ImmutableMap.toImmutableMap(
                   EnvironmentVariable::getName, EnvironmentVariable::getValue));
     }
+
+    @Override
+    public ImmutableList<String> getOutputFiles() {
+      return command
+          .getOutputFilesList()
+          .asByteStringList()
+          .stream()
+          .map(ByteString::toStringUtf8)
+          .collect(ImmutableList.toImmutableList());
+    }
+
+    @Override
+    public ImmutableList<String> getOutputDirectories() {
+      return command
+          .getOutputDirectoriesList()
+          .asByteStringList()
+          .stream()
+          .map(ByteString::toStringUtf8)
+          .collect(ImmutableList.toImmutableList());
+    }
+  }
+
+  private static class GrpcAction implements Action {
+    private final build.bazel.remote.execution.v2.Action action;
+
+    GrpcAction(build.bazel.remote.execution.v2.Action action) {
+      this.action = action;
+    }
+
+    @Override
+    public Digest getCommandDigest() {
+      return new GrpcDigest(action.getCommandDigest());
+    }
+
+    @Override
+    public Digest getInputRootDigest() {
+      return new GrpcDigest(action.getInputRootDigest());
+    }
   }
 
   private static class GrpcFileNode implements FileNode {
-    private final com.google.devtools.remoteexecution.v1test.FileNode fileNode;
+    private final build.bazel.remote.execution.v2.FileNode fileNode;
 
-    public GrpcFileNode(com.google.devtools.remoteexecution.v1test.FileNode fileNode) {
+    public GrpcFileNode(build.bazel.remote.execution.v2.FileNode fileNode) {
       this.fileNode = fileNode;
     }
 
@@ -126,9 +163,9 @@ public class GrpcProtocol implements Protocol {
   }
 
   private static class GrpcDirectory implements Directory {
-    private final com.google.devtools.remoteexecution.v1test.Directory directory;
+    private final build.bazel.remote.execution.v2.Directory directory;
 
-    public GrpcDirectory(com.google.devtools.remoteexecution.v1test.Directory directory) {
+    public GrpcDirectory(build.bazel.remote.execution.v2.Directory directory) {
       this.directory = directory;
     }
 
@@ -157,9 +194,9 @@ public class GrpcProtocol implements Protocol {
   }
 
   private static class GrpcSymlinkNode implements SymlinkNode {
-    private final com.google.devtools.remoteexecution.v1test.SymlinkNode node;
+    private final build.bazel.remote.execution.v2.SymlinkNode node;
 
-    private GrpcSymlinkNode(com.google.devtools.remoteexecution.v1test.SymlinkNode node) {
+    private GrpcSymlinkNode(build.bazel.remote.execution.v2.SymlinkNode node) {
       this.node = node;
     }
 
@@ -175,10 +212,9 @@ public class GrpcProtocol implements Protocol {
   }
 
   private static class GrpcDirectoryNode implements DirectoryNode {
-    private final com.google.devtools.remoteexecution.v1test.DirectoryNode directoryNode;
+    private final build.bazel.remote.execution.v2.DirectoryNode directoryNode;
 
-    public GrpcDirectoryNode(
-        com.google.devtools.remoteexecution.v1test.DirectoryNode directoryNode) {
+    public GrpcDirectoryNode(build.bazel.remote.execution.v2.DirectoryNode directoryNode) {
       this.directoryNode = directoryNode;
     }
 
@@ -194,9 +230,9 @@ public class GrpcProtocol implements Protocol {
   }
 
   private static class GrpcTree implements Tree {
-    private final com.google.devtools.remoteexecution.v1test.Tree tree;
+    private final build.bazel.remote.execution.v2.Tree tree;
 
-    public GrpcTree(com.google.devtools.remoteexecution.v1test.Tree tree) {
+    public GrpcTree(build.bazel.remote.execution.v2.Tree tree) {
       this.tree = tree;
     }
 
@@ -213,10 +249,9 @@ public class GrpcProtocol implements Protocol {
 
   /** Wrapped Grpc OutputDirectory. */
   static class GrpcOutputDirectory implements OutputDirectory {
-    private final com.google.devtools.remoteexecution.v1test.OutputDirectory outputDirectory;
+    private final build.bazel.remote.execution.v2.OutputDirectory outputDirectory;
 
-    GrpcOutputDirectory(
-        com.google.devtools.remoteexecution.v1test.OutputDirectory outputDirectory) {
+    GrpcOutputDirectory(build.bazel.remote.execution.v2.OutputDirectory outputDirectory) {
       this.outputDirectory = outputDirectory;
     }
 
@@ -233,9 +268,9 @@ public class GrpcProtocol implements Protocol {
 
   /** Wrapped Grpc OutputFile. */
   static class GrpcOutputFile implements OutputFile {
-    private final com.google.devtools.remoteexecution.v1test.OutputFile outputFile;
+    private final build.bazel.remote.execution.v2.OutputFile outputFile;
 
-    GrpcOutputFile(com.google.devtools.remoteexecution.v1test.OutputFile outputFile) {
+    GrpcOutputFile(build.bazel.remote.execution.v2.OutputFile outputFile) {
       this.outputFile = outputFile;
     }
 
@@ -250,14 +285,6 @@ public class GrpcProtocol implements Protocol {
     }
 
     @Override
-    @Nullable
-    public ByteBuffer getContent() {
-      return outputFile.getContent() == null
-          ? null
-          : outputFile.getContent().asReadOnlyByteBuffer();
-    }
-
-    @Override
     public boolean getIsExecutable() {
       return outputFile.getIsExecutable();
     }
@@ -265,17 +292,22 @@ public class GrpcProtocol implements Protocol {
 
   @Override
   public Command parseCommand(ByteBuffer data) throws IOException {
-    return new GrpcCommand(com.google.devtools.remoteexecution.v1test.Command.parseFrom(data));
+    return new GrpcCommand(build.bazel.remote.execution.v2.Command.parseFrom(data));
+  }
+
+  @Override
+  public Action parseAction(ByteBuffer data) throws IOException {
+    return new GrpcAction(build.bazel.remote.execution.v2.Action.parseFrom(data));
   }
 
   @Override
   public Directory parseDirectory(ByteBuffer data) throws IOException {
-    return new GrpcDirectory(com.google.devtools.remoteexecution.v1test.Directory.parseFrom(data));
+    return new GrpcDirectory(build.bazel.remote.execution.v2.Directory.parseFrom(data));
   }
 
   @Override
   public Tree parseTree(ByteBuffer data) throws IOException {
-    return new GrpcTree(com.google.devtools.remoteexecution.v1test.Tree.parseFrom(data));
+    return new GrpcTree(build.bazel.remote.execution.v2.Tree.parseFrom(data));
   }
 
   @Override
@@ -285,9 +317,14 @@ public class GrpcProtocol implements Protocol {
 
   @Override
   public Command newCommand(
-      ImmutableList<String> command, ImmutableSortedMap<String, String> commandEnvironment) {
+      ImmutableList<String> command,
+      ImmutableSortedMap<String, String> commandEnvironment,
+      Set<Path> outputs) {
+    List<String> outputStrings =
+        outputs.stream().map(Path::toString).sorted().collect(Collectors.toList());
+
     return new GrpcCommand(
-        com.google.devtools.remoteexecution.v1test.Command.newBuilder()
+        build.bazel.remote.execution.v2.Command.newBuilder()
             .addAllArguments(command)
             .addAllEnvironmentVariables(
                 commandEnvironment
@@ -300,6 +337,19 @@ public class GrpcProtocol implements Protocol {
                                 .setValue(entry.getValue())
                                 .build())
                     .collect(Collectors.toList()))
+            .addAllOutputFiles(outputStrings)
+            .addAllOutputDirectories(outputStrings)
+            .build());
+  }
+
+  @Override
+  public Action newAction(Digest commandDigest, Digest inputRootDigest) {
+    return new GrpcAction(
+        build.bazel.remote.execution.v2.Action.newBuilder()
+            .setCommandDigest(get(commandDigest))
+            .setInputRootDigest(get(inputRootDigest))
+            // no timeout
+            // no doNotCache
             .build());
   }
 
@@ -307,17 +357,16 @@ public class GrpcProtocol implements Protocol {
   @Override
   public SymlinkNode newSymlinkNode(String name, Path target) {
     return new GrpcSymlinkNode(
-        com.google.devtools.remoteexecution.v1test.SymlinkNode.newBuilder()
+        build.bazel.remote.execution.v2.SymlinkNode.newBuilder()
             .setName(name)
             .setTarget(target.toString())
             .build());
   }
 
   @Override
-  public OutputDirectory newOutputDirectory(Path output, Digest digest, Digest treeDigest) {
+  public OutputDirectory newOutputDirectory(Path output, Digest treeDigest) {
     return new GrpcOutputDirectory(
-        com.google.devtools.remoteexecution.v1test.OutputDirectory.newBuilder()
-            .setDigest(get(digest))
+        build.bazel.remote.execution.v2.OutputDirectory.newBuilder()
             .setTreeDigest(get(treeDigest))
             .setPath(output.toString())
             .build());
@@ -326,7 +375,7 @@ public class GrpcProtocol implements Protocol {
   @Override
   public Tree newTree(Directory directory, List<Directory> directories) {
     return new GrpcTree(
-        com.google.devtools.remoteexecution.v1test.Tree.newBuilder()
+        build.bazel.remote.execution.v2.Tree.newBuilder()
             .setRoot(get(directory))
             .addAllChildren(
                 directories.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
@@ -336,7 +385,7 @@ public class GrpcProtocol implements Protocol {
   @Override
   public DirectoryNode newDirectoryNode(String name, Digest digest) {
     return new GrpcDirectoryNode(
-        com.google.devtools.remoteexecution.v1test.DirectoryNode.newBuilder()
+        build.bazel.remote.execution.v2.DirectoryNode.newBuilder()
             .setDigest(get(digest))
             .setName(name)
             .build());
@@ -346,7 +395,7 @@ public class GrpcProtocol implements Protocol {
   public Directory newDirectory(
       List<DirectoryNode> children, List<FileNode> files, List<SymlinkNode> symlinks) {
     return new GrpcDirectory(
-        com.google.devtools.remoteexecution.v1test.Directory.newBuilder()
+        build.bazel.remote.execution.v2.Directory.newBuilder()
             .addAllFiles(files.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
             .addAllDirectories(
                 children.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
@@ -357,7 +406,7 @@ public class GrpcProtocol implements Protocol {
   @Override
   public Digest newDigest(String hash, int size) {
     return new GrpcDigest(
-        com.google.devtools.remoteexecution.v1test.Digest.newBuilder()
+        build.bazel.remote.execution.v2.Digest.newBuilder()
             .setHash(hash)
             .setSizeBytes(size)
             .build());
@@ -370,22 +419,17 @@ public class GrpcProtocol implements Protocol {
       boolean isExecutable,
       ThrowingSupplier<InputStream, IOException> dataSupplier)
       throws IOException {
-    Builder builder = com.google.devtools.remoteexecution.v1test.OutputFile.newBuilder();
+    Builder builder = build.bazel.remote.execution.v2.OutputFile.newBuilder();
     builder.setPath(output.toString());
     builder.setDigest(get(digest));
     builder.setIsExecutable(isExecutable);
-    if (digest.getSize() < MAX_INLINED_OUTPUT_FILE_SIZE) {
-      try (InputStream dataStream = dataSupplier.get()) {
-        builder.setContent(ByteString.readFrom(dataStream));
-      }
-    }
     return new GrpcOutputFile(builder.build());
   }
 
   @Override
   public FileNode newFileNode(Digest digest, String name, boolean isExecutable) {
     return new GrpcFileNode(
-        com.google.devtools.remoteexecution.v1test.FileNode.newBuilder()
+        build.bazel.remote.execution.v2.FileNode.newBuilder()
             .setDigest(get(digest))
             .setName(name)
             .setIsExecutable(isExecutable)
@@ -408,9 +452,14 @@ public class GrpcProtocol implements Protocol {
   }
 
   @Override
+  public byte[] toByteArray(Action action) {
+    return get(action).toByteArray();
+  }
+
+  @Override
   public Digest computeDigest(byte[] data) {
     return new GrpcDigest(
-        com.google.devtools.remoteexecution.v1test.Digest.newBuilder()
+        build.bazel.remote.execution.v2.Digest.newBuilder()
             .setSizeBytes(data.length)
             .setHash(HASHER.hashBytes(data).toString())
             .build());
@@ -421,41 +470,44 @@ public class GrpcProtocol implements Protocol {
     return HASHER;
   }
 
-  private static com.google.devtools.remoteexecution.v1test.DirectoryNode get(
-      DirectoryNode directoryNode) {
+  private static build.bazel.remote.execution.v2.DirectoryNode get(DirectoryNode directoryNode) {
     return ((GrpcDirectoryNode) directoryNode).directoryNode;
   }
 
-  private static com.google.devtools.remoteexecution.v1test.SymlinkNode get(SymlinkNode node) {
+  private static build.bazel.remote.execution.v2.SymlinkNode get(SymlinkNode node) {
     return ((GrpcSymlinkNode) node).node;
   }
 
-  private static com.google.devtools.remoteexecution.v1test.Command get(Command command) {
+  private static build.bazel.remote.execution.v2.Command get(Command command) {
     return ((GrpcCommand) command).command;
   }
 
-  private static com.google.devtools.remoteexecution.v1test.FileNode get(FileNode fileNode) {
+  private static build.bazel.remote.execution.v2.Action get(Action action) {
+    return ((GrpcAction) action).action;
+  }
+
+  private static build.bazel.remote.execution.v2.FileNode get(FileNode fileNode) {
     return ((GrpcFileNode) fileNode).fileNode;
   }
 
-  public static com.google.devtools.remoteexecution.v1test.Digest get(Digest blob) {
+  public static build.bazel.remote.execution.v2.Digest get(Digest blob) {
     return ((GrpcDigest) blob).digest;
   }
 
-  public static com.google.devtools.remoteexecution.v1test.OutputFile get(OutputFile outputFile) {
+  public static build.bazel.remote.execution.v2.OutputFile get(OutputFile outputFile) {
     return ((GrpcOutputFile) outputFile).outputFile;
   }
 
-  public static com.google.devtools.remoteexecution.v1test.OutputDirectory get(
+  public static build.bazel.remote.execution.v2.OutputDirectory get(
       OutputDirectory outputDirectory) {
     return ((GrpcOutputDirectory) outputDirectory).outputDirectory;
   }
 
-  public static com.google.devtools.remoteexecution.v1test.Directory get(Directory directory) {
+  public static build.bazel.remote.execution.v2.Directory get(Directory directory) {
     return ((GrpcDirectory) directory).directory;
   }
 
-  private com.google.devtools.remoteexecution.v1test.Tree get(Tree tree) {
+  private build.bazel.remote.execution.v2.Tree get(Tree tree) {
     return ((GrpcTree) tree).tree;
   }
 }

@@ -34,8 +34,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 /** A Thrift-based Protocol implementation. */
 public class ThriftProtocol implements Protocol {
@@ -94,6 +94,16 @@ public class ThriftProtocol implements Protocol {
           .environment_variables
           .stream()
           .collect(ImmutableMap.toImmutableMap(var -> var.name, var -> var.value));
+    }
+
+    @Override
+    public ImmutableList<String> getOutputFiles() {
+      throw new RuntimeException("TODO(orr): Implement");
+    }
+
+    @Override
+    public ImmutableList<String> getOutputDirectories() {
+      throw new RuntimeException("TODO(orr): Implement");
     }
   }
 
@@ -220,7 +230,9 @@ public class ThriftProtocol implements Protocol {
 
   @Override
   public Command newCommand(
-      ImmutableList<String> command, ImmutableSortedMap<String, String> commandEnvironment) {
+      ImmutableList<String> command,
+      ImmutableSortedMap<String, String> commandEnvironment,
+      Set<Path> outputs) {
     return new ThriftCommand(
         new com.facebook.remoteexecution.executionengine.Command(
             command,
@@ -232,7 +244,12 @@ public class ThriftProtocol implements Protocol {
   }
 
   @Override
-  public OutputDirectory newOutputDirectory(Path output, Digest digest, Digest treeDigest) {
+  public Action newAction(Digest commandDigest, Digest inputRootDigest) {
+    throw new RuntimeException("TODO(orr): Implement");
+  }
+
+  @Override
+  public OutputDirectory newOutputDirectory(Path output, Digest treeDigest) {
     return new ThriftOutputDirectory(
         new com.facebook.remoteexecution.executionengine.OutputDirectory(
             output.toString(), get(treeDigest)));
@@ -258,6 +275,11 @@ public class ThriftProtocol implements Protocol {
   @Override
   public byte[] toByteArray(Command actionCommand) {
     return serialize(get(actionCommand));
+  }
+
+  @Override
+  public byte[] toByteArray(Action action) {
+    throw new RuntimeException("TODO(orr): Implement");
   }
 
   private com.facebook.remoteexecution.executionengine.Command get(Command command) {
@@ -322,12 +344,6 @@ public class ThriftProtocol implements Protocol {
     }
 
     @Override
-    @Nullable
-    public ByteBuffer getContent() {
-      return ByteBuffer.wrap(outputFile.content);
-    }
-
-    @Override
     public boolean getIsExecutable() {
       return outputFile.is_executable;
     }
@@ -361,6 +377,11 @@ public class ThriftProtocol implements Protocol {
         new com.facebook.remoteexecution.executionengine.Command();
     parseStruct(data, command);
     return new ThriftCommand(command);
+  }
+
+  @Override
+  public Action parseAction(ByteBuffer data) throws IOException {
+    throw new RuntimeException("TODO(orr): Implement");
   }
 
   @Override

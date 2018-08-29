@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="remote-apis">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/remote-apis/remote-apis.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/remote-apis/remote-apis.src.jar!/" />
+    </SOURCES>
+  </library>
+</component>

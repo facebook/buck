@@ -20,10 +20,8 @@ import com.facebook.buck.rules.modern.builders.Protocol.Digest;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /** Interface for a remote execution service. Used by RemoteExecution to build rules. */
 public interface RemoteExecutionService {
@@ -43,6 +41,5 @@ public interface RemoteExecutionService {
    *
    * <p>Returns an ActionResult with exit code, outputs, stdout/stderr, etc.
    */
-  ExecutionResult execute(Digest digest, Digest inputsRootDigest, Set<Path> outputs)
-      throws IOException, InterruptedException;
+  ExecutionResult execute(Digest actionDigest) throws IOException, InterruptedException;
 }

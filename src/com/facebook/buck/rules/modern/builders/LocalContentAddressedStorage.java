@@ -187,6 +187,10 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
     outputsMaterializer.materialize(outputDirectories, outputFiles, root);
   }
 
+  public Protocol.Action materializeAction(Protocol.Digest actionDigest) throws IOException {
+    return inputsMaterializer.materializeAction(actionDigest);
+  }
+
   public Optional<Protocol.Command> materializeInputs(
       Path buildDir, Protocol.Digest rootDigest, Optional<Protocol.Digest> commandDigest)
       throws IOException {
@@ -259,6 +263,12 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
         }
       }
       return Optional.empty();
+    }
+
+    public Protocol.Action materializeAction(Protocol.Digest actionDigest) throws IOException {
+      try (InputStream dataStream = delegate.getData(actionDigest)) {
+        return protocol.parseAction(ByteBuffer.wrap(ByteStreams.toByteArray(dataStream)));
+      }
     }
   }
 

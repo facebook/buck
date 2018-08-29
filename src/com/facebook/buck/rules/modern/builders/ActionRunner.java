@@ -168,15 +168,14 @@ public class ActionRunner {
         }
 
         List<Directory> directories = new ArrayList<>();
-        Digest digest =
-            builder.buildTree(
-                new ProtocolTreeBuilder(requiredDataBuilder::put, directories::add, protocol));
+        builder.buildTree(
+            new ProtocolTreeBuilder(requiredDataBuilder::put, directories::add, protocol));
         Preconditions.checkState(!directories.isEmpty());
         Tree tree = protocol.newTree(directories.get(directories.size() - 1), directories);
         byte[] treeData = protocol.toByteArray(tree);
         Digest treeDigest = protocol.computeDigest(treeData);
 
-        outputDirectoriesBuilder.add(protocol.newOutputDirectory(output, digest, treeDigest));
+        outputDirectoriesBuilder.add(protocol.newOutputDirectory(output, treeDigest));
         requiredDataBuilder.put(treeDigest, () -> new ByteArrayInputStream(treeData));
       } else {
         long size = Files.size(path);

@@ -157,4 +157,3 @@ message DeleteOperationRequest {
   // The name of the operation resource to be deleted.
   string name = 1;
 }
-

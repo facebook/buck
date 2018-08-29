@@ -110,8 +110,7 @@ public abstract class RemoteExecution implements IsolatedExecution {
       throws IOException, InterruptedException, StepFailedException {
 
     HashMap<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder;
-    Digest commandDigest;
-    Digest inputsRootDigest;
+    Digest actionDigest;
 
     try (Scope ignored = LeafEvents.scope(eventBus, "deleting_stale_outputs")) {
       for (Path path : outputs) {
@@ -137,22 +136,27 @@ public abstract class RemoteExecution implements IsolatedExecution {
           data -> getProtocol().getHashFunction().hashBytes(data).toString(),
           true);
 
-      Protocol.Command actionCommand = getProtocol().newCommand(command, commandEnvironment);
+      Protocol.Command actionCommand =
+          getProtocol().newCommand(command, commandEnvironment, outputs);
 
       requiredDataBuilder = new HashMap<>();
       ProtocolTreeBuilder grpcTreeBuilder =
           new ProtocolTreeBuilder(requiredDataBuilder::put, directory -> {}, getProtocol());
-      inputsRootDigest = inputsBuilder.buildTree(grpcTreeBuilder);
+      Digest inputsRootDigest = inputsBuilder.buildTree(grpcTreeBuilder);
       byte[] commandData = getProtocol().toByteArray(actionCommand);
-      commandDigest = getProtocol().computeDigest(commandData);
+      Digest commandDigest = getProtocol().computeDigest(commandData);
       requiredDataBuilder.put(commandDigest, () -> new ByteArrayInputStream(commandData));
+
+      Protocol.Action action = getProtocol().newAction(commandDigest, inputsRootDigest);
+      byte[] actionData = getProtocol().toByteArray(action);
+      actionDigest = getProtocol().computeDigest(actionData);
+      requiredDataBuilder.put(actionDigest, () -> new ByteArrayInputStream(actionData));
     }
 
     try (Scope scope = LeafEvents.scope(eventBus, "uploading_inputs")) {
       getStorage().addMissing(ImmutableMap.copyOf(requiredDataBuilder));
     }
-    ExecutionResult result11 =
-        getExecutionService().execute(commandDigest, inputsRootDigest, outputs);
+    ExecutionResult result11 = getExecutionService().execute(actionDigest);
     try (Scope scope = LeafEvents.scope(eventBus, "materializing_outputs")) {
       getStorage()
           .materializeOutputs(

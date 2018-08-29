@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.builders;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.rules.modern.builders.Protocol.Action;
 import com.facebook.buck.rules.modern.builders.Protocol.Command;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
@@ -26,9 +27,11 @@ import com.facebook.buck.rules.modern.builders.RemoteExecutionService.ExecutionR
 import com.facebook.buck.util.NamedTemporaryDirectory;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 /** IsolatedExecution implementation that will run buildrules in a subprocess. */
@@ -59,20 +62,32 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
     super(eventBus, protocol);
     this.storage = storage;
     this.executionService =
-        (digest, inputsRootDigest, outputs) -> {
-          Path buildDir = workDir.getPath().resolve(inputsRootDigest.getHash());
+        (actionDigest) -> {
+          Action action = storage.materializeAction(actionDigest);
+
+          Path buildDir = workDir.getPath().resolve(action.getInputRootDigest().getHash());
           try (Closeable ignored = () -> MostFiles.deleteRecursively(buildDir)) {
-            Optional<Command> command;
+            Command command;
             try (Scope ignored2 = LeafEvents.scope(getEventBus(), "materializing_inputs")) {
-              command = storage.materializeInputs(buildDir, inputsRootDigest, Optional.of(digest));
+              command =
+                  storage
+                      .materializeInputs(
+                          buildDir,
+                          action.getInputRootDigest(),
+                          Optional.of(action.getCommandDigest()))
+                      .get();
             }
 
             ActionRunner.ActionResult actionResult =
                 new ActionRunner(protocol, eventBus)
                     .runAction(
-                        command.get().getCommand(),
-                        command.get().getEnvironment(),
-                        outputs,
+                        command.getCommand(),
+                        command.getEnvironment(),
+                        command
+                            .getOutputDirectories()
+                            .stream()
+                            .map(Paths::get)
+                            .collect(ImmutableSet.toImmutableSet()),
                         buildDir);
             try (Scope ignored2 = LeafEvents.scope(getEventBus(), "uploading_results")) {
               storage.addMissing(actionResult.requiredData);
