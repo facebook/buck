@@ -17,6 +17,7 @@
 package com.facebook.buck.io.filesystem.skylark;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.devtools.build.lib.vfs.DigestHashFunction;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.JavaIoFileSystem;
 import com.google.devtools.build.lib.vfs.Path;
@@ -41,6 +42,7 @@ public class SkylarkFilesystem extends JavaIoFileSystem {
   private final ProjectFilesystem filesystem;
 
   private SkylarkFilesystem(ProjectFilesystem filesystem) {
+    super(DigestHashFunction.SHA1);
     this.filesystem = filesystem;
   }
 
