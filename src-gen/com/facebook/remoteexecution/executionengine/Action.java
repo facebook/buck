@@ -30,26 +30,17 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
   private static final TStruct STRUCT_DESC = new TStruct("Action");
   private static final TField COMMAND_DIGEST_FIELD_DESC = new TField("command_digest", TType.STRUCT, (short)1);
   private static final TField INPUT_ROOT_DIGEST_FIELD_DESC = new TField("input_root_digest", TType.STRUCT, (short)2);
-  private static final TField OUTPUT_FILES_FIELD_DESC = new TField("output_files", TType.LIST, (short)3);
-  private static final TField OUTPUT_DIRECTORIES_FIELD_DESC = new TField("output_directories", TType.LIST, (short)4);
-  private static final TField REQUIREMENTS_FIELD_DESC = new TField("requirements", TType.STRUCT, (short)5);
-  private static final TField TIMEOUT_SECS_FIELD_DESC = new TField("timeout_secs", TType.I64, (short)6);
-  private static final TField DO_NOT_CACHE_FIELD_DESC = new TField("do_not_cache", TType.BOOL, (short)7);
+  private static final TField TIMEOUT_SECS_FIELD_DESC = new TField("timeout_secs", TType.I64, (short)3);
+  private static final TField DO_NOT_CACHE_FIELD_DESC = new TField("do_not_cache", TType.BOOL, (short)4);
 
   public com.facebook.remoteexecution.cas.Digest command_digest;
   public com.facebook.remoteexecution.cas.Digest input_root_digest;
-  public List<String> output_files;
-  public List<String> output_directories;
-  public Requirements requirements;
   public long timeout_secs;
   public boolean do_not_cache;
   public static final int COMMAND_DIGEST = 1;
   public static final int INPUT_ROOT_DIGEST = 2;
-  public static final int OUTPUT_FILES = 3;
-  public static final int OUTPUT_DIRECTORIES = 4;
-  public static final int REQUIREMENTS = 5;
-  public static final int TIMEOUT_SECS = 6;
-  public static final int DO_NOT_CACHE = 7;
+  public static final int TIMEOUT_SECS = 3;
+  public static final int DO_NOT_CACHE = 4;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -64,14 +55,6 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
         new StructMetaData(TType.STRUCT, com.facebook.remoteexecution.cas.Digest.class)));
     tmpMetaDataMap.put(INPUT_ROOT_DIGEST, new FieldMetaData("input_root_digest", TFieldRequirementType.OPTIONAL, 
         new StructMetaData(TType.STRUCT, com.facebook.remoteexecution.cas.Digest.class)));
-    tmpMetaDataMap.put(OUTPUT_FILES, new FieldMetaData("output_files", TFieldRequirementType.DEFAULT, 
-        new ListMetaData(TType.LIST, 
-            new FieldValueMetaData(TType.STRING))));
-    tmpMetaDataMap.put(OUTPUT_DIRECTORIES, new FieldMetaData("output_directories", TFieldRequirementType.DEFAULT, 
-        new ListMetaData(TType.LIST, 
-            new FieldValueMetaData(TType.STRING))));
-    tmpMetaDataMap.put(REQUIREMENTS, new FieldMetaData("requirements", TFieldRequirementType.DEFAULT, 
-        new StructMetaData(TType.STRUCT, Requirements.class)));
     tmpMetaDataMap.put(TIMEOUT_SECS, new FieldMetaData("timeout_secs", TFieldRequirementType.DEFAULT, 
         new FieldValueMetaData(TType.I64)));
     tmpMetaDataMap.put(DO_NOT_CACHE, new FieldMetaData("do_not_cache", TFieldRequirementType.DEFAULT, 
@@ -88,17 +71,11 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
 
   public Action(
     com.facebook.remoteexecution.cas.Digest command_digest,
-    List<String> output_files,
-    List<String> output_directories,
-    Requirements requirements,
     long timeout_secs,
     boolean do_not_cache)
   {
     this();
     this.command_digest = command_digest;
-    this.output_files = output_files;
-    this.output_directories = output_directories;
-    this.requirements = requirements;
     this.timeout_secs = timeout_secs;
     setTimeout_secsIsSet(true);
     this.do_not_cache = do_not_cache;
@@ -108,18 +85,12 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
   public Action(
     com.facebook.remoteexecution.cas.Digest command_digest,
     com.facebook.remoteexecution.cas.Digest input_root_digest,
-    List<String> output_files,
-    List<String> output_directories,
-    Requirements requirements,
     long timeout_secs,
     boolean do_not_cache)
   {
     this();
     this.command_digest = command_digest;
     this.input_root_digest = input_root_digest;
-    this.output_files = output_files;
-    this.output_directories = output_directories;
-    this.requirements = requirements;
     this.timeout_secs = timeout_secs;
     setTimeout_secsIsSet(true);
     this.do_not_cache = do_not_cache;
@@ -137,15 +108,6 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
     }
     if (other.isSetInput_root_digest()) {
       this.input_root_digest = TBaseHelper.deepCopy(other.input_root_digest);
-    }
-    if (other.isSetOutput_files()) {
-      this.output_files = TBaseHelper.deepCopy(other.output_files);
-    }
-    if (other.isSetOutput_directories()) {
-      this.output_directories = TBaseHelper.deepCopy(other.output_directories);
-    }
-    if (other.isSetRequirements()) {
-      this.requirements = TBaseHelper.deepCopy(other.requirements);
     }
     this.timeout_secs = TBaseHelper.deepCopy(other.timeout_secs);
     this.do_not_cache = TBaseHelper.deepCopy(other.do_not_cache);
@@ -208,78 +170,6 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
     }
   }
 
-  public List<String>  getOutput_files() {
-    return this.output_files;
-  }
-
-  public Action setOutput_files(List<String> output_files) {
-    this.output_files = output_files;
-    return this;
-  }
-
-  public void unsetOutput_files() {
-    this.output_files = null;
-  }
-
-  // Returns true if field output_files is set (has been assigned a value) and false otherwise
-  public boolean isSetOutput_files() {
-    return this.output_files != null;
-  }
-
-  public void setOutput_filesIsSet(boolean value) {
-    if (!value) {
-      this.output_files = null;
-    }
-  }
-
-  public List<String>  getOutput_directories() {
-    return this.output_directories;
-  }
-
-  public Action setOutput_directories(List<String> output_directories) {
-    this.output_directories = output_directories;
-    return this;
-  }
-
-  public void unsetOutput_directories() {
-    this.output_directories = null;
-  }
-
-  // Returns true if field output_directories is set (has been assigned a value) and false otherwise
-  public boolean isSetOutput_directories() {
-    return this.output_directories != null;
-  }
-
-  public void setOutput_directoriesIsSet(boolean value) {
-    if (!value) {
-      this.output_directories = null;
-    }
-  }
-
-  public Requirements  getRequirements() {
-    return this.requirements;
-  }
-
-  public Action setRequirements(Requirements requirements) {
-    this.requirements = requirements;
-    return this;
-  }
-
-  public void unsetRequirements() {
-    this.requirements = null;
-  }
-
-  // Returns true if field requirements is set (has been assigned a value) and false otherwise
-  public boolean isSetRequirements() {
-    return this.requirements != null;
-  }
-
-  public void setRequirementsIsSet(boolean value) {
-    if (!value) {
-      this.requirements = null;
-    }
-  }
-
   public long  getTimeout_secs() {
     return this.timeout_secs;
   }
@@ -326,7 +216,6 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
     __isset_bit_vector.set(__DO_NOT_CACHE_ISSET_ID, value);
   }
 
-  @SuppressWarnings("unchecked")
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
     case COMMAND_DIGEST:
@@ -342,30 +231,6 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
         unsetInput_root_digest();
       } else {
         setInput_root_digest((com.facebook.remoteexecution.cas.Digest)value);
-      }
-      break;
-
-    case OUTPUT_FILES:
-      if (value == null) {
-        unsetOutput_files();
-      } else {
-        setOutput_files((List<String>)value);
-      }
-      break;
-
-    case OUTPUT_DIRECTORIES:
-      if (value == null) {
-        unsetOutput_directories();
-      } else {
-        setOutput_directories((List<String>)value);
-      }
-      break;
-
-    case REQUIREMENTS:
-      if (value == null) {
-        unsetRequirements();
-      } else {
-        setRequirements((Requirements)value);
       }
       break;
 
@@ -398,15 +263,6 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
     case INPUT_ROOT_DIGEST:
       return getInput_root_digest();
 
-    case OUTPUT_FILES:
-      return getOutput_files();
-
-    case OUTPUT_DIRECTORIES:
-      return getOutput_directories();
-
-    case REQUIREMENTS:
-      return getRequirements();
-
     case TIMEOUT_SECS:
       return new Long(getTimeout_secs());
 
@@ -425,12 +281,6 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
       return isSetCommand_digest();
     case INPUT_ROOT_DIGEST:
       return isSetInput_root_digest();
-    case OUTPUT_FILES:
-      return isSetOutput_files();
-    case OUTPUT_DIRECTORIES:
-      return isSetOutput_directories();
-    case REQUIREMENTS:
-      return isSetRequirements();
     case TIMEOUT_SECS:
       return isSetTimeout_secs();
     case DO_NOT_CACHE:
@@ -470,33 +320,6 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
       if (!(this_present_input_root_digest && that_present_input_root_digest))
         return false;
       if (!TBaseHelper.equalsNobinary(this.input_root_digest, that.input_root_digest))
-        return false;
-    }
-
-    boolean this_present_output_files = true && this.isSetOutput_files();
-    boolean that_present_output_files = true && that.isSetOutput_files();
-    if (this_present_output_files || that_present_output_files) {
-      if (!(this_present_output_files && that_present_output_files))
-        return false;
-      if (!TBaseHelper.equalsNobinary(this.output_files, that.output_files))
-        return false;
-    }
-
-    boolean this_present_output_directories = true && this.isSetOutput_directories();
-    boolean that_present_output_directories = true && that.isSetOutput_directories();
-    if (this_present_output_directories || that_present_output_directories) {
-      if (!(this_present_output_directories && that_present_output_directories))
-        return false;
-      if (!TBaseHelper.equalsNobinary(this.output_directories, that.output_directories))
-        return false;
-    }
-
-    boolean this_present_requirements = true && this.isSetRequirements();
-    boolean that_present_requirements = true && that.isSetRequirements();
-    if (this_present_requirements || that_present_requirements) {
-      if (!(this_present_requirements && that_present_requirements))
-        return false;
-      if (!TBaseHelper.equalsNobinary(this.requirements, that.requirements))
         return false;
     }
 
@@ -554,30 +377,6 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = Boolean.valueOf(isSetOutput_files()).compareTo(other.isSetOutput_files());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(output_files, other.output_files);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = Boolean.valueOf(isSetOutput_directories()).compareTo(other.isSetOutput_directories());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(output_directories, other.output_directories);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = Boolean.valueOf(isSetRequirements()).compareTo(other.isSetRequirements());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(requirements, other.requirements);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
     lastComparison = Boolean.valueOf(isSetTimeout_secs()).compareTo(other.isSetTimeout_secs());
     if (lastComparison != 0) {
       return lastComparison;
@@ -620,52 +419,6 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
           if (field.type == TType.STRUCT) {
             this.input_root_digest = new com.facebook.remoteexecution.cas.Digest();
             this.input_root_digest.read(iprot);
-          } else { 
-            TProtocolUtil.skip(iprot, field.type);
-          }
-          break;
-        case OUTPUT_FILES:
-          if (field.type == TType.LIST) {
-            {
-              TList _list40 = iprot.readListBegin();
-              this.output_files = new ArrayList<String>(Math.max(0, _list40.size));
-              for (int _i41 = 0; 
-                   (_list40.size < 0) ? iprot.peekList() : (_i41 < _list40.size); 
-                   ++_i41)
-              {
-                String _elem42;
-                _elem42 = iprot.readString();
-                this.output_files.add(_elem42);
-              }
-              iprot.readListEnd();
-            }
-          } else { 
-            TProtocolUtil.skip(iprot, field.type);
-          }
-          break;
-        case OUTPUT_DIRECTORIES:
-          if (field.type == TType.LIST) {
-            {
-              TList _list43 = iprot.readListBegin();
-              this.output_directories = new ArrayList<String>(Math.max(0, _list43.size));
-              for (int _i44 = 0; 
-                   (_list43.size < 0) ? iprot.peekList() : (_i44 < _list43.size); 
-                   ++_i44)
-              {
-                String _elem45;
-                _elem45 = iprot.readString();
-                this.output_directories.add(_elem45);
-              }
-              iprot.readListEnd();
-            }
-          } else { 
-            TProtocolUtil.skip(iprot, field.type);
-          }
-          break;
-        case REQUIREMENTS:
-          if (field.type == TType.STRUCT) {
-            this.requirements = new Requirements();
-            this.requirements.read(iprot);
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -714,33 +467,6 @@ public class Action implements TBase, java.io.Serializable, Cloneable, Comparabl
         this.input_root_digest.write(oprot);
         oprot.writeFieldEnd();
       }
-    }
-    if (this.output_files != null) {
-      oprot.writeFieldBegin(OUTPUT_FILES_FIELD_DESC);
-      {
-        oprot.writeListBegin(new TList(TType.STRING, this.output_files.size()));
-        for (String _iter46 : this.output_files)        {
-          oprot.writeString(_iter46);
-        }
-        oprot.writeListEnd();
-      }
-      oprot.writeFieldEnd();
-    }
-    if (this.output_directories != null) {
-      oprot.writeFieldBegin(OUTPUT_DIRECTORIES_FIELD_DESC);
-      {
-        oprot.writeListBegin(new TList(TType.STRING, this.output_directories.size()));
-        for (String _iter47 : this.output_directories)        {
-          oprot.writeString(_iter47);
-        }
-        oprot.writeListEnd();
-      }
-      oprot.writeFieldEnd();
-    }
-    if (this.requirements != null) {
-      oprot.writeFieldBegin(REQUIREMENTS_FIELD_DESC);
-      this.requirements.write(oprot);
-      oprot.writeFieldEnd();
     }
     oprot.writeFieldBegin(TIMEOUT_SECS_FIELD_DESC);
     oprot.writeI64(this.timeout_secs);
@@ -797,39 +523,6 @@ String space = prettyPrint ? " " : "";
       }
       first = false;
     }
-    if (!first) sb.append("," + newLine);
-    sb.append(indentStr);
-    sb.append("output_files");
-    sb.append(space);
-    sb.append(":").append(space);
-    if (this. getOutput_files() == null) {
-      sb.append("null");
-    } else {
-      sb.append(TBaseHelper.toString(this. getOutput_files(), indent + 1, prettyPrint));
-    }
-    first = false;
-    if (!first) sb.append("," + newLine);
-    sb.append(indentStr);
-    sb.append("output_directories");
-    sb.append(space);
-    sb.append(":").append(space);
-    if (this. getOutput_directories() == null) {
-      sb.append("null");
-    } else {
-      sb.append(TBaseHelper.toString(this. getOutput_directories(), indent + 1, prettyPrint));
-    }
-    first = false;
-    if (!first) sb.append("," + newLine);
-    sb.append(indentStr);
-    sb.append("requirements");
-    sb.append(space);
-    sb.append(":").append(space);
-    if (this. getRequirements() == null) {
-      sb.append("null");
-    } else {
-      sb.append(TBaseHelper.toString(this. getRequirements(), indent + 1, prettyPrint));
-    }
-    first = false;
     if (!first) sb.append("," + newLine);
     sb.append(indentStr);
     sb.append("timeout_secs");

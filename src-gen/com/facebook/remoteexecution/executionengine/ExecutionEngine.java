@@ -30,11 +30,9 @@ public class ExecutionEngine {
 
   public interface Iface {
 
-    public ExecuteResponse execute(ExecuteRequest request) throws ServiceOverloadedException, RejectedActionException, NonUniqueExecutionIdException, TException;
+    public ExecuteOperation execute(ExecuteRequest request) throws ExecutionEngineException, TException;
 
-    public GetExecutionStateResponse getExecutionState(GetExecutionStateRequest request) throws UnknownExecutionIdException, TException;
-
-    public CancelExecutionResponse cancelExecution(CancelExecutionRequest request) throws UnknownExecutionIdException, TException;
+    public ExecuteOperation getExecuteOperation(GetExecuteOperationRequest request) throws ExecutionEngineException, TException;
 
   }
 
@@ -42,9 +40,7 @@ public class ExecutionEngine {
 
     public void execute(ExecuteRequest request, AsyncMethodCallback resultHandler) throws TException;
 
-    public void getExecutionState(GetExecutionStateRequest request, AsyncMethodCallback resultHandler) throws TException;
-
-    public void cancelExecution(CancelExecutionRequest request, AsyncMethodCallback resultHandler) throws TException;
+    public void getExecuteOperation(GetExecuteOperationRequest request, AsyncMethodCallback resultHandler) throws TException;
 
   }
 
@@ -77,7 +73,7 @@ public class ExecutionEngine {
       return this.oprot_;
     }
 
-    public ExecuteResponse execute(ExecuteRequest request) throws ServiceOverloadedException, RejectedActionException, NonUniqueExecutionIdException, TException
+    public ExecuteOperation execute(ExecuteRequest request) throws ExecutionEngineException, TException
     {
       ContextStack ctx = getContextStack("ExecutionEngine.execute", null);
       this.setContextStack(ctx);
@@ -99,7 +95,7 @@ public class ExecutionEngine {
       return;
     }
 
-    public ExecuteResponse recv_execute() throws ServiceOverloadedException, RejectedActionException, NonUniqueExecutionIdException, TException
+    public ExecuteOperation recv_execute() throws ExecutionEngineException, TException
     {
       ContextStack ctx = super.getContextStack();
       long bytes;
@@ -119,112 +115,58 @@ public class ExecutionEngine {
       if (result.isSetSuccess()) {
         return result.success;
       }
-      if (result.service_overloaded != null) {
-        throw result.service_overloaded;
-      }
-      if (result.rejected_action != null) {
-        throw result.rejected_action;
-      }
-      if (result.non_unique_execution_id != null) {
-        throw result.non_unique_execution_id;
+      if (result.ex != null) {
+        throw result.ex;
       }
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "execute failed: unknown result");
     }
 
-    public GetExecutionStateResponse getExecutionState(GetExecutionStateRequest request) throws UnknownExecutionIdException, TException
+    public ExecuteOperation getExecuteOperation(GetExecuteOperationRequest request) throws ExecutionEngineException, TException
     {
-      ContextStack ctx = getContextStack("ExecutionEngine.getExecutionState", null);
+      ContextStack ctx = getContextStack("ExecutionEngine.getExecuteOperation", null);
       this.setContextStack(ctx);
-      send_getExecutionState(request);
-      return recv_getExecutionState();
+      send_getExecuteOperation(request);
+      return recv_getExecuteOperation();
     }
 
-    public void send_getExecutionState(GetExecutionStateRequest request) throws TException
+    public void send_getExecuteOperation(GetExecuteOperationRequest request) throws TException
     {
       ContextStack ctx = this.getContextStack();
-      super.preWrite(ctx, "ExecutionEngine.getExecutionState", null);
-      oprot_.writeMessageBegin(new TMessage("getExecutionState", TMessageType.CALL, seqid_));
-      getExecutionState_args args = new getExecutionState_args();
+      super.preWrite(ctx, "ExecutionEngine.getExecuteOperation", null);
+      oprot_.writeMessageBegin(new TMessage("getExecuteOperation", TMessageType.CALL, seqid_));
+      getExecuteOperation_args args = new getExecuteOperation_args();
       args.request = request;
       args.write(oprot_);
       oprot_.writeMessageEnd();
       oprot_.getTransport().flush();
-      super.postWrite(ctx, "ExecutionEngine.getExecutionState", args);
+      super.postWrite(ctx, "ExecutionEngine.getExecuteOperation", args);
       return;
     }
 
-    public GetExecutionStateResponse recv_getExecutionState() throws UnknownExecutionIdException, TException
+    public ExecuteOperation recv_getExecuteOperation() throws ExecutionEngineException, TException
     {
       ContextStack ctx = super.getContextStack();
       long bytes;
       TMessageType mtype;
-      super.preRead(ctx, "ExecutionEngine.getExecutionState");
+      super.preRead(ctx, "ExecutionEngine.getExecuteOperation");
       TMessage msg = iprot_.readMessageBegin();
       if (msg.type == TMessageType.EXCEPTION) {
         TApplicationException x = TApplicationException.read(iprot_);
         iprot_.readMessageEnd();
         throw x;
       }
-      getExecutionState_result result = new getExecutionState_result();
+      getExecuteOperation_result result = new getExecuteOperation_result();
       result.read(iprot_);
       iprot_.readMessageEnd();
-      super.postRead(ctx, "ExecutionEngine.getExecutionState", result);
+      super.postRead(ctx, "ExecutionEngine.getExecuteOperation", result);
 
       if (result.isSetSuccess()) {
         return result.success;
       }
-      if (result.unknown_execution_id != null) {
-        throw result.unknown_execution_id;
+      if (result.ex != null) {
+        throw result.ex;
       }
-      throw new TApplicationException(TApplicationException.MISSING_RESULT, "getExecutionState failed: unknown result");
-    }
-
-    public CancelExecutionResponse cancelExecution(CancelExecutionRequest request) throws UnknownExecutionIdException, TException
-    {
-      ContextStack ctx = getContextStack("ExecutionEngine.cancelExecution", null);
-      this.setContextStack(ctx);
-      send_cancelExecution(request);
-      return recv_cancelExecution();
-    }
-
-    public void send_cancelExecution(CancelExecutionRequest request) throws TException
-    {
-      ContextStack ctx = this.getContextStack();
-      super.preWrite(ctx, "ExecutionEngine.cancelExecution", null);
-      oprot_.writeMessageBegin(new TMessage("cancelExecution", TMessageType.CALL, seqid_));
-      cancelExecution_args args = new cancelExecution_args();
-      args.request = request;
-      args.write(oprot_);
-      oprot_.writeMessageEnd();
-      oprot_.getTransport().flush();
-      super.postWrite(ctx, "ExecutionEngine.cancelExecution", args);
-      return;
-    }
-
-    public CancelExecutionResponse recv_cancelExecution() throws UnknownExecutionIdException, TException
-    {
-      ContextStack ctx = super.getContextStack();
-      long bytes;
-      TMessageType mtype;
-      super.preRead(ctx, "ExecutionEngine.cancelExecution");
-      TMessage msg = iprot_.readMessageBegin();
-      if (msg.type == TMessageType.EXCEPTION) {
-        TApplicationException x = TApplicationException.read(iprot_);
-        iprot_.readMessageEnd();
-        throw x;
-      }
-      cancelExecution_result result = new cancelExecution_result();
-      result.read(iprot_);
-      iprot_.readMessageEnd();
-      super.postRead(ctx, "ExecutionEngine.cancelExecution", result);
-
-      if (result.isSetSuccess()) {
-        return result.success;
-      }
-      if (result.unknown_execution_id != null) {
-        throw result.unknown_execution_id;
-      }
-      throw new TApplicationException(TApplicationException.MISSING_RESULT, "cancelExecution failed: unknown result");
+      throw new TApplicationException(TApplicationException.MISSING_RESULT, "getExecuteOperation failed: unknown result");
     }
 
   }
@@ -245,17 +187,17 @@ public class ExecutionEngine {
       super(protocolFactory, clientManager, transport);
     }
 
-    public void execute(ExecuteRequest request, AsyncMethodCallback resultHandler62) throws TException {
+    public void execute(ExecuteRequest request, AsyncMethodCallback resultHandler51) throws TException {
       checkReady();
-      execute_call method_call = new execute_call(request, resultHandler62, this, ___protocolFactory, ___transport);
+      execute_call method_call = new execute_call(request, resultHandler51, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
     public static class execute_call extends TAsyncMethodCall {
       private ExecuteRequest request;
-      public execute_call(ExecuteRequest request, AsyncMethodCallback resultHandler63, TAsyncClient client59, TProtocolFactory protocolFactory60, TNonblockingTransport transport61) throws TException {
-        super(client59, protocolFactory60, transport61, resultHandler63, false);
+      public execute_call(ExecuteRequest request, AsyncMethodCallback resultHandler52, TAsyncClient client48, TProtocolFactory protocolFactory49, TNonblockingTransport transport50) throws TException {
+        super(client48, protocolFactory49, transport50, resultHandler52, false);
         this.request = request;
       }
 
@@ -267,7 +209,7 @@ public class ExecutionEngine {
         prot.writeMessageEnd();
       }
 
-      public ExecuteResponse getResult() throws ServiceOverloadedException, RejectedActionException, NonUniqueExecutionIdException, TException {
+      public ExecuteOperation getResult() throws ExecutionEngineException, TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -277,67 +219,35 @@ public class ExecutionEngine {
       }
     }
 
-    public void getExecutionState(GetExecutionStateRequest request, AsyncMethodCallback resultHandler67) throws TException {
+    public void getExecuteOperation(GetExecuteOperationRequest request, AsyncMethodCallback resultHandler56) throws TException {
       checkReady();
-      getExecutionState_call method_call = new getExecutionState_call(request, resultHandler67, this, ___protocolFactory, ___transport);
+      getExecuteOperation_call method_call = new getExecuteOperation_call(request, resultHandler56, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class getExecutionState_call extends TAsyncMethodCall {
-      private GetExecutionStateRequest request;
-      public getExecutionState_call(GetExecutionStateRequest request, AsyncMethodCallback resultHandler68, TAsyncClient client64, TProtocolFactory protocolFactory65, TNonblockingTransport transport66) throws TException {
-        super(client64, protocolFactory65, transport66, resultHandler68, false);
+    public static class getExecuteOperation_call extends TAsyncMethodCall {
+      private GetExecuteOperationRequest request;
+      public getExecuteOperation_call(GetExecuteOperationRequest request, AsyncMethodCallback resultHandler57, TAsyncClient client53, TProtocolFactory protocolFactory54, TNonblockingTransport transport55) throws TException {
+        super(client53, protocolFactory54, transport55, resultHandler57, false);
         this.request = request;
       }
 
       public void write_args(TProtocol prot) throws TException {
-        prot.writeMessageBegin(new TMessage("getExecutionState", TMessageType.CALL, 0));
-        getExecutionState_args args = new getExecutionState_args();
+        prot.writeMessageBegin(new TMessage("getExecuteOperation", TMessageType.CALL, 0));
+        getExecuteOperation_args args = new getExecuteOperation_args();
         args.setRequest(request);
         args.write(prot);
         prot.writeMessageEnd();
       }
 
-      public GetExecutionStateResponse getResult() throws UnknownExecutionIdException, TException {
+      public ExecuteOperation getResult() throws ExecutionEngineException, TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
         TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
         TProtocol prot = super.client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_getExecutionState();
-      }
-    }
-
-    public void cancelExecution(CancelExecutionRequest request, AsyncMethodCallback resultHandler72) throws TException {
-      checkReady();
-      cancelExecution_call method_call = new cancelExecution_call(request, resultHandler72, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
-    }
-
-    public static class cancelExecution_call extends TAsyncMethodCall {
-      private CancelExecutionRequest request;
-      public cancelExecution_call(CancelExecutionRequest request, AsyncMethodCallback resultHandler73, TAsyncClient client69, TProtocolFactory protocolFactory70, TNonblockingTransport transport71) throws TException {
-        super(client69, protocolFactory70, transport71, resultHandler73, false);
-        this.request = request;
-      }
-
-      public void write_args(TProtocol prot) throws TException {
-        prot.writeMessageBegin(new TMessage("cancelExecution", TMessageType.CALL, 0));
-        cancelExecution_args args = new cancelExecution_args();
-        args.setRequest(request);
-        args.write(prot);
-        prot.writeMessageEnd();
-      }
-
-      public CancelExecutionResponse getResult() throws UnknownExecutionIdException, TException {
-        if (getState() != State.RESPONSE_READ) {
-          throw new IllegalStateException("Method call not finished!");
-        }
-        TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
-        TProtocol prot = super.client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_cancelExecution();
+        return (new Client(prot)).recv_getExecuteOperation();
       }
     }
 
@@ -350,8 +260,7 @@ public class ExecutionEngine {
       iface_ = iface;
       event_handler_ = new TProcessorEventHandler(); // Empty handler
       processMap_.put("execute", new execute());
-      processMap_.put("getExecutionState", new getExecutionState());
-      processMap_.put("cancelExecution", new cancelExecution());
+      processMap_.put("getExecuteOperation", new getExecuteOperation());
     }
 
     protected static interface ProcessFunction {
@@ -396,15 +305,9 @@ public class ExecutionEngine {
         execute_result result = new execute_result();
         try {
           result.success = iface_.execute(args.request);
-        } catch (ServiceOverloadedException service_overloaded) {
-          result.service_overloaded = service_overloaded;
-          event_handler_.declaredUserException(handler_ctx, "ExecutionEngine.execute", service_overloaded);
-        } catch (RejectedActionException rejected_action) {
-          result.rejected_action = rejected_action;
-          event_handler_.declaredUserException(handler_ctx, "ExecutionEngine.execute", rejected_action);
-        } catch (NonUniqueExecutionIdException non_unique_execution_id) {
-          result.non_unique_execution_id = non_unique_execution_id;
-          event_handler_.declaredUserException(handler_ctx, "ExecutionEngine.execute", non_unique_execution_id);
+        } catch (ExecutionEngineException ex) {
+          result.ex = ex;
+          event_handler_.declaredUserException(handler_ctx, "ExecutionEngine.execute", ex);
         } catch (Throwable th) {
           LOGGER.error("Internal error processing ExecutionEngine.execute", th);
           event_handler_.handlerError(handler_ctx, "ExecutionEngine.execute", th);
@@ -427,76 +330,39 @@ public class ExecutionEngine {
 
     }
 
-    private class getExecutionState implements ProcessFunction {
+    private class getExecuteOperation implements ProcessFunction {
       public void process(int seqid, TProtocol iprot, TProtocol oprot, TConnectionContext server_ctx) throws TException
       {
-        Object handler_ctx = event_handler_.getContext("ExecutionEngine.getExecutionState", server_ctx);
-        getExecutionState_args args = new getExecutionState_args();
-        event_handler_.preRead(handler_ctx, "ExecutionEngine.getExecutionState");
+        Object handler_ctx = event_handler_.getContext("ExecutionEngine.getExecuteOperation", server_ctx);
+        getExecuteOperation_args args = new getExecuteOperation_args();
+        event_handler_.preRead(handler_ctx, "ExecutionEngine.getExecuteOperation");
         args.read(iprot);
         iprot.readMessageEnd();
-        event_handler_.postRead(handler_ctx, "ExecutionEngine.getExecutionState", args);
-        getExecutionState_result result = new getExecutionState_result();
+        event_handler_.postRead(handler_ctx, "ExecutionEngine.getExecuteOperation", args);
+        getExecuteOperation_result result = new getExecuteOperation_result();
         try {
-          result.success = iface_.getExecutionState(args.request);
-        } catch (UnknownExecutionIdException unknown_execution_id) {
-          result.unknown_execution_id = unknown_execution_id;
-          event_handler_.declaredUserException(handler_ctx, "ExecutionEngine.getExecutionState", unknown_execution_id);
+          result.success = iface_.getExecuteOperation(args.request);
+        } catch (ExecutionEngineException ex) {
+          result.ex = ex;
+          event_handler_.declaredUserException(handler_ctx, "ExecutionEngine.getExecuteOperation", ex);
         } catch (Throwable th) {
-          LOGGER.error("Internal error processing ExecutionEngine.getExecutionState", th);
-          event_handler_.handlerError(handler_ctx, "ExecutionEngine.getExecutionState", th);
-          TApplicationException x = new TApplicationException(TApplicationException.INTERNAL_ERROR, "Internal error processing ExecutionEngine.getExecutionState");
-          event_handler_.preWrite(handler_ctx, "ExecutionEngine.getExecutionState", null);
-          oprot.writeMessageBegin(new TMessage("ExecutionEngine.getExecutionState", TMessageType.EXCEPTION, seqid));
+          LOGGER.error("Internal error processing ExecutionEngine.getExecuteOperation", th);
+          event_handler_.handlerError(handler_ctx, "ExecutionEngine.getExecuteOperation", th);
+          TApplicationException x = new TApplicationException(TApplicationException.INTERNAL_ERROR, "Internal error processing ExecutionEngine.getExecuteOperation");
+          event_handler_.preWrite(handler_ctx, "ExecutionEngine.getExecuteOperation", null);
+          oprot.writeMessageBegin(new TMessage("ExecutionEngine.getExecuteOperation", TMessageType.EXCEPTION, seqid));
           x.write(oprot);
           oprot.writeMessageEnd();
           oprot.getTransport().flush();
-          event_handler_.postWrite(handler_ctx, "ExecutionEngine.getExecutionState", null);
+          event_handler_.postWrite(handler_ctx, "ExecutionEngine.getExecuteOperation", null);
           return;
         }
-        event_handler_.preWrite(handler_ctx, "ExecutionEngine.getExecutionState", result);
-        oprot.writeMessageBegin(new TMessage("getExecutionState", TMessageType.REPLY, seqid));
+        event_handler_.preWrite(handler_ctx, "ExecutionEngine.getExecuteOperation", result);
+        oprot.writeMessageBegin(new TMessage("getExecuteOperation", TMessageType.REPLY, seqid));
         result.write(oprot);
         oprot.writeMessageEnd();
         oprot.getTransport().flush();
-        event_handler_.postWrite(handler_ctx, "ExecutionEngine.getExecutionState", result);
-      }
-
-    }
-
-    private class cancelExecution implements ProcessFunction {
-      public void process(int seqid, TProtocol iprot, TProtocol oprot, TConnectionContext server_ctx) throws TException
-      {
-        Object handler_ctx = event_handler_.getContext("ExecutionEngine.cancelExecution", server_ctx);
-        cancelExecution_args args = new cancelExecution_args();
-        event_handler_.preRead(handler_ctx, "ExecutionEngine.cancelExecution");
-        args.read(iprot);
-        iprot.readMessageEnd();
-        event_handler_.postRead(handler_ctx, "ExecutionEngine.cancelExecution", args);
-        cancelExecution_result result = new cancelExecution_result();
-        try {
-          result.success = iface_.cancelExecution(args.request);
-        } catch (UnknownExecutionIdException unknown_execution_id) {
-          result.unknown_execution_id = unknown_execution_id;
-          event_handler_.declaredUserException(handler_ctx, "ExecutionEngine.cancelExecution", unknown_execution_id);
-        } catch (Throwable th) {
-          LOGGER.error("Internal error processing ExecutionEngine.cancelExecution", th);
-          event_handler_.handlerError(handler_ctx, "ExecutionEngine.cancelExecution", th);
-          TApplicationException x = new TApplicationException(TApplicationException.INTERNAL_ERROR, "Internal error processing ExecutionEngine.cancelExecution");
-          event_handler_.preWrite(handler_ctx, "ExecutionEngine.cancelExecution", null);
-          oprot.writeMessageBegin(new TMessage("ExecutionEngine.cancelExecution", TMessageType.EXCEPTION, seqid));
-          x.write(oprot);
-          oprot.writeMessageEnd();
-          oprot.getTransport().flush();
-          event_handler_.postWrite(handler_ctx, "ExecutionEngine.cancelExecution", null);
-          return;
-        }
-        event_handler_.preWrite(handler_ctx, "ExecutionEngine.cancelExecution", result);
-        oprot.writeMessageBegin(new TMessage("cancelExecution", TMessageType.REPLY, seqid));
-        result.write(oprot);
-        oprot.writeMessageEnd();
-        oprot.getTransport().flush();
-        event_handler_.postWrite(handler_ctx, "ExecutionEngine.cancelExecution", result);
+        event_handler_.postWrite(handler_ctx, "ExecutionEngine.getExecuteOperation", result);
       }
 
     }
@@ -758,18 +624,12 @@ String space = prettyPrint ? " " : "";
   public static class execute_result implements TBase, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("execute_result");
     private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.STRUCT, (short)0);
-    private static final TField SERVICE_OVERLOADED_FIELD_DESC = new TField("service_overloaded", TType.STRUCT, (short)1);
-    private static final TField REJECTED_ACTION_FIELD_DESC = new TField("rejected_action", TType.STRUCT, (short)2);
-    private static final TField NON_UNIQUE_EXECUTION_ID_FIELD_DESC = new TField("non_unique_execution_id", TType.STRUCT, (short)3);
+    private static final TField EX_FIELD_DESC = new TField("ex", TType.STRUCT, (short)1);
 
-    public ExecuteResponse success;
-    public ServiceOverloadedException service_overloaded;
-    public RejectedActionException rejected_action;
-    public NonUniqueExecutionIdException non_unique_execution_id;
+    public ExecuteOperation success;
+    public ExecutionEngineException ex;
     public static final int SUCCESS = 0;
-    public static final int SERVICE_OVERLOADED = 1;
-    public static final int REJECTED_ACTION = 2;
-    public static final int NON_UNIQUE_EXECUTION_ID = 3;
+    public static final int EX = 1;
     public static boolean DEFAULT_PRETTY_PRINT = true;
 
     // isset id assignments
@@ -778,12 +638,8 @@ String space = prettyPrint ? " " : "";
     static {
       Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
       tmpMetaDataMap.put(SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
-          new StructMetaData(TType.STRUCT, ExecuteResponse.class)));
-      tmpMetaDataMap.put(SERVICE_OVERLOADED, new FieldMetaData("service_overloaded", TFieldRequirementType.DEFAULT, 
-          new FieldValueMetaData(TType.STRUCT)));
-      tmpMetaDataMap.put(REJECTED_ACTION, new FieldMetaData("rejected_action", TFieldRequirementType.DEFAULT, 
-          new FieldValueMetaData(TType.STRUCT)));
-      tmpMetaDataMap.put(NON_UNIQUE_EXECUTION_ID, new FieldMetaData("non_unique_execution_id", TFieldRequirementType.DEFAULT, 
+          new StructMetaData(TType.STRUCT, ExecuteOperation.class)));
+      tmpMetaDataMap.put(EX, new FieldMetaData("ex", TFieldRequirementType.DEFAULT, 
           new FieldValueMetaData(TType.STRUCT)));
       metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
     }
@@ -796,16 +652,12 @@ String space = prettyPrint ? " " : "";
     }
 
     public execute_result(
-      ExecuteResponse success,
-      ServiceOverloadedException service_overloaded,
-      RejectedActionException rejected_action,
-      NonUniqueExecutionIdException non_unique_execution_id)
+      ExecuteOperation success,
+      ExecutionEngineException ex)
     {
       this();
       this.success = success;
-      this.service_overloaded = service_overloaded;
-      this.rejected_action = rejected_action;
-      this.non_unique_execution_id = non_unique_execution_id;
+      this.ex = ex;
     }
 
     /**
@@ -815,14 +667,8 @@ String space = prettyPrint ? " " : "";
       if (other.isSetSuccess()) {
         this.success = TBaseHelper.deepCopy(other.success);
       }
-      if (other.isSetService_overloaded()) {
-        this.service_overloaded = TBaseHelper.deepCopy(other.service_overloaded);
-      }
-      if (other.isSetRejected_action()) {
-        this.rejected_action = TBaseHelper.deepCopy(other.rejected_action);
-      }
-      if (other.isSetNon_unique_execution_id()) {
-        this.non_unique_execution_id = TBaseHelper.deepCopy(other.non_unique_execution_id);
+      if (other.isSetEx()) {
+        this.ex = TBaseHelper.deepCopy(other.ex);
       }
     }
 
@@ -835,11 +681,11 @@ String space = prettyPrint ? " " : "";
       return new execute_result(this);
     }
 
-    public ExecuteResponse  getSuccess() {
+    public ExecuteOperation  getSuccess() {
       return this.success;
     }
 
-    public execute_result setSuccess(ExecuteResponse success) {
+    public execute_result setSuccess(ExecuteOperation success) {
       this.success = success;
       return this;
     }
@@ -859,75 +705,27 @@ String space = prettyPrint ? " " : "";
       }
     }
 
-    public ServiceOverloadedException  getService_overloaded() {
-      return this.service_overloaded;
+    public ExecutionEngineException  getEx() {
+      return this.ex;
     }
 
-    public execute_result setService_overloaded(ServiceOverloadedException service_overloaded) {
-      this.service_overloaded = service_overloaded;
+    public execute_result setEx(ExecutionEngineException ex) {
+      this.ex = ex;
       return this;
     }
 
-    public void unsetService_overloaded() {
-      this.service_overloaded = null;
+    public void unsetEx() {
+      this.ex = null;
     }
 
-    // Returns true if field service_overloaded is set (has been assigned a value) and false otherwise
-    public boolean isSetService_overloaded() {
-      return this.service_overloaded != null;
+    // Returns true if field ex is set (has been assigned a value) and false otherwise
+    public boolean isSetEx() {
+      return this.ex != null;
     }
 
-    public void setService_overloadedIsSet(boolean value) {
+    public void setExIsSet(boolean value) {
       if (!value) {
-        this.service_overloaded = null;
-      }
-    }
-
-    public RejectedActionException  getRejected_action() {
-      return this.rejected_action;
-    }
-
-    public execute_result setRejected_action(RejectedActionException rejected_action) {
-      this.rejected_action = rejected_action;
-      return this;
-    }
-
-    public void unsetRejected_action() {
-      this.rejected_action = null;
-    }
-
-    // Returns true if field rejected_action is set (has been assigned a value) and false otherwise
-    public boolean isSetRejected_action() {
-      return this.rejected_action != null;
-    }
-
-    public void setRejected_actionIsSet(boolean value) {
-      if (!value) {
-        this.rejected_action = null;
-      }
-    }
-
-    public NonUniqueExecutionIdException  getNon_unique_execution_id() {
-      return this.non_unique_execution_id;
-    }
-
-    public execute_result setNon_unique_execution_id(NonUniqueExecutionIdException non_unique_execution_id) {
-      this.non_unique_execution_id = non_unique_execution_id;
-      return this;
-    }
-
-    public void unsetNon_unique_execution_id() {
-      this.non_unique_execution_id = null;
-    }
-
-    // Returns true if field non_unique_execution_id is set (has been assigned a value) and false otherwise
-    public boolean isSetNon_unique_execution_id() {
-      return this.non_unique_execution_id != null;
-    }
-
-    public void setNon_unique_execution_idIsSet(boolean value) {
-      if (!value) {
-        this.non_unique_execution_id = null;
+        this.ex = null;
       }
     }
 
@@ -937,31 +735,15 @@ String space = prettyPrint ? " " : "";
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((ExecuteResponse)value);
+          setSuccess((ExecuteOperation)value);
         }
         break;
 
-      case SERVICE_OVERLOADED:
+      case EX:
         if (value == null) {
-          unsetService_overloaded();
+          unsetEx();
         } else {
-          setService_overloaded((ServiceOverloadedException)value);
-        }
-        break;
-
-      case REJECTED_ACTION:
-        if (value == null) {
-          unsetRejected_action();
-        } else {
-          setRejected_action((RejectedActionException)value);
-        }
-        break;
-
-      case NON_UNIQUE_EXECUTION_ID:
-        if (value == null) {
-          unsetNon_unique_execution_id();
-        } else {
-          setNon_unique_execution_id((NonUniqueExecutionIdException)value);
+          setEx((ExecutionEngineException)value);
         }
         break;
 
@@ -975,14 +757,8 @@ String space = prettyPrint ? " " : "";
       case SUCCESS:
         return getSuccess();
 
-      case SERVICE_OVERLOADED:
-        return getService_overloaded();
-
-      case REJECTED_ACTION:
-        return getRejected_action();
-
-      case NON_UNIQUE_EXECUTION_ID:
-        return getNon_unique_execution_id();
+      case EX:
+        return getEx();
 
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -994,12 +770,8 @@ String space = prettyPrint ? " " : "";
       switch (fieldID) {
       case SUCCESS:
         return isSetSuccess();
-      case SERVICE_OVERLOADED:
-        return isSetService_overloaded();
-      case REJECTED_ACTION:
-        return isSetRejected_action();
-      case NON_UNIQUE_EXECUTION_ID:
-        return isSetNon_unique_execution_id();
+      case EX:
+        return isSetEx();
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -1029,30 +801,12 @@ String space = prettyPrint ? " " : "";
           return false;
       }
 
-      boolean this_present_service_overloaded = true && this.isSetService_overloaded();
-      boolean that_present_service_overloaded = true && that.isSetService_overloaded();
-      if (this_present_service_overloaded || that_present_service_overloaded) {
-        if (!(this_present_service_overloaded && that_present_service_overloaded))
+      boolean this_present_ex = true && this.isSetEx();
+      boolean that_present_ex = true && that.isSetEx();
+      if (this_present_ex || that_present_ex) {
+        if (!(this_present_ex && that_present_ex))
           return false;
-        if (!TBaseHelper.equalsNobinary(this.service_overloaded, that.service_overloaded))
-          return false;
-      }
-
-      boolean this_present_rejected_action = true && this.isSetRejected_action();
-      boolean that_present_rejected_action = true && that.isSetRejected_action();
-      if (this_present_rejected_action || that_present_rejected_action) {
-        if (!(this_present_rejected_action && that_present_rejected_action))
-          return false;
-        if (!TBaseHelper.equalsNobinary(this.rejected_action, that.rejected_action))
-          return false;
-      }
-
-      boolean this_present_non_unique_execution_id = true && this.isSetNon_unique_execution_id();
-      boolean that_present_non_unique_execution_id = true && that.isSetNon_unique_execution_id();
-      if (this_present_non_unique_execution_id || that_present_non_unique_execution_id) {
-        if (!(this_present_non_unique_execution_id && that_present_non_unique_execution_id))
-          return false;
-        if (!TBaseHelper.equalsNobinary(this.non_unique_execution_id, that.non_unique_execution_id))
+        if (!TBaseHelper.equalsNobinary(this.ex, that.ex))
           return false;
       }
 
@@ -1077,32 +831,16 @@ String space = prettyPrint ? " " : "";
         {
           case SUCCESS:
             if (field.type == TType.STRUCT) {
-              this.success = new ExecuteResponse();
+              this.success = new ExecuteOperation();
               this.success.read(iprot);
             } else { 
               TProtocolUtil.skip(iprot, field.type);
             }
             break;
-          case SERVICE_OVERLOADED:
+          case EX:
             if (field.type == TType.STRUCT) {
-              this.service_overloaded = new ServiceOverloadedException();
-              this.service_overloaded.read(iprot);
-            } else { 
-              TProtocolUtil.skip(iprot, field.type);
-            }
-            break;
-          case REJECTED_ACTION:
-            if (field.type == TType.STRUCT) {
-              this.rejected_action = new RejectedActionException();
-              this.rejected_action.read(iprot);
-            } else { 
-              TProtocolUtil.skip(iprot, field.type);
-            }
-            break;
-          case NON_UNIQUE_EXECUTION_ID:
-            if (field.type == TType.STRUCT) {
-              this.non_unique_execution_id = new NonUniqueExecutionIdException();
-              this.non_unique_execution_id.read(iprot);
+              this.ex = new ExecutionEngineException();
+              this.ex.read(iprot);
             } else { 
               TProtocolUtil.skip(iprot, field.type);
             }
@@ -1127,17 +865,9 @@ String space = prettyPrint ? " " : "";
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         this.success.write(oprot);
         oprot.writeFieldEnd();
-      } else if (this.isSetService_overloaded()) {
-        oprot.writeFieldBegin(SERVICE_OVERLOADED_FIELD_DESC);
-        this.service_overloaded.write(oprot);
-        oprot.writeFieldEnd();
-      } else if (this.isSetRejected_action()) {
-        oprot.writeFieldBegin(REJECTED_ACTION_FIELD_DESC);
-        this.rejected_action.write(oprot);
-        oprot.writeFieldEnd();
-      } else if (this.isSetNon_unique_execution_id()) {
-        oprot.writeFieldBegin(NON_UNIQUE_EXECUTION_ID_FIELD_DESC);
-        this.non_unique_execution_id.write(oprot);
+      } else if (this.isSetEx()) {
+        oprot.writeFieldBegin(EX_FIELD_DESC);
+        this.ex.write(oprot);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -1177,35 +907,13 @@ String space = prettyPrint ? " " : "";
       first = false;
       if (!first) sb.append("," + newLine);
       sb.append(indentStr);
-      sb.append("service_overloaded");
+      sb.append("ex");
       sb.append(space);
       sb.append(":").append(space);
-      if (this. getService_overloaded() == null) {
+      if (this. getEx() == null) {
         sb.append("null");
       } else {
-        sb.append(TBaseHelper.toString(this. getService_overloaded(), indent + 1, prettyPrint));
-      }
-      first = false;
-      if (!first) sb.append("," + newLine);
-      sb.append(indentStr);
-      sb.append("rejected_action");
-      sb.append(space);
-      sb.append(":").append(space);
-      if (this. getRejected_action() == null) {
-        sb.append("null");
-      } else {
-        sb.append(TBaseHelper.toString(this. getRejected_action(), indent + 1, prettyPrint));
-      }
-      first = false;
-      if (!first) sb.append("," + newLine);
-      sb.append(indentStr);
-      sb.append("non_unique_execution_id");
-      sb.append(space);
-      sb.append(":").append(space);
-      if (this. getNon_unique_execution_id() == null) {
-        sb.append("null");
-      } else {
-        sb.append(TBaseHelper.toString(this. getNon_unique_execution_id(), indent + 1, prettyPrint));
+        sb.append(TBaseHelper.toString(this. getEx(), indent + 1, prettyPrint));
       }
       first = false;
       sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
@@ -1220,11 +928,11 @@ String space = prettyPrint ? " " : "";
 
   }
 
-  public static class getExecutionState_args implements TBase, java.io.Serializable, Cloneable, Comparable<getExecutionState_args>   {
-    private static final TStruct STRUCT_DESC = new TStruct("getExecutionState_args");
+  public static class getExecuteOperation_args implements TBase, java.io.Serializable, Cloneable, Comparable<getExecuteOperation_args>   {
+    private static final TStruct STRUCT_DESC = new TStruct("getExecuteOperation_args");
     private static final TField REQUEST_FIELD_DESC = new TField("request", TType.STRUCT, (short)1);
 
-    public GetExecutionStateRequest request;
+    public GetExecuteOperationRequest request;
     public static final int REQUEST = 1;
     public static boolean DEFAULT_PRETTY_PRINT = true;
 
@@ -1234,19 +942,19 @@ String space = prettyPrint ? " " : "";
     static {
       Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
       tmpMetaDataMap.put(REQUEST, new FieldMetaData("request", TFieldRequirementType.DEFAULT, 
-          new StructMetaData(TType.STRUCT, GetExecutionStateRequest.class)));
+          new StructMetaData(TType.STRUCT, GetExecuteOperationRequest.class)));
       metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
     }
 
     static {
-      FieldMetaData.addStructMetaDataMap(getExecutionState_args.class, metaDataMap);
+      FieldMetaData.addStructMetaDataMap(getExecuteOperation_args.class, metaDataMap);
     }
 
-    public getExecutionState_args() {
+    public getExecuteOperation_args() {
     }
 
-    public getExecutionState_args(
-      GetExecutionStateRequest request)
+    public getExecuteOperation_args(
+      GetExecuteOperationRequest request)
     {
       this();
       this.request = request;
@@ -1255,26 +963,26 @@ String space = prettyPrint ? " " : "";
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getExecutionState_args(getExecutionState_args other) {
+    public getExecuteOperation_args(getExecuteOperation_args other) {
       if (other.isSetRequest()) {
         this.request = TBaseHelper.deepCopy(other.request);
       }
     }
 
-    public getExecutionState_args deepCopy() {
-      return new getExecutionState_args(this);
+    public getExecuteOperation_args deepCopy() {
+      return new getExecuteOperation_args(this);
     }
 
     @Deprecated
-    public getExecutionState_args clone() {
-      return new getExecutionState_args(this);
+    public getExecuteOperation_args clone() {
+      return new getExecuteOperation_args(this);
     }
 
-    public GetExecutionStateRequest  getRequest() {
+    public GetExecuteOperationRequest  getRequest() {
       return this.request;
     }
 
-    public getExecutionState_args setRequest(GetExecutionStateRequest request) {
+    public getExecuteOperation_args setRequest(GetExecuteOperationRequest request) {
       this.request = request;
       return this;
     }
@@ -1300,7 +1008,7 @@ String space = prettyPrint ? " " : "";
         if (value == null) {
           unsetRequest();
         } else {
-          setRequest((GetExecutionStateRequest)value);
+          setRequest((GetExecuteOperationRequest)value);
         }
         break;
 
@@ -1333,12 +1041,12 @@ String space = prettyPrint ? " " : "";
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof getExecutionState_args)
-        return this.equals((getExecutionState_args)that);
+      if (that instanceof getExecuteOperation_args)
+        return this.equals((getExecuteOperation_args)that);
       return false;
     }
 
-    public boolean equals(getExecutionState_args that) {
+    public boolean equals(getExecuteOperation_args that) {
       if (that == null)
         return false;
       if (this == that)
@@ -1362,7 +1070,7 @@ String space = prettyPrint ? " " : "";
     }
 
     @Override
-    public int compareTo(getExecutionState_args other) {
+    public int compareTo(getExecuteOperation_args other) {
       if (other == null) {
         // See java.lang.Comparable docs
         throw new NullPointerException();
@@ -1397,7 +1105,7 @@ String space = prettyPrint ? " " : "";
         {
           case REQUEST:
             if (field.type == TType.STRUCT) {
-              this.request = new GetExecutionStateRequest();
+              this.request = new GetExecuteOperationRequest();
               this.request.read(iprot);
             } else { 
               TProtocolUtil.skip(iprot, field.type);
@@ -1444,7 +1152,7 @@ String space = prettyPrint ? " " : "";
       String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
       String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-      StringBuilder sb = new StringBuilder("getExecutionState_args");
+      StringBuilder sb = new StringBuilder("getExecuteOperation_args");
       sb.append(space);
       sb.append("(");
       sb.append(newLine);
@@ -1472,15 +1180,15 @@ String space = prettyPrint ? " " : "";
 
   }
 
-  public static class getExecutionState_result implements TBase, java.io.Serializable, Cloneable   {
-    private static final TStruct STRUCT_DESC = new TStruct("getExecutionState_result");
+  public static class getExecuteOperation_result implements TBase, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("getExecuteOperation_result");
     private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.STRUCT, (short)0);
-    private static final TField UNKNOWN_EXECUTION_ID_FIELD_DESC = new TField("unknown_execution_id", TType.STRUCT, (short)1);
+    private static final TField EX_FIELD_DESC = new TField("ex", TType.STRUCT, (short)1);
 
-    public GetExecutionStateResponse success;
-    public UnknownExecutionIdException unknown_execution_id;
+    public ExecuteOperation success;
+    public ExecutionEngineException ex;
     public static final int SUCCESS = 0;
-    public static final int UNKNOWN_EXECUTION_ID = 1;
+    public static final int EX = 1;
     public static boolean DEFAULT_PRETTY_PRINT = true;
 
     // isset id assignments
@@ -1489,54 +1197,54 @@ String space = prettyPrint ? " " : "";
     static {
       Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
       tmpMetaDataMap.put(SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
-          new StructMetaData(TType.STRUCT, GetExecutionStateResponse.class)));
-      tmpMetaDataMap.put(UNKNOWN_EXECUTION_ID, new FieldMetaData("unknown_execution_id", TFieldRequirementType.DEFAULT, 
+          new StructMetaData(TType.STRUCT, ExecuteOperation.class)));
+      tmpMetaDataMap.put(EX, new FieldMetaData("ex", TFieldRequirementType.DEFAULT, 
           new FieldValueMetaData(TType.STRUCT)));
       metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
     }
 
     static {
-      FieldMetaData.addStructMetaDataMap(getExecutionState_result.class, metaDataMap);
+      FieldMetaData.addStructMetaDataMap(getExecuteOperation_result.class, metaDataMap);
     }
 
-    public getExecutionState_result() {
+    public getExecuteOperation_result() {
     }
 
-    public getExecutionState_result(
-      GetExecutionStateResponse success,
-      UnknownExecutionIdException unknown_execution_id)
+    public getExecuteOperation_result(
+      ExecuteOperation success,
+      ExecutionEngineException ex)
     {
       this();
       this.success = success;
-      this.unknown_execution_id = unknown_execution_id;
+      this.ex = ex;
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getExecutionState_result(getExecutionState_result other) {
+    public getExecuteOperation_result(getExecuteOperation_result other) {
       if (other.isSetSuccess()) {
         this.success = TBaseHelper.deepCopy(other.success);
       }
-      if (other.isSetUnknown_execution_id()) {
-        this.unknown_execution_id = TBaseHelper.deepCopy(other.unknown_execution_id);
+      if (other.isSetEx()) {
+        this.ex = TBaseHelper.deepCopy(other.ex);
       }
     }
 
-    public getExecutionState_result deepCopy() {
-      return new getExecutionState_result(this);
+    public getExecuteOperation_result deepCopy() {
+      return new getExecuteOperation_result(this);
     }
 
     @Deprecated
-    public getExecutionState_result clone() {
-      return new getExecutionState_result(this);
+    public getExecuteOperation_result clone() {
+      return new getExecuteOperation_result(this);
     }
 
-    public GetExecutionStateResponse  getSuccess() {
+    public ExecuteOperation  getSuccess() {
       return this.success;
     }
 
-    public getExecutionState_result setSuccess(GetExecutionStateResponse success) {
+    public getExecuteOperation_result setSuccess(ExecuteOperation success) {
       this.success = success;
       return this;
     }
@@ -1556,27 +1264,27 @@ String space = prettyPrint ? " " : "";
       }
     }
 
-    public UnknownExecutionIdException  getUnknown_execution_id() {
-      return this.unknown_execution_id;
+    public ExecutionEngineException  getEx() {
+      return this.ex;
     }
 
-    public getExecutionState_result setUnknown_execution_id(UnknownExecutionIdException unknown_execution_id) {
-      this.unknown_execution_id = unknown_execution_id;
+    public getExecuteOperation_result setEx(ExecutionEngineException ex) {
+      this.ex = ex;
       return this;
     }
 
-    public void unsetUnknown_execution_id() {
-      this.unknown_execution_id = null;
+    public void unsetEx() {
+      this.ex = null;
     }
 
-    // Returns true if field unknown_execution_id is set (has been assigned a value) and false otherwise
-    public boolean isSetUnknown_execution_id() {
-      return this.unknown_execution_id != null;
+    // Returns true if field ex is set (has been assigned a value) and false otherwise
+    public boolean isSetEx() {
+      return this.ex != null;
     }
 
-    public void setUnknown_execution_idIsSet(boolean value) {
+    public void setExIsSet(boolean value) {
       if (!value) {
-        this.unknown_execution_id = null;
+        this.ex = null;
       }
     }
 
@@ -1586,15 +1294,15 @@ String space = prettyPrint ? " " : "";
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((GetExecutionStateResponse)value);
+          setSuccess((ExecuteOperation)value);
         }
         break;
 
-      case UNKNOWN_EXECUTION_ID:
+      case EX:
         if (value == null) {
-          unsetUnknown_execution_id();
+          unsetEx();
         } else {
-          setUnknown_execution_id((UnknownExecutionIdException)value);
+          setEx((ExecutionEngineException)value);
         }
         break;
 
@@ -1608,8 +1316,8 @@ String space = prettyPrint ? " " : "";
       case SUCCESS:
         return getSuccess();
 
-      case UNKNOWN_EXECUTION_ID:
-        return getUnknown_execution_id();
+      case EX:
+        return getEx();
 
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -1621,8 +1329,8 @@ String space = prettyPrint ? " " : "";
       switch (fieldID) {
       case SUCCESS:
         return isSetSuccess();
-      case UNKNOWN_EXECUTION_ID:
-        return isSetUnknown_execution_id();
+      case EX:
+        return isSetEx();
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -1632,12 +1340,12 @@ String space = prettyPrint ? " " : "";
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof getExecutionState_result)
-        return this.equals((getExecutionState_result)that);
+      if (that instanceof getExecuteOperation_result)
+        return this.equals((getExecuteOperation_result)that);
       return false;
     }
 
-    public boolean equals(getExecutionState_result that) {
+    public boolean equals(getExecuteOperation_result that) {
       if (that == null)
         return false;
       if (this == that)
@@ -1652,12 +1360,12 @@ String space = prettyPrint ? " " : "";
           return false;
       }
 
-      boolean this_present_unknown_execution_id = true && this.isSetUnknown_execution_id();
-      boolean that_present_unknown_execution_id = true && that.isSetUnknown_execution_id();
-      if (this_present_unknown_execution_id || that_present_unknown_execution_id) {
-        if (!(this_present_unknown_execution_id && that_present_unknown_execution_id))
+      boolean this_present_ex = true && this.isSetEx();
+      boolean that_present_ex = true && that.isSetEx();
+      if (this_present_ex || that_present_ex) {
+        if (!(this_present_ex && that_present_ex))
           return false;
-        if (!TBaseHelper.equalsNobinary(this.unknown_execution_id, that.unknown_execution_id))
+        if (!TBaseHelper.equalsNobinary(this.ex, that.ex))
           return false;
       }
 
@@ -1682,16 +1390,16 @@ String space = prettyPrint ? " " : "";
         {
           case SUCCESS:
             if (field.type == TType.STRUCT) {
-              this.success = new GetExecutionStateResponse();
+              this.success = new ExecuteOperation();
               this.success.read(iprot);
             } else { 
               TProtocolUtil.skip(iprot, field.type);
             }
             break;
-          case UNKNOWN_EXECUTION_ID:
+          case EX:
             if (field.type == TType.STRUCT) {
-              this.unknown_execution_id = new UnknownExecutionIdException();
-              this.unknown_execution_id.read(iprot);
+              this.ex = new ExecutionEngineException();
+              this.ex.read(iprot);
             } else { 
               TProtocolUtil.skip(iprot, field.type);
             }
@@ -1716,9 +1424,9 @@ String space = prettyPrint ? " " : "";
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         this.success.write(oprot);
         oprot.writeFieldEnd();
-      } else if (this.isSetUnknown_execution_id()) {
-        oprot.writeFieldBegin(UNKNOWN_EXECUTION_ID_FIELD_DESC);
-        this.unknown_execution_id.write(oprot);
+      } else if (this.isSetEx()) {
+        oprot.writeFieldBegin(EX_FIELD_DESC);
+        this.ex.write(oprot);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -1740,7 +1448,7 @@ String space = prettyPrint ? " " : "";
       String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
       String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-      StringBuilder sb = new StringBuilder("getExecutionState_result");
+      StringBuilder sb = new StringBuilder("getExecuteOperation_result");
       sb.append(space);
       sb.append("(");
       sb.append(newLine);
@@ -1758,572 +1466,13 @@ String space = prettyPrint ? " " : "";
       first = false;
       if (!first) sb.append("," + newLine);
       sb.append(indentStr);
-      sb.append("unknown_execution_id");
+      sb.append("ex");
       sb.append(space);
       sb.append(":").append(space);
-      if (this. getUnknown_execution_id() == null) {
+      if (this. getEx() == null) {
         sb.append("null");
       } else {
-        sb.append(TBaseHelper.toString(this. getUnknown_execution_id(), indent + 1, prettyPrint));
-      }
-      first = false;
-      sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
-      sb.append(")");
-      return sb.toString();
-    }
-
-    public void validate() throws TException {
-      // check for required fields
-      // check that fields of type enum have valid values
-    }
-
-  }
-
-  public static class cancelExecution_args implements TBase, java.io.Serializable, Cloneable, Comparable<cancelExecution_args>   {
-    private static final TStruct STRUCT_DESC = new TStruct("cancelExecution_args");
-    private static final TField REQUEST_FIELD_DESC = new TField("request", TType.STRUCT, (short)1);
-
-    public CancelExecutionRequest request;
-    public static final int REQUEST = 1;
-    public static boolean DEFAULT_PRETTY_PRINT = true;
-
-    // isset id assignments
-
-    public static final Map<Integer, FieldMetaData> metaDataMap;
-    static {
-      Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
-      tmpMetaDataMap.put(REQUEST, new FieldMetaData("request", TFieldRequirementType.DEFAULT, 
-          new StructMetaData(TType.STRUCT, CancelExecutionRequest.class)));
-      metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
-    }
-
-    static {
-      FieldMetaData.addStructMetaDataMap(cancelExecution_args.class, metaDataMap);
-    }
-
-    public cancelExecution_args() {
-    }
-
-    public cancelExecution_args(
-      CancelExecutionRequest request)
-    {
-      this();
-      this.request = request;
-    }
-
-    /**
-     * Performs a deep copy on <i>other</i>.
-     */
-    public cancelExecution_args(cancelExecution_args other) {
-      if (other.isSetRequest()) {
-        this.request = TBaseHelper.deepCopy(other.request);
-      }
-    }
-
-    public cancelExecution_args deepCopy() {
-      return new cancelExecution_args(this);
-    }
-
-    @Deprecated
-    public cancelExecution_args clone() {
-      return new cancelExecution_args(this);
-    }
-
-    public CancelExecutionRequest  getRequest() {
-      return this.request;
-    }
-
-    public cancelExecution_args setRequest(CancelExecutionRequest request) {
-      this.request = request;
-      return this;
-    }
-
-    public void unsetRequest() {
-      this.request = null;
-    }
-
-    // Returns true if field request is set (has been assigned a value) and false otherwise
-    public boolean isSetRequest() {
-      return this.request != null;
-    }
-
-    public void setRequestIsSet(boolean value) {
-      if (!value) {
-        this.request = null;
-      }
-    }
-
-    public void setFieldValue(int fieldID, Object value) {
-      switch (fieldID) {
-      case REQUEST:
-        if (value == null) {
-          unsetRequest();
-        } else {
-          setRequest((CancelExecutionRequest)value);
-        }
-        break;
-
-      default:
-        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
-      }
-    }
-
-    public Object getFieldValue(int fieldID) {
-      switch (fieldID) {
-      case REQUEST:
-        return getRequest();
-
-      default:
-        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
-      }
-    }
-
-    // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
-    public boolean isSet(int fieldID) {
-      switch (fieldID) {
-      case REQUEST:
-        return isSetRequest();
-      default:
-        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
-      }
-    }
-
-    @Override
-    public boolean equals(Object that) {
-      if (that == null)
-        return false;
-      if (that instanceof cancelExecution_args)
-        return this.equals((cancelExecution_args)that);
-      return false;
-    }
-
-    public boolean equals(cancelExecution_args that) {
-      if (that == null)
-        return false;
-      if (this == that)
-        return true;
-
-      boolean this_present_request = true && this.isSetRequest();
-      boolean that_present_request = true && that.isSetRequest();
-      if (this_present_request || that_present_request) {
-        if (!(this_present_request && that_present_request))
-          return false;
-        if (!TBaseHelper.equalsNobinary(this.request, that.request))
-          return false;
-      }
-
-      return true;
-    }
-
-    @Override
-    public int hashCode() {
-      return 0;
-    }
-
-    @Override
-    public int compareTo(cancelExecution_args other) {
-      if (other == null) {
-        // See java.lang.Comparable docs
-        throw new NullPointerException();
-      }
-
-      if (other == this) {
-        return 0;
-      }
-      int lastComparison = 0;
-
-      lastComparison = Boolean.valueOf(isSetRequest()).compareTo(other.isSetRequest());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      lastComparison = TBaseHelper.compareTo(request, other.request);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      return 0;
-    }
-
-    public void read(TProtocol iprot) throws TException {
-      TField field;
-      iprot.readStructBegin(metaDataMap);
-      while (true)
-      {
-        field = iprot.readFieldBegin();
-        if (field.type == TType.STOP) { 
-          break;
-        }
-        switch (field.id)
-        {
-          case REQUEST:
-            if (field.type == TType.STRUCT) {
-              this.request = new CancelExecutionRequest();
-              this.request.read(iprot);
-            } else { 
-              TProtocolUtil.skip(iprot, field.type);
-            }
-            break;
-          default:
-            TProtocolUtil.skip(iprot, field.type);
-            break;
-        }
-        iprot.readFieldEnd();
-      }
-      iprot.readStructEnd();
-
-
-      // check for required fields of primitive type, which can't be checked in the validate method
-      validate();
-    }
-
-    public void write(TProtocol oprot) throws TException {
-      validate();
-
-      oprot.writeStructBegin(STRUCT_DESC);
-      if (this.request != null) {
-        oprot.writeFieldBegin(REQUEST_FIELD_DESC);
-        this.request.write(oprot);
-        oprot.writeFieldEnd();
-      }
-      oprot.writeFieldStop();
-      oprot.writeStructEnd();
-    }
-
-    @Override
-    public String toString() {
-      return toString(DEFAULT_PRETTY_PRINT);
-    }
-
-    @Override
-    public String toString(boolean prettyPrint) {
-      return toString(1, prettyPrint);
-    }
-
-    @Override
-    public String toString(int indent, boolean prettyPrint) {
-      String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
-      String newLine = prettyPrint ? "\n" : "";
-String space = prettyPrint ? " " : "";
-      StringBuilder sb = new StringBuilder("cancelExecution_args");
-      sb.append(space);
-      sb.append("(");
-      sb.append(newLine);
-      boolean first = true;
-
-      sb.append(indentStr);
-      sb.append("request");
-      sb.append(space);
-      sb.append(":").append(space);
-      if (this. getRequest() == null) {
-        sb.append("null");
-      } else {
-        sb.append(TBaseHelper.toString(this. getRequest(), indent + 1, prettyPrint));
-      }
-      first = false;
-      sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
-      sb.append(")");
-      return sb.toString();
-    }
-
-    public void validate() throws TException {
-      // check for required fields
-      // check that fields of type enum have valid values
-    }
-
-  }
-
-  public static class cancelExecution_result implements TBase, java.io.Serializable, Cloneable   {
-    private static final TStruct STRUCT_DESC = new TStruct("cancelExecution_result");
-    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.STRUCT, (short)0);
-    private static final TField UNKNOWN_EXECUTION_ID_FIELD_DESC = new TField("unknown_execution_id", TType.STRUCT, (short)1);
-
-    public CancelExecutionResponse success;
-    public UnknownExecutionIdException unknown_execution_id;
-    public static final int SUCCESS = 0;
-    public static final int UNKNOWN_EXECUTION_ID = 1;
-    public static boolean DEFAULT_PRETTY_PRINT = true;
-
-    // isset id assignments
-
-    public static final Map<Integer, FieldMetaData> metaDataMap;
-    static {
-      Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
-      tmpMetaDataMap.put(SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
-          new StructMetaData(TType.STRUCT, CancelExecutionResponse.class)));
-      tmpMetaDataMap.put(UNKNOWN_EXECUTION_ID, new FieldMetaData("unknown_execution_id", TFieldRequirementType.DEFAULT, 
-          new FieldValueMetaData(TType.STRUCT)));
-      metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
-    }
-
-    static {
-      FieldMetaData.addStructMetaDataMap(cancelExecution_result.class, metaDataMap);
-    }
-
-    public cancelExecution_result() {
-    }
-
-    public cancelExecution_result(
-      CancelExecutionResponse success,
-      UnknownExecutionIdException unknown_execution_id)
-    {
-      this();
-      this.success = success;
-      this.unknown_execution_id = unknown_execution_id;
-    }
-
-    /**
-     * Performs a deep copy on <i>other</i>.
-     */
-    public cancelExecution_result(cancelExecution_result other) {
-      if (other.isSetSuccess()) {
-        this.success = TBaseHelper.deepCopy(other.success);
-      }
-      if (other.isSetUnknown_execution_id()) {
-        this.unknown_execution_id = TBaseHelper.deepCopy(other.unknown_execution_id);
-      }
-    }
-
-    public cancelExecution_result deepCopy() {
-      return new cancelExecution_result(this);
-    }
-
-    @Deprecated
-    public cancelExecution_result clone() {
-      return new cancelExecution_result(this);
-    }
-
-    public CancelExecutionResponse  getSuccess() {
-      return this.success;
-    }
-
-    public cancelExecution_result setSuccess(CancelExecutionResponse success) {
-      this.success = success;
-      return this;
-    }
-
-    public void unsetSuccess() {
-      this.success = null;
-    }
-
-    // Returns true if field success is set (has been assigned a value) and false otherwise
-    public boolean isSetSuccess() {
-      return this.success != null;
-    }
-
-    public void setSuccessIsSet(boolean value) {
-      if (!value) {
-        this.success = null;
-      }
-    }
-
-    public UnknownExecutionIdException  getUnknown_execution_id() {
-      return this.unknown_execution_id;
-    }
-
-    public cancelExecution_result setUnknown_execution_id(UnknownExecutionIdException unknown_execution_id) {
-      this.unknown_execution_id = unknown_execution_id;
-      return this;
-    }
-
-    public void unsetUnknown_execution_id() {
-      this.unknown_execution_id = null;
-    }
-
-    // Returns true if field unknown_execution_id is set (has been assigned a value) and false otherwise
-    public boolean isSetUnknown_execution_id() {
-      return this.unknown_execution_id != null;
-    }
-
-    public void setUnknown_execution_idIsSet(boolean value) {
-      if (!value) {
-        this.unknown_execution_id = null;
-      }
-    }
-
-    public void setFieldValue(int fieldID, Object value) {
-      switch (fieldID) {
-      case SUCCESS:
-        if (value == null) {
-          unsetSuccess();
-        } else {
-          setSuccess((CancelExecutionResponse)value);
-        }
-        break;
-
-      case UNKNOWN_EXECUTION_ID:
-        if (value == null) {
-          unsetUnknown_execution_id();
-        } else {
-          setUnknown_execution_id((UnknownExecutionIdException)value);
-        }
-        break;
-
-      default:
-        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
-      }
-    }
-
-    public Object getFieldValue(int fieldID) {
-      switch (fieldID) {
-      case SUCCESS:
-        return getSuccess();
-
-      case UNKNOWN_EXECUTION_ID:
-        return getUnknown_execution_id();
-
-      default:
-        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
-      }
-    }
-
-    // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
-    public boolean isSet(int fieldID) {
-      switch (fieldID) {
-      case SUCCESS:
-        return isSetSuccess();
-      case UNKNOWN_EXECUTION_ID:
-        return isSetUnknown_execution_id();
-      default:
-        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
-      }
-    }
-
-    @Override
-    public boolean equals(Object that) {
-      if (that == null)
-        return false;
-      if (that instanceof cancelExecution_result)
-        return this.equals((cancelExecution_result)that);
-      return false;
-    }
-
-    public boolean equals(cancelExecution_result that) {
-      if (that == null)
-        return false;
-      if (this == that)
-        return true;
-
-      boolean this_present_success = true && this.isSetSuccess();
-      boolean that_present_success = true && that.isSetSuccess();
-      if (this_present_success || that_present_success) {
-        if (!(this_present_success && that_present_success))
-          return false;
-        if (!TBaseHelper.equalsNobinary(this.success, that.success))
-          return false;
-      }
-
-      boolean this_present_unknown_execution_id = true && this.isSetUnknown_execution_id();
-      boolean that_present_unknown_execution_id = true && that.isSetUnknown_execution_id();
-      if (this_present_unknown_execution_id || that_present_unknown_execution_id) {
-        if (!(this_present_unknown_execution_id && that_present_unknown_execution_id))
-          return false;
-        if (!TBaseHelper.equalsNobinary(this.unknown_execution_id, that.unknown_execution_id))
-          return false;
-      }
-
-      return true;
-    }
-
-    @Override
-    public int hashCode() {
-      return 0;
-    }
-
-    public void read(TProtocol iprot) throws TException {
-      TField field;
-      iprot.readStructBegin(metaDataMap);
-      while (true)
-      {
-        field = iprot.readFieldBegin();
-        if (field.type == TType.STOP) { 
-          break;
-        }
-        switch (field.id)
-        {
-          case SUCCESS:
-            if (field.type == TType.STRUCT) {
-              this.success = new CancelExecutionResponse();
-              this.success.read(iprot);
-            } else { 
-              TProtocolUtil.skip(iprot, field.type);
-            }
-            break;
-          case UNKNOWN_EXECUTION_ID:
-            if (field.type == TType.STRUCT) {
-              this.unknown_execution_id = new UnknownExecutionIdException();
-              this.unknown_execution_id.read(iprot);
-            } else { 
-              TProtocolUtil.skip(iprot, field.type);
-            }
-            break;
-          default:
-            TProtocolUtil.skip(iprot, field.type);
-            break;
-        }
-        iprot.readFieldEnd();
-      }
-      iprot.readStructEnd();
-
-
-      // check for required fields of primitive type, which can't be checked in the validate method
-      validate();
-    }
-
-    public void write(TProtocol oprot) throws TException {
-      oprot.writeStructBegin(STRUCT_DESC);
-
-      if (this.isSetSuccess()) {
-        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-        this.success.write(oprot);
-        oprot.writeFieldEnd();
-      } else if (this.isSetUnknown_execution_id()) {
-        oprot.writeFieldBegin(UNKNOWN_EXECUTION_ID_FIELD_DESC);
-        this.unknown_execution_id.write(oprot);
-        oprot.writeFieldEnd();
-      }
-      oprot.writeFieldStop();
-      oprot.writeStructEnd();
-    }
-
-    @Override
-    public String toString() {
-      return toString(DEFAULT_PRETTY_PRINT);
-    }
-
-    @Override
-    public String toString(boolean prettyPrint) {
-      return toString(1, prettyPrint);
-    }
-
-    @Override
-    public String toString(int indent, boolean prettyPrint) {
-      String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
-      String newLine = prettyPrint ? "\n" : "";
-String space = prettyPrint ? " " : "";
-      StringBuilder sb = new StringBuilder("cancelExecution_result");
-      sb.append(space);
-      sb.append("(");
-      sb.append(newLine);
-      boolean first = true;
-
-      sb.append(indentStr);
-      sb.append("success");
-      sb.append(space);
-      sb.append(":").append(space);
-      if (this. getSuccess() == null) {
-        sb.append("null");
-      } else {
-        sb.append(TBaseHelper.toString(this. getSuccess(), indent + 1, prettyPrint));
-      }
-      first = false;
-      if (!first) sb.append("," + newLine);
-      sb.append(indentStr);
-      sb.append("unknown_execution_id");
-      sb.append(space);
-      sb.append(":").append(space);
-      if (this. getUnknown_execution_id() == null) {
-        sb.append("null");
-      } else {
-        sb.append(TBaseHelper.toString(this. getUnknown_execution_id(), indent + 1, prettyPrint));
+        sb.append(TBaseHelper.toString(this. getEx(), indent + 1, prettyPrint));
       }
       first = false;
       sb.append(newLine + TBaseHelper.reduceIndent(indentStr));

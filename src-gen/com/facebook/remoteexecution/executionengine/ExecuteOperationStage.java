@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 @SuppressWarnings({ "unused" })
-public class ExecutionStage {
+public class ExecuteOperationStage {
   public static final int UNKNOWN = 0;
   public static final int CACHE_CHECK = 1;
   public static final int QUEUED = 2;
@@ -28,7 +28,7 @@ public class ExecutionStage {
 
   static {
     try {
-      Class<?> klass = ExecutionStage.class;
+      Class<?> klass = ExecuteOperationStage.class;
       for (Field f : klass.getDeclaredFields()) {
         if (f.getType() == Integer.TYPE) {
           VALUES_TO_NAMES.put(f.getInt(null), f.getName());

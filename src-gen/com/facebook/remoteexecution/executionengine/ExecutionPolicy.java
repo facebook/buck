@@ -26,87 +26,89 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class Requirements implements TBase, java.io.Serializable, Cloneable, Comparable<Requirements> {
-  private static final TStruct STRUCT_DESC = new TStruct("Requirements");
-  private static final TField WORKER_HOST_FIELD_DESC = new TField("worker_host", TType.STRUCT, (short)1);
+public class ExecutionPolicy implements TBase, java.io.Serializable, Cloneable, Comparable<ExecutionPolicy> {
+  private static final TStruct STRUCT_DESC = new TStruct("ExecutionPolicy");
+  private static final TField PRIORITY_FIELD_DESC = new TField("priority", TType.I32, (short)1);
 
-  public RequiredWorkerHost worker_host;
-  public static final int WORKER_HOST = 1;
+  public int priority;
+  public static final int PRIORITY = 1;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
+  private static final int __PRIORITY_ISSET_ID = 0;
+  private BitSet __isset_bit_vector = new BitSet(1);
 
   public static final Map<Integer, FieldMetaData> metaDataMap;
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
-    tmpMetaDataMap.put(WORKER_HOST, new FieldMetaData("worker_host", TFieldRequirementType.DEFAULT, 
-        new StructMetaData(TType.STRUCT, RequiredWorkerHost.class)));
+    tmpMetaDataMap.put(PRIORITY, new FieldMetaData("priority", TFieldRequirementType.DEFAULT, 
+        new FieldValueMetaData(TType.I32)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
   static {
-    FieldMetaData.addStructMetaDataMap(Requirements.class, metaDataMap);
+    FieldMetaData.addStructMetaDataMap(ExecutionPolicy.class, metaDataMap);
   }
 
-  public Requirements() {
+  public ExecutionPolicy() {
   }
 
-  public Requirements(
-    RequiredWorkerHost worker_host)
+  public ExecutionPolicy(
+    int priority)
   {
     this();
-    this.worker_host = worker_host;
+    this.priority = priority;
+    setPriorityIsSet(true);
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public Requirements(Requirements other) {
-    if (other.isSetWorker_host()) {
-      this.worker_host = TBaseHelper.deepCopy(other.worker_host);
-    }
+  public ExecutionPolicy(ExecutionPolicy other) {
+    __isset_bit_vector.clear();
+    __isset_bit_vector.or(other.__isset_bit_vector);
+    this.priority = TBaseHelper.deepCopy(other.priority);
   }
 
-  public Requirements deepCopy() {
-    return new Requirements(this);
+  public ExecutionPolicy deepCopy() {
+    return new ExecutionPolicy(this);
   }
 
   @Deprecated
-  public Requirements clone() {
-    return new Requirements(this);
+  public ExecutionPolicy clone() {
+    return new ExecutionPolicy(this);
   }
 
-  public RequiredWorkerHost  getWorker_host() {
-    return this.worker_host;
+  public int  getPriority() {
+    return this.priority;
   }
 
-  public Requirements setWorker_host(RequiredWorkerHost worker_host) {
-    this.worker_host = worker_host;
+  public ExecutionPolicy setPriority(int priority) {
+    this.priority = priority;
+    setPriorityIsSet(true);
     return this;
   }
 
-  public void unsetWorker_host() {
-    this.worker_host = null;
+  public void unsetPriority() {
+    __isset_bit_vector.clear(__PRIORITY_ISSET_ID);
   }
 
-  // Returns true if field worker_host is set (has been assigned a value) and false otherwise
-  public boolean isSetWorker_host() {
-    return this.worker_host != null;
+  // Returns true if field priority is set (has been assigned a value) and false otherwise
+  public boolean isSetPriority() {
+    return __isset_bit_vector.get(__PRIORITY_ISSET_ID);
   }
 
-  public void setWorker_hostIsSet(boolean value) {
-    if (!value) {
-      this.worker_host = null;
-    }
+  public void setPriorityIsSet(boolean value) {
+    __isset_bit_vector.set(__PRIORITY_ISSET_ID, value);
   }
 
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
-    case WORKER_HOST:
+    case PRIORITY:
       if (value == null) {
-        unsetWorker_host();
+        unsetPriority();
       } else {
-        setWorker_host((RequiredWorkerHost)value);
+        setPriority((Integer)value);
       }
       break;
 
@@ -117,8 +119,8 @@ public class Requirements implements TBase, java.io.Serializable, Cloneable, Com
 
   public Object getFieldValue(int fieldID) {
     switch (fieldID) {
-    case WORKER_HOST:
-      return getWorker_host();
+    case PRIORITY:
+      return new Integer(getPriority());
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -128,8 +130,8 @@ public class Requirements implements TBase, java.io.Serializable, Cloneable, Com
   // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
   public boolean isSet(int fieldID) {
     switch (fieldID) {
-    case WORKER_HOST:
-      return isSetWorker_host();
+    case PRIORITY:
+      return isSetPriority();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -139,23 +141,23 @@ public class Requirements implements TBase, java.io.Serializable, Cloneable, Com
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof Requirements)
-      return this.equals((Requirements)that);
+    if (that instanceof ExecutionPolicy)
+      return this.equals((ExecutionPolicy)that);
     return false;
   }
 
-  public boolean equals(Requirements that) {
+  public boolean equals(ExecutionPolicy that) {
     if (that == null)
       return false;
     if (this == that)
       return true;
 
-    boolean this_present_worker_host = true && this.isSetWorker_host();
-    boolean that_present_worker_host = true && that.isSetWorker_host();
-    if (this_present_worker_host || that_present_worker_host) {
-      if (!(this_present_worker_host && that_present_worker_host))
+    boolean this_present_priority = true;
+    boolean that_present_priority = true;
+    if (this_present_priority || that_present_priority) {
+      if (!(this_present_priority && that_present_priority))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.worker_host, that.worker_host))
+      if (!TBaseHelper.equalsNobinary(this.priority, that.priority))
         return false;
     }
 
@@ -168,7 +170,7 @@ public class Requirements implements TBase, java.io.Serializable, Cloneable, Com
   }
 
   @Override
-  public int compareTo(Requirements other) {
+  public int compareTo(ExecutionPolicy other) {
     if (other == null) {
       // See java.lang.Comparable docs
       throw new NullPointerException();
@@ -179,11 +181,11 @@ public class Requirements implements TBase, java.io.Serializable, Cloneable, Com
     }
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetWorker_host()).compareTo(other.isSetWorker_host());
+    lastComparison = Boolean.valueOf(isSetPriority()).compareTo(other.isSetPriority());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = TBaseHelper.compareTo(worker_host, other.worker_host);
+    lastComparison = TBaseHelper.compareTo(priority, other.priority);
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -201,10 +203,10 @@ public class Requirements implements TBase, java.io.Serializable, Cloneable, Com
       }
       switch (field.id)
       {
-        case WORKER_HOST:
-          if (field.type == TType.STRUCT) {
-            this.worker_host = new RequiredWorkerHost();
-            this.worker_host.read(iprot);
+        case PRIORITY:
+          if (field.type == TType.I32) {
+            this.priority = iprot.readI32();
+            setPriorityIsSet(true);
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -226,11 +228,9 @@ public class Requirements implements TBase, java.io.Serializable, Cloneable, Com
     validate();
 
     oprot.writeStructBegin(STRUCT_DESC);
-    if (this.worker_host != null) {
-      oprot.writeFieldBegin(WORKER_HOST_FIELD_DESC);
-      this.worker_host.write(oprot);
-      oprot.writeFieldEnd();
-    }
+    oprot.writeFieldBegin(PRIORITY_FIELD_DESC);
+    oprot.writeI32(this.priority);
+    oprot.writeFieldEnd();
     oprot.writeFieldStop();
     oprot.writeStructEnd();
   }
@@ -250,21 +250,17 @@ public class Requirements implements TBase, java.io.Serializable, Cloneable, Com
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-    StringBuilder sb = new StringBuilder("Requirements");
+    StringBuilder sb = new StringBuilder("ExecutionPolicy");
     sb.append(space);
     sb.append("(");
     sb.append(newLine);
     boolean first = true;
 
     sb.append(indentStr);
-    sb.append("worker_host");
+    sb.append("priority");
     sb.append(space);
     sb.append(":").append(space);
-    if (this. getWorker_host() == null) {
-      sb.append("null");
-    } else {
-      sb.append(TBaseHelper.toString(this. getWorker_host(), indent + 1, prettyPrint));
-    }
+    sb.append(TBaseHelper.toString(this. getPriority(), indent + 1, prettyPrint));
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
     sb.append(")");

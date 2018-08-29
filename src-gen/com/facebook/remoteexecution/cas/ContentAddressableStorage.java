@@ -30,17 +30,17 @@ public class ContentAddressableStorage {
 
   public interface Iface {
 
-    public UpdateBlobResponse updateBlob(UpdateBlobRequest request) throws TException;
+    public UpdateBlobResponse updateBlob(UpdateBlobRequest request) throws ContentAddressableStorageException, TException;
 
-    public BatchUpdateBlobsResponse batchUpdateBlobs(BatchUpdateBlobsRequest request) throws TException;
+    public BatchUpdateBlobsResponse batchUpdateBlobs(BatchUpdateBlobsRequest request) throws ContentAddressableStorageException, TException;
 
-    public ReadBlobResponse readBlob(ReadBlobRequest request) throws TException;
+    public ReadBlobResponse readBlob(ReadBlobRequest request) throws ContentAddressableStorageException, TException;
 
-    public BatchReadBlobsResponse batchReadBlobs(BatchReadBlobsRequest request) throws TException;
+    public BatchReadBlobsResponse batchReadBlobs(BatchReadBlobsRequest request) throws ContentAddressableStorageException, TException;
 
-    public FindMissingBlobsResponse findMissingBlobs(FindMissingBlobsRequest request) throws TException;
+    public FindMissingBlobsResponse findMissingBlobs(FindMissingBlobsRequest request) throws ContentAddressableStorageException, TException;
 
-    public GetTreeResponse getTree(GetTreeRequest request) throws TException;
+    public GetTreeResponse getTree(GetTreeRequest request) throws ContentAddressableStorageException, TException;
 
   }
 
@@ -89,7 +89,7 @@ public class ContentAddressableStorage {
       return this.oprot_;
     }
 
-    public UpdateBlobResponse updateBlob(UpdateBlobRequest request) throws TException
+    public UpdateBlobResponse updateBlob(UpdateBlobRequest request) throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = getContextStack("ContentAddressableStorage.updateBlob", null);
       this.setContextStack(ctx);
@@ -111,7 +111,7 @@ public class ContentAddressableStorage {
       return;
     }
 
-    public UpdateBlobResponse recv_updateBlob() throws TException
+    public UpdateBlobResponse recv_updateBlob() throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = super.getContextStack();
       long bytes;
@@ -131,10 +131,13 @@ public class ContentAddressableStorage {
       if (result.isSetSuccess()) {
         return result.success;
       }
+      if (result.ex != null) {
+        throw result.ex;
+      }
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "updateBlob failed: unknown result");
     }
 
-    public BatchUpdateBlobsResponse batchUpdateBlobs(BatchUpdateBlobsRequest request) throws TException
+    public BatchUpdateBlobsResponse batchUpdateBlobs(BatchUpdateBlobsRequest request) throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = getContextStack("ContentAddressableStorage.batchUpdateBlobs", null);
       this.setContextStack(ctx);
@@ -156,7 +159,7 @@ public class ContentAddressableStorage {
       return;
     }
 
-    public BatchUpdateBlobsResponse recv_batchUpdateBlobs() throws TException
+    public BatchUpdateBlobsResponse recv_batchUpdateBlobs() throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = super.getContextStack();
       long bytes;
@@ -176,10 +179,13 @@ public class ContentAddressableStorage {
       if (result.isSetSuccess()) {
         return result.success;
       }
+      if (result.ex != null) {
+        throw result.ex;
+      }
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "batchUpdateBlobs failed: unknown result");
     }
 
-    public ReadBlobResponse readBlob(ReadBlobRequest request) throws TException
+    public ReadBlobResponse readBlob(ReadBlobRequest request) throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = getContextStack("ContentAddressableStorage.readBlob", null);
       this.setContextStack(ctx);
@@ -201,7 +207,7 @@ public class ContentAddressableStorage {
       return;
     }
 
-    public ReadBlobResponse recv_readBlob() throws TException
+    public ReadBlobResponse recv_readBlob() throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = super.getContextStack();
       long bytes;
@@ -221,10 +227,13 @@ public class ContentAddressableStorage {
       if (result.isSetSuccess()) {
         return result.success;
       }
+      if (result.ex != null) {
+        throw result.ex;
+      }
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "readBlob failed: unknown result");
     }
 
-    public BatchReadBlobsResponse batchReadBlobs(BatchReadBlobsRequest request) throws TException
+    public BatchReadBlobsResponse batchReadBlobs(BatchReadBlobsRequest request) throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = getContextStack("ContentAddressableStorage.batchReadBlobs", null);
       this.setContextStack(ctx);
@@ -246,7 +255,7 @@ public class ContentAddressableStorage {
       return;
     }
 
-    public BatchReadBlobsResponse recv_batchReadBlobs() throws TException
+    public BatchReadBlobsResponse recv_batchReadBlobs() throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = super.getContextStack();
       long bytes;
@@ -266,10 +275,13 @@ public class ContentAddressableStorage {
       if (result.isSetSuccess()) {
         return result.success;
       }
+      if (result.ex != null) {
+        throw result.ex;
+      }
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "batchReadBlobs failed: unknown result");
     }
 
-    public FindMissingBlobsResponse findMissingBlobs(FindMissingBlobsRequest request) throws TException
+    public FindMissingBlobsResponse findMissingBlobs(FindMissingBlobsRequest request) throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = getContextStack("ContentAddressableStorage.findMissingBlobs", null);
       this.setContextStack(ctx);
@@ -291,7 +303,7 @@ public class ContentAddressableStorage {
       return;
     }
 
-    public FindMissingBlobsResponse recv_findMissingBlobs() throws TException
+    public FindMissingBlobsResponse recv_findMissingBlobs() throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = super.getContextStack();
       long bytes;
@@ -311,10 +323,13 @@ public class ContentAddressableStorage {
       if (result.isSetSuccess()) {
         return result.success;
       }
+      if (result.ex != null) {
+        throw result.ex;
+      }
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "findMissingBlobs failed: unknown result");
     }
 
-    public GetTreeResponse getTree(GetTreeRequest request) throws TException
+    public GetTreeResponse getTree(GetTreeRequest request) throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = getContextStack("ContentAddressableStorage.getTree", null);
       this.setContextStack(ctx);
@@ -336,7 +351,7 @@ public class ContentAddressableStorage {
       return;
     }
 
-    public GetTreeResponse recv_getTree() throws TException
+    public GetTreeResponse recv_getTree() throws ContentAddressableStorageException, TException
     {
       ContextStack ctx = super.getContextStack();
       long bytes;
@@ -355,6 +370,9 @@ public class ContentAddressableStorage {
 
       if (result.isSetSuccess()) {
         return result.success;
+      }
+      if (result.ex != null) {
+        throw result.ex;
       }
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "getTree failed: unknown result");
     }
@@ -399,7 +417,7 @@ public class ContentAddressableStorage {
         prot.writeMessageEnd();
       }
 
-      public UpdateBlobResponse getResult() throws TException {
+      public UpdateBlobResponse getResult() throws ContentAddressableStorageException, TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -431,7 +449,7 @@ public class ContentAddressableStorage {
         prot.writeMessageEnd();
       }
 
-      public BatchUpdateBlobsResponse getResult() throws TException {
+      public BatchUpdateBlobsResponse getResult() throws ContentAddressableStorageException, TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -463,7 +481,7 @@ public class ContentAddressableStorage {
         prot.writeMessageEnd();
       }
 
-      public ReadBlobResponse getResult() throws TException {
+      public ReadBlobResponse getResult() throws ContentAddressableStorageException, TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -495,7 +513,7 @@ public class ContentAddressableStorage {
         prot.writeMessageEnd();
       }
 
-      public BatchReadBlobsResponse getResult() throws TException {
+      public BatchReadBlobsResponse getResult() throws ContentAddressableStorageException, TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -527,7 +545,7 @@ public class ContentAddressableStorage {
         prot.writeMessageEnd();
       }
 
-      public FindMissingBlobsResponse getResult() throws TException {
+      public FindMissingBlobsResponse getResult() throws ContentAddressableStorageException, TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -559,7 +577,7 @@ public class ContentAddressableStorage {
         prot.writeMessageEnd();
       }
 
-      public GetTreeResponse getResult() throws TException {
+      public GetTreeResponse getResult() throws ContentAddressableStorageException, TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -625,7 +643,23 @@ public class ContentAddressableStorage {
         iprot.readMessageEnd();
         event_handler_.postRead(handler_ctx, "ContentAddressableStorage.updateBlob", args);
         updateBlob_result result = new updateBlob_result();
-        result.success = iface_.updateBlob(args.request);
+        try {
+          result.success = iface_.updateBlob(args.request);
+        } catch (ContentAddressableStorageException ex) {
+          result.ex = ex;
+          event_handler_.declaredUserException(handler_ctx, "ContentAddressableStorage.updateBlob", ex);
+        } catch (Throwable th) {
+          LOGGER.error("Internal error processing ContentAddressableStorage.updateBlob", th);
+          event_handler_.handlerError(handler_ctx, "ContentAddressableStorage.updateBlob", th);
+          TApplicationException x = new TApplicationException(TApplicationException.INTERNAL_ERROR, "Internal error processing ContentAddressableStorage.updateBlob");
+          event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.updateBlob", null);
+          oprot.writeMessageBegin(new TMessage("ContentAddressableStorage.updateBlob", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          event_handler_.postWrite(handler_ctx, "ContentAddressableStorage.updateBlob", null);
+          return;
+        }
         event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.updateBlob", result);
         oprot.writeMessageBegin(new TMessage("updateBlob", TMessageType.REPLY, seqid));
         result.write(oprot);
@@ -646,7 +680,23 @@ public class ContentAddressableStorage {
         iprot.readMessageEnd();
         event_handler_.postRead(handler_ctx, "ContentAddressableStorage.batchUpdateBlobs", args);
         batchUpdateBlobs_result result = new batchUpdateBlobs_result();
-        result.success = iface_.batchUpdateBlobs(args.request);
+        try {
+          result.success = iface_.batchUpdateBlobs(args.request);
+        } catch (ContentAddressableStorageException ex) {
+          result.ex = ex;
+          event_handler_.declaredUserException(handler_ctx, "ContentAddressableStorage.batchUpdateBlobs", ex);
+        } catch (Throwable th) {
+          LOGGER.error("Internal error processing ContentAddressableStorage.batchUpdateBlobs", th);
+          event_handler_.handlerError(handler_ctx, "ContentAddressableStorage.batchUpdateBlobs", th);
+          TApplicationException x = new TApplicationException(TApplicationException.INTERNAL_ERROR, "Internal error processing ContentAddressableStorage.batchUpdateBlobs");
+          event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.batchUpdateBlobs", null);
+          oprot.writeMessageBegin(new TMessage("ContentAddressableStorage.batchUpdateBlobs", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          event_handler_.postWrite(handler_ctx, "ContentAddressableStorage.batchUpdateBlobs", null);
+          return;
+        }
         event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.batchUpdateBlobs", result);
         oprot.writeMessageBegin(new TMessage("batchUpdateBlobs", TMessageType.REPLY, seqid));
         result.write(oprot);
@@ -667,7 +717,23 @@ public class ContentAddressableStorage {
         iprot.readMessageEnd();
         event_handler_.postRead(handler_ctx, "ContentAddressableStorage.readBlob", args);
         readBlob_result result = new readBlob_result();
-        result.success = iface_.readBlob(args.request);
+        try {
+          result.success = iface_.readBlob(args.request);
+        } catch (ContentAddressableStorageException ex) {
+          result.ex = ex;
+          event_handler_.declaredUserException(handler_ctx, "ContentAddressableStorage.readBlob", ex);
+        } catch (Throwable th) {
+          LOGGER.error("Internal error processing ContentAddressableStorage.readBlob", th);
+          event_handler_.handlerError(handler_ctx, "ContentAddressableStorage.readBlob", th);
+          TApplicationException x = new TApplicationException(TApplicationException.INTERNAL_ERROR, "Internal error processing ContentAddressableStorage.readBlob");
+          event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.readBlob", null);
+          oprot.writeMessageBegin(new TMessage("ContentAddressableStorage.readBlob", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          event_handler_.postWrite(handler_ctx, "ContentAddressableStorage.readBlob", null);
+          return;
+        }
         event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.readBlob", result);
         oprot.writeMessageBegin(new TMessage("readBlob", TMessageType.REPLY, seqid));
         result.write(oprot);
@@ -688,7 +754,23 @@ public class ContentAddressableStorage {
         iprot.readMessageEnd();
         event_handler_.postRead(handler_ctx, "ContentAddressableStorage.batchReadBlobs", args);
         batchReadBlobs_result result = new batchReadBlobs_result();
-        result.success = iface_.batchReadBlobs(args.request);
+        try {
+          result.success = iface_.batchReadBlobs(args.request);
+        } catch (ContentAddressableStorageException ex) {
+          result.ex = ex;
+          event_handler_.declaredUserException(handler_ctx, "ContentAddressableStorage.batchReadBlobs", ex);
+        } catch (Throwable th) {
+          LOGGER.error("Internal error processing ContentAddressableStorage.batchReadBlobs", th);
+          event_handler_.handlerError(handler_ctx, "ContentAddressableStorage.batchReadBlobs", th);
+          TApplicationException x = new TApplicationException(TApplicationException.INTERNAL_ERROR, "Internal error processing ContentAddressableStorage.batchReadBlobs");
+          event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.batchReadBlobs", null);
+          oprot.writeMessageBegin(new TMessage("ContentAddressableStorage.batchReadBlobs", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          event_handler_.postWrite(handler_ctx, "ContentAddressableStorage.batchReadBlobs", null);
+          return;
+        }
         event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.batchReadBlobs", result);
         oprot.writeMessageBegin(new TMessage("batchReadBlobs", TMessageType.REPLY, seqid));
         result.write(oprot);
@@ -709,7 +791,23 @@ public class ContentAddressableStorage {
         iprot.readMessageEnd();
         event_handler_.postRead(handler_ctx, "ContentAddressableStorage.findMissingBlobs", args);
         findMissingBlobs_result result = new findMissingBlobs_result();
-        result.success = iface_.findMissingBlobs(args.request);
+        try {
+          result.success = iface_.findMissingBlobs(args.request);
+        } catch (ContentAddressableStorageException ex) {
+          result.ex = ex;
+          event_handler_.declaredUserException(handler_ctx, "ContentAddressableStorage.findMissingBlobs", ex);
+        } catch (Throwable th) {
+          LOGGER.error("Internal error processing ContentAddressableStorage.findMissingBlobs", th);
+          event_handler_.handlerError(handler_ctx, "ContentAddressableStorage.findMissingBlobs", th);
+          TApplicationException x = new TApplicationException(TApplicationException.INTERNAL_ERROR, "Internal error processing ContentAddressableStorage.findMissingBlobs");
+          event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.findMissingBlobs", null);
+          oprot.writeMessageBegin(new TMessage("ContentAddressableStorage.findMissingBlobs", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          event_handler_.postWrite(handler_ctx, "ContentAddressableStorage.findMissingBlobs", null);
+          return;
+        }
         event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.findMissingBlobs", result);
         oprot.writeMessageBegin(new TMessage("findMissingBlobs", TMessageType.REPLY, seqid));
         result.write(oprot);
@@ -730,7 +828,23 @@ public class ContentAddressableStorage {
         iprot.readMessageEnd();
         event_handler_.postRead(handler_ctx, "ContentAddressableStorage.getTree", args);
         getTree_result result = new getTree_result();
-        result.success = iface_.getTree(args.request);
+        try {
+          result.success = iface_.getTree(args.request);
+        } catch (ContentAddressableStorageException ex) {
+          result.ex = ex;
+          event_handler_.declaredUserException(handler_ctx, "ContentAddressableStorage.getTree", ex);
+        } catch (Throwable th) {
+          LOGGER.error("Internal error processing ContentAddressableStorage.getTree", th);
+          event_handler_.handlerError(handler_ctx, "ContentAddressableStorage.getTree", th);
+          TApplicationException x = new TApplicationException(TApplicationException.INTERNAL_ERROR, "Internal error processing ContentAddressableStorage.getTree");
+          event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.getTree", null);
+          oprot.writeMessageBegin(new TMessage("ContentAddressableStorage.getTree", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          event_handler_.postWrite(handler_ctx, "ContentAddressableStorage.getTree", null);
+          return;
+        }
         event_handler_.preWrite(handler_ctx, "ContentAddressableStorage.getTree", result);
         oprot.writeMessageBegin(new TMessage("getTree", TMessageType.REPLY, seqid));
         result.write(oprot);
@@ -995,12 +1109,15 @@ String space = prettyPrint ? " " : "";
 
   }
 
-  public static class updateBlob_result implements TBase, java.io.Serializable, Cloneable, Comparable<updateBlob_result>   {
+  public static class updateBlob_result implements TBase, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("updateBlob_result");
     private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.STRUCT, (short)0);
+    private static final TField EX_FIELD_DESC = new TField("ex", TType.STRUCT, (short)1);
 
     public UpdateBlobResponse success;
+    public ContentAddressableStorageException ex;
     public static final int SUCCESS = 0;
+    public static final int EX = 1;
     public static boolean DEFAULT_PRETTY_PRINT = true;
 
     // isset id assignments
@@ -1010,6 +1127,8 @@ String space = prettyPrint ? " " : "";
       Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
       tmpMetaDataMap.put(SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
           new StructMetaData(TType.STRUCT, UpdateBlobResponse.class)));
+      tmpMetaDataMap.put(EX, new FieldMetaData("ex", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRUCT)));
       metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
     }
 
@@ -1021,10 +1140,12 @@ String space = prettyPrint ? " " : "";
     }
 
     public updateBlob_result(
-      UpdateBlobResponse success)
+      UpdateBlobResponse success,
+      ContentAddressableStorageException ex)
     {
       this();
       this.success = success;
+      this.ex = ex;
     }
 
     /**
@@ -1033,6 +1154,9 @@ String space = prettyPrint ? " " : "";
     public updateBlob_result(updateBlob_result other) {
       if (other.isSetSuccess()) {
         this.success = TBaseHelper.deepCopy(other.success);
+      }
+      if (other.isSetEx()) {
+        this.ex = TBaseHelper.deepCopy(other.ex);
       }
     }
 
@@ -1069,6 +1193,30 @@ String space = prettyPrint ? " " : "";
       }
     }
 
+    public ContentAddressableStorageException  getEx() {
+      return this.ex;
+    }
+
+    public updateBlob_result setEx(ContentAddressableStorageException ex) {
+      this.ex = ex;
+      return this;
+    }
+
+    public void unsetEx() {
+      this.ex = null;
+    }
+
+    // Returns true if field ex is set (has been assigned a value) and false otherwise
+    public boolean isSetEx() {
+      return this.ex != null;
+    }
+
+    public void setExIsSet(boolean value) {
+      if (!value) {
+        this.ex = null;
+      }
+    }
+
     public void setFieldValue(int fieldID, Object value) {
       switch (fieldID) {
       case SUCCESS:
@@ -1076,6 +1224,14 @@ String space = prettyPrint ? " " : "";
           unsetSuccess();
         } else {
           setSuccess((UpdateBlobResponse)value);
+        }
+        break;
+
+      case EX:
+        if (value == null) {
+          unsetEx();
+        } else {
+          setEx((ContentAddressableStorageException)value);
         }
         break;
 
@@ -1089,6 +1245,9 @@ String space = prettyPrint ? " " : "";
       case SUCCESS:
         return getSuccess();
 
+      case EX:
+        return getEx();
+
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -1099,6 +1258,8 @@ String space = prettyPrint ? " " : "";
       switch (fieldID) {
       case SUCCESS:
         return isSetSuccess();
+      case EX:
+        return isSetEx();
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -1128,34 +1289,20 @@ String space = prettyPrint ? " " : "";
           return false;
       }
 
+      boolean this_present_ex = true && this.isSetEx();
+      boolean that_present_ex = true && that.isSetEx();
+      if (this_present_ex || that_present_ex) {
+        if (!(this_present_ex && that_present_ex))
+          return false;
+        if (!TBaseHelper.equalsNobinary(this.ex, that.ex))
+          return false;
+      }
+
       return true;
     }
 
     @Override
     public int hashCode() {
-      return 0;
-    }
-
-    @Override
-    public int compareTo(updateBlob_result other) {
-      if (other == null) {
-        // See java.lang.Comparable docs
-        throw new NullPointerException();
-      }
-
-      if (other == this) {
-        return 0;
-      }
-      int lastComparison = 0;
-
-      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      lastComparison = TBaseHelper.compareTo(success, other.success);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
       return 0;
     }
 
@@ -1174,6 +1321,14 @@ String space = prettyPrint ? " " : "";
             if (field.type == TType.STRUCT) {
               this.success = new UpdateBlobResponse();
               this.success.read(iprot);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case EX:
+            if (field.type == TType.STRUCT) {
+              this.ex = new ContentAddressableStorageException();
+              this.ex.read(iprot);
             } else { 
               TProtocolUtil.skip(iprot, field.type);
             }
@@ -1197,6 +1352,10 @@ String space = prettyPrint ? " " : "";
       if (this.isSetSuccess()) {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         this.success.write(oprot);
+        oprot.writeFieldEnd();
+      } else if (this.isSetEx()) {
+        oprot.writeFieldBegin(EX_FIELD_DESC);
+        this.ex.write(oprot);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -1232,6 +1391,17 @@ String space = prettyPrint ? " " : "";
         sb.append("null");
       } else {
         sb.append(TBaseHelper.toString(this. getSuccess(), indent + 1, prettyPrint));
+      }
+      first = false;
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("ex");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getEx() == null) {
+        sb.append("null");
+      } else {
+        sb.append(TBaseHelper.toString(this. getEx(), indent + 1, prettyPrint));
       }
       first = false;
       sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
@@ -1498,12 +1668,15 @@ String space = prettyPrint ? " " : "";
 
   }
 
-  public static class batchUpdateBlobs_result implements TBase, java.io.Serializable, Cloneable, Comparable<batchUpdateBlobs_result>   {
+  public static class batchUpdateBlobs_result implements TBase, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("batchUpdateBlobs_result");
     private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.STRUCT, (short)0);
+    private static final TField EX_FIELD_DESC = new TField("ex", TType.STRUCT, (short)1);
 
     public BatchUpdateBlobsResponse success;
+    public ContentAddressableStorageException ex;
     public static final int SUCCESS = 0;
+    public static final int EX = 1;
     public static boolean DEFAULT_PRETTY_PRINT = true;
 
     // isset id assignments
@@ -1513,6 +1686,8 @@ String space = prettyPrint ? " " : "";
       Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
       tmpMetaDataMap.put(SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
           new StructMetaData(TType.STRUCT, BatchUpdateBlobsResponse.class)));
+      tmpMetaDataMap.put(EX, new FieldMetaData("ex", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRUCT)));
       metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
     }
 
@@ -1524,10 +1699,12 @@ String space = prettyPrint ? " " : "";
     }
 
     public batchUpdateBlobs_result(
-      BatchUpdateBlobsResponse success)
+      BatchUpdateBlobsResponse success,
+      ContentAddressableStorageException ex)
     {
       this();
       this.success = success;
+      this.ex = ex;
     }
 
     /**
@@ -1536,6 +1713,9 @@ String space = prettyPrint ? " " : "";
     public batchUpdateBlobs_result(batchUpdateBlobs_result other) {
       if (other.isSetSuccess()) {
         this.success = TBaseHelper.deepCopy(other.success);
+      }
+      if (other.isSetEx()) {
+        this.ex = TBaseHelper.deepCopy(other.ex);
       }
     }
 
@@ -1572,6 +1752,30 @@ String space = prettyPrint ? " " : "";
       }
     }
 
+    public ContentAddressableStorageException  getEx() {
+      return this.ex;
+    }
+
+    public batchUpdateBlobs_result setEx(ContentAddressableStorageException ex) {
+      this.ex = ex;
+      return this;
+    }
+
+    public void unsetEx() {
+      this.ex = null;
+    }
+
+    // Returns true if field ex is set (has been assigned a value) and false otherwise
+    public boolean isSetEx() {
+      return this.ex != null;
+    }
+
+    public void setExIsSet(boolean value) {
+      if (!value) {
+        this.ex = null;
+      }
+    }
+
     public void setFieldValue(int fieldID, Object value) {
       switch (fieldID) {
       case SUCCESS:
@@ -1579,6 +1783,14 @@ String space = prettyPrint ? " " : "";
           unsetSuccess();
         } else {
           setSuccess((BatchUpdateBlobsResponse)value);
+        }
+        break;
+
+      case EX:
+        if (value == null) {
+          unsetEx();
+        } else {
+          setEx((ContentAddressableStorageException)value);
         }
         break;
 
@@ -1592,6 +1804,9 @@ String space = prettyPrint ? " " : "";
       case SUCCESS:
         return getSuccess();
 
+      case EX:
+        return getEx();
+
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -1602,6 +1817,8 @@ String space = prettyPrint ? " " : "";
       switch (fieldID) {
       case SUCCESS:
         return isSetSuccess();
+      case EX:
+        return isSetEx();
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -1631,34 +1848,20 @@ String space = prettyPrint ? " " : "";
           return false;
       }
 
+      boolean this_present_ex = true && this.isSetEx();
+      boolean that_present_ex = true && that.isSetEx();
+      if (this_present_ex || that_present_ex) {
+        if (!(this_present_ex && that_present_ex))
+          return false;
+        if (!TBaseHelper.equalsNobinary(this.ex, that.ex))
+          return false;
+      }
+
       return true;
     }
 
     @Override
     public int hashCode() {
-      return 0;
-    }
-
-    @Override
-    public int compareTo(batchUpdateBlobs_result other) {
-      if (other == null) {
-        // See java.lang.Comparable docs
-        throw new NullPointerException();
-      }
-
-      if (other == this) {
-        return 0;
-      }
-      int lastComparison = 0;
-
-      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      lastComparison = TBaseHelper.compareTo(success, other.success);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
       return 0;
     }
 
@@ -1677,6 +1880,14 @@ String space = prettyPrint ? " " : "";
             if (field.type == TType.STRUCT) {
               this.success = new BatchUpdateBlobsResponse();
               this.success.read(iprot);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case EX:
+            if (field.type == TType.STRUCT) {
+              this.ex = new ContentAddressableStorageException();
+              this.ex.read(iprot);
             } else { 
               TProtocolUtil.skip(iprot, field.type);
             }
@@ -1700,6 +1911,10 @@ String space = prettyPrint ? " " : "";
       if (this.isSetSuccess()) {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         this.success.write(oprot);
+        oprot.writeFieldEnd();
+      } else if (this.isSetEx()) {
+        oprot.writeFieldBegin(EX_FIELD_DESC);
+        this.ex.write(oprot);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -1735,6 +1950,17 @@ String space = prettyPrint ? " " : "";
         sb.append("null");
       } else {
         sb.append(TBaseHelper.toString(this. getSuccess(), indent + 1, prettyPrint));
+      }
+      first = false;
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("ex");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getEx() == null) {
+        sb.append("null");
+      } else {
+        sb.append(TBaseHelper.toString(this. getEx(), indent + 1, prettyPrint));
       }
       first = false;
       sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
@@ -2001,12 +2227,15 @@ String space = prettyPrint ? " " : "";
 
   }
 
-  public static class readBlob_result implements TBase, java.io.Serializable, Cloneable, Comparable<readBlob_result>   {
+  public static class readBlob_result implements TBase, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("readBlob_result");
     private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.STRUCT, (short)0);
+    private static final TField EX_FIELD_DESC = new TField("ex", TType.STRUCT, (short)1);
 
     public ReadBlobResponse success;
+    public ContentAddressableStorageException ex;
     public static final int SUCCESS = 0;
+    public static final int EX = 1;
     public static boolean DEFAULT_PRETTY_PRINT = true;
 
     // isset id assignments
@@ -2016,6 +2245,8 @@ String space = prettyPrint ? " " : "";
       Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
       tmpMetaDataMap.put(SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
           new StructMetaData(TType.STRUCT, ReadBlobResponse.class)));
+      tmpMetaDataMap.put(EX, new FieldMetaData("ex", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRUCT)));
       metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
     }
 
@@ -2027,10 +2258,12 @@ String space = prettyPrint ? " " : "";
     }
 
     public readBlob_result(
-      ReadBlobResponse success)
+      ReadBlobResponse success,
+      ContentAddressableStorageException ex)
     {
       this();
       this.success = success;
+      this.ex = ex;
     }
 
     /**
@@ -2039,6 +2272,9 @@ String space = prettyPrint ? " " : "";
     public readBlob_result(readBlob_result other) {
       if (other.isSetSuccess()) {
         this.success = TBaseHelper.deepCopy(other.success);
+      }
+      if (other.isSetEx()) {
+        this.ex = TBaseHelper.deepCopy(other.ex);
       }
     }
 
@@ -2075,6 +2311,30 @@ String space = prettyPrint ? " " : "";
       }
     }
 
+    public ContentAddressableStorageException  getEx() {
+      return this.ex;
+    }
+
+    public readBlob_result setEx(ContentAddressableStorageException ex) {
+      this.ex = ex;
+      return this;
+    }
+
+    public void unsetEx() {
+      this.ex = null;
+    }
+
+    // Returns true if field ex is set (has been assigned a value) and false otherwise
+    public boolean isSetEx() {
+      return this.ex != null;
+    }
+
+    public void setExIsSet(boolean value) {
+      if (!value) {
+        this.ex = null;
+      }
+    }
+
     public void setFieldValue(int fieldID, Object value) {
       switch (fieldID) {
       case SUCCESS:
@@ -2082,6 +2342,14 @@ String space = prettyPrint ? " " : "";
           unsetSuccess();
         } else {
           setSuccess((ReadBlobResponse)value);
+        }
+        break;
+
+      case EX:
+        if (value == null) {
+          unsetEx();
+        } else {
+          setEx((ContentAddressableStorageException)value);
         }
         break;
 
@@ -2095,6 +2363,9 @@ String space = prettyPrint ? " " : "";
       case SUCCESS:
         return getSuccess();
 
+      case EX:
+        return getEx();
+
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -2105,6 +2376,8 @@ String space = prettyPrint ? " " : "";
       switch (fieldID) {
       case SUCCESS:
         return isSetSuccess();
+      case EX:
+        return isSetEx();
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -2134,34 +2407,20 @@ String space = prettyPrint ? " " : "";
           return false;
       }
 
+      boolean this_present_ex = true && this.isSetEx();
+      boolean that_present_ex = true && that.isSetEx();
+      if (this_present_ex || that_present_ex) {
+        if (!(this_present_ex && that_present_ex))
+          return false;
+        if (!TBaseHelper.equalsNobinary(this.ex, that.ex))
+          return false;
+      }
+
       return true;
     }
 
     @Override
     public int hashCode() {
-      return 0;
-    }
-
-    @Override
-    public int compareTo(readBlob_result other) {
-      if (other == null) {
-        // See java.lang.Comparable docs
-        throw new NullPointerException();
-      }
-
-      if (other == this) {
-        return 0;
-      }
-      int lastComparison = 0;
-
-      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      lastComparison = TBaseHelper.compareTo(success, other.success);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
       return 0;
     }
 
@@ -2180,6 +2439,14 @@ String space = prettyPrint ? " " : "";
             if (field.type == TType.STRUCT) {
               this.success = new ReadBlobResponse();
               this.success.read(iprot);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case EX:
+            if (field.type == TType.STRUCT) {
+              this.ex = new ContentAddressableStorageException();
+              this.ex.read(iprot);
             } else { 
               TProtocolUtil.skip(iprot, field.type);
             }
@@ -2203,6 +2470,10 @@ String space = prettyPrint ? " " : "";
       if (this.isSetSuccess()) {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         this.success.write(oprot);
+        oprot.writeFieldEnd();
+      } else if (this.isSetEx()) {
+        oprot.writeFieldBegin(EX_FIELD_DESC);
+        this.ex.write(oprot);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -2238,6 +2509,17 @@ String space = prettyPrint ? " " : "";
         sb.append("null");
       } else {
         sb.append(TBaseHelper.toString(this. getSuccess(), indent + 1, prettyPrint));
+      }
+      first = false;
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("ex");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getEx() == null) {
+        sb.append("null");
+      } else {
+        sb.append(TBaseHelper.toString(this. getEx(), indent + 1, prettyPrint));
       }
       first = false;
       sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
@@ -2504,12 +2786,15 @@ String space = prettyPrint ? " " : "";
 
   }
 
-  public static class batchReadBlobs_result implements TBase, java.io.Serializable, Cloneable, Comparable<batchReadBlobs_result>   {
+  public static class batchReadBlobs_result implements TBase, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("batchReadBlobs_result");
     private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.STRUCT, (short)0);
+    private static final TField EX_FIELD_DESC = new TField("ex", TType.STRUCT, (short)1);
 
     public BatchReadBlobsResponse success;
+    public ContentAddressableStorageException ex;
     public static final int SUCCESS = 0;
+    public static final int EX = 1;
     public static boolean DEFAULT_PRETTY_PRINT = true;
 
     // isset id assignments
@@ -2519,6 +2804,8 @@ String space = prettyPrint ? " " : "";
       Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
       tmpMetaDataMap.put(SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
           new StructMetaData(TType.STRUCT, BatchReadBlobsResponse.class)));
+      tmpMetaDataMap.put(EX, new FieldMetaData("ex", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRUCT)));
       metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
     }
 
@@ -2530,10 +2817,12 @@ String space = prettyPrint ? " " : "";
     }
 
     public batchReadBlobs_result(
-      BatchReadBlobsResponse success)
+      BatchReadBlobsResponse success,
+      ContentAddressableStorageException ex)
     {
       this();
       this.success = success;
+      this.ex = ex;
     }
 
     /**
@@ -2542,6 +2831,9 @@ String space = prettyPrint ? " " : "";
     public batchReadBlobs_result(batchReadBlobs_result other) {
       if (other.isSetSuccess()) {
         this.success = TBaseHelper.deepCopy(other.success);
+      }
+      if (other.isSetEx()) {
+        this.ex = TBaseHelper.deepCopy(other.ex);
       }
     }
 
@@ -2578,6 +2870,30 @@ String space = prettyPrint ? " " : "";
       }
     }
 
+    public ContentAddressableStorageException  getEx() {
+      return this.ex;
+    }
+
+    public batchReadBlobs_result setEx(ContentAddressableStorageException ex) {
+      this.ex = ex;
+      return this;
+    }
+
+    public void unsetEx() {
+      this.ex = null;
+    }
+
+    // Returns true if field ex is set (has been assigned a value) and false otherwise
+    public boolean isSetEx() {
+      return this.ex != null;
+    }
+
+    public void setExIsSet(boolean value) {
+      if (!value) {
+        this.ex = null;
+      }
+    }
+
     public void setFieldValue(int fieldID, Object value) {
       switch (fieldID) {
       case SUCCESS:
@@ -2585,6 +2901,14 @@ String space = prettyPrint ? " " : "";
           unsetSuccess();
         } else {
           setSuccess((BatchReadBlobsResponse)value);
+        }
+        break;
+
+      case EX:
+        if (value == null) {
+          unsetEx();
+        } else {
+          setEx((ContentAddressableStorageException)value);
         }
         break;
 
@@ -2598,6 +2922,9 @@ String space = prettyPrint ? " " : "";
       case SUCCESS:
         return getSuccess();
 
+      case EX:
+        return getEx();
+
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -2608,6 +2935,8 @@ String space = prettyPrint ? " " : "";
       switch (fieldID) {
       case SUCCESS:
         return isSetSuccess();
+      case EX:
+        return isSetEx();
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -2637,34 +2966,20 @@ String space = prettyPrint ? " " : "";
           return false;
       }
 
+      boolean this_present_ex = true && this.isSetEx();
+      boolean that_present_ex = true && that.isSetEx();
+      if (this_present_ex || that_present_ex) {
+        if (!(this_present_ex && that_present_ex))
+          return false;
+        if (!TBaseHelper.equalsNobinary(this.ex, that.ex))
+          return false;
+      }
+
       return true;
     }
 
     @Override
     public int hashCode() {
-      return 0;
-    }
-
-    @Override
-    public int compareTo(batchReadBlobs_result other) {
-      if (other == null) {
-        // See java.lang.Comparable docs
-        throw new NullPointerException();
-      }
-
-      if (other == this) {
-        return 0;
-      }
-      int lastComparison = 0;
-
-      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      lastComparison = TBaseHelper.compareTo(success, other.success);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
       return 0;
     }
 
@@ -2683,6 +2998,14 @@ String space = prettyPrint ? " " : "";
             if (field.type == TType.STRUCT) {
               this.success = new BatchReadBlobsResponse();
               this.success.read(iprot);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case EX:
+            if (field.type == TType.STRUCT) {
+              this.ex = new ContentAddressableStorageException();
+              this.ex.read(iprot);
             } else { 
               TProtocolUtil.skip(iprot, field.type);
             }
@@ -2706,6 +3029,10 @@ String space = prettyPrint ? " " : "";
       if (this.isSetSuccess()) {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         this.success.write(oprot);
+        oprot.writeFieldEnd();
+      } else if (this.isSetEx()) {
+        oprot.writeFieldBegin(EX_FIELD_DESC);
+        this.ex.write(oprot);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -2741,6 +3068,17 @@ String space = prettyPrint ? " " : "";
         sb.append("null");
       } else {
         sb.append(TBaseHelper.toString(this. getSuccess(), indent + 1, prettyPrint));
+      }
+      first = false;
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("ex");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getEx() == null) {
+        sb.append("null");
+      } else {
+        sb.append(TBaseHelper.toString(this. getEx(), indent + 1, prettyPrint));
       }
       first = false;
       sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
@@ -3007,12 +3345,15 @@ String space = prettyPrint ? " " : "";
 
   }
 
-  public static class findMissingBlobs_result implements TBase, java.io.Serializable, Cloneable, Comparable<findMissingBlobs_result>   {
+  public static class findMissingBlobs_result implements TBase, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("findMissingBlobs_result");
     private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.STRUCT, (short)0);
+    private static final TField EX_FIELD_DESC = new TField("ex", TType.STRUCT, (short)1);
 
     public FindMissingBlobsResponse success;
+    public ContentAddressableStorageException ex;
     public static final int SUCCESS = 0;
+    public static final int EX = 1;
     public static boolean DEFAULT_PRETTY_PRINT = true;
 
     // isset id assignments
@@ -3022,6 +3363,8 @@ String space = prettyPrint ? " " : "";
       Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
       tmpMetaDataMap.put(SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
           new StructMetaData(TType.STRUCT, FindMissingBlobsResponse.class)));
+      tmpMetaDataMap.put(EX, new FieldMetaData("ex", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRUCT)));
       metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
     }
 
@@ -3033,10 +3376,12 @@ String space = prettyPrint ? " " : "";
     }
 
     public findMissingBlobs_result(
-      FindMissingBlobsResponse success)
+      FindMissingBlobsResponse success,
+      ContentAddressableStorageException ex)
     {
       this();
       this.success = success;
+      this.ex = ex;
     }
 
     /**
@@ -3045,6 +3390,9 @@ String space = prettyPrint ? " " : "";
     public findMissingBlobs_result(findMissingBlobs_result other) {
       if (other.isSetSuccess()) {
         this.success = TBaseHelper.deepCopy(other.success);
+      }
+      if (other.isSetEx()) {
+        this.ex = TBaseHelper.deepCopy(other.ex);
       }
     }
 
@@ -3081,6 +3429,30 @@ String space = prettyPrint ? " " : "";
       }
     }
 
+    public ContentAddressableStorageException  getEx() {
+      return this.ex;
+    }
+
+    public findMissingBlobs_result setEx(ContentAddressableStorageException ex) {
+      this.ex = ex;
+      return this;
+    }
+
+    public void unsetEx() {
+      this.ex = null;
+    }
+
+    // Returns true if field ex is set (has been assigned a value) and false otherwise
+    public boolean isSetEx() {
+      return this.ex != null;
+    }
+
+    public void setExIsSet(boolean value) {
+      if (!value) {
+        this.ex = null;
+      }
+    }
+
     public void setFieldValue(int fieldID, Object value) {
       switch (fieldID) {
       case SUCCESS:
@@ -3088,6 +3460,14 @@ String space = prettyPrint ? " " : "";
           unsetSuccess();
         } else {
           setSuccess((FindMissingBlobsResponse)value);
+        }
+        break;
+
+      case EX:
+        if (value == null) {
+          unsetEx();
+        } else {
+          setEx((ContentAddressableStorageException)value);
         }
         break;
 
@@ -3101,6 +3481,9 @@ String space = prettyPrint ? " " : "";
       case SUCCESS:
         return getSuccess();
 
+      case EX:
+        return getEx();
+
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -3111,6 +3494,8 @@ String space = prettyPrint ? " " : "";
       switch (fieldID) {
       case SUCCESS:
         return isSetSuccess();
+      case EX:
+        return isSetEx();
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -3140,34 +3525,20 @@ String space = prettyPrint ? " " : "";
           return false;
       }
 
+      boolean this_present_ex = true && this.isSetEx();
+      boolean that_present_ex = true && that.isSetEx();
+      if (this_present_ex || that_present_ex) {
+        if (!(this_present_ex && that_present_ex))
+          return false;
+        if (!TBaseHelper.equalsNobinary(this.ex, that.ex))
+          return false;
+      }
+
       return true;
     }
 
     @Override
     public int hashCode() {
-      return 0;
-    }
-
-    @Override
-    public int compareTo(findMissingBlobs_result other) {
-      if (other == null) {
-        // See java.lang.Comparable docs
-        throw new NullPointerException();
-      }
-
-      if (other == this) {
-        return 0;
-      }
-      int lastComparison = 0;
-
-      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      lastComparison = TBaseHelper.compareTo(success, other.success);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
       return 0;
     }
 
@@ -3186,6 +3557,14 @@ String space = prettyPrint ? " " : "";
             if (field.type == TType.STRUCT) {
               this.success = new FindMissingBlobsResponse();
               this.success.read(iprot);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case EX:
+            if (field.type == TType.STRUCT) {
+              this.ex = new ContentAddressableStorageException();
+              this.ex.read(iprot);
             } else { 
               TProtocolUtil.skip(iprot, field.type);
             }
@@ -3209,6 +3588,10 @@ String space = prettyPrint ? " " : "";
       if (this.isSetSuccess()) {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         this.success.write(oprot);
+        oprot.writeFieldEnd();
+      } else if (this.isSetEx()) {
+        oprot.writeFieldBegin(EX_FIELD_DESC);
+        this.ex.write(oprot);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -3244,6 +3627,17 @@ String space = prettyPrint ? " " : "";
         sb.append("null");
       } else {
         sb.append(TBaseHelper.toString(this. getSuccess(), indent + 1, prettyPrint));
+      }
+      first = false;
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("ex");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getEx() == null) {
+        sb.append("null");
+      } else {
+        sb.append(TBaseHelper.toString(this. getEx(), indent + 1, prettyPrint));
       }
       first = false;
       sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
@@ -3510,12 +3904,15 @@ String space = prettyPrint ? " " : "";
 
   }
 
-  public static class getTree_result implements TBase, java.io.Serializable, Cloneable, Comparable<getTree_result>   {
+  public static class getTree_result implements TBase, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("getTree_result");
     private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.STRUCT, (short)0);
+    private static final TField EX_FIELD_DESC = new TField("ex", TType.STRUCT, (short)1);
 
     public GetTreeResponse success;
+    public ContentAddressableStorageException ex;
     public static final int SUCCESS = 0;
+    public static final int EX = 1;
     public static boolean DEFAULT_PRETTY_PRINT = true;
 
     // isset id assignments
@@ -3525,6 +3922,8 @@ String space = prettyPrint ? " " : "";
       Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
       tmpMetaDataMap.put(SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
           new StructMetaData(TType.STRUCT, GetTreeResponse.class)));
+      tmpMetaDataMap.put(EX, new FieldMetaData("ex", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRUCT)));
       metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
     }
 
@@ -3536,10 +3935,12 @@ String space = prettyPrint ? " " : "";
     }
 
     public getTree_result(
-      GetTreeResponse success)
+      GetTreeResponse success,
+      ContentAddressableStorageException ex)
     {
       this();
       this.success = success;
+      this.ex = ex;
     }
 
     /**
@@ -3548,6 +3949,9 @@ String space = prettyPrint ? " " : "";
     public getTree_result(getTree_result other) {
       if (other.isSetSuccess()) {
         this.success = TBaseHelper.deepCopy(other.success);
+      }
+      if (other.isSetEx()) {
+        this.ex = TBaseHelper.deepCopy(other.ex);
       }
     }
 
@@ -3584,6 +3988,30 @@ String space = prettyPrint ? " " : "";
       }
     }
 
+    public ContentAddressableStorageException  getEx() {
+      return this.ex;
+    }
+
+    public getTree_result setEx(ContentAddressableStorageException ex) {
+      this.ex = ex;
+      return this;
+    }
+
+    public void unsetEx() {
+      this.ex = null;
+    }
+
+    // Returns true if field ex is set (has been assigned a value) and false otherwise
+    public boolean isSetEx() {
+      return this.ex != null;
+    }
+
+    public void setExIsSet(boolean value) {
+      if (!value) {
+        this.ex = null;
+      }
+    }
+
     public void setFieldValue(int fieldID, Object value) {
       switch (fieldID) {
       case SUCCESS:
@@ -3591,6 +4019,14 @@ String space = prettyPrint ? " " : "";
           unsetSuccess();
         } else {
           setSuccess((GetTreeResponse)value);
+        }
+        break;
+
+      case EX:
+        if (value == null) {
+          unsetEx();
+        } else {
+          setEx((ContentAddressableStorageException)value);
         }
         break;
 
@@ -3604,6 +4040,9 @@ String space = prettyPrint ? " " : "";
       case SUCCESS:
         return getSuccess();
 
+      case EX:
+        return getEx();
+
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -3614,6 +4053,8 @@ String space = prettyPrint ? " " : "";
       switch (fieldID) {
       case SUCCESS:
         return isSetSuccess();
+      case EX:
+        return isSetEx();
       default:
         throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
       }
@@ -3643,34 +4084,20 @@ String space = prettyPrint ? " " : "";
           return false;
       }
 
+      boolean this_present_ex = true && this.isSetEx();
+      boolean that_present_ex = true && that.isSetEx();
+      if (this_present_ex || that_present_ex) {
+        if (!(this_present_ex && that_present_ex))
+          return false;
+        if (!TBaseHelper.equalsNobinary(this.ex, that.ex))
+          return false;
+      }
+
       return true;
     }
 
     @Override
     public int hashCode() {
-      return 0;
-    }
-
-    @Override
-    public int compareTo(getTree_result other) {
-      if (other == null) {
-        // See java.lang.Comparable docs
-        throw new NullPointerException();
-      }
-
-      if (other == this) {
-        return 0;
-      }
-      int lastComparison = 0;
-
-      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      lastComparison = TBaseHelper.compareTo(success, other.success);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
       return 0;
     }
 
@@ -3689,6 +4116,14 @@ String space = prettyPrint ? " " : "";
             if (field.type == TType.STRUCT) {
               this.success = new GetTreeResponse();
               this.success.read(iprot);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case EX:
+            if (field.type == TType.STRUCT) {
+              this.ex = new ContentAddressableStorageException();
+              this.ex.read(iprot);
             } else { 
               TProtocolUtil.skip(iprot, field.type);
             }
@@ -3712,6 +4147,10 @@ String space = prettyPrint ? " " : "";
       if (this.isSetSuccess()) {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         this.success.write(oprot);
+        oprot.writeFieldEnd();
+      } else if (this.isSetEx()) {
+        oprot.writeFieldBegin(EX_FIELD_DESC);
+        this.ex.write(oprot);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -3747,6 +4186,17 @@ String space = prettyPrint ? " " : "";
         sb.append("null");
       } else {
         sb.append(TBaseHelper.toString(this. getSuccess(), indent + 1, prettyPrint));
+      }
+      first = false;
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("ex");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getEx() == null) {
+        sb.append("null");
+      } else {
+        sb.append(TBaseHelper.toString(this. getEx(), indent + 1, prettyPrint));
       }
       first = false;
       sb.append(newLine + TBaseHelper.reduceIndent(indentStr));

@@ -206,16 +206,16 @@ public class BatchReadBlobsRequest implements TBase, java.io.Serializable, Clone
         case REQUESTS:
           if (field.type == TType.LIST) {
             {
-              TList _list24 = iprot.readListBegin();
-              this.requests = new ArrayList<ReadBlobRequest>(Math.max(0, _list24.size));
-              for (int _i25 = 0; 
-                   (_list24.size < 0) ? iprot.peekList() : (_i25 < _list24.size); 
-                   ++_i25)
+              TList _list20 = iprot.readListBegin();
+              this.requests = new ArrayList<ReadBlobRequest>(Math.max(0, _list20.size));
+              for (int _i21 = 0; 
+                   (_list20.size < 0) ? iprot.peekList() : (_i21 < _list20.size); 
+                   ++_i21)
               {
-                ReadBlobRequest _elem26;
-                _elem26 = new ReadBlobRequest();
-                _elem26.read(iprot);
-                this.requests.add(_elem26);
+                ReadBlobRequest _elem22;
+                _elem22 = new ReadBlobRequest();
+                _elem22.read(iprot);
+                this.requests.add(_elem22);
               }
               iprot.readListEnd();
             }
@@ -244,8 +244,8 @@ public class BatchReadBlobsRequest implements TBase, java.io.Serializable, Clone
       oprot.writeFieldBegin(REQUESTS_FIELD_DESC);
       {
         oprot.writeListBegin(new TList(TType.STRUCT, this.requests.size()));
-        for (ReadBlobRequest _iter27 : this.requests)        {
-          _iter27.write(oprot);
+        for (ReadBlobRequest _iter23 : this.requests)        {
+          _iter23.write(oprot);
         }
         oprot.writeListEnd();
       }

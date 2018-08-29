@@ -26,131 +26,131 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class Resource implements TBase, java.io.Serializable, Cloneable, Comparable<Resource> {
-  private static final TStruct STRUCT_DESC = new TStruct("Resource");
-  private static final TField NAME_FIELD_DESC = new TField("name", TType.STRING, (short)1);
-  private static final TField VALUE_FIELD_DESC = new TField("value", TType.DOUBLE, (short)2);
+public class LogFile implements TBase, java.io.Serializable, Cloneable, Comparable<LogFile> {
+  private static final TStruct STRUCT_DESC = new TStruct("LogFile");
+  private static final TField DIGEST_FIELD_DESC = new TField("digest", TType.STRUCT, (short)1);
+  private static final TField HUMAN_READABLE_FIELD_DESC = new TField("human_readable", TType.BOOL, (short)2);
 
-  public String name;
-  public double value;
-  public static final int NAME = 1;
-  public static final int VALUE = 2;
+  public com.facebook.remoteexecution.cas.Digest digest;
+  public boolean human_readable;
+  public static final int DIGEST = 1;
+  public static final int HUMAN_READABLE = 2;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
-  private static final int __VALUE_ISSET_ID = 0;
+  private static final int __HUMAN_READABLE_ISSET_ID = 0;
   private BitSet __isset_bit_vector = new BitSet(1);
 
   public static final Map<Integer, FieldMetaData> metaDataMap;
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
-    tmpMetaDataMap.put(NAME, new FieldMetaData("name", TFieldRequirementType.DEFAULT, 
-        new FieldValueMetaData(TType.STRING)));
-    tmpMetaDataMap.put(VALUE, new FieldMetaData("value", TFieldRequirementType.DEFAULT, 
-        new FieldValueMetaData(TType.DOUBLE)));
+    tmpMetaDataMap.put(DIGEST, new FieldMetaData("digest", TFieldRequirementType.DEFAULT, 
+        new StructMetaData(TType.STRUCT, com.facebook.remoteexecution.cas.Digest.class)));
+    tmpMetaDataMap.put(HUMAN_READABLE, new FieldMetaData("human_readable", TFieldRequirementType.DEFAULT, 
+        new FieldValueMetaData(TType.BOOL)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
   static {
-    FieldMetaData.addStructMetaDataMap(Resource.class, metaDataMap);
+    FieldMetaData.addStructMetaDataMap(LogFile.class, metaDataMap);
   }
 
-  public Resource() {
+  public LogFile() {
   }
 
-  public Resource(
-    String name,
-    double value)
+  public LogFile(
+    com.facebook.remoteexecution.cas.Digest digest,
+    boolean human_readable)
   {
     this();
-    this.name = name;
-    this.value = value;
-    setValueIsSet(true);
+    this.digest = digest;
+    this.human_readable = human_readable;
+    setHuman_readableIsSet(true);
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public Resource(Resource other) {
+  public LogFile(LogFile other) {
     __isset_bit_vector.clear();
     __isset_bit_vector.or(other.__isset_bit_vector);
-    if (other.isSetName()) {
-      this.name = TBaseHelper.deepCopy(other.name);
+    if (other.isSetDigest()) {
+      this.digest = TBaseHelper.deepCopy(other.digest);
     }
-    this.value = TBaseHelper.deepCopy(other.value);
+    this.human_readable = TBaseHelper.deepCopy(other.human_readable);
   }
 
-  public Resource deepCopy() {
-    return new Resource(this);
+  public LogFile deepCopy() {
+    return new LogFile(this);
   }
 
   @Deprecated
-  public Resource clone() {
-    return new Resource(this);
+  public LogFile clone() {
+    return new LogFile(this);
   }
 
-  public String  getName() {
-    return this.name;
+  public com.facebook.remoteexecution.cas.Digest  getDigest() {
+    return this.digest;
   }
 
-  public Resource setName(String name) {
-    this.name = name;
+  public LogFile setDigest(com.facebook.remoteexecution.cas.Digest digest) {
+    this.digest = digest;
     return this;
   }
 
-  public void unsetName() {
-    this.name = null;
+  public void unsetDigest() {
+    this.digest = null;
   }
 
-  // Returns true if field name is set (has been assigned a value) and false otherwise
-  public boolean isSetName() {
-    return this.name != null;
+  // Returns true if field digest is set (has been assigned a value) and false otherwise
+  public boolean isSetDigest() {
+    return this.digest != null;
   }
 
-  public void setNameIsSet(boolean value) {
+  public void setDigestIsSet(boolean value) {
     if (!value) {
-      this.name = null;
+      this.digest = null;
     }
   }
 
-  public double  getValue() {
-    return this.value;
+  public boolean  isHuman_readable() {
+    return this.human_readable;
   }
 
-  public Resource setValue(double value) {
-    this.value = value;
-    setValueIsSet(true);
+  public LogFile setHuman_readable(boolean human_readable) {
+    this.human_readable = human_readable;
+    setHuman_readableIsSet(true);
     return this;
   }
 
-  public void unsetValue() {
-    __isset_bit_vector.clear(__VALUE_ISSET_ID);
+  public void unsetHuman_readable() {
+    __isset_bit_vector.clear(__HUMAN_READABLE_ISSET_ID);
   }
 
-  // Returns true if field value is set (has been assigned a value) and false otherwise
-  public boolean isSetValue() {
-    return __isset_bit_vector.get(__VALUE_ISSET_ID);
+  // Returns true if field human_readable is set (has been assigned a value) and false otherwise
+  public boolean isSetHuman_readable() {
+    return __isset_bit_vector.get(__HUMAN_READABLE_ISSET_ID);
   }
 
-  public void setValueIsSet(boolean value) {
-    __isset_bit_vector.set(__VALUE_ISSET_ID, value);
+  public void setHuman_readableIsSet(boolean value) {
+    __isset_bit_vector.set(__HUMAN_READABLE_ISSET_ID, value);
   }
 
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
-    case NAME:
+    case DIGEST:
       if (value == null) {
-        unsetName();
+        unsetDigest();
       } else {
-        setName((String)value);
+        setDigest((com.facebook.remoteexecution.cas.Digest)value);
       }
       break;
 
-    case VALUE:
+    case HUMAN_READABLE:
       if (value == null) {
-        unsetValue();
+        unsetHuman_readable();
       } else {
-        setValue((Double)value);
+        setHuman_readable((Boolean)value);
       }
       break;
 
@@ -161,11 +161,11 @@ public class Resource implements TBase, java.io.Serializable, Cloneable, Compara
 
   public Object getFieldValue(int fieldID) {
     switch (fieldID) {
-    case NAME:
-      return getName();
+    case DIGEST:
+      return getDigest();
 
-    case VALUE:
-      return new Double(getValue());
+    case HUMAN_READABLE:
+      return new Boolean(isHuman_readable());
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -175,10 +175,10 @@ public class Resource implements TBase, java.io.Serializable, Cloneable, Compara
   // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
   public boolean isSet(int fieldID) {
     switch (fieldID) {
-    case NAME:
-      return isSetName();
-    case VALUE:
-      return isSetValue();
+    case DIGEST:
+      return isSetDigest();
+    case HUMAN_READABLE:
+      return isSetHuman_readable();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -188,32 +188,32 @@ public class Resource implements TBase, java.io.Serializable, Cloneable, Compara
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof Resource)
-      return this.equals((Resource)that);
+    if (that instanceof LogFile)
+      return this.equals((LogFile)that);
     return false;
   }
 
-  public boolean equals(Resource that) {
+  public boolean equals(LogFile that) {
     if (that == null)
       return false;
     if (this == that)
       return true;
 
-    boolean this_present_name = true && this.isSetName();
-    boolean that_present_name = true && that.isSetName();
-    if (this_present_name || that_present_name) {
-      if (!(this_present_name && that_present_name))
+    boolean this_present_digest = true && this.isSetDigest();
+    boolean that_present_digest = true && that.isSetDigest();
+    if (this_present_digest || that_present_digest) {
+      if (!(this_present_digest && that_present_digest))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.name, that.name))
+      if (!TBaseHelper.equalsNobinary(this.digest, that.digest))
         return false;
     }
 
-    boolean this_present_value = true;
-    boolean that_present_value = true;
-    if (this_present_value || that_present_value) {
-      if (!(this_present_value && that_present_value))
+    boolean this_present_human_readable = true;
+    boolean that_present_human_readable = true;
+    if (this_present_human_readable || that_present_human_readable) {
+      if (!(this_present_human_readable && that_present_human_readable))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.value, that.value))
+      if (!TBaseHelper.equalsNobinary(this.human_readable, that.human_readable))
         return false;
     }
 
@@ -226,7 +226,7 @@ public class Resource implements TBase, java.io.Serializable, Cloneable, Compara
   }
 
   @Override
-  public int compareTo(Resource other) {
+  public int compareTo(LogFile other) {
     if (other == null) {
       // See java.lang.Comparable docs
       throw new NullPointerException();
@@ -237,19 +237,19 @@ public class Resource implements TBase, java.io.Serializable, Cloneable, Compara
     }
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetName()).compareTo(other.isSetName());
+    lastComparison = Boolean.valueOf(isSetDigest()).compareTo(other.isSetDigest());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = TBaseHelper.compareTo(name, other.name);
+    lastComparison = TBaseHelper.compareTo(digest, other.digest);
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = Boolean.valueOf(isSetValue()).compareTo(other.isSetValue());
+    lastComparison = Boolean.valueOf(isSetHuman_readable()).compareTo(other.isSetHuman_readable());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = TBaseHelper.compareTo(value, other.value);
+    lastComparison = TBaseHelper.compareTo(human_readable, other.human_readable);
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -267,17 +267,18 @@ public class Resource implements TBase, java.io.Serializable, Cloneable, Compara
       }
       switch (field.id)
       {
-        case NAME:
-          if (field.type == TType.STRING) {
-            this.name = iprot.readString();
+        case DIGEST:
+          if (field.type == TType.STRUCT) {
+            this.digest = new com.facebook.remoteexecution.cas.Digest();
+            this.digest.read(iprot);
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
           break;
-        case VALUE:
-          if (field.type == TType.DOUBLE) {
-            this.value = iprot.readDouble();
-            setValueIsSet(true);
+        case HUMAN_READABLE:
+          if (field.type == TType.BOOL) {
+            this.human_readable = iprot.readBool();
+            setHuman_readableIsSet(true);
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -299,13 +300,13 @@ public class Resource implements TBase, java.io.Serializable, Cloneable, Compara
     validate();
 
     oprot.writeStructBegin(STRUCT_DESC);
-    if (this.name != null) {
-      oprot.writeFieldBegin(NAME_FIELD_DESC);
-      oprot.writeString(this.name);
+    if (this.digest != null) {
+      oprot.writeFieldBegin(DIGEST_FIELD_DESC);
+      this.digest.write(oprot);
       oprot.writeFieldEnd();
     }
-    oprot.writeFieldBegin(VALUE_FIELD_DESC);
-    oprot.writeDouble(this.value);
+    oprot.writeFieldBegin(HUMAN_READABLE_FIELD_DESC);
+    oprot.writeBool(this.human_readable);
     oprot.writeFieldEnd();
     oprot.writeFieldStop();
     oprot.writeStructEnd();
@@ -326,28 +327,28 @@ public class Resource implements TBase, java.io.Serializable, Cloneable, Compara
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-    StringBuilder sb = new StringBuilder("Resource");
+    StringBuilder sb = new StringBuilder("LogFile");
     sb.append(space);
     sb.append("(");
     sb.append(newLine);
     boolean first = true;
 
     sb.append(indentStr);
-    sb.append("name");
+    sb.append("digest");
     sb.append(space);
     sb.append(":").append(space);
-    if (this. getName() == null) {
+    if (this. getDigest() == null) {
       sb.append("null");
     } else {
-      sb.append(TBaseHelper.toString(this. getName(), indent + 1, prettyPrint));
+      sb.append(TBaseHelper.toString(this. getDigest(), indent + 1, prettyPrint));
     }
     first = false;
     if (!first) sb.append("," + newLine);
     sb.append(indentStr);
-    sb.append("value");
+    sb.append("human_readable");
     sb.append(space);
     sb.append(":").append(space);
-    sb.append(TBaseHelper.toString(this. getValue(), indent + 1, prettyPrint));
+    sb.append(TBaseHelper.toString(this. isHuman_readable(), indent + 1, prettyPrint));
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
     sb.append(")");

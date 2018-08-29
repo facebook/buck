@@ -26,21 +26,27 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class ExecutionState implements TBase, java.io.Serializable, Cloneable, Comparable<ExecutionState> {
-  private static final TStruct STRUCT_DESC = new TStruct("ExecutionState");
+public class ExecuteOperation implements TBase, java.io.Serializable, Cloneable {
+  private static final TStruct STRUCT_DESC = new TStruct("ExecuteOperation");
   private static final TField EXECUTION_ID_FIELD_DESC = new TField("execution_id", TType.STRING, (short)1);
   private static final TField METADATA_FIELD_DESC = new TField("metadata", TType.STRUCT, (short)2);
   private static final TField DONE_FIELD_DESC = new TField("done", TType.BOOL, (short)3);
-  private static final TField RESULT_FIELD_DESC = new TField("result", TType.STRUCT, (short)4);
+  private static final TField EX_FIELD_DESC = new TField("ex", TType.STRUCT, (short)4);
+  private static final TField RESPONSE_FIELD_DESC = new TField("response", TType.STRUCT, (short)5);
+  private static final TField STATUS_HTTP_ENDPOINT_FIELD_DESC = new TField("status_http_endpoint", TType.STRING, (short)6);
 
   public String execution_id;
-  public ExecutionMetadata metadata;
+  public ExecuteOperationMetadata metadata;
   public boolean done;
-  public ExecutionResult result;
+  public ExecutionEngineException ex;
+  public ExecuteResponse response;
+  public String status_http_endpoint;
   public static final int EXECUTION_ID = 1;
   public static final int METADATA = 2;
   public static final int DONE = 3;
-  public static final int RESULT = 4;
+  public static final int EX = 4;
+  public static final int RESPONSE = 5;
+  public static final int STATUS_HTTP_ENDPOINT = 6;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -53,24 +59,28 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
     tmpMetaDataMap.put(EXECUTION_ID, new FieldMetaData("execution_id", TFieldRequirementType.DEFAULT, 
         new FieldValueMetaData(TType.STRING)));
     tmpMetaDataMap.put(METADATA, new FieldMetaData("metadata", TFieldRequirementType.DEFAULT, 
-        new StructMetaData(TType.STRUCT, ExecutionMetadata.class)));
+        new StructMetaData(TType.STRUCT, ExecuteOperationMetadata.class)));
     tmpMetaDataMap.put(DONE, new FieldMetaData("done", TFieldRequirementType.DEFAULT, 
         new FieldValueMetaData(TType.BOOL)));
-    tmpMetaDataMap.put(RESULT, new FieldMetaData("result", TFieldRequirementType.OPTIONAL, 
-        new StructMetaData(TType.STRUCT, ExecutionResult.class)));
+    tmpMetaDataMap.put(EX, new FieldMetaData("ex", TFieldRequirementType.OPTIONAL, 
+        new FieldValueMetaData(TType.STRUCT)));
+    tmpMetaDataMap.put(RESPONSE, new FieldMetaData("response", TFieldRequirementType.OPTIONAL, 
+        new StructMetaData(TType.STRUCT, ExecuteResponse.class)));
+    tmpMetaDataMap.put(STATUS_HTTP_ENDPOINT, new FieldMetaData("status_http_endpoint", TFieldRequirementType.OPTIONAL, 
+        new FieldValueMetaData(TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
   static {
-    FieldMetaData.addStructMetaDataMap(ExecutionState.class, metaDataMap);
+    FieldMetaData.addStructMetaDataMap(ExecuteOperation.class, metaDataMap);
   }
 
-  public ExecutionState() {
+  public ExecuteOperation() {
   }
 
-  public ExecutionState(
+  public ExecuteOperation(
     String execution_id,
-    ExecutionMetadata metadata,
+    ExecuteOperationMetadata metadata,
     boolean done)
   {
     this();
@@ -80,24 +90,28 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
     setDoneIsSet(true);
   }
 
-  public ExecutionState(
+  public ExecuteOperation(
     String execution_id,
-    ExecutionMetadata metadata,
+    ExecuteOperationMetadata metadata,
     boolean done,
-    ExecutionResult result)
+    ExecutionEngineException ex,
+    ExecuteResponse response,
+    String status_http_endpoint)
   {
     this();
     this.execution_id = execution_id;
     this.metadata = metadata;
     this.done = done;
     setDoneIsSet(true);
-    this.result = result;
+    this.ex = ex;
+    this.response = response;
+    this.status_http_endpoint = status_http_endpoint;
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public ExecutionState(ExecutionState other) {
+  public ExecuteOperation(ExecuteOperation other) {
     __isset_bit_vector.clear();
     __isset_bit_vector.or(other.__isset_bit_vector);
     if (other.isSetExecution_id()) {
@@ -107,25 +121,31 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
       this.metadata = TBaseHelper.deepCopy(other.metadata);
     }
     this.done = TBaseHelper.deepCopy(other.done);
-    if (other.isSetResult()) {
-      this.result = TBaseHelper.deepCopy(other.result);
+    if (other.isSetEx()) {
+      this.ex = TBaseHelper.deepCopy(other.ex);
+    }
+    if (other.isSetResponse()) {
+      this.response = TBaseHelper.deepCopy(other.response);
+    }
+    if (other.isSetStatus_http_endpoint()) {
+      this.status_http_endpoint = TBaseHelper.deepCopy(other.status_http_endpoint);
     }
   }
 
-  public ExecutionState deepCopy() {
-    return new ExecutionState(this);
+  public ExecuteOperation deepCopy() {
+    return new ExecuteOperation(this);
   }
 
   @Deprecated
-  public ExecutionState clone() {
-    return new ExecutionState(this);
+  public ExecuteOperation clone() {
+    return new ExecuteOperation(this);
   }
 
   public String  getExecution_id() {
     return this.execution_id;
   }
 
-  public ExecutionState setExecution_id(String execution_id) {
+  public ExecuteOperation setExecution_id(String execution_id) {
     this.execution_id = execution_id;
     return this;
   }
@@ -145,11 +165,11 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
     }
   }
 
-  public ExecutionMetadata  getMetadata() {
+  public ExecuteOperationMetadata  getMetadata() {
     return this.metadata;
   }
 
-  public ExecutionState setMetadata(ExecutionMetadata metadata) {
+  public ExecuteOperation setMetadata(ExecuteOperationMetadata metadata) {
     this.metadata = metadata;
     return this;
   }
@@ -173,7 +193,7 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
     return this.done;
   }
 
-  public ExecutionState setDone(boolean done) {
+  public ExecuteOperation setDone(boolean done) {
     this.done = done;
     setDoneIsSet(true);
     return this;
@@ -192,27 +212,75 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
     __isset_bit_vector.set(__DONE_ISSET_ID, value);
   }
 
-  public ExecutionResult  getResult() {
-    return this.result;
+  public ExecutionEngineException  getEx() {
+    return this.ex;
   }
 
-  public ExecutionState setResult(ExecutionResult result) {
-    this.result = result;
+  public ExecuteOperation setEx(ExecutionEngineException ex) {
+    this.ex = ex;
     return this;
   }
 
-  public void unsetResult() {
-    this.result = null;
+  public void unsetEx() {
+    this.ex = null;
   }
 
-  // Returns true if field result is set (has been assigned a value) and false otherwise
-  public boolean isSetResult() {
-    return this.result != null;
+  // Returns true if field ex is set (has been assigned a value) and false otherwise
+  public boolean isSetEx() {
+    return this.ex != null;
   }
 
-  public void setResultIsSet(boolean value) {
+  public void setExIsSet(boolean value) {
     if (!value) {
-      this.result = null;
+      this.ex = null;
+    }
+  }
+
+  public ExecuteResponse  getResponse() {
+    return this.response;
+  }
+
+  public ExecuteOperation setResponse(ExecuteResponse response) {
+    this.response = response;
+    return this;
+  }
+
+  public void unsetResponse() {
+    this.response = null;
+  }
+
+  // Returns true if field response is set (has been assigned a value) and false otherwise
+  public boolean isSetResponse() {
+    return this.response != null;
+  }
+
+  public void setResponseIsSet(boolean value) {
+    if (!value) {
+      this.response = null;
+    }
+  }
+
+  public String  getStatus_http_endpoint() {
+    return this.status_http_endpoint;
+  }
+
+  public ExecuteOperation setStatus_http_endpoint(String status_http_endpoint) {
+    this.status_http_endpoint = status_http_endpoint;
+    return this;
+  }
+
+  public void unsetStatus_http_endpoint() {
+    this.status_http_endpoint = null;
+  }
+
+  // Returns true if field status_http_endpoint is set (has been assigned a value) and false otherwise
+  public boolean isSetStatus_http_endpoint() {
+    return this.status_http_endpoint != null;
+  }
+
+  public void setStatus_http_endpointIsSet(boolean value) {
+    if (!value) {
+      this.status_http_endpoint = null;
     }
   }
 
@@ -230,7 +298,7 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
       if (value == null) {
         unsetMetadata();
       } else {
-        setMetadata((ExecutionMetadata)value);
+        setMetadata((ExecuteOperationMetadata)value);
       }
       break;
 
@@ -242,11 +310,27 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
       }
       break;
 
-    case RESULT:
+    case EX:
       if (value == null) {
-        unsetResult();
+        unsetEx();
       } else {
-        setResult((ExecutionResult)value);
+        setEx((ExecutionEngineException)value);
+      }
+      break;
+
+    case RESPONSE:
+      if (value == null) {
+        unsetResponse();
+      } else {
+        setResponse((ExecuteResponse)value);
+      }
+      break;
+
+    case STATUS_HTTP_ENDPOINT:
+      if (value == null) {
+        unsetStatus_http_endpoint();
+      } else {
+        setStatus_http_endpoint((String)value);
       }
       break;
 
@@ -266,8 +350,14 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
     case DONE:
       return new Boolean(isDone());
 
-    case RESULT:
-      return getResult();
+    case EX:
+      return getEx();
+
+    case RESPONSE:
+      return getResponse();
+
+    case STATUS_HTTP_ENDPOINT:
+      return getStatus_http_endpoint();
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -283,8 +373,12 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
       return isSetMetadata();
     case DONE:
       return isSetDone();
-    case RESULT:
-      return isSetResult();
+    case EX:
+      return isSetEx();
+    case RESPONSE:
+      return isSetResponse();
+    case STATUS_HTTP_ENDPOINT:
+      return isSetStatus_http_endpoint();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -294,12 +388,12 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof ExecutionState)
-      return this.equals((ExecutionState)that);
+    if (that instanceof ExecuteOperation)
+      return this.equals((ExecuteOperation)that);
     return false;
   }
 
-  public boolean equals(ExecutionState that) {
+  public boolean equals(ExecuteOperation that) {
     if (that == null)
       return false;
     if (this == that)
@@ -332,12 +426,30 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
         return false;
     }
 
-    boolean this_present_result = true && this.isSetResult();
-    boolean that_present_result = true && that.isSetResult();
-    if (this_present_result || that_present_result) {
-      if (!(this_present_result && that_present_result))
+    boolean this_present_ex = true && this.isSetEx();
+    boolean that_present_ex = true && that.isSetEx();
+    if (this_present_ex || that_present_ex) {
+      if (!(this_present_ex && that_present_ex))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.result, that.result))
+      if (!TBaseHelper.equalsNobinary(this.ex, that.ex))
+        return false;
+    }
+
+    boolean this_present_response = true && this.isSetResponse();
+    boolean that_present_response = true && that.isSetResponse();
+    if (this_present_response || that_present_response) {
+      if (!(this_present_response && that_present_response))
+        return false;
+      if (!TBaseHelper.equalsNobinary(this.response, that.response))
+        return false;
+    }
+
+    boolean this_present_status_http_endpoint = true && this.isSetStatus_http_endpoint();
+    boolean that_present_status_http_endpoint = true && that.isSetStatus_http_endpoint();
+    if (this_present_status_http_endpoint || that_present_status_http_endpoint) {
+      if (!(this_present_status_http_endpoint && that_present_status_http_endpoint))
+        return false;
+      if (!TBaseHelper.equalsNobinary(this.status_http_endpoint, that.status_http_endpoint))
         return false;
     }
 
@@ -346,53 +458,6 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
 
   @Override
   public int hashCode() {
-    return 0;
-  }
-
-  @Override
-  public int compareTo(ExecutionState other) {
-    if (other == null) {
-      // See java.lang.Comparable docs
-      throw new NullPointerException();
-    }
-
-    if (other == this) {
-      return 0;
-    }
-    int lastComparison = 0;
-
-    lastComparison = Boolean.valueOf(isSetExecution_id()).compareTo(other.isSetExecution_id());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(execution_id, other.execution_id);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = Boolean.valueOf(isSetMetadata()).compareTo(other.isSetMetadata());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(metadata, other.metadata);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = Boolean.valueOf(isSetDone()).compareTo(other.isSetDone());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(done, other.done);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = Boolean.valueOf(isSetResult()).compareTo(other.isSetResult());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(result, other.result);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
     return 0;
   }
 
@@ -416,7 +481,7 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
           break;
         case METADATA:
           if (field.type == TType.STRUCT) {
-            this.metadata = new ExecutionMetadata();
+            this.metadata = new ExecuteOperationMetadata();
             this.metadata.read(iprot);
           } else { 
             TProtocolUtil.skip(iprot, field.type);
@@ -430,10 +495,25 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
             TProtocolUtil.skip(iprot, field.type);
           }
           break;
-        case RESULT:
+        case EX:
           if (field.type == TType.STRUCT) {
-            this.result = new ExecutionResult();
-            this.result.read(iprot);
+            this.ex = new ExecutionEngineException();
+            this.ex.read(iprot);
+          } else { 
+            TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
+        case RESPONSE:
+          if (field.type == TType.STRUCT) {
+            this.response = new ExecuteResponse();
+            this.response.read(iprot);
+          } else { 
+            TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
+        case STATUS_HTTP_ENDPOINT:
+          if (field.type == TType.STRING) {
+            this.status_http_endpoint = iprot.readString();
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -468,10 +548,24 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
     oprot.writeFieldBegin(DONE_FIELD_DESC);
     oprot.writeBool(this.done);
     oprot.writeFieldEnd();
-    if (this.result != null) {
-      if (isSetResult()) {
-        oprot.writeFieldBegin(RESULT_FIELD_DESC);
-        this.result.write(oprot);
+    if (this.ex != null) {
+      if (isSetEx()) {
+        oprot.writeFieldBegin(EX_FIELD_DESC);
+        this.ex.write(oprot);
+        oprot.writeFieldEnd();
+      }
+    }
+    if (this.response != null) {
+      if (isSetResponse()) {
+        oprot.writeFieldBegin(RESPONSE_FIELD_DESC);
+        this.response.write(oprot);
+        oprot.writeFieldEnd();
+      }
+    }
+    if (this.status_http_endpoint != null) {
+      if (isSetStatus_http_endpoint()) {
+        oprot.writeFieldBegin(STATUS_HTTP_ENDPOINT_FIELD_DESC);
+        oprot.writeString(this.status_http_endpoint);
         oprot.writeFieldEnd();
       }
     }
@@ -494,7 +588,7 @@ public class ExecutionState implements TBase, java.io.Serializable, Cloneable, C
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-    StringBuilder sb = new StringBuilder("ExecutionState");
+    StringBuilder sb = new StringBuilder("ExecuteOperation");
     sb.append(space);
     sb.append("(");
     sb.append(newLine);
@@ -528,17 +622,45 @@ String space = prettyPrint ? " " : "";
     sb.append(":").append(space);
     sb.append(TBaseHelper.toString(this. isDone(), indent + 1, prettyPrint));
     first = false;
-    if (isSetResult())
+    if (isSetEx())
     {
       if (!first) sb.append("," + newLine);
       sb.append(indentStr);
-      sb.append("result");
+      sb.append("ex");
       sb.append(space);
       sb.append(":").append(space);
-      if (this. getResult() == null) {
+      if (this. getEx() == null) {
         sb.append("null");
       } else {
-        sb.append(TBaseHelper.toString(this. getResult(), indent + 1, prettyPrint));
+        sb.append(TBaseHelper.toString(this. getEx(), indent + 1, prettyPrint));
+      }
+      first = false;
+    }
+    if (isSetResponse())
+    {
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("response");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getResponse() == null) {
+        sb.append("null");
+      } else {
+        sb.append(TBaseHelper.toString(this. getResponse(), indent + 1, prettyPrint));
+      }
+      first = false;
+    }
+    if (isSetStatus_http_endpoint())
+    {
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("status_http_endpoint");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getStatus_http_endpoint() == null) {
+        sb.append("null");
+      } else {
+        sb.append(TBaseHelper.toString(this. getStatus_http_endpoint(), indent + 1, prettyPrint));
       }
       first = false;
     }

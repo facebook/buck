@@ -206,16 +206,16 @@ public class FindMissingBlobsRequest implements TBase, java.io.Serializable, Clo
         case BLOB_DIGESTS:
           if (field.type == TType.LIST) {
             {
-              TList _list32 = iprot.readListBegin();
-              this.blob_digests = new ArrayList<Digest>(Math.max(0, _list32.size));
-              for (int _i33 = 0; 
-                   (_list32.size < 0) ? iprot.peekList() : (_i33 < _list32.size); 
-                   ++_i33)
+              TList _list28 = iprot.readListBegin();
+              this.blob_digests = new ArrayList<Digest>(Math.max(0, _list28.size));
+              for (int _i29 = 0; 
+                   (_list28.size < 0) ? iprot.peekList() : (_i29 < _list28.size); 
+                   ++_i29)
               {
-                Digest _elem34;
-                _elem34 = new Digest();
-                _elem34.read(iprot);
-                this.blob_digests.add(_elem34);
+                Digest _elem30;
+                _elem30 = new Digest();
+                _elem30.read(iprot);
+                this.blob_digests.add(_elem30);
               }
               iprot.readListEnd();
             }
@@ -244,8 +244,8 @@ public class FindMissingBlobsRequest implements TBase, java.io.Serializable, Clo
       oprot.writeFieldBegin(BLOB_DIGESTS_FIELD_DESC);
       {
         oprot.writeListBegin(new TList(TType.STRUCT, this.blob_digests.size()));
-        for (Digest _iter35 : this.blob_digests)        {
-          _iter35.write(oprot);
+        for (Digest _iter31 : this.blob_digests)        {
+          _iter31.write(oprot);
         }
         oprot.writeListEnd();
       }

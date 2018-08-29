@@ -23,6 +23,7 @@ import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage.AsyncClient.readBlob_call;
+import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
 import com.facebook.remoteexecution.cas.ReadBlobRequest;
 import com.facebook.thrift.TException;
 import com.facebook.thrift.async.AsyncMethodCallback;
@@ -56,7 +57,7 @@ public class ThriftAsyncBlobFetcher implements AsyncBlobFetcher {
               byte[] data = new byte[0];
               try {
                 data = ((readBlob_call) tAsyncMethodCall).getResult().data;
-              } catch (TException e) {
+              } catch (TException | ContentAddressableStorageException e) {
                 onError(e);
               }
               future.set(ByteBuffer.wrap(data));

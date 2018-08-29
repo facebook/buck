@@ -277,16 +277,16 @@ public class GetTreeResponse implements TBase, java.io.Serializable, Cloneable, 
         case DIRECTORIES:
           if (field.type == TType.LIST) {
             {
-              TList _list40 = iprot.readListBegin();
-              this.directories = new ArrayList<Directory>(Math.max(0, _list40.size));
-              for (int _i41 = 0; 
-                   (_list40.size < 0) ? iprot.peekList() : (_i41 < _list40.size); 
-                   ++_i41)
+              TList _list36 = iprot.readListBegin();
+              this.directories = new ArrayList<Directory>(Math.max(0, _list36.size));
+              for (int _i37 = 0; 
+                   (_list36.size < 0) ? iprot.peekList() : (_i37 < _list36.size); 
+                   ++_i37)
               {
-                Directory _elem42;
-                _elem42 = new Directory();
-                _elem42.read(iprot);
-                this.directories.add(_elem42);
+                Directory _elem38;
+                _elem38 = new Directory();
+                _elem38.read(iprot);
+                this.directories.add(_elem38);
               }
               iprot.readListEnd();
             }
@@ -322,8 +322,8 @@ public class GetTreeResponse implements TBase, java.io.Serializable, Cloneable, 
       oprot.writeFieldBegin(DIRECTORIES_FIELD_DESC);
       {
         oprot.writeListBegin(new TList(TType.STRUCT, this.directories.size()));
-        for (Directory _iter43 : this.directories)        {
-          _iter43.write(oprot);
+        for (Directory _iter39 : this.directories)        {
+          _iter39.write(oprot);
         }
         oprot.writeListEnd();
       }

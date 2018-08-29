@@ -31,16 +31,13 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
   private static final TField PATH_FIELD_DESC = new TField("path", TType.STRING, (short)1);
   private static final TField DATA_DIGEST_FIELD_DESC = new TField("data_digest", TType.STRUCT, (short)2);
   private static final TField IS_EXECUTABLE_FIELD_DESC = new TField("is_executable", TType.BOOL, (short)3);
-  private static final TField CONTENT_FIELD_DESC = new TField("content", TType.STRING, (short)4);
 
   public String path;
   public com.facebook.remoteexecution.cas.Digest data_digest;
   public boolean is_executable;
-  public byte[] content;
   public static final int PATH = 1;
   public static final int DATA_DIGEST = 2;
   public static final int IS_EXECUTABLE = 3;
-  public static final int CONTENT = 4;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -56,8 +53,6 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
         new StructMetaData(TType.STRUCT, com.facebook.remoteexecution.cas.Digest.class)));
     tmpMetaDataMap.put(IS_EXECUTABLE, new FieldMetaData("is_executable", TFieldRequirementType.DEFAULT, 
         new FieldValueMetaData(TType.BOOL)));
-    tmpMetaDataMap.put(CONTENT, new FieldMetaData("content", TFieldRequirementType.OPTIONAL, 
-        new FieldValueMetaData(TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
@@ -80,20 +75,6 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
     setIs_executableIsSet(true);
   }
 
-  public OutputFile(
-    String path,
-    com.facebook.remoteexecution.cas.Digest data_digest,
-    boolean is_executable,
-    byte[] content)
-  {
-    this();
-    this.path = path;
-    this.data_digest = data_digest;
-    this.is_executable = is_executable;
-    setIs_executableIsSet(true);
-    this.content = content;
-  }
-
   /**
    * Performs a deep copy on <i>other</i>.
    */
@@ -107,9 +88,6 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
       this.data_digest = TBaseHelper.deepCopy(other.data_digest);
     }
     this.is_executable = TBaseHelper.deepCopy(other.is_executable);
-    if (other.isSetContent()) {
-      this.content = TBaseHelper.deepCopy(other.content);
-    }
   }
 
   public OutputFile deepCopy() {
@@ -192,30 +170,6 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
     __isset_bit_vector.set(__IS_EXECUTABLE_ISSET_ID, value);
   }
 
-  public byte[]  getContent() {
-    return this.content;
-  }
-
-  public OutputFile setContent(byte[] content) {
-    this.content = content;
-    return this;
-  }
-
-  public void unsetContent() {
-    this.content = null;
-  }
-
-  // Returns true if field content is set (has been assigned a value) and false otherwise
-  public boolean isSetContent() {
-    return this.content != null;
-  }
-
-  public void setContentIsSet(boolean value) {
-    if (!value) {
-      this.content = null;
-    }
-  }
-
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
     case PATH:
@@ -242,14 +196,6 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
       }
       break;
 
-    case CONTENT:
-      if (value == null) {
-        unsetContent();
-      } else {
-        setContent((byte[])value);
-      }
-      break;
-
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -266,9 +212,6 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
     case IS_EXECUTABLE:
       return new Boolean(isIs_executable());
 
-    case CONTENT:
-      return getContent();
-
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -283,8 +226,6 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
       return isSetData_digest();
     case IS_EXECUTABLE:
       return isSetIs_executable();
-    case CONTENT:
-      return isSetContent();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -332,15 +273,6 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
         return false;
     }
 
-    boolean this_present_content = true && this.isSetContent();
-    boolean that_present_content = true && that.isSetContent();
-    if (this_present_content || that_present_content) {
-      if (!(this_present_content && that_present_content))
-        return false;
-      if (!TBaseHelper.equalsSlow(this.content, that.content))
-        return false;
-    }
-
     return true;
   }
 
@@ -385,14 +317,6 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = Boolean.valueOf(isSetContent()).compareTo(other.isSetContent());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(content, other.content);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
     return 0;
   }
 
@@ -430,13 +354,6 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
             TProtocolUtil.skip(iprot, field.type);
           }
           break;
-        case CONTENT:
-          if (field.type == TType.STRING) {
-            this.content = iprot.readBinary();
-          } else { 
-            TProtocolUtil.skip(iprot, field.type);
-          }
-          break;
         default:
           TProtocolUtil.skip(iprot, field.type);
           break;
@@ -467,13 +384,6 @@ public class OutputFile implements TBase, java.io.Serializable, Cloneable, Compa
     oprot.writeFieldBegin(IS_EXECUTABLE_FIELD_DESC);
     oprot.writeBool(this.is_executable);
     oprot.writeFieldEnd();
-    if (this.content != null) {
-      if (isSetContent()) {
-        oprot.writeFieldBegin(CONTENT_FIELD_DESC);
-        oprot.writeBinary(this.content);
-        oprot.writeFieldEnd();
-      }
-    }
     oprot.writeFieldStop();
     oprot.writeStructEnd();
   }
@@ -527,25 +437,6 @@ String space = prettyPrint ? " " : "";
     sb.append(":").append(space);
     sb.append(TBaseHelper.toString(this. isIs_executable(), indent + 1, prettyPrint));
     first = false;
-    if (isSetContent())
-    {
-      if (!first) sb.append("," + newLine);
-      sb.append(indentStr);
-      sb.append("content");
-      sb.append(space);
-      sb.append(":").append(space);
-      if (this. getContent() == null) {
-        sb.append("null");
-      } else {
-          int __content_size = Math.min(this. getContent().length, 128);
-          for (int i = 0; i < __content_size; i++) {
-            if (i != 0) sb.append(" ");
-            sb.append(Integer.toHexString(this. getContent()[i]).length() > 1 ? Integer.toHexString(this. getContent()[i]).substring(Integer.toHexString(this. getContent()[i]).length() - 2).toUpperCase() : "0" + Integer.toHexString(this. getContent()[i]).toUpperCase());
-          }
-          if (this. getContent().length > 128) sb.append(" ...");
-      }
-      first = false;
-    }
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
     sb.append(")");
     return sb.toString();

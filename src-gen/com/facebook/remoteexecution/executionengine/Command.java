@@ -30,11 +30,23 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
   private static final TStruct STRUCT_DESC = new TStruct("Command");
   private static final TField ARGUMENTS_FIELD_DESC = new TField("arguments", TType.LIST, (short)1);
   private static final TField ENVIRONMENT_VARIABLES_FIELD_DESC = new TField("environment_variables", TType.LIST, (short)2);
+  private static final TField OUTPUT_FILES_FIELD_DESC = new TField("output_files", TType.LIST, (short)3);
+  private static final TField OUTPUT_DIRECTORIES_FIELD_DESC = new TField("output_directories", TType.LIST, (short)4);
+  private static final TField PLATFORM_FIELD_DESC = new TField("platform", TType.STRUCT, (short)5);
+  private static final TField WORKING_DIRECTORY_FIELD_DESC = new TField("working_directory", TType.STRING, (short)6);
 
   public List<String> arguments;
   public List<EnvironmentVariable> environment_variables;
+  public List<String> output_files;
+  public List<String> output_directories;
+  public Platform platform;
+  public String working_directory;
   public static final int ARGUMENTS = 1;
   public static final int ENVIRONMENT_VARIABLES = 2;
+  public static final int OUTPUT_FILES = 3;
+  public static final int OUTPUT_DIRECTORIES = 4;
+  public static final int PLATFORM = 5;
+  public static final int WORKING_DIRECTORY = 6;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -48,6 +60,16 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
     tmpMetaDataMap.put(ENVIRONMENT_VARIABLES, new FieldMetaData("environment_variables", TFieldRequirementType.DEFAULT, 
         new ListMetaData(TType.LIST, 
             new StructMetaData(TType.STRUCT, EnvironmentVariable.class))));
+    tmpMetaDataMap.put(OUTPUT_FILES, new FieldMetaData("output_files", TFieldRequirementType.DEFAULT, 
+        new ListMetaData(TType.LIST, 
+            new FieldValueMetaData(TType.STRING))));
+    tmpMetaDataMap.put(OUTPUT_DIRECTORIES, new FieldMetaData("output_directories", TFieldRequirementType.DEFAULT, 
+        new ListMetaData(TType.LIST, 
+            new FieldValueMetaData(TType.STRING))));
+    tmpMetaDataMap.put(PLATFORM, new FieldMetaData("platform", TFieldRequirementType.DEFAULT, 
+        new StructMetaData(TType.STRUCT, Platform.class)));
+    tmpMetaDataMap.put(WORKING_DIRECTORY, new FieldMetaData("working_directory", TFieldRequirementType.DEFAULT, 
+        new FieldValueMetaData(TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
@@ -60,11 +82,19 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
 
   public Command(
     List<String> arguments,
-    List<EnvironmentVariable> environment_variables)
+    List<EnvironmentVariable> environment_variables,
+    List<String> output_files,
+    List<String> output_directories,
+    Platform platform,
+    String working_directory)
   {
     this();
     this.arguments = arguments;
     this.environment_variables = environment_variables;
+    this.output_files = output_files;
+    this.output_directories = output_directories;
+    this.platform = platform;
+    this.working_directory = working_directory;
   }
 
   /**
@@ -76,6 +106,18 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
     }
     if (other.isSetEnvironment_variables()) {
       this.environment_variables = TBaseHelper.deepCopy(other.environment_variables);
+    }
+    if (other.isSetOutput_files()) {
+      this.output_files = TBaseHelper.deepCopy(other.output_files);
+    }
+    if (other.isSetOutput_directories()) {
+      this.output_directories = TBaseHelper.deepCopy(other.output_directories);
+    }
+    if (other.isSetPlatform()) {
+      this.platform = TBaseHelper.deepCopy(other.platform);
+    }
+    if (other.isSetWorking_directory()) {
+      this.working_directory = TBaseHelper.deepCopy(other.working_directory);
     }
   }
 
@@ -136,6 +178,102 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
     }
   }
 
+  public List<String>  getOutput_files() {
+    return this.output_files;
+  }
+
+  public Command setOutput_files(List<String> output_files) {
+    this.output_files = output_files;
+    return this;
+  }
+
+  public void unsetOutput_files() {
+    this.output_files = null;
+  }
+
+  // Returns true if field output_files is set (has been assigned a value) and false otherwise
+  public boolean isSetOutput_files() {
+    return this.output_files != null;
+  }
+
+  public void setOutput_filesIsSet(boolean value) {
+    if (!value) {
+      this.output_files = null;
+    }
+  }
+
+  public List<String>  getOutput_directories() {
+    return this.output_directories;
+  }
+
+  public Command setOutput_directories(List<String> output_directories) {
+    this.output_directories = output_directories;
+    return this;
+  }
+
+  public void unsetOutput_directories() {
+    this.output_directories = null;
+  }
+
+  // Returns true if field output_directories is set (has been assigned a value) and false otherwise
+  public boolean isSetOutput_directories() {
+    return this.output_directories != null;
+  }
+
+  public void setOutput_directoriesIsSet(boolean value) {
+    if (!value) {
+      this.output_directories = null;
+    }
+  }
+
+  public Platform  getPlatform() {
+    return this.platform;
+  }
+
+  public Command setPlatform(Platform platform) {
+    this.platform = platform;
+    return this;
+  }
+
+  public void unsetPlatform() {
+    this.platform = null;
+  }
+
+  // Returns true if field platform is set (has been assigned a value) and false otherwise
+  public boolean isSetPlatform() {
+    return this.platform != null;
+  }
+
+  public void setPlatformIsSet(boolean value) {
+    if (!value) {
+      this.platform = null;
+    }
+  }
+
+  public String  getWorking_directory() {
+    return this.working_directory;
+  }
+
+  public Command setWorking_directory(String working_directory) {
+    this.working_directory = working_directory;
+    return this;
+  }
+
+  public void unsetWorking_directory() {
+    this.working_directory = null;
+  }
+
+  // Returns true if field working_directory is set (has been assigned a value) and false otherwise
+  public boolean isSetWorking_directory() {
+    return this.working_directory != null;
+  }
+
+  public void setWorking_directoryIsSet(boolean value) {
+    if (!value) {
+      this.working_directory = null;
+    }
+  }
+
   @SuppressWarnings("unchecked")
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
@@ -155,6 +293,38 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
       }
       break;
 
+    case OUTPUT_FILES:
+      if (value == null) {
+        unsetOutput_files();
+      } else {
+        setOutput_files((List<String>)value);
+      }
+      break;
+
+    case OUTPUT_DIRECTORIES:
+      if (value == null) {
+        unsetOutput_directories();
+      } else {
+        setOutput_directories((List<String>)value);
+      }
+      break;
+
+    case PLATFORM:
+      if (value == null) {
+        unsetPlatform();
+      } else {
+        setPlatform((Platform)value);
+      }
+      break;
+
+    case WORKING_DIRECTORY:
+      if (value == null) {
+        unsetWorking_directory();
+      } else {
+        setWorking_directory((String)value);
+      }
+      break;
+
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -168,6 +338,18 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
     case ENVIRONMENT_VARIABLES:
       return getEnvironment_variables();
 
+    case OUTPUT_FILES:
+      return getOutput_files();
+
+    case OUTPUT_DIRECTORIES:
+      return getOutput_directories();
+
+    case PLATFORM:
+      return getPlatform();
+
+    case WORKING_DIRECTORY:
+      return getWorking_directory();
+
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -180,6 +362,14 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
       return isSetArguments();
     case ENVIRONMENT_VARIABLES:
       return isSetEnvironment_variables();
+    case OUTPUT_FILES:
+      return isSetOutput_files();
+    case OUTPUT_DIRECTORIES:
+      return isSetOutput_directories();
+    case PLATFORM:
+      return isSetPlatform();
+    case WORKING_DIRECTORY:
+      return isSetWorking_directory();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -215,6 +405,42 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
       if (!(this_present_environment_variables && that_present_environment_variables))
         return false;
       if (!TBaseHelper.equalsNobinary(this.environment_variables, that.environment_variables))
+        return false;
+    }
+
+    boolean this_present_output_files = true && this.isSetOutput_files();
+    boolean that_present_output_files = true && that.isSetOutput_files();
+    if (this_present_output_files || that_present_output_files) {
+      if (!(this_present_output_files && that_present_output_files))
+        return false;
+      if (!TBaseHelper.equalsNobinary(this.output_files, that.output_files))
+        return false;
+    }
+
+    boolean this_present_output_directories = true && this.isSetOutput_directories();
+    boolean that_present_output_directories = true && that.isSetOutput_directories();
+    if (this_present_output_directories || that_present_output_directories) {
+      if (!(this_present_output_directories && that_present_output_directories))
+        return false;
+      if (!TBaseHelper.equalsNobinary(this.output_directories, that.output_directories))
+        return false;
+    }
+
+    boolean this_present_platform = true && this.isSetPlatform();
+    boolean that_present_platform = true && that.isSetPlatform();
+    if (this_present_platform || that_present_platform) {
+      if (!(this_present_platform && that_present_platform))
+        return false;
+      if (!TBaseHelper.equalsNobinary(this.platform, that.platform))
+        return false;
+    }
+
+    boolean this_present_working_directory = true && this.isSetWorking_directory();
+    boolean that_present_working_directory = true && that.isSetWorking_directory();
+    if (this_present_working_directory || that_present_working_directory) {
+      if (!(this_present_working_directory && that_present_working_directory))
+        return false;
+      if (!TBaseHelper.equalsNobinary(this.working_directory, that.working_directory))
         return false;
     }
 
@@ -254,6 +480,38 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
     if (lastComparison != 0) {
       return lastComparison;
     }
+    lastComparison = Boolean.valueOf(isSetOutput_files()).compareTo(other.isSetOutput_files());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(output_files, other.output_files);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetOutput_directories()).compareTo(other.isSetOutput_directories());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(output_directories, other.output_directories);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetPlatform()).compareTo(other.isSetPlatform());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(platform, other.platform);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetWorking_directory()).compareTo(other.isSetWorking_directory());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(working_directory, other.working_directory);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
     return 0;
   }
 
@@ -271,15 +529,15 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
         case ARGUMENTS:
           if (field.type == TType.LIST) {
             {
-              TList _list32 = iprot.readListBegin();
-              this.arguments = new ArrayList<String>(Math.max(0, _list32.size));
-              for (int _i33 = 0; 
-                   (_list32.size < 0) ? iprot.peekList() : (_i33 < _list32.size); 
-                   ++_i33)
+              TList _list4 = iprot.readListBegin();
+              this.arguments = new ArrayList<String>(Math.max(0, _list4.size));
+              for (int _i5 = 0; 
+                   (_list4.size < 0) ? iprot.peekList() : (_i5 < _list4.size); 
+                   ++_i5)
               {
-                String _elem34;
-                _elem34 = iprot.readString();
-                this.arguments.add(_elem34);
+                String _elem6;
+                _elem6 = iprot.readString();
+                this.arguments.add(_elem6);
               }
               iprot.readListEnd();
             }
@@ -290,19 +548,72 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
         case ENVIRONMENT_VARIABLES:
           if (field.type == TType.LIST) {
             {
-              TList _list35 = iprot.readListBegin();
-              this.environment_variables = new ArrayList<EnvironmentVariable>(Math.max(0, _list35.size));
-              for (int _i36 = 0; 
-                   (_list35.size < 0) ? iprot.peekList() : (_i36 < _list35.size); 
-                   ++_i36)
+              TList _list7 = iprot.readListBegin();
+              this.environment_variables = new ArrayList<EnvironmentVariable>(Math.max(0, _list7.size));
+              for (int _i8 = 0; 
+                   (_list7.size < 0) ? iprot.peekList() : (_i8 < _list7.size); 
+                   ++_i8)
               {
-                EnvironmentVariable _elem37;
-                _elem37 = new EnvironmentVariable();
-                _elem37.read(iprot);
-                this.environment_variables.add(_elem37);
+                EnvironmentVariable _elem9;
+                _elem9 = new EnvironmentVariable();
+                _elem9.read(iprot);
+                this.environment_variables.add(_elem9);
               }
               iprot.readListEnd();
             }
+          } else { 
+            TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
+        case OUTPUT_FILES:
+          if (field.type == TType.LIST) {
+            {
+              TList _list10 = iprot.readListBegin();
+              this.output_files = new ArrayList<String>(Math.max(0, _list10.size));
+              for (int _i11 = 0; 
+                   (_list10.size < 0) ? iprot.peekList() : (_i11 < _list10.size); 
+                   ++_i11)
+              {
+                String _elem12;
+                _elem12 = iprot.readString();
+                this.output_files.add(_elem12);
+              }
+              iprot.readListEnd();
+            }
+          } else { 
+            TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
+        case OUTPUT_DIRECTORIES:
+          if (field.type == TType.LIST) {
+            {
+              TList _list13 = iprot.readListBegin();
+              this.output_directories = new ArrayList<String>(Math.max(0, _list13.size));
+              for (int _i14 = 0; 
+                   (_list13.size < 0) ? iprot.peekList() : (_i14 < _list13.size); 
+                   ++_i14)
+              {
+                String _elem15;
+                _elem15 = iprot.readString();
+                this.output_directories.add(_elem15);
+              }
+              iprot.readListEnd();
+            }
+          } else { 
+            TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
+        case PLATFORM:
+          if (field.type == TType.STRUCT) {
+            this.platform = new Platform();
+            this.platform.read(iprot);
+          } else { 
+            TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
+        case WORKING_DIRECTORY:
+          if (field.type == TType.STRING) {
+            this.working_directory = iprot.readString();
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -328,8 +639,8 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
       oprot.writeFieldBegin(ARGUMENTS_FIELD_DESC);
       {
         oprot.writeListBegin(new TList(TType.STRING, this.arguments.size()));
-        for (String _iter38 : this.arguments)        {
-          oprot.writeString(_iter38);
+        for (String _iter16 : this.arguments)        {
+          oprot.writeString(_iter16);
         }
         oprot.writeListEnd();
       }
@@ -339,11 +650,43 @@ public class Command implements TBase, java.io.Serializable, Cloneable, Comparab
       oprot.writeFieldBegin(ENVIRONMENT_VARIABLES_FIELD_DESC);
       {
         oprot.writeListBegin(new TList(TType.STRUCT, this.environment_variables.size()));
-        for (EnvironmentVariable _iter39 : this.environment_variables)        {
-          _iter39.write(oprot);
+        for (EnvironmentVariable _iter17 : this.environment_variables)        {
+          _iter17.write(oprot);
         }
         oprot.writeListEnd();
       }
+      oprot.writeFieldEnd();
+    }
+    if (this.output_files != null) {
+      oprot.writeFieldBegin(OUTPUT_FILES_FIELD_DESC);
+      {
+        oprot.writeListBegin(new TList(TType.STRING, this.output_files.size()));
+        for (String _iter18 : this.output_files)        {
+          oprot.writeString(_iter18);
+        }
+        oprot.writeListEnd();
+      }
+      oprot.writeFieldEnd();
+    }
+    if (this.output_directories != null) {
+      oprot.writeFieldBegin(OUTPUT_DIRECTORIES_FIELD_DESC);
+      {
+        oprot.writeListBegin(new TList(TType.STRING, this.output_directories.size()));
+        for (String _iter19 : this.output_directories)        {
+          oprot.writeString(_iter19);
+        }
+        oprot.writeListEnd();
+      }
+      oprot.writeFieldEnd();
+    }
+    if (this.platform != null) {
+      oprot.writeFieldBegin(PLATFORM_FIELD_DESC);
+      this.platform.write(oprot);
+      oprot.writeFieldEnd();
+    }
+    if (this.working_directory != null) {
+      oprot.writeFieldBegin(WORKING_DIRECTORY_FIELD_DESC);
+      oprot.writeString(this.working_directory);
       oprot.writeFieldEnd();
     }
     oprot.writeFieldStop();
@@ -390,6 +733,50 @@ String space = prettyPrint ? " " : "";
       sb.append("null");
     } else {
       sb.append(TBaseHelper.toString(this. getEnvironment_variables(), indent + 1, prettyPrint));
+    }
+    first = false;
+    if (!first) sb.append("," + newLine);
+    sb.append(indentStr);
+    sb.append("output_files");
+    sb.append(space);
+    sb.append(":").append(space);
+    if (this. getOutput_files() == null) {
+      sb.append("null");
+    } else {
+      sb.append(TBaseHelper.toString(this. getOutput_files(), indent + 1, prettyPrint));
+    }
+    first = false;
+    if (!first) sb.append("," + newLine);
+    sb.append(indentStr);
+    sb.append("output_directories");
+    sb.append(space);
+    sb.append(":").append(space);
+    if (this. getOutput_directories() == null) {
+      sb.append("null");
+    } else {
+      sb.append(TBaseHelper.toString(this. getOutput_directories(), indent + 1, prettyPrint));
+    }
+    first = false;
+    if (!first) sb.append("," + newLine);
+    sb.append(indentStr);
+    sb.append("platform");
+    sb.append(space);
+    sb.append(":").append(space);
+    if (this. getPlatform() == null) {
+      sb.append("null");
+    } else {
+      sb.append(TBaseHelper.toString(this. getPlatform(), indent + 1, prettyPrint));
+    }
+    first = false;
+    if (!first) sb.append("," + newLine);
+    sb.append(indentStr);
+    sb.append("working_directory");
+    sb.append(space);
+    sb.append(":").append(space);
+    if (this. getWorking_directory() == null) {
+      sb.append("null");
+    } else {
+      sb.append(TBaseHelper.toString(this. getWorking_directory(), indent + 1, prettyPrint));
     }
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));

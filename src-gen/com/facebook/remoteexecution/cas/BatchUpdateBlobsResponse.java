@@ -206,16 +206,16 @@ public class BatchUpdateBlobsResponse implements TBase, java.io.Serializable, Cl
         case RESPONSES:
           if (field.type == TType.LIST) {
             {
-              TList _list20 = iprot.readListBegin();
-              this.responses = new ArrayList<UpdateBlobResponse>(Math.max(0, _list20.size));
-              for (int _i21 = 0; 
-                   (_list20.size < 0) ? iprot.peekList() : (_i21 < _list20.size); 
-                   ++_i21)
+              TList _list16 = iprot.readListBegin();
+              this.responses = new ArrayList<UpdateBlobResponse>(Math.max(0, _list16.size));
+              for (int _i17 = 0; 
+                   (_list16.size < 0) ? iprot.peekList() : (_i17 < _list16.size); 
+                   ++_i17)
               {
-                UpdateBlobResponse _elem22;
-                _elem22 = new UpdateBlobResponse();
-                _elem22.read(iprot);
-                this.responses.add(_elem22);
+                UpdateBlobResponse _elem18;
+                _elem18 = new UpdateBlobResponse();
+                _elem18.read(iprot);
+                this.responses.add(_elem18);
               }
               iprot.readListEnd();
             }
@@ -244,8 +244,8 @@ public class BatchUpdateBlobsResponse implements TBase, java.io.Serializable, Cl
       oprot.writeFieldBegin(RESPONSES_FIELD_DESC);
       {
         oprot.writeListBegin(new TList(TType.STRUCT, this.responses.size()));
-        for (UpdateBlobResponse _iter23 : this.responses)        {
-          _iter23.write(oprot);
+        for (UpdateBlobResponse _iter19 : this.responses)        {
+          _iter19.write(oprot);
         }
         oprot.writeListEnd();
       }

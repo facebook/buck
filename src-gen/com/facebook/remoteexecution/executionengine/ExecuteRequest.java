@@ -28,19 +28,19 @@ import com.facebook.thrift.protocol.*;
 @SuppressWarnings({ "unused", "serial" })
 public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, Comparable<ExecuteRequest> {
   private static final TStruct STRUCT_DESC = new TStruct("ExecuteRequest");
-  private static final TField INSTANCE_NAME_FIELD_DESC = new TField("instance_name", TType.STRING, (short)1);
-  private static final TField ACTION_FIELD_DESC = new TField("action", TType.STRUCT, (short)2);
-  private static final TField SKIP_CACHE_LOOKUP_FIELD_DESC = new TField("skip_cache_lookup", TType.BOOL, (short)3);
-  private static final TField EXECUTION_ID_FIELD_DESC = new TField("execution_id", TType.STRING, (short)4);
+  private static final TField SKIP_CACHE_LOOKUP_FIELD_DESC = new TField("skip_cache_lookup", TType.BOOL, (short)1);
+  private static final TField ACTION_DIGEST_FIELD_DESC = new TField("action_digest", TType.STRUCT, (short)2);
+  private static final TField EXECUTION_POLICY_FIELD_DESC = new TField("execution_policy", TType.STRUCT, (short)3);
+  private static final TField RESULTS_CACHE_POLICY_FIELD_DESC = new TField("results_cache_policy", TType.STRUCT, (short)4);
 
-  public String instance_name;
-  public Action action;
   public boolean skip_cache_lookup;
-  public String execution_id;
-  public static final int INSTANCE_NAME = 1;
-  public static final int ACTION = 2;
-  public static final int SKIP_CACHE_LOOKUP = 3;
-  public static final int EXECUTION_ID = 4;
+  public com.facebook.remoteexecution.cas.Digest action_digest;
+  public ExecutionPolicy execution_policy;
+  public ResultsCachePolicy results_cache_policy;
+  public static final int SKIP_CACHE_LOOKUP = 1;
+  public static final int ACTION_DIGEST = 2;
+  public static final int EXECUTION_POLICY = 3;
+  public static final int RESULTS_CACHE_POLICY = 4;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -50,14 +50,14 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
   public static final Map<Integer, FieldMetaData> metaDataMap;
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
-    tmpMetaDataMap.put(INSTANCE_NAME, new FieldMetaData("instance_name", TFieldRequirementType.DEFAULT, 
-        new FieldValueMetaData(TType.STRING)));
-    tmpMetaDataMap.put(ACTION, new FieldMetaData("action", TFieldRequirementType.DEFAULT, 
-        new StructMetaData(TType.STRUCT, Action.class)));
     tmpMetaDataMap.put(SKIP_CACHE_LOOKUP, new FieldMetaData("skip_cache_lookup", TFieldRequirementType.DEFAULT, 
         new FieldValueMetaData(TType.BOOL)));
-    tmpMetaDataMap.put(EXECUTION_ID, new FieldMetaData("execution_id", TFieldRequirementType.OPTIONAL, 
-        new FieldValueMetaData(TType.STRING)));
+    tmpMetaDataMap.put(ACTION_DIGEST, new FieldMetaData("action_digest", TFieldRequirementType.DEFAULT, 
+        new StructMetaData(TType.STRUCT, com.facebook.remoteexecution.cas.Digest.class)));
+    tmpMetaDataMap.put(EXECUTION_POLICY, new FieldMetaData("execution_policy", TFieldRequirementType.OPTIONAL, 
+        new StructMetaData(TType.STRUCT, ExecutionPolicy.class)));
+    tmpMetaDataMap.put(RESULTS_CACHE_POLICY, new FieldMetaData("results_cache_policy", TFieldRequirementType.OPTIONAL, 
+        new StructMetaData(TType.STRUCT, ResultsCachePolicy.class)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
@@ -69,29 +69,27 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
   }
 
   public ExecuteRequest(
-    String instance_name,
-    Action action,
-    boolean skip_cache_lookup)
+    boolean skip_cache_lookup,
+    com.facebook.remoteexecution.cas.Digest action_digest)
   {
     this();
-    this.instance_name = instance_name;
-    this.action = action;
     this.skip_cache_lookup = skip_cache_lookup;
     setSkip_cache_lookupIsSet(true);
+    this.action_digest = action_digest;
   }
 
   public ExecuteRequest(
-    String instance_name,
-    Action action,
     boolean skip_cache_lookup,
-    String execution_id)
+    com.facebook.remoteexecution.cas.Digest action_digest,
+    ExecutionPolicy execution_policy,
+    ResultsCachePolicy results_cache_policy)
   {
     this();
-    this.instance_name = instance_name;
-    this.action = action;
     this.skip_cache_lookup = skip_cache_lookup;
     setSkip_cache_lookupIsSet(true);
-    this.execution_id = execution_id;
+    this.action_digest = action_digest;
+    this.execution_policy = execution_policy;
+    this.results_cache_policy = results_cache_policy;
   }
 
   /**
@@ -100,15 +98,15 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
   public ExecuteRequest(ExecuteRequest other) {
     __isset_bit_vector.clear();
     __isset_bit_vector.or(other.__isset_bit_vector);
-    if (other.isSetInstance_name()) {
-      this.instance_name = TBaseHelper.deepCopy(other.instance_name);
-    }
-    if (other.isSetAction()) {
-      this.action = TBaseHelper.deepCopy(other.action);
-    }
     this.skip_cache_lookup = TBaseHelper.deepCopy(other.skip_cache_lookup);
-    if (other.isSetExecution_id()) {
-      this.execution_id = TBaseHelper.deepCopy(other.execution_id);
+    if (other.isSetAction_digest()) {
+      this.action_digest = TBaseHelper.deepCopy(other.action_digest);
+    }
+    if (other.isSetExecution_policy()) {
+      this.execution_policy = TBaseHelper.deepCopy(other.execution_policy);
+    }
+    if (other.isSetResults_cache_policy()) {
+      this.results_cache_policy = TBaseHelper.deepCopy(other.results_cache_policy);
     }
   }
 
@@ -119,54 +117,6 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
   @Deprecated
   public ExecuteRequest clone() {
     return new ExecuteRequest(this);
-  }
-
-  public String  getInstance_name() {
-    return this.instance_name;
-  }
-
-  public ExecuteRequest setInstance_name(String instance_name) {
-    this.instance_name = instance_name;
-    return this;
-  }
-
-  public void unsetInstance_name() {
-    this.instance_name = null;
-  }
-
-  // Returns true if field instance_name is set (has been assigned a value) and false otherwise
-  public boolean isSetInstance_name() {
-    return this.instance_name != null;
-  }
-
-  public void setInstance_nameIsSet(boolean value) {
-    if (!value) {
-      this.instance_name = null;
-    }
-  }
-
-  public Action  getAction() {
-    return this.action;
-  }
-
-  public ExecuteRequest setAction(Action action) {
-    this.action = action;
-    return this;
-  }
-
-  public void unsetAction() {
-    this.action = null;
-  }
-
-  // Returns true if field action is set (has been assigned a value) and false otherwise
-  public boolean isSetAction() {
-    return this.action != null;
-  }
-
-  public void setActionIsSet(boolean value) {
-    if (!value) {
-      this.action = null;
-    }
   }
 
   public boolean  isSkip_cache_lookup() {
@@ -192,48 +142,80 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
     __isset_bit_vector.set(__SKIP_CACHE_LOOKUP_ISSET_ID, value);
   }
 
-  public String  getExecution_id() {
-    return this.execution_id;
+  public com.facebook.remoteexecution.cas.Digest  getAction_digest() {
+    return this.action_digest;
   }
 
-  public ExecuteRequest setExecution_id(String execution_id) {
-    this.execution_id = execution_id;
+  public ExecuteRequest setAction_digest(com.facebook.remoteexecution.cas.Digest action_digest) {
+    this.action_digest = action_digest;
     return this;
   }
 
-  public void unsetExecution_id() {
-    this.execution_id = null;
+  public void unsetAction_digest() {
+    this.action_digest = null;
   }
 
-  // Returns true if field execution_id is set (has been assigned a value) and false otherwise
-  public boolean isSetExecution_id() {
-    return this.execution_id != null;
+  // Returns true if field action_digest is set (has been assigned a value) and false otherwise
+  public boolean isSetAction_digest() {
+    return this.action_digest != null;
   }
 
-  public void setExecution_idIsSet(boolean value) {
+  public void setAction_digestIsSet(boolean value) {
     if (!value) {
-      this.execution_id = null;
+      this.action_digest = null;
+    }
+  }
+
+  public ExecutionPolicy  getExecution_policy() {
+    return this.execution_policy;
+  }
+
+  public ExecuteRequest setExecution_policy(ExecutionPolicy execution_policy) {
+    this.execution_policy = execution_policy;
+    return this;
+  }
+
+  public void unsetExecution_policy() {
+    this.execution_policy = null;
+  }
+
+  // Returns true if field execution_policy is set (has been assigned a value) and false otherwise
+  public boolean isSetExecution_policy() {
+    return this.execution_policy != null;
+  }
+
+  public void setExecution_policyIsSet(boolean value) {
+    if (!value) {
+      this.execution_policy = null;
+    }
+  }
+
+  public ResultsCachePolicy  getResults_cache_policy() {
+    return this.results_cache_policy;
+  }
+
+  public ExecuteRequest setResults_cache_policy(ResultsCachePolicy results_cache_policy) {
+    this.results_cache_policy = results_cache_policy;
+    return this;
+  }
+
+  public void unsetResults_cache_policy() {
+    this.results_cache_policy = null;
+  }
+
+  // Returns true if field results_cache_policy is set (has been assigned a value) and false otherwise
+  public boolean isSetResults_cache_policy() {
+    return this.results_cache_policy != null;
+  }
+
+  public void setResults_cache_policyIsSet(boolean value) {
+    if (!value) {
+      this.results_cache_policy = null;
     }
   }
 
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
-    case INSTANCE_NAME:
-      if (value == null) {
-        unsetInstance_name();
-      } else {
-        setInstance_name((String)value);
-      }
-      break;
-
-    case ACTION:
-      if (value == null) {
-        unsetAction();
-      } else {
-        setAction((Action)value);
-      }
-      break;
-
     case SKIP_CACHE_LOOKUP:
       if (value == null) {
         unsetSkip_cache_lookup();
@@ -242,11 +224,27 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
       }
       break;
 
-    case EXECUTION_ID:
+    case ACTION_DIGEST:
       if (value == null) {
-        unsetExecution_id();
+        unsetAction_digest();
       } else {
-        setExecution_id((String)value);
+        setAction_digest((com.facebook.remoteexecution.cas.Digest)value);
+      }
+      break;
+
+    case EXECUTION_POLICY:
+      if (value == null) {
+        unsetExecution_policy();
+      } else {
+        setExecution_policy((ExecutionPolicy)value);
+      }
+      break;
+
+    case RESULTS_CACHE_POLICY:
+      if (value == null) {
+        unsetResults_cache_policy();
+      } else {
+        setResults_cache_policy((ResultsCachePolicy)value);
       }
       break;
 
@@ -257,17 +255,17 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
 
   public Object getFieldValue(int fieldID) {
     switch (fieldID) {
-    case INSTANCE_NAME:
-      return getInstance_name();
-
-    case ACTION:
-      return getAction();
-
     case SKIP_CACHE_LOOKUP:
       return new Boolean(isSkip_cache_lookup());
 
-    case EXECUTION_ID:
-      return getExecution_id();
+    case ACTION_DIGEST:
+      return getAction_digest();
+
+    case EXECUTION_POLICY:
+      return getExecution_policy();
+
+    case RESULTS_CACHE_POLICY:
+      return getResults_cache_policy();
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -277,14 +275,14 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
   // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
   public boolean isSet(int fieldID) {
     switch (fieldID) {
-    case INSTANCE_NAME:
-      return isSetInstance_name();
-    case ACTION:
-      return isSetAction();
     case SKIP_CACHE_LOOKUP:
       return isSetSkip_cache_lookup();
-    case EXECUTION_ID:
-      return isSetExecution_id();
+    case ACTION_DIGEST:
+      return isSetAction_digest();
+    case EXECUTION_POLICY:
+      return isSetExecution_policy();
+    case RESULTS_CACHE_POLICY:
+      return isSetResults_cache_policy();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -305,24 +303,6 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
     if (this == that)
       return true;
 
-    boolean this_present_instance_name = true && this.isSetInstance_name();
-    boolean that_present_instance_name = true && that.isSetInstance_name();
-    if (this_present_instance_name || that_present_instance_name) {
-      if (!(this_present_instance_name && that_present_instance_name))
-        return false;
-      if (!TBaseHelper.equalsNobinary(this.instance_name, that.instance_name))
-        return false;
-    }
-
-    boolean this_present_action = true && this.isSetAction();
-    boolean that_present_action = true && that.isSetAction();
-    if (this_present_action || that_present_action) {
-      if (!(this_present_action && that_present_action))
-        return false;
-      if (!TBaseHelper.equalsNobinary(this.action, that.action))
-        return false;
-    }
-
     boolean this_present_skip_cache_lookup = true;
     boolean that_present_skip_cache_lookup = true;
     if (this_present_skip_cache_lookup || that_present_skip_cache_lookup) {
@@ -332,12 +312,30 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
         return false;
     }
 
-    boolean this_present_execution_id = true && this.isSetExecution_id();
-    boolean that_present_execution_id = true && that.isSetExecution_id();
-    if (this_present_execution_id || that_present_execution_id) {
-      if (!(this_present_execution_id && that_present_execution_id))
+    boolean this_present_action_digest = true && this.isSetAction_digest();
+    boolean that_present_action_digest = true && that.isSetAction_digest();
+    if (this_present_action_digest || that_present_action_digest) {
+      if (!(this_present_action_digest && that_present_action_digest))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.execution_id, that.execution_id))
+      if (!TBaseHelper.equalsNobinary(this.action_digest, that.action_digest))
+        return false;
+    }
+
+    boolean this_present_execution_policy = true && this.isSetExecution_policy();
+    boolean that_present_execution_policy = true && that.isSetExecution_policy();
+    if (this_present_execution_policy || that_present_execution_policy) {
+      if (!(this_present_execution_policy && that_present_execution_policy))
+        return false;
+      if (!TBaseHelper.equalsNobinary(this.execution_policy, that.execution_policy))
+        return false;
+    }
+
+    boolean this_present_results_cache_policy = true && this.isSetResults_cache_policy();
+    boolean that_present_results_cache_policy = true && that.isSetResults_cache_policy();
+    if (this_present_results_cache_policy || that_present_results_cache_policy) {
+      if (!(this_present_results_cache_policy && that_present_results_cache_policy))
+        return false;
+      if (!TBaseHelper.equalsNobinary(this.results_cache_policy, that.results_cache_policy))
         return false;
     }
 
@@ -361,22 +359,6 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
     }
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetInstance_name()).compareTo(other.isSetInstance_name());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(instance_name, other.instance_name);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = Boolean.valueOf(isSetAction()).compareTo(other.isSetAction());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(action, other.action);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
     lastComparison = Boolean.valueOf(isSetSkip_cache_lookup()).compareTo(other.isSetSkip_cache_lookup());
     if (lastComparison != 0) {
       return lastComparison;
@@ -385,11 +367,27 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = Boolean.valueOf(isSetExecution_id()).compareTo(other.isSetExecution_id());
+    lastComparison = Boolean.valueOf(isSetAction_digest()).compareTo(other.isSetAction_digest());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = TBaseHelper.compareTo(execution_id, other.execution_id);
+    lastComparison = TBaseHelper.compareTo(action_digest, other.action_digest);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetExecution_policy()).compareTo(other.isSetExecution_policy());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(execution_policy, other.execution_policy);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetResults_cache_policy()).compareTo(other.isSetResults_cache_policy());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(results_cache_policy, other.results_cache_policy);
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -407,21 +405,6 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
       }
       switch (field.id)
       {
-        case INSTANCE_NAME:
-          if (field.type == TType.STRING) {
-            this.instance_name = iprot.readString();
-          } else { 
-            TProtocolUtil.skip(iprot, field.type);
-          }
-          break;
-        case ACTION:
-          if (field.type == TType.STRUCT) {
-            this.action = new Action();
-            this.action.read(iprot);
-          } else { 
-            TProtocolUtil.skip(iprot, field.type);
-          }
-          break;
         case SKIP_CACHE_LOOKUP:
           if (field.type == TType.BOOL) {
             this.skip_cache_lookup = iprot.readBool();
@@ -430,9 +413,26 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
             TProtocolUtil.skip(iprot, field.type);
           }
           break;
-        case EXECUTION_ID:
-          if (field.type == TType.STRING) {
-            this.execution_id = iprot.readString();
+        case ACTION_DIGEST:
+          if (field.type == TType.STRUCT) {
+            this.action_digest = new com.facebook.remoteexecution.cas.Digest();
+            this.action_digest.read(iprot);
+          } else { 
+            TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
+        case EXECUTION_POLICY:
+          if (field.type == TType.STRUCT) {
+            this.execution_policy = new ExecutionPolicy();
+            this.execution_policy.read(iprot);
+          } else { 
+            TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
+        case RESULTS_CACHE_POLICY:
+          if (field.type == TType.STRUCT) {
+            this.results_cache_policy = new ResultsCachePolicy();
+            this.results_cache_policy.read(iprot);
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -454,23 +454,25 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
     validate();
 
     oprot.writeStructBegin(STRUCT_DESC);
-    if (this.instance_name != null) {
-      oprot.writeFieldBegin(INSTANCE_NAME_FIELD_DESC);
-      oprot.writeString(this.instance_name);
-      oprot.writeFieldEnd();
-    }
-    if (this.action != null) {
-      oprot.writeFieldBegin(ACTION_FIELD_DESC);
-      this.action.write(oprot);
-      oprot.writeFieldEnd();
-    }
     oprot.writeFieldBegin(SKIP_CACHE_LOOKUP_FIELD_DESC);
     oprot.writeBool(this.skip_cache_lookup);
     oprot.writeFieldEnd();
-    if (this.execution_id != null) {
-      if (isSetExecution_id()) {
-        oprot.writeFieldBegin(EXECUTION_ID_FIELD_DESC);
-        oprot.writeString(this.execution_id);
+    if (this.action_digest != null) {
+      oprot.writeFieldBegin(ACTION_DIGEST_FIELD_DESC);
+      this.action_digest.write(oprot);
+      oprot.writeFieldEnd();
+    }
+    if (this.execution_policy != null) {
+      if (isSetExecution_policy()) {
+        oprot.writeFieldBegin(EXECUTION_POLICY_FIELD_DESC);
+        this.execution_policy.write(oprot);
+        oprot.writeFieldEnd();
+      }
+    }
+    if (this.results_cache_policy != null) {
+      if (isSetResults_cache_policy()) {
+        oprot.writeFieldBegin(RESULTS_CACHE_POLICY_FIELD_DESC);
+        this.results_cache_policy.write(oprot);
         oprot.writeFieldEnd();
       }
     }
@@ -500,44 +502,47 @@ String space = prettyPrint ? " " : "";
     boolean first = true;
 
     sb.append(indentStr);
-    sb.append("instance_name");
-    sb.append(space);
-    sb.append(":").append(space);
-    if (this. getInstance_name() == null) {
-      sb.append("null");
-    } else {
-      sb.append(TBaseHelper.toString(this. getInstance_name(), indent + 1, prettyPrint));
-    }
-    first = false;
-    if (!first) sb.append("," + newLine);
-    sb.append(indentStr);
-    sb.append("action");
-    sb.append(space);
-    sb.append(":").append(space);
-    if (this. getAction() == null) {
-      sb.append("null");
-    } else {
-      sb.append(TBaseHelper.toString(this. getAction(), indent + 1, prettyPrint));
-    }
-    first = false;
-    if (!first) sb.append("," + newLine);
-    sb.append(indentStr);
     sb.append("skip_cache_lookup");
     sb.append(space);
     sb.append(":").append(space);
     sb.append(TBaseHelper.toString(this. isSkip_cache_lookup(), indent + 1, prettyPrint));
     first = false;
-    if (isSetExecution_id())
+    if (!first) sb.append("," + newLine);
+    sb.append(indentStr);
+    sb.append("action_digest");
+    sb.append(space);
+    sb.append(":").append(space);
+    if (this. getAction_digest() == null) {
+      sb.append("null");
+    } else {
+      sb.append(TBaseHelper.toString(this. getAction_digest(), indent + 1, prettyPrint));
+    }
+    first = false;
+    if (isSetExecution_policy())
     {
       if (!first) sb.append("," + newLine);
       sb.append(indentStr);
-      sb.append("execution_id");
+      sb.append("execution_policy");
       sb.append(space);
       sb.append(":").append(space);
-      if (this. getExecution_id() == null) {
+      if (this. getExecution_policy() == null) {
         sb.append("null");
       } else {
-        sb.append(TBaseHelper.toString(this. getExecution_id(), indent + 1, prettyPrint));
+        sb.append(TBaseHelper.toString(this. getExecution_policy(), indent + 1, prettyPrint));
+      }
+      first = false;
+    }
+    if (isSetResults_cache_policy())
+    {
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("results_cache_policy");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getResults_cache_policy() == null) {
+        sb.append("null");
+      } else {
+        sb.append(TBaseHelper.toString(this. getResults_cache_policy(), indent + 1, prettyPrint));
       }
       first = false;
     }

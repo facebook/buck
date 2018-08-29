@@ -3,119 +3,48 @@ include "cas.thrift"
 namespace java com.facebook.remoteexecution.executionengine
 
 /*
- * A tuple of name and value. Names are always strings. Values may be numeric,
- * but for maximum flexibility are represented as strings as well.
+ * A single property for the environment. If an unknown `name` is
+ * provided in the requirements for an Action, the server SHOULD
+ * reject the execution request. If permitted by the server, the same `name`
+ * may occur multiple times.
+ *
+ * The server is also responsible for specifying the interpretation of
+ * property `value`s. For instance, a property describing how much RAM must be
+ * available may be interpreted as allowing a worker with 16GB to fulfill a
+ * request for 8GB, while a property describing the OS environment on which
+ * the action must be performed may require an exact match with the worker's
+ * OS.
+ *
+ * The server MAY use the `value` of one or more properties to determine how
+ * it sets up the execution environment, such as by making specific system
+ * files available to the worker.
  */
 struct Property {
-  1: string name,
-  2: string value,
+  /*
+   * The property name.
+   */
+  1: string name;
+
+  /*
+   * The property value.
+   */
+  2: string value;
 }
 
 /*
- * A tuple of name and value representing a *dynamic* resource, such as: CPU,
- * RAM, disk, etc. Names are always strings and values numeric.
+ * A Platform is a set of requirements, such as hardware, operating system, or
+ * compiler toolchain, for an Action's execution environment. A Platform is
+ * represented as a series of key-value pairs representing the properties that
+ * are required of the platform.
  */
-struct Resource {
-  1: string name,
-  2: double value,
-}
-
-/*
- * Describe a required device to connected to a worker host.
- */
-struct RequiredDevice {
+struct Platform {
   /*
-   * Properties characterizing the device. E.g., OS, CPU architecture, etc.
+   * The properties that make up this platform. In order to ensure that
+   * equivalent Platforms always hash to the same value, the properties MUST
+   * be lexicographically sorted by name, and then by value. Sorting of strings
+   * is done by code point, equivalently, by the UTF-8 bytes.
    */
-  1: list<Property> properties,
-}
-
-/*
- * Describe the host on which a worker runs and the connected devices.
- */
-struct WorkerHost {
-  /*
-   * Fundamental features that apply to the host, and not to individual devices.
-   * E.g., OS, CPU architecture, total available memory, etc.
-   */
-  1: list<Property> properties,
-
-  /*
-   * Dynamic resources *available* for leasing (i.e. not guaranteed for other
-   * leases), such as: CPU, RAM, disk, etc. Should not include total values, but
-   * only resources free for leasing.
-   *
-   * TODO: Do we want to make the distinction between "un-leased" resources, and
-   *       system-available resourced? Is that interesting? (but can also be
-   *       very time-sensitive to when we measure/report)
-   */
-  2: list<Resource> resources,
-
-  /*
-   * A list of any attached devices *available* for leasing.
-   */
-  3: list<Device> devices,
-}
-
-/*
- * Describe the required host on which to run a worker and the connected devices
- */
-struct RequiredWorkerHost {
-  /*
-   * Fundamental features that apply to the host, and not to individual devices.
-   * E.g., OS, CPU architecture, total available memory, etc.
-   */
-  1: list<Property> properties,
-
-  /*
-   * Dynamic resources required for execution, such as: CPU, RAM, disk, etc.
-   */
-  2: list<Resource> resources,
-
-  /*
-   * A list of required attached devices.
-   */
-  3: list<RequiredDevice> devices,
-}
-
-/*
- * Describe a device connected to a worker host.
- */
-struct Device {
-  /*
-   * A logical "handle" for a device. Unique within a worker host.
-   */
-  1: string name,
-
-  /*
-   * Properties characterizing the device. E.g., OS, CPU architecture, etc.
-   */
-  2: list<Property> properties,
-}
-
-/*
- * Describe the *required* execution environment. This is the top-level object
- * that captures the entire environment. Can include external resources,
- * custom networking rewuirements, and anything external to a worker host.
- */
-struct Requirements {
-  /*
-   * Required worker host.
-   */
-  1: RequiredWorkerHost worker_host,
-}
-
-/*
- * Describe the *available* execution environment. This is the top-level object
- * that captures the entire environment of a worker. Can include external
- * resources, custom networking rewuirements, and anything external to a worker
- * host.
- */
-struct Capabilities {
-  /*
-   * Available worker host.
-   */
-  1: WorkerHost worker_host,
+  1: list<Property> properties;
 }
 
 /*
@@ -125,12 +54,12 @@ struct EnvironmentVariable {
   /*
    * The variable name.
    */
-  1: string name,
+  1: string name;
 
   /*
    * The variable value.
    */
-  2: string value,
+  2: string value;
 }
 
 /*
@@ -143,10 +72,9 @@ struct Command {
   /*
    * The arguments to the command. The first argument must be the path to
    * the executable, which must be either a relative path, in which case it
-   * is evaluated with respect to the input root, or an absolute path. The
-   * working directory will always be the input root.
+   * is evaluated with respect to the input root, or an absolute path.
    */
-  1: list<string> arguments,
+  1: list<string> arguments;
 
   /*
    * The environment variables to set when running the program. The worker may
@@ -157,29 +85,7 @@ struct Command {
    * the environment variables MUST be lexicographically sorted by name. Sorting
    * of strings is done by code point or, equivalently, by the UTF-8 bytes.
    */
-  2: list<EnvironmentVariable> environment_variables,
-}
-
-/*
- * Captures all the information about an execution that's required to
- * reproduce it. A single Action represents a repeatable action that can be
- * performed by the Execution Engine.
- */
-struct Action {
-  /*
-   * The digest of the Command to run. MUST be present in the CAS.
-   */
-  1: cas.Digest command_digest,
-
-  /*
-   * The digest of the root Directory for the input files. Files in the
-   * directory tree will be available in the correct location on the remote
-   * worker before the command is executed. The root directory, as well as
-   * the blobs referred, MUST be in the CAS.
-   *
-   * This field is optional, in case there is no input for the command.
-   */
-  2: optional cas.Digest input_root_digest,
+  2: list<EnvironmentVariable> environment_variables;
 
   /*
    * A list of the output files that the client expects to retrieve from the
@@ -196,8 +102,12 @@ struct Action {
    * In order to ensure consistent hashing of the same Action, the output paths
    * MUST be sorted lexicographically by code point (or, equivalently, by UTF-8
    * bytes).
+   *
+   * An output file cannot be duplicated, be a parent of another output file, be
+   * a child of a listed output directory, or have the same path as any of the
+   * listed output directories.
    */
-  3: list<string> output_files,
+  3: list<string> output_files;
 
   /*
    * A list of the output directories that the client expects to retrieve from
@@ -217,18 +127,71 @@ struct Action {
    * In order to ensure consistent hashing of the same Action, the output paths
    * MUST be sorted lexicographically by code point (or, equivalently, by UTF-8
    * bytes).
+   *
+   * An output directory cannot be duplicated, be a parent of another output
+   * directory, be a parent of a listed output file, or have the same path as
+   * any of the listed output files.
    */
-  4: list<string> output_directories,
+  4: list<string> output_directories;
 
   /*
-   * The requirements demanded by this lease.
+   * The platform requirements for the execution environment. The server MAY
+   * choose to execute the action on any worker satisfying the requirements, so
+   * the client SHOULD ensure that running the action on any such worker will
+   * have the same result.
    */
-  5: Requirements requirements,
+  5: Platform platform;
+
+  /*
+   * The working directory, relative to the input root, for the command to run
+   * in. It must be a directory which exists in the input tree. If it is left
+   * empty, then the action is run in the input root.
+   */
+  6: string working_directory;
+}
+
+/*
+ * An Action captures all the information about an execution which is required
+ * to reproduce it.
+ *
+ * Actions are the core component of the Remote Execution system. A single
+ * Action represents a repeatable action that can be performed by the
+ * execution service. Actions can be succinctly identified by the digest of
+ * their wire format encoding and, once an Action has been executed, will be
+ * cached in the action cache. Future requests can then use the cached result
+ * rather than needing to run afresh.
+ *
+ * When a server completes execution of an Action, it MAY choose to cache the
+ * ActionResult in the ActionCache unless `do_not_cache` is `true`. Clients
+ * SHOULD expect the server to do so. By default, future calls to execute
+ * the same Action will also serve their results from the cache. Clients must
+ * take care to understand the caching behaviour. Ideally, all Actions will be
+ * reproducible so that serving a result from cache is always desirable and
+ * correct.
+ */
+struct Action {
+  /*
+   * The digest of the Command to run. MUST be present in the CAS.
+   */
+  1: cas.Digest command_digest;
+
+  /*
+   * The digest of the root Directory for the input files. Files in the
+   * directory tree will be available in the correct location on the remote
+   * worker before the command is executed. The root directory, as well as
+   * the blobs referred to, MUST be in the CAS.
+   *
+   * This field is optional, in case there is no input for the command.
+   */
+  2: optional cas.Digest input_root_digest;
 
   /*
    * A timeout, in seconds, after which the execution should be killed. If the
-   * client specifies a timeout that is longer than the server's maximum
-   * timeout, the server MUST reject the request.
+   * timeout is absent, then the client is specifying that the execution should
+   * continue as long as the server will let it. The server SHOULD impose a
+   * timeout if the client does not specify one, however, if the client
+   * specifies a timeout that is longer than the server's maximum timeout, the
+   * server MUST reject the request.
    *
    * The timeout is a part of the Action message, and therefore two Actions with
    * different timeouts are different, even if they are otherwise identical.
@@ -239,48 +202,36 @@ struct Action {
    * the execution timeout will fail immediately, rather than whenever the cache
    * entry gets evicted.
    */
-  6: i64 timeout_secs,
+  3: i64 timeout_secs;
 
   /*
    * If true, then the Action's result cannot be cached.
    */
-  7: bool do_not_cache,
+  4: bool do_not_cache;
 }
 
 /*
  * An OutputFile is similar to a FileNode, but it is tailored for output as
  * part of an ActionResult. It allows a full file path rather than only a
- * name, and allows the server to include content inline.
+ * name.
  */
 struct OutputFile {
   /*
-   * The full path of the file relative to the input root, including the
+   * The full path of the file relative to the working directory, including the
    * filename. The path separator is a forward slash '/'. Since this is a
    * relative path, it MUST NOT begin with a leading forward slash.
    */
-  1: string path,
+  1: string path;
 
   /*
    * The digest of the file's content.
    */
-  2: cas.Digest data_digest,
+  2: cas.Digest data_digest;
 
   /*
    * True if file is executable, false otherwise.
    */
-  3: bool is_executable,
-
-  /*
-   * The raw content of the file.
-   *
-   * This field may be used by the server to provide the content of a file
-   * inline in an ActionResult and avoid requiring that the client make a
-   * separate call to ContentAddressableStorage.GetBlob to retrieve it.
-   *
-   * The client SHOULD NOT assume that it will get raw content with any request,
-   * and always be prepared to retrieve it via the digest field.
-   */
-  4: optional binary content,
+  3: bool is_executable;
 }
 
 /*
@@ -294,12 +245,86 @@ struct OutputDirectory {
    * NOT begin with a leading forward slash. The empty string value is allowed,
    * and it denotes the entire working directory.
    */
-  1: string path,
+  1: string path;
 
   /*
    * The digest of the encoded Tree struct containing the directory's contents.
    */
-  2: cas.Digest tree_digest,
+  2: cas.Digest tree_digest;
+}
+
+/*
+ * Contains all the Directory structs in a single directory Merkle tree,
+ * compressed into one message.
+ */
+struct Tree {
+  /*
+   * The root directory in the tree.
+   */
+  1: cas.Directory root;
+
+  /*
+   * All the child directories: the directories referred to by the root and,
+   * recursively, all its children. In order to reconstruct the directory tree,
+   * the client must take the digests of each of the child directories and then
+   * build up a tree starting from the `root`.
+   */
+  2: list<cas.Directory> children;
+}
+
+/*
+ * ExecutedActionMetadata contains details about a completed execution.
+ */
+struct ExecutedActionMetadata {
+  /*
+   * The name of the worker which ran the execution.
+   */
+  1: string worker;
+
+  /*
+   * When was the action added to the queue.
+   */
+  2: i64 queued_timestamp;
+
+  /*
+   * When the worker received the action.
+   */
+  3: i64 worker_start_timestamp;
+
+  /*
+   * When the worker completed the action, including all stages.
+   */
+  4: i64 worker_completed_timestamp;
+
+  /*
+   * When the worker started fetching action inputs.
+   */
+  5: i64 input_fetch_start_timestamp;
+
+  /*
+   * When the worker finished fetching action inputs.
+   */
+  6: i64 input_fetch_completed_timestamp;
+
+  /*
+   * When the worker started executing the action command.
+   */
+  7: i64 execution_start_timestamp;
+
+  /*
+   * When the worker completed executing the action command.
+   */
+  8: i64 execution_completed_timestamp;
+
+  /*
+   * When the worker started uploading action outputs.
+   */
+  9: i64 output_upload_start_timestamp;
+
+  /*
+   * When the worker finished uploading action outputs.
+   */
+  10: i64 output_upload_completed_timestamp;
 }
 
 /*
@@ -309,270 +334,350 @@ struct ActionResult {
   /*
    * Output files of the Action. Will contain a single entry for every file
    * declared in the Action's output_files that existed after the action
-   * completed. No order guarantees for the list.
+   * completed.
+   *
+   * If the action does not produce the requested output, or produces a
+   * directory where a regular file is expected or vice versa, then that output
+   * will be omitted from the list.
+   *
+   * No order guarantees for the list.
    */
-  1: list<OutputFile> output_files,
+  1: list<OutputFile> output_files;
 
   /*
    * Output directories of the Action. Will contain a single entry for every
    * directory declared in the Action's output_directories that existed after
    * the action completed. No order guarantees for the list.
    */
-  2: list<OutputDirectory> output_directories,
+  2: list<OutputDirectory> output_directories;
 
   /*
    * Exit code of the Command.
    */
-  3: i32 exit_code,
+  3: i32 exit_code;
 
   /*
-   * The standard output buffer of the action. The server will determine
-   * whether to return in raw form or to return a digest in the stdout_digest
-   * field, that points to the buffer. If neither is set, then the buffer is
-   * empty.
+   * The standard output buffer of the action. The server will determine, based
+   * on the size of the buffer, whether to return in raw form or to return a
+   * digest in the stdout_digest field, that points to the buffer. If neither is
+   * set, then the buffer is empty.
    */
-  4: optional binary stdout_raw,
+  4: optional binary stdout_raw;
 
   /*
    * The digest for a blob containing the standard output of the action. See
    * stdout_raw for when this will be set.
    */
-  5: optional cas.Digest stdout_digest,
+  5: optional cas.Digest stdout_digest;
 
   /*
-   * The standard error buffer of the action. The server will determine
-   * whether to return in raw form or to return a digest in the stderr_digest
-   * field, that points to the buffer. If neither is set, then the buffer is
-   * empty.
+   * The standard error buffer of the action. The server will determine, based
+   * on the size of the buffer, whether to return in raw form or to return a
+   * digest in the stderr_digest field, that points to the buffer. If neither is
+   * set, then the buffer is empty.
    */
-  6: optional binary stderr_raw,
+  6: optional binary stderr_raw;
 
   /*
    * The digest for a blob containing the standard error of the action. See
    * stderr_raw for when this will be set.
    */
-  7: optional cas.Digest stderr_digest,
+  7: optional cas.Digest stderr_digest;
 
   /*
-   * The duration of the command execution, rounded to the closest second. This
-   * refers only to the amount of time the command took to execute from the
-   * moment its process was spawned to the moment it ended, without including
-   * the time to prepare the environment or upload the result.
+   * The details of the execution that originally produced this result.
    */
-  8: i64 duration_secs,
+  8: ExecutedActionMetadata execution_metadata;
 }
 
 /*
- * Exception thrown when the service is overloaded and can't take any more
- * executions at the moment.
+ * Specific error codes for ExecutionEngine failures.
  */
-exception ServiceOverloadedException {
-  1: string message,
+enum ExecutionEngineExceptionCode {
+  /*
+   * Non-specific exception code.
+   */
+  UNKNOWN = 0;
+
+  /*
+   * The execution was cancelled.
+   */
+  CANCELLED = 1;
+
+  /*
+   * The execution timed out.
+   */
+  TIMEOUT = 2;
+
+  /*
+   * The service is overloaded and can't take any more executions at the moment.
+   */
+  SERVICE_OVERLOADED = 3;
+
+  /*
+   * Action execution rejected. The action is either invalid, the service
+   * lacks the required platrofm, or the timeout_secs in the action is higher
+   * than the max allowed.
+   */
+  ACTION_REJECTED = 4;
+
+  /*
+   * Given execution id not known by the service.
+   */
+  UNKNOWN_EXECUTION_ID = 5;
 }
 
 /*
- * Thrown by the service if the execution of an action is rejected. It means
- * that the action is either invalid or the service lacks the capabilities or
- * the timeout_secs in the action is higher than the max allowed.
+ * Represents an ExecutionEngine failure.
  */
-exception RejectedActionException {
-  1: string message,
-}
+exception ExecutionEngineException {
+  /*
+   * The exception status code.
+   */
+  1: ExecutionEngineExceptionCode code;
 
-/*
- * Thrown if the execution id given by the client is not known by the service.
- */
-exception UnknownExecutionIdException {
-  1: string message,
-}
+  /*
+   * A developer-facing error message, which should be in English. Any
+   * user-facing error message should be localized and sent in the
+   * details field, or localized by the client.
+   */
+  2: string message;
 
-/*
- * Thrown if the client requests execution with a previously generated id.
- */
-exception NonUniqueExecutionIdException {
-  1: string message,
+  /*
+   * A list of messages that carry the error details.
+   */
+  3: list<string> details;
 }
 
 /*
  * The possible stages of an execution.
  */
-enum ExecutionStage {
+enum ExecuteOperationStage {
   /*
    * Default value; do not use.
    */
-  UNKNOWN = 0,
+  UNKNOWN = 0;
 
   /*
    * Checking the result against the cache.
    */
-  CACHE_CHECK = 1,
+  CACHE_CHECK = 1;
 
   /*
    * Currently idle, awaiting a free machine to execute.
    */
-  QUEUED = 2,
+  QUEUED = 2;
 
   /*
    * Currently being executed by a worker.
    */
-  EXECUTING = 3,
+  EXECUTING = 3;
 
   /*
    * Finished execution.
    */
-  COMPLETED = 4,
+  COMPLETED = 4;
 }
 
-enum ExecutionStatus {
+/*
+ * Metadata about an ongoing ExecuteOperation.
+ */
+struct ExecuteOperationMetadata {
   /*
-   * Default value; do not use.
+   * The current stage of execution.
    */
-  UNKNOWN = 0,
+  1: ExecuteOperationStage stage;
 
   /*
-   * Completed with no errors.
+   * The Digest of the Action being executed.
    */
-  OK = 1,
+  2: cas.Digest action_digest;
+}
+
+/*
+ * A log stored in the CAS.
+ */
+struct LogFile {
+  /*
+   * The digest of the log contents.
+   */
+  1: cas.Digest digest;
 
   /*
-   * The execution was canceled.
+   * Hint for the purpose of the log, and is set to true if can be usefully
+   * displayed to a user. For example, can avoid displaying binary files to a
+   * user.
    */
-  CANCELED = 2,
+  2: bool human_readable;
+}
+
+/*
+ * An ExecutionPolicy can be used to control the scheduling of an Action.
+ */
+struct ExecutionPolicy {
+  /*
+   * The priority (relative importance) of this action. Generally, a lower value
+   * means that the action should be run sooner than actions having a greater
+   * priority value, but the interpretation of a given value is server-
+   * dependent. A priority of 0 means the *default* priority. Priorities may be
+   * positive or negative, and such actions should run later or sooner than
+   * actions having the default priority, respectively.
+   *
+   * The particular semantics
+   * of this field is up to the server. In particular, every server will have
+   * their own supported range of priorities, and will decide how these map into
+   * scheduling policy.
+   */
+  1: i32 priority;
+}
+
+/*
+ * A ResultsCachePolicy can be used for fine-grained control over how Action
+ * outputs are stored in the ActionCache and CAS.
+ */
+struct ResultsCachePolicy {
+  /*
+   * The priority (relative importance) of this content in the overall cache.
+   * Generally, a lower value means a longer retention time or other advantage,
+   * but the interpretation of a given value is server-dependent. A priority of
+   * 0 means a *default* value, decided by the server.
+   *
+   * The particular semantics of this field is up to the server. In particular,
+   * every server will have their own supported range of priorities, and will
+   * decide how these map into retention/eviction policy.
+   */
+  1: i32 priority;
+}
+
+/*
+ * A request message for Execution.
+ */
+struct ExecuteRequest {
+  /*
+   * If true, the action will be executed anew even if its result was already
+   * present in the cache. If false, the result may be served from the
+   * ActionCache.
+   */
+  1: bool skip_cache_lookup;
 
   /*
-   * The execution timed out.
+   * The digest of the Action to execute.
    */
-  TIMEOUT = 3,
+  2: cas.Digest action_digest;
+
+  /*
+   * An optional policy for execution of the action. The server will have a
+   * default policy if this is not provided.
+   */
+  3: optional ExecutionPolicy execution_policy;
+
+ /*
+  * An optional policy for the results of this execution in the remote cache.
+  * The server will have a default policy if this is not provided. This may be
+  * applied to both the ActionResult and the associated blobs.
+  */
+  4: optional ResultsCachePolicy results_cache_policy;
 }
 
 /*
  * The eventual response for ExecutionEngine.execute, which will be contained
  * in the response field of the Execution.
  */
-struct ExecutionResult {
+struct ExecuteResponse {
   /*
    * The result of the Action. Can be missing in case of an error status.
    */
-  1: optional ActionResult action_result,
+  1: optional ActionResult result;
 
   /*
    * True if the result was served from cache, false if it was executed.
    */
-  2: bool cached_result,
+  2: bool cached_result;
 
   /*
-   * If the status is other than OK, it indicates that the Action did not
-   * finish execution, like timing out or being canceled.
+   * If an exception is present, it indicates that the Action did not
+   * finish execution, like timing out, or failed with an error.
    *
-   * If the status code is other than OK, then the result MUST NOT be cached.
+   * Servers MUST use this field for errors in execution, rather than the
+   * exception field on the ExecuteOperation object.
+   *
+   * If present the result MUST NOT be cached.
    */
-  3: ExecutionStatus status,
-}
-
-/*
- * Metadata about an ongoing Execution.
- */
-struct ExecutionMetadata {
-  /*
-   * The current stage of execution.
-   */
-  1: ExecutionStage stage,
+  3: optional ExecutionEngineException ex;
 
   /*
-   * The Digest of the Action being executed.
+   * An optional list of log outputs the server provides. These can include
+   * execution-specific logs, primarily intended for debugging issues that
+   * may be outside of the actual job execution, like worker setup. Keys should
+   * be human readable so they can be displayed to a user.
    */
-  2: cas.Digest action_digest,
+  4: map<string, LogFile> server_logs;
 }
 
 /*
  * A running execution that is the result of a call to ExecutionEngine.execute.
+ * Fulfills a similar role to google.longrunning.Operation.
  */
-struct ExecutionState {
+struct ExecuteOperation {
   /*
-   * An id which is unique within the system. To be used for querying the
-   * Execution's state.
+   * A server-assigned id which is unique within the system. To be used for
+   * querying the Execution's state.
    */
-  1: string execution_id,
+  1: string execution_id;
 
   /*
    * Contains progress information as well as common metadata such as
    * execution stage.
    */
-  2: ExecutionMetadata metadata,
+  2: ExecuteOperationMetadata metadata;
 
   /*
    * If the value is false, it means the execution is still in progress. If
-   * true, the execution has completed, and result will be available.
+   * true, the execution has completed, and error or response will be available.
    */
-  3: bool done,
+  3: bool done;
 
   /*
-   * The result of the execution. Only available if execution is done.
+   * Report potential errors while creating/running the Execution itself,
+   * like failure to start the Execution or cancellation. This field DOES NOT
+   * indicate anything about the result of the Execution itself ("user errors"),
+   * which will be reported in ExecuteResponse.
+   *
+   * Executions that completed but have logically failed executing their Action
+   * will won't be reported in this field.
    */
-  4: optional ExecutionResult result,
+  4: optional ExecutionEngineException ex;
+
+  /*
+   * The normal response of the execution in case of success. This does not mean
+   * that there aren't any logical errors.
+   */
+  5: optional ExecuteResponse response;
+
+  /*
+   * FB-specific extension for reporting status via HTTP long-polling. Contains
+   * the HTTP endpoint that the caller can use to query status.
+   *
+   * Ex. "http://devbig466.frc2.facebook.com:1234/status/long_poll"
+   */
+  6: optional string status_http_endpoint;
 }
 
-struct GetExecutionStateRequest {
-  /*
-   * The id of the execution.
-   */
-  1: string execution_id,
+/*
+ * Reponse struct used to stream long-polling updates.
+ */
+struct GetExecuteOperationMultiResponse {
+  1: map<string, ExecuteOperation> operations,
 }
 
-struct GetExecutionStateResponse {
+/*
+ * Request message for ExecutionEngine.getExecuteOperation.
+ */
+struct GetExecuteOperationRequest {
   /*
-   * The current state of the execution. If the id is invalid/unknown to this
-   * execution engine, this won't be set (i.e. it'll be null).
+   * The server-assigned id.
    */
-  1: optional ExecutionState state,
-}
-
-struct ExecuteRequest {
-  /*
-   * The instance of the execution system to operate against. Instances enable
-   * support for multi-tenancy. The system may support multiple instances, each
-   * with their own worker pool, cache, etc.
-   */
-  1: string instance_name,
-
-  /*
-   * The action to be performed.
-   */
-  2: Action action,
-
-  /*
-   * If true, the action will be executed anew even if its result was already
-   * present in the cache. If false, the result may be served from the
-   * ActionCache.
-   */
-  3: bool skip_cache_lookup;
-
-  /*
-   * A client-assigned execution id used to refer to this execution. This id
-   * must be unique. If one isn't given, it will be assigned by the server.
-   */
-  4: optional string execution_id,
-}
-
-struct ExecuteResponse {
-  /*
-   * The initial state of the execution.
-   */
-  1: ExecutionState state,
-}
-
-struct CancelExecutionRequest {
-  /*
-   * The id of the execution to cancel.
-   */
-  1: string execution_id,
-}
-
-struct CancelExecutionResponse {
-  /*
-   * The id of the execution requested to be canceled.
-   */
-  1: string execution_id,
+  1: string execution_id;
 }
 
 /*
@@ -588,34 +693,25 @@ service ExecutionEngine {
    * The input Action MUST meet the specific canonicalization requirements by
    * the system.
    *
-   * Returns an Execution describing the resulting execution, with the eventual
-   * response field ExecuteResponse.
+   * Returns an ExecuteOperation describing the ongoing execution operation,
+   * with the eventual response field ExecuteResponse:
+   *
+   *   ExecuteRequest => ExecuteOperation ... => ExecuteResponse
+   *      (Action)                                (ActionResult)
    */
-  ExecuteResponse execute(
+  ExecuteOperation execute(
     1: ExecuteRequest request,
   ) throws (
-    1: ServiceOverloadedException service_overloaded,
-    2: RejectedActionException rejected_action,
-    3: NonUniqueExecutionIdException non_unique_execution_id,
+    1: ExecutionEngineException ex,
   );
 
   /*
-   * Gets the latest state of an existing execution. Clients can use this method
-   * to poll the execution result.
+   * Gets an ongoing execution operation. Clients can use this method to poll
+   * the operation and wait for execution response.
    */
-  GetExecutionStateResponse getExecutionState(
-    1: GetExecutionStateRequest request,
+  ExecuteOperation getExecuteOperation(
+    1: GetExecuteOperationRequest request,
   ) throws (
-    1: UnknownExecutionIdException unknown_execution_id,
-  );
-
-  /*
-   * Requests the cancellation of an execution. The cancellation might not
-   * happen immediately.
-   */
-  CancelExecutionResponse cancelExecution(
-    1: CancelExecutionRequest request,
-  ) throws (
-    1: UnknownExecutionIdException unknown_execution_id,
+    1: ExecutionEngineException ex,
   );
 }

@@ -91,9 +91,6 @@ struct FileNode {
 
   /*
    * True if file is executable, false otherwise.
-   *
-   * TODO: Do we want to extend to a more generic file metadata field, or
-   *       add those as direct fields when we have a use-case?
    */
   3: bool is_executable;
 }
@@ -120,28 +117,6 @@ struct SymlinkNode {
    * Windows.
    */
   3: bool is_directory;
-}
-
-/*
- * Contains all the Directory structs in a single directory Merkle tree,
- * compressed into one message.
- *
- * TODO: This is only used in OutputDirectory/ActionResult. Move to execution
- * engine API?
- */
-struct Tree {
-  /*
-   * The root directory in the tree.
-   */
-  1: Directory root;
-
-  /*
-   * All the child directories: the directories referred to by the root and,
-   * recursively, all its children. In order to reconstruct the directory tree,
-   * the client must take the digests of each of the child directories and then
-   * build up a tree starting from the `root`.
-   */
-  2: list<Directory> children;
 }
 
 /*
@@ -298,6 +273,45 @@ struct GetTreeResponse {
   2: optional string next_page_token;
 }
 
+enum ContentAddressableStorageExceptionCode {
+  /*
+   * Non-specific exception code.
+   */
+  UNKNOWN = 0;
+
+  /*
+   * Provided digest doesn't match blob content.
+   */
+  DIGEST_INVALID = 1;
+
+  /*
+   * Digest requested isn't found.
+   */
+  DIGEST_NOT_FOUND = 2;
+}
+
+/*
+ * Represents a CAS failure.
+ */
+exception ContentAddressableStorageException {
+  /*
+   * The exception status code.
+   */
+  1: ContentAddressableStorageExceptionCode code;
+
+  /*
+   * A developer-facing error message, which should be in English. Any
+   * user-facing error message should be localized and sent in the
+   * details field, or localized by the client.
+   */
+  2: string message;
+
+  /*
+   * A list of messages that carry the error details.
+   */
+  3: list<string> details;
+}
+
 /*
  * The CAS (content-addressable storage) is used to store the inputs/outputs
  * from actions and other blobs. Each piece of content is addressed by the
@@ -311,38 +325,49 @@ service ContentAddressableStorage {
   /*
    * Upload a single blob.
    */
-  UpdateBlobResponse updateBlob(1: UpdateBlobRequest request);
+  UpdateBlobResponse updateBlob(
+    1: UpdateBlobRequest request,
+  ) throws (
+    1: ContentAddressableStorageException ex,
+  );
 
   /*
    * Upload many blobs at once.
-   *
-   * TODO: Which limits should we set on batch uploads? Google has a combined
-   *       limit of 10MiB. They require splitting to multiple batch upload
-   *       requests, or using their ByteStream.Write API for single files
-   *       that are larger than 10MiB which uses streaming. Do we support write
-   *       streaming in Thrift? How does Stampede handle large uploads to the
-   *       CAS?
    */
-  BatchUpdateBlobsResponse batchUpdateBlobs(1: BatchUpdateBlobsRequest request);
+  BatchUpdateBlobsResponse batchUpdateBlobs(
+    1: BatchUpdateBlobsRequest request,
+  ) throws (
+    1: ContentAddressableStorageException ex,
+  )
 
   /*
    * Retrieve the contents of a blob.
    */
-  ReadBlobResponse readBlob(1: ReadBlobRequest request);
+  ReadBlobResponse readBlob(
+    1: ReadBlobRequest request,
+  ) throws (
+    1: ContentAddressableStorageException ex,
+  )
 
   /*
    * Download many blobs at once.
-   *
-   * TODO: Which limits should we set on batch downloads?
    */
-  BatchReadBlobsResponse batchReadBlobs(1: BatchReadBlobsRequest request);
+  BatchReadBlobsResponse batchReadBlobs(
+    1: BatchReadBlobsRequest request,
+  ) throws (
+    1: ContentAddressableStorageException ex,
+  )
 
   /*
    * Determines if blobs are present in the CAS. Clients can use this API before
    * uploading blobs to determine which ones are already present in the CAS and
    * do not need to be uploaded again.
    */
-  FindMissingBlobsResponse findMissingBlobs(1: FindMissingBlobsRequest request);
+  FindMissingBlobsResponse findMissingBlobs(
+    1: FindMissingBlobsRequest request,
+  ) throws (
+    1: ContentAddressableStorageException ex,
+  )
 
   /*
    * Fetch the entire directory tree rooted at a node.
@@ -355,5 +380,9 @@ service ContentAddressableStorage {
    * If part of the tree is missing from the CAS, the server will return the
    * portion present and omit the rest.
    */
-  GetTreeResponse getTree(1: GetTreeRequest request);
+  GetTreeResponse getTree(
+    1: GetTreeRequest request,
+  ) throws (
+    1: ContentAddressableStorageException ex,
+  )
 }

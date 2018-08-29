@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage.AsyncClient.findMissingBlobs_call;
+import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
 import com.facebook.remoteexecution.cas.Digest;
 import com.facebook.remoteexecution.cas.FindMissingBlobsRequest;
 import com.facebook.remoteexecution.cas.FindMissingBlobsResponse;
@@ -64,7 +65,7 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
   }
 
   @Test
-  public void testSyncCasClient() throws TException {
+  public void testSyncCasClient() throws TException, ContentAddressableStorageException {
     ContentAddressableStorage.Client client = clients.createCasClient();
     FindMissingBlobsRequest request = new FindMissingBlobsRequest(digests);
     FindMissingBlobsResponse response = client.findMissingBlobs(request);
@@ -92,7 +93,7 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
               FindMissingBlobsResponse r = null;
               try {
                 r = ((findMissingBlobs_call) tAsyncMethodCall).getResult();
-              } catch (TException e) {
+              } catch (TException | ContentAddressableStorageException e) {
                 onError(e);
               }
               response.set(r);

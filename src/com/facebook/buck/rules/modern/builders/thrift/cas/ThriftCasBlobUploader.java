@@ -28,6 +28,7 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.remoteexecution.cas.BatchUpdateBlobsRequest;
 import com.facebook.remoteexecution.cas.BatchUpdateBlobsResponse;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
+import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
 import com.facebook.remoteexecution.cas.Digest;
 import com.facebook.remoteexecution.cas.FindMissingBlobsRequest;
 import com.facebook.remoteexecution.cas.FindMissingBlobsResponse;
@@ -73,7 +74,7 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
       synchronized (clientLock) {
         response = client.findMissingBlobs(request);
       }
-    } catch (TException e) {
+    } catch (TException | ContentAddressableStorageException e) {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);
 
       String message = String.format("Failed to get missing hashes: [%s]", e.getMessage());
@@ -110,7 +111,7 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
       synchronized (clientLock) {
         response = client.batchUpdateBlobs(request);
       }
-    } catch (TException e) {
+    } catch (TException | ContentAddressableStorageException e) {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);
       String message = String.format("Failed to batch update blobs: [%s]", e.getMessage());
       LOG.error(e, message);

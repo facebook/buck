@@ -4,7 +4,7 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-package com.facebook.remoteexecution.executionengine;
+package com.facebook.remoteexecution.cas;
 
 
 import java.lang.reflect.*;
@@ -16,18 +16,17 @@ import java.util.Map;
 import java.util.HashMap;
 
 @SuppressWarnings({ "unused" })
-public class ExecutionStatus {
+public class ContentAddressableStorageExceptionCode {
   public static final int UNKNOWN = 0;
-  public static final int OK = 1;
-  public static final int CANCELED = 2;
-  public static final int TIMEOUT = 3;
+  public static final int DIGEST_INVALID = 1;
+  public static final int DIGEST_NOT_FOUND = 2;
 
   public static final IntRangeSet VALID_VALUES;
   public static final Map<Integer, String> VALUES_TO_NAMES = new HashMap<Integer, String>();
 
   static {
     try {
-      Class<?> klass = ExecutionStatus.class;
+      Class<?> klass = ContentAddressableStorageExceptionCode.class;
       for (Field f : klass.getDeclaredFields()) {
         if (f.getType() == Integer.TYPE) {
           VALUES_TO_NAMES.put(f.getInt(null), f.getName());

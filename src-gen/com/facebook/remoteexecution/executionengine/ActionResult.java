@@ -35,7 +35,7 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
   private static final TField STDOUT_DIGEST_FIELD_DESC = new TField("stdout_digest", TType.STRUCT, (short)5);
   private static final TField STDERR_RAW_FIELD_DESC = new TField("stderr_raw", TType.STRING, (short)6);
   private static final TField STDERR_DIGEST_FIELD_DESC = new TField("stderr_digest", TType.STRUCT, (short)7);
-  private static final TField DURATION_SECS_FIELD_DESC = new TField("duration_secs", TType.I64, (short)8);
+  private static final TField EXECUTION_METADATA_FIELD_DESC = new TField("execution_metadata", TType.STRUCT, (short)8);
 
   public List<OutputFile> output_files;
   public List<OutputDirectory> output_directories;
@@ -44,7 +44,7 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
   public com.facebook.remoteexecution.cas.Digest stdout_digest;
   public byte[] stderr_raw;
   public com.facebook.remoteexecution.cas.Digest stderr_digest;
-  public long duration_secs;
+  public ExecutedActionMetadata execution_metadata;
   public static final int OUTPUT_FILES = 1;
   public static final int OUTPUT_DIRECTORIES = 2;
   public static final int EXIT_CODE = 3;
@@ -52,13 +52,12 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
   public static final int STDOUT_DIGEST = 5;
   public static final int STDERR_RAW = 6;
   public static final int STDERR_DIGEST = 7;
-  public static final int DURATION_SECS = 8;
+  public static final int EXECUTION_METADATA = 8;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
   private static final int __EXIT_CODE_ISSET_ID = 0;
-  private static final int __DURATION_SECS_ISSET_ID = 1;
-  private BitSet __isset_bit_vector = new BitSet(2);
+  private BitSet __isset_bit_vector = new BitSet(1);
 
   public static final Map<Integer, FieldMetaData> metaDataMap;
   static {
@@ -79,8 +78,8 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
         new FieldValueMetaData(TType.STRING)));
     tmpMetaDataMap.put(STDERR_DIGEST, new FieldMetaData("stderr_digest", TFieldRequirementType.OPTIONAL, 
         new StructMetaData(TType.STRUCT, com.facebook.remoteexecution.cas.Digest.class)));
-    tmpMetaDataMap.put(DURATION_SECS, new FieldMetaData("duration_secs", TFieldRequirementType.DEFAULT, 
-        new FieldValueMetaData(TType.I64)));
+    tmpMetaDataMap.put(EXECUTION_METADATA, new FieldMetaData("execution_metadata", TFieldRequirementType.DEFAULT, 
+        new StructMetaData(TType.STRUCT, ExecutedActionMetadata.class)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
@@ -95,15 +94,14 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
     List<OutputFile> output_files,
     List<OutputDirectory> output_directories,
     int exit_code,
-    long duration_secs)
+    ExecutedActionMetadata execution_metadata)
   {
     this();
     this.output_files = output_files;
     this.output_directories = output_directories;
     this.exit_code = exit_code;
     setExit_codeIsSet(true);
-    this.duration_secs = duration_secs;
-    setDuration_secsIsSet(true);
+    this.execution_metadata = execution_metadata;
   }
 
   public ActionResult(
@@ -114,7 +112,7 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
     com.facebook.remoteexecution.cas.Digest stdout_digest,
     byte[] stderr_raw,
     com.facebook.remoteexecution.cas.Digest stderr_digest,
-    long duration_secs)
+    ExecutedActionMetadata execution_metadata)
   {
     this();
     this.output_files = output_files;
@@ -125,8 +123,7 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
     this.stdout_digest = stdout_digest;
     this.stderr_raw = stderr_raw;
     this.stderr_digest = stderr_digest;
-    this.duration_secs = duration_secs;
-    setDuration_secsIsSet(true);
+    this.execution_metadata = execution_metadata;
   }
 
   /**
@@ -154,7 +151,9 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
     if (other.isSetStderr_digest()) {
       this.stderr_digest = TBaseHelper.deepCopy(other.stderr_digest);
     }
-    this.duration_secs = TBaseHelper.deepCopy(other.duration_secs);
+    if (other.isSetExecution_metadata()) {
+      this.execution_metadata = TBaseHelper.deepCopy(other.execution_metadata);
+    }
   }
 
   public ActionResult deepCopy() {
@@ -333,27 +332,28 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
     }
   }
 
-  public long  getDuration_secs() {
-    return this.duration_secs;
+  public ExecutedActionMetadata  getExecution_metadata() {
+    return this.execution_metadata;
   }
 
-  public ActionResult setDuration_secs(long duration_secs) {
-    this.duration_secs = duration_secs;
-    setDuration_secsIsSet(true);
+  public ActionResult setExecution_metadata(ExecutedActionMetadata execution_metadata) {
+    this.execution_metadata = execution_metadata;
     return this;
   }
 
-  public void unsetDuration_secs() {
-    __isset_bit_vector.clear(__DURATION_SECS_ISSET_ID);
+  public void unsetExecution_metadata() {
+    this.execution_metadata = null;
   }
 
-  // Returns true if field duration_secs is set (has been assigned a value) and false otherwise
-  public boolean isSetDuration_secs() {
-    return __isset_bit_vector.get(__DURATION_SECS_ISSET_ID);
+  // Returns true if field execution_metadata is set (has been assigned a value) and false otherwise
+  public boolean isSetExecution_metadata() {
+    return this.execution_metadata != null;
   }
 
-  public void setDuration_secsIsSet(boolean value) {
-    __isset_bit_vector.set(__DURATION_SECS_ISSET_ID, value);
+  public void setExecution_metadataIsSet(boolean value) {
+    if (!value) {
+      this.execution_metadata = null;
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -415,11 +415,11 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
       }
       break;
 
-    case DURATION_SECS:
+    case EXECUTION_METADATA:
       if (value == null) {
-        unsetDuration_secs();
+        unsetExecution_metadata();
       } else {
-        setDuration_secs((Long)value);
+        setExecution_metadata((ExecutedActionMetadata)value);
       }
       break;
 
@@ -451,8 +451,8 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
     case STDERR_DIGEST:
       return getStderr_digest();
 
-    case DURATION_SECS:
-      return new Long(getDuration_secs());
+    case EXECUTION_METADATA:
+      return getExecution_metadata();
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -476,8 +476,8 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
       return isSetStderr_raw();
     case STDERR_DIGEST:
       return isSetStderr_digest();
-    case DURATION_SECS:
-      return isSetDuration_secs();
+    case EXECUTION_METADATA:
+      return isSetExecution_metadata();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -561,12 +561,12 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
         return false;
     }
 
-    boolean this_present_duration_secs = true;
-    boolean that_present_duration_secs = true;
-    if (this_present_duration_secs || that_present_duration_secs) {
-      if (!(this_present_duration_secs && that_present_duration_secs))
+    boolean this_present_execution_metadata = true && this.isSetExecution_metadata();
+    boolean that_present_execution_metadata = true && that.isSetExecution_metadata();
+    if (this_present_execution_metadata || that_present_execution_metadata) {
+      if (!(this_present_execution_metadata && that_present_execution_metadata))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.duration_secs, that.duration_secs))
+      if (!TBaseHelper.equalsNobinary(this.execution_metadata, that.execution_metadata))
         return false;
     }
 
@@ -646,11 +646,11 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = Boolean.valueOf(isSetDuration_secs()).compareTo(other.isSetDuration_secs());
+    lastComparison = Boolean.valueOf(isSetExecution_metadata()).compareTo(other.isSetExecution_metadata());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = TBaseHelper.compareTo(duration_secs, other.duration_secs);
+    lastComparison = TBaseHelper.compareTo(execution_metadata, other.execution_metadata);
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -671,16 +671,16 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
         case OUTPUT_FILES:
           if (field.type == TType.LIST) {
             {
-              TList _list48 = iprot.readListBegin();
-              this.output_files = new ArrayList<OutputFile>(Math.max(0, _list48.size));
-              for (int _i49 = 0; 
-                   (_list48.size < 0) ? iprot.peekList() : (_i49 < _list48.size); 
-                   ++_i49)
+              TList _list24 = iprot.readListBegin();
+              this.output_files = new ArrayList<OutputFile>(Math.max(0, _list24.size));
+              for (int _i25 = 0; 
+                   (_list24.size < 0) ? iprot.peekList() : (_i25 < _list24.size); 
+                   ++_i25)
               {
-                OutputFile _elem50;
-                _elem50 = new OutputFile();
-                _elem50.read(iprot);
-                this.output_files.add(_elem50);
+                OutputFile _elem26;
+                _elem26 = new OutputFile();
+                _elem26.read(iprot);
+                this.output_files.add(_elem26);
               }
               iprot.readListEnd();
             }
@@ -691,16 +691,16 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
         case OUTPUT_DIRECTORIES:
           if (field.type == TType.LIST) {
             {
-              TList _list51 = iprot.readListBegin();
-              this.output_directories = new ArrayList<OutputDirectory>(Math.max(0, _list51.size));
-              for (int _i52 = 0; 
-                   (_list51.size < 0) ? iprot.peekList() : (_i52 < _list51.size); 
-                   ++_i52)
+              TList _list27 = iprot.readListBegin();
+              this.output_directories = new ArrayList<OutputDirectory>(Math.max(0, _list27.size));
+              for (int _i28 = 0; 
+                   (_list27.size < 0) ? iprot.peekList() : (_i28 < _list27.size); 
+                   ++_i28)
               {
-                OutputDirectory _elem53;
-                _elem53 = new OutputDirectory();
-                _elem53.read(iprot);
-                this.output_directories.add(_elem53);
+                OutputDirectory _elem29;
+                _elem29 = new OutputDirectory();
+                _elem29.read(iprot);
+                this.output_directories.add(_elem29);
               }
               iprot.readListEnd();
             }
@@ -746,10 +746,10 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
             TProtocolUtil.skip(iprot, field.type);
           }
           break;
-        case DURATION_SECS:
-          if (field.type == TType.I64) {
-            this.duration_secs = iprot.readI64();
-            setDuration_secsIsSet(true);
+        case EXECUTION_METADATA:
+          if (field.type == TType.STRUCT) {
+            this.execution_metadata = new ExecutedActionMetadata();
+            this.execution_metadata.read(iprot);
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -775,8 +775,8 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
       oprot.writeFieldBegin(OUTPUT_FILES_FIELD_DESC);
       {
         oprot.writeListBegin(new TList(TType.STRUCT, this.output_files.size()));
-        for (OutputFile _iter54 : this.output_files)        {
-          _iter54.write(oprot);
+        for (OutputFile _iter30 : this.output_files)        {
+          _iter30.write(oprot);
         }
         oprot.writeListEnd();
       }
@@ -786,8 +786,8 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
       oprot.writeFieldBegin(OUTPUT_DIRECTORIES_FIELD_DESC);
       {
         oprot.writeListBegin(new TList(TType.STRUCT, this.output_directories.size()));
-        for (OutputDirectory _iter55 : this.output_directories)        {
-          _iter55.write(oprot);
+        for (OutputDirectory _iter31 : this.output_directories)        {
+          _iter31.write(oprot);
         }
         oprot.writeListEnd();
       }
@@ -824,9 +824,11 @@ public class ActionResult implements TBase, java.io.Serializable, Cloneable, Com
         oprot.writeFieldEnd();
       }
     }
-    oprot.writeFieldBegin(DURATION_SECS_FIELD_DESC);
-    oprot.writeI64(this.duration_secs);
-    oprot.writeFieldEnd();
+    if (this.execution_metadata != null) {
+      oprot.writeFieldBegin(EXECUTION_METADATA_FIELD_DESC);
+      this.execution_metadata.write(oprot);
+      oprot.writeFieldEnd();
+    }
     oprot.writeFieldStop();
     oprot.writeStructEnd();
   }
@@ -948,10 +950,14 @@ String space = prettyPrint ? " " : "";
     }
     if (!first) sb.append("," + newLine);
     sb.append(indentStr);
-    sb.append("duration_secs");
+    sb.append("execution_metadata");
     sb.append(space);
     sb.append(":").append(space);
-    sb.append(TBaseHelper.toString(this. getDuration_secs(), indent + 1, prettyPrint));
+    if (this. getExecution_metadata() == null) {
+      sb.append("null");
+    } else {
+      sb.append(TBaseHelper.toString(this. getExecution_metadata(), indent + 1, prettyPrint));
+    }
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
     sb.append(")");

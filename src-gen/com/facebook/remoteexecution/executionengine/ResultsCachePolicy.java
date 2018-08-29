@@ -26,87 +26,89 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class CancelExecutionRequest implements TBase, java.io.Serializable, Cloneable, Comparable<CancelExecutionRequest> {
-  private static final TStruct STRUCT_DESC = new TStruct("CancelExecutionRequest");
-  private static final TField EXECUTION_ID_FIELD_DESC = new TField("execution_id", TType.STRING, (short)1);
+public class ResultsCachePolicy implements TBase, java.io.Serializable, Cloneable, Comparable<ResultsCachePolicy> {
+  private static final TStruct STRUCT_DESC = new TStruct("ResultsCachePolicy");
+  private static final TField PRIORITY_FIELD_DESC = new TField("priority", TType.I32, (short)1);
 
-  public String execution_id;
-  public static final int EXECUTION_ID = 1;
+  public int priority;
+  public static final int PRIORITY = 1;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
+  private static final int __PRIORITY_ISSET_ID = 0;
+  private BitSet __isset_bit_vector = new BitSet(1);
 
   public static final Map<Integer, FieldMetaData> metaDataMap;
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
-    tmpMetaDataMap.put(EXECUTION_ID, new FieldMetaData("execution_id", TFieldRequirementType.DEFAULT, 
-        new FieldValueMetaData(TType.STRING)));
+    tmpMetaDataMap.put(PRIORITY, new FieldMetaData("priority", TFieldRequirementType.DEFAULT, 
+        new FieldValueMetaData(TType.I32)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
   static {
-    FieldMetaData.addStructMetaDataMap(CancelExecutionRequest.class, metaDataMap);
+    FieldMetaData.addStructMetaDataMap(ResultsCachePolicy.class, metaDataMap);
   }
 
-  public CancelExecutionRequest() {
+  public ResultsCachePolicy() {
   }
 
-  public CancelExecutionRequest(
-    String execution_id)
+  public ResultsCachePolicy(
+    int priority)
   {
     this();
-    this.execution_id = execution_id;
+    this.priority = priority;
+    setPriorityIsSet(true);
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public CancelExecutionRequest(CancelExecutionRequest other) {
-    if (other.isSetExecution_id()) {
-      this.execution_id = TBaseHelper.deepCopy(other.execution_id);
-    }
+  public ResultsCachePolicy(ResultsCachePolicy other) {
+    __isset_bit_vector.clear();
+    __isset_bit_vector.or(other.__isset_bit_vector);
+    this.priority = TBaseHelper.deepCopy(other.priority);
   }
 
-  public CancelExecutionRequest deepCopy() {
-    return new CancelExecutionRequest(this);
+  public ResultsCachePolicy deepCopy() {
+    return new ResultsCachePolicy(this);
   }
 
   @Deprecated
-  public CancelExecutionRequest clone() {
-    return new CancelExecutionRequest(this);
+  public ResultsCachePolicy clone() {
+    return new ResultsCachePolicy(this);
   }
 
-  public String  getExecution_id() {
-    return this.execution_id;
+  public int  getPriority() {
+    return this.priority;
   }
 
-  public CancelExecutionRequest setExecution_id(String execution_id) {
-    this.execution_id = execution_id;
+  public ResultsCachePolicy setPriority(int priority) {
+    this.priority = priority;
+    setPriorityIsSet(true);
     return this;
   }
 
-  public void unsetExecution_id() {
-    this.execution_id = null;
+  public void unsetPriority() {
+    __isset_bit_vector.clear(__PRIORITY_ISSET_ID);
   }
 
-  // Returns true if field execution_id is set (has been assigned a value) and false otherwise
-  public boolean isSetExecution_id() {
-    return this.execution_id != null;
+  // Returns true if field priority is set (has been assigned a value) and false otherwise
+  public boolean isSetPriority() {
+    return __isset_bit_vector.get(__PRIORITY_ISSET_ID);
   }
 
-  public void setExecution_idIsSet(boolean value) {
-    if (!value) {
-      this.execution_id = null;
-    }
+  public void setPriorityIsSet(boolean value) {
+    __isset_bit_vector.set(__PRIORITY_ISSET_ID, value);
   }
 
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
-    case EXECUTION_ID:
+    case PRIORITY:
       if (value == null) {
-        unsetExecution_id();
+        unsetPriority();
       } else {
-        setExecution_id((String)value);
+        setPriority((Integer)value);
       }
       break;
 
@@ -117,8 +119,8 @@ public class CancelExecutionRequest implements TBase, java.io.Serializable, Clon
 
   public Object getFieldValue(int fieldID) {
     switch (fieldID) {
-    case EXECUTION_ID:
-      return getExecution_id();
+    case PRIORITY:
+      return new Integer(getPriority());
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -128,8 +130,8 @@ public class CancelExecutionRequest implements TBase, java.io.Serializable, Clon
   // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
   public boolean isSet(int fieldID) {
     switch (fieldID) {
-    case EXECUTION_ID:
-      return isSetExecution_id();
+    case PRIORITY:
+      return isSetPriority();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -139,23 +141,23 @@ public class CancelExecutionRequest implements TBase, java.io.Serializable, Clon
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof CancelExecutionRequest)
-      return this.equals((CancelExecutionRequest)that);
+    if (that instanceof ResultsCachePolicy)
+      return this.equals((ResultsCachePolicy)that);
     return false;
   }
 
-  public boolean equals(CancelExecutionRequest that) {
+  public boolean equals(ResultsCachePolicy that) {
     if (that == null)
       return false;
     if (this == that)
       return true;
 
-    boolean this_present_execution_id = true && this.isSetExecution_id();
-    boolean that_present_execution_id = true && that.isSetExecution_id();
-    if (this_present_execution_id || that_present_execution_id) {
-      if (!(this_present_execution_id && that_present_execution_id))
+    boolean this_present_priority = true;
+    boolean that_present_priority = true;
+    if (this_present_priority || that_present_priority) {
+      if (!(this_present_priority && that_present_priority))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.execution_id, that.execution_id))
+      if (!TBaseHelper.equalsNobinary(this.priority, that.priority))
         return false;
     }
 
@@ -168,7 +170,7 @@ public class CancelExecutionRequest implements TBase, java.io.Serializable, Clon
   }
 
   @Override
-  public int compareTo(CancelExecutionRequest other) {
+  public int compareTo(ResultsCachePolicy other) {
     if (other == null) {
       // See java.lang.Comparable docs
       throw new NullPointerException();
@@ -179,11 +181,11 @@ public class CancelExecutionRequest implements TBase, java.io.Serializable, Clon
     }
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetExecution_id()).compareTo(other.isSetExecution_id());
+    lastComparison = Boolean.valueOf(isSetPriority()).compareTo(other.isSetPriority());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = TBaseHelper.compareTo(execution_id, other.execution_id);
+    lastComparison = TBaseHelper.compareTo(priority, other.priority);
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -201,9 +203,10 @@ public class CancelExecutionRequest implements TBase, java.io.Serializable, Clon
       }
       switch (field.id)
       {
-        case EXECUTION_ID:
-          if (field.type == TType.STRING) {
-            this.execution_id = iprot.readString();
+        case PRIORITY:
+          if (field.type == TType.I32) {
+            this.priority = iprot.readI32();
+            setPriorityIsSet(true);
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -225,11 +228,9 @@ public class CancelExecutionRequest implements TBase, java.io.Serializable, Clon
     validate();
 
     oprot.writeStructBegin(STRUCT_DESC);
-    if (this.execution_id != null) {
-      oprot.writeFieldBegin(EXECUTION_ID_FIELD_DESC);
-      oprot.writeString(this.execution_id);
-      oprot.writeFieldEnd();
-    }
+    oprot.writeFieldBegin(PRIORITY_FIELD_DESC);
+    oprot.writeI32(this.priority);
+    oprot.writeFieldEnd();
     oprot.writeFieldStop();
     oprot.writeStructEnd();
   }
@@ -249,21 +250,17 @@ public class CancelExecutionRequest implements TBase, java.io.Serializable, Clon
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-    StringBuilder sb = new StringBuilder("CancelExecutionRequest");
+    StringBuilder sb = new StringBuilder("ResultsCachePolicy");
     sb.append(space);
     sb.append("(");
     sb.append(newLine);
     boolean first = true;
 
     sb.append(indentStr);
-    sb.append("execution_id");
+    sb.append("priority");
     sb.append(space);
     sb.append(":").append(space);
-    if (this. getExecution_id() == null) {
-      sb.append("null");
-    } else {
-      sb.append(TBaseHelper.toString(this. getExecution_id(), indent + 1, prettyPrint));
-    }
+    sb.append(TBaseHelper.toString(this. getPriority(), indent + 1, prettyPrint));
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
     sb.append(")");

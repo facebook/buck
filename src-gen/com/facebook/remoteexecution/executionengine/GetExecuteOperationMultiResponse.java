@@ -26,12 +26,12 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class GetExecutionStateRequest implements TBase, java.io.Serializable, Cloneable, Comparable<GetExecutionStateRequest> {
-  private static final TStruct STRUCT_DESC = new TStruct("GetExecutionStateRequest");
-  private static final TField EXECUTION_ID_FIELD_DESC = new TField("execution_id", TType.STRING, (short)1);
+public class GetExecuteOperationMultiResponse implements TBase, java.io.Serializable, Cloneable {
+  private static final TStruct STRUCT_DESC = new TStruct("GetExecuteOperationMultiResponse");
+  private static final TField OPERATIONS_FIELD_DESC = new TField("operations", TType.MAP, (short)1);
 
-  public String execution_id;
-  public static final int EXECUTION_ID = 1;
+  public Map<String,ExecuteOperation> operations;
+  public static final int OPERATIONS = 1;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -39,74 +39,77 @@ public class GetExecutionStateRequest implements TBase, java.io.Serializable, Cl
   public static final Map<Integer, FieldMetaData> metaDataMap;
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
-    tmpMetaDataMap.put(EXECUTION_ID, new FieldMetaData("execution_id", TFieldRequirementType.DEFAULT, 
-        new FieldValueMetaData(TType.STRING)));
+    tmpMetaDataMap.put(OPERATIONS, new FieldMetaData("operations", TFieldRequirementType.DEFAULT, 
+        new MapMetaData(TType.MAP, 
+            new FieldValueMetaData(TType.STRING), 
+            new StructMetaData(TType.STRUCT, ExecuteOperation.class))));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
   static {
-    FieldMetaData.addStructMetaDataMap(GetExecutionStateRequest.class, metaDataMap);
+    FieldMetaData.addStructMetaDataMap(GetExecuteOperationMultiResponse.class, metaDataMap);
   }
 
-  public GetExecutionStateRequest() {
+  public GetExecuteOperationMultiResponse() {
   }
 
-  public GetExecutionStateRequest(
-    String execution_id)
+  public GetExecuteOperationMultiResponse(
+    Map<String,ExecuteOperation> operations)
   {
     this();
-    this.execution_id = execution_id;
+    this.operations = operations;
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public GetExecutionStateRequest(GetExecutionStateRequest other) {
-    if (other.isSetExecution_id()) {
-      this.execution_id = TBaseHelper.deepCopy(other.execution_id);
+  public GetExecuteOperationMultiResponse(GetExecuteOperationMultiResponse other) {
+    if (other.isSetOperations()) {
+      this.operations = TBaseHelper.deepCopy(other.operations);
     }
   }
 
-  public GetExecutionStateRequest deepCopy() {
-    return new GetExecutionStateRequest(this);
+  public GetExecuteOperationMultiResponse deepCopy() {
+    return new GetExecuteOperationMultiResponse(this);
   }
 
   @Deprecated
-  public GetExecutionStateRequest clone() {
-    return new GetExecutionStateRequest(this);
+  public GetExecuteOperationMultiResponse clone() {
+    return new GetExecuteOperationMultiResponse(this);
   }
 
-  public String  getExecution_id() {
-    return this.execution_id;
+  public Map<String,ExecuteOperation>  getOperations() {
+    return this.operations;
   }
 
-  public GetExecutionStateRequest setExecution_id(String execution_id) {
-    this.execution_id = execution_id;
+  public GetExecuteOperationMultiResponse setOperations(Map<String,ExecuteOperation> operations) {
+    this.operations = operations;
     return this;
   }
 
-  public void unsetExecution_id() {
-    this.execution_id = null;
+  public void unsetOperations() {
+    this.operations = null;
   }
 
-  // Returns true if field execution_id is set (has been assigned a value) and false otherwise
-  public boolean isSetExecution_id() {
-    return this.execution_id != null;
+  // Returns true if field operations is set (has been assigned a value) and false otherwise
+  public boolean isSetOperations() {
+    return this.operations != null;
   }
 
-  public void setExecution_idIsSet(boolean value) {
+  public void setOperationsIsSet(boolean value) {
     if (!value) {
-      this.execution_id = null;
+      this.operations = null;
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
-    case EXECUTION_ID:
+    case OPERATIONS:
       if (value == null) {
-        unsetExecution_id();
+        unsetOperations();
       } else {
-        setExecution_id((String)value);
+        setOperations((Map<String,ExecuteOperation>)value);
       }
       break;
 
@@ -117,8 +120,8 @@ public class GetExecutionStateRequest implements TBase, java.io.Serializable, Cl
 
   public Object getFieldValue(int fieldID) {
     switch (fieldID) {
-    case EXECUTION_ID:
-      return getExecution_id();
+    case OPERATIONS:
+      return getOperations();
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -128,8 +131,8 @@ public class GetExecutionStateRequest implements TBase, java.io.Serializable, Cl
   // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
   public boolean isSet(int fieldID) {
     switch (fieldID) {
-    case EXECUTION_ID:
-      return isSetExecution_id();
+    case OPERATIONS:
+      return isSetOperations();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -139,23 +142,23 @@ public class GetExecutionStateRequest implements TBase, java.io.Serializable, Cl
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof GetExecutionStateRequest)
-      return this.equals((GetExecutionStateRequest)that);
+    if (that instanceof GetExecuteOperationMultiResponse)
+      return this.equals((GetExecuteOperationMultiResponse)that);
     return false;
   }
 
-  public boolean equals(GetExecutionStateRequest that) {
+  public boolean equals(GetExecuteOperationMultiResponse that) {
     if (that == null)
       return false;
     if (this == that)
       return true;
 
-    boolean this_present_execution_id = true && this.isSetExecution_id();
-    boolean that_present_execution_id = true && that.isSetExecution_id();
-    if (this_present_execution_id || that_present_execution_id) {
-      if (!(this_present_execution_id && that_present_execution_id))
+    boolean this_present_operations = true && this.isSetOperations();
+    boolean that_present_operations = true && that.isSetOperations();
+    if (this_present_operations || that_present_operations) {
+      if (!(this_present_operations && that_present_operations))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.execution_id, that.execution_id))
+      if (!TBaseHelper.equalsNobinary(this.operations, that.operations))
         return false;
     }
 
@@ -164,29 +167,6 @@ public class GetExecutionStateRequest implements TBase, java.io.Serializable, Cl
 
   @Override
   public int hashCode() {
-    return 0;
-  }
-
-  @Override
-  public int compareTo(GetExecutionStateRequest other) {
-    if (other == null) {
-      // See java.lang.Comparable docs
-      throw new NullPointerException();
-    }
-
-    if (other == this) {
-      return 0;
-    }
-    int lastComparison = 0;
-
-    lastComparison = Boolean.valueOf(isSetExecution_id()).compareTo(other.isSetExecution_id());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(execution_id, other.execution_id);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
     return 0;
   }
 
@@ -201,9 +181,24 @@ public class GetExecutionStateRequest implements TBase, java.io.Serializable, Cl
       }
       switch (field.id)
       {
-        case EXECUTION_ID:
-          if (field.type == TType.STRING) {
-            this.execution_id = iprot.readString();
+        case OPERATIONS:
+          if (field.type == TType.MAP) {
+            {
+              TMap _map41 = iprot.readMapBegin();
+              this.operations = new HashMap<String,ExecuteOperation>(Math.max(0, 2*_map41.size));
+              for (int _i42 = 0; 
+                   (_map41.size < 0) ? iprot.peekMap() : (_i42 < _map41.size); 
+                   ++_i42)
+              {
+                String _key43;
+                ExecuteOperation _val44;
+                _key43 = iprot.readString();
+                _val44 = new ExecuteOperation();
+                _val44.read(iprot);
+                this.operations.put(_key43, _val44);
+              }
+              iprot.readMapEnd();
+            }
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -225,9 +220,16 @@ public class GetExecutionStateRequest implements TBase, java.io.Serializable, Cl
     validate();
 
     oprot.writeStructBegin(STRUCT_DESC);
-    if (this.execution_id != null) {
-      oprot.writeFieldBegin(EXECUTION_ID_FIELD_DESC);
-      oprot.writeString(this.execution_id);
+    if (this.operations != null) {
+      oprot.writeFieldBegin(OPERATIONS_FIELD_DESC);
+      {
+        oprot.writeMapBegin(new TMap(TType.STRING, TType.STRUCT, this.operations.size()));
+        for (Map.Entry<String, ExecuteOperation> _iter45 : this.operations.entrySet())        {
+          oprot.writeString(_iter45.getKey());
+          _iter45.getValue().write(oprot);
+        }
+        oprot.writeMapEnd();
+      }
       oprot.writeFieldEnd();
     }
     oprot.writeFieldStop();
@@ -249,20 +251,20 @@ public class GetExecutionStateRequest implements TBase, java.io.Serializable, Cl
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-    StringBuilder sb = new StringBuilder("GetExecutionStateRequest");
+    StringBuilder sb = new StringBuilder("GetExecuteOperationMultiResponse");
     sb.append(space);
     sb.append("(");
     sb.append(newLine);
     boolean first = true;
 
     sb.append(indentStr);
-    sb.append("execution_id");
+    sb.append("operations");
     sb.append(space);
     sb.append(":").append(space);
-    if (this. getExecution_id() == null) {
+    if (this. getOperations() == null) {
       sb.append("null");
     } else {
-      sb.append(TBaseHelper.toString(this. getExecution_id(), indent + 1, prettyPrint));
+      sb.append(TBaseHelper.toString(this. getOperations(), indent + 1, prettyPrint));
     }
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));

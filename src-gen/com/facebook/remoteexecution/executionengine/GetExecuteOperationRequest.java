@@ -26,12 +26,12 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class RejectedActionException extends Exception implements TBase, java.io.Serializable, Cloneable {
-  private static final TStruct STRUCT_DESC = new TStruct("RejectedActionException");
-  private static final TField MESSAGE_FIELD_DESC = new TField("message", TType.STRING, (short)1);
+public class GetExecuteOperationRequest implements TBase, java.io.Serializable, Cloneable, Comparable<GetExecuteOperationRequest> {
+  private static final TStruct STRUCT_DESC = new TStruct("GetExecuteOperationRequest");
+  private static final TField EXECUTION_ID_FIELD_DESC = new TField("execution_id", TType.STRING, (short)1);
 
-  public String message;
-  public static final int MESSAGE = 1;
+  public String execution_id;
+  public static final int EXECUTION_ID = 1;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -39,74 +39,74 @@ public class RejectedActionException extends Exception implements TBase, java.io
   public static final Map<Integer, FieldMetaData> metaDataMap;
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
-    tmpMetaDataMap.put(MESSAGE, new FieldMetaData("message", TFieldRequirementType.DEFAULT, 
+    tmpMetaDataMap.put(EXECUTION_ID, new FieldMetaData("execution_id", TFieldRequirementType.DEFAULT, 
         new FieldValueMetaData(TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
   static {
-    FieldMetaData.addStructMetaDataMap(RejectedActionException.class, metaDataMap);
+    FieldMetaData.addStructMetaDataMap(GetExecuteOperationRequest.class, metaDataMap);
   }
 
-  public RejectedActionException() {
+  public GetExecuteOperationRequest() {
   }
 
-  public RejectedActionException(
-    String message)
+  public GetExecuteOperationRequest(
+    String execution_id)
   {
     this();
-    this.message = message;
+    this.execution_id = execution_id;
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public RejectedActionException(RejectedActionException other) {
-    if (other.isSetMessage()) {
-      this.message = TBaseHelper.deepCopy(other.message);
+  public GetExecuteOperationRequest(GetExecuteOperationRequest other) {
+    if (other.isSetExecution_id()) {
+      this.execution_id = TBaseHelper.deepCopy(other.execution_id);
     }
   }
 
-  public RejectedActionException deepCopy() {
-    return new RejectedActionException(this);
+  public GetExecuteOperationRequest deepCopy() {
+    return new GetExecuteOperationRequest(this);
   }
 
   @Deprecated
-  public RejectedActionException clone() {
-    return new RejectedActionException(this);
+  public GetExecuteOperationRequest clone() {
+    return new GetExecuteOperationRequest(this);
   }
 
-  public String  getMessage() {
-    return this.message;
+  public String  getExecution_id() {
+    return this.execution_id;
   }
 
-  public RejectedActionException setMessage(String message) {
-    this.message = message;
+  public GetExecuteOperationRequest setExecution_id(String execution_id) {
+    this.execution_id = execution_id;
     return this;
   }
 
-  public void unsetMessage() {
-    this.message = null;
+  public void unsetExecution_id() {
+    this.execution_id = null;
   }
 
-  // Returns true if field message is set (has been assigned a value) and false otherwise
-  public boolean isSetMessage() {
-    return this.message != null;
+  // Returns true if field execution_id is set (has been assigned a value) and false otherwise
+  public boolean isSetExecution_id() {
+    return this.execution_id != null;
   }
 
-  public void setMessageIsSet(boolean value) {
+  public void setExecution_idIsSet(boolean value) {
     if (!value) {
-      this.message = null;
+      this.execution_id = null;
     }
   }
 
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
-    case MESSAGE:
+    case EXECUTION_ID:
       if (value == null) {
-        unsetMessage();
+        unsetExecution_id();
       } else {
-        setMessage((String)value);
+        setExecution_id((String)value);
       }
       break;
 
@@ -117,8 +117,8 @@ public class RejectedActionException extends Exception implements TBase, java.io
 
   public Object getFieldValue(int fieldID) {
     switch (fieldID) {
-    case MESSAGE:
-      return getMessage();
+    case EXECUTION_ID:
+      return getExecution_id();
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -128,8 +128,8 @@ public class RejectedActionException extends Exception implements TBase, java.io
   // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
   public boolean isSet(int fieldID) {
     switch (fieldID) {
-    case MESSAGE:
-      return isSetMessage();
+    case EXECUTION_ID:
+      return isSetExecution_id();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -139,23 +139,23 @@ public class RejectedActionException extends Exception implements TBase, java.io
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof RejectedActionException)
-      return this.equals((RejectedActionException)that);
+    if (that instanceof GetExecuteOperationRequest)
+      return this.equals((GetExecuteOperationRequest)that);
     return false;
   }
 
-  public boolean equals(RejectedActionException that) {
+  public boolean equals(GetExecuteOperationRequest that) {
     if (that == null)
       return false;
     if (this == that)
       return true;
 
-    boolean this_present_message = true && this.isSetMessage();
-    boolean that_present_message = true && that.isSetMessage();
-    if (this_present_message || that_present_message) {
-      if (!(this_present_message && that_present_message))
+    boolean this_present_execution_id = true && this.isSetExecution_id();
+    boolean that_present_execution_id = true && that.isSetExecution_id();
+    if (this_present_execution_id || that_present_execution_id) {
+      if (!(this_present_execution_id && that_present_execution_id))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.message, that.message))
+      if (!TBaseHelper.equalsNobinary(this.execution_id, that.execution_id))
         return false;
     }
 
@@ -164,6 +164,29 @@ public class RejectedActionException extends Exception implements TBase, java.io
 
   @Override
   public int hashCode() {
+    return 0;
+  }
+
+  @Override
+  public int compareTo(GetExecuteOperationRequest other) {
+    if (other == null) {
+      // See java.lang.Comparable docs
+      throw new NullPointerException();
+    }
+
+    if (other == this) {
+      return 0;
+    }
+    int lastComparison = 0;
+
+    lastComparison = Boolean.valueOf(isSetExecution_id()).compareTo(other.isSetExecution_id());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(execution_id, other.execution_id);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
     return 0;
   }
 
@@ -178,9 +201,9 @@ public class RejectedActionException extends Exception implements TBase, java.io
       }
       switch (field.id)
       {
-        case MESSAGE:
+        case EXECUTION_ID:
           if (field.type == TType.STRING) {
-            this.message = iprot.readString();
+            this.execution_id = iprot.readString();
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -202,9 +225,9 @@ public class RejectedActionException extends Exception implements TBase, java.io
     validate();
 
     oprot.writeStructBegin(STRUCT_DESC);
-    if (this.message != null) {
-      oprot.writeFieldBegin(MESSAGE_FIELD_DESC);
-      oprot.writeString(this.message);
+    if (this.execution_id != null) {
+      oprot.writeFieldBegin(EXECUTION_ID_FIELD_DESC);
+      oprot.writeString(this.execution_id);
       oprot.writeFieldEnd();
     }
     oprot.writeFieldStop();
@@ -226,20 +249,20 @@ public class RejectedActionException extends Exception implements TBase, java.io
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-    StringBuilder sb = new StringBuilder("RejectedActionException");
+    StringBuilder sb = new StringBuilder("GetExecuteOperationRequest");
     sb.append(space);
     sb.append("(");
     sb.append(newLine);
     boolean first = true;
 
     sb.append(indentStr);
-    sb.append("message");
+    sb.append("execution_id");
     sb.append(space);
     sb.append(":").append(space);
-    if (this. getMessage() == null) {
+    if (this. getExecution_id() == null) {
       sb.append("null");
     } else {
-      sb.append(TBaseHelper.toString(this. getMessage(), indent + 1, prettyPrint));
+      sb.append(TBaseHelper.toString(this. getExecution_id(), indent + 1, prettyPrint));
     }
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));

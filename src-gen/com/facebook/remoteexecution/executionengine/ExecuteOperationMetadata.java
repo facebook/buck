@@ -26,14 +26,14 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class ExecutionMetadata implements TBase, java.io.Serializable, Cloneable, Comparable<ExecutionMetadata> {
-  private static final TStruct STRUCT_DESC = new TStruct("ExecutionMetadata");
+public class ExecuteOperationMetadata implements TBase, java.io.Serializable, Cloneable, Comparable<ExecuteOperationMetadata> {
+  private static final TStruct STRUCT_DESC = new TStruct("ExecuteOperationMetadata");
   private static final TField STAGE_FIELD_DESC = new TField("stage", TType.I32, (short)1);
   private static final TField ACTION_DIGEST_FIELD_DESC = new TField("action_digest", TType.STRUCT, (short)2);
 
   /**
    * 
-   * @see ExecutionStage
+   * @see ExecuteOperationStage
    */
   public int stage;
   public com.facebook.remoteexecution.cas.Digest action_digest;
@@ -56,13 +56,13 @@ public class ExecutionMetadata implements TBase, java.io.Serializable, Cloneable
   }
 
   static {
-    FieldMetaData.addStructMetaDataMap(ExecutionMetadata.class, metaDataMap);
+    FieldMetaData.addStructMetaDataMap(ExecuteOperationMetadata.class, metaDataMap);
   }
 
-  public ExecutionMetadata() {
+  public ExecuteOperationMetadata() {
   }
 
-  public ExecutionMetadata(
+  public ExecuteOperationMetadata(
     int stage,
     com.facebook.remoteexecution.cas.Digest action_digest)
   {
@@ -75,7 +75,7 @@ public class ExecutionMetadata implements TBase, java.io.Serializable, Cloneable
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public ExecutionMetadata(ExecutionMetadata other) {
+  public ExecuteOperationMetadata(ExecuteOperationMetadata other) {
     __isset_bit_vector.clear();
     __isset_bit_vector.or(other.__isset_bit_vector);
     this.stage = TBaseHelper.deepCopy(other.stage);
@@ -84,18 +84,18 @@ public class ExecutionMetadata implements TBase, java.io.Serializable, Cloneable
     }
   }
 
-  public ExecutionMetadata deepCopy() {
-    return new ExecutionMetadata(this);
+  public ExecuteOperationMetadata deepCopy() {
+    return new ExecuteOperationMetadata(this);
   }
 
   @Deprecated
-  public ExecutionMetadata clone() {
-    return new ExecutionMetadata(this);
+  public ExecuteOperationMetadata clone() {
+    return new ExecuteOperationMetadata(this);
   }
 
   /**
    * 
-   * @see ExecutionStage
+   * @see ExecuteOperationStage
    */
   public int  getStage() {
     return this.stage;
@@ -103,9 +103,9 @@ public class ExecutionMetadata implements TBase, java.io.Serializable, Cloneable
 
   /**
    * 
-   * @see ExecutionStage
+   * @see ExecuteOperationStage
    */
-  public ExecutionMetadata setStage(int stage) {
+  public ExecuteOperationMetadata setStage(int stage) {
     this.stage = stage;
     setStageIsSet(true);
     return this;
@@ -128,7 +128,7 @@ public class ExecutionMetadata implements TBase, java.io.Serializable, Cloneable
     return this.action_digest;
   }
 
-  public ExecutionMetadata setAction_digest(com.facebook.remoteexecution.cas.Digest action_digest) {
+  public ExecuteOperationMetadata setAction_digest(com.facebook.remoteexecution.cas.Digest action_digest) {
     this.action_digest = action_digest;
     return this;
   }
@@ -200,12 +200,12 @@ public class ExecutionMetadata implements TBase, java.io.Serializable, Cloneable
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof ExecutionMetadata)
-      return this.equals((ExecutionMetadata)that);
+    if (that instanceof ExecuteOperationMetadata)
+      return this.equals((ExecuteOperationMetadata)that);
     return false;
   }
 
-  public boolean equals(ExecutionMetadata that) {
+  public boolean equals(ExecuteOperationMetadata that) {
     if (that == null)
       return false;
     if (this == that)
@@ -238,7 +238,7 @@ public class ExecutionMetadata implements TBase, java.io.Serializable, Cloneable
   }
 
   @Override
-  public int compareTo(ExecutionMetadata other) {
+  public int compareTo(ExecuteOperationMetadata other) {
     if (other == null) {
       // See java.lang.Comparable docs
       throw new NullPointerException();
@@ -339,7 +339,7 @@ public class ExecutionMetadata implements TBase, java.io.Serializable, Cloneable
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-    StringBuilder sb = new StringBuilder("ExecutionMetadata");
+    StringBuilder sb = new StringBuilder("ExecuteOperationMetadata");
     sb.append(space);
     sb.append("(");
     sb.append(newLine);
@@ -349,7 +349,7 @@ String space = prettyPrint ? " " : "";
     sb.append("stage");
     sb.append(space);
     sb.append(":").append(space);
-    String stage_name = ExecutionStage.VALUES_TO_NAMES.get(this. getStage());
+    String stage_name = ExecuteOperationStage.VALUES_TO_NAMES.get(this. getStage());
     if (stage_name != null) {
       sb.append(stage_name);
       sb.append(" (");
@@ -378,7 +378,7 @@ String space = prettyPrint ? " " : "";
   public void validate() throws TException {
     // check for required fields
     // check that fields of type enum have valid values
-    if (isSetStage() && !ExecutionStage.VALID_VALUES.contains(stage)){
+    if (isSetStage() && !ExecuteOperationStage.VALID_VALUES.contains(stage)){
       throw new TProtocolException("The field 'stage' has been assigned the invalid value " + stage);
     }
   }

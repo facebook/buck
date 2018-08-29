@@ -26,12 +26,12 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class CancelExecutionResponse implements TBase, java.io.Serializable, Cloneable, Comparable<CancelExecutionResponse> {
-  private static final TStruct STRUCT_DESC = new TStruct("CancelExecutionResponse");
-  private static final TField EXECUTION_ID_FIELD_DESC = new TField("execution_id", TType.STRING, (short)1);
+public class Platform implements TBase, java.io.Serializable, Cloneable, Comparable<Platform> {
+  private static final TStruct STRUCT_DESC = new TStruct("Platform");
+  private static final TField PROPERTIES_FIELD_DESC = new TField("properties", TType.LIST, (short)1);
 
-  public String execution_id;
-  public static final int EXECUTION_ID = 1;
+  public List<Property> properties;
+  public static final int PROPERTIES = 1;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -39,74 +39,76 @@ public class CancelExecutionResponse implements TBase, java.io.Serializable, Clo
   public static final Map<Integer, FieldMetaData> metaDataMap;
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
-    tmpMetaDataMap.put(EXECUTION_ID, new FieldMetaData("execution_id", TFieldRequirementType.DEFAULT, 
-        new FieldValueMetaData(TType.STRING)));
+    tmpMetaDataMap.put(PROPERTIES, new FieldMetaData("properties", TFieldRequirementType.DEFAULT, 
+        new ListMetaData(TType.LIST, 
+            new StructMetaData(TType.STRUCT, Property.class))));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
   static {
-    FieldMetaData.addStructMetaDataMap(CancelExecutionResponse.class, metaDataMap);
+    FieldMetaData.addStructMetaDataMap(Platform.class, metaDataMap);
   }
 
-  public CancelExecutionResponse() {
+  public Platform() {
   }
 
-  public CancelExecutionResponse(
-    String execution_id)
+  public Platform(
+    List<Property> properties)
   {
     this();
-    this.execution_id = execution_id;
+    this.properties = properties;
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public CancelExecutionResponse(CancelExecutionResponse other) {
-    if (other.isSetExecution_id()) {
-      this.execution_id = TBaseHelper.deepCopy(other.execution_id);
+  public Platform(Platform other) {
+    if (other.isSetProperties()) {
+      this.properties = TBaseHelper.deepCopy(other.properties);
     }
   }
 
-  public CancelExecutionResponse deepCopy() {
-    return new CancelExecutionResponse(this);
+  public Platform deepCopy() {
+    return new Platform(this);
   }
 
   @Deprecated
-  public CancelExecutionResponse clone() {
-    return new CancelExecutionResponse(this);
+  public Platform clone() {
+    return new Platform(this);
   }
 
-  public String  getExecution_id() {
-    return this.execution_id;
+  public List<Property>  getProperties() {
+    return this.properties;
   }
 
-  public CancelExecutionResponse setExecution_id(String execution_id) {
-    this.execution_id = execution_id;
+  public Platform setProperties(List<Property> properties) {
+    this.properties = properties;
     return this;
   }
 
-  public void unsetExecution_id() {
-    this.execution_id = null;
+  public void unsetProperties() {
+    this.properties = null;
   }
 
-  // Returns true if field execution_id is set (has been assigned a value) and false otherwise
-  public boolean isSetExecution_id() {
-    return this.execution_id != null;
+  // Returns true if field properties is set (has been assigned a value) and false otherwise
+  public boolean isSetProperties() {
+    return this.properties != null;
   }
 
-  public void setExecution_idIsSet(boolean value) {
+  public void setPropertiesIsSet(boolean value) {
     if (!value) {
-      this.execution_id = null;
+      this.properties = null;
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
-    case EXECUTION_ID:
+    case PROPERTIES:
       if (value == null) {
-        unsetExecution_id();
+        unsetProperties();
       } else {
-        setExecution_id((String)value);
+        setProperties((List<Property>)value);
       }
       break;
 
@@ -117,8 +119,8 @@ public class CancelExecutionResponse implements TBase, java.io.Serializable, Clo
 
   public Object getFieldValue(int fieldID) {
     switch (fieldID) {
-    case EXECUTION_ID:
-      return getExecution_id();
+    case PROPERTIES:
+      return getProperties();
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -128,8 +130,8 @@ public class CancelExecutionResponse implements TBase, java.io.Serializable, Clo
   // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
   public boolean isSet(int fieldID) {
     switch (fieldID) {
-    case EXECUTION_ID:
-      return isSetExecution_id();
+    case PROPERTIES:
+      return isSetProperties();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -139,23 +141,23 @@ public class CancelExecutionResponse implements TBase, java.io.Serializable, Clo
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof CancelExecutionResponse)
-      return this.equals((CancelExecutionResponse)that);
+    if (that instanceof Platform)
+      return this.equals((Platform)that);
     return false;
   }
 
-  public boolean equals(CancelExecutionResponse that) {
+  public boolean equals(Platform that) {
     if (that == null)
       return false;
     if (this == that)
       return true;
 
-    boolean this_present_execution_id = true && this.isSetExecution_id();
-    boolean that_present_execution_id = true && that.isSetExecution_id();
-    if (this_present_execution_id || that_present_execution_id) {
-      if (!(this_present_execution_id && that_present_execution_id))
+    boolean this_present_properties = true && this.isSetProperties();
+    boolean that_present_properties = true && that.isSetProperties();
+    if (this_present_properties || that_present_properties) {
+      if (!(this_present_properties && that_present_properties))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.execution_id, that.execution_id))
+      if (!TBaseHelper.equalsNobinary(this.properties, that.properties))
         return false;
     }
 
@@ -168,7 +170,7 @@ public class CancelExecutionResponse implements TBase, java.io.Serializable, Clo
   }
 
   @Override
-  public int compareTo(CancelExecutionResponse other) {
+  public int compareTo(Platform other) {
     if (other == null) {
       // See java.lang.Comparable docs
       throw new NullPointerException();
@@ -179,11 +181,11 @@ public class CancelExecutionResponse implements TBase, java.io.Serializable, Clo
     }
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetExecution_id()).compareTo(other.isSetExecution_id());
+    lastComparison = Boolean.valueOf(isSetProperties()).compareTo(other.isSetProperties());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = TBaseHelper.compareTo(execution_id, other.execution_id);
+    lastComparison = TBaseHelper.compareTo(properties, other.properties);
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -201,9 +203,22 @@ public class CancelExecutionResponse implements TBase, java.io.Serializable, Clo
       }
       switch (field.id)
       {
-        case EXECUTION_ID:
-          if (field.type == TType.STRING) {
-            this.execution_id = iprot.readString();
+        case PROPERTIES:
+          if (field.type == TType.LIST) {
+            {
+              TList _list0 = iprot.readListBegin();
+              this.properties = new ArrayList<Property>(Math.max(0, _list0.size));
+              for (int _i1 = 0; 
+                   (_list0.size < 0) ? iprot.peekList() : (_i1 < _list0.size); 
+                   ++_i1)
+              {
+                Property _elem2;
+                _elem2 = new Property();
+                _elem2.read(iprot);
+                this.properties.add(_elem2);
+              }
+              iprot.readListEnd();
+            }
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -225,9 +240,15 @@ public class CancelExecutionResponse implements TBase, java.io.Serializable, Clo
     validate();
 
     oprot.writeStructBegin(STRUCT_DESC);
-    if (this.execution_id != null) {
-      oprot.writeFieldBegin(EXECUTION_ID_FIELD_DESC);
-      oprot.writeString(this.execution_id);
+    if (this.properties != null) {
+      oprot.writeFieldBegin(PROPERTIES_FIELD_DESC);
+      {
+        oprot.writeListBegin(new TList(TType.STRUCT, this.properties.size()));
+        for (Property _iter3 : this.properties)        {
+          _iter3.write(oprot);
+        }
+        oprot.writeListEnd();
+      }
       oprot.writeFieldEnd();
     }
     oprot.writeFieldStop();
@@ -249,20 +270,20 @@ public class CancelExecutionResponse implements TBase, java.io.Serializable, Clo
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-    StringBuilder sb = new StringBuilder("CancelExecutionResponse");
+    StringBuilder sb = new StringBuilder("Platform");
     sb.append(space);
     sb.append("(");
     sb.append(newLine);
     boolean first = true;
 
     sb.append(indentStr);
-    sb.append("execution_id");
+    sb.append("properties");
     sb.append(space);
     sb.append(":").append(space);
-    if (this. getExecution_id() == null) {
+    if (this. getProperties() == null) {
       sb.append("null");
     } else {
-      sb.append(TBaseHelper.toString(this. getExecution_id(), indent + 1, prettyPrint));
+      sb.append(TBaseHelper.toString(this. getProperties(), indent + 1, prettyPrint));
     }
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));

@@ -4,7 +4,7 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-package com.facebook.remoteexecution.cas;
+package com.facebook.remoteexecution.executionengine;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -31,8 +31,8 @@ public class Tree implements TBase, java.io.Serializable, Cloneable, Comparable<
   private static final TField ROOT_FIELD_DESC = new TField("root", TType.STRUCT, (short)1);
   private static final TField CHILDREN_FIELD_DESC = new TField("children", TType.LIST, (short)2);
 
-  public Directory root;
-  public List<Directory> children;
+  public com.facebook.remoteexecution.cas.Directory root;
+  public List<com.facebook.remoteexecution.cas.Directory> children;
   public static final int ROOT = 1;
   public static final int CHILDREN = 2;
   public static boolean DEFAULT_PRETTY_PRINT = true;
@@ -43,10 +43,10 @@ public class Tree implements TBase, java.io.Serializable, Cloneable, Comparable<
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
     tmpMetaDataMap.put(ROOT, new FieldMetaData("root", TFieldRequirementType.DEFAULT, 
-        new StructMetaData(TType.STRUCT, Directory.class)));
+        new StructMetaData(TType.STRUCT, com.facebook.remoteexecution.cas.Directory.class)));
     tmpMetaDataMap.put(CHILDREN, new FieldMetaData("children", TFieldRequirementType.DEFAULT, 
         new ListMetaData(TType.LIST, 
-            new StructMetaData(TType.STRUCT, Directory.class))));
+            new StructMetaData(TType.STRUCT, com.facebook.remoteexecution.cas.Directory.class))));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
@@ -58,8 +58,8 @@ public class Tree implements TBase, java.io.Serializable, Cloneable, Comparable<
   }
 
   public Tree(
-    Directory root,
-    List<Directory> children)
+    com.facebook.remoteexecution.cas.Directory root,
+    List<com.facebook.remoteexecution.cas.Directory> children)
   {
     this();
     this.root = root;
@@ -87,11 +87,11 @@ public class Tree implements TBase, java.io.Serializable, Cloneable, Comparable<
     return new Tree(this);
   }
 
-  public Directory  getRoot() {
+  public com.facebook.remoteexecution.cas.Directory  getRoot() {
     return this.root;
   }
 
-  public Tree setRoot(Directory root) {
+  public Tree setRoot(com.facebook.remoteexecution.cas.Directory root) {
     this.root = root;
     return this;
   }
@@ -111,11 +111,11 @@ public class Tree implements TBase, java.io.Serializable, Cloneable, Comparable<
     }
   }
 
-  public List<Directory>  getChildren() {
+  public List<com.facebook.remoteexecution.cas.Directory>  getChildren() {
     return this.children;
   }
 
-  public Tree setChildren(List<Directory> children) {
+  public Tree setChildren(List<com.facebook.remoteexecution.cas.Directory> children) {
     this.children = children;
     return this;
   }
@@ -142,7 +142,7 @@ public class Tree implements TBase, java.io.Serializable, Cloneable, Comparable<
       if (value == null) {
         unsetRoot();
       } else {
-        setRoot((Directory)value);
+        setRoot((com.facebook.remoteexecution.cas.Directory)value);
       }
       break;
 
@@ -150,7 +150,7 @@ public class Tree implements TBase, java.io.Serializable, Cloneable, Comparable<
       if (value == null) {
         unsetChildren();
       } else {
-        setChildren((List<Directory>)value);
+        setChildren((List<com.facebook.remoteexecution.cas.Directory>)value);
       }
       break;
 
@@ -269,7 +269,7 @@ public class Tree implements TBase, java.io.Serializable, Cloneable, Comparable<
       {
         case ROOT:
           if (field.type == TType.STRUCT) {
-            this.root = new Directory();
+            this.root = new com.facebook.remoteexecution.cas.Directory();
             this.root.read(iprot);
           } else { 
             TProtocolUtil.skip(iprot, field.type);
@@ -278,16 +278,16 @@ public class Tree implements TBase, java.io.Serializable, Cloneable, Comparable<
         case CHILDREN:
           if (field.type == TType.LIST) {
             {
-              TList _list12 = iprot.readListBegin();
-              this.children = new ArrayList<Directory>(Math.max(0, _list12.size));
-              for (int _i13 = 0; 
-                   (_list12.size < 0) ? iprot.peekList() : (_i13 < _list12.size); 
-                   ++_i13)
+              TList _list20 = iprot.readListBegin();
+              this.children = new ArrayList<com.facebook.remoteexecution.cas.Directory>(Math.max(0, _list20.size));
+              for (int _i21 = 0; 
+                   (_list20.size < 0) ? iprot.peekList() : (_i21 < _list20.size); 
+                   ++_i21)
               {
-                Directory _elem14;
-                _elem14 = new Directory();
-                _elem14.read(iprot);
-                this.children.add(_elem14);
+                com.facebook.remoteexecution.cas.Directory _elem22;
+                _elem22 = new com.facebook.remoteexecution.cas.Directory();
+                _elem22.read(iprot);
+                this.children.add(_elem22);
               }
               iprot.readListEnd();
             }
@@ -321,8 +321,8 @@ public class Tree implements TBase, java.io.Serializable, Cloneable, Comparable<
       oprot.writeFieldBegin(CHILDREN_FIELD_DESC);
       {
         oprot.writeListBegin(new TList(TType.STRUCT, this.children.size()));
-        for (Directory _iter15 : this.children)        {
-          _iter15.write(oprot);
+        for (com.facebook.remoteexecution.cas.Directory _iter23 : this.children)        {
+          _iter23.write(oprot);
         }
         oprot.writeListEnd();
       }

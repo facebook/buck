@@ -206,16 +206,16 @@ public class BatchReadBlobsResponse implements TBase, java.io.Serializable, Clon
         case RESPONSES:
           if (field.type == TType.LIST) {
             {
-              TList _list28 = iprot.readListBegin();
-              this.responses = new ArrayList<ReadBlobResponse>(Math.max(0, _list28.size));
-              for (int _i29 = 0; 
-                   (_list28.size < 0) ? iprot.peekList() : (_i29 < _list28.size); 
-                   ++_i29)
+              TList _list24 = iprot.readListBegin();
+              this.responses = new ArrayList<ReadBlobResponse>(Math.max(0, _list24.size));
+              for (int _i25 = 0; 
+                   (_list24.size < 0) ? iprot.peekList() : (_i25 < _list24.size); 
+                   ++_i25)
               {
-                ReadBlobResponse _elem30;
-                _elem30 = new ReadBlobResponse();
-                _elem30.read(iprot);
-                this.responses.add(_elem30);
+                ReadBlobResponse _elem26;
+                _elem26 = new ReadBlobResponse();
+                _elem26.read(iprot);
+                this.responses.add(_elem26);
               }
               iprot.readListEnd();
             }
@@ -244,8 +244,8 @@ public class BatchReadBlobsResponse implements TBase, java.io.Serializable, Clon
       oprot.writeFieldBegin(RESPONSES_FIELD_DESC);
       {
         oprot.writeListBegin(new TList(TType.STRUCT, this.responses.size()));
-        for (ReadBlobResponse _iter31 : this.responses)        {
-          _iter31.write(oprot);
+        for (ReadBlobResponse _iter27 : this.responses)        {
+          _iter27.write(oprot);
         }
         oprot.writeListEnd();
       }

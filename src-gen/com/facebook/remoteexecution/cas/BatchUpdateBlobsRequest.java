@@ -206,16 +206,16 @@ public class BatchUpdateBlobsRequest implements TBase, java.io.Serializable, Clo
         case REQUESTS:
           if (field.type == TType.LIST) {
             {
-              TList _list16 = iprot.readListBegin();
-              this.requests = new ArrayList<UpdateBlobRequest>(Math.max(0, _list16.size));
-              for (int _i17 = 0; 
-                   (_list16.size < 0) ? iprot.peekList() : (_i17 < _list16.size); 
-                   ++_i17)
+              TList _list12 = iprot.readListBegin();
+              this.requests = new ArrayList<UpdateBlobRequest>(Math.max(0, _list12.size));
+              for (int _i13 = 0; 
+                   (_list12.size < 0) ? iprot.peekList() : (_i13 < _list12.size); 
+                   ++_i13)
               {
-                UpdateBlobRequest _elem18;
-                _elem18 = new UpdateBlobRequest();
-                _elem18.read(iprot);
-                this.requests.add(_elem18);
+                UpdateBlobRequest _elem14;
+                _elem14 = new UpdateBlobRequest();
+                _elem14.read(iprot);
+                this.requests.add(_elem14);
               }
               iprot.readListEnd();
             }
@@ -244,8 +244,8 @@ public class BatchUpdateBlobsRequest implements TBase, java.io.Serializable, Clo
       oprot.writeFieldBegin(REQUESTS_FIELD_DESC);
       {
         oprot.writeListBegin(new TList(TType.STRUCT, this.requests.size()));
-        for (UpdateBlobRequest _iter19 : this.requests)        {
-          _iter19.write(oprot);
+        for (UpdateBlobRequest _iter15 : this.requests)        {
+          _iter15.write(oprot);
         }
         oprot.writeListEnd();
       }
