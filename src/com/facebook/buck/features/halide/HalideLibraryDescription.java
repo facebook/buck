@@ -182,7 +182,8 @@ public class HalideLibraryDescription
             ImmutableList.of(),
             platformLinkerFlags,
             Optional.empty(),
-            rawHeaders);
+            rawHeaders,
+            Optional.empty());
 
     buildTarget = CxxStrip.restoreStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
     buildTarget =

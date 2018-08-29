@@ -71,6 +71,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+import java.io.File;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -477,5 +478,64 @@ public class CxxBinaryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxBinary binary = binaryBuilder.build(graphBuilder, targetGraph);
     assertThat(binary.getCxxPlatform(), equalTo(alternatePlatform));
+  }
+
+  @Test
+  public void testDefaultExecutableNameArg() {
+    CxxPlatform alternatePlatform =
+        CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("alternate"));
+    FlavorDomain<CxxPlatform> cxxPlatforms =
+        new FlavorDomain<>(
+            "C/C++ Platform",
+            ImmutableMap.of(
+                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                alternatePlatform.getFlavor(),
+                alternatePlatform));
+    CxxBinaryBuilder binaryBuilder =
+        new CxxBinaryBuilder(
+            BuildTargetFactory.newInstance("//:foo"),
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            cxxPlatforms);
+    binaryBuilder.setDefaultPlatform(alternatePlatform.getFlavor());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    CxxBinary binary = binaryBuilder.build(graphBuilder, targetGraph);
+    assertEquals(
+        binary.getLinkRule().getSourcePathToOutput().toString(),
+        "Pair(//:foo#binary, buck-out" + File.separator + "gen" + File.separator + "foo)");
+  }
+
+  @Test
+  public void testUserSpecifiedExecutableNameArg() {
+    CxxPlatform alternatePlatform =
+        CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("alternate"));
+    FlavorDomain<CxxPlatform> cxxPlatforms =
+        new FlavorDomain<>(
+            "C/C++ Platform",
+            ImmutableMap.of(
+                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                alternatePlatform.getFlavor(),
+                alternatePlatform));
+    CxxBinaryBuilder binaryBuilder =
+        new CxxBinaryBuilder(
+            BuildTargetFactory.newInstance("//:foo"),
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            cxxPlatforms);
+    binaryBuilder.setExecutableName(Optional.of("FooBarBaz"));
+    binaryBuilder.setDefaultPlatform(alternatePlatform.getFlavor());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    CxxBinary binary = binaryBuilder.build(graphBuilder, targetGraph);
+    assertEquals(
+        binary.getLinkRule().getSourcePathToOutput().toString(),
+        "Pair(//:foo#binary, buck-out"
+            + File.separator
+            + "gen"
+            + File.separator
+            + "foo"
+            + File.separator
+            + "FooBarBaz)");
   }
 }

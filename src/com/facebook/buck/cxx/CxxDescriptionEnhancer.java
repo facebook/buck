@@ -94,6 +94,7 @@ import com.google.common.collect.Multimaps;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -675,9 +676,22 @@ public class CxxDescriptionEnhancer {
   }
 
   private static Path getBinaryOutputPath(
-      BuildTarget target, ProjectFilesystem filesystem, Optional<String> extension) {
-    String format = extension.map(ext -> "%s." + ext).orElse("%s");
-    return BuildTargetPaths.getGenPath(filesystem, target, format);
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      Optional<String> extension,
+      final Optional<String> outputRootName) {
+    String fullFormat;
+    if (outputRootName.isPresent()) {
+      // Make sure that for user defined output root name, the output goes into
+      // <target>/<User Defined Output Root Name> file.
+      String extensionFormat = extension.map(ext -> "." + ext).orElse("");
+      String outputName = outputRootName.get() + extensionFormat;
+      fullFormat = String.format("%%s%s%s", File.separator, outputName);
+    } else {
+      // Keep the current behavior if the user has not specified it's own output root name.
+      fullFormat = extension.map(ext -> "%s." + ext).orElse("%s");
+    }
+    return BuildTargetPaths.getGenPath(filesystem, target, fullFormat);
   }
 
   @VisibleForTesting
@@ -799,7 +813,8 @@ public class CxxDescriptionEnhancer {
         args.getLinkerExtraOutputs(),
         args.getPlatformLinkerFlags(),
         args.getCxxRuntimeType(),
-        args.getRawHeaders());
+        args.getRawHeaders(),
+        args.getExecutableName());
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
@@ -835,7 +850,8 @@ public class CxxDescriptionEnhancer {
       ImmutableList<String> linkerExtraOutputs,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
       Optional<CxxRuntimeType> cxxRuntimeType,
-      ImmutableSortedSet<SourcePath> rawHeaders) {
+      ImmutableSortedSet<SourcePath> rawHeaders,
+      Optional<String> outputRootName) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     //    TODO(beefon): should be:
@@ -849,7 +865,8 @@ public class CxxDescriptionEnhancer {
                 ? target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor())
                 : target,
             projectFilesystem,
-            cxxPlatform.getBinaryExtension());
+            cxxPlatform.getBinaryExtension(),
+            outputRootName);
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
@@ -1034,7 +1051,13 @@ public class CxxDescriptionEnhancer {
       }
       CxxStrip stripRule =
           createCxxStripRule(
-              cxxTarget, projectFilesystem, graphBuilder, stripStyle.get(), cxxLink, cxxPlatform);
+              cxxTarget,
+              projectFilesystem,
+              graphBuilder,
+              stripStyle.get(),
+              cxxLink,
+              cxxPlatform,
+              outputRootName);
       cxxStrip = Optional.of(stripRule);
       binaryRuleForExecutable = stripRule;
     } else {
@@ -1089,7 +1112,8 @@ public class CxxDescriptionEnhancer {
       ActionGraphBuilder graphBuilder,
       StripStyle stripStyle,
       BuildRule unstrippedBinaryRule,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      Optional<String> outputRootName) {
     return (CxxStrip)
         graphBuilder.computeIfAbsent(
             baseBuildTarget.withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()),
@@ -1105,7 +1129,10 @@ public class CxxDescriptionEnhancer {
                     stripStyle,
                     cxxPlatform.getStrip(),
                     CxxDescriptionEnhancer.getBinaryOutputPath(
-                        stripBuildTarget, projectFilesystem, cxxPlatform.getBinaryExtension())));
+                        stripBuildTarget,
+                        projectFilesystem,
+                        cxxPlatform.getBinaryExtension(),
+                        outputRootName)));
   }
 
   public static BuildRule createUberCompilationDatabase(

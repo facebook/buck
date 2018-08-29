@@ -503,7 +503,8 @@ public class AppleLibraryDescription
             graphBuilder,
             flavoredStripStyle.orElse(StripStyle.NON_GLOBAL_SYMBOLS),
             unstrippedBinaryRule,
-            representativePlatform);
+            representativePlatform,
+            Optional.empty());
 
     return AppleDescriptions.createAppleDebuggableBinary(
         unstrippedBuildTarget,

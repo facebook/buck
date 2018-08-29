@@ -123,6 +123,11 @@ public class CxxBinaryBuilder
     return this;
   }
 
+  public CxxBinaryBuilder setExecutableName(Optional<String> execName) {
+    getArgForPopulating().setExecutableName(execName);
+    return this;
+  }
+
   public CxxBinaryBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
     getArgForPopulating().setLinkerFlags(linkerFlags);
     return this;
