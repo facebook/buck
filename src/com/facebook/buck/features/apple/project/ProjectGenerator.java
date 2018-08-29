@@ -1671,11 +1671,13 @@ public class ProjectGenerator {
     // Focused: Included in the workspace and built by Xcode but not in current project.
     // Other: Not included in the workspace to be built by Xcode.
     FluentIterable<TargetNode<?>> depTargetNodes = collectRecursiveLibraryDepTargets(targetNode);
-    if (options.shouldForceLoadLinkWholeLibraries() || options.shouldAddLinkedLibrariesAsFlags()) {
-      FluentIterable<TargetNode<?>> filteredDeps =
-          collectRecursiveLibraryDepsMinusBundleLoaderDeps(
-              targetNode, depTargetNodes, bundleLoaderNode);
 
+    // Don't duplicate linker flags for the bundle loader.
+    FluentIterable<TargetNode<?>> filteredDeps =
+        collectRecursiveLibraryDepsMinusBundleLoaderDeps(
+            targetNode, depTargetNodes, bundleLoaderNode);
+
+    if (options.shouldForceLoadLinkWholeLibraries() || options.shouldAddLinkedLibrariesAsFlags()) {
       ImmutableList<String> forceLoadLocal =
           collectForceLoadLinkerFlags(
               filterRecursiveLibraryDepsIterable(
@@ -1715,21 +1717,21 @@ public class ProjectGenerator {
       Iterable<String> localLibraryFlags =
           collectLibraryLinkerFlags(
               filterRecursiveLibraryDepsIterable(
-                  depTargetNodes,
+                  filteredDeps,
                   shouldLimitByForceLoad
                       ? FilterFlags.LIBRARY_CURRENT_PROJECT_WITHOUT_FORCE_LOAD
                       : FilterFlags.LIBRARY_CURRENT_PROJECT));
       Iterable<String> focusedLibraryFlags =
           collectLibraryLinkerFlags(
               filterRecursiveLibraryDepsIterable(
-                  depTargetNodes,
+                  filteredDeps,
                   shouldLimitByForceLoad
                       ? FilterFlags.LIBRARY_FOCUSED_WITHOUT_FORCE_LOAD
                       : FilterFlags.LIBRARY_FOCUSED));
       Iterable<String> otherLibraryFlags =
           collectLibraryLinkerFlags(
               filterRecursiveLibraryDepsIterable(
-                  depTargetNodes,
+                  filteredDeps,
                   shouldLimitByForceLoad
                       ? FilterFlags.LIBRARY_OTHER_WITHOUT_FORCE_LOAD
                       : FilterFlags.LIBRARY_OTHER));
