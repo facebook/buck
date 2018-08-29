@@ -109,7 +109,7 @@ public class RegisterSpecAnalyzer {
     @Nullable AnalyzerAdapter adapter;
 
     public RegSpecMethodVisitor(String className, String methodName) {
-      super(Opcodes.ASM4);
+      super(Opcodes.ASM6);
       this.className = className;
       this.methodName = methodName;
     }

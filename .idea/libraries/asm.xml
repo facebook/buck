@@ -1,16 +1,21 @@
 <component name="libraryTable">
   <library name="asm">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-6.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-tree-6.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-analysis-6.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-commons-6.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-util-6.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-xml-6.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-6.2.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-tree-6.2.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-analysis-6.2.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-commons-6.2.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-util-6.2.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-xml-6.2.1.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-6.0-src.zip!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-6.2.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-tree-6.2.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-analysis-6.2.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-commons-6.2.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-util-6.2.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-xml-6.2.1-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

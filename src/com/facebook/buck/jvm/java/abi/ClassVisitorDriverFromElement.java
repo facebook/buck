@@ -250,7 +250,6 @@ class ClassVisitorDriverFromElement {
                 fromMethodParameter.getSimpleName(),
                 accessFlagsUtils.getAccessFlags(fromMethodParameter) | Opcodes.ACC_SYNTHETIC,
                 annotations,
-                false,
                 methodVisitor);
           }
           innerClassesTable.addTypeReferences(fromMethod.getAnnotationMirrors());
@@ -301,10 +300,6 @@ class ClassVisitorDriverFromElement {
         List<? extends VariableElement> parameters,
         MethodVisitor methodVisitor,
         boolean isInnerClassConstructor) {
-      if (isInnerClassConstructor) {
-        // ASM uses a fake annotation to indicate synthetic parameters
-        methodVisitor.visitParameterAnnotation(0, "Ljava/lang/Synthetic;", false);
-      }
       for (int i = 0; i < parameters.size(); i++) {
         VariableElement parameter = parameters.get(i);
         visitParameter(
@@ -313,8 +308,18 @@ class ClassVisitorDriverFromElement {
             parameter.getSimpleName(),
             accessFlagsUtils.getAccessFlags(parameter),
             parameter.getAnnotationMirrors(),
-            isInnerClassConstructor,
             methodVisitor);
+      }
+      if (isInnerClassConstructor) {
+        // As of ASM 6.1, ASM no longer attempts to map bytecode parameter indices to source level
+        // parameter indices for parameter annotations. To maintain binary compatibility with class
+        // ABI jars, we override the default behavior of emitting a
+        // Runtime[In]VisibleParameterAnnotations entry (even if empty) for all parameters in the
+        // method descriptor, including synthetic ones. Note that the <code>parameters</code> list
+        // here does not include synthetic parameters. See comment in <code>visitParameter</code>.
+        // See https://gitlab.ow2.org/asm/asm/merge_requests/56 for more details.
+        methodVisitor.visitAnnotableParameterCount(parameters.size(), false);
+        methodVisitor.visitAnnotableParameterCount(parameters.size(), true);
       }
     }
 
@@ -324,7 +329,6 @@ class ClassVisitorDriverFromElement {
         Name name,
         int access,
         List<? extends AnnotationMirror> annotationMirrors,
-        boolean isInnerClassConstructor,
         MethodVisitor methodVisitor) {
       if (includeParameterMetadata) {
         methodVisitor.visitParameter(name.toString(), access);
@@ -339,10 +343,14 @@ class ClassVisitorDriverFromElement {
           reportMissingAnnotationType(parameter, annotationMirror);
           continue;
         }
+        // Note: We purposely don't attempt to remap source level parameter indices to bytecode
+        //       parameter indices here when we have a synthetic first parameter for an inner class
+        //       constructor, as this would cause ASM to emit an empty parameter annotation entry
+        //       for the synthetic parameter. See comment in <code>visitParameters</code>.
         visitAnnotationValues(
             annotationMirror,
             methodVisitor.visitParameterAnnotation(
-                isInnerClassConstructor ? index + 1 : index,
+                index,
                 descriptorFactory.getDescriptor(annotationMirror.getAnnotationType()),
                 MoreElements.isRuntimeRetention(annotationMirror)));
       }

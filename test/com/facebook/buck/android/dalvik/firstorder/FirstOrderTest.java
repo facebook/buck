@@ -216,7 +216,7 @@ public class FirstOrderTest {
   private static ClassNode loadClassNode(Class<?> input) {
     try {
       ClassReader reader = new ClassReader(input.getName());
-      ClassNode node = new ClassNode(Opcodes.ASM4);
+      ClassNode node = new ClassNode(Opcodes.ASM6);
       reader.accept(node, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
       return node;
     } catch (IOException e) {

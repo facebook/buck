@@ -188,7 +188,7 @@ public class DalvikStatsTool {
     @Nullable private String className;
 
     private StatsClassVisitor(Map<Pattern, Integer> penalties) {
-      super(Opcodes.ASM5);
+      super(Opcodes.ASM6);
       this.penalties = ImmutableMap.copyOf(penalties);
       this.methodReferenceBuilder = ImmutableSet.builder();
       this.fieldReferenceBuilder = ImmutableSet.builder();
@@ -284,7 +284,7 @@ public class DalvikStatsTool {
 
     private class StatsMethodVisitor extends MethodVisitor {
       public StatsMethodVisitor() {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM6);
       }
 
       @Override
@@ -451,7 +451,7 @@ public class DalvikStatsTool {
 
     private class StatsFieldVisitor extends FieldVisitor {
       public StatsFieldVisitor() {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM6);
       }
 
       @Override
@@ -468,7 +468,7 @@ public class DalvikStatsTool {
 
     private class StatsAnnotationVisitor extends AnnotationVisitor {
       public StatsAnnotationVisitor() {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM6);
       }
 
       @Override

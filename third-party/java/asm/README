@@ -1,7 +1,1 @@
-Files in this directory were retrieved from http://forge.ow2.org/projects/asm/.
-
-The files were taken from asm-6.0-src.zip file downloaded from http://forge.ow2.org/project/showfiles.php?group_id=23&release_id=5987
-
-- asm-6.0/lib/asm-6.0.jar
-- asm-6.0/src.zip (renamed to asm-6.0-src.zip)
-- asm-6.0/doc/README.txt (renamed to LICENSE)
+Files in this directory were retrieved from https://repository.ow2.org/nexus/content/repositories/releases/org/ow2/asm/

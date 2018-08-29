@@ -283,7 +283,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  // signature <E:Ljava/io/IOException;>()V^TE;",
-            "  // declaration: void throwSomeStuff<E extends java.io.IOException>() throws E",
+            "  // declaration: void <E extends java.io.IOException>() throws E",
             "  public throwSomeStuff()V throws java/io/IOException ",
             "}")
         .createAndCheckStubJar();
@@ -303,7 +303,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x21",
             "// signature <T:Ljava/lang/Object;>Ljava/lang/Object;",
-            "// declaration: com/example/buck/A<T>",
+            "// declaration: <T>",
             "public class com/example/buck/A {",
             "",
             "",
@@ -312,7 +312,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  // signature (Ljava/lang/String;)TT;",
-            "  // declaration: T get(java.lang.String)",
+            "  // declaration: T (java.lang.String)",
             "  public get(Ljava/lang/String;)Ljava/lang/Object;",
             "}")
         .createAndCheckStubJar();
@@ -332,7 +332,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x21",
             "// signature <T:Ljava/util/ArrayList;U::Ljava/lang/CharSequence;V:TT;>Ljava/lang/Object;",
-            "// declaration: com/example/buck/A<T extends java.util.ArrayList, U extends java.lang.CharSequence, VT>",
+            "// declaration: <T extends java.util.ArrayList, U extends java.lang.CharSequence, V extends T>",
             "public class com/example/buck/A {",
             "",
             "",
@@ -341,7 +341,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  // signature (TU;TV;)TT;",
-            "  // declaration: T get(U, V)",
+            "  // declaration: T (U, V)",
             "  public get(Ljava/lang/CharSequence;Ljava/util/ArrayList;)Ljava/util/ArrayList;",
             "}")
         .createAndCheckStubJar();
@@ -527,13 +527,13 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x601",
             "// signature <T:Ljava/lang/Object;>Ljava/lang/Object;",
-            "// declaration: com/example/buck/A<T>",
+            "// declaration: <T>",
             "public abstract interface com/example/buck/A {",
             "",
             "",
             "  // access flags 0x401",
             "  // signature (Ljava/lang/String;)TT;",
-            "  // declaration: T get(java.lang.String)",
+            "  // declaration: T (java.lang.String)",
             "  public abstract get(Ljava/lang/String;)Ljava/lang/Object;",
             "}")
         .createAndCheckStubJar();
@@ -956,13 +956,13 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x21",
             "// signature <T:Ljava/lang/Object;>Ljava/lang/Object;",
-            "// declaration: com/example/buck/A<T>",
+            "// declaration: <T>",
             "public class com/example/buck/A {",
             "",
             "",
             "  // access flags 0x1",
             "  // signature TT;",
-            "  // declaration: T",
+            "  // declaration:  extends T",
             "  public Ljava/lang/Object; theField",
             "",
             "  // access flags 0x1",
@@ -986,7 +986,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x21",
             "// signature <T:Ljava/lang/Object;>Ljava/lang/Object;",
-            "// declaration: com/example/buck/A<T>",
+            "// declaration: <T>",
             "public class com/example/buck/A {",
             "",
             "",
@@ -995,12 +995,12 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  // signature (Ljava/lang/String;)TT;",
-            "  // declaration: T get(java.lang.String)",
+            "  // declaration: T (java.lang.String)",
             "  public get(Ljava/lang/String;)Ljava/lang/Object;",
             "",
             "  // access flags 0x1",
             "  // signature <X::Ljava/lang/Comparable<TT;>;>(TT;)TX;",
-            "  // declaration: X compareWith<X extends java.lang.Comparable<T>>(T)",
+            "  // declaration: X <X extends java.lang.Comparable<T>>(T)",
             "  public compareWith(Ljava/lang/Object;)Ljava/lang/Comparable;",
             "}")
         .createAndCheckStubJar();
@@ -1146,6 +1146,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  public peynir(Ljava/lang/String;I)V",
+            "    // annotable parameter count: 2 (visible)",
             "    @Lcom/example/buck/Foo;() // parameter 0",
             "}")
         .createAndCheckStubJar();
@@ -1168,7 +1169,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x21",
             "// signature <T:Ljava/lang/Object;>Ljava/lang/Object;",
-            "// declaration: com/example/buck/A<T>",
+            "// declaration: <T>",
             "public class com/example/buck/A {",
             "",
             "",
@@ -1212,7 +1213,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x0",
             "  // signature <T:Ljava/lang/Object;>(Ljava/lang/String;)V",
-            "  // declaration: void foo<T>(java.lang.String)",
+            "  // declaration: void <T>(java.lang.String)",
             "  foo(Ljava/lang/String;)V",
             "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_TYPE_PARAMETER 0, null // invisible",
             "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_FORMAL_PARAMETER 0, null // invisible",
@@ -1248,7 +1249,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x0",
             "  // signature Ljava/util/List<Ljava/lang/String;>;",
-            "  // declaration: java.util.List<java.lang.String>",
+            "  // declaration:  extends java.util.List<java.lang.String>",
             "  Ljava/util/List; list",
             "  @Lcom/example/buck/Foo$TypeAnnotation;() : FIELD, 0; // invisible",
             "",
@@ -1667,7 +1668,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4031",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;",
-            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A>",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A>",
             "public final enum com/example/buck/A extends java/lang/Enum  {",
             "",
             "",
@@ -1707,7 +1708,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4031",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;Ljava/util/Comparator<Lcom/example/buck/A;>;",
-            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A> implements java.util.Comparator<com.example.buck.A>",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A> implements java.util.Comparator<com.example.buck.A>",
             "public final enum com/example/buck/A extends java/lang/Enum  implements java/util/Comparator  {",
             "",
             "",
@@ -1753,7 +1754,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4421",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;",
-            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A>",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A>",
             // abstract flag is removed in the stub:
             "public abstract enum com/example/buck/A extends java/lang/Enum  {",
             "",
@@ -1774,7 +1775,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x2",
             "  // signature ()V",
-            "  // declaration: void <init>()",
+            "  // declaration: void ()",
             "  private <init>(Ljava/lang/String;I)V",
             "",
             "  // access flags 0x401",
@@ -1791,7 +1792,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4421",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;",
-            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A>",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A>",
             "public abstract enum com/example/buck/A extends java/lang/Enum  {",
             "",
             "",
@@ -1830,7 +1831,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4421",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;Ljava/lang/Runnable;",
-            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A> implements java.lang.Runnable",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A> implements java.lang.Runnable",
             // abstract flag is removed in the stub:
             "public abstract enum com/example/buck/A extends java/lang/Enum  implements java/lang/Runnable  {",
             "",
@@ -1851,7 +1852,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x2",
             "  // signature ()V",
-            "  // declaration: void <init>()",
+            "  // declaration: void ()",
             "  private <init>(Ljava/lang/String;I)V",
             "",
             "  // access flags 0x1000",
@@ -1865,7 +1866,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4421",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;Ljava/lang/Runnable;",
-            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A> implements java.lang.Runnable",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A> implements java.lang.Runnable",
             "public abstract enum com/example/buck/A extends java/lang/Enum  implements java/lang/Runnable  {",
             "",
             "",
@@ -2081,7 +2082,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4031",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A$B;>;",
-            "// declaration: com/example/buck/A$B extends java.lang.Enum<com.example.buck.A$B>",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A$B>",
             "public final enum com/example/buck/A$B extends java/lang/Enum  {",
             "",
             "  // access flags 0x4019",
@@ -2133,7 +2134,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4421",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A$B;>;Ljava/lang/Runnable;",
-            "// declaration: com/example/buck/A$B extends java.lang.Enum<com.example.buck.A$B> implements java.lang.Runnable",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A$B> implements java.lang.Runnable",
             "public abstract enum com/example/buck/A$B extends java/lang/Enum  implements java/lang/Runnable  {",
             "",
             "  // access flags 0x4409",
@@ -2157,7 +2158,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x2",
             "  // signature ()V",
-            "  // declaration: void <init>()",
+            "  // declaration: void ()",
             "  private <init>(Ljava/lang/String;I)V",
             "",
             "  // access flags 0x1000",
@@ -2171,7 +2172,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4421",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A$B;>;Ljava/lang/Runnable;",
-            "// declaration: com/example/buck/A$B extends java.lang.Enum<com.example.buck.A$B> implements java.lang.Runnable",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A$B> implements java.lang.Runnable",
             "public abstract enum com/example/buck/A$B extends java/lang/Enum  implements java/lang/Runnable  {",
             "",
             "  // access flags 0x4409",
@@ -2684,7 +2685,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4031",
             "// signature Ljava/lang/Enum<Lcom/example/buck/B$C$D;>;",
-            "// declaration: com/example/buck/B$C$D extends java.lang.Enum<com.example.buck.B$C$D>",
+            "// declaration:  extends java.lang.Enum<com.example.buck.B$C$D>",
             "public final enum com/example/buck/B$C$D extends java/lang/Enum  {",
             "",
             "  // access flags 0x9",
@@ -3014,7 +3015,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x401",
             "  // signature ()Ljava/lang/Class<*>;",
-            "  // declaration: java.lang.Class<?> value()",
+            "  // declaration: java.lang.Class<?> ()",
             "  public abstract value()Ljava/lang/Class;",
             "}")
         .addExpectedStub(
@@ -3073,7 +3074,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  // signature (Ljava/util/Map<Ljava/lang/String;Ljava/lang/String;>;)V",
-            "  // declaration: void foo(java.util.Map<java.lang.String, java.lang.String>)",
+            "  // declaration: void (java.util.Map<java.lang.String, java.lang.String>)",
             "  public foo(Ljava/util/Map;)V",
             "}")
         .addExpectedStub(
@@ -3088,7 +3089,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  // signature (Ljava/util/Map<Ljava/lang/String;Ljava/lang/String;>;)V",
-            "  // declaration: void foo(java.util.Map<java.lang.String, java.lang.String>)",
+            "  // declaration: void (java.util.Map<java.lang.String, java.lang.String>)",
             "  public foo(Ljava/util/Map;)V",
             "}")
         .createAndCheckStubJar();
@@ -3317,7 +3318,8 @@ public class StubJarTest {
   }
 
   @Test
-  public void preservesAnnotationsOnInnerClassConstructorParameters() throws IOException {
+  public void preservesRuntimeInvisibleAnnotationsOnInnerClassConstructorParameters()
+      throws IOException {
     tester
         .setSourceFile(
             "A.java",
@@ -3339,7 +3341,113 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  public <init>(Lcom/example/buck/A;Ljava/lang/String;)V",
-            "    @Ljava/lang/Synthetic;() // invisible, parameter 0",
+            "    // annotable parameter count: 1 (invisible)",
+            "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/Anno",
+            "// class version 52.0 (52)",
+            "// access flags 0x2600",
+            "abstract @interface com/example/buck/Anno implements java/lang/annotation/Annotation  {",
+            "",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void preservesRuntimeVisibleAnnotationsOnInnerClassConstructorParameters()
+      throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import java.lang.annotation.*;",
+            "public class A {",
+            "  public class Inner {",
+            "    public Inner(@RuntimeRetentionAnno String param) { }",
+            "  }",
+            "}",
+            "@Retention(RetentionPolicy.RUNTIME)",
+            "@interface RuntimeRetentionAnno {}")
+        .addExpectedStub(
+            "com/example/buck/A$Inner",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A$Inner {",
+            "",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
+            "",
+            "  // access flags 0x1",
+            "  public <init>(Lcom/example/buck/A;Ljava/lang/String;)V",
+            "    // annotable parameter count: 1 (visible)",
+            "    @Lcom/example/buck/RuntimeRetentionAnno;() // parameter 0",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/RuntimeRetentionAnno",
+            "// class version 52.0 (52)",
+            "// access flags 0x2600",
+            "abstract @interface com/example/buck/RuntimeRetentionAnno implements java/lang/annotation/Annotation  {",
+            "",
+            "",
+            "  @Ljava/lang/annotation/Retention;(value=Ljava/lang/annotation/RetentionPolicy;.RUNTIME)",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void preservesMultipleAnnotationsOnInnerClassConstructorParameters() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import java.lang.annotation.*;",
+            "public class A {",
+            "  public class Inner {",
+            "    public Inner(String param1, @Anno String param2, @RuntimeRetentionAnno String param3) { }",
+            "  }",
+            "}",
+            "@interface Anno {}",
+            "@Retention(RetentionPolicy.RUNTIME)",
+            "@interface RuntimeRetentionAnno {}")
+        .addExpectedStub(
+            "com/example/buck/A$Inner",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A$Inner {",
+            "",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
+            "",
+            "  // access flags 0x1",
+            "  public <init>(Lcom/example/buck/A;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
+            "    // annotable parameter count: 3 (visible)",
+            "    @Lcom/example/buck/RuntimeRetentionAnno;() // parameter 2",
+            "    // annotable parameter count: 3 (invisible)",
             "    @Lcom/example/buck/Anno;() // invisible, parameter 1",
             "}")
         .addExpectedStub(
@@ -3360,6 +3468,15 @@ public class StubJarTest {
             "// access flags 0x2600",
             "abstract @interface com/example/buck/Anno implements java/lang/annotation/Annotation  {",
             "",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/RuntimeRetentionAnno",
+            "// class version 52.0 (52)",
+            "// access flags 0x2600",
+            "abstract @interface com/example/buck/RuntimeRetentionAnno implements java/lang/annotation/Annotation  {",
+            "",
+            "",
+            "  @Ljava/lang/annotation/Retention;(value=Ljava/lang/annotation/RetentionPolicy;.RUNTIME)",
             "}")
         .createAndCheckStubJar();
   }
@@ -3459,7 +3576,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x401",
             "  // signature (Ljava/util/Set<Lcom/example/buck/Outer$Inner;>;)V",
-            "  // declaration: void foo(java.util.Set<com.example.buck.Outer$Inner>)",
+            "  // declaration: void (java.util.Set<com.example.buck.Outer$Inner>)",
             "  public abstract foo(Ljava/util/Set;)V",
             "}")
         .createAndCheckStubJar();
@@ -4266,7 +4383,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4030",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A$E;>;",
-            "// declaration: com/example/buck/A$E extends java.lang.Enum<com.example.buck.A$E>",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A$E>",
             "final enum com/example/buck/A$E extends java/lang/Enum  {",
             "",
             "  // access flags 0x4018",
@@ -4378,7 +4495,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4021",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;",
-            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A>",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A>",
             "public enum com/example/buck/A extends java/lang/Enum  {",
             "",
             "  // access flags 0x4008",
@@ -4398,7 +4515,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x2",
             "  // signature ()V",
-            "  // declaration: void <init>()",
+            "  // declaration: void ()",
             "  private <init>(Ljava/lang/String;I)V",
             "",
             "  // access flags 0x1000",
@@ -4413,7 +4530,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x4021",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;",
-            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A>",
+            "// declaration:  extends java.lang.Enum<com.example.buck.A>",
             "public enum com/example/buck/A extends java/lang/Enum  {",
             "",
             "",
@@ -4449,7 +4566,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x21",
             "// signature Ljava/lang/Object;Ljava/lang/Comparable<Lcom/example/buck/A;>;",
-            "// declaration: com/example/buck/A implements java.lang.Comparable<com.example.buck.A>",
+            "// declaration:  implements java.lang.Comparable<com.example.buck.A>",
             "public class com/example/buck/A implements java/lang/Comparable  {",
             "",
             "",
@@ -4467,7 +4584,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x21",
             "// signature Ljava/lang/Object;Ljava/lang/Comparable<Lcom/example/buck/A;>;",
-            "// declaration: com/example/buck/A implements java.lang.Comparable<com.example.buck.A>",
+            "// declaration:  implements java.lang.Comparable<com.example.buck.A>",
             "public class com/example/buck/A implements java/lang/Comparable  {",
             "",
             "",
@@ -4507,7 +4624,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x21",
             "// signature Lcom/example/buck/Super<Ljava/lang/String;>;",
-            "// declaration: com/example/buck/A extends com.example.buck.Super<java.lang.String>",
+            "// declaration:  extends com.example.buck.Super<java.lang.String>",
             "public class com/example/buck/A extends com/example/buck/Super  {",
             "",
             "",
@@ -4528,7 +4645,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x20",
             "// signature <T::Ljava/lang/CharSequence;>Ljava/lang/Object;Ljava/lang/Comparable<TT;>;",
-            "// declaration: com/example/buck/Super<T extends java.lang.CharSequence> implements java.lang.Comparable<T>",
+            "// declaration: <T extends java.lang.CharSequence> implements java.lang.Comparable<T>",
             "class com/example/buck/Super implements java/lang/Comparable  {",
             "",
             "",
@@ -4537,7 +4654,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  // signature (TT;)I",
-            "  // declaration: int compareTo(T)",
+            "  // declaration: int (T)",
             "  public compareTo(Ljava/lang/CharSequence;)I",
             "",
             "  // access flags 0x1041",
@@ -4577,7 +4694,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x21",
             "// signature Lcom/example/buck/Super<Ljava/lang/String;Ljava/lang/String;>;",
-            "// declaration: com/example/buck/A extends com.example.buck.Super<java.lang.String, java.lang.String>",
+            "// declaration:  extends com.example.buck.Super<java.lang.String, java.lang.String>",
             "public class com/example/buck/A extends com/example/buck/Super  {",
             "",
             "",
@@ -4595,7 +4712,7 @@ public class StubJarTest {
             "// class version 52.0 (52)",
             "// access flags 0x21",
             "// signature Lcom/example/buck/Super<Ljava/lang/String;Ljava/lang/String;>;",
-            "// declaration: com/example/buck/A extends com.example.buck.Super<java.lang.String, java.lang.String>",
+            "// declaration:  extends com.example.buck.Super<java.lang.String, java.lang.String>",
             "public class com/example/buck/A extends com/example/buck/Super  {",
             "",
             "",
@@ -4653,6 +4770,7 @@ public class StubJarTest {
             "  public getThis(I)Lcom/example/buck/A; throws java/io/IOException ",
             "    // parameter final  i",
             "  @Lcom/example/buck/Anno;() // invisible",
+            "    // annotable parameter count: 1 (invisible)",
             "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
             "",
             "  // access flags 0x81",
@@ -4667,6 +4785,7 @@ public class StubJarTest {
             "  public synthetic bridge getThis(I)Lcom/example/buck/Super; throws java/lang/Exception ",
             "    // parameter final synthetic  i",
             "  @Lcom/example/buck/Anno;() // invisible",
+            "    // annotable parameter count: 1 (invisible)",
             "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
             "}")
         .addExpectedStub(
@@ -4683,6 +4802,7 @@ public class StubJarTest {
             "  public getThis(I)Lcom/example/buck/A; throws java/io/IOException ",
             "    // parameter final  i",
             "  @Lcom/example/buck/Anno;() // invisible",
+            "    // annotable parameter count: 1 (invisible)",
             "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
             "",
             "  // access flags 0x81",
@@ -4697,6 +4817,7 @@ public class StubJarTest {
             "  public synthetic bridge getThis(I)Lcom/example/buck/Super; throws java/lang/Exception ",
             "    // parameter final synthetic  i",
             "  @Lcom/example/buck/Anno;() // invisible",
+            "    // annotable parameter count: 1 (invisible)",
             "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
             "}")
         .createAndCheckStubJar();
