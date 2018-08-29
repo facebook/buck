@@ -39,7 +39,7 @@ public class BuckCommand {
 
   private final String[] parameters;
 
-  private BuckCommand(String name, String... parameters) {
+  public BuckCommand(String name, String... parameters) {
     this.name = name;
     this.parameters = parameters;
   }

@@ -16,22 +16,22 @@
 
 package com.facebook.buck.intellij.ideabuck.build;
 
-import com.google.common.util.concurrent.FutureCallback;
 import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import java.util.function.Consumer;
 
 public class ResultCallbackBuckHandler extends BuckCommandHandler {
-  private final FutureCallback futureCallback;
+  private final Consumer<String> futureCallback;
   private StringBuilder stdout;
 
   public ResultCallbackBuckHandler(
       final Project project,
       final VirtualFile root,
       final BuckCommand command,
-      final FutureCallback futureCallback) {
+      final Consumer<String> futureCallback) {
     super(project, VfsUtil.virtualToIoFile(root), command, true);
     this.futureCallback = futureCallback;
     this.stdout = new StringBuilder();
@@ -54,9 +54,6 @@ public class ResultCallbackBuckHandler extends BuckCommandHandler {
 
   @Override
   protected void afterCommand() {
-    String result = stdout.toString();
-    if (!result.isEmpty()) {
-      futureCallback.onSuccess(stdout.toString());
-    }
+    futureCallback.accept(stdout.toString());
   }
 }

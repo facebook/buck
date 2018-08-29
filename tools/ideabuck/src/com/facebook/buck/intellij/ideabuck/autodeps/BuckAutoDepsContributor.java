@@ -20,7 +20,6 @@ import com.facebook.buck.intellij.ideabuck.actions.BuckAuditOwner;
 import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import com.google.common.util.concurrent.FutureCallback;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.event.DocumentEvent;
@@ -103,49 +102,43 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
   public void addDependency(final VirtualFile importClass, final VirtualFile currentClass) {
     BuckAuditOwner.execute(
         mProject,
-        new FutureCallback<String>() {
-          @Override
-          public void onSuccess(@Nullable String buckTargetResult) {
-            try {
-              String currentClassPath = currentClass.getPath();
-              Map<String, List<String>> pathAndTargetData =
-                  mObjectMapper.readValue(buckTargetResult, Map.class);
-              String importTargetName = "";
-              String importPath = "";
-              String currentTargetName = "";
-              String currentPath = "";
+        buckTargetResult -> {
+          try {
+            String currentClassPath = currentClass.getPath();
+            Map<String, List<String>> pathAndTargetData =
+                mObjectMapper.readValue(buckTargetResult, Map.class);
+            String importTargetName = "";
+            String importPath = "";
+            String currentTargetName = "";
+            String currentPath = "";
 
-              for (Map.Entry<String, List<String>> targetAndPathEntry :
-                  pathAndTargetData.entrySet()) {
-                String[] pathAndTarget =
-                    targetAndPathEntry.getValue().get(0).replaceFirst("//", "").split(":");
-                if (currentClassPath.contains(targetAndPathEntry.getKey())) {
-                  currentTargetName = pathAndTarget[1];
-                  currentPath = pathAndTarget[0];
-                } else {
-                  importTargetName = pathAndTarget[1];
-                  importPath = pathAndTarget[0];
-                }
+            for (Map.Entry<String, List<String>> targetAndPathEntry :
+                pathAndTargetData.entrySet()) {
+              String[] pathAndTarget =
+                  targetAndPathEntry.getValue().get(0).replaceFirst("//", "").split(":");
+              if (currentClassPath.contains(targetAndPathEntry.getKey())) {
+                currentTargetName = pathAndTarget[1];
+                currentPath = pathAndTarget[0];
+              } else {
+                importTargetName = pathAndTarget[1];
+                importPath = pathAndTarget[0];
               }
-
-              // Make sure we found both ends of the dependency to add.
-              // TODO(ideabuck):  Consider if a single file is part of more than one target.
-              if (!Strings.isNullOrEmpty(currentTargetName)
-                  && !Strings.isNullOrEmpty(currentPath)
-                  && !Strings.isNullOrEmpty(importTargetName)
-                  && !Strings.isNullOrEmpty(importPath)) {
-                BuckDeps.addDeps(
-                    mProject, importPath, currentPath, importTargetName, currentTargetName);
-                BuckDeps.addVisibility(
-                    mProject, importPath, currentPath, importTargetName, currentTargetName);
-              }
-            } catch (IOException e) {
-              LOG.error(e.toString());
             }
-          }
 
-          @Override
-          public void onFailure(Throwable throwable) {}
+            // Make sure we found both ends of the dependency to add.
+            // TODO(ideabuck):  Consider if a single file is part of more than one target.
+            if (!Strings.isNullOrEmpty(currentTargetName)
+                && !Strings.isNullOrEmpty(currentPath)
+                && !Strings.isNullOrEmpty(importTargetName)
+                && !Strings.isNullOrEmpty(importPath)) {
+              BuckDeps.addDeps(
+                  mProject, importPath, currentPath, importTargetName, currentTargetName);
+              BuckDeps.addVisibility(
+                  mProject, importPath, currentPath, importTargetName, currentTargetName);
+            }
+          } catch (IOException e) {
+            LOG.error(e.toString());
+          }
         },
         importClass.getPath(),
         currentClass.getPath());
