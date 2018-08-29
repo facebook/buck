@@ -40,7 +40,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 import com.google.common.io.MoreFiles;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -193,6 +192,6 @@ public class ActionRunner {
   }
 
   private HashCode hashFile(Path file) throws IOException {
-    return MoreFiles.asByteSource(file).hash(Hashing.sha1());
+    return MoreFiles.asByteSource(file).hash(protocol.getHashFunction());
   }
 }

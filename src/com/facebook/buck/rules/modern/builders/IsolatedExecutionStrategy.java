@@ -45,7 +45,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -77,6 +76,7 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final Path cellPathPrefix;
   private final Set<Optional<String>> cellNames;
   private final Map<HashCode, Node> nodeMap;
+  private final HashFunction hasher;
 
   IsolatedExecutionStrategy(
       IsolatedExecution executionStrategy,
@@ -89,10 +89,11 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.rootCell = rootCell;
     this.fileHasher = fileHasher;
     this.nodeMap = new ConcurrentHashMap<>();
+    this.hasher = executionStrategy.getProtocol().getHashFunction();
 
     Delegate delegate =
         (instance, data, children) -> {
-          HashCode hash = Hashing.sha1().hashBytes(data);
+          HashCode hash = hasher.hashBytes(data);
           Node node =
               new Node(
                   data,
@@ -128,7 +129,6 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
                                 .getCellByPath(cellResolver.getCellPath(name).get())
                                 .getBuckConfig())));
 
-    HashFunction hasher = Hashing.sha1();
     this.configHashes =
         cellToConfig
             .entrySet()

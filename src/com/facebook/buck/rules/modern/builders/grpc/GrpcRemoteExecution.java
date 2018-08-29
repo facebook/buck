@@ -106,7 +106,7 @@ public class GrpcRemoteExecution extends RemoteExecution {
 
   GrpcRemoteExecution(String instanceName, ManagedChannel channel, BuckEventBus eventBus)
       throws IOException {
-    super(eventBus);
+    super(eventBus, PROTOCOL);
     ByteStreamStub byteStreamStub = ByteStreamGrpc.newStub(channel);
     this.storage =
         createStorage(
@@ -130,11 +130,6 @@ public class GrpcRemoteExecution extends RemoteExecution {
   @Override
   public ContentAddressedStorage getStorage() {
     return storage;
-  }
-
-  @Override
-  protected Protocol getProtocol() {
-    return PROTOCOL;
   }
 
   private ContentAddressedStorage createStorage(

@@ -46,6 +46,8 @@ public interface IsolatedExecution extends Closeable {
       Path cellPrefixRoot)
       throws IOException, StepFailedException, InterruptedException;
 
+  Protocol getProtocol();
+
   /** Creates a BuildRuleStrategy for a particular */
   static BuildRuleStrategy createIsolatedExecutionStrategy(
       IsolatedExecution executionStrategy,

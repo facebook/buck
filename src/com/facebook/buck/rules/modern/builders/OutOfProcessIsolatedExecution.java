@@ -37,7 +37,6 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
   private final NamedTemporaryDirectory workDir;
   private final LocalContentAddressedStorage storage;
   private final RemoteExecutionService executionService;
-  private final Protocol protocol;
 
   /**
    * Returns a RemoteExecution implementation that uses a local CAS and a separate local temporary
@@ -57,9 +56,8 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
       final Protocol protocol,
       BuckEventBus eventBus)
       throws IOException {
-    super(eventBus);
+    super(eventBus, protocol);
     this.storage = storage;
-    this.protocol = protocol;
     this.executionService =
         (digest, inputsRootDigest, outputs) -> {
           Path buildDir = workDir.getPath().resolve(inputsRootDigest.getHash());
@@ -103,11 +101,6 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
           }
         };
     this.workDir = workDir;
-  }
-
-  @Override
-  protected Protocol getProtocol() {
-    return protocol;
   }
 
   @Override

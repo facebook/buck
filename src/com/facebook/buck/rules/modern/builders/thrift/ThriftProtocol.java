@@ -39,7 +39,10 @@ import javax.annotation.Nullable;
 
 /** A Thrift-based Protocol implementation. */
 public class ThriftProtocol implements Protocol {
-  private static final HashFunction HASHER = Hashing.sipHash24();
+  // TODO(shivanker): This hash function is only used to generate hashes of data we have in memory.
+  // We still use the FileHashCache to compute hashes of source files. So until that is switched
+  // over to SHA256, we cannot really change this.
+  private static final HashFunction HASHER = Hashing.sha1();
 
   /** Digest mapping */
   public static class ThriftDigest implements Digest {
@@ -407,6 +410,11 @@ public class ThriftProtocol implements Protocol {
     return new ThriftDigest(
         new com.facebook.remoteexecution.cas.Digest(
             HASHER.hashBytes(data).toString(), data.length));
+  }
+
+  @Override
+  public HashFunction getHashFunction() {
+    return HASHER;
   }
 
   private static byte[] serialize(TBase source) {

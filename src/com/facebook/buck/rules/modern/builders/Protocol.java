@@ -20,6 +20,7 @@ import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.hash.HashFunction;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -150,4 +151,6 @@ public interface Protocol {
   Digest computeDigest(Directory directory) throws IOException;
 
   Digest computeDigest(byte[] data);
+
+  HashFunction getHashFunction();
 }

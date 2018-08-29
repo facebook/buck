@@ -36,9 +36,11 @@ import javax.annotation.Nullable;
 
 /** A Grpc-based Protocol implementation. */
 public class GrpcProtocol implements Protocol {
-
-  private static final int MAX_INLINED_OUTPUT_FILE_SIZE = 64 * 1024;
+  // TODO(shivanker): This hash function is only used to generate hashes of data we have in memory.
+  // We still use the FileHashCache to compute hashes of source files. So until that is switched
+  // over to SHA256, we cannot really change this.
   private static final HashFunction HASHER = Hashing.sha1();
+  private static final int MAX_INLINED_OUTPUT_FILE_SIZE = 64 * 1024;
 
   /** Wrapped Grpc Digest. */
   static class GrpcDigest implements Digest {
@@ -412,6 +414,11 @@ public class GrpcProtocol implements Protocol {
             .setSizeBytes(data.length)
             .setHash(HASHER.hashBytes(data).toString())
             .build());
+  }
+
+  @Override
+  public HashFunction getHashFunction() {
+    return HASHER;
   }
 
   private static com.google.devtools.remoteexecution.v1test.DirectoryNode get(

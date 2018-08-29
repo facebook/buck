@@ -48,19 +48,25 @@ class InProcessIsolatedExecution implements IsolatedExecution {
   private final BuckEventBus eventBus;
   private final Console console;
   private final LocalContentAddressedStorage storage;
+  private final Protocol protocol;
 
   InProcessIsolatedExecution(BuckEventBus eventBus, Console console) throws IOException {
     this.eventBus = eventBus;
     this.console = console;
     this.workDir = new NamedTemporaryDirectory("__work__");
+    this.protocol = new ThriftProtocol();
     this.storage =
-        new LocalContentAddressedStorage(
-            workDir.getPath().resolve("__cache__"), new ThriftProtocol());
+        new LocalContentAddressedStorage(workDir.getPath().resolve("__cache__"), protocol);
   }
 
   @Override
   public void close() throws IOException {
     workDir.close();
+  }
+
+  @Override
+  public Protocol getProtocol() {
+    return protocol;
   }
 
   @Override
@@ -82,7 +88,6 @@ class InProcessIsolatedExecution implements IsolatedExecution {
 
     try (Closeable ignored = () -> MostFiles.deleteRecursively(buildDir)) {
       HashMap<Digest, ThrowingSupplier<InputStream, IOException>> requiredData = new HashMap<>();
-      ThriftProtocol protocol = new ThriftProtocol();
       Digest rootDigest =
           inputsBuilder.buildTree(new ProtocolTreeBuilder(requiredData::put, dir -> {}, protocol));
 
