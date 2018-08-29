@@ -229,6 +229,7 @@
     <toolWindow
         id="Buck"
         anchor="bottom"
+        icon="/icons/buck_tool_window_icon.png"
         factoryClass="com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory"/>
     <applicationConfigurable
         groupId="tools"
