@@ -1,6 +1,7 @@
 java_library(
     name = "external_lib",
     srcs = glob(["**/*.java"]),
+    exported_deps = ["//src/com/facebook/buck/test/result/type:type"],
     provided_deps = [
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-annotations",
@@ -9,13 +10,11 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
-    deps = ["//src/com/facebook/buck/test/result/type:type"],
 )
 
 java_binary(
     name = "external",
     deps = [
         ":external_lib",
-        "//src/com/facebook/buck/test/result/type:type",
     ],
 )

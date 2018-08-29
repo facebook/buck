@@ -6,7 +6,6 @@ java_test(
     target = "1.8",
     deps = [
         "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/test/result/type:type",
         "//third-party/java/guava:guava",
         "//third-party/java/intellij:intellij-plugin-sdk",
         "//third-party/java/jackson:jackson-databind",

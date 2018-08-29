@@ -67,7 +67,6 @@ java_library(
     deps = [
         ":bundle_generated_lib",
         "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/test/result/type:type",
         "//third-party/java/android:ddmlib",
         "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
@@ -99,7 +98,6 @@ java_binary(
     deps = [
         ":ideabuck-lib",
         ":resources",
-        "//src/com/facebook/buck/test/result/type:type",
     ],
 )
 
@@ -115,7 +113,7 @@ java_library(
     visibility = ["//tools/ideabuck/tests/..."],
     deps = [
         ":ideabuck-lib",
-        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/event/external:external_lib",
         "//third-party/java/guava:guava",
     ],
 )
