@@ -1,5 +1,9 @@
 install:
    - set -exo pipefail
+   - mkdir python_tmp
+   - wget https://github.com/kageiit/jitpack-python/releases/download/2.7/python-2.7.tar.gz -O python_tmp/python.tar.gz
+   - tar -C python_tmp -xf python_tmp/python.tar.gz --strip-components=1
+   - export PATH="$PATH:python_tmp/bin"
    - ant
    - PEX=$(bin/buck build buck --show-output | awk '{print $2}')
    - SHA=$(git rev-parse HEAD)
