@@ -20,7 +20,8 @@ import com.facebook.buck.intellij.ideabuck.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommandHandler;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
-import com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory;
+import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
+import com.facebook.buck.intellij.ideabuck.ui.components.BuckToolWindow;
 import com.intellij.debugger.DebugEnvironment;
 import com.intellij.debugger.DebuggerManagerEx;
 import com.intellij.debugger.DefaultDebugEnvironment;
@@ -152,8 +153,10 @@ class TestExecutionState implements RunProfileState {
                       } finally {
                         indicator.cancel();
                       }
-                      if (!BuckToolWindowFactory.isRunToolWindowVisible(mProject)) {
-                        BuckToolWindowFactory.showRunToolWindow(mProject);
+                      BuckToolWindow buckToolWindow =
+                          BuckUIManager.getInstance(mProject).getBuckToolWindow();
+                      if (!buckToolWindow.isRunToolWindowVisible()) {
+                        buckToolWindow.showRunToolWindow();
                       }
                     }
                   });

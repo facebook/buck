@@ -16,7 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.build;
 
-import com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory;
+import com.facebook.buck.intellij.ideabuck.ui.components.BuckToolWindow;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
@@ -28,8 +28,7 @@ import com.intellij.notification.NotificationType;
 public class BuckBuildNotification extends Notification {
 
   public static final NotificationGroup NOTIFICATION_GROUP_ID =
-      NotificationGroup.toolWindowGroup(
-          "Buck Build Messages", BuckToolWindowFactory.TOOL_WINDOW_ID);
+      NotificationGroup.toolWindowGroup("Buck Build Messages", BuckToolWindow.MAIN_TOOL_WINDOW_ID);
 
   public BuckBuildNotification(
       String groupDisplayId, String title, String content, NotificationType type) {

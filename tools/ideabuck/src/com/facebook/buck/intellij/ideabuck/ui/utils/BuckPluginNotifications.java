@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.intellij.ideabuck.ui.utils;
 
-import com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory;
+import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationListener;
@@ -46,7 +46,7 @@ public class BuckPluginNotifications {
                 @Override
                 public void hyperlinkUpdate(
                     @NotNull Notification notification, @NotNull HyperlinkEvent hyperlinkEvent) {
-                  BuckToolWindowFactory.showMainToolbar(project);
+                  BuckUIManager.getInstance(project).getBuckToolWindow().showMainToolbar();
                 }
               }),
           project);

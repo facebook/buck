@@ -16,43 +16,45 @@
 
 package com.facebook.buck.intellij.ideabuck.ui;
 
-import com.intellij.execution.impl.ConsoleViewImpl;
-import com.intellij.execution.ui.ConsoleView;
-import com.intellij.execution.ui.RunnerLayoutUi;
+import com.facebook.buck.intellij.ideabuck.ui.components.BuckDebugPanel;
+import com.facebook.buck.intellij.ideabuck.ui.components.BuckToolWindow;
+import com.facebook.buck.intellij.ideabuck.ui.components.BuckTreeViewPanel;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
-import javax.swing.tree.DefaultTreeModel;
 
 public class BuckUIManager {
 
-  private ConsoleView outputConsole;
-  private RunnerLayoutUi runnerLayoutUi;
+  private BuckToolWindow mBuckToolWindow;
+  private BuckDebugPanel mBuckDebugPanel;
+  private BuckTreeViewPanel mBuckTreeViewPanel;
 
   public static synchronized BuckUIManager getInstance(Project project) {
     return ServiceManager.getService(project, BuckUIManager.class);
   }
 
-  public ConsoleView getConsoleWindow(Project project) {
-    if (outputConsole == null) {
-      outputConsole = new ConsoleViewImpl(project, false);
-    }
-    return outputConsole;
+  public BuckUIManager(Project project) {
+    mBuckToolWindow = new BuckToolWindow(project);
+    mBuckDebugPanel = new BuckDebugPanel(project);
+    mBuckTreeViewPanel = new BuckTreeViewPanel();
   }
 
-  public RunnerLayoutUi getLayoutUi(Project project) {
-    if (runnerLayoutUi == null) {
-      runnerLayoutUi =
-          RunnerLayoutUi.Factory.getInstance(project).create("buck", "buck", "buck", project);
-    }
-    return runnerLayoutUi;
+  public BuckDebugPanel getBuckDebugPanel() {
+    return mBuckDebugPanel;
   }
 
-  private DefaultTreeModel mTreeModel;
+  public BuckTreeViewPanel getBuckTreeViewPanel() {
+    return mBuckTreeViewPanel;
+  }
 
-  public DefaultTreeModel getTreeModel() {
-    if (mTreeModel == null) {
-      mTreeModel = new DefaultTreeModel(null);
+  public void initBuckToolWindow(boolean hasDebugPanel) {
+    mBuckToolWindow.addPanel(mBuckTreeViewPanel);
+    if (hasDebugPanel) {
+      mBuckToolWindow.addPanel(mBuckDebugPanel);
     }
-    return mTreeModel;
+    mBuckToolWindow.initBuckToolWindow();
+  }
+
+  public BuckToolWindow getBuckToolWindow() {
+    return mBuckToolWindow;
   }
 }

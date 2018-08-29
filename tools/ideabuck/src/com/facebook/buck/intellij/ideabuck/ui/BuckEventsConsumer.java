@@ -44,9 +44,7 @@ import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestResultsSummar
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.util.messages.MessageBusConnection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,7 +53,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.swing.tree.DefaultTreeModel;
 
 public class BuckEventsConsumer
     implements BuckBuildStartConsumer,
@@ -75,14 +72,15 @@ public class BuckEventsConsumer
         BuckInstallFinishedConsumer {
 
   private Project mProject;
+  private final BuckUIManager mBuckUIManager;
 
   public BuckEventsConsumer(Project project) {
     mProject = project;
+    mBuckUIManager = BuckUIManager.getInstance(project);
   }
 
   private String mTarget = null;
   private MessageBusConnection mConnection;
-  private DefaultTreeModel mTreeModel;
   private Map<String, List<String>> mErrors =
       Collections.synchronizedMap(new HashMap<String, List<String>>());
   private double mBuildProgressValue = 0;
@@ -123,25 +121,25 @@ public class BuckEventsConsumer
     mProjectGenerationProgressValue = 0;
     mTestResultsList = Collections.synchronizedList(new LinkedList<TestResults>());
     mErrors = Collections.synchronizedMap(new HashMap<String, List<String>>());
+    if (mCurrentBuildRootElement != null) {
+      mBuckUIManager
+          .getBuckTreeViewPanel()
+          .getModifiableModel()
+          .removeAllChildren(mCurrentBuildRootElement);
+    }
   }
 
   public boolean isAttached() {
     return attached;
   }
 
-  public void attach(String target, DefaultTreeModel treeModel) {
-    mTreeModel = treeModel;
+  public void attach(String target) {
     mTarget = target == null ? "NONE" : target;
-    mCurrentBuildRootElement = new BuckTextNode("Building " + mTarget, TextType.INFO);
-
-    ApplicationManager.getApplication()
-        .invokeLater(
-            new Runnable() {
-              @Override
-              public void run() {
-                mTreeModel.setRoot(mCurrentBuildRootElement);
-              }
-            });
+    mCurrentBuildRootElement = mBuckUIManager.getBuckTreeViewPanel().getRoot();
+    mBuckUIManager
+        .getBuckTreeViewPanel()
+        .getModifiableModel()
+        .setNodeText(mCurrentBuildRootElement, "Building " + mTarget);
 
     mMainBuildStartTimestamp = 0;
 
@@ -182,15 +180,7 @@ public class BuckEventsConsumer
     mBuildProgressValue = progressValue;
     final String message = "Current build progress: " + Math.round(mBuildProgressValue * 100) + "%";
 
-    BuckEventsConsumer.this.mBuildProgress.getNodeObject().setText(message);
-    ApplicationManager.getApplication()
-        .invokeLater(
-            new Runnable() {
-              @Override
-              public void run() {
-                BuckEventsConsumer.this.mTreeModel.reload();
-              }
-            });
+    mBuckUIManager.getBuckTreeViewPanel().getModifiableModel().setNodeText(mBuildProgress, message);
   }
 
   @Override
@@ -203,15 +193,10 @@ public class BuckEventsConsumer
           new BuckTextNode(
               "Current file parsing progress: " + Math.round(mParseProgressValue * 100) + "%",
               TextType.INFO);
-      mCurrentBuildRootElement.add(mParseProgress);
-      ApplicationManager.getApplication()
-          .invokeLater(
-              new Runnable() {
-                @Override
-                public void run() {
-                  BuckEventsConsumer.this.mTreeModel.reload();
-                }
-              });
+      mBuckUIManager
+          .getBuckTreeViewPanel()
+          .getModifiableModel()
+          .addChild(mCurrentBuildRootElement, mParseProgress);
     }
   }
 
@@ -222,15 +207,7 @@ public class BuckEventsConsumer
     float duration = (mParseFilesEndTimestamp - mParseFilesStartTimestamp) / 1000;
     final String message = "File parsing ended, took " + duration + " seconds!";
 
-    BuckEventsConsumer.this.mParseProgress.getNodeObject().setText(message);
-    ApplicationManager.getApplication()
-        .invokeLater(
-            new Runnable() {
-              @Override
-              public void run() {
-                BuckEventsConsumer.this.mTreeModel.reload();
-              }
-            });
+    mBuckUIManager.getBuckTreeViewPanel().getModifiableModel().setNodeText(mParseProgress, message);
   }
 
   @Override
@@ -243,15 +220,10 @@ public class BuckEventsConsumer
       final String message =
           "Current file parsing progress: " + Math.round(mParseProgressValue * 100) + "%";
 
-      BuckEventsConsumer.this.mParseProgress.getNodeObject().setText(message);
-      ApplicationManager.getApplication()
-          .invokeLater(
-              new Runnable() {
-                @Override
-                public void run() {
-                  BuckEventsConsumer.this.mTreeModel.reload();
-                }
-              });
+      mBuckUIManager
+          .getBuckTreeViewPanel()
+          .getModifiableModel()
+          .setNodeText(mParseProgress, message);
     }
   }
 
@@ -302,33 +274,20 @@ public class BuckEventsConsumer
 
   private void displayErrors() {
     if (mErrors.size() > 0) {
-      if (!BuckToolWindowFactory.isToolWindowVisible(mProject)) {
-        BuckToolWindowFactory.showToolWindow(mProject);
+      if (!mBuckUIManager.getBuckToolWindow().isMainToolWindowVisible()) {
+        mBuckUIManager.getBuckToolWindow().showMainToolWindow();
       }
       Set<String> targetsWithErrors = mErrors.keySet();
       for (String target : targetsWithErrors) {
         List<String> errorMessages = mErrors.get(target);
         if (errorMessages.size() > 0) {
           BuckTextNode targetNode = buildTargetErrorNode(target, errorMessages);
-          mCurrentBuildRootElement.add(targetNode);
+          mBuckUIManager
+              .getBuckTreeViewPanel()
+              .getModifiableModel()
+              .addChild(mCurrentBuildRootElement, targetNode);
         }
       }
-    }
-  }
-
-  public void clearDisplay() {
-    if (mTestResults != null) {
-      mCurrentBuildRootElement.remove(mTestResults);
-    }
-    if (mParseProgress != null) {
-      mCurrentBuildRootElement.remove(mParseProgress);
-    }
-    if (mBuildProgress != null) {
-      mCurrentBuildRootElement.remove(mBuildProgress);
-    }
-
-    if (mProjectGenerationProgress != null) {
-      mCurrentBuildRootElement.remove(mProjectGenerationProgress);
     }
   }
 
@@ -378,23 +337,21 @@ public class BuckEventsConsumer
     consumeBuckBuildProgressUpdate(timestamp, 1f);
 
     if (errorsMessageToUse.length() > 0) {
-      clearDisplay();
+      mBuckUIManager
+          .getBuckTreeViewPanel()
+          .getModifiableModel()
+          .removeAllChildren(mCurrentBuildRootElement);
       BuckTextNode errorsMessageNode = new BuckTextNode(errorsMessageToUse, TextType.ERROR);
-      BuckEventsConsumer.this.mCurrentBuildRootElement.add(errorsMessageNode);
+      mBuckUIManager
+          .getBuckTreeViewPanel()
+          .getModifiableModel()
+          .addChild(mCurrentBuildRootElement, errorsMessageNode);
 
       // Display errors
       BuckEventsConsumer.this.displayErrors();
     }
 
-    BuckEventsConsumer.this.mBuildProgress.getNodeObject().setText(message);
-    ApplicationManager.getApplication()
-        .invokeLater(
-            new Runnable() {
-              @Override
-              public void run() {
-                BuckEventsConsumer.this.mTreeModel.reload();
-              }
-            });
+    mBuckUIManager.getBuckTreeViewPanel().getModifiableModel().setNodeText(mBuildProgress, message);
   }
 
   @Override
@@ -406,15 +363,10 @@ public class BuckEventsConsumer
               "Current build progress: " + Math.round(mBuildProgressValue * 100) + "%",
               TextType.INFO);
       // start may be called before of after progress update
-      BuckEventsConsumer.this.mCurrentBuildRootElement.add(mBuildProgress);
-      ApplicationManager.getApplication()
-          .invokeLater(
-              new Runnable() {
-                @Override
-                public void run() {
-                  BuckEventsConsumer.this.mTreeModel.reload();
-                }
-              });
+      mBuckUIManager
+          .getBuckTreeViewPanel()
+          .getModifiableModel()
+          .addChild(mCurrentBuildRootElement, mBuildProgress);
     }
   }
 
@@ -426,18 +378,10 @@ public class BuckEventsConsumer
         (mProjectGenerationFinishedTimestamp - mProjectGenerationStartTimestamp) / 1000;
     final String message = "Project generation ended, took " + duration + " seconds!";
 
-    BuckEventsConsumer.this.mProjectGenerationProgress.getNodeObject().setText(message);
-    ApplicationManager.getApplication()
-        .invokeLater(
-            new Runnable() {
-              @Override
-              public void run() {
-                BuckEventsConsumer.this.mTreeModel.reload();
-                // IntelliJ's synchronize action
-                FileDocumentManager.getInstance().saveAllDocuments();
-                VirtualFileManager.getInstance().refreshWithoutFileWatcher(true);
-              }
-            });
+    mBuckUIManager
+        .getBuckTreeViewPanel()
+        .getModifiableModel()
+        .setNodeText(mProjectGenerationProgress, message, true);
   }
 
   @Override
@@ -452,15 +396,10 @@ public class BuckEventsConsumer
               + Math.round(mProjectGenerationProgressValue * 100)
               + "%";
 
-      BuckEventsConsumer.this.mProjectGenerationProgress.getNodeObject().setText(message);
-      ApplicationManager.getApplication()
-          .invokeLater(
-              new Runnable() {
-                @Override
-                public void run() {
-                  BuckEventsConsumer.this.mTreeModel.reload();
-                }
-              });
+      mBuckUIManager
+          .getBuckTreeViewPanel()
+          .getModifiableModel()
+          .setNodeText(mProjectGenerationProgress, message);
     }
   }
 
@@ -476,15 +415,10 @@ public class BuckEventsConsumer
                   + "%",
               TextType.INFO);
 
-      BuckEventsConsumer.this.mCurrentBuildRootElement.add(mProjectGenerationProgress);
-      ApplicationManager.getApplication()
-          .invokeLater(
-              new Runnable() {
-                @Override
-                public void run() {
-                  BuckEventsConsumer.this.mTreeModel.reload();
-                }
-              });
+      mBuckUIManager
+          .getBuckTreeViewPanel()
+          .getModifiableModel()
+          .addChild(mCurrentBuildRootElement, mProjectGenerationProgress);
     }
   }
 
@@ -537,15 +471,11 @@ public class BuckEventsConsumer
         }
       }
     }
-    BuckEventsConsumer.this.mTestResults.getNodeObject().setText(message.toString());
-    ApplicationManager.getApplication()
-        .invokeLater(
-            new Runnable() {
-              @Override
-              public void run() {
-                BuckEventsConsumer.this.mTreeModel.reload();
-              }
-            });
+
+    mBuckUIManager
+        .getBuckTreeViewPanel()
+        .getModifiableModel()
+        .setNodeText(mTestResults, message.toString());
     mTestResultsList.clear();
   }
 
@@ -572,41 +502,25 @@ public class BuckEventsConsumer
     // start may be called before of after progress update
     if (BuckEventsConsumer.this.mTestResults == null) {
       BuckEventsConsumer.this.mTestResults = new BuckTextNode("Running tests", TextType.INFO);
-      BuckEventsConsumer.this.mCurrentBuildRootElement.add(mTestResults);
-
-      ApplicationManager.getApplication()
-          .invokeLater(
-              new Runnable() {
-                @Override
-                public void run() {
-                  BuckEventsConsumer.this.mTreeModel.reload();
-                }
-              });
+      mBuckUIManager
+          .getBuckTreeViewPanel()
+          .getModifiableModel()
+          .addChild(mCurrentBuildRootElement, mTestResults);
     }
   }
 
   @Override
   public void consumeConsoleEvent(final String message) {
-    if (!BuckToolWindowFactory.isToolWindowInstantiated(mProject)) {
-      return;
-    }
-    if (!BuckToolWindowFactory.isToolWindowVisible(mProject)) {
-      BuckToolWindowFactory.showToolWindow(mProject);
-    }
+    mBuckUIManager.getBuckToolWindow().showMainToolWindowIfNecessary();
 
     if (mCurrentBuildRootElement == null) {
       return;
     }
-    mCurrentBuildRootElement.add(new BuckTextNode(message, TextType.ERROR));
 
-    ApplicationManager.getApplication()
-        .invokeLater(
-            new Runnable() {
-              @Override
-              public void run() {
-                BuckEventsConsumer.this.mTreeModel.reload();
-              }
-            });
+    mBuckUIManager
+        .getBuckTreeViewPanel()
+        .getModifiableModel()
+        .addChild(mCurrentBuildRootElement, new BuckTextNode(message, TextType.ERROR));
   }
 
   @Override

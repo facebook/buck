@@ -16,7 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.build;
 
-import com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory;
+import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
@@ -31,23 +31,24 @@ public class BuckKillCommandHandler extends BuckCommandHandler {
 
   @Override
   protected boolean beforeCommand() {
-    if (!BuckBuildManager.getInstance(project()).isBuckProject(project)) {
-      BuckToolWindowFactory.outputConsoleMessage(
-          project(),
-          BuckBuildManager.NOT_BUCK_PROJECT_ERROR_MESSAGE,
-          ConsoleViewContentType.ERROR_OUTPUT);
+    if (!BuckBuildManager.getInstance(project).isBuckProject(project)) {
+      BuckUIManager.getInstance(project)
+          .getBuckDebugPanel()
+          .outputConsoleMessage(
+              BuckBuildManager.NOT_BUCK_PROJECT_ERROR_MESSAGE, ConsoleViewContentType.ERROR_OUTPUT);
       return false;
     }
-    BuckBuildManager.getInstance(project()).setKilling(project, true);
+    BuckBuildManager.getInstance(project).setKilling(project, true);
     return true;
   }
 
   @Override
   protected void afterCommand() {
-    BuckBuildManager buildManager = BuckBuildManager.getInstance(project());
+    BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
     buildManager.setBuilding(project, false);
     buildManager.setKilling(project, false);
-    BuckToolWindowFactory.outputConsoleMessage(
-        project(), "Build aborted\n", ConsoleViewContentType.ERROR_OUTPUT);
+    BuckUIManager.getInstance(project)
+        .getBuckDebugPanel()
+        .outputConsoleMessage("Build aborted\n", ConsoleViewContentType.ERROR_OUTPUT);
   }
 }

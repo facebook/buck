@@ -18,7 +18,8 @@ package com.facebook.buck.intellij.ideabuck.build;
 
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
-import com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory;
+import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
+import com.facebook.buck.intellij.ideabuck.ui.components.BuckDebugPanel;
 import com.intellij.execution.filters.HyperlinkInfo;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.ide.DataManager;
@@ -65,7 +66,7 @@ public class BuckBuildManager {
   }
 
   /** Get saved target for this project from settings. */
-  public String getCurrentSavedTarget(Project project) {
+  public static String getCurrentSavedTarget(Project project) {
     return BuckSettingsProvider.getInstance().getLastAliasForProject(project);
   }
 
@@ -79,7 +80,7 @@ public class BuckBuildManager {
 
   public synchronized void setBuilding(Project project, boolean value) {
     isBuilding = value;
-    BuckToolWindowFactory.updateActionsNow(project);
+    BuckUIManager.getInstance(project).getBuckToolWindow().updateActionsNow();
   }
 
   public boolean isKilling() {
@@ -88,7 +89,7 @@ public class BuckBuildManager {
 
   public synchronized void setKilling(Project project, boolean value) {
     isKilling = value;
-    BuckToolWindowFactory.updateActionsNow(project);
+    BuckUIManager.getInstance(project).getBuckToolWindow().updateActionsNow();
   }
 
   public boolean isBuckProject(Project project) {
@@ -107,10 +108,10 @@ public class BuckBuildManager {
     BuckModule buckModule = project.getComponent(BuckModule.class);
     buckModule.getBuckEventsConsumer().consumeConsoleEvent("Please choose a build target!");
 
-    BuckToolWindowFactory.outputConsoleMessage(
-        project, "Please ", ConsoleViewContentType.ERROR_OUTPUT);
-    BuckToolWindowFactory.outputConsoleHyperlink(
-        project,
+    BuckDebugPanel buckDebugPanel = BuckUIManager.getInstance(project).getBuckDebugPanel();
+
+    buckDebugPanel.outputConsoleMessage("Please ", ConsoleViewContentType.ERROR_OUTPUT);
+    buckDebugPanel.outputConsoleHyperlink(
         "choose a build target!\n",
         new HyperlinkInfo() {
           @Override
@@ -151,16 +152,14 @@ public class BuckBuildManager {
               ModalityState.NON_MODAL);
     }
     Project project = handler.project();
+    BuckDebugPanel buckDebugPanel = BuckUIManager.getInstance(project).getBuckDebugPanel();
 
     String exec = BuckSettingsProvider.getInstance().resolveBuckExecutable();
     if (exec == null) {
-      BuckToolWindowFactory.outputConsoleMessage(
-          project,
-          "Please specify the buck executable path!\n",
-          ConsoleViewContentType.ERROR_OUTPUT);
+      buckDebugPanel.outputConsoleMessage(
+          "Please specify the buck executable path!\n", ConsoleViewContentType.ERROR_OUTPUT);
 
-      BuckToolWindowFactory.outputConsoleMessage(
-          project,
+      buckDebugPanel.outputConsoleMessage(
           "Preference -> Tools -> Buck -> Path to Buck executable\n",
           ConsoleViewContentType.NORMAL_OUTPUT);
       return;

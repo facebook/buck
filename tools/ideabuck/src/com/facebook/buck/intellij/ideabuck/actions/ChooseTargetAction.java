@@ -20,7 +20,7 @@ import com.facebook.buck.intellij.ideabuck.actions.choosetargets.ChooseTargetIte
 import com.facebook.buck.intellij.ideabuck.actions.choosetargets.ChooseTargetModel;
 import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
-import com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory;
+import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
 import com.intellij.ide.actions.GotoActionBase;
 import com.intellij.ide.util.gotoByName.ChooseByNamePopup;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -78,7 +78,8 @@ public class ChooseTargetAction extends GotoActionBase implements DumbAware {
 
             BuckSettingsProvider buckSettingsProvider = BuckSettingsProvider.getInstance();
             buckSettingsProvider.setLastAliasForProject(project, item.getBuildTarget());
-            BuckToolWindowFactory.updateBuckToolWindowTitle(project);
+            BuckUIManager buckUIManager = BuckUIManager.getInstance(project);
+            buckUIManager.getBuckToolWindow().updateMainToolWindowTitleByTarget();
           }
         };
     showNavigationPopup(e, model, callback, "Choose Build Target", true, false);
