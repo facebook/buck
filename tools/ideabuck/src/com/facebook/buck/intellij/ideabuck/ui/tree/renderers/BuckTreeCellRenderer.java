@@ -16,11 +16,9 @@
 
 package com.facebook.buck.intellij.ideabuck.ui.tree.renderers;
 
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeBuild;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetail;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetailError;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeFileError;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeTarget;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckErrorItemNode;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckFileErrorNode;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode;
 import com.google.common.collect.ImmutableMap;
 import com.intellij.ui.components.JBLabel;
 import java.awt.Component;
@@ -29,16 +27,14 @@ import javax.swing.tree.TreeCellRenderer;
 
 public class BuckTreeCellRenderer implements TreeCellRenderer {
 
-  private ImmutableMap<Class<?>, BuildElementRenderer> mRenderers;
+  private ImmutableMap<Class<?>, TreeNodeRenderer> mRenderers;
 
   public BuckTreeCellRenderer() {
     mRenderers =
-        new ImmutableMap.Builder<Class<?>, BuildElementRenderer>()
-            .put(BuckTreeNodeBuild.class, new BuildNodeRenderer())
-            .put(BuckTreeNodeTarget.class, new TargetNodeRenderer())
-            .put(BuckTreeNodeFileError.class, new FileErrorNodeRenderer())
-            .put(BuckTreeNodeDetail.class, new DetailNodeRenderer())
-            .put(BuckTreeNodeDetailError.class, new DetailNodeRenderer())
+        new ImmutableMap.Builder<Class<?>, TreeNodeRenderer>()
+            .put(BuckTextNode.class, new TextNodeRenderer())
+            .put(BuckFileErrorNode.class, new FileErrorNodeRenderer())
+            .put(BuckErrorItemNode.class, new TextNodeRenderer())
             .build();
   }
 
@@ -54,7 +50,7 @@ public class BuckTreeCellRenderer implements TreeCellRenderer {
 
     Class<?> cc = value.getClass();
     if (mRenderers.containsKey(cc)) {
-      BuildElementRenderer renderer = mRenderers.get(value.getClass());
+      TreeNodeRenderer renderer = mRenderers.get(value.getClass());
       return renderer.render(value);
     }
     return new JBLabel("unknown kind of element");

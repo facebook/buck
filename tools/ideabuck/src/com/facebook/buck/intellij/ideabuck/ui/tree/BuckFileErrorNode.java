@@ -14,18 +14,21 @@
  * under the License.
  */
 
-package com.facebook.buck.intellij.ideabuck.ui.tree.renderers;
+package com.facebook.buck.intellij.ideabuck.ui.tree;
 
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeTarget;
-import com.intellij.icons.AllIcons;
-import com.intellij.ui.components.JBLabel;
-import java.awt.Component;
-import javax.swing.SwingConstants;
+import com.facebook.buck.intellij.ideabuck.ui.utils.CompilerErrorItem;
 
-public class TargetNodeRenderer implements BuildElementRenderer {
-  @Override
-  public Component render(Object value) {
-    return new JBLabel(
-        ((BuckTreeNodeTarget) value).getTarget(), AllIcons.Ide.Error, SwingConstants.HORIZONTAL);
+public class BuckFileErrorNode extends BuckTextNode {
+
+  public BuckFileErrorNode(String text) {
+    super(text, TextType.ERROR);
+  }
+
+  public void addErrorItem(CompilerErrorItem error) {
+    if (error.getType() == CompilerErrorItem.Type.ERROR) {
+      add(new BuckErrorItemNode(error.getError(), error.getLine(), error.getColumn()));
+    } else {
+      add(new BuckTextNode(error.getError(), BuckTextNode.TextType.WARNING));
+    }
   }
 }

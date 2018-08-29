@@ -18,10 +18,9 @@ package com.facebook.buck.intellij.ideabuck.ui;
 
 import com.facebook.buck.intellij.ideabuck.actions.BuckInstallDebugAction;
 import com.facebook.buck.intellij.ideabuck.debugger.AndroidDebugger;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeBuild;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetail;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeFileError;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeTarget;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckFileErrorNode;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode.TextType;
 import com.facebook.buck.intellij.ideabuck.ui.utils.CompilerErrorItem;
 import com.facebook.buck.intellij.ideabuck.ui.utils.ErrorExtractor;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckBuildEndConsumer;
@@ -104,11 +103,11 @@ public class BuckEventsConsumer
   private long mProjectGenerationStartTimestamp = 0;
   private long mProjectGenerationFinishedTimestamp = 0;
 
-  BuckTreeNodeBuild mCurrentBuildRootElement;
-  BuckTreeNodeDetail mBuildProgress;
-  BuckTreeNodeDetail mParseProgress;
-  BuckTreeNodeDetail mTestResults;
-  BuckTreeNodeDetail mProjectGenerationProgress;
+  BuckTextNode mCurrentBuildRootElement;
+  BuckTextNode mBuildProgress;
+  BuckTextNode mParseProgress;
+  BuckTextNode mTestResults;
+  BuckTextNode mProjectGenerationProgress;
 
   public void detach() {
     if (mConnection != null) {
@@ -133,7 +132,7 @@ public class BuckEventsConsumer
   public void attach(String target, DefaultTreeModel treeModel) {
     mTreeModel = treeModel;
     mTarget = target == null ? "NONE" : target;
-    mCurrentBuildRootElement = new BuckTreeNodeBuild(mTarget);
+    mCurrentBuildRootElement = new BuckTextNode("Building " + mTarget, TextType.INFO);
 
     ApplicationManager.getApplication()
         .invokeLater(
@@ -183,7 +182,7 @@ public class BuckEventsConsumer
     mBuildProgressValue = progressValue;
     final String message = "Current build progress: " + Math.round(mBuildProgressValue * 100) + "%";
 
-    BuckEventsConsumer.this.mBuildProgress.setDetail(message);
+    BuckEventsConsumer.this.mBuildProgress.getNodeObject().setText(message);
     ApplicationManager.getApplication()
         .invokeLater(
             new Runnable() {
@@ -201,11 +200,10 @@ public class BuckEventsConsumer
     // start may be called before of after progress update
     if (BuckEventsConsumer.this.mParseProgress == null) {
       BuckEventsConsumer.this.mParseProgress =
-          new BuckTreeNodeDetail(
-              mCurrentBuildRootElement,
-              BuckTreeNodeDetail.DetailType.INFO,
-              "Current file parsing progress: " + Math.round(mParseProgressValue * 100) + "%");
-      BuckEventsConsumer.this.mCurrentBuildRootElement.addChild(mParseProgress);
+          new BuckTextNode(
+              "Current file parsing progress: " + Math.round(mParseProgressValue * 100) + "%",
+              TextType.INFO);
+      mCurrentBuildRootElement.add(mParseProgress);
       ApplicationManager.getApplication()
           .invokeLater(
               new Runnable() {
@@ -224,7 +222,7 @@ public class BuckEventsConsumer
     float duration = (mParseFilesEndTimestamp - mParseFilesStartTimestamp) / 1000;
     final String message = "File parsing ended, took " + duration + " seconds!";
 
-    BuckEventsConsumer.this.mParseProgress.setDetail(message);
+    BuckEventsConsumer.this.mParseProgress.getNodeObject().setText(message);
     ApplicationManager.getApplication()
         .invokeLater(
             new Runnable() {
@@ -245,7 +243,7 @@ public class BuckEventsConsumer
       final String message =
           "Current file parsing progress: " + Math.round(mParseProgressValue * 100) + "%";
 
-      BuckEventsConsumer.this.mParseProgress.setDetail(message);
+      BuckEventsConsumer.this.mParseProgress.getNodeObject().setText(message);
       ApplicationManager.getApplication()
           .invokeLater(
               new Runnable() {
@@ -270,34 +268,33 @@ public class BuckEventsConsumer
     mErrors.put(target, existingErrors);
   }
 
-  private BuckTreeNodeTarget buildTargetErrorNode(String target, List<String> errorMessages) {
-    BuckTreeNodeTarget targetNode = new BuckTreeNodeTarget(mCurrentBuildRootElement, target);
+  private BuckTextNode buildTargetErrorNode(String target, List<String> errorMessages) {
+    BuckTextNode targetNode = new BuckTextNode(target, TextType.ERROR);
     for (String currentError : errorMessages) {
       ErrorExtractor errorExtractor = new ErrorExtractor(currentError);
       ImmutableList<CompilerErrorItem> errorItems = errorExtractor.getErrors();
 
-      BuckTreeNodeFileError currentFileErrorNode = null;
+      BuckFileErrorNode currentFileErrorNode = null;
       String currentFilePath = "";
 
       for (CompilerErrorItem currentErrorItem : errorItems) {
         if (!currentErrorItem.getFilePath().equals(currentFilePath)) {
           if (currentFileErrorNode != null) {
             // Add to parent
-            targetNode.addFileError(currentFileErrorNode);
+            targetNode.add(currentFileErrorNode);
           }
           // Create the new node, for the new file
-          currentFileErrorNode =
-              new BuckTreeNodeFileError(
-                  targetNode, currentErrorItem.getFilePath(), currentErrorItem);
+          currentFileErrorNode = new BuckFileErrorNode(currentErrorItem.getFilePath());
+          currentFileErrorNode.addErrorItem(currentErrorItem);
           currentFilePath = currentErrorItem.getFilePath();
         } else {
-          currentFileErrorNode.addError(currentErrorItem);
+          currentFileErrorNode.addErrorItem(currentErrorItem);
         }
       }
 
       if (currentFileErrorNode != null) {
         // Add the leftovers
-        targetNode.addFileError(currentFileErrorNode);
+        targetNode.add(currentFileErrorNode);
       }
     }
     return targetNode;
@@ -312,8 +309,8 @@ public class BuckEventsConsumer
       for (String target : targetsWithErrors) {
         List<String> errorMessages = mErrors.get(target);
         if (errorMessages.size() > 0) {
-          BuckTreeNodeTarget targetNode = buildTargetErrorNode(target, errorMessages);
-          mCurrentBuildRootElement.addChild(targetNode);
+          BuckTextNode targetNode = buildTargetErrorNode(target, errorMessages);
+          mCurrentBuildRootElement.add(targetNode);
         }
       }
     }
@@ -321,17 +318,17 @@ public class BuckEventsConsumer
 
   public void clearDisplay() {
     if (mTestResults != null) {
-      mCurrentBuildRootElement.removeChild(mTestResults);
+      mCurrentBuildRootElement.remove(mTestResults);
     }
     if (mParseProgress != null) {
-      mCurrentBuildRootElement.removeChild(mParseProgress);
+      mCurrentBuildRootElement.remove(mParseProgress);
     }
     if (mBuildProgress != null) {
-      mCurrentBuildRootElement.removeChild(mBuildProgress);
+      mCurrentBuildRootElement.remove(mBuildProgress);
     }
 
     if (mProjectGenerationProgress != null) {
-      mCurrentBuildRootElement.removeChild(mProjectGenerationProgress);
+      mCurrentBuildRootElement.remove(mProjectGenerationProgress);
     }
   }
 
@@ -382,18 +379,14 @@ public class BuckEventsConsumer
 
     if (errorsMessageToUse.length() > 0) {
       clearDisplay();
-      BuckTreeNodeDetail errorsMessageNode =
-          new BuckTreeNodeDetail(
-              BuckEventsConsumer.this.mCurrentBuildRootElement,
-              BuckTreeNodeDetail.DetailType.ERROR,
-              errorsMessageToUse);
-      BuckEventsConsumer.this.mCurrentBuildRootElement.addChild(errorsMessageNode);
+      BuckTextNode errorsMessageNode = new BuckTextNode(errorsMessageToUse, TextType.ERROR);
+      BuckEventsConsumer.this.mCurrentBuildRootElement.add(errorsMessageNode);
 
       // Display errors
       BuckEventsConsumer.this.displayErrors();
     }
 
-    BuckEventsConsumer.this.mBuildProgress.setDetail(message);
+    BuckEventsConsumer.this.mBuildProgress.getNodeObject().setText(message);
     ApplicationManager.getApplication()
         .invokeLater(
             new Runnable() {
@@ -409,12 +402,11 @@ public class BuckEventsConsumer
     mMainBuildStartTimestamp = timestamp;
     if (BuckEventsConsumer.this.mBuildProgress == null) {
       BuckEventsConsumer.this.mBuildProgress =
-          new BuckTreeNodeDetail(
-              BuckEventsConsumer.this.mCurrentBuildRootElement,
-              BuckTreeNodeDetail.DetailType.INFO,
-              "Current build progress: " + Math.round(mBuildProgressValue * 100) + "%");
+          new BuckTextNode(
+              "Current build progress: " + Math.round(mBuildProgressValue * 100) + "%",
+              TextType.INFO);
       // start may be called before of after progress update
-      BuckEventsConsumer.this.mCurrentBuildRootElement.addChild(mBuildProgress);
+      BuckEventsConsumer.this.mCurrentBuildRootElement.add(mBuildProgress);
       ApplicationManager.getApplication()
           .invokeLater(
               new Runnable() {
@@ -434,7 +426,7 @@ public class BuckEventsConsumer
         (mProjectGenerationFinishedTimestamp - mProjectGenerationStartTimestamp) / 1000;
     final String message = "Project generation ended, took " + duration + " seconds!";
 
-    BuckEventsConsumer.this.mProjectGenerationProgress.setDetail(message);
+    BuckEventsConsumer.this.mProjectGenerationProgress.getNodeObject().setText(message);
     ApplicationManager.getApplication()
         .invokeLater(
             new Runnable() {
@@ -460,7 +452,7 @@ public class BuckEventsConsumer
               + Math.round(mProjectGenerationProgressValue * 100)
               + "%";
 
-      BuckEventsConsumer.this.mProjectGenerationProgress.setDetail(message);
+      BuckEventsConsumer.this.mProjectGenerationProgress.getNodeObject().setText(message);
       ApplicationManager.getApplication()
           .invokeLater(
               new Runnable() {
@@ -478,14 +470,13 @@ public class BuckEventsConsumer
     // start may be called before of after progress update
     if (BuckEventsConsumer.this.mProjectGenerationProgress == null) {
       BuckEventsConsumer.this.mProjectGenerationProgress =
-          new BuckTreeNodeDetail(
-              BuckEventsConsumer.this.mCurrentBuildRootElement,
-              BuckTreeNodeDetail.DetailType.INFO,
+          new BuckTextNode(
               "Current project generation progress: "
                   + Math.round(BuckEventsConsumer.this.mProjectGenerationProgressValue * 100)
-                  + "%");
+                  + "%",
+              TextType.INFO);
 
-      BuckEventsConsumer.this.mCurrentBuildRootElement.addChild(mProjectGenerationProgress);
+      BuckEventsConsumer.this.mCurrentBuildRootElement.add(mProjectGenerationProgress);
       ApplicationManager.getApplication()
           .invokeLater(
               new Runnable() {
@@ -546,7 +537,7 @@ public class BuckEventsConsumer
         }
       }
     }
-    BuckEventsConsumer.this.mTestResults.setDetail(message.toString());
+    BuckEventsConsumer.this.mTestResults.getNodeObject().setText(message.toString());
     ApplicationManager.getApplication()
         .invokeLater(
             new Runnable() {
@@ -580,10 +571,8 @@ public class BuckEventsConsumer
     mTestingStartTimestamp = timestamp;
     // start may be called before of after progress update
     if (BuckEventsConsumer.this.mTestResults == null) {
-      BuckEventsConsumer.this.mTestResults =
-          new BuckTreeNodeDetail(
-              mCurrentBuildRootElement, BuckTreeNodeDetail.DetailType.INFO, "Running tests");
-      BuckEventsConsumer.this.mCurrentBuildRootElement.addChild(mTestResults);
+      BuckEventsConsumer.this.mTestResults = new BuckTextNode("Running tests", TextType.INFO);
+      BuckEventsConsumer.this.mCurrentBuildRootElement.add(mTestResults);
 
       ApplicationManager.getApplication()
           .invokeLater(
@@ -608,9 +597,7 @@ public class BuckEventsConsumer
     if (mCurrentBuildRootElement == null) {
       return;
     }
-    mCurrentBuildRootElement.addChild(
-        new BuckTreeNodeDetail(
-            mCurrentBuildRootElement, BuckTreeNodeDetail.DetailType.ERROR, message));
+    mCurrentBuildRootElement.add(new BuckTextNode(message, TextType.ERROR));
 
     ApplicationManager.getApplication()
         .invokeLater(

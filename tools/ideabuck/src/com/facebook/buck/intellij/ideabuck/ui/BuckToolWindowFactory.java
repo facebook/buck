@@ -19,9 +19,9 @@ package com.facebook.buck.intellij.ideabuck.ui;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetail;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetailError;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeFileError;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckErrorItemNode;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckFileErrorNode;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode;
 import com.facebook.buck.intellij.ideabuck.ui.tree.renderers.BuckTreeCellRenderer;
 import com.intellij.execution.filters.HyperlinkInfo;
 import com.intellij.execution.ui.ConsoleView;
@@ -239,9 +239,9 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
             if (selRow != -1 && e.getClickCount() == 2) {
               TreeNode node = (TreeNode) selPath.getLastPathComponent();
               if (node.isLeaf()) {
-                BuckTreeNodeDetail buckNode = (BuckTreeNodeDetail) node;
-                if (buckNode instanceof BuckTreeNodeDetailError) {
-                  BuckToolWindowFactory.this.handleClickOnError((BuckTreeNodeDetailError) buckNode);
+                BuckTextNode buckNode = (BuckTextNode) node;
+                if (buckNode instanceof BuckErrorItemNode) {
+                  BuckToolWindowFactory.this.handleClickOnError((BuckErrorItemNode) buckNode);
                 }
               }
             }
@@ -266,15 +266,15 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
     return treeView;
   }
 
-  private void handleClickOnError(BuckTreeNodeDetailError node) {
+  private void handleClickOnError(BuckErrorItemNode node) {
     TreeNode parentNode = node.getParent();
-    if (parentNode instanceof BuckTreeNodeFileError) {
-      BuckTreeNodeFileError buckParentNode = (BuckTreeNodeFileError) parentNode;
+    if (parentNode instanceof BuckFileErrorNode) {
+      BuckFileErrorNode buckParentNode = (BuckFileErrorNode) parentNode;
 
       DataContext dataContext = DataManager.getInstance().getDataContext();
       Project project = DataKeys.PROJECT.getData(dataContext);
 
-      String relativePath = buckParentNode.getFilePath().replace(project.getBasePath(), "");
+      String relativePath = buckParentNode.getText().replace(project.getBasePath(), "");
 
       VirtualFile virtualFile = project.getBaseDir().findFileByRelativePath(relativePath);
       OpenFileDescriptor openFileDescriptor =

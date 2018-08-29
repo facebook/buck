@@ -16,34 +16,37 @@
 
 package com.facebook.buck.intellij.ideabuck.ui.tree.renderers;
 
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetail;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode;
 import com.google.common.html.HtmlEscapers;
 import com.intellij.icons.AllIcons;
 import com.intellij.ui.components.JBLabel;
 import java.awt.Component;
-import javax.swing.Icon;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 
-public class DetailNodeRenderer implements BuildElementRenderer {
+public class TextNodeRenderer implements TreeNodeRenderer {
   @Override
   public Component render(Object value) {
-    BuckTreeNodeDetail node = (BuckTreeNodeDetail) value;
+    BuckTextNode node = (BuckTextNode) value;
+
+    if (node.getText().isEmpty()) {
+      return new JLabel("");
+    }
 
     Icon icon = AllIcons.Ide.Info_notifications;
-    if (node.getType() == BuckTreeNodeDetail.DetailType.ERROR) {
+    if (node.getTextType() == BuckTextNode.TextType.ERROR) {
       icon = AllIcons.Ide.Error;
-    } else if (node.getType() == BuckTreeNodeDetail.DetailType.WARNING) {
+    } else if (node.getTextType() == BuckTextNode.TextType.WARNING) {
       icon = AllIcons.Ide.Warning_notifications;
     }
 
     String message =
         "<html><pre style='margin:0px'>"
-            + HtmlEscapers.htmlEscaper().escape(node.getDetail())
+            + HtmlEscapers.htmlEscaper().escape(node.getText())
             + "</pre></html>";
 
     JBLabel result = new JBLabel(message, icon, SwingConstants.HORIZONTAL);
 
-    result.setToolTipText("<pre>" + node.getDetail() + "</pre>");
+    result.setToolTipText("<pre>" + node.getText() + "</pre>");
 
     return result;
   }

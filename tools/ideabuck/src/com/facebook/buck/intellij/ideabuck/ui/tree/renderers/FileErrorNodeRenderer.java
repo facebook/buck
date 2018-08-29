@@ -16,28 +16,28 @@
 
 package com.facebook.buck.intellij.ideabuck.ui.tree.renderers;
 
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetail;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeFileError;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckFileErrorNode;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode;
 import com.intellij.icons.AllIcons;
 import com.intellij.ui.components.JBLabel;
 import java.awt.Color;
 import java.awt.Component;
 import javax.swing.SwingConstants;
 
-public class FileErrorNodeRenderer implements BuildElementRenderer {
+public class FileErrorNodeRenderer implements TreeNodeRenderer {
   @Override
   public Component render(Object value) {
 
     JBLabel result =
         new JBLabel(
-            ((BuckTreeNodeFileError) value).getFilePath(),
+            ((BuckFileErrorNode) value).getText(),
             AllIcons.Ide.Warning_notifications,
             SwingConstants.HORIZONTAL);
 
-    BuckTreeNodeFileError buckNode = (BuckTreeNodeFileError) value;
+    BuckFileErrorNode buckNode = (BuckFileErrorNode) value;
     for (int i = 0; i < buckNode.getChildCount(); i++) {
-      BuckTreeNodeDetail childNode = (BuckTreeNodeDetail) buckNode.getChildAt(i);
-      if (childNode.getType() == BuckTreeNodeDetail.DetailType.ERROR) {
+      BuckTextNode childNode = (BuckTextNode) buckNode.getChildAt(i);
+      if (childNode.getTextType() == BuckTextNode.TextType.ERROR) {
         result.setIcon(AllIcons.Ide.Error);
         result.setForeground(Color.RED);
         break;
