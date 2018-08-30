@@ -5,14 +5,24 @@ java_library(
         ":annotations",
         ":extensions",
         ":idea",
+        ":java-api",
+        ":java-impl",
         ":jdom",
         ":openapi",
+        ":picocontainer",
+        ":platform-api",
+        ":platform-impl",
         ":serviceMessages",
         ":util",
     ],
     visibility = [
         "PUBLIC",
     ],
+)
+
+prebuilt_jar(
+    name = "android",
+    binary_jar = "android.jar",
 )
 
 prebuilt_jar(
@@ -26,23 +36,18 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
-    name = "openapi",
-    binary_jar = "openapi.jar",
-)
-
-prebuilt_jar(
-    name = "util",
-    binary_jar = "util.jar",
-)
-
-prebuilt_jar(
     name = "idea",
     binary_jar = "idea.jar",
 )
 
 prebuilt_jar(
-    name = "serviceMessages",
-    binary_jar = "serviceMessages.jar",
+    name = "java-api",
+    binary_jar = "java-api.jar",
+)
+
+prebuilt_jar(
+    name = "java-impl",
+    binary_jar = "java-impl.jar",
 )
 
 prebuilt_jar(
@@ -51,6 +56,31 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
-    name = "android",
-    binary_jar = "android.jar",
+    name = "openapi",
+    binary_jar = "openapi.jar",
+)
+
+prebuilt_jar(
+    name = "picocontainer",
+    binary_jar = "picocontainer.jar",
+)
+
+prebuilt_jar(
+    name = "platform-api",
+    binary_jar = "platform-api.jar",
+)
+
+prebuilt_jar(
+    name = "platform-impl",
+    binary_jar = "platform-impl.jar",
+)
+
+prebuilt_jar(
+    name = "serviceMessages",
+    binary_jar = "serviceMessages.jar",
+)
+
+prebuilt_jar(
+    name = "util",
+    binary_jar = "util.jar",
 )

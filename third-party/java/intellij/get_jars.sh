@@ -13,13 +13,20 @@
 INTELLIJ_LIBS_TO_COPY=(
   annotations.jar
   extensions.jar
-  openapi.jar
-  util.jar
+  java-api.jar
+  java-impl.jar
   jdom.jar
+  openapi.jar
+  picocontainer.jar
+  platform-api.jar
+  platform-impl.jar
   serviceMessages.jar
+  util.jar
 )
 INTELLIJ_LIBS_TO_STUB=(
   idea.jar
+  java-impl.jar
+  platform-impl.jar
 )
 INTELLIJ_LIBS=("${INTELLIJ_LIBS_TO_COPY[@]}" "${INTELLIJ_LIBS_TO_STUB[@]}")
 
@@ -140,7 +147,7 @@ for lib in "${ALL_LIBS[@]}"; do
   fi
 done
 
-grep binary_jar "$BUCK_FILE" | cut -d"'" -f2 | sort | uniq | while IFS= read -r wanted ; do
+grep binary_jar "$BUCK_FILE" | cut -d'"' -f2 | sort | uniq | while IFS= read -r wanted ; do
   FOUND=false
   for copied in "${ALL_LIBS[@]}"; do
     if [[ "$wanted" == "$copied" ]]; then
