@@ -41,7 +41,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
@@ -475,13 +474,20 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   public Path getMetadataTxtPath() {
-    Preconditions.checkState(dexSplitMode.isShouldSplitDex());
+    checkSplitDexEnabled();
     return new SplitDexPaths().metadataFile;
   }
 
   public Path getDexDirectory() {
-    Preconditions.checkState(dexSplitMode.isShouldSplitDex());
+    checkSplitDexEnabled();
     return new SplitDexPaths().jarfilesSubdir;
+  }
+
+  private void checkSplitDexEnabled() {
+    if (!dexSplitMode.isShouldSplitDex()) {
+      throw new HumanReadableException(
+          "A multi-dex build was requested, but `use_split_dex=True` was not specified");
+    }
   }
 
   /** @return the output directories for modular dex files */
