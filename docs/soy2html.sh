@@ -34,4 +34,4 @@ OUTPUT_DIR="$1"
 # Generate javadoc and include it in the output directory.
 ant javadoc-with-android
 mkdir -p "${OUTPUT_DIR}"/javadoc/
-cp -r build/javadoc-with-android/* "${OUTPUT_DIR}"/javadoc/
+cp -r ant-out/javadoc-with-android/* "${OUTPUT_DIR}"/javadoc/
