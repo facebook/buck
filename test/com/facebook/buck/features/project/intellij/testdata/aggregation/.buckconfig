@@ -8,3 +8,4 @@
   ide = intellij
 [intellij]
   android_module_sdk_name = Android SDK
+  keep_module_files_in_module_dirs = true

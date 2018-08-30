@@ -11,3 +11,4 @@
 [intellij]
   jdk_name = Android SDK Version 23
   jdk_type = Android SDK
+  keep_module_files_in_module_dirs = true

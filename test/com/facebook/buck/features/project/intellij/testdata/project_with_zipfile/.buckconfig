@@ -4,3 +4,4 @@
 [intellij]
   jdk_name = 1.8
   jdk_type = JavaSDK
+  keep_module_files_in_module_dirs = true

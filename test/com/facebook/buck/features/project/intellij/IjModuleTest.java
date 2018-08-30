@@ -44,7 +44,7 @@ public class IjModuleTest {
     assertEquals("java_src_com_facebook_foo", javaLibraryModule.getName());
     assertEquals(
         Paths.get("java", "src", "com", "facebook", "foo", "java_src_com_facebook_foo.iml"),
-        javaLibraryModule.getModuleImlFilePath());
+        IjTestProjectConfig.create().getProjectPaths().getModuleImlFilePath(javaLibraryModule));
   }
 
   private static <T> IjModule createModule(TargetNode<?> targetNode) {

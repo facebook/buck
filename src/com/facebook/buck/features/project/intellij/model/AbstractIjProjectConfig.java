@@ -74,6 +74,8 @@ abstract class AbstractIjProjectConfig {
 
   public abstract boolean isSkipBuildEnabled();
 
+  public abstract boolean isKeepModuleFilesInModuleDirsEnabled();
+
   public abstract AggregationMode getAggregationMode();
 
   public abstract Optional<String> getGeneratedFilesListFilename();

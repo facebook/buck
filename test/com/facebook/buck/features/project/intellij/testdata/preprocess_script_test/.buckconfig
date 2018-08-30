@@ -1,3 +1,5 @@
 [project]
   pre_process = ./preprocess.sh
   ide = intellij
+[intellij]
+  keep_module_files_in_module_dirs = true

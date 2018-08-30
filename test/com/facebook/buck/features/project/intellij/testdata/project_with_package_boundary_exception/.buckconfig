@@ -4,3 +4,5 @@
   package_boundary_exceptions = \
     project1, \
     project2
+[intellij]
+  keep_module_files_in_module_dirs = true

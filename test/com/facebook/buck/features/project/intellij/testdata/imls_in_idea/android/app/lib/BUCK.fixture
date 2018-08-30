@@ -1,0 +1,13 @@
+android_resource(
+    name = "res",
+    package = "com.test",
+    res = subdir_glob([("res", "**")]),
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_library(
+    name = "src_release",
+    manifest = "AndroidManifest.xml",
+)

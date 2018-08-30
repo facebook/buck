@@ -1,3 +1,5 @@
 [project]
   ide = intellij
   ignore = test-ignore
+[intellij]
+  keep_module_files_in_module_dirs = true

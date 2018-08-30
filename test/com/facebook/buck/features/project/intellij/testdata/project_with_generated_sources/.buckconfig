@@ -8,3 +8,4 @@
   exclude_artifacts = true
 [intellij]
   generated_sources_label_map = guava_generated_sources => %name%__guava__
+  keep_module_files_in_module_dirs = true

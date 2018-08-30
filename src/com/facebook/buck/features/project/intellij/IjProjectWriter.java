@@ -16,6 +16,8 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import static com.facebook.buck.features.project.intellij.IjProjectPaths.getUrl;
+
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
@@ -48,6 +50,7 @@ public class IjProjectWriter {
   private final IntellijModulesListParser modulesParser;
   private final IJProjectCleaner cleaner;
   private final ProjectFilesystem outFilesystem;
+  private final IjProjectPaths projectPaths;
 
   public IjProjectWriter(
       IjProjectTemplateDataPreparer projectDataPreparer,
@@ -58,6 +61,7 @@ public class IjProjectWriter {
       ProjectFilesystem outFilesystem) {
     this.projectDataPreparer = projectDataPreparer;
     this.projectConfig = projectConfig;
+    this.projectPaths = projectConfig.getProjectPaths();
     this.projectFilesystem = projectFilesystem;
     this.modulesParser = modulesParser;
     this.cleaner = cleaner;
@@ -102,10 +106,10 @@ public class IjProjectWriter {
         "metaInfDirectory",
         module
             .getMetaInfDirectory()
-            .map((dir) -> module.getModuleBasePath().relativize(dir))
+            .map((dir) -> getUrl(projectPaths.getModuleQualifiedPath(dir, module)))
             .orElse(null));
 
-    writeTemplate(moduleContents, module.getModuleImlFilePath());
+    writeTemplate(moduleContents, projectPaths.getModuleImlFilePath(module));
   }
 
   private void writeProjectSettings() throws IOException {
@@ -148,35 +152,33 @@ public class IjProjectWriter {
 
   private void writeLibrary(IjLibrary library) throws IOException {
     ST contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
-    IjProjectPaths projectPaths = projectConfig.getProjectPaths();
     contents.add("name", library.getName());
     contents.add(
         "binaryJars",
         library
             .getBinaryJars()
             .stream()
-            .map(projectPaths::toProjectDirRelativeString)
+            .map(projectPaths::getProjectRelativePath)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     contents.add(
         "classPaths",
         library
             .getClassPaths()
             .stream()
-            .map(projectPaths::toProjectDirRelativeString)
+            .map(projectPaths::getProjectRelativePath)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     contents.add(
         "sourceJars",
         library
             .getSourceJars()
             .stream()
-            .map(projectPaths::toProjectDirRelativeString)
+            .map(projectPaths::getProjectRelativePath)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     contents.add("javadocUrls", library.getJavadocUrls());
     // TODO(mkosiba): support res and assets for aar.
 
     Path path =
-        projectConfig
-            .getProjectPaths()
+        projectPaths
             .getLibrariesDir()
             .resolve(Util.normalizeIntelliJName(library.getName()) + ".xml");
     writeTemplate(contents, path);
@@ -192,7 +194,7 @@ public class IjProjectWriter {
   }
 
   private Path getIdeaConfigDir() {
-    return projectConfig.getProjectPaths().getIdeaConfigDir();
+    return projectPaths.getIdeaConfigDir();
   }
 
   /**
@@ -274,7 +276,7 @@ public class IjProjectWriter {
     ImmutableSet<Path> remainingModuleFilepaths =
         modulesEdited
             .stream()
-            .map(IjModule::getModuleImlFilePath)
+            .map(projectPaths::getModuleImlFilePath)
             .map(MorePaths::pathWithUnixSeparators)
             .map(Paths::get)
             .filter(modulePath -> !existingModuleFilepaths.contains(modulePath))
@@ -290,10 +292,8 @@ public class IjProjectWriter {
         modulePath ->
             finalModulesBuilder.add(
                 ModuleIndexEntry.builder()
-                    .setFilePath(
-                        Paths.get(
-                            projectConfig.getProjectPaths().toProjectDirRelativeString(modulePath)))
-                    .setFileUrl(projectConfig.getProjectPaths().toProjectDirRelativeUrl(modulePath))
+                    .setFilePath(projectPaths.getProjectRelativePath(modulePath))
+                    .setFileUrl(getUrl(projectPaths.getProjectQualifiedPath(modulePath)))
                     .setGroup(projectConfig.getModuleGroupName())
                     .build()));
 

@@ -684,9 +684,20 @@ public class DefaultIjModuleFactoryTest {
                 false,
                 false,
                 false,
-                true)
+                true,
+                false)
             : IjProjectBuckConfig.create(
-                buckConfig, AggregationMode.AUTO, null, "", "", false, false, false, false, true);
+                buckConfig,
+                AggregationMode.AUTO,
+                null,
+                "",
+                "",
+                false,
+                false,
+                false,
+                false,
+                true,
+                false);
     JavaPackageFinder packageFinder =
         (buckConfig == null)
             ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(Collections.emptyList())

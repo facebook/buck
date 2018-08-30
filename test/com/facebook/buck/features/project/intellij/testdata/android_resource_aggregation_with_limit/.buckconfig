@@ -4,3 +4,4 @@
 [intellij]
   aggregate_android_resource_modules = true
   android_resource_module_aggregation_limit = 2
+  keep_module_files_in_module_dirs = true

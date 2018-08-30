@@ -9,3 +9,4 @@
 [intellij]
   android_module_sdk_name = "Google Inc.:Google APIs:24"
   android_module_sdk_type = "AndroidSDK"
+  keep_module_files_in_module_dirs = true

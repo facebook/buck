@@ -6,3 +6,5 @@
   ignore = buck-out
   ide = intellij
   exclude_artifacts = true
+[intellij]
+  keep_module_files_in_module_dirs = true

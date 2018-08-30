@@ -47,10 +47,7 @@ abstract class AbstractIjModule implements IjProjectElement {
 
   public abstract ImmutableSet<BuildTarget> getNonSourceBuildTargets();
 
-  /**
-   * @return path to the top-most directory the module is responsible for. This is also where the
-   *     corresponding .iml file is located.
-   */
+  /** @return path to the top-most directory the module is responsible for. */
   public abstract Path getModuleBasePath();
 
   /** @return paths to various directories the module is responsible for. */
@@ -80,12 +77,6 @@ abstract class AbstractIjModule implements IjProjectElement {
   public abstract Optional<Path> getMetaInfDirectory();
 
   public abstract Optional<Path> getCompilerOutputPath();
-
-  /** @return path where the XML describing the module to IntelliJ will be written to. */
-  @Value.Derived
-  public Path getModuleImlFilePath() {
-    return getModuleBasePath().resolve(getName() + ".iml");
-  }
 
   @Value.Check
   protected void allRulesAreChildrenOfBasePath() {
@@ -138,13 +129,13 @@ abstract class AbstractIjModule implements IjProjectElement {
 
   @Override
   public int hashCode() {
-    return getModuleImlFilePath().hashCode();
+    return getModuleBasePath().hashCode();
   }
 
   @Override
   public boolean equals(Object another) {
     return this == another
         || another instanceof IjModule
-            && getModuleImlFilePath().equals(((IjModule) another).getModuleImlFilePath());
+            && getModuleBasePath().equals(((IjModule) another).getModuleBasePath());
   }
 }

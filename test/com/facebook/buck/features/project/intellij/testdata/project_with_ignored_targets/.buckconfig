@@ -1,4 +1,5 @@
 [intellij]
   ignored_target_labels = ignore_in_intellij
+  keep_module_files_in_module_dirs = true
 [project]
   ide = intellij

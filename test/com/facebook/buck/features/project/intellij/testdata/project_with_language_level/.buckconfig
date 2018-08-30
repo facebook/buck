@@ -12,3 +12,4 @@
   jdk_name = Android SDK Version 23
   jdk_type = Android SDK
   language_level = JDK_1_8
+  keep_module_files_in_module_dirs = true

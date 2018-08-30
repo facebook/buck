@@ -7,3 +7,4 @@
   ide = intellij
 [intellij]
   remove_unused_libraries = true
+  keep_module_files_in_module_dirs = true

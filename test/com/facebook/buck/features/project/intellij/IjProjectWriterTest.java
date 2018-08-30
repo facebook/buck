@@ -139,7 +139,8 @@ public class IjProjectWriterTest {
         false,
         true,
         false,
-        true);
+        true,
+        false);
   }
 
   // Mutable FakeClock, to provide distinct timestamps to a single FakeProjectFileSystem

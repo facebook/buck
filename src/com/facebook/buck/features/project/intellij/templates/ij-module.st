@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="%moduleType%" version="4">
 %if(metaInfDirectory)%
-  <component name="DevKit.ModuleBuildProperties" url="file://$MODULE_DIR$/%metaInfDirectory%/plugin.xml" />
+  <component name="DevKit.ModuleBuildProperties" url="%metaInfDirectory%/plugin.xml" />
 %endif%
 %if(androidFacet.enabled)%
   <component name="FacetManager">
@@ -49,8 +49,8 @@
     %endif%
     <exclude-output />
 %if(androidFacet.enabled)%
-    <content url="file://$MODULE_DIR$%androidFacet.module_gen_path%">
-      <sourceFolder url="file://$MODULE_DIR$%androidFacet.module_gen_path%" isTestSource="false" />
+    <content url="%androidFacet.module_gen_url%">
+      <sourceFolder url="%androidFacet.module_gen_url%" isTestSource="false" />
     </content>
 %endif%
 %generatedSourceFolders:{generatedFolder |

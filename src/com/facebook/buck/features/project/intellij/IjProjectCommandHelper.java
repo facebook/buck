@@ -50,6 +50,7 @@ import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.test.selectors.Nullable;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
@@ -85,7 +86,7 @@ public class IjProjectCommandHelper {
   private final boolean enableParserProfiling;
   private final boolean processAnnotations;
   private final boolean updateOnly;
-  private final String outputDir;
+  private final @Nullable String outputDir;
   private final BuckBuildRunner buckBuildRunner;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
 

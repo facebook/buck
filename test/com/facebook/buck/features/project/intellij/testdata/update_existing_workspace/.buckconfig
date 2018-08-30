@@ -8,3 +8,4 @@
   disable_r_java_idea_generator = true
 [intellij]
   excluded_resource_paths = values-en
+  keep_module_files_in_module_dirs = true

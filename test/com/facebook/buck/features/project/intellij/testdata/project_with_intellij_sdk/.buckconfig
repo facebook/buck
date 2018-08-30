@@ -9,3 +9,4 @@
 [intellij]
   intellij_module_sdk_name = IDEA SDK
   intellij_plugin_labels = intellij_plugin
+  keep_module_files_in_module_dirs = true

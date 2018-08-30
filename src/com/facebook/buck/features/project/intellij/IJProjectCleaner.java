@@ -101,6 +101,7 @@ public class IJProjectCleaner {
 
   public void clean(
       BuckConfig buckConfig,
+      Path ideaConfigDir,
       Path librariesXmlBase,
       boolean runPostGenerationCleaner,
       boolean removeOldLibraries) {
@@ -131,6 +132,9 @@ public class IJProjectCleaner {
                         convertPathToFile(projectFilesystem.resolve("")),
                         IML_FILENAME_FILTER,
                         buckDirectories));
+                topLevelTasks.add(
+                    new CandidateFinderWithExclusions(
+                        ideaConfigDir.toFile(), IML_FILENAME_FILTER, buckDirectories));
               }
               topLevelTasks.add(
                   new CandidateFinder(convertPathToFile(librariesXmlBase), XML_FILENAME_FILTER));

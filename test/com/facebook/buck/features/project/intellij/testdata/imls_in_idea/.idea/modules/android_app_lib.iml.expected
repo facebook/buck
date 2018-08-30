@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="android" name="Android">
+      <configuration>
+        <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="/../../buck-out/android/android/app/lib/gen" />
+        <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="/../../buck-out/android/android/app/lib/gen" />
+        <option name="MANIFEST_FILE_RELATIVE_PATH" value="/../../android/app/lib/AndroidManifest.xml" />
+        <option name="RES_FOLDERS_RELATIVE_PATH" value="file://$MODULE_DIR$/../../buck-out/gen/android/app/lib/res#resources-symlink-tree/res" />
+        <option name="LIBRARY_PROJECT" value="true" />
+        <option name="PROJECT_TYPE" value="1" />
+        <option name="UPDATE_PROPERTY_FILES" value="false" />
+        <option name="ENABLE_SOURCES_AUTOGENERATION" value="true" />
+        <includeAssetsFromLibraries>true</includeAssetsFromLibraries>
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="jar://$MODULE_DIR$/../../buck-out/gen/android/app/lib/lib__src_release__output/src_release.jar!/" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../buck-out/android/android/app/lib/gen">
+      <sourceFolder url="file://$MODULE_DIR$/../../buck-out/android/android/app/lib/gen" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../android/app/lib">
+      <sourceFolder url="file://$MODULE_DIR$/../../android/app/lib" isTestSource="false" packagePrefix="android.app.lib" />
+      <excludeFolder url="file://$MODULE_DIR$/../../android/app/lib/res" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../buck-out/gen/android/app/lib/res#resources-symlink-tree/res">
+      <sourceFolder url="file://$MODULE_DIR$/../../buck-out/gen/android/app/lib/res#resources-symlink-tree/res" isTestSource="false" packagePrefix="com.test" type="java-resource" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

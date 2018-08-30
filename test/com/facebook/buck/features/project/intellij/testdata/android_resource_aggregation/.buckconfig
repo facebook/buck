@@ -3,3 +3,4 @@
   intellij_aggregation_mode = 1
 [intellij]
   aggregate_android_resource_modules = true
+  keep_module_files_in_module_dirs = true

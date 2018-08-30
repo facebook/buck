@@ -361,6 +361,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testImlsInIdea() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("imls_in_idea");
+  }
+
+  @Test
   public void testOutputDir() throws IOException, InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =

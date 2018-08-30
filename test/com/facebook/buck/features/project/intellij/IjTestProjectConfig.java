@@ -23,21 +23,11 @@ import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 public class IjTestProjectConfig {
 
   public static IjProjectConfig create() {
-    return IjProjectBuckConfig.create(
-        FakeBuckConfig.builder().build(),
-        null,
-        null,
-        "",
-        "modules",
-        false,
-        false,
-        true,
-        false,
-        true);
+    return create(FakeBuckConfig.builder().build());
   }
 
   public static IjProjectConfig create(BuckConfig buckConfig) {
     return IjProjectBuckConfig.create(
-        buckConfig, null, null, "", "modules", false, false, true, false, true);
+        buckConfig, null, null, "", "modules", false, false, true, false, true, true);
   }
 }

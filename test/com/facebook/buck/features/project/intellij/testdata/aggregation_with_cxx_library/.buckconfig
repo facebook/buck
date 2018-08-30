@@ -1,5 +1,6 @@
 [intellij]
     default_android_manifest_path = src/main/AndroidManifest.xml
+    keep_module_files_in_module_dirs = true
 [project]
     intellij_aggregation_mode = shallow
     ide = intellij

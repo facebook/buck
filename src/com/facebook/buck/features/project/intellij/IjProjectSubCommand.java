@@ -127,6 +127,11 @@ public class IjProjectSubCommand extends ProjectSubCommand {
   @Nullable
   private String outputDir = null;
 
+  @Option(
+      name = "--keep-module-files-in-module-dirs",
+      usage = "Write module iml files to each modules working directory, instead of .idea/modules.")
+  private boolean keepModuleFilesInModuleDirs = false;
+
   @Override
   public String getOptionValue() {
     return "intellij";
@@ -157,7 +162,8 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             removeUnusedLibraries,
             excludeArtifacts,
             includeTransitiveDependencies,
-            skipBuild || !build);
+            skipBuild || !build,
+            keepModuleFilesInModuleDirs);
 
     IjProjectCommandHelper projectCommandHelper =
         new IjProjectCommandHelper(

@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.io.file.MorePaths;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,49 +24,79 @@ public class IjProjectPaths {
   private final Path projectRootPath;
   private final Path ideaConfigDir;
   private final Path librariesDir;
+  private final Path modulesDir;
+  private final boolean keepModuleFilesInModuleDirs;
 
-  public IjProjectPaths(String projectRoot) {
+  private static final String MODULE_DIR = "$MODULE_DIR$";
+  private static final String PROJECT_DIR = "$PROJECT_DIR$";
+
+  public IjProjectPaths(String projectRoot, boolean keepModuleFilesInModuleDirs) {
     this.projectRootPath = Paths.get(projectRoot);
     this.ideaConfigDir = projectRootPath.resolve(".idea");
     this.librariesDir = ideaConfigDir.resolve("libraries");
+    this.modulesDir = ideaConfigDir.resolve("modules");
+    this.keepModuleFilesInModuleDirs = keepModuleFilesInModuleDirs;
   }
 
-  Path getIdeaConfigDir() {
+  public Path getIdeaConfigDir() {
     return ideaConfigDir;
   }
 
-  Path getLibrariesDir() {
+  public Path getLibrariesDir() {
     return librariesDir;
   }
 
-  /**
-   * @param path path to folder or jar.
-   * @param moduleLocationBasePath path to the location of the .iml file.
-   * @return a path, relative to the module .iml file location describing a folder or jar in
-   *     IntelliJ format.
-   */
-  static String toModuleDirRelativeString(Path path, Path moduleLocationBasePath) {
-    String moduleRelativePath = moduleLocationBasePath.relativize(path).toString();
-    if (moduleRelativePath.isEmpty()) {
-      return "file://$MODULE_DIR$";
-    } else if (moduleRelativePath.endsWith(".jar")) {
-      return "jar://$MODULE_DIR$/" + MorePaths.pathWithUnixSeparators(moduleRelativePath) + "!/";
+  /** @return path where the XML describing the module to IntelliJ will be written to. */
+  public Path getModuleImlFilePath(IjModule module) {
+    return getModuleDir(module).resolve(module.getName() + ".iml");
+  }
+
+  /** @return the directory containing the modules .iml file, $MODULE_DIR$ points to this. */
+  public Path getModuleDir(IjModule module) {
+    return keepModuleFilesInModuleDirs ? module.getModuleBasePath() : modulesDir;
+  }
+
+  /** @return path relative to module path, prefixed with $MODULE_DIR$ */
+  public String getModuleQualifiedPath(Path path, IjModule module) {
+    String relativePath = MorePaths.pathWithUnixSeparators(getModuleRelativePath(path, module));
+    if (relativePath.isEmpty()) {
+      return MODULE_DIR;
     } else {
-      return "file://$MODULE_DIR$/" + MorePaths.pathWithUnixSeparators(moduleRelativePath);
+      return MODULE_DIR + "/" + relativePath;
     }
   }
 
-  String toProjectDirRelativeString(Path repoRelativePath) {
-    return MorePaths.pathWithUnixSeparators(
-        projectRootPath.toAbsolutePath().relativize(repoRelativePath.toAbsolutePath()));
+  /** @return path relative to module dir, for a path relative to the project root */
+  public Path getModuleRelativePath(Path path, IjModule module) {
+    return getModuleDir(module).relativize(path);
   }
 
-  String toProjectDirRelativeUrl(Path repoRelativePath) {
-    String path = toProjectDirRelativeString(repoRelativePath);
-    if (path.isEmpty()) {
-      return "file://$PROJECT_DIR$";
+  /** @return path relative to project root, prefixed with $PROJECT_DIR$ */
+  public String getProjectQualifiedPath(Path path) {
+    String projectRelativePath = MorePaths.pathWithUnixSeparators(getProjectRelativePath(path));
+    if (projectRelativePath.isEmpty()) {
+      return PROJECT_DIR;
     } else {
-      return "file://$PROJECT_DIR$/" + path;
+      return PROJECT_DIR + "/" + projectRelativePath;
     }
+  }
+
+  /** @return path relative to project root */
+  public Path getProjectRelativePath(Path path) {
+    return projectRootPath.toAbsolutePath().relativize(path.toAbsolutePath());
+  }
+
+  /** @return url string for qualified path */
+  public static String getUrl(String qualifiedPath) {
+    if (qualifiedPath.endsWith(".jar")) {
+      return "jar://" + qualifiedPath + "!/";
+    } else {
+      return "file://" + qualifiedPath;
+    }
+  }
+
+  /** Paths in Android facet config marked RELATIVE_PATH expect / prefix */
+  public static String getAndroidFacetRelativePath(Path path) {
+    return "/" + path.toString();
   }
 }

@@ -4,3 +4,4 @@
 [intellij]
   aggregate_android_resource_modules = true
   generate_android_manifest = true
+  keep_module_files_in_module_dirs = true

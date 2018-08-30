@@ -45,7 +45,8 @@ public class IjProjectBuckConfig {
       boolean removeUnusedLibraries,
       boolean excludeArtifacts,
       boolean includeTransitiveDependencies,
-      boolean skipBuild) {
+      boolean skipBuild,
+      boolean keepModuleFilesInModuleDirsEnabled) {
     Optional<String> excludedResourcePathsOption =
         buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "excluded_resource_paths");
 
@@ -66,6 +67,11 @@ public class IjProjectBuckConfig {
 
     Optional<Path> androidManifest =
         buckConfig.getPath(INTELLIJ_BUCK_CONFIG_SECTION, "default_android_manifest_path", false);
+
+    keepModuleFilesInModuleDirsEnabled =
+        buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "keep_module_files_in_module_dirs", false)
+            || keepModuleFilesInModuleDirsEnabled;
 
     return IjProjectConfig.builder()
         .setAutogenerateAndroidFacetSourcesEnabled(
@@ -94,6 +100,7 @@ public class IjProjectBuckConfig {
         .setLabelToGeneratedSourcesMap(labelToGeneratedSourcesMap)
         .setAndroidManifest(androidManifest)
         .setCleanerEnabled(isCleanerEnabled)
+        .setKeepModuleFilesInModuleDirsEnabled(keepModuleFilesInModuleDirsEnabled)
         .setRemovingUnusedLibrariesEnabled(
             isRemovingUnusedLibrariesEnabled(removeUnusedLibraries, buckConfig))
         .setExcludeArtifactsEnabled(isExcludingArtifactsEnabled(excludeArtifacts, buckConfig))
@@ -103,7 +110,7 @@ public class IjProjectBuckConfig {
         .setAggregationMode(getAggregationMode(aggregationMode, buckConfig))
         .setGeneratedFilesListFilename(Optional.ofNullable(generatedFilesListFilename))
         .setProjectRoot(projectRoot)
-        .setProjectPaths(new IjProjectPaths(projectRoot))
+        .setProjectPaths(new IjProjectPaths(projectRoot, keepModuleFilesInModuleDirsEnabled))
         .setIncludeTransitiveDependency(
             isIncludingTransitiveDependencyEnabled(includeTransitiveDependencies, buckConfig))
         .setModuleGroupName(getModuleGroupName(moduleGroupName, buckConfig))
