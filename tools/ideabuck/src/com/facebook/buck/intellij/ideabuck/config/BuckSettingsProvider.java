@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 
-/** Load and save buck setting states across IDE restarts. */
+/** Application-level preferences. */
 @State(
     name = "BuckOptionsProvider",
     storages = {@Storage(file = StoragePathMacros.APP_CONFIG + "/buck.xml")})
@@ -218,11 +218,20 @@ public class BuckSettingsProvider
     state.customizedInstallSettingCommand = customizedInstallSettingCommand;
   }
 
+  /** @deprecated Use {@link BuckProjectSettingsProvider#getLastAlias()} */
+  @Deprecated
   public @Nullable String getLastAliasForProject(Project project) {
-    return state.lastAlias.get(project.getBasePath());
+    BuckProjectSettingsProvider projectSettingsProvider =
+        BuckProjectSettingsProvider.getInstance(project);
+    return projectSettingsProvider
+        .getLastAlias()
+        .orElse(state.lastAlias.get(project.getBasePath()));
   }
 
+  /** @deprecated Use {@link BuckProjectSettingsProvider#setLastAlias(String)} */
+  @Deprecated
   public void setLastAliasForProject(Project project, String buildTarget) {
+    BuckProjectSettingsProvider.getInstance(project).setLastAlias(buildTarget);
     state.lastAlias.put(project.getBasePath(), buildTarget);
   }
 
@@ -230,7 +239,7 @@ public class BuckSettingsProvider
   public static class State {
 
     /** Remember the last used buck alias for each historical project. */
-    public Map<String, String> lastAlias = new HashMap<>();
+    @Deprecated public Map<String, String> lastAlias = new HashMap<>();
 
     /** Buck executable to prefer to whatever can be found by the BuckExecutableDetector. */
     public String buckExecutable = null;
