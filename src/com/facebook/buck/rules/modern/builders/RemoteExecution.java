@@ -180,8 +180,14 @@ public abstract class RemoteExecution implements IsolatedExecution {
 
   private ImmutableSortedMap<String, String> getBuilderEnvironmentOverrides(
       ImmutableList<Path> bootstrapClasspath, Iterable<Path> classpath) {
+    // TODO(shivanker): Pass all user environment overrides to remote workers.
     return ImmutableSortedMap.of(
-        "CLASSPATH", classpathArg(bootstrapClasspath), "BUCK_CLASSPATH", classpathArg(classpath));
+        "CLASSPATH",
+        classpathArg(bootstrapClasspath),
+        "BUCK_CLASSPATH",
+        classpathArg(classpath),
+        "BUCK_DISTCC",
+        "0");
   }
 
   private ImmutableList<String> getBuilderCommand(
