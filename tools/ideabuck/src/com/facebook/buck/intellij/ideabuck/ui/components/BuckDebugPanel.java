@@ -17,45 +17,12 @@
 package com.facebook.buck.intellij.ideabuck.ui.components;
 
 import com.intellij.execution.filters.HyperlinkInfo;
-import com.intellij.execution.impl.ConsoleViewImpl;
-import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
-import com.intellij.openapi.project.Project;
-import javax.swing.JComponent;
 
-public class BuckDebugPanel implements BuckToolWindowPanel {
+public interface BuckDebugPanel extends BuckToolWindowPanel {
+  void outputConsoleMessage(String message, ConsoleViewContentType type);
 
-  private static final String OUTPUT_WINDOW_CONTENT_ID = "BuckOutputWindowContent";
-  private ConsoleView outputConsole;
+  void outputConsoleHyperlink(String link, HyperlinkInfo linkInfo);
 
-  public BuckDebugPanel(Project project) {
-    outputConsole = new ConsoleViewImpl(project, false);
-  }
-
-  public synchronized void outputConsoleMessage(String message, ConsoleViewContentType type) {
-    outputConsole.print(message, type);
-  }
-
-  public synchronized void outputConsoleHyperlink(String link, HyperlinkInfo linkInfo) {
-    outputConsole.printHyperlink(link, linkInfo);
-  }
-
-  public synchronized void cleanConsole() {
-    outputConsole.clear();
-  }
-
-  @Override
-  public String getId() {
-    return OUTPUT_WINDOW_CONTENT_ID;
-  }
-
-  @Override
-  public String getTitle() {
-    return "Debug";
-  }
-
-  @Override
-  public JComponent getComponent() {
-    return outputConsole.getComponent();
-  }
+  void cleanConsole();
 }

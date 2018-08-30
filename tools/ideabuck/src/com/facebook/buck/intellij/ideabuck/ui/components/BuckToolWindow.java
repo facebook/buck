@@ -16,149 +16,36 @@
 
 package com.facebook.buck.intellij.ideabuck.ui.components;
 
-import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
-import com.intellij.execution.ui.RunnerLayoutUi;
-import com.intellij.execution.ui.layout.PlaceInGrid;
-import com.intellij.ide.ui.UISettings;
 import com.intellij.openapi.actionSystem.ActionGroup;
-import com.intellij.openapi.actionSystem.ActionManager;
-import com.intellij.openapi.actionSystem.ActionPlaces;
-import com.intellij.openapi.actionSystem.DefaultActionGroup;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowManager;
-import com.intellij.ui.content.Content;
-import com.intellij.ui.content.ContentManager;
 import org.jetbrains.annotations.Nullable;
 
-public class BuckToolWindow {
-  public static final String MAIN_TOOL_WINDOW_ID = "Buck";
-  public static final String RUN_TOOL_WINDOW_ID = "Run";
+public interface BuckToolWindow {
+  String MAIN_TOOL_WINDOW_ID = "Buck";
+  String RUN_TOOL_WINDOW_ID = "Run";
 
-  private final Project project;
-  private final RunnerLayoutUi runnerLayoutUi;
-  private ToolWindow mainToolWindow;
-  private ToolWindow runToolWindow;
+  void addPanel(BuckToolWindowPanel buckToolWindowPanel);
 
-  public BuckToolWindow(Project project) {
-    this.project = project;
-    this.runnerLayoutUi =
-        RunnerLayoutUi.Factory.getInstance(project).create("buck", "buck", "buck", project);
-  }
+  void initBuckToolWindow();
 
-  public void addPanel(BuckToolWindowPanel buckToolWindowPanel) {
-    Content content =
-        runnerLayoutUi.createContent(
-            buckToolWindowPanel.getId(),
-            buckToolWindowPanel.getComponent(),
-            buckToolWindowPanel.getTitle(),
-            null,
-            null);
-    content.setCloseable(false);
-    content.setPinnable(false);
-    runnerLayoutUi.addContent(content, 0, PlaceInGrid.center, false);
-  }
+  void showMainToolbar();
 
-  public void initBuckToolWindow() {
-    mainToolWindow = ToolWindowManager.getInstance(project).getToolWindow(MAIN_TOOL_WINDOW_ID);
-    runToolWindow = ToolWindowManager.getInstance(project).getToolWindow(RUN_TOOL_WINDOW_ID);
-    runnerLayoutUi.getOptions().setLeftToolbar(getLeftToolbarActions(), ActionPlaces.UNKNOWN);
+  void showMainToolWindow();
 
-    runnerLayoutUi.updateActionsNow();
+  void showRunToolWindow();
 
-    final ContentManager contentManager = mainToolWindow.getContentManager();
-    Content content =
-        contentManager.getFactory().createContent(runnerLayoutUi.getComponent(), "", true);
-    contentManager.addContent(content);
+  void showMainToolWindowIfNecessary();
 
-    updateMainToolWindowTitleByTarget();
-  }
+  boolean isToolWindowInstantiated();
 
-  public void showMainToolbar() {
-    ApplicationManager.getApplication()
-        .invokeLater(
-            () -> {
-              UISettings uiSettings = UISettings.getInstance();
-              uiSettings.SHOW_MAIN_TOOLBAR = true;
-              uiSettings.fireUISettingsChanged();
-            });
-  }
+  boolean isMainToolWindowVisible();
 
-  public void showMainToolWindow() {
-    showToolWindow(mainToolWindow);
-  }
+  boolean isRunToolWindowVisible();
 
-  public void showRunToolWindow() {
-    showToolWindow(runToolWindow);
-  }
+  void updateMainToolWindowTitleByTarget();
 
-  private void showToolWindow(ToolWindow toolWindow) {
-    ApplicationManager.getApplication()
-        .getInvokator()
-        .invokeLater(
-            () -> {
-              if (toolWindow != null) {
-                toolWindow.activate(null, false);
-              }
-            });
-  }
+  void updateMainToolWindowTitle(@Nullable String title);
 
-  public void showMainToolWindowIfNecessary() {
-    if (!isToolWindowInstantiated()) {
-      return;
-    }
-    if (!isMainToolWindowVisible()) {
-      showMainToolWindow();
-    }
-  }
+  ActionGroup getLeftToolbarActions();
 
-  public boolean isToolWindowInstantiated() {
-    return !project.isDisposed() && ToolWindowManager.getInstance(project) != null;
-  }
-
-  public boolean isMainToolWindowVisible() {
-    return isToolWindowVisible(mainToolWindow);
-  }
-
-  public boolean isRunToolWindowVisible() {
-    return isToolWindowVisible(runToolWindow);
-  }
-
-  private boolean isToolWindowVisible(ToolWindow toolWindow) {
-    return toolWindow != null && toolWindow.isVisible();
-  }
-
-  public void updateMainToolWindowTitleByTarget() {
-    String target = BuckBuildManager.getInstance(project).getCurrentSavedTarget(project);
-    updateMainToolWindowTitle("Target: " + target);
-  }
-
-  public void updateMainToolWindowTitle(@Nullable String title) {
-    ToolWindow toolWindow =
-        ToolWindowManager.getInstance(project).getToolWindow(MAIN_TOOL_WINDOW_ID);
-    toolWindow.setTitle(title == null ? "" : title);
-  }
-
-  public ActionGroup getLeftToolbarActions() {
-    ActionManager actionManager = ActionManager.getInstance();
-
-    DefaultActionGroup group = new DefaultActionGroup();
-
-    group.add(actionManager.getAction("buck.ChooseTarget"));
-    group.addSeparator();
-    group.add(actionManager.getAction("buck.Build"));
-    group.add(actionManager.getAction("buck.Test"));
-    group.add(actionManager.getAction("buck.Install"));
-    group.add(actionManager.getAction("buck.InstallDebug"));
-    group.add(actionManager.getAction("buck.Uninstall"));
-    group.add(actionManager.getAction("buck.Kill"));
-    group.add(actionManager.getAction("buck.ProjectGeneration"));
-
-    return group;
-  }
-
-  public synchronized void updateActionsNow() {
-    ApplicationManager.getApplication().invokeLater(() -> runnerLayoutUi.updateActionsNow());
-  }
+  void updateActionsNow();
 }

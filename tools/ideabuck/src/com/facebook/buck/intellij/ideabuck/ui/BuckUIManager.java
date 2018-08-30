@@ -17,13 +17,17 @@
 package com.facebook.buck.intellij.ideabuck.ui;
 
 import com.facebook.buck.intellij.ideabuck.ui.components.BuckDebugPanel;
+import com.facebook.buck.intellij.ideabuck.ui.components.BuckDebugPanelImpl;
 import com.facebook.buck.intellij.ideabuck.ui.components.BuckToolWindow;
+import com.facebook.buck.intellij.ideabuck.ui.components.BuckToolWindowImpl;
 import com.facebook.buck.intellij.ideabuck.ui.components.BuckTreeViewPanel;
+import com.facebook.buck.intellij.ideabuck.ui.components.BuckTreeViewPanelImpl;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 
 public class BuckUIManager {
 
+  private Project mProject;
   private BuckToolWindow mBuckToolWindow;
   private BuckDebugPanel mBuckDebugPanel;
   private BuckTreeViewPanel mBuckTreeViewPanel;
@@ -33,28 +37,35 @@ public class BuckUIManager {
   }
 
   public BuckUIManager(Project project) {
-    mBuckToolWindow = new BuckToolWindow(project);
-    mBuckDebugPanel = new BuckDebugPanel(project);
-    mBuckTreeViewPanel = new BuckTreeViewPanel();
+    mProject = project;
   }
 
   public BuckDebugPanel getBuckDebugPanel() {
+    if (mBuckDebugPanel == null) {
+      mBuckDebugPanel = new BuckDebugPanelImpl(mProject);
+    }
     return mBuckDebugPanel;
   }
 
   public BuckTreeViewPanel getBuckTreeViewPanel() {
+    if (mBuckTreeViewPanel == null) {
+      mBuckTreeViewPanel = new BuckTreeViewPanelImpl();
+    }
     return mBuckTreeViewPanel;
   }
 
   public void initBuckToolWindow(boolean hasDebugPanel) {
-    mBuckToolWindow.addPanel(mBuckTreeViewPanel);
+    getBuckToolWindow().addPanel(getBuckTreeViewPanel());
     if (hasDebugPanel) {
-      mBuckToolWindow.addPanel(mBuckDebugPanel);
+      getBuckToolWindow().addPanel(getBuckDebugPanel());
     }
-    mBuckToolWindow.initBuckToolWindow();
+    getBuckToolWindow().initBuckToolWindow();
   }
 
   public BuckToolWindow getBuckToolWindow() {
+    if (mBuckToolWindow == null) {
+      mBuckToolWindow = new BuckToolWindowImpl(mProject);
+    }
     return mBuckToolWindow;
   }
 }
