@@ -36,7 +36,7 @@ import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
-import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
+import com.facebook.buck.util.concurrent.AutoCloseableReadWriteLock;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -300,8 +300,8 @@ public class DaemonicParserState {
   @GuardedBy("cachedStateLock")
   private Map<Path, Iterable<String>> cachedIncludes;
 
-  private final AutoCloseableReadWriteUpdateLock cachedStateLock;
-  private final AutoCloseableReadWriteUpdateLock cellStateLock;
+  private final AutoCloseableReadWriteLock cachedStateLock;
+  private final AutoCloseableReadWriteLock cellStateLock;
 
   public DaemonicParserState(
       TypeCoercerFactory typeCoercerFactory,
@@ -348,8 +348,8 @@ public class DaemonicParserState {
 
     this.rawNodeCache = new DaemonicRawCacheView();
 
-    this.cachedStateLock = new AutoCloseableReadWriteUpdateLock();
-    this.cellStateLock = new AutoCloseableReadWriteUpdateLock();
+    this.cachedStateLock = new AutoCloseableReadWriteLock();
+    this.cellStateLock = new AutoCloseableReadWriteLock();
   }
 
   TypeCoercerFactory getTypeCoercerFactory() {
