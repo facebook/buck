@@ -747,13 +747,13 @@ docsearch({
 {template .cmd_link}
   {if not $section}
     {if $rendered_text}
-      <a href="{ROOT}command/{$name}.html"><code>{$rendered_text}</code></a>
+      <a href="{ROOT}command/{$name}.html">{$rendered_text|noAutoescape}</a>
     {else}
       <a href="{ROOT}command/{$name}.html"><code>buck {$name}</code></a>
     {/if}
   {else}
     {if $rendered_text}
-      <a href="{ROOT}command/{$name}.html#{$section}"><code>{$rendered_text}</code></a>
+      <a href="{ROOT}command/{$name}.html#{$section}">{$rendered_text|noAutoescape}</a>
     {else}
       <a href="{ROOT}command/{$name}.html#{$section}"><code>{$section}</code></a>
     {/if}
