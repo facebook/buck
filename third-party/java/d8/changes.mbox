@@ -1,4 +1,4 @@
-From 493b9a30b31a024e2289ed1d430880892c2625cb Mon Sep 17 00:00:00 2001
+From 305e86cbf58409e84c035dc9e275eba014e4283c Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
 Date: Tue, 21 Nov 2017 22:52:39 -0800
 Subject: [PATCH] Compute referenced resources in D8 and bypass default
@@ -15,7 +15,7 @@ Subject: [PATCH] Compute referenced resources in D8 and bypass default
  4 files changed, 27 insertions(+), 14 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
-index 99b0a1e7..8e7fcad6 100644
+index 1a081137..a7b643fc 100644
 --- a/src/main/java/com/android/tools/r8/D8Command.java
 +++ b/src/main/java/com/android/tools/r8/D8Command.java
 @@ -150,6 +150,11 @@ public final class D8Command extends BaseCompilerCommand {
@@ -41,7 +41,7 @@ index 99b0a1e7..8e7fcad6 100644
      internal.debug = getMode() == CompilationMode.DEBUG;
      internal.programConsumer = getProgramConsumer();
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index 3f020093..3e19a17e 100644
+index 4b40c148..dafdf7d0 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 @@ -29,6 +29,7 @@ import java.util.ArrayList;
@@ -52,9 +52,9 @@ index 3f020093..3e19a17e 100644
  import java.util.IdentityHashMap;
  import java.util.List;
  import java.util.Map;
-@@ -860,4 +861,17 @@ public class DexItemFactory {
-   synchronized public void forAllCallSites(Consumer<DexCallSite> f) {
-     new ArrayList<>(callSites).forEach(f);
+@@ -853,4 +854,17 @@ public class DexItemFactory {
+   synchronized public void forAllTypes(Consumer<DexType> f) {
+     new ArrayList<>(types.values()).forEach(f);
    }
 +
 +  // Facebook addition: compute the resources referenced by this dex file.
@@ -71,10 +71,10 @@ index 3f020093..3e19a17e 100644
 +  }
  }
 diff --git a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-index c75456d6..ae3c8329 100644
+index 0ca4f164..f5f7374e 100644
 --- a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
 +++ b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-@@ -166,18 +166,10 @@ final class ClassProcessor {
+@@ -174,18 +174,10 @@ final class ClassProcessor {
          if (superClass != null) {
            current = superClass;
          } else {
