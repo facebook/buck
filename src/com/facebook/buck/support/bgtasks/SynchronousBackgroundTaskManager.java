@@ -41,7 +41,9 @@ public class SynchronousBackgroundTaskManager implements BackgroundTaskManager {
   @Override
   public String schedule(BackgroundTask<?> task) {
     ManagedBackgroundTask managedTask = ManagedBackgroundTask.of(task);
-    scheduledTasks.add(managedTask);
+    synchronized (scheduledTasks) {
+      scheduledTasks.add(managedTask);
+    }
     return managedTask.getTaskId();
   }
 
@@ -81,9 +83,11 @@ public class SynchronousBackgroundTaskManager implements BackgroundTaskManager {
         break;
 
       case COMMAND_END:
-        while (scheduledTasks.size() > 0) {
-          ManagedBackgroundTask task = scheduledTasks.poll();
-          runTask(task);
+        synchronized (scheduledTasks) {
+          while (scheduledTasks.size() > 0) {
+            ManagedBackgroundTask task = scheduledTasks.poll();
+            runTask(task);
+          }
         }
     }
   }
@@ -96,6 +100,8 @@ public class SynchronousBackgroundTaskManager implements BackgroundTaskManager {
 
   @VisibleForTesting
   protected List<ManagedBackgroundTask> getScheduledTaskCount() {
-    return new ArrayList<>(scheduledTasks);
+    synchronized (scheduledTasks) {
+      return new ArrayList<>(scheduledTasks);
+    }
   }
 }
