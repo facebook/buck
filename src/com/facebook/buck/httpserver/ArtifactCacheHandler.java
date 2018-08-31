@@ -61,13 +61,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
       String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
       throws IOException {
     try {
-      int status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-      String method = baseRequest.getMethod();
-      if (method.equals("GET")) {
-        status = handleGet(baseRequest, response);
-      } else if (method.equals("PUT")) {
-        status = handlePut(baseRequest, response);
-      }
+      int status = handle(baseRequest, response);
       response.setStatus(status);
     } catch (Exception e) {
       LOG.error(e, "Exception when handling request %s", target);
@@ -79,12 +73,22 @@ public class ArtifactCacheHandler extends AbstractHandler {
     }
   }
 
-  private int handleGet(Request baseRequest, HttpServletResponse response) throws IOException {
+  private int handle(Request baseRequest, HttpServletResponse response) throws IOException {
     if (!artifactCache.isPresent()) {
       response.getWriter().write("Serving local cache is disabled for this instance.");
       return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
     }
+    int status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+    String method = baseRequest.getMethod();
+    if (method.equals("GET")) {
+      status = handleGet(baseRequest, response);
+    } else if (method.equals("PUT")) {
+      status = handlePut(baseRequest, response);
+    }
+    return status;
+  }
 
+  private int handleGet(Request baseRequest, HttpServletResponse response) throws IOException {
     String path = baseRequest.getHttpURI().getPath();
     String[] pathElements = path.split("/");
     if (pathElements.length != 4 || !pathElements[2].equals("key")) {
@@ -129,11 +133,6 @@ public class ArtifactCacheHandler extends AbstractHandler {
   }
 
   private int handlePut(Request baseRequest, HttpServletResponse response) throws IOException {
-    if (!artifactCache.isPresent()) {
-      response.getWriter().write("Serving local cache is disabled for this instance.");
-      return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-    }
-
     Path temp = null;
     try {
       projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
