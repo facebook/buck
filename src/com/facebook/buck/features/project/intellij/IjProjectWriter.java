@@ -18,14 +18,10 @@ package com.facebook.buck.features.project.intellij;
 
 import static com.facebook.buck.features.project.intellij.IjProjectPaths.getUrl;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.features.project.intellij.model.ContentRoot;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
-import com.facebook.buck.features.project.intellij.model.IjProjectElement;
 import com.facebook.buck.features.project.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -33,7 +29,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -85,7 +80,7 @@ public class IjProjectWriter {
     writeWorkspace();
   }
 
-  private void writeModule(IjModule module, ImmutableList<ContentRoot> contentRoots)
+  private boolean writeModule(IjModule module, ImmutableList<ContentRoot> contentRoots)
       throws IOException {
 
     ST moduleContents = StringTemplateFile.MODULE_TEMPLATE.getST();
@@ -109,7 +104,7 @@ public class IjProjectWriter {
             .map((dir) -> getUrl(projectPaths.getModuleQualifiedPath(dir, module)))
             .orElse(null));
 
-    writeTemplate(moduleContents, projectPaths.getModuleImlFilePath(module));
+    return writeTemplate(moduleContents, projectPaths.getModuleImlFilePath(module));
   }
 
   private void writeProjectSettings() throws IOException {
@@ -202,9 +197,11 @@ public class IjProjectWriter {
    *
    * @param path Relative path from project root
    */
-  private void writeTemplate(ST contents, Path path) throws IOException {
-    StringTemplateFile.writeToFile(outFilesystem, contents, path, getIdeaConfigDir());
+  private boolean writeTemplate(ST contents, Path path) throws IOException {
+    boolean didUpdate =
+        StringTemplateFile.writeToFile(outFilesystem, contents, path, getIdeaConfigDir());
     cleaner.doNotDelete(path);
+    return didUpdate;
   }
 
   private void writeWorkspace() throws IOException {
@@ -214,52 +211,23 @@ public class IjProjectWriter {
   }
 
   /**
-   * Update just the roots that were passed in
+   * Update project files and modules index
    *
-   * @param targetGraphAndTargets
-   * @param moduleGraph
-   * @throws IOException
+   * @throws IOException if a file cannot be written
    */
-  public void update(TargetGraphAndTargets targetGraphAndTargets, IjModuleGraph moduleGraph)
-      throws IOException {
+  public void update() throws IOException {
     outFilesystem.mkdirs(getIdeaConfigDir());
-    Set<BuildTarget> modulesToUpdate =
-        targetGraphAndTargets
-            .getProjectRoots()
-            .stream()
-            .map(TargetNode::getBuildTarget)
-            .collect(ImmutableSet.toImmutableSet());
-    // Find all modules that contain one or more of our targets
-    final ImmutableSet<IjModule> modulesEdited =
-        projectDataPreparer
-            .getModulesToBeWritten()
-            .stream()
-            .filter(module -> !Sets.intersection(module.getTargets(), modulesToUpdate).isEmpty())
-            .collect(ImmutableSet.toImmutableSet());
-    // Find all direct dependencies of our modules
-    final ImmutableSet<IjProjectElement> depsToKeep =
-        modulesEdited
-            .stream()
-            .flatMap(module -> moduleGraph.getDepsFor(module).keySet().stream())
-            .collect(ImmutableSet.toImmutableSet());
-    // Find all libraries which are direct deps of the modules we found above
-    final ImmutableSet<IjLibrary> librariesNeeded =
-        projectDataPreparer
-            .getLibrariesToBeWritten()
-            .stream()
-            .filter(depsToKeep::contains)
-            .collect(ImmutableSet.toImmutableSet());
-
-    // Write out the modules that contain our targets
-    for (IjModule module : modulesEdited) {
+    ImmutableSet.Builder<IjModule> modulesEdited = ImmutableSet.builder();
+    for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
       ImmutableList<ContentRoot> contentRoots = projectDataPreparer.getContentRoots(module);
-      writeModule(module, contentRoots);
+      if (writeModule(module, contentRoots)) {
+        modulesEdited.add(module);
+      }
     }
-    // Write out the libraries that our modules depend on
-    for (IjLibrary library : librariesNeeded) {
+    for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
       writeLibrary(library);
     }
-    updateModulesIndex(modulesEdited);
+    updateModulesIndex(modulesEdited.build());
   }
 
   /** Update the modules.xml file with any new modules from the given set */

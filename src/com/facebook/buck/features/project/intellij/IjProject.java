@@ -150,7 +150,7 @@ public class IjProject {
             outFilesystem);
 
     if (updateOnly) {
-      writer.update(targetGraphAndTargets, moduleGraph);
+      writer.update();
     } else {
       writer.write();
     }

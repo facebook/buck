@@ -54,7 +54,7 @@ enum StringTemplateFile {
     return new ST(template, DELIMITER, DELIMITER);
   }
 
-  public static void writeToFile(
+  public static boolean writeToFile(
       ProjectFilesystem projectFilesystem, ST contents, Path path, Path ideaConfigDir)
       throws IOException {
 
@@ -65,7 +65,7 @@ enum StringTemplateFile {
       Sha1HashCode contentsSha1 =
           Sha1HashCode.fromHashCode(Hashing.sha1().hashBytes(renderedContentsBytes));
       if (fileSha1.equals(contentsSha1)) {
-        return;
+        return false;
       }
 
       boolean danglingTempFile = false;
@@ -88,5 +88,6 @@ enum StringTemplateFile {
         outputStream.write(renderedContentsBytes);
       }
     }
+    return true;
   }
 }
