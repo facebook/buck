@@ -62,7 +62,7 @@ public class ServerStatusCommand extends AbstractCommand {
       int port = -1;
       Optional<WebServer> webServer = params.getWebServer();
       if (webServer.isPresent()) {
-        port = webServer.get().getPort().orElse(port);
+        port = webServer.get().getPort();
       }
 
       builder.put("http.port", port);

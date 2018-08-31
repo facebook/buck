@@ -133,7 +133,7 @@ public class ServedCacheIntegrationTest {
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
-        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().getAsInt()));
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort()));
 
     Path fetchedContents = tmpDir.newFile();
     CacheResult cacheResult =
@@ -204,7 +204,7 @@ public class ServedCacheIntegrationTest {
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
-        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().getAsInt()));
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort()));
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult =
@@ -242,7 +242,7 @@ public class ServedCacheIntegrationTest {
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
-        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().getAsInt(), 3));
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort(), 3));
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult =
@@ -275,7 +275,7 @@ public class ServedCacheIntegrationTest {
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
-        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().getAsInt(), 4));
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort(), 4));
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult =
@@ -301,7 +301,7 @@ public class ServedCacheIntegrationTest {
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
-        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().getAsInt()));
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort()));
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult =
@@ -315,7 +315,7 @@ public class ServedCacheIntegrationTest {
     webServer.updateAndStartIfNeeded(Optional.empty());
 
     ArtifactCache serverBackedCache =
-        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().getAsInt()));
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort()));
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult =
@@ -329,7 +329,7 @@ public class ServedCacheIntegrationTest {
     webServer.updateAndStartIfNeeded(Optional.empty());
 
     ArtifactCache serverBackedCache =
-        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().getAsInt()));
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort()));
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     assertThat(
@@ -363,7 +363,7 @@ public class ServedCacheIntegrationTest {
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
-        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().getAsInt()));
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort()));
 
     RuleKey ruleKey = new RuleKey("00111222333444");
     ImmutableMap<String, String> metadata = ImmutableMap.of("some key", "some value");
@@ -401,7 +401,7 @@ public class ServedCacheIntegrationTest {
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
-        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().getAsInt()));
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort()));
 
     RuleKey ruleKey = new RuleKey("00111222333444");
     ImmutableMap<String, String> metadata = ImmutableMap.of("some key", "some value");
@@ -439,7 +439,7 @@ public class ServedCacheIntegrationTest {
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
-        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().getAsInt()));
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort()));
 
     RuleKey ruleKey = new RuleKey("00111222333444");
     ImmutableMap<String, String> metadata = ImmutableMap.of("some key", "some value");
@@ -481,7 +481,7 @@ public class ServedCacheIntegrationTest {
                 "two_level_cache_enabled=true",
                 "two_level_cache_minimum_size=0b",
                 "dir = server-backed-dir-cache",
-                String.format("http_url = http://127.0.0.1:%d/", webServer.getPort().getAsInt())));
+                String.format("http_url = http://127.0.0.1:%d/", webServer.getPort())));
 
     ArtifactCache serverBackedDirCache =
         createArtifactCache(
