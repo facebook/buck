@@ -44,6 +44,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.ProcessResult;
@@ -76,6 +77,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
   private String failingStepTarget = "//:failing_step";
   private String largeDynamicTarget = "//:large_dynamic";
   private String hugeDynamicTarget = "//:huge_dynamic";
+  private String duplicateOutputsTarget = "//:duplicate_outputs";
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
@@ -244,7 +246,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
                     ImmutableList.of(
                         new TouchOutputDescription(),
                         new LargeDynamicsDescription(),
-                        new FailingRuleDescription()),
+                        new FailingRuleDescription(),
+                        new DuplicateOutputsDescription()),
                     knownConfigurationDescriptions));
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
@@ -279,6 +282,69 @@ public class ModernBuildRuleStrategyIntegrationTest {
         workspace.getFileContents(
             new DefaultOutputPathResolver(filesystem, BuildTargetFactory.newInstance(simpleTarget))
                 .resolvePath(new OutputPath("some.path"))));
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  interface AbstractDuplicateOutputsArg extends CommonDescriptionArg {}
+
+  private static class DuplicateOutputsDescription
+      implements DescriptionWithTargetGraph<DuplicateOutputsArg> {
+    @Override
+    public Class<DuplicateOutputsArg> getConstructorArgType() {
+      return DuplicateOutputsArg.class;
+    }
+
+    @Override
+    public BuildRule createBuildRule(
+        BuildRuleCreationContextWithTargetGraph context,
+        BuildTarget buildTarget,
+        BuildRuleParams params,
+        DuplicateOutputsArg args) {
+      return new DuplicateOutputsRule(
+          buildTarget,
+          context.getProjectFilesystem(),
+          new SourcePathRuleFinder(context.getActionGraphBuilder()));
+    }
+  }
+
+  private static class DuplicateOutputsRule extends ModernBuildRule<DuplicateOutputsRule>
+      implements Buildable {
+    @AddToRuleKey final OutputPath output1;
+    @AddToRuleKey final OutputPath output2;
+
+    DuplicateOutputsRule(
+        BuildTarget buildTarget, ProjectFilesystem filesystem, SourcePathRuleFinder finder) {
+      super(buildTarget, filesystem, finder, DuplicateOutputsRule.class);
+      this.output1 = new OutputPath("output1");
+      this.output2 = new OutputPath("output2");
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      return ImmutableList.of(
+          new AbstractExecutionStep("blah") {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
+              String data = "data";
+              filesystem.writeContentsToPath(data, outputPathResolver.resolvePath(output1));
+
+              filesystem.writeContentsToPath(data, outputPathResolver.resolvePath(output2));
+              return StepExecutionResults.SUCCESS;
+            }
+          });
+    }
+  }
+
+  @Test
+  public void testBuildRuleWithDuplicateOutputs() throws Exception {
+    ProcessResult result = workspace.runBuckBuild(duplicateOutputsTarget);
+    result.assertSuccess();
   }
 
   @Test

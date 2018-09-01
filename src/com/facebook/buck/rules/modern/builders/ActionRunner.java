@@ -48,7 +48,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -117,11 +119,10 @@ public class ActionRunner {
 
     ImmutableList.Builder<OutputFile> outputFiles;
     ImmutableList.Builder<OutputDirectory> outputDirectories;
-    ImmutableMap.Builder<Digest, ThrowingSupplier<InputStream, IOException>> requiredData;
+    Map<Digest, ThrowingSupplier<InputStream, IOException>> requiredData = new HashMap<>();
     try (Scope ignored = LeafEvents.scope(eventBus, "collecting_outputs")) {
       outputFiles = ImmutableList.builder();
       outputDirectories = ImmutableList.builder();
-      requiredData = ImmutableMap.builder();
       if (result.getExitCode() == 0) {
         // TODO(cjhopman): Should outputs be returned on failure?
         collectOutputs(outputs, buildDir, outputFiles, outputDirectories, requiredData);
@@ -131,7 +132,7 @@ public class ActionRunner {
     return new ActionResult(
         outputFiles.build(),
         outputDirectories.build(),
-        requiredData.build(),
+        ImmutableMap.copyOf(requiredData),
         result.getExitCode(),
         result.getStderr().get(),
         result.getStdout().get());
@@ -142,7 +143,7 @@ public class ActionRunner {
       Path buildDir,
       ImmutableList.Builder<OutputFile> outputFilesBuilder,
       ImmutableList.Builder<OutputDirectory> outputDirectoriesBuilder,
-      ImmutableMap.Builder<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder)
+      Map<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder)
       throws IOException {
     for (Path output : outputs) {
       Path path = buildDir.resolve(output);
