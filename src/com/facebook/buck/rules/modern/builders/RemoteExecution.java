@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * An implementation of IsolatedExecution that uses a ContentAddressedStorage and
@@ -66,12 +67,16 @@ public abstract class RemoteExecution implements IsolatedExecution {
               "buck.path_to_isolated_trampoline",
               "src/com/facebook/buck/rules/modern/builders/trampoline.sh"));
 
+  private static final String pluginResources = System.getProperty("buck.module.resources");
+  private static final String pluginRoot = System.getProperty("pf4j.pluginsDir");
+
   private final byte[] trampoline;
   private final BuckEventBus eventBus;
   private final Protocol protocol;
 
   private final ImmutableMap<Path, Supplier<InputFile>> classPath;
   private final ImmutableMap<Path, Supplier<InputFile>> bootstrapClassPath;
+  private final ImmutableMap<Path, Supplier<InputFile>> pluginFiles;
 
   protected RemoteExecution(BuckEventBus eventBus, Protocol protocol) throws IOException {
     this.eventBus = eventBus;
@@ -80,6 +85,12 @@ public abstract class RemoteExecution implements IsolatedExecution {
 
     this.classPath = prepareClassPath(BuckClasspath.getClasspath());
     this.bootstrapClassPath = prepareClassPath(BuckClasspath.getBootstrapClasspath());
+
+    if (pluginResources == null || pluginRoot == null) {
+      pluginFiles = ImmutableMap.of();
+    } else {
+      pluginFiles = prepareClassPath(findPlugins());
+    }
   }
 
   protected abstract ContentAddressedStorage getStorage();
@@ -93,6 +104,25 @@ public abstract class RemoteExecution implements IsolatedExecution {
   @Override
   public Protocol getProtocol() {
     return protocol;
+  }
+
+  private static ImmutableList<Path> findPlugins() throws IOException {
+    ImmutableList.Builder<Path> pathsBuilder = ImmutableList.builder();
+    try (Stream<Path> files = Files.walk(Paths.get(pluginRoot))) {
+      for (Path file : (Iterable<Path>) files::iterator) {
+        if (Files.isRegularFile(file)) {
+          pathsBuilder.add(file);
+        }
+      }
+    }
+    try (Stream<Path> files = Files.walk(Paths.get(pluginResources))) {
+      for (Path file : (Iterable<Path>) files::iterator) {
+        if (Files.isRegularFile(file)) {
+          pathsBuilder.add(file);
+        }
+      }
+    }
+    return pathsBuilder.build();
   }
 
   @Override
@@ -124,11 +154,14 @@ public abstract class RemoteExecution implements IsolatedExecution {
       ImmutableList<Path> isolatedBootstrapClasspath =
           processClasspath(inputsBuilder, cellPrefixRoot, bootstrapClassPath);
 
+      processClasspath(inputsBuilder, cellPrefixRoot, pluginFiles);
+
       Path trampolinePath = Paths.get("./__trampoline__.sh");
       ImmutableList<String> command =
           getBuilderCommand(trampolinePath, projectRoot, hash.toString());
       ImmutableSortedMap<String, String> commandEnvironment =
-          getBuilderEnvironmentOverrides(isolatedBootstrapClasspath, isolatedClasspath);
+          getBuilderEnvironmentOverrides(
+              isolatedBootstrapClasspath, isolatedClasspath, cellPrefixRoot);
 
       inputsBuilder.addFile(
           trampolinePath,
@@ -179,13 +212,30 @@ public abstract class RemoteExecution implements IsolatedExecution {
   }
 
   private ImmutableSortedMap<String, String> getBuilderEnvironmentOverrides(
-      ImmutableList<Path> bootstrapClasspath, Iterable<Path> classpath) {
+      ImmutableList<Path> bootstrapClasspath, Iterable<Path> classpath, Path cellPrefixRoot) {
+
     // TODO(shivanker): Pass all user environment overrides to remote workers.
+    String relativePluginRoot = "";
+    if (pluginRoot != null) {
+      Path rootPath = Paths.get(pluginRoot);
+      relativePluginRoot =
+          (rootPath.isAbsolute() ? cellPrefixRoot.relativize(Paths.get(pluginRoot)) : pluginRoot)
+              .toString();
+    }
+    String relativePluginResources =
+        pluginResources == null
+            ? ""
+            : cellPrefixRoot.relativize(Paths.get(pluginResources)).toString();
     return ImmutableSortedMap.of(
         "CLASSPATH",
         classpathArg(bootstrapClasspath),
         "BUCK_CLASSPATH",
         classpathArg(classpath),
+        "BUCK_PLUGIN_ROOT",
+        relativePluginRoot,
+        "BUCK_PLUGIN_RESOURCES",
+        relativePluginResources,
+        // TODO(cjhopman): This shouldn't be done here, it's not a Buck thing.
         "BUCK_DISTCC",
         "0");
   }
