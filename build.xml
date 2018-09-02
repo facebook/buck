@@ -196,7 +196,7 @@
     <include name="protobuf/protobuf-lite-3.0.1.jar" />
     <include name="slf4j/slf4j-jdk14-1.7.5.jar" /><!-- redirect slf4j to java.util.logging -->
     <include name="stringtemplate/ST-4.0.8.jar" />
-    <include name="thrift/libthrift-0.10.0-patched.jar" />
+    <include name="thrift/libthrift-0.11.0.jar" />
     <include name="xz-java-1.5/xz-1.5.jar" />
     <include name="zstd-jni/zstd-jni-1.3.5-2.jar" />
 
