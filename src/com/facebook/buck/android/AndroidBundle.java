@@ -151,7 +151,8 @@ public class AndroidBundle extends AbstractBuildRule
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
       Optional<ExopackageInfo> exopackageInfo,
-      int apkCompressionLevel) {
+      int apkCompressionLevel,
+      ImmutableSet<String> packagingExcludePatterns) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -223,6 +224,7 @@ public class AndroidBundle extends AbstractBuildRule
             apkModules,
             enhancementResult.getModuleResourceApkPaths(),
             apkCompressionLevel,
+            packagingExcludePatterns,
             false);
     this.exopackageInfo = exopackageInfo;
 

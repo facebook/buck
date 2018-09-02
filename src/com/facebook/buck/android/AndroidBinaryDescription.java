@@ -306,5 +306,7 @@ public class AndroidBinaryDescription
     abstract Optional<SourcePath> getRedexConfig();
 
     abstract ImmutableList<StringWithMacros> getRedexExtraArgs();
+
+    abstract ImmutableSet<String> getPackagingExcludePatterns();
   }
 }

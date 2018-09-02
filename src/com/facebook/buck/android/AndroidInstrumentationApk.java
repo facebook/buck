@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -98,7 +99,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         resourceFilesInfo,
         ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules()),
         exopackageInfo,
-        apkCompressionLevel);
+        apkCompressionLevel,
+        ImmutableSet.of());
     this.apkUnderTest = apkUnderTest;
   }
 

@@ -143,6 +143,7 @@ public class AndroidBundleFactory {
         filesInfo.getResourceFilesInfo(),
         ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
         filesInfo.getExopackageInfo(),
-        apkConfig.getCompressionLevel());
+        apkConfig.getCompressionLevel(),
+        args.getPackagingExcludePatterns());
   }
 }

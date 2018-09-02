@@ -118,6 +118,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   @AddToRuleKey private final ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths;
 
+  @AddToRuleKey private final ImmutableSet<String> packagingExcludePatterns;
+
   private final boolean isApk;
 
   // These should be the only things not added to the rulekey.
@@ -148,6 +150,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableSortedSet<APKModule> apkModules,
       ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths,
       int apkCompressionLevel,
+      ImmutableSet<String> packagingExcludePatterns,
       boolean isApk) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
@@ -170,6 +173,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.compressAssetLibraries = compressAssetLibraries;
     this.resourceFilesInfo = resourceFilesInfo;
     this.apkCompressionLevel = apkCompressionLevel;
+    this.packagingExcludePatterns = packagingExcludePatterns;
     this.isApk = isApk;
   }
 
@@ -279,7 +283,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               keystoreProperties,
               false,
               javaRuntimeLauncher.getCommandPrefix(pathResolver),
-              apkCompressionLevel));
+              apkCompressionLevel,
+              packagingExcludePatterns));
     } else {
       Path tempBundleConfig =
           BuildTargetPaths.getGenPath(
@@ -350,6 +355,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               keystoreProperties,
               false,
               apkCompressionLevel,
+              packagingExcludePatterns,
               tempBundleConfig,
               modulesInfo.build(),
               moduleNames));

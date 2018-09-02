@@ -66,6 +66,7 @@ public class AabBuilderStep implements Step {
   private final ImmutableSet<ModuleInfo> modulesInfo;
   private final AppBuilderBase appBuilderBase;
   private final ImmutableSet<String> moduleNames;
+  private final ImmutableSet<String> packagingExcludePatterns;
 
   /**
    * @param modulesInfo A set of ModuleInfo containing information about modules to be built within
@@ -81,6 +82,7 @@ public class AabBuilderStep implements Step {
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       boolean debugMode,
       int apkCompressionLevel,
+      ImmutableSet<String> packagingExcludePatterns,
       Path tempBundleConfig,
       ImmutableSet<ModuleInfo> modulesInfo,
       ImmutableSet<String> moduleNames) {
@@ -91,6 +93,7 @@ public class AabBuilderStep implements Step {
     this.tempBundleConfig = tempBundleConfig;
     this.modulesInfo = modulesInfo;
     this.moduleNames = moduleNames;
+    this.packagingExcludePatterns = packagingExcludePatterns;
     this.appBuilderBase =
         new AppBuilderBase(filesystem, keystorePropertiesSupplier, pathToKeystore);
   }
@@ -117,7 +120,8 @@ public class AabBuilderStep implements Step {
               privateKeyAndCertificate.privateKey,
               privateKeyAndCertificate.certificate,
               output,
-              apkCompressionLevel);
+              apkCompressionLevel,
+              packagingExcludePatterns);
       builder.setDebugMode(debugMode);
       Set<String> addedFiles = new HashSet<>();
       Set<Path> addedSourceFiles = new HashSet<>();

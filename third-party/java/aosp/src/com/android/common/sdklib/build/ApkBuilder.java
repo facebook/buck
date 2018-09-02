@@ -25,6 +25,8 @@ import com.android.sdklib.build.SealedApkException;
 import com.android.common.sdklib.internal.build.SignedJarBuilder;
 
 import com.android.sdklib.internal.build.SignedJarBuilder.IZipEntryFilter;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -90,6 +92,11 @@ public final class ApkBuilder implements IArchiveBuilder {
     private final List<String> mNativeLibs = new ArrayList<String>();
     private boolean mNativeLibsConflict = false;
     private File mInputFile;
+    private final Pattern packagingExcludePattern;
+
+    JavaAndNativeResourceFilter(ImmutableSet<String> packagingExcludePatterns) {
+      packagingExcludePattern = Pattern.compile( "(" + Joiner.on("|").join(packagingExcludePatterns) + ")");
+    }
 
     @Override
     public boolean checkEntry(String archivePath) throws IZipEntryFilter.ZipAbortException {
@@ -119,6 +126,10 @@ public final class ApkBuilder implements IArchiveBuilder {
       // only do additional checks if the file passes the default checks.
       if (check) {
         verbosePrintln("=> %s", archivePath);
+
+        if (packagingExcludePattern.matcher(archivePath).matches()) {
+          return false;
+        }
 
         File duplicate = checkFileForDuplicate(archivePath);
         if (duplicate != null) {
@@ -166,7 +177,7 @@ public final class ApkBuilder implements IArchiveBuilder {
   private boolean mIsSealed = false;
 
   private final NullZipFilter mNullFilter = new NullZipFilter();
-  private final JavaAndNativeResourceFilter mFilter = new JavaAndNativeResourceFilter();
+  private final JavaAndNativeResourceFilter mFilter;
   private final HashMap<String, File> mAddedFiles = new HashMap<String, File>();
 
   /** Internal implementation of {@link JarStatus}. */
@@ -212,8 +223,9 @@ public final class ApkBuilder implements IArchiveBuilder {
    * @throws ApkCreationException
    */
   public ApkBuilder(File apkFile, File resFile, File dexFile, PrivateKey key,
-      X509Certificate certificate, PrintStream verboseStream, int compressionLevel) throws ApkCreationException {
+      X509Certificate certificate, PrintStream verboseStream, int compressionLevel, ImmutableSet<String> packagingExcludePatterns) throws ApkCreationException {
     init(apkFile, resFile, dexFile, key, certificate, verboseStream, compressionLevel);
+    mFilter = new JavaAndNativeResourceFilter(packagingExcludePatterns);
   }
 
 

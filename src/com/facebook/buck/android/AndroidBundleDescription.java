@@ -318,5 +318,7 @@ public class AndroidBundleDescription
     public AaptMode getAaptMode() {
       return AaptMode.AAPT2;
     }
+
+    abstract ImmutableSet<String> getPackagingExcludePatterns();
   }
 }

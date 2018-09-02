@@ -58,6 +58,7 @@ public class ApkBuilderStep implements Step {
   private final boolean debugMode;
   private final ImmutableList<String> javaRuntimeLauncher;
   private final int apkCompressionLevel;
+  private final ImmutableSet<String> packagingExcludePatterns;
   private final AppBuilderBase appBuilderBase;
 
   /**
@@ -83,7 +84,8 @@ public class ApkBuilderStep implements Step {
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       boolean debugMode,
       ImmutableList<String> javaRuntimeLauncher,
-      int apkCompressionLevel) {
+      int apkCompressionLevel,
+      ImmutableSet<String> packagingExcludePatterns) {
     this.filesystem = filesystem;
     this.resourceApk = resourceApk;
     this.pathToOutputApkFile = pathToOutputApkFile;
@@ -95,6 +97,7 @@ public class ApkBuilderStep implements Step {
     this.debugMode = debugMode;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.apkCompressionLevel = apkCompressionLevel;
+    this.packagingExcludePatterns = packagingExcludePatterns;
     this.appBuilderBase =
         new AppBuilderBase(filesystem, keystorePropertiesSupplier, pathToKeystore);
   }
@@ -118,7 +121,8 @@ public class ApkBuilderStep implements Step {
               privateKeyAndCertificate.privateKey,
               privateKeyAndCertificate.certificate,
               output,
-              apkCompressionLevel);
+              apkCompressionLevel,
+              packagingExcludePatterns);
       builder.setDebugMode(debugMode);
       for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
         builder.addNativeLibraries(
