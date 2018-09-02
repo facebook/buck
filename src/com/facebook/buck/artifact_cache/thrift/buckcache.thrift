@@ -1,7 +1,7 @@
 # Copyright 2016 Facebook. All Rights Reserved.
 #
 # To refresh the protocol run the following command:
-#   /usr/local/bin/thrift --gen java -out src-gen/ src/com/facebook/buck/artifact_cache/thrift/buckcache.thrift
+#   /usr/local/bin/thrift --gen java:generated_annotations=undated  -out src-gen/ src/com/facebook/buck/artifact_cache/thrift/buckcache.thrift
 #
 # This .thrift file contains the protocol required by the buck client to
 # communicate with the buck-cache server.
@@ -18,6 +18,9 @@ enum BuckCacheRequestType {
   // `DELETE` is a define somewhere inside glibc
   DELETE_REQUEST = 105,
   CONTAINS = 107,
+  MANIFEST_APPEND = 108,
+  MANIFEST_FETCH = 109,
+  MANIFEST_DELETE = 110,
 }
 
 struct RuleKey {
@@ -175,6 +178,33 @@ struct BuckCacheDeleteResponse {
   1: optional DeleteDebugInfo debugInfo;
 }
 
+struct Manifest {
+  1: optional string key;
+  2: optional list<binary> values;
+}
+
+struct ManifestAppendRequest {
+  1: optional Manifest manifest;
+}
+
+struct ManifestAppendResponse {
+}
+
+struct ManifestFetchRequest {
+  1: optional string manifestKey;
+}
+
+struct ManifestFetchResponse {
+  1: optional Manifest manifest;
+}
+
+struct ManifestDeleteRequest {
+  1: optional string manifestKey;
+}
+
+struct ManifestDeleteResponse {
+}
+
 struct BuckCacheRequest {
   1: optional BuckCacheRequestType type = BuckCacheRequestType.UNKNOWN;
 
@@ -188,6 +218,9 @@ struct BuckCacheRequest {
   103: optional BuckCacheMultiFetchRequest multiFetchRequest;
   105: optional BuckCacheDeleteRequest deleteRequest;
   107: optional BuckCacheMultiContainsRequest multiContainsRequest;
+  108: optional ManifestAppendRequest manifestAppendRequest;
+  109: optional ManifestFetchRequest manifestFetchRequest;
+  110: optional ManifestDeleteRequest manifestDeleteRequest;
 }
 
 struct BuckCacheResponse {
@@ -196,10 +229,19 @@ struct BuckCacheResponse {
 
   10: optional BuckCacheRequestType type = BuckCacheRequestType.UNKNOWN;
 
+  // 30: DEPRECATED.
+
+  // Human-readable single-line server info.
+  // Can be used only for debugging.
+  31: optional string diagnosticServerInfo;
+
   100: optional list<PayloadInfo> payloads;
   101: optional BuckCacheFetchResponse fetchResponse;
   102: optional BuckCacheStoreResponse storeResponse;
   103: optional BuckCacheMultiFetchResponse multiFetchResponse;
   105: optional BuckCacheDeleteResponse deleteResponse;
   107: optional BuckCacheMultiContainsResponse multiContainsResponse;
+  108: optional ManifestAppendResponse manifestAppendResponse;
+  109: optional ManifestFetchResponse manifestFetchResponse;
+  110: optional ManifestDeleteResponse manifestDeleteResponse;
 }

@@ -19,6 +19,9 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
   private static final org.apache.thrift.protocol.TField MULTI_FETCH_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("multiFetchRequest", org.apache.thrift.protocol.TType.STRUCT, (short)103);
   private static final org.apache.thrift.protocol.TField DELETE_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("deleteRequest", org.apache.thrift.protocol.TType.STRUCT, (short)105);
   private static final org.apache.thrift.protocol.TField MULTI_CONTAINS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("multiContainsRequest", org.apache.thrift.protocol.TType.STRUCT, (short)107);
+  private static final org.apache.thrift.protocol.TField MANIFEST_APPEND_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("manifestAppendRequest", org.apache.thrift.protocol.TType.STRUCT, (short)108);
+  private static final org.apache.thrift.protocol.TField MANIFEST_FETCH_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("manifestFetchRequest", org.apache.thrift.protocol.TType.STRUCT, (short)109);
+  private static final org.apache.thrift.protocol.TField MANIFEST_DELETE_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("manifestDeleteRequest", org.apache.thrift.protocol.TType.STRUCT, (short)110);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new BuckCacheRequestStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new BuckCacheRequestTupleSchemeFactory();
@@ -35,6 +38,9 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
   public BuckCacheMultiFetchRequest multiFetchRequest; // optional
   public BuckCacheDeleteRequest deleteRequest; // optional
   public BuckCacheMultiContainsRequest multiContainsRequest; // optional
+  public ManifestAppendRequest manifestAppendRequest; // optional
+  public ManifestFetchRequest manifestFetchRequest; // optional
+  public ManifestDeleteRequest manifestDeleteRequest; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -49,7 +55,10 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
     STORE_REQUEST((short)102, "storeRequest"),
     MULTI_FETCH_REQUEST((short)103, "multiFetchRequest"),
     DELETE_REQUEST((short)105, "deleteRequest"),
-    MULTI_CONTAINS_REQUEST((short)107, "multiContainsRequest");
+    MULTI_CONTAINS_REQUEST((short)107, "multiContainsRequest"),
+    MANIFEST_APPEND_REQUEST((short)108, "manifestAppendRequest"),
+    MANIFEST_FETCH_REQUEST((short)109, "manifestFetchRequest"),
+    MANIFEST_DELETE_REQUEST((short)110, "manifestDeleteRequest");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -80,6 +89,12 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
           return DELETE_REQUEST;
         case 107: // MULTI_CONTAINS_REQUEST
           return MULTI_CONTAINS_REQUEST;
+        case 108: // MANIFEST_APPEND_REQUEST
+          return MANIFEST_APPEND_REQUEST;
+        case 109: // MANIFEST_FETCH_REQUEST
+          return MANIFEST_FETCH_REQUEST;
+        case 110: // MANIFEST_DELETE_REQUEST
+          return MANIFEST_DELETE_REQUEST;
         default:
           return null;
       }
@@ -120,7 +135,7 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.TYPE,_Fields.BUCK_BUILD_ID,_Fields.PAYLOADS,_Fields.FETCH_REQUEST,_Fields.STORE_REQUEST,_Fields.MULTI_FETCH_REQUEST,_Fields.DELETE_REQUEST,_Fields.MULTI_CONTAINS_REQUEST};
+  private static final _Fields optionals[] = {_Fields.TYPE,_Fields.BUCK_BUILD_ID,_Fields.PAYLOADS,_Fields.FETCH_REQUEST,_Fields.STORE_REQUEST,_Fields.MULTI_FETCH_REQUEST,_Fields.DELETE_REQUEST,_Fields.MULTI_CONTAINS_REQUEST,_Fields.MANIFEST_APPEND_REQUEST,_Fields.MANIFEST_FETCH_REQUEST,_Fields.MANIFEST_DELETE_REQUEST};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -141,6 +156,12 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, BuckCacheDeleteRequest.class)));
     tmpMap.put(_Fields.MULTI_CONTAINS_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("multiContainsRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, BuckCacheMultiContainsRequest.class)));
+    tmpMap.put(_Fields.MANIFEST_APPEND_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("manifestAppendRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ManifestAppendRequest.class)));
+    tmpMap.put(_Fields.MANIFEST_FETCH_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("manifestFetchRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ManifestFetchRequest.class)));
+    tmpMap.put(_Fields.MANIFEST_DELETE_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("manifestDeleteRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ManifestDeleteRequest.class)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(BuckCacheRequest.class, metaDataMap);
   }
@@ -182,6 +203,15 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
     if (other.isSetMultiContainsRequest()) {
       this.multiContainsRequest = new BuckCacheMultiContainsRequest(other.multiContainsRequest);
     }
+    if (other.isSetManifestAppendRequest()) {
+      this.manifestAppendRequest = new ManifestAppendRequest(other.manifestAppendRequest);
+    }
+    if (other.isSetManifestFetchRequest()) {
+      this.manifestFetchRequest = new ManifestFetchRequest(other.manifestFetchRequest);
+    }
+    if (other.isSetManifestDeleteRequest()) {
+      this.manifestDeleteRequest = new ManifestDeleteRequest(other.manifestDeleteRequest);
+    }
   }
 
   public BuckCacheRequest deepCopy() {
@@ -199,6 +229,9 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
     this.multiFetchRequest = null;
     this.deleteRequest = null;
     this.multiContainsRequest = null;
+    this.manifestAppendRequest = null;
+    this.manifestFetchRequest = null;
+    this.manifestDeleteRequest = null;
   }
 
   /**
@@ -416,6 +449,78 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
     }
   }
 
+  public ManifestAppendRequest getManifestAppendRequest() {
+    return this.manifestAppendRequest;
+  }
+
+  public BuckCacheRequest setManifestAppendRequest(ManifestAppendRequest manifestAppendRequest) {
+    this.manifestAppendRequest = manifestAppendRequest;
+    return this;
+  }
+
+  public void unsetManifestAppendRequest() {
+    this.manifestAppendRequest = null;
+  }
+
+  /** Returns true if field manifestAppendRequest is set (has been assigned a value) and false otherwise */
+  public boolean isSetManifestAppendRequest() {
+    return this.manifestAppendRequest != null;
+  }
+
+  public void setManifestAppendRequestIsSet(boolean value) {
+    if (!value) {
+      this.manifestAppendRequest = null;
+    }
+  }
+
+  public ManifestFetchRequest getManifestFetchRequest() {
+    return this.manifestFetchRequest;
+  }
+
+  public BuckCacheRequest setManifestFetchRequest(ManifestFetchRequest manifestFetchRequest) {
+    this.manifestFetchRequest = manifestFetchRequest;
+    return this;
+  }
+
+  public void unsetManifestFetchRequest() {
+    this.manifestFetchRequest = null;
+  }
+
+  /** Returns true if field manifestFetchRequest is set (has been assigned a value) and false otherwise */
+  public boolean isSetManifestFetchRequest() {
+    return this.manifestFetchRequest != null;
+  }
+
+  public void setManifestFetchRequestIsSet(boolean value) {
+    if (!value) {
+      this.manifestFetchRequest = null;
+    }
+  }
+
+  public ManifestDeleteRequest getManifestDeleteRequest() {
+    return this.manifestDeleteRequest;
+  }
+
+  public BuckCacheRequest setManifestDeleteRequest(ManifestDeleteRequest manifestDeleteRequest) {
+    this.manifestDeleteRequest = manifestDeleteRequest;
+    return this;
+  }
+
+  public void unsetManifestDeleteRequest() {
+    this.manifestDeleteRequest = null;
+  }
+
+  /** Returns true if field manifestDeleteRequest is set (has been assigned a value) and false otherwise */
+  public boolean isSetManifestDeleteRequest() {
+    return this.manifestDeleteRequest != null;
+  }
+
+  public void setManifestDeleteRequestIsSet(boolean value) {
+    if (!value) {
+      this.manifestDeleteRequest = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case TYPE:
@@ -482,6 +587,30 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
       }
       break;
 
+    case MANIFEST_APPEND_REQUEST:
+      if (value == null) {
+        unsetManifestAppendRequest();
+      } else {
+        setManifestAppendRequest((ManifestAppendRequest)value);
+      }
+      break;
+
+    case MANIFEST_FETCH_REQUEST:
+      if (value == null) {
+        unsetManifestFetchRequest();
+      } else {
+        setManifestFetchRequest((ManifestFetchRequest)value);
+      }
+      break;
+
+    case MANIFEST_DELETE_REQUEST:
+      if (value == null) {
+        unsetManifestDeleteRequest();
+      } else {
+        setManifestDeleteRequest((ManifestDeleteRequest)value);
+      }
+      break;
+
     }
   }
 
@@ -511,6 +640,15 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
     case MULTI_CONTAINS_REQUEST:
       return getMultiContainsRequest();
 
+    case MANIFEST_APPEND_REQUEST:
+      return getManifestAppendRequest();
+
+    case MANIFEST_FETCH_REQUEST:
+      return getManifestFetchRequest();
+
+    case MANIFEST_DELETE_REQUEST:
+      return getManifestDeleteRequest();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -538,6 +676,12 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
       return isSetDeleteRequest();
     case MULTI_CONTAINS_REQUEST:
       return isSetMultiContainsRequest();
+    case MANIFEST_APPEND_REQUEST:
+      return isSetManifestAppendRequest();
+    case MANIFEST_FETCH_REQUEST:
+      return isSetManifestFetchRequest();
+    case MANIFEST_DELETE_REQUEST:
+      return isSetManifestDeleteRequest();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -629,6 +773,33 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
         return false;
     }
 
+    boolean this_present_manifestAppendRequest = true && this.isSetManifestAppendRequest();
+    boolean that_present_manifestAppendRequest = true && that.isSetManifestAppendRequest();
+    if (this_present_manifestAppendRequest || that_present_manifestAppendRequest) {
+      if (!(this_present_manifestAppendRequest && that_present_manifestAppendRequest))
+        return false;
+      if (!this.manifestAppendRequest.equals(that.manifestAppendRequest))
+        return false;
+    }
+
+    boolean this_present_manifestFetchRequest = true && this.isSetManifestFetchRequest();
+    boolean that_present_manifestFetchRequest = true && that.isSetManifestFetchRequest();
+    if (this_present_manifestFetchRequest || that_present_manifestFetchRequest) {
+      if (!(this_present_manifestFetchRequest && that_present_manifestFetchRequest))
+        return false;
+      if (!this.manifestFetchRequest.equals(that.manifestFetchRequest))
+        return false;
+    }
+
+    boolean this_present_manifestDeleteRequest = true && this.isSetManifestDeleteRequest();
+    boolean that_present_manifestDeleteRequest = true && that.isSetManifestDeleteRequest();
+    if (this_present_manifestDeleteRequest || that_present_manifestDeleteRequest) {
+      if (!(this_present_manifestDeleteRequest && that_present_manifestDeleteRequest))
+        return false;
+      if (!this.manifestDeleteRequest.equals(that.manifestDeleteRequest))
+        return false;
+    }
+
     return true;
   }
 
@@ -667,6 +838,18 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
     hashCode = hashCode * 8191 + ((isSetMultiContainsRequest()) ? 131071 : 524287);
     if (isSetMultiContainsRequest())
       hashCode = hashCode * 8191 + multiContainsRequest.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetManifestAppendRequest()) ? 131071 : 524287);
+    if (isSetManifestAppendRequest())
+      hashCode = hashCode * 8191 + manifestAppendRequest.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetManifestFetchRequest()) ? 131071 : 524287);
+    if (isSetManifestFetchRequest())
+      hashCode = hashCode * 8191 + manifestFetchRequest.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetManifestDeleteRequest()) ? 131071 : 524287);
+    if (isSetManifestDeleteRequest())
+      hashCode = hashCode * 8191 + manifestDeleteRequest.hashCode();
 
     return hashCode;
   }
@@ -755,6 +938,36 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
     }
     if (isSetMultiContainsRequest()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.multiContainsRequest, other.multiContainsRequest);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetManifestAppendRequest()).compareTo(other.isSetManifestAppendRequest());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetManifestAppendRequest()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.manifestAppendRequest, other.manifestAppendRequest);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetManifestFetchRequest()).compareTo(other.isSetManifestFetchRequest());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetManifestFetchRequest()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.manifestFetchRequest, other.manifestFetchRequest);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetManifestDeleteRequest()).compareTo(other.isSetManifestDeleteRequest());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetManifestDeleteRequest()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.manifestDeleteRequest, other.manifestDeleteRequest);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -858,6 +1071,36 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
       }
       first = false;
     }
+    if (isSetManifestAppendRequest()) {
+      if (!first) sb.append(", ");
+      sb.append("manifestAppendRequest:");
+      if (this.manifestAppendRequest == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.manifestAppendRequest);
+      }
+      first = false;
+    }
+    if (isSetManifestFetchRequest()) {
+      if (!first) sb.append(", ");
+      sb.append("manifestFetchRequest:");
+      if (this.manifestFetchRequest == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.manifestFetchRequest);
+      }
+      first = false;
+    }
+    if (isSetManifestDeleteRequest()) {
+      if (!first) sb.append(", ");
+      sb.append("manifestDeleteRequest:");
+      if (this.manifestDeleteRequest == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.manifestDeleteRequest);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -879,6 +1122,15 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
     }
     if (multiContainsRequest != null) {
       multiContainsRequest.validate();
+    }
+    if (manifestAppendRequest != null) {
+      manifestAppendRequest.validate();
+    }
+    if (manifestFetchRequest != null) {
+      manifestFetchRequest.validate();
+    }
+    if (manifestDeleteRequest != null) {
+      manifestDeleteRequest.validate();
     }
   }
 
@@ -935,14 +1187,14 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
           case 100: // PAYLOADS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list90 = iprot.readListBegin();
-                struct.payloads = new java.util.ArrayList<PayloadInfo>(_list90.size);
-                PayloadInfo _elem91;
-                for (int _i92 = 0; _i92 < _list90.size; ++_i92)
+                org.apache.thrift.protocol.TList _list98 = iprot.readListBegin();
+                struct.payloads = new java.util.ArrayList<PayloadInfo>(_list98.size);
+                PayloadInfo _elem99;
+                for (int _i100 = 0; _i100 < _list98.size; ++_i100)
                 {
-                  _elem91 = new PayloadInfo();
-                  _elem91.read(iprot);
-                  struct.payloads.add(_elem91);
+                  _elem99 = new PayloadInfo();
+                  _elem99.read(iprot);
+                  struct.payloads.add(_elem99);
                 }
                 iprot.readListEnd();
               }
@@ -996,6 +1248,33 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 108: // MANIFEST_APPEND_REQUEST
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.manifestAppendRequest = new ManifestAppendRequest();
+              struct.manifestAppendRequest.read(iprot);
+              struct.setManifestAppendRequestIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 109: // MANIFEST_FETCH_REQUEST
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.manifestFetchRequest = new ManifestFetchRequest();
+              struct.manifestFetchRequest.read(iprot);
+              struct.setManifestFetchRequestIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 110: // MANIFEST_DELETE_REQUEST
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.manifestDeleteRequest = new ManifestDeleteRequest();
+              struct.manifestDeleteRequest.read(iprot);
+              struct.setManifestDeleteRequestIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1030,9 +1309,9 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
           oprot.writeFieldBegin(PAYLOADS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.payloads.size()));
-            for (PayloadInfo _iter93 : struct.payloads)
+            for (PayloadInfo _iter101 : struct.payloads)
             {
-              _iter93.write(oprot);
+              _iter101.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -1071,6 +1350,27 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
         if (struct.isSetMultiContainsRequest()) {
           oprot.writeFieldBegin(MULTI_CONTAINS_REQUEST_FIELD_DESC);
           struct.multiContainsRequest.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.manifestAppendRequest != null) {
+        if (struct.isSetManifestAppendRequest()) {
+          oprot.writeFieldBegin(MANIFEST_APPEND_REQUEST_FIELD_DESC);
+          struct.manifestAppendRequest.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.manifestFetchRequest != null) {
+        if (struct.isSetManifestFetchRequest()) {
+          oprot.writeFieldBegin(MANIFEST_FETCH_REQUEST_FIELD_DESC);
+          struct.manifestFetchRequest.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.manifestDeleteRequest != null) {
+        if (struct.isSetManifestDeleteRequest()) {
+          oprot.writeFieldBegin(MANIFEST_DELETE_REQUEST_FIELD_DESC);
+          struct.manifestDeleteRequest.write(oprot);
           oprot.writeFieldEnd();
         }
       }
@@ -1116,7 +1416,16 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
       if (struct.isSetMultiContainsRequest()) {
         optionals.set(7);
       }
-      oprot.writeBitSet(optionals, 8);
+      if (struct.isSetManifestAppendRequest()) {
+        optionals.set(8);
+      }
+      if (struct.isSetManifestFetchRequest()) {
+        optionals.set(9);
+      }
+      if (struct.isSetManifestDeleteRequest()) {
+        optionals.set(10);
+      }
+      oprot.writeBitSet(optionals, 11);
       if (struct.isSetType()) {
         oprot.writeI32(struct.type.getValue());
       }
@@ -1126,9 +1435,9 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
       if (struct.isSetPayloads()) {
         {
           oprot.writeI32(struct.payloads.size());
-          for (PayloadInfo _iter94 : struct.payloads)
+          for (PayloadInfo _iter102 : struct.payloads)
           {
-            _iter94.write(oprot);
+            _iter102.write(oprot);
           }
         }
       }
@@ -1147,12 +1456,21 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
       if (struct.isSetMultiContainsRequest()) {
         struct.multiContainsRequest.write(oprot);
       }
+      if (struct.isSetManifestAppendRequest()) {
+        struct.manifestAppendRequest.write(oprot);
+      }
+      if (struct.isSetManifestFetchRequest()) {
+        struct.manifestFetchRequest.write(oprot);
+      }
+      if (struct.isSetManifestDeleteRequest()) {
+        struct.manifestDeleteRequest.write(oprot);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, BuckCacheRequest struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(8);
+      java.util.BitSet incoming = iprot.readBitSet(11);
       if (incoming.get(0)) {
         struct.type = com.facebook.buck.artifact_cache.thrift.BuckCacheRequestType.findByValue(iprot.readI32());
         struct.setTypeIsSet(true);
@@ -1163,14 +1481,14 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
       }
       if (incoming.get(2)) {
         {
-          org.apache.thrift.protocol.TList _list95 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.payloads = new java.util.ArrayList<PayloadInfo>(_list95.size);
-          PayloadInfo _elem96;
-          for (int _i97 = 0; _i97 < _list95.size; ++_i97)
+          org.apache.thrift.protocol.TList _list103 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.payloads = new java.util.ArrayList<PayloadInfo>(_list103.size);
+          PayloadInfo _elem104;
+          for (int _i105 = 0; _i105 < _list103.size; ++_i105)
           {
-            _elem96 = new PayloadInfo();
-            _elem96.read(iprot);
-            struct.payloads.add(_elem96);
+            _elem104 = new PayloadInfo();
+            _elem104.read(iprot);
+            struct.payloads.add(_elem104);
           }
         }
         struct.setPayloadsIsSet(true);
@@ -1199,6 +1517,21 @@ public class BuckCacheRequest implements org.apache.thrift.TBase<BuckCacheReques
         struct.multiContainsRequest = new BuckCacheMultiContainsRequest();
         struct.multiContainsRequest.read(iprot);
         struct.setMultiContainsRequestIsSet(true);
+      }
+      if (incoming.get(8)) {
+        struct.manifestAppendRequest = new ManifestAppendRequest();
+        struct.manifestAppendRequest.read(iprot);
+        struct.setManifestAppendRequestIsSet(true);
+      }
+      if (incoming.get(9)) {
+        struct.manifestFetchRequest = new ManifestFetchRequest();
+        struct.manifestFetchRequest.read(iprot);
+        struct.setManifestFetchRequestIsSet(true);
+      }
+      if (incoming.get(10)) {
+        struct.manifestDeleteRequest = new ManifestDeleteRequest();
+        struct.manifestDeleteRequest.read(iprot);
+        struct.setManifestDeleteRequestIsSet(true);
       }
     }
   }

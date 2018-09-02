@@ -14,12 +14,16 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
   private static final org.apache.thrift.protocol.TField WAS_SUCCESSFUL_FIELD_DESC = new org.apache.thrift.protocol.TField("wasSuccessful", org.apache.thrift.protocol.TType.BOOL, (short)1);
   private static final org.apache.thrift.protocol.TField ERROR_MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("errorMessage", org.apache.thrift.protocol.TType.STRING, (short)2);
   private static final org.apache.thrift.protocol.TField TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("type", org.apache.thrift.protocol.TType.I32, (short)10);
+  private static final org.apache.thrift.protocol.TField DIAGNOSTIC_SERVER_INFO_FIELD_DESC = new org.apache.thrift.protocol.TField("diagnosticServerInfo", org.apache.thrift.protocol.TType.STRING, (short)31);
   private static final org.apache.thrift.protocol.TField PAYLOADS_FIELD_DESC = new org.apache.thrift.protocol.TField("payloads", org.apache.thrift.protocol.TType.LIST, (short)100);
   private static final org.apache.thrift.protocol.TField FETCH_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("fetchResponse", org.apache.thrift.protocol.TType.STRUCT, (short)101);
   private static final org.apache.thrift.protocol.TField STORE_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("storeResponse", org.apache.thrift.protocol.TType.STRUCT, (short)102);
   private static final org.apache.thrift.protocol.TField MULTI_FETCH_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("multiFetchResponse", org.apache.thrift.protocol.TType.STRUCT, (short)103);
   private static final org.apache.thrift.protocol.TField DELETE_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("deleteResponse", org.apache.thrift.protocol.TType.STRUCT, (short)105);
   private static final org.apache.thrift.protocol.TField MULTI_CONTAINS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("multiContainsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)107);
+  private static final org.apache.thrift.protocol.TField MANIFEST_APPEND_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("manifestAppendResponse", org.apache.thrift.protocol.TType.STRUCT, (short)108);
+  private static final org.apache.thrift.protocol.TField MANIFEST_FETCH_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("manifestFetchResponse", org.apache.thrift.protocol.TType.STRUCT, (short)109);
+  private static final org.apache.thrift.protocol.TField MANIFEST_DELETE_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("manifestDeleteResponse", org.apache.thrift.protocol.TType.STRUCT, (short)110);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new BuckCacheResponseStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new BuckCacheResponseTupleSchemeFactory();
@@ -31,12 +35,16 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
    * @see BuckCacheRequestType
    */
   public BuckCacheRequestType type; // optional
+  public java.lang.String diagnosticServerInfo; // optional
   public java.util.List<PayloadInfo> payloads; // optional
   public BuckCacheFetchResponse fetchResponse; // optional
   public BuckCacheStoreResponse storeResponse; // optional
   public BuckCacheMultiFetchResponse multiFetchResponse; // optional
   public BuckCacheDeleteResponse deleteResponse; // optional
   public BuckCacheMultiContainsResponse multiContainsResponse; // optional
+  public ManifestAppendResponse manifestAppendResponse; // optional
+  public ManifestFetchResponse manifestFetchResponse; // optional
+  public ManifestDeleteResponse manifestDeleteResponse; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -47,12 +55,16 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
      * @see BuckCacheRequestType
      */
     TYPE((short)10, "type"),
+    DIAGNOSTIC_SERVER_INFO((short)31, "diagnosticServerInfo"),
     PAYLOADS((short)100, "payloads"),
     FETCH_RESPONSE((short)101, "fetchResponse"),
     STORE_RESPONSE((short)102, "storeResponse"),
     MULTI_FETCH_RESPONSE((short)103, "multiFetchResponse"),
     DELETE_RESPONSE((short)105, "deleteResponse"),
-    MULTI_CONTAINS_RESPONSE((short)107, "multiContainsResponse");
+    MULTI_CONTAINS_RESPONSE((short)107, "multiContainsResponse"),
+    MANIFEST_APPEND_RESPONSE((short)108, "manifestAppendResponse"),
+    MANIFEST_FETCH_RESPONSE((short)109, "manifestFetchResponse"),
+    MANIFEST_DELETE_RESPONSE((short)110, "manifestDeleteResponse");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -73,6 +85,8 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
           return ERROR_MESSAGE;
         case 10: // TYPE
           return TYPE;
+        case 31: // DIAGNOSTIC_SERVER_INFO
+          return DIAGNOSTIC_SERVER_INFO;
         case 100: // PAYLOADS
           return PAYLOADS;
         case 101: // FETCH_RESPONSE
@@ -85,6 +99,12 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
           return DELETE_RESPONSE;
         case 107: // MULTI_CONTAINS_RESPONSE
           return MULTI_CONTAINS_RESPONSE;
+        case 108: // MANIFEST_APPEND_RESPONSE
+          return MANIFEST_APPEND_RESPONSE;
+        case 109: // MANIFEST_FETCH_RESPONSE
+          return MANIFEST_FETCH_RESPONSE;
+        case 110: // MANIFEST_DELETE_RESPONSE
+          return MANIFEST_DELETE_RESPONSE;
         default:
           return null;
       }
@@ -127,7 +147,7 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
   // isset id assignments
   private static final int __WASSUCCESSFUL_ISSET_ID = 0;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.WAS_SUCCESSFUL,_Fields.ERROR_MESSAGE,_Fields.TYPE,_Fields.PAYLOADS,_Fields.FETCH_RESPONSE,_Fields.STORE_RESPONSE,_Fields.MULTI_FETCH_RESPONSE,_Fields.DELETE_RESPONSE,_Fields.MULTI_CONTAINS_RESPONSE};
+  private static final _Fields optionals[] = {_Fields.WAS_SUCCESSFUL,_Fields.ERROR_MESSAGE,_Fields.TYPE,_Fields.DIAGNOSTIC_SERVER_INFO,_Fields.PAYLOADS,_Fields.FETCH_RESPONSE,_Fields.STORE_RESPONSE,_Fields.MULTI_FETCH_RESPONSE,_Fields.DELETE_RESPONSE,_Fields.MULTI_CONTAINS_RESPONSE,_Fields.MANIFEST_APPEND_RESPONSE,_Fields.MANIFEST_FETCH_RESPONSE,_Fields.MANIFEST_DELETE_RESPONSE};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -137,6 +157,8 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.TYPE, new org.apache.thrift.meta_data.FieldMetaData("type", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, BuckCacheRequestType.class)));
+    tmpMap.put(_Fields.DIAGNOSTIC_SERVER_INFO, new org.apache.thrift.meta_data.FieldMetaData("diagnosticServerInfo", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.PAYLOADS, new org.apache.thrift.meta_data.FieldMetaData("payloads", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, PayloadInfo.class))));
@@ -150,6 +172,12 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, BuckCacheDeleteResponse.class)));
     tmpMap.put(_Fields.MULTI_CONTAINS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("multiContainsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, BuckCacheMultiContainsResponse.class)));
+    tmpMap.put(_Fields.MANIFEST_APPEND_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("manifestAppendResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ManifestAppendResponse.class)));
+    tmpMap.put(_Fields.MANIFEST_FETCH_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("manifestFetchResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ManifestFetchResponse.class)));
+    tmpMap.put(_Fields.MANIFEST_DELETE_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("manifestDeleteResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ManifestDeleteResponse.class)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(BuckCacheResponse.class, metaDataMap);
   }
@@ -170,6 +198,9 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
     }
     if (other.isSetType()) {
       this.type = other.type;
+    }
+    if (other.isSetDiagnosticServerInfo()) {
+      this.diagnosticServerInfo = other.diagnosticServerInfo;
     }
     if (other.isSetPayloads()) {
       java.util.List<PayloadInfo> __this__payloads = new java.util.ArrayList<PayloadInfo>(other.payloads.size());
@@ -193,6 +224,15 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
     if (other.isSetMultiContainsResponse()) {
       this.multiContainsResponse = new BuckCacheMultiContainsResponse(other.multiContainsResponse);
     }
+    if (other.isSetManifestAppendResponse()) {
+      this.manifestAppendResponse = new ManifestAppendResponse(other.manifestAppendResponse);
+    }
+    if (other.isSetManifestFetchResponse()) {
+      this.manifestFetchResponse = new ManifestFetchResponse(other.manifestFetchResponse);
+    }
+    if (other.isSetManifestDeleteResponse()) {
+      this.manifestDeleteResponse = new ManifestDeleteResponse(other.manifestDeleteResponse);
+    }
   }
 
   public BuckCacheResponse deepCopy() {
@@ -206,12 +246,16 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
     this.errorMessage = null;
     this.type = com.facebook.buck.artifact_cache.thrift.BuckCacheRequestType.UNKNOWN;
 
+    this.diagnosticServerInfo = null;
     this.payloads = null;
     this.fetchResponse = null;
     this.storeResponse = null;
     this.multiFetchResponse = null;
     this.deleteResponse = null;
     this.multiContainsResponse = null;
+    this.manifestAppendResponse = null;
+    this.manifestFetchResponse = null;
+    this.manifestDeleteResponse = null;
   }
 
   public boolean isWasSuccessful() {
@@ -290,6 +334,30 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
   public void setTypeIsSet(boolean value) {
     if (!value) {
       this.type = null;
+    }
+  }
+
+  public java.lang.String getDiagnosticServerInfo() {
+    return this.diagnosticServerInfo;
+  }
+
+  public BuckCacheResponse setDiagnosticServerInfo(java.lang.String diagnosticServerInfo) {
+    this.diagnosticServerInfo = diagnosticServerInfo;
+    return this;
+  }
+
+  public void unsetDiagnosticServerInfo() {
+    this.diagnosticServerInfo = null;
+  }
+
+  /** Returns true if field diagnosticServerInfo is set (has been assigned a value) and false otherwise */
+  public boolean isSetDiagnosticServerInfo() {
+    return this.diagnosticServerInfo != null;
+  }
+
+  public void setDiagnosticServerInfoIsSet(boolean value) {
+    if (!value) {
+      this.diagnosticServerInfo = null;
     }
   }
 
@@ -452,6 +520,78 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
     }
   }
 
+  public ManifestAppendResponse getManifestAppendResponse() {
+    return this.manifestAppendResponse;
+  }
+
+  public BuckCacheResponse setManifestAppendResponse(ManifestAppendResponse manifestAppendResponse) {
+    this.manifestAppendResponse = manifestAppendResponse;
+    return this;
+  }
+
+  public void unsetManifestAppendResponse() {
+    this.manifestAppendResponse = null;
+  }
+
+  /** Returns true if field manifestAppendResponse is set (has been assigned a value) and false otherwise */
+  public boolean isSetManifestAppendResponse() {
+    return this.manifestAppendResponse != null;
+  }
+
+  public void setManifestAppendResponseIsSet(boolean value) {
+    if (!value) {
+      this.manifestAppendResponse = null;
+    }
+  }
+
+  public ManifestFetchResponse getManifestFetchResponse() {
+    return this.manifestFetchResponse;
+  }
+
+  public BuckCacheResponse setManifestFetchResponse(ManifestFetchResponse manifestFetchResponse) {
+    this.manifestFetchResponse = manifestFetchResponse;
+    return this;
+  }
+
+  public void unsetManifestFetchResponse() {
+    this.manifestFetchResponse = null;
+  }
+
+  /** Returns true if field manifestFetchResponse is set (has been assigned a value) and false otherwise */
+  public boolean isSetManifestFetchResponse() {
+    return this.manifestFetchResponse != null;
+  }
+
+  public void setManifestFetchResponseIsSet(boolean value) {
+    if (!value) {
+      this.manifestFetchResponse = null;
+    }
+  }
+
+  public ManifestDeleteResponse getManifestDeleteResponse() {
+    return this.manifestDeleteResponse;
+  }
+
+  public BuckCacheResponse setManifestDeleteResponse(ManifestDeleteResponse manifestDeleteResponse) {
+    this.manifestDeleteResponse = manifestDeleteResponse;
+    return this;
+  }
+
+  public void unsetManifestDeleteResponse() {
+    this.manifestDeleteResponse = null;
+  }
+
+  /** Returns true if field manifestDeleteResponse is set (has been assigned a value) and false otherwise */
+  public boolean isSetManifestDeleteResponse() {
+    return this.manifestDeleteResponse != null;
+  }
+
+  public void setManifestDeleteResponseIsSet(boolean value) {
+    if (!value) {
+      this.manifestDeleteResponse = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case WAS_SUCCESSFUL:
@@ -475,6 +615,14 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
         unsetType();
       } else {
         setType((BuckCacheRequestType)value);
+      }
+      break;
+
+    case DIAGNOSTIC_SERVER_INFO:
+      if (value == null) {
+        unsetDiagnosticServerInfo();
+      } else {
+        setDiagnosticServerInfo((java.lang.String)value);
       }
       break;
 
@@ -526,6 +674,30 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
       }
       break;
 
+    case MANIFEST_APPEND_RESPONSE:
+      if (value == null) {
+        unsetManifestAppendResponse();
+      } else {
+        setManifestAppendResponse((ManifestAppendResponse)value);
+      }
+      break;
+
+    case MANIFEST_FETCH_RESPONSE:
+      if (value == null) {
+        unsetManifestFetchResponse();
+      } else {
+        setManifestFetchResponse((ManifestFetchResponse)value);
+      }
+      break;
+
+    case MANIFEST_DELETE_RESPONSE:
+      if (value == null) {
+        unsetManifestDeleteResponse();
+      } else {
+        setManifestDeleteResponse((ManifestDeleteResponse)value);
+      }
+      break;
+
     }
   }
 
@@ -539,6 +711,9 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
 
     case TYPE:
       return getType();
+
+    case DIAGNOSTIC_SERVER_INFO:
+      return getDiagnosticServerInfo();
 
     case PAYLOADS:
       return getPayloads();
@@ -558,6 +733,15 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
     case MULTI_CONTAINS_RESPONSE:
       return getMultiContainsResponse();
 
+    case MANIFEST_APPEND_RESPONSE:
+      return getManifestAppendResponse();
+
+    case MANIFEST_FETCH_RESPONSE:
+      return getManifestFetchResponse();
+
+    case MANIFEST_DELETE_RESPONSE:
+      return getManifestDeleteResponse();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -575,6 +759,8 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
       return isSetErrorMessage();
     case TYPE:
       return isSetType();
+    case DIAGNOSTIC_SERVER_INFO:
+      return isSetDiagnosticServerInfo();
     case PAYLOADS:
       return isSetPayloads();
     case FETCH_RESPONSE:
@@ -587,6 +773,12 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
       return isSetDeleteResponse();
     case MULTI_CONTAINS_RESPONSE:
       return isSetMultiContainsResponse();
+    case MANIFEST_APPEND_RESPONSE:
+      return isSetManifestAppendResponse();
+    case MANIFEST_FETCH_RESPONSE:
+      return isSetManifestFetchResponse();
+    case MANIFEST_DELETE_RESPONSE:
+      return isSetManifestDeleteResponse();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -630,6 +822,15 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
       if (!(this_present_type && that_present_type))
         return false;
       if (!this.type.equals(that.type))
+        return false;
+    }
+
+    boolean this_present_diagnosticServerInfo = true && this.isSetDiagnosticServerInfo();
+    boolean that_present_diagnosticServerInfo = true && that.isSetDiagnosticServerInfo();
+    if (this_present_diagnosticServerInfo || that_present_diagnosticServerInfo) {
+      if (!(this_present_diagnosticServerInfo && that_present_diagnosticServerInfo))
+        return false;
+      if (!this.diagnosticServerInfo.equals(that.diagnosticServerInfo))
         return false;
     }
 
@@ -687,6 +888,33 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
         return false;
     }
 
+    boolean this_present_manifestAppendResponse = true && this.isSetManifestAppendResponse();
+    boolean that_present_manifestAppendResponse = true && that.isSetManifestAppendResponse();
+    if (this_present_manifestAppendResponse || that_present_manifestAppendResponse) {
+      if (!(this_present_manifestAppendResponse && that_present_manifestAppendResponse))
+        return false;
+      if (!this.manifestAppendResponse.equals(that.manifestAppendResponse))
+        return false;
+    }
+
+    boolean this_present_manifestFetchResponse = true && this.isSetManifestFetchResponse();
+    boolean that_present_manifestFetchResponse = true && that.isSetManifestFetchResponse();
+    if (this_present_manifestFetchResponse || that_present_manifestFetchResponse) {
+      if (!(this_present_manifestFetchResponse && that_present_manifestFetchResponse))
+        return false;
+      if (!this.manifestFetchResponse.equals(that.manifestFetchResponse))
+        return false;
+    }
+
+    boolean this_present_manifestDeleteResponse = true && this.isSetManifestDeleteResponse();
+    boolean that_present_manifestDeleteResponse = true && that.isSetManifestDeleteResponse();
+    if (this_present_manifestDeleteResponse || that_present_manifestDeleteResponse) {
+      if (!(this_present_manifestDeleteResponse && that_present_manifestDeleteResponse))
+        return false;
+      if (!this.manifestDeleteResponse.equals(that.manifestDeleteResponse))
+        return false;
+    }
+
     return true;
   }
 
@@ -705,6 +933,10 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
     hashCode = hashCode * 8191 + ((isSetType()) ? 131071 : 524287);
     if (isSetType())
       hashCode = hashCode * 8191 + type.getValue();
+
+    hashCode = hashCode * 8191 + ((isSetDiagnosticServerInfo()) ? 131071 : 524287);
+    if (isSetDiagnosticServerInfo())
+      hashCode = hashCode * 8191 + diagnosticServerInfo.hashCode();
 
     hashCode = hashCode * 8191 + ((isSetPayloads()) ? 131071 : 524287);
     if (isSetPayloads())
@@ -729,6 +961,18 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
     hashCode = hashCode * 8191 + ((isSetMultiContainsResponse()) ? 131071 : 524287);
     if (isSetMultiContainsResponse())
       hashCode = hashCode * 8191 + multiContainsResponse.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetManifestAppendResponse()) ? 131071 : 524287);
+    if (isSetManifestAppendResponse())
+      hashCode = hashCode * 8191 + manifestAppendResponse.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetManifestFetchResponse()) ? 131071 : 524287);
+    if (isSetManifestFetchResponse())
+      hashCode = hashCode * 8191 + manifestFetchResponse.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetManifestDeleteResponse()) ? 131071 : 524287);
+    if (isSetManifestDeleteResponse())
+      hashCode = hashCode * 8191 + manifestDeleteResponse.hashCode();
 
     return hashCode;
   }
@@ -767,6 +1011,16 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
     }
     if (isSetType()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.type, other.type);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetDiagnosticServerInfo()).compareTo(other.isSetDiagnosticServerInfo());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetDiagnosticServerInfo()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.diagnosticServerInfo, other.diagnosticServerInfo);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -831,6 +1085,36 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
         return lastComparison;
       }
     }
+    lastComparison = java.lang.Boolean.valueOf(isSetManifestAppendResponse()).compareTo(other.isSetManifestAppendResponse());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetManifestAppendResponse()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.manifestAppendResponse, other.manifestAppendResponse);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetManifestFetchResponse()).compareTo(other.isSetManifestFetchResponse());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetManifestFetchResponse()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.manifestFetchResponse, other.manifestFetchResponse);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetManifestDeleteResponse()).compareTo(other.isSetManifestDeleteResponse());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetManifestDeleteResponse()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.manifestDeleteResponse, other.manifestDeleteResponse);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -873,6 +1157,16 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
         sb.append("null");
       } else {
         sb.append(this.type);
+      }
+      first = false;
+    }
+    if (isSetDiagnosticServerInfo()) {
+      if (!first) sb.append(", ");
+      sb.append("diagnosticServerInfo:");
+      if (this.diagnosticServerInfo == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.diagnosticServerInfo);
       }
       first = false;
     }
@@ -936,6 +1230,36 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
       }
       first = false;
     }
+    if (isSetManifestAppendResponse()) {
+      if (!first) sb.append(", ");
+      sb.append("manifestAppendResponse:");
+      if (this.manifestAppendResponse == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.manifestAppendResponse);
+      }
+      first = false;
+    }
+    if (isSetManifestFetchResponse()) {
+      if (!first) sb.append(", ");
+      sb.append("manifestFetchResponse:");
+      if (this.manifestFetchResponse == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.manifestFetchResponse);
+      }
+      first = false;
+    }
+    if (isSetManifestDeleteResponse()) {
+      if (!first) sb.append(", ");
+      sb.append("manifestDeleteResponse:");
+      if (this.manifestDeleteResponse == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.manifestDeleteResponse);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -957,6 +1281,15 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
     }
     if (multiContainsResponse != null) {
       multiContainsResponse.validate();
+    }
+    if (manifestAppendResponse != null) {
+      manifestAppendResponse.validate();
+    }
+    if (manifestFetchResponse != null) {
+      manifestFetchResponse.validate();
+    }
+    if (manifestDeleteResponse != null) {
+      manifestDeleteResponse.validate();
     }
   }
 
@@ -1020,17 +1353,25 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 31: // DIAGNOSTIC_SERVER_INFO
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.diagnosticServerInfo = iprot.readString();
+              struct.setDiagnosticServerInfoIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           case 100: // PAYLOADS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list98 = iprot.readListBegin();
-                struct.payloads = new java.util.ArrayList<PayloadInfo>(_list98.size);
-                PayloadInfo _elem99;
-                for (int _i100 = 0; _i100 < _list98.size; ++_i100)
+                org.apache.thrift.protocol.TList _list106 = iprot.readListBegin();
+                struct.payloads = new java.util.ArrayList<PayloadInfo>(_list106.size);
+                PayloadInfo _elem107;
+                for (int _i108 = 0; _i108 < _list106.size; ++_i108)
                 {
-                  _elem99 = new PayloadInfo();
-                  _elem99.read(iprot);
-                  struct.payloads.add(_elem99);
+                  _elem107 = new PayloadInfo();
+                  _elem107.read(iprot);
+                  struct.payloads.add(_elem107);
                 }
                 iprot.readListEnd();
               }
@@ -1084,6 +1425,33 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 108: // MANIFEST_APPEND_RESPONSE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.manifestAppendResponse = new ManifestAppendResponse();
+              struct.manifestAppendResponse.read(iprot);
+              struct.setManifestAppendResponseIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 109: // MANIFEST_FETCH_RESPONSE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.manifestFetchResponse = new ManifestFetchResponse();
+              struct.manifestFetchResponse.read(iprot);
+              struct.setManifestFetchResponseIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 110: // MANIFEST_DELETE_RESPONSE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.manifestDeleteResponse = new ManifestDeleteResponse();
+              struct.manifestDeleteResponse.read(iprot);
+              struct.setManifestDeleteResponseIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1118,14 +1486,21 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
           oprot.writeFieldEnd();
         }
       }
+      if (struct.diagnosticServerInfo != null) {
+        if (struct.isSetDiagnosticServerInfo()) {
+          oprot.writeFieldBegin(DIAGNOSTIC_SERVER_INFO_FIELD_DESC);
+          oprot.writeString(struct.diagnosticServerInfo);
+          oprot.writeFieldEnd();
+        }
+      }
       if (struct.payloads != null) {
         if (struct.isSetPayloads()) {
           oprot.writeFieldBegin(PAYLOADS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.payloads.size()));
-            for (PayloadInfo _iter101 : struct.payloads)
+            for (PayloadInfo _iter109 : struct.payloads)
             {
-              _iter101.write(oprot);
+              _iter109.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -1167,6 +1542,27 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
           oprot.writeFieldEnd();
         }
       }
+      if (struct.manifestAppendResponse != null) {
+        if (struct.isSetManifestAppendResponse()) {
+          oprot.writeFieldBegin(MANIFEST_APPEND_RESPONSE_FIELD_DESC);
+          struct.manifestAppendResponse.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.manifestFetchResponse != null) {
+        if (struct.isSetManifestFetchResponse()) {
+          oprot.writeFieldBegin(MANIFEST_FETCH_RESPONSE_FIELD_DESC);
+          struct.manifestFetchResponse.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.manifestDeleteResponse != null) {
+        if (struct.isSetManifestDeleteResponse()) {
+          oprot.writeFieldBegin(MANIFEST_DELETE_RESPONSE_FIELD_DESC);
+          struct.manifestDeleteResponse.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -1194,25 +1590,37 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
       if (struct.isSetType()) {
         optionals.set(2);
       }
-      if (struct.isSetPayloads()) {
+      if (struct.isSetDiagnosticServerInfo()) {
         optionals.set(3);
       }
-      if (struct.isSetFetchResponse()) {
+      if (struct.isSetPayloads()) {
         optionals.set(4);
       }
-      if (struct.isSetStoreResponse()) {
+      if (struct.isSetFetchResponse()) {
         optionals.set(5);
       }
-      if (struct.isSetMultiFetchResponse()) {
+      if (struct.isSetStoreResponse()) {
         optionals.set(6);
       }
-      if (struct.isSetDeleteResponse()) {
+      if (struct.isSetMultiFetchResponse()) {
         optionals.set(7);
       }
-      if (struct.isSetMultiContainsResponse()) {
+      if (struct.isSetDeleteResponse()) {
         optionals.set(8);
       }
-      oprot.writeBitSet(optionals, 9);
+      if (struct.isSetMultiContainsResponse()) {
+        optionals.set(9);
+      }
+      if (struct.isSetManifestAppendResponse()) {
+        optionals.set(10);
+      }
+      if (struct.isSetManifestFetchResponse()) {
+        optionals.set(11);
+      }
+      if (struct.isSetManifestDeleteResponse()) {
+        optionals.set(12);
+      }
+      oprot.writeBitSet(optionals, 13);
       if (struct.isSetWasSuccessful()) {
         oprot.writeBool(struct.wasSuccessful);
       }
@@ -1222,12 +1630,15 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
       if (struct.isSetType()) {
         oprot.writeI32(struct.type.getValue());
       }
+      if (struct.isSetDiagnosticServerInfo()) {
+        oprot.writeString(struct.diagnosticServerInfo);
+      }
       if (struct.isSetPayloads()) {
         {
           oprot.writeI32(struct.payloads.size());
-          for (PayloadInfo _iter102 : struct.payloads)
+          for (PayloadInfo _iter110 : struct.payloads)
           {
-            _iter102.write(oprot);
+            _iter110.write(oprot);
           }
         }
       }
@@ -1246,12 +1657,21 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
       if (struct.isSetMultiContainsResponse()) {
         struct.multiContainsResponse.write(oprot);
       }
+      if (struct.isSetManifestAppendResponse()) {
+        struct.manifestAppendResponse.write(oprot);
+      }
+      if (struct.isSetManifestFetchResponse()) {
+        struct.manifestFetchResponse.write(oprot);
+      }
+      if (struct.isSetManifestDeleteResponse()) {
+        struct.manifestDeleteResponse.write(oprot);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, BuckCacheResponse struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(9);
+      java.util.BitSet incoming = iprot.readBitSet(13);
       if (incoming.get(0)) {
         struct.wasSuccessful = iprot.readBool();
         struct.setWasSuccessfulIsSet(true);
@@ -1265,43 +1685,62 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
         struct.setTypeIsSet(true);
       }
       if (incoming.get(3)) {
+        struct.diagnosticServerInfo = iprot.readString();
+        struct.setDiagnosticServerInfoIsSet(true);
+      }
+      if (incoming.get(4)) {
         {
-          org.apache.thrift.protocol.TList _list103 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.payloads = new java.util.ArrayList<PayloadInfo>(_list103.size);
-          PayloadInfo _elem104;
-          for (int _i105 = 0; _i105 < _list103.size; ++_i105)
+          org.apache.thrift.protocol.TList _list111 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.payloads = new java.util.ArrayList<PayloadInfo>(_list111.size);
+          PayloadInfo _elem112;
+          for (int _i113 = 0; _i113 < _list111.size; ++_i113)
           {
-            _elem104 = new PayloadInfo();
-            _elem104.read(iprot);
-            struct.payloads.add(_elem104);
+            _elem112 = new PayloadInfo();
+            _elem112.read(iprot);
+            struct.payloads.add(_elem112);
           }
         }
         struct.setPayloadsIsSet(true);
       }
-      if (incoming.get(4)) {
+      if (incoming.get(5)) {
         struct.fetchResponse = new BuckCacheFetchResponse();
         struct.fetchResponse.read(iprot);
         struct.setFetchResponseIsSet(true);
       }
-      if (incoming.get(5)) {
+      if (incoming.get(6)) {
         struct.storeResponse = new BuckCacheStoreResponse();
         struct.storeResponse.read(iprot);
         struct.setStoreResponseIsSet(true);
       }
-      if (incoming.get(6)) {
+      if (incoming.get(7)) {
         struct.multiFetchResponse = new BuckCacheMultiFetchResponse();
         struct.multiFetchResponse.read(iprot);
         struct.setMultiFetchResponseIsSet(true);
       }
-      if (incoming.get(7)) {
+      if (incoming.get(8)) {
         struct.deleteResponse = new BuckCacheDeleteResponse();
         struct.deleteResponse.read(iprot);
         struct.setDeleteResponseIsSet(true);
       }
-      if (incoming.get(8)) {
+      if (incoming.get(9)) {
         struct.multiContainsResponse = new BuckCacheMultiContainsResponse();
         struct.multiContainsResponse.read(iprot);
         struct.setMultiContainsResponseIsSet(true);
+      }
+      if (incoming.get(10)) {
+        struct.manifestAppendResponse = new ManifestAppendResponse();
+        struct.manifestAppendResponse.read(iprot);
+        struct.setManifestAppendResponseIsSet(true);
+      }
+      if (incoming.get(11)) {
+        struct.manifestFetchResponse = new ManifestFetchResponse();
+        struct.manifestFetchResponse.read(iprot);
+        struct.setManifestFetchResponseIsSet(true);
+      }
+      if (incoming.get(12)) {
+        struct.manifestDeleteResponse = new ManifestDeleteResponse();
+        struct.manifestDeleteResponse.read(iprot);
+        struct.setManifestDeleteResponseIsSet(true);
       }
     }
   }
