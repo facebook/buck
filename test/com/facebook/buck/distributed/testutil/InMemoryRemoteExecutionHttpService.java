@@ -28,8 +28,8 @@ import com.facebook.buck.distributed.thrift.RemoteExecutionStoreResponse;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.HybridThriftOverHttpService;
-import com.facebook.buck.slb.HybridThriftOverHttpServiceArgs;
 import com.facebook.buck.slb.HybridThriftOverHttpServiceImpl;
+import com.facebook.buck.slb.HybridThriftOverHttpServiceImplArgs;
 import com.facebook.buck.slb.HybridThriftRequestHandler;
 import com.facebook.buck.slb.HybridThriftResponseHandler;
 import com.facebook.buck.slb.ThriftProtocol;
@@ -113,7 +113,7 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
   public RemoteExecutionStorageService createRemoteExecutionStorageService() {
     HybridThriftOverHttpService<FrontendRequest, FrontendResponse> httpService =
         new HybridThriftOverHttpServiceImpl<>(
-            HybridThriftOverHttpServiceArgs.builder()
+            HybridThriftOverHttpServiceImplArgs.builder()
                 .setService(this)
                 .setExecutor(MoreExecutors.newDirectExecutorService())
                 .build());

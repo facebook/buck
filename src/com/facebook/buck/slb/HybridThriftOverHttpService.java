@@ -22,7 +22,8 @@ import org.apache.thrift.TBase;
 
 /** Sync and async methods to communicate using the Hybrid Thrift protocol. */
 public interface HybridThriftOverHttpService<
-    ThriftRequest extends TBase<?, ?>, ThriftResponse extends TBase<?, ?>> {
+        ThriftRequest extends TBase<?, ?>, ThriftResponse extends TBase<?, ?>>
+    extends ThriftOverHttpService<ThriftRequest, ThriftResponse> {
 
   /** Asynchronously make a request. */
   ListenableFuture<ThriftResponse> makeRequest(

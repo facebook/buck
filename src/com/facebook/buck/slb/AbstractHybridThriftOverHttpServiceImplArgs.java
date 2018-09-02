@@ -22,7 +22,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractHybridThriftOverHttpServiceArgs {
+abstract class AbstractHybridThriftOverHttpServiceImplArgs {
 
   public static final String DEFAULT_HYBRID_THRIFT_PATH = "/hybrid_thrift";
 

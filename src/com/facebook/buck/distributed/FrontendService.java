@@ -18,14 +18,15 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
-import com.facebook.buck.slb.ThriftOverHttpService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
+import com.facebook.buck.slb.ThriftOverHttpServiceImpl;
 import java.io.IOException;
 
 /**
- * Extension of ThriftOverHttpService to get rid of the template arguments and make it easymock-able
+ * Extension of ThriftOverHttpServiceImpl to get rid of the template arguments and make it
+ * easymock-able
  */
-public class FrontendService extends ThriftOverHttpService<FrontendRequest, FrontendResponse> {
+public class FrontendService extends ThriftOverHttpServiceImpl<FrontendRequest, FrontendResponse> {
 
   public FrontendService(ThriftOverHttpServiceConfig config) {
     super(config);

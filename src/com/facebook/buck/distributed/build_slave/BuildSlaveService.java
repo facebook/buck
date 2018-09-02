@@ -19,13 +19,13 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildSlaveRequest;
 import com.facebook.buck.distributed.thrift.BuildSlaveResponse;
-import com.facebook.buck.slb.ThriftOverHttpService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
+import com.facebook.buck.slb.ThriftOverHttpServiceImpl;
 import java.io.IOException;
 
-/** Extension of ThriftOverHttpService to get rid of the template arguments */
+/** Extension of ThriftOverHttpServiceImpl to get rid of the template arguments */
 public class BuildSlaveService
-    extends ThriftOverHttpService<BuildSlaveRequest, BuildSlaveResponse> {
+    extends ThriftOverHttpServiceImpl<BuildSlaveRequest, BuildSlaveResponse> {
   private static final Logger LOG = Logger.get(BuildSlaveService.class);
 
   public BuildSlaveService(ThriftOverHttpServiceConfig config) {

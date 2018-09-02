@@ -35,13 +35,13 @@ public class ThriftOverHttpServiceTest {
 
   private HttpService httpService;
   private ThriftOverHttpServiceConfig config;
-  private ThriftOverHttpService<FrontendRequest, FrontendResponse> service;
+  private ThriftOverHttpServiceImpl<FrontendRequest, FrontendResponse> service;
 
   @Before
   public void setUp() {
     httpService = EasyMock.createMock(HttpService.class);
     config = ThriftOverHttpServiceConfig.builder().setService(httpService).build();
-    service = new ThriftOverHttpService<FrontendRequest, FrontendResponse>(config);
+    service = new ThriftOverHttpServiceImpl<FrontendRequest, FrontendResponse>(config);
   }
 
   @Test
@@ -73,7 +73,7 @@ public class ThriftOverHttpServiceTest {
 
     Request actualHttpRequest = requestBuilder.getValue().url("http://localhost").build();
     Assert.assertEquals(
-        ThriftOverHttpService.THRIFT_CONTENT_TYPE, actualHttpRequest.body().contentType());
+        ThriftOverHttpServiceImpl.THRIFT_CONTENT_TYPE, actualHttpRequest.body().contentType());
 
     EasyMock.verify(httpResponse, httpService);
   }
