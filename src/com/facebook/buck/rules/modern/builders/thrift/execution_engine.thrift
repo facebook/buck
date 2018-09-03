@@ -549,6 +549,10 @@ struct ResultsCachePolicy {
   1: i32 priority;
 }
 
+struct ExecuteRequestMetadata {
+  1: optional string artillery_trace_id;
+}
+
 /*
  * A request message for Execution.
  */
@@ -576,7 +580,9 @@ struct ExecuteRequest {
   * The server will have a default policy if this is not provided. This may be
   * applied to both the ActionResult and the associated blobs.
   */
-  4: optional ResultsCachePolicy results_cache_policy;
+ 4: optional ResultsCachePolicy results_cache_policy;
+
+ 5: optional ExecuteRequestMetadata metadata;
 }
 
 /*

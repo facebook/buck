@@ -32,15 +32,18 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
   private static final TField ACTION_DIGEST_FIELD_DESC = new TField("action_digest", TType.STRUCT, (short)2);
   private static final TField EXECUTION_POLICY_FIELD_DESC = new TField("execution_policy", TType.STRUCT, (short)3);
   private static final TField RESULTS_CACHE_POLICY_FIELD_DESC = new TField("results_cache_policy", TType.STRUCT, (short)4);
+  private static final TField METADATA_FIELD_DESC = new TField("metadata", TType.STRUCT, (short)5);
 
   public boolean skip_cache_lookup;
   public com.facebook.remoteexecution.cas.Digest action_digest;
   public ExecutionPolicy execution_policy;
   public ResultsCachePolicy results_cache_policy;
+  public ExecuteRequestMetadata metadata;
   public static final int SKIP_CACHE_LOOKUP = 1;
   public static final int ACTION_DIGEST = 2;
   public static final int EXECUTION_POLICY = 3;
   public static final int RESULTS_CACHE_POLICY = 4;
+  public static final int METADATA = 5;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -58,6 +61,8 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
         new StructMetaData(TType.STRUCT, ExecutionPolicy.class)));
     tmpMetaDataMap.put(RESULTS_CACHE_POLICY, new FieldMetaData("results_cache_policy", TFieldRequirementType.OPTIONAL, 
         new StructMetaData(TType.STRUCT, ResultsCachePolicy.class)));
+    tmpMetaDataMap.put(METADATA, new FieldMetaData("metadata", TFieldRequirementType.OPTIONAL, 
+        new StructMetaData(TType.STRUCT, ExecuteRequestMetadata.class)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
@@ -82,7 +87,8 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
     boolean skip_cache_lookup,
     com.facebook.remoteexecution.cas.Digest action_digest,
     ExecutionPolicy execution_policy,
-    ResultsCachePolicy results_cache_policy)
+    ResultsCachePolicy results_cache_policy,
+    ExecuteRequestMetadata metadata)
   {
     this();
     this.skip_cache_lookup = skip_cache_lookup;
@@ -90,6 +96,7 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
     this.action_digest = action_digest;
     this.execution_policy = execution_policy;
     this.results_cache_policy = results_cache_policy;
+    this.metadata = metadata;
   }
 
   /**
@@ -107,6 +114,9 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
     }
     if (other.isSetResults_cache_policy()) {
       this.results_cache_policy = TBaseHelper.deepCopy(other.results_cache_policy);
+    }
+    if (other.isSetMetadata()) {
+      this.metadata = TBaseHelper.deepCopy(other.metadata);
     }
   }
 
@@ -214,6 +224,30 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
     }
   }
 
+  public ExecuteRequestMetadata  getMetadata() {
+    return this.metadata;
+  }
+
+  public ExecuteRequest setMetadata(ExecuteRequestMetadata metadata) {
+    this.metadata = metadata;
+    return this;
+  }
+
+  public void unsetMetadata() {
+    this.metadata = null;
+  }
+
+  // Returns true if field metadata is set (has been assigned a value) and false otherwise
+  public boolean isSetMetadata() {
+    return this.metadata != null;
+  }
+
+  public void setMetadataIsSet(boolean value) {
+    if (!value) {
+      this.metadata = null;
+    }
+  }
+
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
     case SKIP_CACHE_LOOKUP:
@@ -248,6 +282,14 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
       }
       break;
 
+    case METADATA:
+      if (value == null) {
+        unsetMetadata();
+      } else {
+        setMetadata((ExecuteRequestMetadata)value);
+      }
+      break;
+
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -267,6 +309,9 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
     case RESULTS_CACHE_POLICY:
       return getResults_cache_policy();
 
+    case METADATA:
+      return getMetadata();
+
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -283,6 +328,8 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
       return isSetExecution_policy();
     case RESULTS_CACHE_POLICY:
       return isSetResults_cache_policy();
+    case METADATA:
+      return isSetMetadata();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -339,6 +386,15 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
         return false;
     }
 
+    boolean this_present_metadata = true && this.isSetMetadata();
+    boolean that_present_metadata = true && that.isSetMetadata();
+    if (this_present_metadata || that_present_metadata) {
+      if (!(this_present_metadata && that_present_metadata))
+        return false;
+      if (!TBaseHelper.equalsNobinary(this.metadata, that.metadata))
+        return false;
+    }
+
     return true;
   }
 
@@ -391,6 +447,14 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
     if (lastComparison != 0) {
       return lastComparison;
     }
+    lastComparison = Boolean.valueOf(isSetMetadata()).compareTo(other.isSetMetadata());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(metadata, other.metadata);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
     return 0;
   }
 
@@ -437,6 +501,14 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
             TProtocolUtil.skip(iprot, field.type);
           }
           break;
+        case METADATA:
+          if (field.type == TType.STRUCT) {
+            this.metadata = new ExecuteRequestMetadata();
+            this.metadata.read(iprot);
+          } else { 
+            TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
         default:
           TProtocolUtil.skip(iprot, field.type);
           break;
@@ -473,6 +545,13 @@ public class ExecuteRequest implements TBase, java.io.Serializable, Cloneable, C
       if (isSetResults_cache_policy()) {
         oprot.writeFieldBegin(RESULTS_CACHE_POLICY_FIELD_DESC);
         this.results_cache_policy.write(oprot);
+        oprot.writeFieldEnd();
+      }
+    }
+    if (this.metadata != null) {
+      if (isSetMetadata()) {
+        oprot.writeFieldBegin(METADATA_FIELD_DESC);
+        this.metadata.write(oprot);
         oprot.writeFieldEnd();
       }
     }
@@ -543,6 +622,20 @@ String space = prettyPrint ? " " : "";
         sb.append("null");
       } else {
         sb.append(TBaseHelper.toString(this. getResults_cache_policy(), indent + 1, prettyPrint));
+      }
+      first = false;
+    }
+    if (isSetMetadata())
+    {
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("metadata");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getMetadata() == null) {
+        sb.append("null");
+      } else {
+        sb.append(TBaseHelper.toString(this. getMetadata(), indent + 1, prettyPrint));
       }
       first = false;
     }
