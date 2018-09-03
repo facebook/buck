@@ -114,10 +114,10 @@ public class GoLinkStep extends ShellStep {
       command.add("-extld", cxxLinkCommandPrefix.get(0));
       if (cxxLinkCommandPrefix.size() > 1 || externalLinkerFlags.size() > 0) {
         command.add(
-            "-extldflags",
-            Stream.concat(cxxLinkCommandPrefix.stream().skip(1), externalLinkerFlags.stream())
-                .map(Escaper.BASH_ESCAPER)
-                .collect(Collectors.joining(" ")));
+            "-extldflags="
+                + Stream.concat(cxxLinkCommandPrefix.stream().skip(1), externalLinkerFlags.stream())
+                    .map(Escaper.BASH_ESCAPER)
+                    .collect(Collectors.joining(" ")));
       }
     }
     command.add(mainArchive.toString());
