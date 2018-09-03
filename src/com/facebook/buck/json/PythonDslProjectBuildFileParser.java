@@ -78,6 +78,9 @@ import javax.annotation.Nullable;
 public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   private static final String PYTHONPATH_ENV_VAR_NAME = "PYTHONPATH";
+  // https://docs.python.org/3/using/cmdline.html#envvar-PYTHONHASHSEED
+  private static final String PYTHON_HASH_SEED_ENV_VAR_NAME = "PYTHONHASHSEED";
+  private static final String PYTHON_HASH_SEED_VALUE = "7";
 
   private static final Logger LOG = Logger.get(PythonDslProjectBuildFileParser.class);
 
@@ -186,13 +189,20 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(buckEventBus, PerfEventId.of("ParserInit"))) {
 
-      ImmutableMap.Builder<String, String> pythonEnvironmentBuilder = ImmutableMap.builder();
+      ImmutableMap.Builder<String, String> pythonEnvironmentBuilder =
+          ImmutableMap.builderWithExpectedSize(environment.size());
       // Strip out PYTHONPATH. buck.py manually sets this to include only nailgun. We don't want
       // to inject nailgun into the parser's PYTHONPATH, so strip that value out.
       // If we wanted to pass on some environmental PYTHONPATH, we would have to do some actual
       // merging of this and the BuckConfig's python module search path.
+      // Also ignore PYTHONHASHSEED environment variable passed by clients since Buck manages it to
+      // prevent non-determinism.
       pythonEnvironmentBuilder.putAll(
-          Maps.filterKeys(environment, k -> !PYTHONPATH_ENV_VAR_NAME.equals(k)));
+          Maps.filterKeys(
+              environment,
+              k -> !PYTHONPATH_ENV_VAR_NAME.equals(k) && !PYTHON_HASH_SEED_ENV_VAR_NAME.equals(k)));
+      // set Python hash seed to a fixed number to make parsing reproducible
+      pythonEnvironmentBuilder.put(PYTHON_HASH_SEED_ENV_VAR_NAME, PYTHON_HASH_SEED_VALUE);
 
       if (options.getPythonModuleSearchPath().isPresent()) {
         pythonEnvironmentBuilder.put(
