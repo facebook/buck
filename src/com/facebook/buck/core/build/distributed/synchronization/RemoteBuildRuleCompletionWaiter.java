@@ -27,8 +27,8 @@ public interface RemoteBuildRuleCompletionWaiter {
 
   /**
    * Local Buck builds will never wait for remote completion of rule before building locally.
-   * Stampede builds always wait if always_wait_for_remote_build_before_proceeding_locally=true, and
-   * will also wait if set to false but the build rule has already started building remotely.
+   * Stampede builds always wait if local_mode = WAIT_FOR_REMOTE, and will also wait if set to false
+   * but the build rule has already started building remotely.
    *
    * @param buildTarget
    * @return
