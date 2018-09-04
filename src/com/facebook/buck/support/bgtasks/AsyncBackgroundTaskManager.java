@@ -24,10 +24,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -58,6 +60,7 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
   private final Semaphore availableThreads;
   private final Optional<ExecutorService> scheduler;
   private final ExecutorService taskPool;
+  private final ScheduledExecutorService timeoutPool;
 
   /**
    * Constructs an {@link AsyncBackgroundTaskManager}. If in nonblocking mode, sets up a scheduler
@@ -71,6 +74,7 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
     this.blocking = blocking;
     this.schedulerRunning = new AtomicBoolean(false);
     this.taskPool = Executors.newFixedThreadPool(nThreads);
+    this.timeoutPool = Executors.newScheduledThreadPool(1);
     this.scheduler = blocking ? Optional.empty() : Optional.of(Executors.newFixedThreadPool(1));
     this.commandsRunning = new AtomicInteger(0);
     this.availableThreads = new Semaphore(nThreads);
@@ -105,12 +109,14 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
   @Override
   public void shutdownNow() {
     shutDownScheduling();
+    timeoutPool.shutdownNow(); // we lose timeouts on shutdown
     taskPool.shutdownNow();
   }
 
   @Override
   public void shutdown(long timeout, TimeUnit units) throws InterruptedException {
     shutDownScheduling();
+    timeoutPool.shutdownNow(); // we lose timeouts on shutdown
     taskPool.shutdown();
     taskPool.awaitTermination(timeout, units);
   }
@@ -154,6 +160,20 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
     }
   }
 
+  private void addTimeoutIfNeeded(Future<?> taskHandler, ManagedBackgroundTask task) {
+    Optional<Timeout> timeout = task.getTask().getTimeout();
+    if (timeout.isPresent()) {
+      timeoutPool.schedule(
+          () -> {
+            if (taskHandler.cancel(true)) {
+              LOG.warn(String.format("Task %s timed out", task.getTaskId()));
+            }
+          },
+          timeout.get().timeout(),
+          timeout.get().unit());
+    }
+  }
+
   @Override
   public void notify(Notification code) {
     if (blocking) {
@@ -161,6 +181,18 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
     } else {
       notifyAsync(code);
     }
+  }
+
+  private Future<?> submitTask() {
+    ManagedBackgroundTask task = scheduledTasks.remove();
+    Future<?> handler =
+        taskPool.submit(
+            () -> {
+              runTask(task);
+              availableThreads.release();
+            });
+    addTimeoutIfNeeded(handler, task);
+    return handler;
   }
 
   private void notifySync(Notification code) {
@@ -182,13 +214,7 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
                 break;
               }
               availableThreads.acquire();
-              ManagedBackgroundTask task = scheduledTasks.remove();
-              futures.add(
-                  taskPool.submit(
-                      () -> {
-                        runTask(task);
-                        availableThreads.release();
-                      }));
+              futures.add(submitTask());
             }
           }
           for (Future<?> future : futures) {
@@ -197,6 +223,8 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
             } catch (ExecutionException e) {
               // task exceptions should normally be caught in runTask
               LOG.error(e, "Task threw exception");
+            } catch (CancellationException e) {
+              LOG.info(e, "Task was cancelled");
             }
           }
         } catch (InterruptedException e) {
@@ -235,12 +263,7 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
           }
         }
         availableThreads.acquire();
-        ManagedBackgroundTask task = scheduledTasks.remove();
-        taskPool.submit(
-            () -> {
-              runTask(task);
-              availableThreads.release();
-            });
+        submitTask();
       }
       LOG.info("Scheduler thread interrupted; shutting down manager");
     } catch (InterruptedException e) {

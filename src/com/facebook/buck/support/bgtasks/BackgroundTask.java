@@ -16,6 +16,9 @@
 
 package com.facebook.buck.support.bgtasks;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.immutables.value.Value;
 
 /**
@@ -24,7 +27,7 @@ import org.immutables.value.Value;
  * {@link BackgroundTaskManager}.
  */
 @Value.Immutable
-@Value.Style(init = "set*")
+@Value.Style(init = "set*", deepImmutablesDetection = true)
 public abstract class BackgroundTask<T> {
 
   @Value.Parameter
@@ -36,7 +39,20 @@ public abstract class BackgroundTask<T> {
   @Value.Parameter
   protected abstract T getActionArgs();
 
+  public abstract Optional<Timeout> getTimeout();
+
   public void run() throws Exception {
     getAction().run(getActionArgs());
+  }
+
+  /** Timeout object for {@link BackgroundTask}. */
+  @Value.Immutable(builder = false)
+  @BuckStyleImmutable
+  abstract static class AbstractTimeout {
+    @Value.Parameter
+    abstract long timeout();
+
+    @Value.Parameter
+    abstract TimeUnit unit();
   }
 }

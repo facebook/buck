@@ -24,6 +24,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
@@ -40,6 +41,7 @@ public class AsyncBackgroundTaskManagerTest {
   private static final int NTHREADS = 3;
   private static final int FIRST_COMMAND_TASKS = 5;
   private static final int SECOND_COMMAND_TASKS = 4;
+  private static final long TIMEOUT_MILLIS = 1000;
 
   @Before
   public void setUp() {
@@ -139,6 +141,23 @@ public class AsyncBackgroundTaskManagerTest {
     assertEquals("init", task.getActionArgs().getOutput());
     manager.shutdown(5, TimeUnit.SECONDS);
     assertTrue(manager.isShutDown());
+  }
+
+  @Test(timeout = 2 * TIMEOUT_MILLIS)
+  public void testBlockingTimeout() {
+    CountDownLatch blocker = new CountDownLatch(1);
+    BackgroundTask<TestArgs> task =
+        ImmutableBackgroundTask.<TestArgs>builder()
+            .setActionArgs(new TestArgs(true, false, blocker, null, null))
+            .setAction(new TestAction())
+            .setName("timeoutTask")
+            .setTimeout(Optional.of(Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
+            .build();
+    blockingManager.notify(Notification.COMMAND_START);
+    blockingManager.schedule(task);
+    blockingManager.notify(Notification.COMMAND_END);
+    assertEquals("init", task.getActionArgs().getOutput());
+    assertFalse(blockingManager.isShutDown());
   }
 
   /** Nonblocking mode tests **************************************************************** */
@@ -325,6 +344,35 @@ public class AsyncBackgroundTaskManagerTest {
             .build();
     manager.schedule(secondTask);
     assertEquals(0, manager.getScheduledTasks().size());
+  }
+
+  @Test
+  public void testNonblockingTimeout() throws InterruptedException {
+    CountDownLatch firstBlocker = new CountDownLatch(1);
+    CountDownLatch secondBlocker = new CountDownLatch(1);
+    CountDownLatch waiter = new CountDownLatch(2);
+    BackgroundTask<TestArgs> task =
+        ImmutableBackgroundTask.<TestArgs>builder()
+            .setActionArgs(new TestArgs(true, false, firstBlocker, waiter, null))
+            .setAction(new TestAction())
+            .setName("timeoutTask")
+            .setTimeout(Optional.of(Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
+            .build();
+    BackgroundTask<TestArgs> secondTask =
+        ImmutableBackgroundTask.<TestArgs>builder()
+            .setActionArgs(new TestArgs(true, false, secondBlocker, waiter, null))
+            .setAction(new TestAction())
+            .setName("secondTask")
+            .build();
+    nonblockingManager.notify(Notification.COMMAND_START);
+    nonblockingManager.schedule(task);
+    nonblockingManager.schedule(secondTask);
+    nonblockingManager.notify(Notification.COMMAND_END);
+    secondBlocker.countDown();
+    waiter.await(2 * TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+    assertEquals("init", task.getActionArgs().getOutput());
+    assertEquals("succeeded", secondTask.getActionArgs().getOutput());
+    assertFalse(nonblockingManager.isShutDown());
   }
 
   /**
