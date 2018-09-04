@@ -140,7 +140,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final boolean shouldAlwaysSortThreadsByTime;
   private final long buildRuleMinimumDurationMillis;
 
-  private final DateFormat dateFormat;
   private int lastNumLinesPrinted;
 
   private Optional<String> parsingStatus = Optional.empty();
@@ -262,8 +261,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.minimumDurationMillisecondsToShowWatchman = minimumDurationMillisecondsToShowWatchman;
     this.hideEmptyDownload = hideEmptyDownload;
 
-    this.dateFormat = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", this.locale);
-    this.dateFormat.setTimeZone(timeZone);
+    DateFormat dateFormat = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", this.locale);
+    dateFormat.setTimeZone(timeZone);
 
     // Using LinkedHashMap because we want a predictable iteration order.
     this.distBuildSlaveTracker = new LinkedHashMap<>();
