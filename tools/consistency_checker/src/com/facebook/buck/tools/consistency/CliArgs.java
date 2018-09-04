@@ -98,7 +98,8 @@ public class CliArgs extends CliCommand {
     @Argument(
         metaVar = "target name",
         usage = "The root target to traverse from in each file",
-        required = true)
+        required = true,
+        index = 2)
     List<String> targetNames;
 
     @Option(
