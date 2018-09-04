@@ -24,7 +24,7 @@
 <ul>
   <li>Moved "Go to Buck file" action to Navigate menu and "Go To" popup menu.</li>
   <li>Show warning about missing Buck server as a balloon.</li>
-  <li>Introduce project-level settings</li>
+  <li>Introduce project-level settings, stored in <code>.idea/ideabuck.xml</code></li>
 </ul>
 
 <h3>3.4</h3>

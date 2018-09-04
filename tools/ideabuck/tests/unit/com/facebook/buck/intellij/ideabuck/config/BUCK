@@ -5,6 +5,7 @@ java_test(
     srcs = glob(["*.java"]),
     target = "1.8",
     deps = [
+        "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
         "//third-party/java/intellij:intellij-plugin-sdk",
         "//third-party/java/junit:junit",

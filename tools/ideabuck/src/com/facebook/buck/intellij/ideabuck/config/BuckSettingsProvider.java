@@ -218,27 +218,43 @@ public class BuckSettingsProvider
     state.customizedInstallSettingCommand = customizedInstallSettingCommand;
   }
 
-  /** @deprecated Use {@link BuckProjectSettingsProvider#getLastAlias()} */
+  /**
+   * @deprecated Use {@link BuckProjectSettingsProvider#getLastAlias()}.
+   * @see {@link State#lastAlias} for details.
+   */
   @Deprecated
-  public @Nullable String getLastAliasForProject(Project project) {
-    BuckProjectSettingsProvider projectSettingsProvider =
-        BuckProjectSettingsProvider.getInstance(project);
-    return projectSettingsProvider
-        .getLastAlias()
-        .orElse(state.lastAlias.get(project.getBasePath()));
+  @Nullable
+  String getLastAliasForProject(Project project) {
+    return state.lastAlias.get(project.getBasePath());
   }
 
-  /** @deprecated Use {@link BuckProjectSettingsProvider#setLastAlias(String)} */
+  /**
+   * @deprecated Use {@link BuckProjectSettingsProvider#setLastAlias(String)}
+   * @see {@link State#lastAlias} for details.
+   */
   @Deprecated
-  public void setLastAliasForProject(Project project, String buildTarget) {
-    BuckProjectSettingsProvider.getInstance(project).setLastAlias(buildTarget);
+  void setLastAliasForProject(Project project, String buildTarget) {
     state.lastAlias.put(project.getBasePath(), buildTarget);
+  }
+
+  public void removeAliasForProject(Project project) {
+    state.lastAlias.remove(project.getBasePath());
   }
 
   /** All settings are stored in this inner class. */
   public static class State {
 
-    /** Remember the last used buck alias for each historical project. */
+    /**
+     * Remember the last used buck alias for each historical project.
+     *
+     * <p>The source of truth for a project is the {@link BuckProjectSettingsProvider}, but a value
+     * remains here for at least one release of ideabuck so that user values can be migrated from
+     * this map to individual project preferences. It will be removed in a future version of
+     * ideabuck.
+     *
+     * @deprecated Use {@link BuckProjectSettingsProvider.State#lastAlias}.
+     * @see {@link BuckProjectSettingsProvider#loadState} .)
+     */
     @Deprecated public Map<String, String> lastAlias = new HashMap<>();
 
     /** Buck executable to prefer to whatever can be found by the BuckExecutableDetector. */

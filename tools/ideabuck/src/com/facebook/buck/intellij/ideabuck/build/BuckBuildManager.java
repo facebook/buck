@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.build;
 
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
+import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
 import com.facebook.buck.intellij.ideabuck.ui.components.BuckDebugPanel;
@@ -67,7 +68,7 @@ public class BuckBuildManager {
 
   /** Get saved target for this project from settings. */
   public static String getCurrentSavedTarget(Project project) {
-    return BuckSettingsProvider.getInstance().getLastAliasForProject(project);
+    return BuckProjectSettingsProvider.getInstance(project).getLastAlias().orElse(null);
   }
 
   public BuckCommandHandler getCurrentRunningBuckCommandHandler() {

@@ -33,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 public class BuckProjectSettingsProvider extends AbstractProjectComponent
     implements PersistentStateComponent<BuckProjectSettingsProvider.State> {
 
+  private BuckSettingsProvider myBuckSettingsProvider;
   private State state = new State();
   private static final Logger LOG = Logger.getInstance(BuckProjectSettingsProvider.class);
 
@@ -40,8 +41,9 @@ public class BuckProjectSettingsProvider extends AbstractProjectComponent
     return project.getComponent(BuckProjectSettingsProvider.class);
   }
 
-  public BuckProjectSettingsProvider(Project project) {
+  public BuckProjectSettingsProvider(Project project, BuckSettingsProvider buckSettingsProvider) {
     super(project);
+    myBuckSettingsProvider = buckSettingsProvider;
   }
 
   @Override
@@ -52,6 +54,14 @@ public class BuckProjectSettingsProvider extends AbstractProjectComponent
   @Override
   public void loadState(State state) {
     this.state = state;
+    if (state.lastAlias == null) {
+      /*
+       * If user hasn't previously set an alias, migrate a legacy value
+       * from BuckSettingsProvider.
+       */
+      state.lastAlias = myBuckSettingsProvider.getLastAliasForProject(myProject);
+      myBuckSettingsProvider.removeAliasForProject(myProject);
+    }
   }
 
   @Override
