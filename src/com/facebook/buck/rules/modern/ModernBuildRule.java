@@ -109,12 +109,10 @@ import javax.annotation.Nullable;
  */
 public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     implements SupportsInputBasedRuleKey {
-  private final OutputPathResolver outputPathResolver;
-
-  private final Supplier<ImmutableSortedSet<BuildRule>> deps;
-  private final T buildable;
-  private final ClassInfo<T> classInfo;
-
+  private OutputPathResolver outputPathResolver;
+  private Supplier<ImmutableSortedSet<BuildRule>> deps;
+  private T buildable;
+  private ClassInfo<T> classInfo;
   private InputRuleResolver inputRuleResolver;
 
   protected ModernBuildRule(
@@ -139,12 +137,50 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       Either<T, Class<T>> buildableSource,
       SourcePathRuleFinder ruleFinder) {
     super(buildTarget, filesystem);
-    this.deps = MoreSuppliers.memoize(this::computeDeps);
-    this.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
-    this.outputPathResolver =
-        new DefaultOutputPathResolver(this.getProjectFilesystem(), this.getBuildTarget());
-    this.buildable = buildableSource.transform(b -> b, clz -> clz.cast(this));
-    this.classInfo = DefaultClassInfoFactory.forInstance(this.buildable);
+    initialize(this, buildableSource, ruleFinder, filesystem, buildTarget);
+    Preconditions.checkNotNull(deps);
+    Preconditions.checkNotNull(inputRuleResolver);
+    Preconditions.checkNotNull(outputPathResolver);
+    Preconditions.checkNotNull(buildable);
+    Preconditions.checkNotNull(classInfo);
+  }
+
+  private static <T extends Buildable> void initialize(
+      ModernBuildRule<T> rule,
+      Either<T, Class<T>> buildableSource,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget) {
+    rule.deps = MoreSuppliers.memoize(rule::computeDeps);
+    rule.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
+    rule.outputPathResolver = new DefaultOutputPathResolver(filesystem, buildTarget);
+    T buildable = buildableSource.transform(b -> b, clz -> clz.cast(rule));
+    rule.buildable = buildable;
+    rule.classInfo = DefaultClassInfoFactory.forInstance(buildable);
+  }
+
+  private static <T extends Buildable> void injectFields(
+      ModernBuildRule<T> rule,
+      ProjectFilesystem filesystem,
+      BuildTarget target,
+      SourcePathRuleFinder ruleFinder) {
+    Preconditions.checkState(rule instanceof Buildable);
+    AbstractBuildRule.injectFields(rule, filesystem, target);
+    @SuppressWarnings("unchecked")
+    Either<T, Class<T>> buildableSource = Either.ofRight((Class<T>) rule.getClass());
+    initialize(rule, buildableSource, ruleFinder, filesystem, target);
+  }
+
+  /** Allows injecting the AbstractBuildRule fields into a Buildable after construction. */
+  public static void injectFieldsIfNecessary(
+      ProjectFilesystem filesystem,
+      BuildTarget target,
+      Buildable buildable,
+      SourcePathRuleFinder ruleFinder) {
+    if (buildable instanceof ModernBuildRule) {
+      ModernBuildRule<?> rule = (ModernBuildRule<?>) buildable;
+      injectFields(rule, filesystem, target, ruleFinder);
+    }
   }
 
   private ImmutableSortedSet<BuildRule> computeDeps() {

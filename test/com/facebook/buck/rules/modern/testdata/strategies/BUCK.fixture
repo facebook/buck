@@ -3,6 +3,10 @@ touch_output(
     out = "some.path",
 )
 
+check_serialization(
+    name = "check_serialization",
+)
+
 large_dynamics(
     name = "large_dynamic",
     value = "a",

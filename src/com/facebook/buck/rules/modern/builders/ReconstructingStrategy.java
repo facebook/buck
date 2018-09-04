@@ -19,6 +19,8 @@ package com.facebook.buck.rules.modern.builders;
 import com.facebook.buck.core.build.engine.BuildExecutorRunner;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.AbstractBuildRuleResolver;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -98,6 +100,17 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
           Buildable original = converted.getBuildable();
           HashCode hash = serializer.serialize(original);
           Buildable reconstructed = deserializer.deserialize(getProvider(hash), Buildable.class);
+          ModernBuildRule.injectFieldsIfNecessary(
+              rule.getProjectFilesystem(),
+              rule.getBuildTarget(),
+              reconstructed,
+              new SourcePathRuleFinder(
+                  new AbstractBuildRuleResolver() {
+                    @Override
+                    public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
+                      throw new RuntimeException("Cannot resolve rules in deserialized MBR state.");
+                    }
+                  }));
 
           for (Step step :
               ModernBuildRule.stepsForBuildable(

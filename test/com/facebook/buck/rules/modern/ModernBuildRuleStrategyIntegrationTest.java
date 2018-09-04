@@ -52,6 +52,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Arrays;
@@ -78,6 +79,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
   private String largeDynamicTarget = "//:large_dynamic";
   private String hugeDynamicTarget = "//:huge_dynamic";
   private String duplicateOutputsTarget = "//:duplicate_outputs";
+  private String checkSerializationTarget = "//:check_serialization";
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
@@ -124,6 +126,58 @@ public class ModernBuildRuleStrategyIntegrationTest {
           creationContext.getProjectFilesystem(),
           new SourcePathRuleFinder(creationContext.getActionGraphBuilder()),
           args.getOut());
+    }
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractCheckSerializationArg extends CommonDescriptionArg {}
+
+  private static class CheckSerializationDescription
+      implements DescriptionWithTargetGraph<CheckSerializationArg> {
+    @Override
+    public Class<CheckSerializationArg> getConstructorArgType() {
+      return CheckSerializationArg.class;
+    }
+
+    @Override
+    public BuildRule createBuildRule(
+        BuildRuleCreationContextWithTargetGraph creationContext,
+        BuildTarget buildTarget,
+        BuildRuleParams params,
+        CheckSerializationArg args) {
+      return new CheckSerialization(
+          buildTarget,
+          creationContext.getProjectFilesystem(),
+          new SourcePathRuleFinder(creationContext.getActionGraphBuilder()));
+    }
+  }
+
+  private static class CheckSerialization extends ModernBuildRule<CheckSerialization>
+      implements Buildable {
+    @AddToRuleKey private final String target;
+    @AddToRuleKey private final String type;
+    @AddToRuleKey private final OutputPath output;
+
+    protected CheckSerialization(
+        BuildTarget buildTarget, ProjectFilesystem filesystem, SourcePathRuleFinder finder) {
+      super(buildTarget, filesystem, finder, CheckSerialization.class);
+      this.target = getBuildTarget().toString();
+      this.type = getType();
+      this.output = new OutputPath("output");
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      Preconditions.checkState(
+          filesystem.getRootPath().equals(getProjectFilesystem().getRootPath()));
+      Preconditions.checkState(target.equals(getBuildTarget().toString()));
+      Preconditions.checkState(type.equals(getType()));
+      return ImmutableList.of(new TouchStep(filesystem, outputPathResolver.resolvePath(output)));
     }
   }
 
@@ -247,7 +301,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
                         new TouchOutputDescription(),
                         new LargeDynamicsDescription(),
                         new FailingRuleDescription(),
-                        new DuplicateOutputsDescription()),
+                        new DuplicateOutputsDescription(),
+                        new CheckSerializationDescription()),
                     knownConfigurationDescriptions));
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
@@ -282,6 +337,12 @@ public class ModernBuildRuleStrategyIntegrationTest {
         workspace.getFileContents(
             new DefaultOutputPathResolver(filesystem, BuildTargetFactory.newInstance(simpleTarget))
                 .resolvePath(new OutputPath("some.path"))));
+  }
+
+  @Test
+  public void testAbstractBuildRuleFieldSerialization() throws Exception {
+    ProcessResult result = workspace.runBuckBuild(checkSerializationTarget);
+    result.assertSuccess();
   }
 
   @Value.Immutable
