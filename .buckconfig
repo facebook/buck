@@ -1,4 +1,5 @@
 [repositories]
+    buck = .
     bazel_skylib = ./third-party/skylark/bazel-skylib
 [java]
     ; Indicates that any folder named src or test
