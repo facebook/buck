@@ -24,14 +24,15 @@ import java.util.Optional;
 
 /**
  * Test implementation of {@link BackgroundTaskManager}. Behaves same as blocking mode on {@link
- * SynchronousBackgroundTaskManager} except that exceptions are caught and saved internally.
- * Internal list of tasks is also accessible.
+ * AsyncBackgroundTaskManager} except that exceptions are caught and saved internally. Internal list
+ * of tasks is also accessible.
  */
-public class TestBackgroundTaskManager extends SynchronousBackgroundTaskManager {
+public class TestBackgroundTaskManager extends AsyncBackgroundTaskManager {
 
   private final Map<ManagedBackgroundTask, Optional<Exception>> statuses;
 
   public TestBackgroundTaskManager() {
+    super(true);
     this.statuses = new HashMap<>();
   }
 
@@ -67,7 +68,7 @@ public class TestBackgroundTaskManager extends SynchronousBackgroundTaskManager 
    */
   public List<BackgroundTask<?>> getScheduledTasksToTest() {
     List<BackgroundTask<?>> output = new ArrayList<>();
-    for (ManagedBackgroundTask mTask : getScheduledTaskCount()) {
+    for (ManagedBackgroundTask mTask : getScheduledTasks()) {
       output.add(mTask.getTask());
     }
     return output;
