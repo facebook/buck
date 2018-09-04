@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.ui;
 
 import com.facebook.buck.intellij.ideabuck.actions.BuckInstallDebugAction;
+import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.debugger.AndroidDebugger;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckFileErrorNode;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode;
@@ -532,7 +533,9 @@ public class BuckEventsConsumer
                 @Override
                 public void run() {
                   try {
-                    AndroidDebugger.init();
+                    String adbExecutable =
+                        BuckProjectSettingsProvider.getInstance(mProject).resolveAdbExecutable();
+                    AndroidDebugger.init(adbExecutable);
                     AndroidDebugger.attachDebugger(packageName, mProject);
                     BuckInstallDebugAction.setDebug(false);
                   } catch (InterruptedException | RuntimeException e) {

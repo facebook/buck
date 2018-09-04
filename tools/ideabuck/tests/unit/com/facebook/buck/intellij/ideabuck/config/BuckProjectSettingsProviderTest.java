@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.ideabuck.config;
 
-import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider.State;
 import com.intellij.openapi.project.Project;
 import java.util.Optional;
 import org.easymock.EasyMock;
@@ -24,45 +23,57 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class BuckProjectSettingsProviderTest {
-
   @Test
-  public void whenLastAliasUnsetMigratesValueFromBuckSettingsProvider() {
-    BuckSettingsProvider applicationSettings = new BuckSettingsProvider();
+  public void projectAdbExecutableCanOverrideDefaultAdb() {
+    String defaultAdb = "/path/to/default/adb";
+    String projectAdb = "/custom/override/adb";
+    BuckExecutableDetector buckExecutableDetector =
+        EasyMock.createMock(BuckExecutableDetector.class);
+    EasyMock.expect(buckExecutableDetector.getAdbExecutable()).andReturn(defaultAdb).anyTimes();
     Project project = EasyMock.createMock(Project.class);
     EasyMock.expect(project.getBasePath()).andReturn("/path/to/project").anyTimes();
-    EasyMock.replay(project);
-
-    applicationSettings.setLastAliasForProject(project, "foo");
-    Assert.assertEquals(
-        "Legacy application prefs (prev use of ideabuck) should have lastAlias",
-        applicationSettings.getLastAliasForProject(project),
-        "foo");
+    EasyMock.replay(buckExecutableDetector, project);
 
     BuckProjectSettingsProvider projectSettings =
-        new BuckProjectSettingsProvider(project, applicationSettings);
-    projectSettings.loadState(new State());
+        new BuckProjectSettingsProvider(project, buckExecutableDetector);
+
+    projectSettings.setAdbExecutableOverride(Optional.empty());
     Assert.assertEquals(
-        "Should get legacy lastAlias value from application settings",
-        projectSettings.getLastAlias(),
-        Optional.of("foo"));
-    Assert.assertNull(
-        "Migration should remove legacy lastAlias from application settings",
-        applicationSettings.getLastAliasForProject(project));
+        "Should detect adb when not overridden",
+        defaultAdb,
+        projectSettings.resolveAdbExecutable());
+
+    projectSettings.setAdbExecutableOverride(Optional.of(projectAdb));
+    Assert.assertEquals(
+        "Should use project adb when overridden",
+        projectAdb,
+        projectSettings.resolveAdbExecutable());
   }
 
   @Test
-  public void whenLastAliasUnsetAndBuckSettingsProviderHasNoLegacyValue() {
-    BuckSettingsProvider applicationSettings = new BuckSettingsProvider();
+  public void projectBuckExecutableCanOverrideDefaultBuck() {
+    String defaultBuck = "/path/to/default/buck";
+    String projectBuck = "/custom/override/buck";
+    BuckExecutableDetector buckExecutableDetector =
+        EasyMock.createMock(BuckExecutableDetector.class);
+    EasyMock.expect(buckExecutableDetector.getBuckExecutable()).andReturn(defaultBuck).anyTimes();
     Project project = EasyMock.createMock(Project.class);
     EasyMock.expect(project.getBasePath()).andReturn("/path/to/project").anyTimes();
-    EasyMock.replay(project);
+    EasyMock.replay(buckExecutableDetector, project);
 
     BuckProjectSettingsProvider projectSettings =
-        new BuckProjectSettingsProvider(project, applicationSettings);
-    projectSettings.loadState(new State());
+        new BuckProjectSettingsProvider(project, buckExecutableDetector);
+
+    projectSettings.setBuckExecutableOverride(Optional.empty());
     Assert.assertEquals(
-        "When no legacy value of lastAlias in application settings, starts off empty",
-        projectSettings.getLastAlias(),
-        Optional.empty());
+        "Should use application buck when not overridden",
+        defaultBuck,
+        projectSettings.resolveBuckExecutable());
+
+    projectSettings.setBuckExecutableOverride(Optional.of(projectBuck));
+    Assert.assertEquals(
+        "Should use project buck when overridden",
+        projectBuck,
+        projectSettings.resolveBuckExecutable());
   }
 }

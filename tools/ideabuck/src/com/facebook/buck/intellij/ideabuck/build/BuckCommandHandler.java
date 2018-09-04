@@ -17,7 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.build;
 
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
-import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.ui.BuckEventsConsumer;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
@@ -81,7 +81,8 @@ public abstract class BuckCommandHandler {
       Project project, File directory, BuckCommand command, boolean doStartNotify) {
     this.doStartNotify = doStartNotify;
 
-    String buckExecutable = BuckSettingsProvider.getInstance().resolveBuckExecutable();
+    String buckExecutable =
+        BuckProjectSettingsProvider.getInstance(project).resolveBuckExecutable();
 
     this.project = project;
     this.command = command;

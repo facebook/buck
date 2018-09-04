@@ -19,13 +19,18 @@ package com.facebook.buck.intellij.ideabuck.config;
 import com.facebook.buck.intellij.ideabuck.ui.BuckSettingsUI;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
+import com.intellij.openapi.project.Project;
 import javax.swing.JComponent;
+import org.jetbrains.annotations.NotNull;
 
 public class BuckSettingsConfigurable implements SearchableConfigurable {
 
+  private Project project;
   private BuckSettingsUI panel;
 
-  public BuckSettingsConfigurable() {}
+  public BuckSettingsConfigurable(@NotNull Project project) {
+    this.project = project;
+  }
 
   @Override
   public String getId() {
@@ -49,7 +54,7 @@ public class BuckSettingsConfigurable implements SearchableConfigurable {
 
   @Override
   public JComponent createComponent() {
-    panel = new BuckSettingsUI();
+    panel = new BuckSettingsUI(BuckProjectSettingsProvider.getInstance(project));
     return panel;
   }
 

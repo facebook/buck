@@ -16,7 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.ui;
 
-import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
@@ -31,7 +31,7 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
     toolWindow.setToHideOnEmptyContent(true);
     toolWindow.setIcon(BuckIcons.BUCK_TOOL_WINDOW_ICON);
 
-    BuckSettingsProvider settingsProvider = BuckSettingsProvider.getInstance();
+    BuckProjectSettingsProvider settingsProvider = BuckProjectSettingsProvider.getInstance(project);
     BuckUIManager buckUIManager = BuckUIManager.getInstance(project);
 
     // Init tool window

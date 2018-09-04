@@ -16,8 +16,10 @@
 
 package com.facebook.buck.intellij.ideabuck.ui;
 
-import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckExecutableDetector;
+import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextComponentAccessor;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Comparing;
@@ -26,9 +28,7 @@ import com.intellij.ui.components.JBTextField;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.Optional;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -49,121 +49,176 @@ public class BuckSettingsUI extends JPanel {
   private JCheckBox multiInstallMode;
   private JCheckBox uninstallBeforeInstall;
   private JCheckBox customizedInstallSetting;
-  private BuckSettingsProvider optionsProvider;
+  private BuckProjectSettingsProvider optionsProvider;
 
-  public BuckSettingsUI() {
-    optionsProvider = BuckSettingsProvider.getInstance();
+  public BuckSettingsUI(BuckProjectSettingsProvider buckProjectSettingsProvider) {
+    optionsProvider = buckProjectSettingsProvider;
     init();
   }
 
+  private TextFieldWithBrowseButton createTextFieldWithBrowseButton(
+      String emptyText, String title, String description, Project project) {
+    JBTextField textField = new JBTextField();
+    textField.getEmptyText().setText(emptyText);
+    TextFieldWithBrowseButton field = new TextFieldWithBrowseButton(textField);
+    FileChooserDescriptor fileChooserDescriptor =
+        new FileChooserDescriptor(true, false, false, false, false, false);
+    field.addBrowseFolderListener(
+        title,
+        description,
+        project,
+        fileChooserDescriptor,
+        TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT);
+    return field;
+  }
+
   private void init() {
-    setLayout(new BorderLayout());
-    JPanel container = this;
 
-    buckPathField = new TextFieldWithBrowseButton();
-    FileChooserDescriptor buckFileChooserDescriptor =
-        new FileChooserDescriptor(true, false, false, false, false, false);
-    buckPathField.addBrowseFolderListener(
-        "Buck Executable",
-        "If unspecified, dynamically find one on your PATH",
-        null,
-        buckFileChooserDescriptor,
-        TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT);
+    final GridBagConstraints constraints = new GridBagConstraints();
+    constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+    constraints.fill = GridBagConstraints.HORIZONTAL;
+    constraints.weightx = 1;
+    constraints.weighty = 1;
 
-    adbPathField = new TextFieldWithBrowseButton();
-    FileChooserDescriptor adbFileChooserDescriptor =
-        new FileChooserDescriptor(true, false, false, false, false, false);
-    adbPathField.addBrowseFolderListener(
-        "Adb Executable",
-        "If unspecified, dynamically find one on your PATH or relative to ANDROID_SDK",
-        null,
-        adbFileChooserDescriptor,
-        TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT);
-    customizedInstallSettingField = new JBTextField();
-    customizedInstallSettingField.getEmptyText().setText(CUSTOMIZED_INSTALL_FLAGS_HINT);
-    customizedInstallSettingField.setEnabled(false);
+    JPanel container = new JPanel(new GridBagLayout());
+    container.setLayout(new GridBagLayout());
+    constraints.gridy = 0;
+    container.add(initUISettingsSection(), constraints);
+    constraints.gridy = 1;
+    container.add(initExecutablesSection(), constraints);
+    constraints.gridy = 2;
+    container.add(initInstallSettingsSection(), constraints);
 
+    this.setLayout(new BorderLayout());
+    this.add(container, BorderLayout.NORTH);
+  }
+
+  private JPanel initExecutablesSection() {
+    BuckExecutableDetector executableDetector = BuckExecutableDetector.newInstance();
+    String emptyTextForBuckExecutable;
+    try {
+      emptyTextForBuckExecutable = "Default: " + executableDetector.getBuckExecutable();
+    } catch (RuntimeException e) {
+      emptyTextForBuckExecutable = "No buck found on path";
+    }
+    String emptyTextForAdbExecutable;
+    try {
+      emptyTextForAdbExecutable = "Default: " + executableDetector.getAdbExecutable();
+    } catch (RuntimeException e) {
+      emptyTextForAdbExecutable = "No adb found on path";
+    }
+    buckPathField =
+        createTextFieldWithBrowseButton(
+            emptyTextForBuckExecutable,
+            "Buck Executable",
+            "Specify the buck executable to use (for this project)",
+            null);
+
+    adbPathField =
+        createTextFieldWithBrowseButton(
+            emptyTextForAdbExecutable,
+            "Adb Executable",
+            "Specify the adb executable to use (for this project)",
+            optionsProvider.getProject());
+
+    JPanel panel = new JPanel(new GridBagLayout());
+    panel.setBorder(IdeBorderFactory.createTitledBorder("Executables", true));
+
+    GridBagConstraints leftSide = new GridBagConstraints();
+    leftSide.fill = GridBagConstraints.NONE;
+    leftSide.anchor = GridBagConstraints.LINE_START;
+    leftSide.gridx = 0;
+    leftSide.weightx = 0;
+
+    GridBagConstraints rightSide = new GridBagConstraints();
+    rightSide.fill = GridBagConstraints.HORIZONTAL;
+    rightSide.anchor = GridBagConstraints.LINE_START;
+    leftSide.gridx = 1;
+    rightSide.weightx = 1;
+
+    leftSide.gridy = rightSide.gridy = 0;
+    panel.add(new JLabel("Buck Executable:"), leftSide);
+    panel.add(buckPathField, rightSide);
+
+    leftSide.gridy = rightSide.gridy = 1;
+    panel.add(new JLabel("Adb Executable:"), leftSide);
+    panel.add(adbPathField, rightSide);
+
+    return panel;
+  }
+
+  private JPanel initUISettingsSection() {
     showDebug = new JCheckBox("Show debug in tool window");
     enableAutoDeps = new JCheckBox("Enable auto dependencies");
+
+    JPanel panel = new JPanel(new GridBagLayout());
+    panel.setBorder(IdeBorderFactory.createTitledBorder("UI Settings", true));
+
+    GridBagConstraints constraints = new GridBagConstraints();
+    constraints.fill = GridBagConstraints.HORIZONTAL;
+    constraints.anchor = GridBagConstraints.LINE_START;
+    constraints.weightx = 1;
+
+    constraints.gridy = 0;
+    panel.add(showDebug, constraints);
+
+    constraints.gridy = 1;
+    panel.add(enableAutoDeps, constraints);
+    return panel;
+  }
+
+  private JPanel initInstallSettingsSection() {
     runAfterInstall = new JCheckBox("Run after install (-r)");
     multiInstallMode = new JCheckBox("Multi-install mode (-x)");
     uninstallBeforeInstall = new JCheckBox("Uninstall before installing (-u)");
     customizedInstallSetting = new JCheckBox("Use customized install setting:  ");
-    initCustomizedInstallCommandListener();
+    customizedInstallSettingField = new JBTextField();
+    customizedInstallSettingField.getEmptyText().setText(CUSTOMIZED_INSTALL_FLAGS_HINT);
+    customizedInstallSettingField.setEnabled(false);
 
-    JPanel buckSettings = new JPanel(new GridBagLayout());
-    buckSettings.setBorder(IdeBorderFactory.createTitledBorder("Buck Settings", true));
-    container.add(container = new JPanel(new BorderLayout()), BorderLayout.NORTH);
-    container.add(buckSettings, BorderLayout.NORTH);
-    final GridBagConstraints constraints =
-        new GridBagConstraints(
-            0,
-            0,
-            1,
-            1,
-            0,
-            0,
-            GridBagConstraints.WEST,
-            GridBagConstraints.NONE,
-            new Insets(0, 0, 0, 0),
-            0,
-            0);
+    JPanel panel = new JPanel(new GridBagLayout());
+    panel.setBorder(IdeBorderFactory.createTitledBorder("Install Settings", true));
 
-    buckSettings.add(new JLabel("Buck Executable Path:"), constraints);
-    constraints.gridx = 1;
-    constraints.weightx = 1;
-    constraints.fill = GridBagConstraints.HORIZONTAL;
-    buckSettings.add(buckPathField, constraints);
-    constraints.gridx = 0;
-    constraints.gridy = 1;
-    constraints.weightx = 1;
-    buckSettings.add(new JLabel("Adb Executable Path:"), constraints);
-    constraints.gridx = 1;
-    constraints.gridy = 1;
-    constraints.weightx = 1;
-    constraints.fill = GridBagConstraints.HORIZONTAL;
-    buckSettings.add(adbPathField, constraints);
-    constraints.gridx = 0;
-    constraints.gridy = 2;
-    buckSettings.add(showDebug, constraints);
-    constraints.gridx = 0;
-    constraints.gridy = 3;
-    buckSettings.add(enableAutoDeps, constraints);
+    GridBagConstraints leftSide = new GridBagConstraints();
+    leftSide.fill = GridBagConstraints.NONE;
+    leftSide.anchor = GridBagConstraints.LINE_START;
+    leftSide.gridx = 0;
+    leftSide.weightx = 0;
 
-    JPanel installSettings = new JPanel(new BorderLayout());
-    installSettings.setBorder(IdeBorderFactory.createTitledBorder("Buck Install Settings", true));
-    container.add(container = new JPanel(new BorderLayout()), BorderLayout.SOUTH);
-    container.add(installSettings, BorderLayout.NORTH);
+    GridBagConstraints rightSide = new GridBagConstraints();
+    rightSide.fill = GridBagConstraints.HORIZONTAL;
+    rightSide.anchor = GridBagConstraints.LINE_START;
+    leftSide.gridx = 1;
+    rightSide.weightx = 1;
 
-    installSettings.add(runAfterInstall, BorderLayout.NORTH);
-    installSettings.add(installSettings = new JPanel(new BorderLayout()), BorderLayout.SOUTH);
+    leftSide.gridy = rightSide.gridy = 0;
+    panel.add(runAfterInstall, leftSide);
 
-    installSettings.add(multiInstallMode, BorderLayout.NORTH);
-    installSettings.add(installSettings = new JPanel(new BorderLayout()), BorderLayout.SOUTH);
+    leftSide.gridy = rightSide.gridy = 1;
+    panel.add(multiInstallMode, leftSide);
 
-    installSettings.add(uninstallBeforeInstall, BorderLayout.NORTH);
-    installSettings.add(installSettings = new JPanel(new BorderLayout()), BorderLayout.SOUTH);
+    leftSide.gridy = rightSide.gridy = 2;
+    panel.add(uninstallBeforeInstall, leftSide);
 
-    final GridBagConstraints customConstraints =
-        new GridBagConstraints(
-            0,
-            0,
-            1,
-            1,
-            0,
-            0,
-            GridBagConstraints.WEST,
-            GridBagConstraints.NONE,
-            new Insets(0, 0, 0, 0),
-            0,
-            0);
-    JPanel customizedInstallSetting = new JPanel(new GridBagLayout());
-    customizedInstallSetting.add(this.customizedInstallSetting, customConstraints);
-    customConstraints.gridx = 1;
-    customConstraints.weightx = 1;
-    customConstraints.fill = GridBagConstraints.HORIZONTAL;
-    customizedInstallSetting.add(customizedInstallSettingField, customConstraints);
-    installSettings.add(customizedInstallSetting, BorderLayout.NORTH);
+    leftSide.gridy = rightSide.gridy = 3;
+    panel.add(customizedInstallSetting, leftSide);
+    panel.add(customizedInstallSettingField, rightSide);
+
+    customizedInstallSetting.addItemListener(
+        e -> {
+          if (e.getStateChange() == ItemEvent.SELECTED) {
+            customizedInstallSettingField.setEnabled(true);
+            runAfterInstall.setEnabled(false);
+            multiInstallMode.setEnabled(false);
+            uninstallBeforeInstall.setEnabled(false);
+          } else {
+            customizedInstallSettingField.setEnabled(false);
+            runAfterInstall.setEnabled(true);
+            multiInstallMode.setEnabled(true);
+            uninstallBeforeInstall.setEnabled(true);
+          }
+        });
+    return panel;
   }
 
   // When displaying an empty Optional in a text field, use "".
@@ -210,6 +265,7 @@ public class BuckSettingsUI extends JPanel {
   }
 
   public void reset() {
+    adbPathField.setText(optionsProvider.getAdbExecutableOverride().orElse(""));
     buckPathField.setText(optionsProvider.getBuckExecutableOverride().orElse(""));
     adbPathField.setText(optionsProvider.getAdbExecutableOverride().orElse(""));
     showDebug.setSelected(optionsProvider.isShowDebugWindow());
@@ -219,25 +275,5 @@ public class BuckSettingsUI extends JPanel {
     uninstallBeforeInstall.setSelected(optionsProvider.isUninstallBeforeInstalling());
     customizedInstallSetting.setSelected(optionsProvider.isUseCustomizedInstallSetting());
     customizedInstallSettingField.setText(optionsProvider.getCustomizedInstallSettingCommand());
-  }
-
-  private void initCustomizedInstallCommandListener() {
-    customizedInstallSetting.addItemListener(
-        new ItemListener() {
-          @Override
-          public void itemStateChanged(ItemEvent e) {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-              customizedInstallSettingField.setEnabled(true);
-              runAfterInstall.setEnabled(false);
-              multiInstallMode.setEnabled(false);
-              uninstallBeforeInstall.setEnabled(false);
-            } else {
-              customizedInstallSettingField.setEnabled(false);
-              runAfterInstall.setEnabled(true);
-              multiInstallMode.setEnabled(true);
-              uninstallBeforeInstall.setEnabled(true);
-            }
-          }
-        });
   }
 }

@@ -16,13 +16,14 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
-import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.DefaultProgramRunner;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.RunContentDescriptor;
+import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,12 +35,12 @@ public class TestProgramRunner extends DefaultProgramRunner {
   @Override
   protected RunContentDescriptor doExecute(
       @NotNull RunProfileState state, @NotNull ExecutionEnvironment env) throws ExecutionException {
-    checkBuckSettings();
+    checkBuckSettings(env.getProject());
     return super.doExecute(state, env);
   }
 
-  private void checkBuckSettings() throws ExecutionException {
-    String exec = BuckSettingsProvider.getInstance().resolveBuckExecutable();
+  private void checkBuckSettings(Project project) throws ExecutionException {
+    String exec = BuckProjectSettingsProvider.getInstance(project).resolveBuckExecutable();
     if (exec == null) {
       throw new ExecutionException(
           "Please specify the buck executable path!\n"

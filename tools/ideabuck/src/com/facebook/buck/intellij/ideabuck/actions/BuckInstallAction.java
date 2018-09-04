@@ -20,7 +20,7 @@ import com.facebook.buck.intellij.ideabuck.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
-import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
@@ -56,7 +56,7 @@ public class BuckInstallAction extends BuckBaseAction {
       return;
     }
 
-    BuckSettingsProvider settingsProvider = BuckSettingsProvider.getInstance();
+    BuckProjectSettingsProvider settingsProvider = BuckProjectSettingsProvider.getInstance(project);
     BuckBuildCommandHandler handler =
         new BuckBuildCommandHandler(project, project.getBaseDir(), BuckCommand.INSTALL);
     if (settingsProvider.isUseCustomizedInstallSetting()) {

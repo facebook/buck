@@ -19,7 +19,6 @@ package com.facebook.buck.intellij.ideabuck.debugger;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
-import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
 import com.intellij.execution.ProgramRunnerUtil;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
@@ -41,12 +40,12 @@ public class AndroidDebugger {
 
   private AndroidDebugger() {}
 
-  public static void init() throws InterruptedException {
+  /** Initializes an {@link AndroidDebugBridge} using the given adb. */
+  public static void init(String adbExecutable) throws InterruptedException {
     if (AndroidDebugBridge.getBridge() == null
         || !isAdbInitialized(AndroidDebugBridge.getBridge())) {
       AndroidDebugBridge.initIfNeeded(/* clientSupport */ true);
-      AndroidDebugBridge.createBridge(
-          BuckSettingsProvider.getInstance().resolveAdbExecutable(), false);
+      AndroidDebugBridge.createBridge(adbExecutable, false);
     }
 
     long start = System.currentTimeMillis();

@@ -17,7 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.autodeps;
 
 import com.facebook.buck.intellij.ideabuck.actions.BuckAuditOwner;
-import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.intellij.openapi.diagnostic.Logger;
@@ -75,7 +75,7 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
 
           @Override
           public void documentChanged(DocumentEvent documentEvent) {
-            if (!BuckSettingsProvider.getInstance().isAutoDepsEnabled()) {
+            if (!BuckProjectSettingsProvider.getInstance(mProject).isAutoDepsEnabled()) {
               return; // autodeps off, don't bother
             }
             VirtualFile documentFile = FileDocumentManager.getInstance().getFile(document);

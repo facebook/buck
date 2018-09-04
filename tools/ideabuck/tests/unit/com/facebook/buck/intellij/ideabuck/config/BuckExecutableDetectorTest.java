@@ -47,7 +47,7 @@ public class BuckExecutableDetectorTest {
             path1.toString() + File.pathSeparator + path2.toString(),
             "ANDROID_SDK",
             androidSdk.toString());
-    BuckExecutableDetector detector = new BuckExecutableDetector(env);
+    BuckExecutableDetector detector = new BuckExecutableDetector.Impl(env);
     Assert.assertEquals(expectedAdb.toString(), detector.getAdbExecutable());
   }
 }

@@ -189,77 +189,80 @@
   <extensions defaultExtensionNs="com.intellij">
     <fileTypeFactory implementation="com.facebook.buck.intellij.ideabuck.file.BuckFileTypeFactory"/>
     <lang.parserDefinition
-        language="Buck"
-        implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckParserDefinition"/>
+      language="Buck"
+      implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckParserDefinition"/>
     <lang.syntaxHighlighterFactory
-        language="Buck"
-        implementationClass="com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighterFactory"/>
+      language="Buck"
+      implementationClass="com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighterFactory"/>
     <lang.formatter
-        language="Buck"
-        implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckFormattingModelBuilder"/>
+      language="Buck"
+      implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckFormattingModelBuilder"/>
     <lang.importOptimizer
-        language="Buck"
-        implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckImportOptimizer"/>
+      language="Buck"
+      implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckImportOptimizer"/>
     <lang.foldingBuilder
-        language="Buck"
-        implementationClass="com.facebook.buck.intellij.ideabuck.folding.BuckFoldingBuilder"/>
+      language="Buck"
+      implementationClass="com.facebook.buck.intellij.ideabuck.folding.BuckFoldingBuilder"/>
     <completion.contributor
-        language="Buck"
-        implementationClass="com.facebook.buck.intellij.ideabuck.completion.BuckCompletionContributor"/>
+      language="Buck"
+      implementationClass="com.facebook.buck.intellij.ideabuck.completion.BuckCompletionContributor"/>
     <codeStyleSettingsProvider
-        implementation="com.facebook.buck.intellij.ideabuck.config.BuckCodeStyleSettingsProvider"/>
+      implementation="com.facebook.buck.intellij.ideabuck.config.BuckCodeStyleSettingsProvider"/>
     <langCodeStyleSettingsProvider
-        implementation="com.facebook.buck.intellij.ideabuck.format.BuckLanguageCodeStyleSettingsProvider"/>
+      implementation="com.facebook.buck.intellij.ideabuck.format.BuckLanguageCodeStyleSettingsProvider"/>
     <gotoDeclarationHandler
-        implementation="com.facebook.buck.intellij.ideabuck.navigation.BuckGotoProvider"
-        order="FIRST"/>
+      implementation="com.facebook.buck.intellij.ideabuck.navigation.BuckGotoProvider"
+      order="FIRST"/>
     <annotator language="Buck"
-               implementationClass="com.facebook.buck.intellij.ideabuck.annotator.BuckAnnotator"/>
+      implementationClass="com.facebook.buck.intellij.ideabuck.annotator.BuckAnnotator"/>
     <colorSettingsPage
-        implementation="com.facebook.buck.intellij.ideabuck.config.BuckColorSettingsPage"/>
+      implementation="com.facebook.buck.intellij.ideabuck.config.BuckColorSettingsPage"/>
     <lang.commenter language="Buck"
-                    implementationClass="com.facebook.buck.intellij.ideabuck.commenter.BuckCommenter"/>
+      implementationClass="com.facebook.buck.intellij.ideabuck.commenter.BuckCommenter"/>
     <lang.braceMatcher
-        language="Buck"
-        implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckBraceMatcher"/>
+      language="Buck"
+      implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckBraceMatcher"/>
     <quoteHandler
-        fileType="Buck"
-        className="com.facebook.buck.intellij.ideabuck.format.BuckQuoteHandler"/>
+      fileType="Buck"
+      className="com.facebook.buck.intellij.ideabuck.format.BuckQuoteHandler"/>
     <copyPastePreProcessor
-        implementation="com.facebook.buck.intellij.ideabuck.format.BuckCopyPasteProcessor"/>
+      implementation="com.facebook.buck.intellij.ideabuck.format.BuckCopyPasteProcessor"/>
     <toolWindow
-        id="Buck"
-        anchor="bottom"
-        icon="/icons/buck_tool_window_icon.png"
-        factoryClass="com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory"/>
-    <applicationConfigurable
-        groupId="tools"
-        displayName="Buck"
-        id="buck.settings"
-        instance="com.facebook.buck.intellij.ideabuck.config.BuckSettingsConfigurable"/>
+      id="Buck"
+      anchor="bottom"
+      icon="/icons/buck_tool_window_icon.png"
+      factoryClass="com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory"/>
+    <projectConfigurable
+      groupId="tools"
+      displayName="Buck"
+      id="buck.settings"
+      instance="com.facebook.buck.intellij.ideabuck.config.BuckSettingsConfigurable"/>
     <projectService
-        serviceImplementation="com.facebook.buck.intellij.ideabuck.build.BuckBuildManager"/>
+      serviceImplementation="com.facebook.buck.intellij.ideabuck.build.BuckBuildManager"/>
     <projectService
-        serviceImplementation="com.facebook.buck.intellij.ideabuck.ui.BuckUIManager"/>
-    <projectService serviceImplementation="com.facebook.buck.intellij.ideabuck.notification.BuckNotification"/>
+      serviceImplementation="com.facebook.buck.intellij.ideabuck.ui.BuckUIManager"/>
+    <projectService
+      serviceImplementation="com.facebook.buck.intellij.ideabuck.notification.BuckNotification"/>
     <configurationType
-            implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
+      implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
     <programRunner
-            implementation="com.facebook.buck.intellij.ideabuck.configurations.TestProgramRunner"/>
-    <runLineMarkerContributor language="JAVA" implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor"/>
+      implementation="com.facebook.buck.intellij.ideabuck.configurations.TestProgramRunner"/>
+    <runLineMarkerContributor language="JAVA"
+      implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor"/>
   </extensions>
 
   <extensions defaultExtensionNs="com.android.project">
-    <featureEnableService implementation="com.facebook.buck.intellij.ideabuck.proj.BuckFeatureEnableService"/>
+    <featureEnableService
+      implementation="com.facebook.buck.intellij.ideabuck.proj.BuckFeatureEnableService"/>
   </extensions>
 
   <actions>
     <group id="buck.Menu">
       <action
-          id="buck.GoToBuckFile"
-          class="com.facebook.buck.intellij.ideabuck.actions.GoToBuckFile"
-          text="Buck file"
-          description="Go to Buck file for this source file.">
+        id="buck.GoToBuckFile"
+        class="com.facebook.buck.intellij.ideabuck.actions.GoToBuckFile"
+        text="Buck file"
+        description="Go to Buck file for this source file.">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift P"/>
       </action>
       <add-to-group anchor="first" group-id="EditorPopupMenu.GoTo"/>
@@ -280,7 +283,8 @@
 
     <group id="buck.BuildGroup">
       <separator></separator>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.ChooseTargetAction" id="buck.ChooseTarget">
+      <action class="com.facebook.buck.intellij.ideabuck.actions.ChooseTargetAction"
+        id="buck.ChooseTarget">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift J"/>
       </action>
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckBuildAction" id="buck.Build">
@@ -289,39 +293,38 @@
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckTestAction" id="buck.Test">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift Y"/>
       </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckInstallAction" id="buck.Install">
+      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckInstallAction"
+        id="buck.Install">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift X"/>
       </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckInstallDebugAction" id="buck.InstallDebug">
+      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckInstallDebugAction"
+        id="buck.InstallDebug">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift D"/>
       </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckUninstallAction" id="buck.Uninstall">
+      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckUninstallAction"
+        id="buck.Uninstall">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
       </action>
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckKillAction" id="buck.Kill">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L"/>
       </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckProjectGenerationAction" id="buck.ProjectGeneration">
+      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckProjectGenerationAction"
+        id="buck.ProjectGeneration">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift B"/>
       </action>
       <add-to-group anchor="last" group-id="MainToolBar"/>
     </group>
   </actions>
 
-  <application-components>
+  <project-components>
     <component>
-      <implementation-class>com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider
+      <implementation-class>com.facebook.buck.intellij.ideabuck.config.BuckModule
+      </implementation-class>
+      <loadForDefaultProject/>
+    </component>
+    <component>
+      <implementation-class>com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider
       </implementation-class>
     </component>
-  </application-components>
-
-    <project-components>
-        <component>
-            <implementation-class>com.facebook.buck.intellij.ideabuck.config.BuckModule</implementation-class>
-            <loadForDefaultProject />
-        </component>
-      <component>
-        <implementation-class>com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider</implementation-class>
-      </component>
-    </project-components>
+  </project-components>
 </idea-plugin>

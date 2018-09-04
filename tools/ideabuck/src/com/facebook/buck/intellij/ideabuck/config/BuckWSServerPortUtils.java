@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.ideabuck.config;
 import com.google.common.base.Strings;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.openapi.project.Project;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,9 +29,10 @@ public final class BuckWSServerPortUtils {
 
   private static final String SEARCH_FOR = "http.port=";
 
-  public static int getPort(String runInPath)
+  /** Returns the port number of Buck's HTTP server, if it can be determined, else a value < 0. */
+  public static int getPort(Project project, String path)
       throws NumberFormatException, IOException, ExecutionException {
-    String exec = BuckSettingsProvider.getInstance().resolveBuckExecutable();
+    String exec = BuckProjectSettingsProvider.getInstance(project).resolveBuckExecutable();
 
     if (Strings.isNullOrEmpty(exec)) {
       throw new RuntimeException("Buck executable is not defined in settings.");
@@ -38,7 +40,7 @@ public final class BuckWSServerPortUtils {
 
     GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.setExePath(exec);
-    commandLine.withWorkDirectory(runInPath);
+    commandLine.withWorkDirectory(path);
     commandLine.addParameter("server");
     commandLine.addParameter("status");
     commandLine.addParameter("--http-port");
