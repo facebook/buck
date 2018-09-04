@@ -54,7 +54,6 @@ import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +62,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -100,8 +98,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private static final int EXPECTED_MAXIMUM_RENDERED_LINE_LENGTH = 128;
 
   private static final Logger LOG = Logger.get(SuperConsoleEventBusListener.class);
-
-  @VisibleForTesting static final String EMOJI_BUNNY = "\uD83D\uDC07";
 
   private final Locale locale;
   private final Function<Long, String> formatTimeFunction;
@@ -1067,19 +1063,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   public void envVariableChange(ParsingEvent.EnvVariableChange event) {
     printInfoDirectlyOnce("Action graph will be rebuilt because environment variables changed.");
     parsingStatus = Optional.of("envVariableChange");
-  }
-
-  @VisibleForTesting
-  static Optional<String> createParsingMessage(String emoji, String reason) {
-    if (Charset.defaultCharset().equals(Charsets.UTF_8)) {
-      return Optional.of(emoji + "  " + reason);
-    } else {
-      if (emoji.equals(EMOJI_BUNNY)) {
-        return Optional.of("(FAST)");
-      } else {
-        return Optional.of("(SLOW) " + reason);
-      }
-    }
   }
 
   @Override
