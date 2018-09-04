@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.BuildRuleKeys;
@@ -42,6 +43,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.parser.ParseEvent;
@@ -62,12 +64,18 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
+@RunWith(Parameterized.class)
 public class SimpleConsoleEventBusListenerTest {
   private static final StampedeId STAMPEDE_ID_ONE = new StampedeId().setId("stampedeIdOne");
   private static final String STAMPEDE_ID_ONE_MESSAGE =
@@ -96,10 +104,43 @@ public class SimpleConsoleEventBusListenerTest {
     console = new TestConsole();
   }
 
+  @Parameters(name = "{2}")
+  public static Collection<Object[]> data() {
+    return Arrays.asList(
+        new Object[][] {
+          {false, Optional.empty(), "no_build_id_and_no_build_url"},
+          {true, Optional.empty(), "build_id_and_no_build_url"},
+          {
+            true,
+            Optional.of("View details at https://example.com/build/{build_id}"),
+            "build_id_and_build_url"
+          },
+          {
+            false,
+            Optional.of("View details at https://example.com/build/{build_id}"),
+            "no_build_id_and_build_url"
+          }
+        });
+  }
+
+  private final BuildId buildId = new BuildId("1234-5678");
+
+  @Parameterized.Parameter(0)
+  public boolean printBuildId;
+
+  @Parameterized.Parameter(1)
+  public Optional<String> buildDetailsTemplate;
+
+  @Parameterized.Parameter(2)
+  public String _ignoredName;
+
   @Test
   public void testSimpleBuild() {
-    setupSimpleConsole(false);
+    setupSimpleConsole(false, printBuildId, buildDetailsTemplate);
     String expectedOutput = "";
+    if (printBuildId) {
+      expectedOutput = "Build UUID: 1234-5678" + System.lineSeparator();
+    }
     assertOutput(expectedOutput, console);
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
@@ -170,9 +211,10 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
+    expectedOutput += "BUILT  0.4s //banana:stand" + System.lineSeparator();
+
     expectedOutput +=
         linesToText(
-            "BUILT  0.4s //banana:stand",
             FINISHED_DOWNLOAD_STRING + ", 100.0% CACHE MISS",
             "BUILDING: FINISHED IN 1.2s",
             "WAITING FOR HTTP CACHE UPLOADS 0.00 BYTES (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)",
@@ -222,6 +264,15 @@ public class SimpleConsoleEventBusListenerTest {
     expectedOutput +=
         "HTTP CACHE UPLOAD: FINISHED 1.50 MBYTES (1 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)"
             + System.lineSeparator();
+    assertOutput(expectedOutput, console);
+
+    CommandEvent.Started commandStarted =
+        CommandEvent.started("build", ImmutableList.of(), true, 1234);
+    eventBus.post(CommandEvent.finished(commandStarted, ExitCode.SUCCESS));
+    if (buildDetailsTemplate.isPresent()) {
+      expectedOutput +=
+          "View details at https://example.com/build/1234-5678" + System.lineSeparator();
+    }
     assertOutput(expectedOutput, console);
   }
 
@@ -494,6 +545,11 @@ public class SimpleConsoleEventBusListenerTest {
   }
 
   private void setupSimpleConsole(boolean hideSucceededRules) {
+    setupSimpleConsole(hideSucceededRules, false, Optional.empty());
+  }
+
+  private void setupSimpleConsole(
+      boolean hideSucceededRules, boolean printBuildId, Optional<String> buildDetailsTemplate) {
     SimpleConsoleEventBusListener listener =
         new SimpleConsoleEventBusListener(
             console,
@@ -506,7 +562,9 @@ public class SimpleConsoleEventBusListenerTest {
             logPath,
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()), System.getProperties()),
-            Optional.empty());
+            buildId,
+            printBuildId,
+            buildDetailsTemplate);
 
     eventBus.register(listener);
   }

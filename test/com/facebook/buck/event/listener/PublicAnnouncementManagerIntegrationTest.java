@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.distributed.thrift.Announcement;
 import com.facebook.buck.distributed.thrift.AnnouncementResponse;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
@@ -140,6 +141,8 @@ public class PublicAnnouncementManagerIntegrationTest {
               Locale.US,
               logPath,
               TimeZone.getTimeZone("UTC"),
+              new BuildId("1234-5679"),
+              false,
               Optional.empty());
       eventBus.register(listener);
 

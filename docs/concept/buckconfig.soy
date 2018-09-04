@@ -2817,6 +2817,19 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'log' /}
+  {param name: 'build_details_template' /}
+  {param example_value}
+    {literal}"Details at https://example.com/builds/{build_id}"{/literal}
+  {/param}
+  {param description}
+    If provided, Buck prints the specified string at the end of each build.
+    The string <code>{lb}build_id{rb}</code> is replaced with the current build ID.
+    This can be helpful to link to external systems that may have more details about the build.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'lua' /}
   {param description}

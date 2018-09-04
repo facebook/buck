@@ -975,9 +975,9 @@ public final class Main {
                     executionEnvironment,
                     locale,
                     filesystem.getBuckPaths().getLogDir().resolve("test.log"),
-                    buckConfig.isLogBuildIdToConsoleEnabled()
-                        ? Optional.of(buildId)
-                        : Optional.empty());
+                    buildId,
+                    buckConfig.isLogBuildIdToConsoleEnabled(),
+                    buckConfig.getBuildDetailsTemplate());
             // This makes calls to LOG.error(...) post to the EventBus, instead of writing to
             // stderr.
             Closeable logErrorToEventBus =
@@ -1866,7 +1866,9 @@ public final class Main {
       ExecutionEnvironment executionEnvironment,
       Locale locale,
       Path testLogPath,
-      Optional<BuildId> buildId) {
+      BuildId buildId,
+      boolean printBuildId,
+      Optional<String> buildDetailsTemplate) {
     if (config.isEnabled(console, Platform.detect())) {
       SuperConsoleEventBusListener superConsole =
           new SuperConsoleEventBusListener(
@@ -1878,7 +1880,9 @@ public final class Main {
               locale,
               testLogPath,
               TimeZone.getDefault(),
-              buildId);
+              buildId,
+              printBuildId,
+              buildDetailsTemplate);
       superConsole.startRenderScheduler(
           SUPER_CONSOLE_REFRESH_RATE.toMillis(), TimeUnit.MILLISECONDS);
       return superConsole;
@@ -1893,7 +1897,9 @@ public final class Main {
         locale,
         testLogPath,
         executionEnvironment,
-        buildId);
+        buildId,
+        printBuildId,
+        buildDetailsTemplate);
   }
 
   /**

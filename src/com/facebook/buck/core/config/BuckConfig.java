@@ -112,7 +112,9 @@ public class BuckConfig {
             "chrome_trace_generation",
             "compress_traces",
             "max_traces",
-            "public_announcements"));
+            "public_announcements",
+            "log_build_id_to_console_enabled",
+            "build_details_template"));
     ignoreFieldsForDaemonRestartBuilder.put("project", ImmutableSet.of("ide_prompt"));
     ignoreFieldsForDaemonRestartBuilder.put("ui", ImmutableSet.of("superconsole"));
     ignoreFieldsForDaemonRestartBuilder.put("color", ImmutableSet.of("ui"));
@@ -1000,5 +1002,9 @@ public class BuckConfig {
    */
   public boolean getShouldDeleteTemporaries() {
     return config.getBooleanValue("build", "delete_temporaries", false);
+  }
+
+  public Optional<String> getBuildDetailsTemplate() {
+    return config.get("log", "build_details_template");
   }
 }

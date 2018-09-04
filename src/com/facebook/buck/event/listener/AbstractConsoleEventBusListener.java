@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildStatus;
@@ -52,6 +53,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
@@ -77,6 +79,7 @@ import java.util.logging.Level;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
+import org.stringtemplate.v4.ST;
 
 /**
  * Base class for {@link BuckEventListener}s responsible for outputting information about the
@@ -134,6 +137,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Nullable protected volatile InstallEvent.Started installStarted;
   @Nullable protected volatile InstallEvent.Finished installFinished;
 
+  @Nullable protected volatile CommandEvent.Finished commandFinished;
+
   protected AtomicReference<HttpArtifactCacheEvent.Scheduled> firstHttpCacheUploadScheduled =
       new AtomicReference<>();
 
@@ -165,6 +170,10 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @GuardedBy("distBuildStatusLock")
   protected Optional<DistBuildStatus> distBuildStatus = Optional.empty();
+
+  /** Commands that should print out the build details, if provided */
+  protected final ImmutableSet<String> buildDetailsCommands =
+      ImmutableSet.of("build", "test", "install");
 
   public AbstractConsoleEventBusListener(
       Console console,
@@ -211,6 +220,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.networkStatsKeeper = new NetworkStatsKeeper();
 
     this.buildRuleThreadTracker = new BuildRuleThreadTracker(executionEnvironment);
+  }
+
+  public static String getBuildDetailsLine(BuildId buildId, String buildDetailsTemplate) {
+    return new ST(buildDetailsTemplate, '{', '}').add("build_id", buildId).render();
+  }
+
+  public static String getBuildLogLine(BuildId buildId) {
+    return "Build UUID: " + buildId;
   }
 
   @VisibleForTesting
@@ -848,6 +865,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     distBuildTotalRulesCount =
         buildProgress.getTotalRulesCount() - buildProgress.getSkippedRulesCount();
     distBuildFinishedRulesCount = buildProgress.getBuiltRulesCount();
+  }
+
+  @Subscribe
+  public void commandFinished(CommandEvent.Finished event) {
+    commandFinished = event;
   }
 
   /**

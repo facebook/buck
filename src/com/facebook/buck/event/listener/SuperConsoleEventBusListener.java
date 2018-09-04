@@ -33,6 +33,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
+import com.facebook.buck.event.CommandEvent.Finished;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.FlushConsoleEvent;
@@ -57,6 +58,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -168,6 +170,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final int outputMaxColumns;
 
   private final Optional<String> buildIdLine;
+  private final Optional<String> buildDetailsLine;
 
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
@@ -178,7 +181,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Locale locale,
       Path testLogPath,
       TimeZone timeZone,
-      Optional<BuildId> buildId) {
+      BuildId buildId,
+      boolean printBuildId,
+      Optional<String> buildDetailsTemplate) {
     this(
         config,
         console,
@@ -192,7 +197,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         500L,
         1000L,
         true,
-        buildId);
+        buildId,
+        printBuildId,
+        buildDetailsTemplate);
   }
 
   @VisibleForTesting
@@ -209,7 +216,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       long minimumDurationMillisecondsToShowActionGraph,
       long minimumDurationMillisecondsToShowWatchman,
       boolean hideEmptyDownload,
-      Optional<BuildId> buildId) {
+      BuildId buildId,
+      boolean printBuildId,
+      Optional<String> buildDetailsTemplate) {
     super(
         console,
         clock,
@@ -279,10 +288,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       }
     }
     this.outputMaxColumns = outputMaxColumns;
-    this.buildIdLine =
-        buildId.isPresent()
-            ? Optional.of(SimpleConsoleEventBusListener.getBuildLogLine(buildId.get()))
-            : Optional.empty();
+    this.buildIdLine = printBuildId ? Optional.of(getBuildLogLine(buildId)) : Optional.empty();
+    this.buildDetailsLine =
+        buildDetailsTemplate.map(
+            template -> AbstractConsoleEventBusListener.getBuildDetailsLine(buildId, template));
   }
 
   /** Schedules a runnable that updates the console output at a fixed interval. */
@@ -573,7 +582,19 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         lines);
 
     logHttpCacheUploads(lines);
+
+    maybePrintBuildDetails(lines);
+
     return lines.build();
+  }
+
+  private void maybePrintBuildDetails(Builder<String> lines) {
+    Finished commandFinishedEvent = commandFinished;
+    if (commandFinishedEvent != null
+        && buildDetailsCommands.contains(commandFinishedEvent.getCommandName())
+        && buildDetailsLine.isPresent()) {
+      lines.add(buildDetailsLine.get());
+    }
   }
 
   private void getTotalTimeLine(ImmutableList.Builder<String> lines) {
