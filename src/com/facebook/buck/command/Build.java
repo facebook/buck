@@ -165,18 +165,25 @@ public class Build implements Closeable {
     buildEngine.terminateBuildWithFailure(failure);
   }
 
+  /** Setup all the symlinks necessary for a build */
+  private synchronized void setupBuildSymlinks() throws IOException {
+    // Symlinks should only be created once, across all invocations of build, otherwise
+    // there will be file system conflicts.
+    if (symlinksCreated) {
+      return;
+    }
+    // Setup symlinks required when configuring the output path.
+    createConfiguredBuckOutSymlinks();
+    createProjectRootSymlink();
+    symlinksCreated = true;
+  }
+
   /**
    * When the user overrides the configured buck-out directory via the `.buckconfig` and also sets
    * the `project.buck_out_compat_link` setting to `true`, we symlink the original output path
    * (`buck-out/`) to this newly configured location for backwards compatibility.
    */
-  private synchronized void createConfiguredBuckOutSymlinks() throws IOException {
-    // Symlinks should only be created once, across all invocations of Build, otherwise
-    // there will be file system conflicts.
-    if (symlinksCreated) {
-      return;
-    }
-
+  private void createConfiguredBuckOutSymlinks() throws IOException {
     for (Cell cell : rootCell.getAllCells()) {
       BuckConfig buckConfig = cell.getBuckConfig();
       ProjectFilesystem filesystem = cell.getFilesystem();
@@ -201,8 +208,15 @@ public class Build implements Closeable {
         }
       }
     }
+  }
 
-    symlinksCreated = true;
+  private void createProjectRootSymlink() throws IOException {
+    for (Cell cell : rootCell.getAllCells()) {
+      ProjectFilesystem filesystem = cell.getFilesystem();
+      BuckPaths buckPaths = filesystem.getBuckPaths();
+
+      filesystem.createSymLink(buckPaths.getProjectRootDir(), filesystem.getRootPath(), true);
+    }
   }
 
   /**
@@ -295,8 +309,8 @@ public class Build implements Closeable {
    */
   public List<BuildEngineResult> initializeBuild(ImmutableList<BuildRule> rulesToBuild)
       throws IOException {
-    // Setup symlinks required when configuring the output path.
-    createConfiguredBuckOutSymlinks();
+
+    setupBuildSymlinks();
 
     List<BuildEngineResult> resultFutures =
         rulesToBuild

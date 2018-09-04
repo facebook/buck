@@ -95,15 +95,20 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<String> cellsPathsStringsBuilder = new ImmutableList.Builder<String>();
     ImmutableList.Builder<String> cellsNamesBuilder = new ImmutableList.Builder<String>();
 
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+
+    Path pathToProjectRoot =
+        output.getParent().relativize(projectFilesystem.getBuckPaths().getProjectRootDir());
+
     // Create symlink to the root cell.
     Path rootPath = cellRoots.getCellPathOrThrow(Optional.empty());
-    Path relativePath = getProjectFilesystem().resolve(output.getParent()).relativize(rootPath);
+    Path relativePath = projectFilesystem.getRootPath().relativize(rootPath);
     cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
     cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ROOT_CELL_LINK_NAME));
 
     // Create symlink to the cells.
     for (ImmutableMap.Entry<String, Path> ent : cellRoots.getCellPaths().entrySet()) {
-      relativePath = getProjectFilesystem().resolve(output.getParent()).relativize(ent.getValue());
+      relativePath = projectFilesystem.getRootPath().relativize(ent.getValue());
       cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
       cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ent.getKey()));
     }
@@ -135,6 +140,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     // Configure the template output.
     ImmutableMap.Builder<String, Object> valuesBuilder = ImmutableMap.builder();
+    valuesBuilder.put("path_to_project_root", Escaper.escapeAsBashString(pathToProjectRoot));
     valuesBuilder.put(
         "script_to_run",
         Escaper.escapeAsBashString(context.getSourcePathResolver().getRelativePath(main)));

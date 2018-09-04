@@ -4,6 +4,8 @@ set -e
 
 SCRIPT_TO_RUN=<script_to_run>
 
+BUCK_PROJECT_ROOT=<path_to_project_root>
+
 # This script can be cached and used on machines other than the one where it was created. That
 # means it can't contain any absolute filepaths. Expose the absolute filepath of the root of
 # the project as $BUCK_REAL_ROOT, determined at runtime.
@@ -29,7 +31,7 @@ trap "rm -rf $BUCK_TMP_ROOT" EXIT HUP INT TERM
     for idx in "${!CELLS_NAMES[@]}"; do
       name="${CELLS_NAMES[$idx]}"
       path="${CELLS_PATHS[$idx]}"
-      ln -sf "../$path" "$tmpfolder/$name"
+      ln -sf "../$BUCK_PROJECT_ROOT/$path" "$tmpfolder/$name"
     done
     mv -n "$tmpfolder/" "$BUCK_REAL_ROOT/cells/" 2>/dev/null || true
   fi

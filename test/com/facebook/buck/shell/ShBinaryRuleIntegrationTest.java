@@ -179,4 +179,20 @@ public class ShBinaryRuleIntegrationTest {
     workspace.buildAndReturnOutput(
         "--config", "project.embedded_cell_buck_out_enabled=true", "//:create_output_using_node");
   }
+
+  @Test
+  public void testShBinaryWithBuckoutOutsideRoot() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_trivial", temporaryFolder);
+    workspace.setUp();
+
+    // symlink the buck-out to be outside the project root
+    Path tempBuckOut = Files.createTempDirectory("buck-out");
+    Files.createSymbolicLink(temporaryFolder.getRoot().resolve("buck-out"), tempBuckOut);
+
+    workspace.buildAndReturnOutput("//:run_example");
+  }
 }
