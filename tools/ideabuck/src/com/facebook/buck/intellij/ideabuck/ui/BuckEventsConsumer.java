@@ -80,7 +80,6 @@ public class BuckEventsConsumer
     mBuckUIManager = BuckUIManager.getInstance(project);
   }
 
-  private String mTarget = null;
   private MessageBusConnection mConnection;
   private Map<String, List<String>> mErrors =
       Collections.synchronizedMap(new HashMap<String, List<String>>());
@@ -122,25 +121,24 @@ public class BuckEventsConsumer
     mProjectGenerationProgressValue = 0;
     mTestResultsList = Collections.synchronizedList(new LinkedList<TestResults>());
     mErrors = Collections.synchronizedMap(new HashMap<String, List<String>>());
-    if (mCurrentBuildRootElement != null) {
-      mBuckUIManager
-          .getBuckTreeViewPanel()
-          .getModifiableModel()
-          .removeAllChildren(mCurrentBuildRootElement);
-    }
   }
 
   public boolean isAttached() {
     return attached;
   }
 
-  public void attach(String target) {
-    mTarget = target == null ? "NONE" : target;
-    mCurrentBuildRootElement = mBuckUIManager.getBuckTreeViewPanel().getRoot();
+  /**
+   * Add a new BuckTextNode in the BuckTreeViewPanel, which becomes the root when adding new nodes
+   * in the event consumers
+   *
+   * @param message The text to be displayed in the BuckTextNode
+   */
+  public void attach(String message) {
+    mCurrentBuildRootElement = new BuckTextNode(message, TextType.INFO);
     mBuckUIManager
         .getBuckTreeViewPanel()
         .getModifiableModel()
-        .setNodeText(mCurrentBuildRootElement, "Building " + mTarget);
+        .addChild(mBuckUIManager.getBuckTreeViewPanel().getRoot(), mCurrentBuildRootElement);
 
     mMainBuildStartTimestamp = 0;
 
@@ -510,8 +508,13 @@ public class BuckEventsConsumer
     }
   }
 
-  @Override
-  public void consumeConsoleEvent(final String message) {
+  /**
+   * Add a BuckTextNode to display a message as if it were sent as a console event
+   *
+   * @param message The string to be displayed
+   * @param textType The type of the text
+   */
+  public void sendAsConsoleEvent(final String message, final TextType textType) {
     mBuckUIManager.getBuckToolWindow().showMainToolWindowIfNecessary();
 
     if (mCurrentBuildRootElement == null) {
@@ -521,7 +524,12 @@ public class BuckEventsConsumer
     mBuckUIManager
         .getBuckTreeViewPanel()
         .getModifiableModel()
-        .addChild(mCurrentBuildRootElement, new BuckTextNode(message, TextType.ERROR));
+        .addChild(mCurrentBuildRootElement, new BuckTextNode(message, textType));
+  }
+
+  @Override
+  public void consumeConsoleEvent(final String message) {
+    sendAsConsoleEvent(message, TextType.ERROR);
   }
 
   @Override

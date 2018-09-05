@@ -101,10 +101,24 @@ public final class BuckModule implements ProjectComponent {
     }
   }
 
+  /**
+   * A shortcut of calling attachWithText("Building " + target)
+   *
+   * @param target The target name to be built
+   */
   public void attach(String target) {
+    attachWithText("Building " + target);
+  }
+
+  /**
+   * Detach and then re-attach the event consumers
+   *
+   * @param text The text to be displayed in the BuckTextNode
+   */
+  public void attachWithText(String text) {
     mBuckEventsConsumer.detach();
 
-    mBuckEventsConsumer.attach(target);
+    mBuckEventsConsumer.attach(text);
   }
 
   public BuckEventsConsumer getBuckEventsConsumer() {
