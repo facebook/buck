@@ -30,6 +30,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -80,14 +81,14 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       Path root, Config config, BuckPaths buckPaths) {
     ImmutableSet.Builder<PathOrGlobMatcher> builder = ImmutableSet.builder();
 
-    builder.add(new PathOrGlobMatcher(root, ".idea"));
+    builder.add(new PathOrGlobMatcher(Paths.get(".idea")));
 
     String projectKey = "project";
     String ignoreKey = "ignore";
 
     String buckdDirProperty = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
     if (!Strings.isNullOrEmpty(buckdDirProperty)) {
-      builder.add(new PathOrGlobMatcher(root, buckdDirProperty));
+      builder.add(new PathOrGlobMatcher(Paths.get(buckdDirProperty)));
     }
 
     Path cacheDir =
@@ -113,7 +114,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
                   return new PathOrGlobMatcher(
                       root.getFileSystem().getPathMatcher("glob:" + input), input);
                 }
-                return new PathOrGlobMatcher(root, input);
+                return new PathOrGlobMatcher(Paths.get(input));
               }
             })
         // And now remove any null patterns

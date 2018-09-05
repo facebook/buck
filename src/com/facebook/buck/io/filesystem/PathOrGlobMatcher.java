@@ -60,10 +60,6 @@ public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMa
     this.globMatcher = Optional.empty();
   }
 
-  public PathOrGlobMatcher(Path root, String basePath) {
-    this(root.getFileSystem().getPath(basePath));
-  }
-
   public PathOrGlobMatcher(PathMatcher globMatcher, String globPattern) {
     this.type = Type.GLOB;
     this.pathPrefixMatcher = Optional.empty();
