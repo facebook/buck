@@ -164,6 +164,7 @@ public class BuckToolWindowImpl implements BuckToolWindow {
     group.add(actionManager.getAction("buck.Kill"));
     group.add(actionManager.getAction("buck.ProjectGeneration"));
     group.add(actionManager.getAction("buck.ScrollToEnd"));
+    group.add(actionManager.getAction("buck.Clear"));
 
     return group;
   }
