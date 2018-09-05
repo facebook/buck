@@ -151,9 +151,13 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
                 FluentIterable.from(
                         // "Path" is Iterable, so avoid adding each segment.
                         // We use the default value here because that's what we've always done.
-                        ImmutableSet.of(
-                            getCacheDir(
-                                root, Optional.of(buckPaths.getCacheDir().toString()), buckPaths)))
+                        MorePaths.filterForSubpaths(
+                            ImmutableSet.of(
+                                getCacheDir(
+                                    root,
+                                    Optional.of(buckPaths.getCacheDir().toString()),
+                                    buckPaths)),
+                            root))
                     .append(ImmutableSet.of(buckPaths.getTrashDir()))
                     .transform(PathOrGlobMatcher::new))
             .toSet();

@@ -28,6 +28,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -93,7 +94,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
     Path cacheDir =
         DefaultProjectFilesystem.getCacheDir(root, config.getValue("cache", "dir"), buckPaths);
-    builder.add(new PathOrGlobMatcher(cacheDir));
+    addPathMatcherRelativeToRepo(root, builder, cacheDir);
 
     config
         .getListWithoutComments(projectKey, ignoreKey)
@@ -121,6 +122,17 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
         .forEach(builder::add);
 
     return builder.build();
+  }
+
+  private static void addPathMatcherRelativeToRepo(
+      Path root, Builder<PathOrGlobMatcher> builder, Path pathToAdd) {
+    if (!pathToAdd.isAbsolute()
+        || pathToAdd.normalize().startsWith(root.toAbsolutePath().normalize())) {
+      if (pathToAdd.isAbsolute()) {
+        pathToAdd = root.relativize(pathToAdd);
+      }
+      builder.add(new PathOrGlobMatcher(pathToAdd));
+    }
   }
 
   private static BuckPaths getConfiguredBuckPaths(
