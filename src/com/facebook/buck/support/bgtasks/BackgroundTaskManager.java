@@ -39,17 +39,15 @@ public interface BackgroundTaskManager {
    * Schedule a task to be run in the background.
    *
    * @param task {@link BackgroundTask} object to be run
-   * @return Full task ID used by task manager
    */
-  String schedule(BackgroundTask<?> task);
+  void schedule(BackgroundTask<?> task);
 
   /**
    * Schedule a list of tasks to be run in the background.
    *
    * @param taskList List of {@link BackgroundTask} objects
-   * @return List of task IDs used by task manager
    */
-  ImmutableList<String> schedule(ImmutableList<? extends BackgroundTask<?>> taskList);
+  void schedule(ImmutableList<? extends BackgroundTask<?>> taskList);
 
   /**
    * Notify the manager of some event, e.g. command start/end. Exceptions should generally be caught

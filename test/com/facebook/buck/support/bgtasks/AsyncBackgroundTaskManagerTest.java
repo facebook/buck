@@ -98,9 +98,7 @@ public class AsyncBackgroundTaskManagerTest {
             .setActionArgs(new TestArgs(true, false))
             .setName("testTask")
             .build();
-    String taskId = blockingManager.schedule(task);
-
-    assertTrue(taskId.contains("testTask"));
+    blockingManager.schedule(task);
     assertEquals(task, blockingManager.getScheduledTasks().peek().getTask());
   }
 

@@ -122,26 +122,23 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
   }
 
   @Override
-  public ImmutableList<String> schedule(ImmutableList<? extends BackgroundTask<?>> taskList) {
-    ImmutableList.Builder<String> ids = ImmutableList.builderWithExpectedSize(taskList.size());
+  public void schedule(ImmutableList<? extends BackgroundTask<?>> taskList) {
     for (BackgroundTask<?> task : taskList) {
-      ids.add(schedule(task));
+      schedule(task);
     }
-    return ids.build();
   }
 
   @Override
-  public String schedule(BackgroundTask<?> task) {
+  public void schedule(BackgroundTask<?> task) {
     if (!schedulingOpen.get()) {
       LOG.warn("Manager is not accepting new tasks; newly scheduled tasks will not be run.");
-      return "notScheduled_".concat(task.getName());
+      return;
     }
     ManagedBackgroundTask managedTask = ManagedBackgroundTask.of(task);
     synchronized (scheduledTasks) {
       scheduledTasks.add(managedTask);
       scheduledTasks.notify();
     }
-    return managedTask.getTaskId();
   }
 
   /**
@@ -154,9 +151,10 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
       BackgroundTask<?> task = managedTask.getTask();
       task.run();
     } catch (InterruptedException e) {
-      LOG.warn(e, "Task %s interrupted.", managedTask.getTaskId());
+      LOG.warn(e, "Task %s interrupted.", managedTask.getTask().getName());
     } catch (Throwable e) {
-      LOG.warn(e, "%s while running task %s", e.getClass().getName(), managedTask.getTaskId());
+      LOG.warn(
+          e, "%s while running task %s", e.getClass().getName(), managedTask.getTask().getName());
     }
   }
 
@@ -166,7 +164,7 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
       timeoutPool.schedule(
           () -> {
             if (taskHandler.cancel(true)) {
-              LOG.warn(String.format("Task %s timed out", task.getTaskId()));
+              LOG.warn(String.format("Task %s timed out", task.getTask().getName()));
             }
           },
           timeout.get().timeout(),

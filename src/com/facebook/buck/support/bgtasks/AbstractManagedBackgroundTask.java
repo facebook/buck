@@ -17,7 +17,6 @@
 package com.facebook.buck.support.bgtasks;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import java.util.UUID;
 import org.immutables.value.Value;
 
 /**
@@ -30,9 +29,4 @@ abstract class AbstractManagedBackgroundTask {
 
   @Value.Parameter
   public abstract BackgroundTask<?> getTask();
-
-  @Value.Derived
-  public String getTaskId() {
-    return getTask().getName().concat(UUID.randomUUID().toString());
-  }
 }
