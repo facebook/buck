@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.core.util.graph.TraversableGraph;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventListener;
@@ -33,6 +34,11 @@ import com.facebook.buck.event.chrome_trace.ChromeTraceEvent.Phase;
 import com.facebook.buck.event.chrome_trace.ChromeTraceWriter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.support.bgtasks.BackgroundTask;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
+import com.facebook.buck.support.bgtasks.TaskAction;
+import com.facebook.buck.support.bgtasks.Timeout;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -49,7 +55,6 @@ import com.google.common.collect.MinMaxPriorityQueue;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -63,9 +68,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
@@ -84,9 +87,9 @@ public class BuildTargetDurationListener implements BuckEventListener {
   private static final int SHUTDOWN_TIMEOUT_SECONDS = 60;
 
   private final InvocationInfo info;
-  private final ExecutorService executor;
   private final ProjectFilesystem filesystem;
   private final int criticalPathCount;
+  private final BackgroundTaskManager bgTaskManager;
 
   private Optional<ActionGraph> actionGraph = Optional.empty();
   private Optional<ImmutableSet<BuildTarget>> targetBuildRules = Optional.empty();
@@ -102,12 +105,12 @@ public class BuildTargetDurationListener implements BuckEventListener {
   public BuildTargetDurationListener(
       InvocationInfo info,
       ProjectFilesystem filesystem,
-      ExecutorService executor,
-      int criticalPathCount) {
+      int criticalPathCount,
+      BackgroundTaskManager bgTaskManager) {
     this.info = info;
     this.filesystem = filesystem;
-    this.executor = executor;
     this.criticalPathCount = criticalPathCount;
+    this.bgTaskManager = bgTaskManager;
   }
 
   /** Save start of the {@link BuildRuleEvent}. */
@@ -221,13 +224,6 @@ public class BuildTargetDurationListener implements BuckEventListener {
     return criticalPaths.build();
   }
 
-  private void rendersCriticalPaths(List<Deque<CriticalPathEntry>> criticalPaths)
-      throws IOException {
-    try (FileOutputStream fos = new FileOutputStream(getTraceFilePath().toFile())) {
-      rendersCriticalPathsTraceFile(criticalPaths, fos);
-    }
-  }
-
   @VisibleForTesting
   static void rendersCriticalPathsTraceFile(
       List<Deque<CriticalPathEntry>> criticalPaths, OutputStream os) {
@@ -295,85 +291,136 @@ public class BuildTargetDurationListener implements BuckEventListener {
 
   @Override
   public synchronized void close() {
-    SimpleTimeLimiter timeLimiter = SimpleTimeLimiter.create(executor);
-    try {
-      timeLimiter.runWithTimeout(
-          () -> {
-            try (BufferedOutputStream outputStream =
-                    new BufferedOutputStream(new FileOutputStream(getLogFilePath().toFile()));
-                BufferedOutputStream targetStream =
-                    new BufferedOutputStream(new FileOutputStream(getTargetFilePath().toFile()))) {
-              LOG.info("Starting critical path calculation for %s", info);
-              LOG.info("Writing critical path to %s", getLogFilePath().toString());
-              if (actionGraph.isPresent()) {
-                updateBuildRuleInfosWithDependents();
-                computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
-                // Find root build rules
-                Collection<BuildRuleInfo> rootBuildRuleInfos = Lists.newArrayList();
-                if (targetBuildRules.isPresent()) {
-                  for (BuildTarget buildTarget : targetBuildRules.get()) {
-                    BuildRuleInfo buildRuleInfo =
-                        buildRuleInfos.get(buildTarget.getFullyQualifiedName());
-                    if (buildRuleInfo != null) {
-                      rootBuildRuleInfos.add(buildRuleInfo);
-                    } else {
-                      LOG.warn(
-                          "Could not find build rule for the target %s!",
-                          buildTarget.getFullyQualifiedName());
-                    }
-                  }
-                } else {
-                  LOG.warn(
-                      "There were not any target, construction of critical paths will be skipped.");
-                }
-                List<Deque<CriticalPathEntry>> kCriticalPaths =
-                    constructCriticalPaths(rootBuildRuleInfos, criticalPathCount);
-                // Render chrome trace of the critical path of the longest
-                rendersCriticalPaths(kCriticalPaths);
-                // Serialize BuildRuleCriticalPaths
-                ObjectMappers.WRITER.writeValue(
-                    outputStream, constructBuildRuleCriticalPaths(kCriticalPaths));
-                // Serialize BuildTargetResults
-                ObjectMappers.WRITER.writeValue(
-                    targetStream, constructBuildTargetResults(rootBuildRuleInfos));
-                LOG.info("Critical path and target results have been written successfully.");
+    BuildTargetDurationListenerCloseArgs args =
+        BuildTargetDurationListenerCloseArgs.builder()
+            .setLogFilePath(getLogFilePath())
+            .setTargetFilePath(getTargetFilePath())
+            .setTraceFilePath(getTraceFilePath())
+            .setInvocationInfo(info)
+            .setCriticalPathCount(criticalPathCount)
+            .setTargetBuildRules(targetBuildRules)
+            .setBuildRuleInfos(buildRuleInfos)
+            .setActionGraph(actionGraph)
+            .build();
+    BackgroundTask<BuildTargetDurationListenerCloseArgs> task =
+        ImmutableBackgroundTask.<BuildTargetDurationListenerCloseArgs>builder()
+            .setAction(new BuildTargetDurationListenerCloseAction())
+            .setActionArgs(args)
+            .setName("BuildTargetDurationListener_close")
+            .setTimeout(Timeout.of(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS))
+            .build();
+
+    bgTaskManager.schedule(task);
+  }
+
+  /** {@link TaskAction} implementation for closing {@link BuildTargetDurationListener}. */
+  static class BuildTargetDurationListenerCloseAction
+      implements TaskAction<BuildTargetDurationListenerCloseArgs> {
+    @Override
+    public void run(BuildTargetDurationListenerCloseArgs args) {
+
+      try (BufferedOutputStream outputStream =
+              new BufferedOutputStream(new FileOutputStream(args.getLogFilePath().toFile()));
+          BufferedOutputStream targetStream =
+              new BufferedOutputStream(new FileOutputStream(args.getTargetFilePath().toFile()))) {
+        LOG.info("Starting critical path calculation for %s", args.getInvocationInfo());
+        LOG.info("Writing critical path to %s", args.getLogFilePath().toString());
+        if (args.getActionGraph().isPresent()) {
+          updateBuildRuleInfosWithDependents(args.getActionGraph(), args.getBuildRuleInfos());
+          computeCriticalPathsUsingGraphTraversal(args.getBuildRuleInfos());
+          // Find root build rules
+          Collection<BuildRuleInfo> rootBuildRuleInfos = Lists.newArrayList();
+          if (args.getTargetBuildRules().isPresent()) {
+            for (BuildTarget buildTarget : args.getTargetBuildRules().get()) {
+              BuildRuleInfo buildRuleInfo =
+                  args.getBuildRuleInfos().get(buildTarget.getFullyQualifiedName());
+              if (buildRuleInfo != null) {
+                rootBuildRuleInfos.add(buildRuleInfo);
               } else {
-                ObjectMappers.WRITER.writeValue(outputStream, Collections.emptyList());
-                LOG.warn("There was no action graph, computation is skipped.");
+                LOG.warn(
+                    "Could not find build rule for the target %s!",
+                    buildTarget.getFullyQualifiedName());
               }
-            } catch (IOException e) {
-              LOG.warn(e, "Could not complete IO Request.");
             }
-          },
-          SHUTDOWN_TIMEOUT_SECONDS,
-          TimeUnit.SECONDS);
-    } catch (InterruptedException | TimeoutException e) {
-      LOG.error(e, "Could not complete all jobs within timeout during shutdown.");
-    } catch (AssertionError e) {
-      LOG.error(e.getCause(), "An exception occurred during execution of task.");
-    } finally {
-      executor.shutdownNow();
+          } else {
+            LOG.warn("There were not any target, construction of critical paths will be skipped.");
+          }
+          List<Deque<CriticalPathEntry>> kCriticalPaths =
+              constructCriticalPaths(rootBuildRuleInfos, args.getCriticalPathCount());
+          // Render chrome trace of the critical path of the longest
+          rendersCriticalPaths(args.getTraceFilePath(), kCriticalPaths);
+          // Serialize BuildRuleCriticalPaths
+          ObjectMappers.WRITER.writeValue(
+              outputStream, constructBuildRuleCriticalPaths(kCriticalPaths));
+          // Serialize BuildTargetResults
+          ObjectMappers.WRITER.writeValue(
+              targetStream, constructBuildTargetResults(rootBuildRuleInfos));
+          LOG.info("Critical path and target results have been written successfully.");
+        } else {
+          ObjectMappers.WRITER.writeValue(outputStream, Collections.emptyList());
+          LOG.warn("There was no action graph, computation is skipped.");
+        }
+      } catch (IOException e) {
+        LOG.warn(e, "Could not complete IO Request.");
+      }
+    }
+
+    private void rendersCriticalPaths(
+        Path traceFilePath, List<Deque<CriticalPathEntry>> criticalPaths) throws IOException {
+      try (FileOutputStream fos = new FileOutputStream(traceFilePath.toFile())) {
+        rendersCriticalPathsTraceFile(criticalPaths, fos);
+      }
+    }
+
+    private void updateBuildRuleInfosWithDependents(
+        Optional<ActionGraph> actionGraph, ConcurrentMap<String, BuildRuleInfo> buildRuleInfos) {
+      if (!actionGraph.isPresent()) {
+        return;
+      }
+      for (BuildRule buildRule : actionGraph.get().getNodes()) {
+        // for each dependency include a back-edge from dependency to dependent
+        buildRule
+            .getBuildDeps()
+            .forEach(
+                dependency -> {
+                  BuildRuleInfo dependencyBuildRuleInfo =
+                      buildRuleInfos.get(dependency.getFullyQualifiedName());
+                  // It might not exist if a BuildRuleEvent is not executed!
+                  if (dependencyBuildRuleInfo != null) {
+                    dependencyBuildRuleInfo.addDependent(buildRule.getFullyQualifiedName());
+                  }
+                });
+      }
     }
   }
 
-  private void updateBuildRuleInfosWithDependents() {
-    if (!actionGraph.isPresent()) {
-      return;
-    }
-    for (BuildRule buildRule : actionGraph.get().getNodes()) {
-      // for each dependency include a back-edge from dependency to dependent
-      buildRule
-          .getBuildDeps()
-          .forEach(
-              dependency -> {
-                BuildRuleInfo dependencyBuildRuleInfo =
-                    buildRuleInfos.get(dependency.getFullyQualifiedName());
-                // It might not exist if a BuildRuleEvent is not executed!
-                if (dependencyBuildRuleInfo != null) {
-                  dependencyBuildRuleInfo.addDependent(buildRule.getFullyQualifiedName());
-                }
-              });
-    }
+  /** Arguments to {@link BuildTargetDurationListenerCloseAction}. */
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractBuildTargetDurationListenerCloseArgs {
+    @Value.Parameter
+    public abstract Path getLogFilePath();
+
+    @Value.Parameter
+    public abstract Path getTargetFilePath();
+
+    @Value.Parameter
+    public abstract Path getTraceFilePath();
+
+    @Value.Parameter
+    public abstract InvocationInfo getInvocationInfo();
+
+    @Value.Parameter
+    public abstract int getCriticalPathCount();
+
+    @Value.Parameter
+    public abstract Optional<ImmutableSet<BuildTarget>> getTargetBuildRules();
+
+    @Value.Parameter
+    public abstract ConcurrentMap<String, BuildRuleInfo> getBuildRuleInfos();
+
+    @Value.Parameter
+    public abstract Optional<ActionGraph> getActionGraph();
   }
 
   /** Construct {@link BuildTargetResult} list for all given roots. */

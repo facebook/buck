@@ -42,6 +42,9 @@ import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInf
 import com.facebook.buck.event.listener.BuildTargetDurationListener.CriticalPathEntry;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.rules.FakeTestRule;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
+import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -64,7 +67,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.junit.Assert;
@@ -487,6 +489,7 @@ public class BuildTargetDurationListenerTest {
   public void testBuildStartFinishTimes() {
     final String target = "//:celik";
     BuildId buildId = new BuildId("19911501");
+    BackgroundTaskManager bgTaskManager = new TestBackgroundTaskManager();
     BuildTargetDurationListener listener =
         new BuildTargetDurationListener(
             InvocationInfo.of(
@@ -498,8 +501,8 @@ public class BuildTargetDurationListenerTest {
                 Arrays.asList(),
                 Paths.get(".")),
             new FakeProjectFilesystem(),
-            Executors.newSingleThreadExecutor(),
-            1);
+            1,
+            bgTaskManager);
     BuildRuleDurationTracker tracker = new BuildRuleDurationTracker();
     BuildRule rule =
         new FakeTestRule(
@@ -530,5 +533,7 @@ public class BuildTargetDurationListenerTest {
     listener.buildRuleEventFinished(end);
     BuildRuleInfo buildRuleInfo = listener.getBuildRuleInfos().get(target);
     assertEquals(42, buildRuleInfo.getWholeTargetDuration());
+    listener.close();
+    bgTaskManager.notify(Notification.COMMAND_END);
   }
 }

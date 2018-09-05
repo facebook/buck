@@ -1827,12 +1827,7 @@ public final class Main {
     if (buckConfig.isCriticalPathAnalysisEnabled()) {
       eventListenersBuilder.add(
           new BuildTargetDurationListener(
-              invocationInfo,
-              projectFilesystem,
-              MostExecutors.newSingleThreadExecutor(
-                  new CommandThreadFactory(
-                      BuildTargetDurationListener.class.getName(), commonThreadFactoryState)),
-              buckConfig.getCriticalPathCount()));
+              invocationInfo, projectFilesystem, buckConfig.getCriticalPathCount(), bgTaskManager));
     }
     eventListenersBuilder.addAll(commandSpecificEventListeners);
 
