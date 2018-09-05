@@ -41,7 +41,7 @@ import org.immutables.value.Value;
 /** TaskAction implementation for the close() logic in {@link ChromeTraceBuildListener}. */
 class ChromeTraceBuildListenerCloseAction implements TaskAction<ChromeTraceBuildListenerCloseArgs> {
 
-  private static final Logger LOG = Logger.get(ChromeTraceBuildListenerCloseAction.class);
+  private static final Logger LOG = Logger.get(ChromeTraceBuildListener.class);
   private static final int TIMEOUT_SECONDS = 30;
 
   /** Abstract class holding arguments to close() logic. */
