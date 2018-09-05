@@ -99,6 +99,7 @@ import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRul
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
@@ -145,6 +146,7 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -192,8 +194,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1028,6 +1034,116 @@ public class ProjectGenerator {
     return targetNodeWithSwiftArgs.flatMap(t -> t.getConstructorArg().getSwiftVersion());
   }
 
+  private static String sourceNameRelativeToOutput(
+      SourcePath source, SourcePathResolver pathResolver, Path outputDirectory) {
+    Path pathRelativeToCell = pathResolver.getRelativePath(source);
+    Path pathRelativeToOutput = outputDirectory.relativize(pathRelativeToCell);
+    return pathRelativeToOutput.toString();
+  }
+
+  private static void appendPlatformSourceToAllPlatformSourcesAndSourcesByPlatform(
+      Set<String> allPlatformSources,
+      Map<String, Set<String>> platformSourcesByPlatform,
+      String platformName,
+      String sourceName) {
+    allPlatformSources.add(sourceName);
+    if (platformSourcesByPlatform.get(platformName) != null) {
+      platformSourcesByPlatform.get(platformName).add(sourceName);
+    }
+  }
+
+  @VisibleForTesting
+  static ImmutableMap<String, ImmutableSortedSet<String>> gatherExcludedSources(
+      ImmutableSet<String> applePlatforms,
+      ImmutableList<Pair<Pattern, ImmutableSortedSet<SourceWithFlags>>> platformSources,
+      ImmutableList<Pair<Pattern, Iterable<SourcePath>>> platformHeaders,
+      Path outputDirectory,
+      SourcePathResolver pathResolver) {
+    Set<String> allPlatformSpecificSources = new HashSet<>();
+    Map<String, Set<String>> includedSourcesByPlatform = new HashMap<>();
+
+    for (Pair<Pattern, ImmutableSortedSet<SourceWithFlags>> platformSource : platformSources) {
+      String platformName = platformSource.getFirst().toString();
+      includedSourcesByPlatform.putIfAbsent(platformName, new HashSet<>());
+
+      for (SourceWithFlags source : platformSource.getSecond()) {
+        appendPlatformSourceToAllPlatformSourcesAndSourcesByPlatform(
+            allPlatformSpecificSources,
+            includedSourcesByPlatform,
+            platformName,
+            sourceNameRelativeToOutput(source.getSourcePath(), pathResolver, outputDirectory));
+      }
+    }
+
+    for (Pair<Pattern, Iterable<SourcePath>> platformHeader : platformHeaders) {
+      String platformName = platformHeader.getFirst().toString();
+      includedSourcesByPlatform.putIfAbsent(platformName, new HashSet<>());
+
+      for (SourcePath source : platformHeader.getSecond()) {
+        appendPlatformSourceToAllPlatformSourcesAndSourcesByPlatform(
+            allPlatformSpecificSources,
+            includedSourcesByPlatform,
+            platformName,
+            sourceNameRelativeToOutput(source, pathResolver, outputDirectory));
+      }
+    }
+
+    Map<String, SortedSet<String>> result = new HashMap<>();
+    result.put(
+        "EXCLUDED_SOURCE_FILE_NAMES",
+        ImmutableSortedSet.copyOf(
+            allPlatformSpecificSources
+                .stream()
+                .map(s -> "'" + s + "'")
+                .collect(Collectors.toSet())));
+    // We need to convert the regex to a glob that Xcode will recognize so we match the regex
+    // against the name of a known sdk with the matcher, then glob that.
+    for (String platformMatcher : includedSourcesByPlatform.keySet()) {
+      for (String flavor : applePlatforms) {
+        Pattern pattern = Pattern.compile(platformMatcher);
+        Matcher matcher = pattern.matcher(flavor);
+        if (matcher.lookingAt()) {
+          String key = "INCLUDED_SOURCE_FILE_NAMES[sdk=" + flavor + "*]";
+          Set<String> sourcesMatchingPlatform = includedSourcesByPlatform.get(platformMatcher);
+          if (sourcesMatchingPlatform != null) {
+            Set<String> quotedSources =
+                sourcesMatchingPlatform
+                    .stream()
+                    .map(s -> "'" + s + "'")
+                    .collect(Collectors.toSet());
+            // They may have different matchers for similar things in which case the key will
+            // already
+            // be included
+            if (result.get(key) != null) {
+              result.get(key).addAll(quotedSources);
+            } else {
+              result.put(
+                  "INCLUDED_SOURCE_FILE_NAMES[sdk=" + flavor + "*]", new TreeSet<>(quotedSources));
+            }
+          }
+        }
+      }
+    }
+
+    ImmutableMap.Builder<String, ImmutableSortedSet<String>> finalResultBuilder =
+        ImmutableMap.builder();
+
+    for (Map.Entry<String, SortedSet<String>> entry : result.entrySet()) {
+      finalResultBuilder.put(entry.getKey(), ImmutableSortedSet.copyOf(entry.getValue()));
+    }
+    return finalResultBuilder.build();
+  }
+
+  @VisibleForTesting
+  static Pair<String, String> applePlatformAndArchitecture(Flavor platformFlavor) {
+    String platformName = platformFlavor.getName();
+    int index = platformName.lastIndexOf('-');
+    String sdk = platformName.substring(0, index);
+    String sdkWithoutVersion = sdk.split("\\d+")[0];
+    String arch = platformName.substring(index + 1);
+    return new Pair<>(sdkWithoutVersion, arch);
+  }
+
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       Optional<? extends TargetNode<? extends HasAppleBundleFields>> bundle,
@@ -1057,7 +1173,12 @@ public class ProjectGenerator {
         new NewNativeTargetProjectMutator(pathRelativizer, this::resolveSourcePath);
     ImmutableSet<SourcePath> exportedHeaders =
         ImmutableSet.copyOf(getHeaderSourcePaths(arg.getExportedHeaders()));
-    ImmutableSet<SourcePath> headers = ImmutableSet.copyOf(getHeaderSourcePaths(arg.getHeaders()));
+    ImmutableSet.Builder<SourcePath> headersBuilder = ImmutableSet.builder();
+    headersBuilder.addAll(getHeaderSourcePaths(arg.getHeaders()));
+    for (SourceSortedSet headersSet : arg.getPlatformHeaders().getValues()) {
+      headersBuilder.addAll(getHeaderSourcePaths(headersSet));
+    }
+    ImmutableSet<SourcePath> headers = headersBuilder.build();
     ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langPreprocessorFlags =
         targetNode.getConstructorArg().getLangPreprocessorFlags();
     boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
@@ -1081,13 +1202,53 @@ public class ProjectGenerator {
     ImmutableMap.Builder<String, String> swiftDepsSettingsBuilder = ImmutableMap.builder();
     ImmutableList.Builder<String> swiftDebugLinkerFlagsBuilder = ImmutableList.builder();
 
+    ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
+
+    ImmutableList<Pair<Pattern, SourceSortedSet>> platformHeaders =
+        arg.getPlatformHeaders().getPatternsAndValues();
+    ImmutableList.Builder<Pair<Pattern, Iterable<SourcePath>>> platformHeadersIterableBuilder =
+        ImmutableList.builder();
+    for (Pair<Pattern, SourceSortedSet> platformHeader : platformHeaders) {
+      platformHeadersIterableBuilder.add(
+          new Pair<>(platformHeader.getFirst(), getHeaderSourcePaths(platformHeader.getSecond())));
+    }
+    ImmutableList<Pair<Pattern, Iterable<SourcePath>>> platformHeadersIterable =
+        platformHeadersIterableBuilder.build();
+
+    ImmutableList<Pair<Pattern, ImmutableSortedSet<SourceWithFlags>>> platformSources =
+        arg.getPlatformSrcs().getPatternsAndValues();
+    ImmutableMap<String, ImmutableSortedSet<String>> platformExcludedSourcesMapping =
+        ProjectGenerator.gatherExcludedSources(
+            appleCxxFlavors
+                .stream()
+                .map(f -> applePlatformAndArchitecture(f).getFirst())
+                .collect(ImmutableSet.toImmutableSet()),
+            platformSources,
+            platformHeadersIterable,
+            outputDirectory,
+            defaultPathResolver);
+    for (Map.Entry<String, ImmutableSortedSet<String>> platformExcludedSources :
+        platformExcludedSourcesMapping.entrySet()) {
+      if (platformExcludedSources.getValue().size() > 0) {
+        extraSettingsBuilder.put(
+            platformExcludedSources.getKey(), String.join(" ", platformExcludedSources.getValue()));
+      }
+    }
+
+    ImmutableSortedSet<SourceWithFlags> nonPlatformSrcs = arg.getSrcs();
+    ImmutableSortedSet.Builder<SourceWithFlags> allSrcsBuilder = ImmutableSortedSet.naturalOrder();
+    allSrcsBuilder.addAll(nonPlatformSrcs);
+    for (Pair<Pattern, ImmutableSortedSet<SourceWithFlags>> platformSource : platformSources) {
+      allSrcsBuilder.addAll(platformSource.getSecond());
+    }
+
+    ImmutableSortedSet<SourceWithFlags> allSrcs = allSrcsBuilder.build();
+
     if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
       if (isFocusedOnTarget) {
         filesAddedBuilder.addAll(
-            arg.getSrcs()
-                .stream()
-                .map(s -> s.getSourcePath())
-                .collect(ImmutableList.toImmutableList()));
+            allSrcs.stream().map(s -> s.getSourcePath()).collect(ImmutableList.toImmutableList()));
         mutator
             .setLangPreprocessorFlags(
                 ImmutableMap.copyOf(
@@ -1095,7 +1256,7 @@ public class ProjectGenerator {
                         langPreprocessorFlags, f -> convertStringWithMacros(targetNode, f))))
             .setPublicHeaders(exportedHeaders)
             .setPrefixHeader(getPrefixHeaderSourcePath(arg))
-            .setSourcesWithFlags(ImmutableSet.copyOf(arg.getSrcs()))
+            .setSourcesWithFlags(ImmutableSet.copyOf(allSrcs))
             .setPrivateHeaders(headers)
             .setRecursiveResources(recursiveResources)
             .setDirectResources(directResources)
@@ -1244,9 +1405,6 @@ public class ProjectGenerator {
         mutator.buildTargetAndAddToProject(project, isFocusedOnTarget);
     PBXNativeTarget target = targetBuilderResult.target;
     Optional<PBXGroup> targetGroup = targetBuilderResult.targetGroup;
-
-    ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
-    ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
 
     extraSettingsBuilder.putAll(swiftDepsSettingsBuilder.build());
 
@@ -2213,7 +2371,8 @@ public class ProjectGenerator {
     return BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s-" + input + ".xcconfig");
   }
 
-  private Iterable<SourcePath> getHeaderSourcePaths(SourceSortedSet headers) {
+  @VisibleForTesting
+  static Iterable<SourcePath> getHeaderSourcePaths(SourceSortedSet headers) {
     if (headers.getUnnamedSources().isPresent()) {
       return headers.getUnnamedSources().get();
     } else {
@@ -3884,7 +4043,10 @@ public class ProjectGenerator {
     if (!library.isPresent()) {
       return false;
     }
-    return (library.get().getConstructorArg().getSrcs().size() != 0);
+    PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> platformSources =
+        library.get().getConstructorArg().getPlatformSrcs();
+    int platFormSourcesSize = platformSources.getValues().size();
+    return (library.get().getConstructorArg().getSrcs().size() + platFormSourcesSize != 0);
   }
 
   private boolean isLibraryWithSwiftSources(TargetNode<?> input) {

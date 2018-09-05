@@ -82,11 +82,13 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -112,6 +114,8 @@ import com.facebook.buck.features.halide.HalideLibraryDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
+import com.facebook.buck.rules.keys.EmptyFakeBuildRule;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -125,6 +129,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -159,6 +164,9 @@ import org.junit.rules.ExpectedException;
 
 public class ProjectGeneratorTest {
 
+  private static final BuildTarget TARGET_1 =
+      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
+  private static final BuildRule RULE_1 = new EmptyFakeBuildRule(TARGET_1);
   private static final Path OUTPUT_DIRECTORY = Paths.get("_gen");
   private static final String PROJECT_NAME = "GeneratedProject";
   private static final String PROJECT_CONTAINER = PROJECT_NAME + ".xcodeproj";
@@ -310,6 +318,177 @@ public class ProjectGeneratorTest {
       }
     }
     assertSame(count, 1);
+  }
+
+  @Test
+  public void testPlatformSourcesAndHeaders() throws IOException {
+    SourceWithFlags androidSource =
+        SourceWithFlags.builder().setSourcePath(FakeSourcePath.of("androidFile.cpp")).build();
+    SourceWithFlags iOSAndSimulatorSource =
+        SourceWithFlags.builder()
+            .setSourcePath(FakeSourcePath.of("iOSAndSimulatorFile.cpp"))
+            .build();
+    SourceWithFlags macOSSource =
+        SourceWithFlags.builder().setSourcePath(FakeSourcePath.of("macOSFile.cpp")).build();
+
+    Pattern androidPattern = Pattern.compile("android");
+    Pattern simulatorPattern = Pattern.compile("^iphonesim.*");
+    Pattern iOSPattern = Pattern.compile("iphoneos");
+    Pattern macOSPattern = Pattern.compile("macos");
+
+    Pair<Pattern, ImmutableSortedSet<SourceWithFlags>> androidSources =
+        new Pair<>(androidPattern, ImmutableSortedSet.of(androidSource));
+    Pair<Pattern, ImmutableSortedSet<SourceWithFlags>> simulatorSources =
+        new Pair<>(simulatorPattern, ImmutableSortedSet.of(iOSAndSimulatorSource));
+    Pair<Pattern, ImmutableSortedSet<SourceWithFlags>> iOSSources =
+        new Pair<>(iOSPattern, ImmutableSortedSet.of(iOSAndSimulatorSource));
+    Pair<Pattern, ImmutableSortedSet<SourceWithFlags>> macOSSources =
+        new Pair<>(macOSPattern, ImmutableSortedSet.of(macOSSource));
+
+    ImmutableList.Builder<Pair<Pattern, ImmutableSortedSet<SourceWithFlags>>>
+        platformSourcesbuilder = ImmutableList.builder();
+    ImmutableList<Pair<Pattern, ImmutableSortedSet<SourceWithFlags>>> platformSources =
+        platformSourcesbuilder
+            .add(androidSources)
+            .add(simulatorSources)
+            .add(iOSSources)
+            .add(macOSSources)
+            .build();
+
+    SourcePath androidHeader = FakeSourcePath.of("androidFile.h");
+    SourcePath simulatorHeader = FakeSourcePath.of("simulatorFile.h");
+    SourcePath macOSAndIOSHeader = FakeSourcePath.of("macOSAndIOSFile.h");
+
+    Pattern androidPattern2 = Pattern.compile("android");
+    Pattern simulatorPattern2 = Pattern.compile("iphonesimulator");
+    Pattern iOSPattern2 = Pattern.compile("iphoneos");
+    Pattern macOSPattern2 = Pattern.compile("mac");
+
+    Pair<Pattern, SourceSortedSet> androidHeaders =
+        new Pair<>(
+            androidPattern2,
+            SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(androidHeader)));
+    Pair<Pattern, SourceSortedSet> simulatorHeaders =
+        new Pair<>(
+            simulatorPattern2,
+            SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(simulatorHeader)));
+    Pair<Pattern, SourceSortedSet> iOSHeaders =
+        new Pair<>(
+            iOSPattern2,
+            SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(macOSAndIOSHeader)));
+    Pair<Pattern, SourceSortedSet> macOSHeaders =
+        new Pair<>(
+            macOSPattern2,
+            SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(macOSAndIOSHeader)));
+
+    SourcePath androidAndMacHeader = FakeSourcePath.of("androidAndMacFile.h");
+    SourcePath iPhoneHeader = FakeSourcePath.of("iOSAndSimulatorFile.h");
+
+    Pattern androidPattern3 = Pattern.compile("an.*");
+    Pattern iPhonePattern = Pattern.compile("iphone");
+
+    Pair<Pattern, SourceSortedSet> androidHeaders2 =
+        new Pair<>(
+            androidPattern3,
+            SourceSortedSet.ofNamedSources(ImmutableSortedMap.of("ignored", androidAndMacHeader)));
+    Pair<Pattern, SourceSortedSet> iPhoneHeaders =
+        new Pair<>(
+            iPhonePattern,
+            SourceSortedSet.ofNamedSources(ImmutableSortedMap.of("ignored", iPhoneHeader)));
+    Pair<Pattern, SourceSortedSet> macOSHeaders2 =
+        new Pair<>(
+            macOSPattern2,
+            SourceSortedSet.ofNamedSources(ImmutableSortedMap.of("ignored", androidAndMacHeader)));
+
+    ImmutableList.Builder<Pair<Pattern, SourceSortedSet>> platformHeadersBuilder =
+        ImmutableList.builder();
+    platformHeadersBuilder.add(androidHeaders);
+    platformHeadersBuilder.add(simulatorHeaders);
+    platformHeadersBuilder.add(iOSHeaders);
+    platformHeadersBuilder.add(macOSHeaders);
+    platformHeadersBuilder.add(androidHeaders2);
+    platformHeadersBuilder.add(iPhoneHeaders);
+    platformHeadersBuilder.add(macOSHeaders2);
+    ImmutableList<Pair<Pattern, SourceSortedSet>> platformHeaders = platformHeadersBuilder.build();
+
+    ImmutableList.Builder<Pair<Pattern, Iterable<SourcePath>>> platformHeadersIterableBuilder =
+        ImmutableList.builder();
+    for (Pair<Pattern, SourceSortedSet> platformHeader : platformHeaders) {
+      platformHeadersIterableBuilder.add(
+          new Pair<>(
+              platformHeader.getFirst(),
+              ProjectGenerator.getHeaderSourcePaths(platformHeader.getSecond())));
+    }
+    ImmutableList<Pair<Pattern, Iterable<SourcePath>>> platformHeadersIterable =
+        platformHeadersIterableBuilder.build();
+
+    UserFlavor simulator =
+        UserFlavor.builder()
+            .setName("iphonesimulator11.4-i386")
+            .setDescription("buck boilerplate")
+            .build();
+    UserFlavor macOS =
+        UserFlavor.builder().setName("macosx10-x86_64").setDescription("buck boilerplate").build();
+    UserFlavor.Builder iOSBuilder =
+        UserFlavor.builder().setName("iphoneos-x86_64").setDescription("buck boilerplate");
+    UserFlavor iOS = iOSBuilder.build();
+
+    ImmutableSet<String> appleFlavors =
+        ImmutableSet.of(simulator, iOS, macOS)
+            .stream()
+            .map(f -> ProjectGenerator.applePlatformAndArchitecture(f).getFirst())
+            .collect(ImmutableSet.toImmutableSet());
+
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+
+    ImmutableMap<String, ImmutableSortedSet<String>> result =
+        ProjectGenerator.gatherExcludedSources(
+            appleFlavors, platformSources, platformHeadersIterable, Paths.get("."), resolver);
+
+    ImmutableSet.Builder<String> excludedResultsBuilder = ImmutableSet.builder();
+    ImmutableSet<String> excludedResults =
+        excludedResultsBuilder
+            .add("'../androidFile.cpp'")
+            .add("'../iOSAndSimulatorFile.cpp'")
+            .add("'../macOSFile.cpp'")
+            .add("'../androidFile.h'")
+            .add("'../simulatorFile.h'")
+            .add("'../macOSAndIOSFile.h'")
+            .add("'../androidAndMacFile.h'")
+            .add("'../iOSAndSimulatorFile.h'")
+            .build();
+    ImmutableSet.Builder<String> simulatorResultsBuilder = ImmutableSet.builder();
+    ImmutableSet<String> simulatorResults =
+        simulatorResultsBuilder
+            .add("'../iOSAndSimulatorFile.cpp'")
+            .add("'../simulatorFile.h'")
+            .add("'../iOSAndSimulatorFile.h'")
+            .build();
+    ImmutableSet.Builder<String> iOSResultsBuilder = ImmutableSet.builder();
+    ImmutableSet<String> iOSResults =
+        iOSResultsBuilder
+            .add("'../iOSAndSimulatorFile.cpp'")
+            .add("'../macOSAndIOSFile.h'")
+            .add("'../iOSAndSimulatorFile.h'")
+            .build();
+    ImmutableSet.Builder<String> macOSResultsBuilder = ImmutableSet.builder();
+    ImmutableSet<String> macOSResults =
+        macOSResultsBuilder
+            .add("'../macOSFile.cpp'")
+            .add("'../macOSAndIOSFile.h'")
+            .add("'../androidAndMacFile.h'")
+            .build();
+
+    ImmutableMap.Builder<String, ImmutableSet<String>> expectedBuilder = ImmutableMap.builder();
+    expectedBuilder.put("EXCLUDED_SOURCE_FILE_NAMES", excludedResults);
+    expectedBuilder.put("INCLUDED_SOURCE_FILE_NAMES[sdk=iphoneos*]", iOSResults);
+    expectedBuilder.put("INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*]", simulatorResults);
+    expectedBuilder.put("INCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]", macOSResults);
+    ImmutableMap<String, ImmutableSet<String>> expectedResult = expectedBuilder.build();
+
+    assertEquals(result, expectedResult);
   }
 
   @Test
