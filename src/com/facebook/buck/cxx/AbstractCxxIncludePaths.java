@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.cxx.toolchain.PathShortener;
@@ -37,12 +40,16 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStylePackageVisibleTuple
-abstract class AbstractCxxIncludePaths {
+abstract class AbstractCxxIncludePaths implements AddsToRuleKey {
 
   /** Paths added with {@code -I} */
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
+  @Value.Parameter
   public abstract ImmutableSet<CxxHeaders> getIPaths();
 
   /** Framework paths added with {@code -F} */
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
+  @Value.Parameter
   public abstract ImmutableSet<FrameworkPath> getFPaths();
 
   /**

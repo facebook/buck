@@ -21,6 +21,8 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -64,7 +66,8 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
   @Value.Parameter
   public abstract ImmutableList<FrameworkPath> getFrameworkPaths();
 
-  @Value.Lazy
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
+  @Value.Derived
   public CxxIncludePaths getCxxIncludePaths() {
     return CxxIncludePaths.of(getIncludes(), getFrameworkPaths());
   }

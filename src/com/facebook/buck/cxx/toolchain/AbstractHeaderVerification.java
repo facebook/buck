@@ -56,7 +56,8 @@ abstract class AbstractHeaderVerification implements AddsToRuleKey {
   protected abstract ImmutableSortedSet<String> getPlatformWhitelist();
 
   @Value.Derived
-  protected Iterable<Pattern> getWhitelistPatterns() {
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
+  protected ImmutableList<Pattern> getWhitelistPatterns() {
     return Stream.concat(getWhitelist().stream(), getPlatformWhitelist().stream())
         .map(Pattern::compile)
         .collect(ImmutableList.toImmutableList());
