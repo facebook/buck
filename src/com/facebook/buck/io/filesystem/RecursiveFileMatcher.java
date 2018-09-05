@@ -33,10 +33,6 @@ public class RecursiveFileMatcher implements PathMatcher {
     this.basePath = basePath;
   }
 
-  private RecursiveFileMatcher(Path root, String basePath) {
-    this(root.getFileSystem().getPath(basePath));
-  }
-
   @Override
   public boolean equals(Object other) {
     if (this == other) {
@@ -84,10 +80,5 @@ public class RecursiveFileMatcher implements PathMatcher {
   /** @return The matcher for paths that start with {@code basePath}. */
   public static RecursiveFileMatcher of(Path basePath) {
     return new RecursiveFileMatcher(basePath);
-  }
-
-  /** @return The matcher for {@code basePath} paths relative to {@code root}. */
-  public static RecursiveFileMatcher of(Path root, String basePath) {
-    return new RecursiveFileMatcher(root, basePath);
   }
 }
