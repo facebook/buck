@@ -312,6 +312,7 @@
         id="buck.ProjectGeneration">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift B"/>
       </action>
+      <action class="com.facebook.buck.intellij.ideabuck.actions.ScrollToEndAction" id="buck.ScrollToEnd" />
       <add-to-group anchor="last" group-id="MainToolBar"/>
     </group>
   </actions>

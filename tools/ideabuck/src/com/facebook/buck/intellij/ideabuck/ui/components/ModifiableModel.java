@@ -53,4 +53,10 @@ public interface ModifiableModel {
   void removeAllChildren(BuckTextNode node, boolean syncAfter);
 
   void removeAllChildren(BuckTextNode node);
+
+  boolean shouldScrollToEnd();
+
+  void setScrollToEnd(boolean scrollToEnd);
+
+  void scrollToEnd();
 }

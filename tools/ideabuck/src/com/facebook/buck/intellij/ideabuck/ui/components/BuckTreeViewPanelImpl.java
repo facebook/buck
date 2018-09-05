@@ -101,6 +101,7 @@ public class BuckTreeViewPanelImpl implements BuckTreeViewPanel {
     private final DefaultTreeModel mTreeModel;
     private Tree mTree;
     private TreeModelListener mDefaultTreeModelListener;
+    private boolean mScrollToEnd;
 
     public ModifiableModelImpl(DefaultTreeModel treeModel, Tree tree) {
       mTreeModel = treeModel;
@@ -112,10 +113,14 @@ public class BuckTreeViewPanelImpl implements BuckTreeViewPanel {
 
             @Override
             public void treeNodesInserted(TreeModelEvent e) {
-              if (e.getTreePath().getLastPathComponent() == mTreeModel.getRoot()) {
-                ApplicationManager.getApplication()
-                    .invokeLater(() -> mTree.expandPath(e.getTreePath()));
-              }
+              ApplicationManager.getApplication()
+                  .invokeLater(
+                      () -> {
+                        mTree.expandPath(e.getTreePath());
+                        if (mScrollToEnd) {
+                          scrollToEnd();
+                        }
+                      });
             }
 
             @Override
@@ -132,6 +137,9 @@ public class BuckTreeViewPanelImpl implements BuckTreeViewPanel {
               Tree tree = (Tree) e.getComponent();
               int selRow = tree.getRowForLocation(e.getX(), e.getY());
               TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
+              if (selRow != -1) {
+                setScrollToEnd(false);
+              }
               if (selRow != -1 && e.getClickCount() == 2) {
                 TreeNode node = (TreeNode) selPath.getLastPathComponent();
                 if (node.isLeaf()) {
@@ -159,6 +167,7 @@ public class BuckTreeViewPanelImpl implements BuckTreeViewPanel {
       mTree.setShowsRootHandles(false);
       mTree.setRowHeight(0);
       mTree.setScrollsOnExpand(true);
+      mScrollToEnd = true;
     }
 
     @Override
@@ -292,6 +301,26 @@ public class BuckTreeViewPanelImpl implements BuckTreeViewPanel {
     @Override
     public void removeAllChildren(BuckTextNode node) {
       removeAllChildren(node, false);
+    }
+
+    @Override
+    public boolean shouldScrollToEnd() {
+      return mScrollToEnd;
+    }
+
+    @Override
+    public void setScrollToEnd(boolean scrollToEnd) {
+      mScrollToEnd = scrollToEnd;
+    }
+
+    @Override
+    public void scrollToEnd() {
+      Rectangle rowRect = mTree.getRowBounds(mTree.getRowCount() - 1);
+      Rectangle viewRect = mTree.getVisibleRect();
+      if (rowRect != null && viewRect != null) {
+        viewRect.y = rowRect.y;
+        mTree.scrollRectToVisible(viewRect);
+      }
     }
   }
 
