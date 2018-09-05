@@ -3,45 +3,118 @@
 /***/
 {template .soyweb}
   {call buck.page}
-    {param title: 'Overview' /}
+    {param title: 'Key concepts' /}
     {param navid: 'about_overview' /}
     {param description}
-        A simple overview of Buck.
+        An overview of some fundamental concepts in Buck.
     {/param}
     {param content}
-
-<h3>Fundamentals</h3>
 
 <p>Buck has a number of fundamental concepts:</p>
 
 <ul>
+
   <li>
-    A <em>{call buck.concept_link}{param name: 'build rule' /}{param page: 'build_rule' /}{/call}</em> describes 
+    A <strong><em>{call buck.concept_link}{param name: 'build rule' /}{param page: 'build_rule' /}{/call}</em></strong> describes 
     how to produce an output file from a set of input files. Most build rules
     are specific to a particular language or platform. For example, you would use 
     the {call buck.ruleLink}{param name : 'cxx_binary' /}{/call} rule to
     create a C++ binary, but you would use the {call buck.ruleLink}{param name : 'android_binary' /}{/call} rule to 
     create an Android APK.
   </li>
+
   <li>
-    A <em>{call buck.concept_link}{param name: 'build file' /}{param page: 'build_file' /}{/call}</em> defines 
+    A <strong><em>{call buck.concept_link}{param name: 'build target'
+    /}{param page: 'build_target' /}{/call}</em></strong> is
+    a string that uniquely identifies a build rule. It can be thought of as a URI for the build rule 
+    within the Buck project.
+  </li>
+
+  <li>
+    A <strong><em>{call buck.concept_link}{param name: 'build file' /}{param page: 'build_file' /}{/call}</em></strong> defines 
     one or more build rules. In Buck, build files are typically named <code>BUCK</code>. 
     A <code>BUCK</code> file is analogous to the <code>Makefile</code> used by the Make utility. 
     In your project, you will usually have a separate a <code>BUCK</code> file for each buildable 
     unit of software&mdash;such as a binary or library. For large projects, you could have hundreds 
     of <code>BUCK</code> files.
   </li>
+
   <li>
-    A <em>{call buck.concept_link}{param name: 'build target' /}{param page: 'build_target' /}{/call}</em> is
-    a string that uniquely identifies a build rule. It can be thought of as a URI for the build rule 
-    within the Buck project.
+    <p>
+    A Buck <strong><em>package</em></strong> comprises: a Buck build file 
+    (a <code>BUCK</code> file), all files&mdash;such as source files and
+    headers&mdash;in the same directory as the <code>BUCK</code> file or
+    in subdirectories, provided those subdirectories do not themselves 
+    contain a <code>BUCK</code> file. To say it another way, 
+    a <code>BUCK</code> file defines the root of a package, but
+    Buck packages might not include all their subdirectories because 
+    Buck packages do not overlap or contain other Buck packages.
+    </p>
+
+    <p>
+    For example, in the following diagram, the BUCK file in 
+    directory <code>app-dir-1</code> defines that directory as the root of a
+    package&mdash;which is labeled <strong>Package A</strong> in the
+    diagram.  The directory <code>app-dir-2</code> is part of Package A
+    because it is a subdirectory of <code>app-dir-1</code>, but does not
+    itself contain a BUCK file. 
+    </p>
+
+    <p>
+    Now, consider directory <code>app-dir-3</code>.  
+    Because <code>app-dir-3</code> contains a BUCK file it is the root of a new
+    package (<strong>Package B</strong>). Although <code>app-dir-3</code> is 
+    a subdirectory of <code>app-dir-1</code>,
+    it is <em>not</em> part of Package A.
+    </p>
   </li>
+
+  <img id="super_console_sample"
+       src="{ROOT}static/packages-1.png"
+       alt="Chrome Tracing Sample">
+
   <li>
-    The root of your Buck project contains a global configuration file
-    called <em>{call buck.concept_link}{param page: 'buckconfig' /}{param name: '.buckconfig' /}{/call}</em>. 
-    This location of the <code>.buckconfig</code> file identifies the root directory of your Buck project.
+    <p>
+      Buck has the concept of a <strong><em>cell</em></strong>, which 
+      defines a directory tree of one or more Buck packages.  A Buck 
+      build could involve multiple cells.  Cells often correspond to 
+      repositories, but this isn't required. 
+    </p>
+
+    <p>
+      The root of a Buck cell contains a global configuration file
+      called <strong><code>{call buck.concept_link}{param page: 'buckconfig' /}{param name: '.buckconfig' /}{/call}</code></strong>.
+      Note that although the cell root should contain a <code>.buckconfig</code>, the
+      presence of a <code>.buckconfig</code> file doesn't in itself 
+      define a cell. Rather, <em>the cells involved in a build are defined
+      at the time Buck is invoked</em>; they are specified in the <code>.buckconfig</code> for 
+      the Buck <em>project</em> (see below).
+    </p>
   </li>
+
+  <li>
+    <p>
+      A Buck <strong><em>project</em></strong> is defined by 
+      the <code>.buckconfig</code> where Buck is invoked, or if that 
+      directory doesn't contain a <code>.buckconfig</code>, the project
+      is defined by the <code>.buckconfig</code> in the nearest 
+      ancestor directory.
+    </p>
+
+    <p>
+      The <code>.buckconfig</code> for the project specifies the cells
+      that constitute the Buck project. Specifically, these cells are
+      specified in the <code>[repositories]</code> section of 
+      the <code>.buckconfig</code>. Note that the directory tree rooted at 
+      this <code>.buckconfig</code> is automatically considered a cell
+      by Buck; in other words, the project's <code>.buckconfig</code> doesn't 
+      need to specify the project cell explicitly&mdash;although it is a 
+      good practice to do so.
+    </p>
+  </li>
+
 </ul>
+
 
 <h3>Buck's dependency graph</h3>
 
@@ -71,15 +144,15 @@
 
 <p>
   Buck is designed to build multiple deliverables from a single
-  repository&mdash;that is, a <em>monorepo</em>&mdash;rather than from multiple repositories.  
-  Therefore, your repository could contain multiple Buck projects, each
-  with a separate root, defined by a <code>.buckconfig</code> file.
+  repository&mdash;that is, a <em>monorepo</em>&mdash;rather than 
+  from multiple repositories. Support for the monorepo design motivated 
+  Buck's support for cells and projects.
 </p>
 
 <p>
   It is Facebook's experience that maintaining all dependencies in the
   same repository makes it easier to ensure that all developers have the
-  correct version of the code, and simplifies the process for making
+  correct version of the code and simplifies the process of making
   atomic commits.
 </p>
 
