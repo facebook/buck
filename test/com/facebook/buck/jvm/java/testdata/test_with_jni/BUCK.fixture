@@ -43,6 +43,7 @@ java_test(
     deps = [
         ":hamcrest-jar",
         ":jlib",
+        ":jlib-native",
         ":junit-jar",
     ],
 )
@@ -63,6 +64,7 @@ java_test(
     deps = [
         ":hamcrest-jar",
         ":jlib",
+        ":jlib-native",
         ":junit-jar",
         ":lib-broken",
     ],
@@ -86,6 +88,7 @@ java_test(
     deps = [
         ":hamcrest-jar",
         ":jlib",
+        ":jlib-native",
         ":junit-jar",
         ":lib-pernicious",
     ],
@@ -102,6 +105,7 @@ java_test(
     deps = [
         ":hamcrest-jar",
         ":jlib",
+        ":jlib-native",
         ":junit-jar",
         ":lib-pernicious",
     ],

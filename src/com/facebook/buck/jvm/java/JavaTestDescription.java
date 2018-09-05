@@ -307,6 +307,9 @@ public class JavaTestDescription
         SourcePathRuleFinder ruleFinder,
         BuildRuleParams buildRuleParams,
         CxxPlatform cxxPlatform) {
+      // TODO(cjhopman): The behavior of this doesn't really make sense. This should use a
+      // packageable interface and some sort of proper logic for finding native libraries. Currently
+      // this includes native libraries contained within the second-order dependency set only.
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
           buildTarget,
           projectFilesystem,
@@ -314,7 +317,13 @@ public class JavaTestDescription
           ruleFinder,
           cxxPlatform,
           buildRuleParams.getBuildDeps(),
-          r -> r instanceof JavaLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
+          r ->
+              r instanceof JavaLibrary
+                  ? Optional.of(
+                      buildRuleParams.getBuildDeps().contains(r)
+                          ? ((JavaLibrary) r).getDepsForTransitiveClasspathEntries()
+                          : ImmutableList.of())
+                  : Optional.empty());
     }
   }
 }
