@@ -37,7 +37,7 @@ import javax.annotation.concurrent.GuardedBy;
 /** Thrift clients for the Thrift-based remote execution services. */
 class ThriftRemoteExecutionClients implements Closeable {
 
-  private static final int SOCKET_TIMEOUT_MILLIS = 1000 * 10; // 10 seconds
+  private static final int SOCKET_TIMEOUT_MILLIS = 1000 * 30; // 30 seconds
   private static final int CONNECTION_TIMEOUT_MILLIS = 1000 * 10; // 10 seconds
 
   private final String remoteExecutionHost;
