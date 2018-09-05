@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MostFiles;
@@ -61,6 +62,7 @@ import java.util.stream.Stream;
  * for a high-level description of the approach to remote execution.
  */
 public abstract class RemoteExecution implements IsolatedExecution {
+  private static final Logger LOG = Logger.get(RemoteExecution.class);
   private static final Path TRAMPOLINE =
       Paths.get(
           System.getProperty(
@@ -189,15 +191,19 @@ public abstract class RemoteExecution implements IsolatedExecution {
     try (Scope scope = LeafEvents.scope(eventBus, "uploading_inputs")) {
       getStorage().addMissing(ImmutableMap.copyOf(requiredDataBuilder));
     }
-    ExecutionResult result11 = getExecutionService().execute(actionDigest);
-    try (Scope scope = LeafEvents.scope(eventBus, "materializing_outputs")) {
-      getStorage()
-          .materializeOutputs(
-              result11.getOutputDirectories(), result11.getOutputFiles(), cellPrefixRoot);
-    }
-    ExecutionResult result = result11;
 
-    if (result.getExitCode() != 0) {
+    ExecutionResult result = getExecutionService().execute(actionDigest);
+
+    if (result.getExitCode() == 0) {
+      try (Scope scope = LeafEvents.scope(eventBus, "materializing_outputs")) {
+        getStorage()
+            .materializeOutputs(
+                result.getOutputDirectories(), result.getOutputFiles(), cellPrefixRoot);
+      }
+    } else {
+      LOG.error(
+          "Execution returned non-zero exit code: [%d]. Skipping output materialization.",
+          result.getExitCode());
       throw StepFailedException.createForFailingStepWithExitCode(
           new AbstractExecutionStep("remote_execution") {
             @Override

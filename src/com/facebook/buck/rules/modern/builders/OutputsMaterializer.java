@@ -105,9 +105,12 @@ public class OutputsMaterializer {
       throws IOException {
     Files.createDirectories(root);
     for (Protocol.DirectoryNode childNode : directory.getDirectoriesList()) {
+
       materializeDirectory(
           childMap,
-          Preconditions.checkNotNull(childMap.get(childNode.getDigest())),
+          Preconditions.checkNotNull(
+              childMap.get(childNode.getDigest()),
+              String.format("Data for dir [%s] not found in merkle-tree.", root)),
           root.resolve(childNode.getName()),
           pendingWorkConsumer);
     }

@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -80,6 +81,15 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
       String message = String.format("Failed to get missing hashes: [%s]", e.getMessage());
       LOG.error(e, message);
       throw new BuckUncheckedExecutionException(e, message);
+    }
+
+    if (response.missing_blob_digests.stream().anyMatch(Objects::isNull)) {
+      LOG.error(
+          "Found null digest in response. Requested digests were: [%s]",
+          digests
+              .stream()
+              .map(Digest::getHash)
+              .reduce((String a, String b) -> String.format("%s, %s", a, b)));
     }
 
     return response

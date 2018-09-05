@@ -25,6 +25,7 @@ import com.facebook.thrift.TDeserializer;
 import com.facebook.thrift.TException;
 import com.facebook.thrift.TSerializer;
 import com.facebook.thrift.protocol.TCompactProtocol;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -53,6 +54,8 @@ public class ThriftProtocol implements Protocol {
     private final com.facebook.remoteexecution.cas.Digest digest;
 
     public ThriftDigest(com.facebook.remoteexecution.cas.Digest digest) {
+      Preconditions.checkNotNull(digest);
+      Preconditions.checkNotNull(digest.getHash());
       this.digest = digest;
     }
 
@@ -115,6 +118,7 @@ public class ThriftProtocol implements Protocol {
     private final com.facebook.remoteexecution.executionengine.Action action;
 
     ThriftAction(com.facebook.remoteexecution.executionengine.Action action) {
+      Preconditions.checkNotNull(action);
       this.action = action;
     }
 
@@ -133,6 +137,7 @@ public class ThriftProtocol implements Protocol {
     private final com.facebook.remoteexecution.cas.FileNode fileNode;
 
     public ThriftFileNode(com.facebook.remoteexecution.cas.FileNode fileNode) {
+      Preconditions.checkNotNull(fileNode);
       this.fileNode = fileNode;
     }
 
@@ -156,6 +161,7 @@ public class ThriftProtocol implements Protocol {
     private final com.facebook.remoteexecution.cas.Directory directory;
 
     public ThriftDirectory(com.facebook.remoteexecution.cas.Directory directory) {
+      Preconditions.checkNotNull(directory);
       this.directory = directory;
     }
 
@@ -183,6 +189,7 @@ public class ThriftProtocol implements Protocol {
     private final com.facebook.remoteexecution.cas.DirectoryNode directoryNode;
 
     public ThriftDirectoryNode(com.facebook.remoteexecution.cas.DirectoryNode directoryNode) {
+      Preconditions.checkNotNull(directoryNode);
       this.directoryNode = directoryNode;
     }
 
@@ -209,6 +216,7 @@ public class ThriftProtocol implements Protocol {
     private final com.facebook.remoteexecution.executionengine.Tree tree;
 
     public ThriftTree(com.facebook.remoteexecution.executionengine.Tree tree) {
+      Preconditions.checkNotNull(tree);
       this.tree = tree;
     }
 
@@ -229,6 +237,7 @@ public class ThriftProtocol implements Protocol {
 
     public ThriftOutputDirectory(
         com.facebook.remoteexecution.executionengine.OutputDirectory outputDirectory) {
+      Preconditions.checkNotNull(outputDirectory);
       this.outputDirectory = outputDirectory;
     }
 
@@ -295,6 +304,7 @@ public class ThriftProtocol implements Protocol {
   }
 
   private static com.facebook.remoteexecution.cas.Directory get(Directory directory) {
+    Preconditions.checkNotNull(directory);
     return ((ThriftDirectory) directory).directory;
   }
 
@@ -314,14 +324,17 @@ public class ThriftProtocol implements Protocol {
   }
 
   private com.facebook.remoteexecution.executionengine.Command get(Command command) {
+    Preconditions.checkNotNull(command);
     return ((ThriftCommand) command).command;
   }
 
   private com.facebook.remoteexecution.executionengine.Action get(Action action) {
+    Preconditions.checkNotNull(action);
     return ((ThriftAction) action).action;
   }
 
   private com.facebook.remoteexecution.executionengine.Tree get(Tree tree) {
+    Preconditions.checkNotNull(tree);
     return ((ThriftTree) tree).tree;
   }
 
@@ -346,6 +359,7 @@ public class ThriftProtocol implements Protocol {
     private final com.facebook.remoteexecution.cas.SymlinkNode symlink;
 
     private ThriftSymlinkNode(com.facebook.remoteexecution.cas.SymlinkNode symlink) {
+      Preconditions.checkNotNull(symlink);
       this.symlink = symlink;
     }
 
@@ -365,6 +379,7 @@ public class ThriftProtocol implements Protocol {
     private final com.facebook.remoteexecution.executionengine.OutputFile outputFile;
 
     public ThriftOutputFile(com.facebook.remoteexecution.executionengine.OutputFile outputFile) {
+      Preconditions.checkNotNull(outputFile);
       this.outputFile = outputFile;
     }
 
@@ -391,18 +406,22 @@ public class ThriftProtocol implements Protocol {
   }
 
   public static com.facebook.remoteexecution.cas.Digest get(Digest digest) {
+    Preconditions.checkNotNull(digest.getHash());
     return ((ThriftDigest) digest).digest;
   }
 
   private static com.facebook.remoteexecution.cas.DirectoryNode get(DirectoryNode directoryNode) {
+    Preconditions.checkNotNull(directoryNode);
     return ((ThriftDirectoryNode) directoryNode).directoryNode;
   }
 
   private static com.facebook.remoteexecution.cas.SymlinkNode get(SymlinkNode symlink) {
+    Preconditions.checkNotNull(symlink);
     return ((ThriftSymlinkNode) symlink).symlink;
   }
 
   private static com.facebook.remoteexecution.cas.FileNode get(FileNode fileNode) {
+    Preconditions.checkNotNull(fileNode);
     return ((ThriftFileNode) fileNode).fileNode;
   }
 
