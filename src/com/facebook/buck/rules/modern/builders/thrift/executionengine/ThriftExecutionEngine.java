@@ -41,14 +41,16 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 /** A Thrift-based remote execution (execution engine) implementation. */
 public class ThriftExecutionEngine implements RemoteExecutionService {
 
-  private static final int INITIAL_POLL_INTERVAL = 50;
-  private static final int MAX_POLL_INTERVAL = 2000;
-  private static final float POLL_INTERVAL_GROWTH = 1.5f;
+  private static final int INITIAL_POLL_INTERVAL_MS = 15;
+  private static final int MAX_POLL_INTERVAL_MS = 500;
+  private static final int POLL_FUZZ_SIZE_MS = 20;
+  private static final float POLL_INTERVAL_GROWTH = 1.25f;
   private static final boolean SKIP_CACHE_LOOKUP = false;
   private static Charset CHARSET = Charset.forName("UTF-8");
 
@@ -86,7 +88,8 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
   private ExecuteResponse waitForResponse(ExecuteOperation operation) throws TException {
     // TODO(orr): This is currently blocking and infinite, like the Grpc implementation. This is
     // not a good long-term solution:
-    int pollInterval = INITIAL_POLL_INTERVAL;
+    int pollInterval = INITIAL_POLL_INTERVAL_MS;
+    pollInterval += ThreadLocalRandom.current().nextInt(POLL_FUZZ_SIZE_MS);
     while (!operation.done) {
       try {
         Thread.sleep(pollInterval);
@@ -94,7 +97,8 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
         Thread.currentThread().interrupt();
         throw new BuckUncheckedExecutionException(e);
       }
-      pollInterval = (int) Math.min(pollInterval * POLL_INTERVAL_GROWTH, MAX_POLL_INTERVAL);
+      pollInterval = (int) Math.min(pollInterval * POLL_INTERVAL_GROWTH, MAX_POLL_INTERVAL_MS);
+      pollInterval += ThreadLocalRandom.current().nextInt(POLL_FUZZ_SIZE_MS);
 
       GetExecuteOperationRequest request = new GetExecuteOperationRequest(operation.execution_id);
 
