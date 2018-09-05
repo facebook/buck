@@ -16,10 +16,13 @@
 
 package com.facebook.buck.intellij.ideabuck.actions;
 
+import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
+import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
 import com.intellij.icons.AllIcons.Actions;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.DumbAwareAction;
+import com.intellij.openapi.project.Project;
 
 public class ClearTreeViewPanelAction extends DumbAwareAction {
 
@@ -31,11 +34,25 @@ public class ClearTreeViewPanelAction extends DumbAwareAction {
   }
 
   @Override
+  public void update(AnActionEvent e) {
+    Project project = e.getProject();
+    if (project != null) {
+      e.getPresentation()
+          .setEnabled(
+              !BuckBuildManager.getInstance(project).isBuilding()
+                  && project.getComponent(BuckModule.class).isConnected());
+    }
+  }
+
+  @Override
   public void actionPerformed(AnActionEvent anActionEvent) {
-    BuckUIManager buckUIManager = BuckUIManager.getInstance(anActionEvent.getProject());
-    buckUIManager
-        .getBuckTreeViewPanel()
-        .getModifiableModel()
-        .removeAllChildren(buckUIManager.getBuckTreeViewPanel().getRoot());
+    Project project = anActionEvent.getProject();
+    if (project != null) {
+      BuckUIManager buckUIManager = BuckUIManager.getInstance(project);
+      buckUIManager
+          .getBuckTreeViewPanel()
+          .getModifiableModel()
+          .removeAllChildren(buckUIManager.getBuckTreeViewPanel().getRoot());
+    }
   }
 }
