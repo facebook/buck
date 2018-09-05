@@ -265,6 +265,7 @@ public interface QueryEnvironment {
           new BuildFileFunction(),
           new DepsFunction(),
           new DepsFunction.FirstOrderDepsFunction(),
+          new DepsFunction.LookupFunction(),
           new InputsFunction(),
           new FilterFunction(),
           new KindFunction(),

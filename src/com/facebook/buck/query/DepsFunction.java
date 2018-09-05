@@ -91,7 +91,9 @@ public class DepsFunction implements QueryFunction {
               new TargetVariablesQueryEnvironment(
                   ImmutableMap.of(
                       FirstOrderDepsFunction.NAME,
-                      ImmutableSet.copyOf(env.getFwdDeps(ImmutableList.of(target)))),
+                      ImmutableSet.copyOf(env.getFwdDeps(ImmutableList.of(target))),
+                      "@this",
+                      ImmutableSet.of(target)),
                   env));
       deps.forEach(consumer);
     }
@@ -169,6 +171,31 @@ public class DepsFunction implements QueryFunction {
         QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args) {
       Preconditions.checkArgument(args.size() == 0);
       return env.resolveTargetVariable(getName());
+    }
+  }
+
+  /** A function that looks up target variables by name */
+  public static class LookupFunction implements QueryFunction {
+    @Override
+    public String getName() {
+      return "lookup";
+    }
+
+    @Override
+    public int getMandatoryArguments() {
+      return 1;
+    }
+
+    @Override
+    public ImmutableList<ArgumentType> getArgumentTypes() {
+      return ImmutableList.of(ArgumentType.WORD);
+    }
+
+    @Override
+    public ImmutableSet<QueryTarget> eval(
+        QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args) {
+      Preconditions.checkArgument(args.size() == 1);
+      return env.resolveTargetVariable(args.get(0).getWord());
     }
   }
 }
