@@ -111,8 +111,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
                 }
 
                 if (GLOB_CHARS.matcher(input).find()) {
-                  return new PathOrGlobMatcher(
-                      root.getFileSystem().getPathMatcher("glob:" + input), input);
+                  return new PathOrGlobMatcher(input);
                 }
                 return new PathOrGlobMatcher(Paths.get(input));
               }
