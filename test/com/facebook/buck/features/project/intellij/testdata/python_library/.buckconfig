@@ -1,0 +1,6 @@
+[project]
+  ide = intellij
+[intellij]
+  default_android_manifest_path = manifest/AndroidManifest.xml
+  keep_module_files_in_module_dirs = true
+  python_module_sdk_name = "Python 3.7"

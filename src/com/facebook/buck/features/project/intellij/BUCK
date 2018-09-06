@@ -3,6 +3,9 @@ load("//tools/build_rules:module_rules.bzl", "buck_module")
 buck_module(
     name = "intellij",
     srcs = glob(["**/*.java"]),
+    module_deps = [
+        "//src/com/facebook/buck/features/python:module",
+    ],
     provided_deps = [
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/artifact_cache/config:config",

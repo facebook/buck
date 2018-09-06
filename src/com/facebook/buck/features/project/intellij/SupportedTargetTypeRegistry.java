@@ -33,11 +33,15 @@ import com.facebook.buck.features.project.intellij.lang.java.JavaLibraryModuleRu
 import com.facebook.buck.features.project.intellij.lang.java.JavaTestModuleRule;
 import com.facebook.buck.features.project.intellij.lang.kotlin.KotlinLibraryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.kotlin.KotlinTestModuleRule;
+import com.facebook.buck.features.project.intellij.lang.python.PythonLibraryModuleRule;
+import com.facebook.buck.features.project.intellij.lang.python.PythonTestModuleRule;
 import com.facebook.buck.features.project.intellij.lang.scala.ScalaLibraryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.scala.ScalaTestModuleRule;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleRule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
+import com.facebook.buck.features.python.PythonLibraryDescription;
+import com.facebook.buck.features.python.PythonTestDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
@@ -72,6 +76,8 @@ public class SupportedTargetTypeRegistry {
               GroovyTestDescription.class,
               KotlinLibraryDescription.class,
               KotlinTestDescription.class,
+              PythonLibraryDescription.class,
+              PythonTestDescription.class,
               ScalaLibraryDescription.class,
               ScalaTestDescription.class);
 
@@ -114,9 +120,11 @@ public class SupportedTargetTypeRegistry {
     addToIndex(
         new KotlinLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new KotlinTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(
+        new PythonLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(new PythonTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new ScalaLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new ScalaTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-
     Preconditions.checkState(areTargetTypesEqual(moduleRuleIndex.keySet()));
   }
 

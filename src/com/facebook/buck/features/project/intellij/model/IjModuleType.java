@@ -100,6 +100,18 @@ public enum IjModuleType {
     }
   },
 
+  PYTHON_MODULE("PYTHON_MODULE") {
+    @Override
+    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
+      return projectConfig.getPythonModuleSdkName();
+    }
+
+    @Override
+    public String getSdkType(IjProjectConfig projectConfig) {
+      return projectConfig.getPythonModuleSdkType().orElse(SDK_TYPE_PYTHON);
+    }
+  },
+
   UNKNOWN_MODULE("JAVA_MODULE") {
     @Override
     public Optional<String> getSdkName(IjProjectConfig projectConfig) {
@@ -121,6 +133,9 @@ public enum IjModuleType {
 
   // From constructor of org.jetbrains.idea.devkit.projectRoots.IdeaJdk
   private static final String SDK_TYPE_IDEA = "IDEA JDK";
+
+  // From constructor of com.jetbrains.python.sdk.PythonSdkType
+  private static final String SDK_TYPE_PYTHON = "Python SDK";
 
   IjModuleType(String imlModuleType) {
     this.imlModuleType = imlModuleType;

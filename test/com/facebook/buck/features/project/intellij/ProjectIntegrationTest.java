@@ -366,6 +366,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testPythonLibrary() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("python_library");
+  }
+
+  @Test
   public void testOutputDir() throws IOException, InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =

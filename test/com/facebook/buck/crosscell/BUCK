@@ -35,6 +35,7 @@ standard_java_test(
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/event/listener:listener",
         "//src/com/facebook/buck/features/project/intellij:intellij",
+        "//src/com/facebook/buck/features/python:python",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",

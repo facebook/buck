@@ -56,6 +56,10 @@ abstract class AbstractIjProjectConfig {
 
   public abstract Optional<String> getJavaModuleSdkType();
 
+  public abstract Optional<String> getPythonModuleSdkName();
+
+  public abstract Optional<String> getPythonModuleSdkType();
+
   public abstract Optional<String> getProjectLanguageLevel();
 
   public abstract List<String> getExcludedResourcePaths();

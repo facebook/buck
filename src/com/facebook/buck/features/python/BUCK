@@ -87,10 +87,12 @@ python_binary(
 
 buck_module(
     name = "module",
+    exported_deps = [
+        "//src/com/facebook/buck/features/python:python",
+    ],
     module_resources = ["//src/com/facebook/buck/features/python:pex"],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/features/python:python",
         "//src/com/facebook/buck/features/python/toolchain:toolchain",
         "//src/com/facebook/buck/features/python/toolchain/impl:impl",
     ],
