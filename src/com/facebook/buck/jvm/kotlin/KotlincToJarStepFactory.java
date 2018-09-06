@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.kotlin;
 
 import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
-import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -55,6 +54,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -425,7 +425,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       }
 
       oos.flush();
-      return printBase64Binary(os.toByteArray());
+      return Base64.getEncoder().encodeToString(os.toByteArray());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
