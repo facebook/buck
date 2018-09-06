@@ -839,6 +839,7 @@ Make sure it is on PATH or JAVA_HOME is set."
                 """
             Could not find Java executable under JAVA_HOME at: '{}'.
             Please make sure your JAVA_HOME environment variable is set correctly.
+            Then restart buck (buck kill) and try again.
             """
             ).format(java_path)
             raise BuckToolException(message)
