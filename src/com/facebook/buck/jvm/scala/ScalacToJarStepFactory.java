@@ -54,8 +54,8 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
   @AddToRuleKey private final ImmutableList<String> extraArguments;
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerPlugins;
   @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
-  private final Javac javac;
-  private final JavacOptions javacOptions;
+  @AddToRuleKey private final Javac javac;
+  @AddToRuleKey private final JavacOptions javacOptions;
 
   public ScalacToJarStepFactory(
       Tool scalac,

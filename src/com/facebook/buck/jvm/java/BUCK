@@ -309,6 +309,7 @@ java_library_with_plugins(
         "CompileAgainstLibraryType.java",
         "ConfiguredCompilerFactory.java",
         "DefaultJavaLibrary.java",
+        "DefaultJavaLibraryBuildable.java",
         "DefaultJavaLibraryRules.java",
         "DefaultSourceOnlyAbiRuleInfo.java",
         "DefaultSourceOnlyAbiRuleInfoFactory.java",
@@ -350,6 +351,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/core/rules/pipeline:pipeline",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/util/types:types",
     ],
     resources = [
@@ -373,6 +375,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/common:common",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/toolchain:toolchain",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",

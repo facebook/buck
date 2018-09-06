@@ -235,6 +235,7 @@ public class JavaTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand("test", "//:jtest");
+
     result.assertSuccess();
   }
 

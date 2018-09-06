@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -27,10 +28,10 @@ public class RemoveClassesPatternsMatcher implements AddsToRuleKey, Predicate<Ob
   public static final RemoveClassesPatternsMatcher EMPTY =
       new RemoveClassesPatternsMatcher(ImmutableSet.of());
 
-  @AddToRuleKey private final ImmutableSet<Pattern> patterns;
+  @AddToRuleKey private final ImmutableList<Pattern> patterns;
 
   public RemoveClassesPatternsMatcher(ImmutableSet<Pattern> patterns) {
-    this.patterns = patterns;
+    this.patterns = ImmutableList.copyOf(patterns);
   }
 
   private boolean shouldRemoveClass(ZipEntry entry) {
@@ -53,11 +54,6 @@ public class RemoveClassesPatternsMatcher implements AddsToRuleKey, Predicate<Ob
     }
 
     return false;
-  }
-
-  /** This method is for serialization only. */
-  /* package */ ImmutableSet<Pattern> getPatterns() {
-    return patterns;
   }
 
   private static String pathToClassName(String classFilePath) {

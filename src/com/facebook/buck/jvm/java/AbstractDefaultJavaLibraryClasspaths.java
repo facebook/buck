@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import java.util.Objects;
 import org.immutables.builder.Builder;
 import org.immutables.value.Value;
@@ -87,19 +86,6 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   }
 
   @Value.Lazy
-  public ImmutableList<BuildRule> getNonClasspathDeps() {
-    // TODO(jkeljo): When creating source-only ABIs, *some* non-classpath deps can be omitted
-    // (basically anything that's not either source, resources, or a source-only-ABI-compatible
-    // annotation processor).
-    ImmutableSortedSet<BuildRule> compileTimeClasspathFullDeps = getCompileTimeClasspathFullDeps();
-    return ImmutableList.copyOf(
-        Iterables.concat(
-            Sets.difference(getBuildRuleParams().getBuildDeps(), compileTimeClasspathFullDeps),
-            Sets.difference(
-                getCompileTimeClasspathUnfilteredFullDeps(), compileTimeClasspathFullDeps)));
-  }
-
-  @Value.Lazy
   protected ImmutableSortedSet<SourcePath> getCompileTimeClasspathSourcePaths() {
     return getCompileTimeClasspathDeps()
         .stream()
@@ -126,7 +112,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   }
 
   @Value.Lazy
-  public ImmutableSortedSet<BuildRule> getCompileTimeClasspathFullDeps() {
+  protected ImmutableSortedSet<BuildRule> getCompileTimeClasspathFullDeps() {
     return getCompileTimeClasspathUnfilteredFullDeps()
         .stream()
         .filter(dep -> dep instanceof HasJavaAbi)
@@ -134,7 +120,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   }
 
   @Value.Lazy
-  public ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
+  protected ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
     if (getCompileAgainstLibraryType() == CompileAgainstLibraryType.SOURCE_ONLY_ABI) {
       return getCompileTimeClasspathSourceOnlyAbiDeps();
     }

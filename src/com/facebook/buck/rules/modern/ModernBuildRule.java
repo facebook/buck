@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -44,6 +45,7 @@ import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -279,7 +281,40 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       Iterable<Path> outputs) {
     ImmutableList.Builder<Step> stepBuilder = ImmutableList.builder();
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, buildTarget);
+    getSetupStepsForBuildable(context, filesystem, outputs, stepBuilder, outputPathResolver);
 
+    stepBuilder.addAll(
+        buildable.getBuildSteps(
+            context,
+            filesystem,
+            outputPathResolver,
+            getBuildCellPathFactory(context, filesystem, outputPathResolver)));
+
+    // TODO(cjhopman): This should probably be handled by the build engine.
+    if (context.getShouldDeleteTemporaries()) {
+      stepBuilder.add(
+          RmStep.of(
+                  BuildCellRelativePath.fromCellRelativePath(
+                      context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath()))
+              .withRecursive(true));
+    }
+
+    return stepBuilder.build();
+  }
+
+  protected static DefaultBuildCellRelativePathFactory getBuildCellPathFactory(
+      BuildContext context, ProjectFilesystem filesystem, OutputPathResolver outputPathResolver) {
+    return new DefaultBuildCellRelativePathFactory(
+        context.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver));
+  }
+
+  /** Gets the steps for preparing the output directories of the build rule. */
+  public static void getSetupStepsForBuildable(
+      BuildContext context,
+      ProjectFilesystem filesystem,
+      Iterable<Path> outputs,
+      Builder<Step> stepBuilder,
+      OutputPathResolver outputPathResolver) {
     // TODO(cjhopman): This should probably actually be handled by the build engine.
     for (Path output : outputs) {
       stepBuilder.add(
@@ -289,30 +324,14 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
               .withRecursive(true));
     }
 
-    BuildCellRelativePath rootPath =
-        BuildCellRelativePath.fromCellRelativePath(
-            context.getBuildCellRootPath(), filesystem, outputPathResolver.getRootPath());
-    BuildCellRelativePath tempPath =
-        BuildCellRelativePath.fromCellRelativePath(
-            context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath());
-
-    stepBuilder.addAll(MakeCleanDirectoryStep.of(rootPath));
-    stepBuilder.addAll(MakeCleanDirectoryStep.of(tempPath));
-
     stepBuilder.addAll(
-        buildable.getBuildSteps(
-            context,
-            filesystem,
-            outputPathResolver,
-            new DefaultBuildCellRelativePathFactory(
-                context.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver))));
-
-    // TODO(cjhopman): This should probably be handled by the build engine.
-    if (context.getShouldDeleteTemporaries()) {
-      stepBuilder.add(RmStep.of(tempPath).withRecursive(true));
-    }
-
-    return stepBuilder.build();
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), filesystem, outputPathResolver.getRootPath())));
+    stepBuilder.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath())));
   }
 
   /** Return the steps for a buildable. */
@@ -339,7 +358,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
    * Records the outputs of this buildrule. An output will only be recorded once (i.e. no duplicates
    * and if a directory is recorded, none of its contents will be).
    */
-  public static <T extends Buildable> void recordOutputs(
+  public static <T extends AddsToRuleKey> void recordOutputs(
       BuildableContext buildableContext,
       OutputPathResolver outputPathResolver,
       ClassInfo<T> classInfo,
@@ -371,6 +390,19 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     }
   }
 
+  /**
+   * Records the outputs of this buildrule. An output will only be recorded once (i.e. no duplicates
+   * and if a directory is recorded, none of its contents will be).
+   */
+  public static <T extends AddsToRuleKey> void recordOutputs(
+      BuildableContext buildableContext, OutputPathResolver outputPathResolver, T buildable) {
+    recordOutputs(
+        buildableContext,
+        outputPathResolver,
+        DefaultClassInfoFactory.forInstance(buildable),
+        buildable);
+  }
+
   private static boolean shouldRecord(Set<Path> outputs, Path path) {
     Path parent = path.getParent();
     while (parent != null) {
@@ -380,11 +412,6 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       parent = parent.getParent();
     }
     return true;
-  }
-
-  @Override
-  public final boolean outputFileCanBeCopied() {
-    return false;
   }
 
   @Override
