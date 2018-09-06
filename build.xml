@@ -874,12 +874,6 @@
     </exec>
   </target>
 
-  <target name="verify-core-rules-boundaries" depends="default">
-    <exec dir="${user.dir}/tools/build/core-boundaries" executable="python" failonerror="true">
-      <arg line="verify-core-rules-boundaries.py" />
-    </exec>
-  </target>
-
   <!--
   Copy classpath jars to a directory buck_repo.py can use, so that buck built with ant continues
   to work after checking out a different revision or making changes to classpaths file.
@@ -1044,7 +1038,7 @@
     </sequential>
   </macrodef>
 
-  <target name="lint" depends="pmd, missing-test-files-check, verify-core-rules-boundaries" />
+  <target name="lint" depends="pmd, missing-test-files-check" />
 
   <macrodef name="buck-javadoc" description="generates HTML documentation for Java code">
     <attribute name="destdir" />
