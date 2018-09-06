@@ -33,7 +33,7 @@ public final class BuckIcons {
   public static final Icon ACTION_DEBUG = load("/icons/actions/Debug.png");
   public static final Icon ACTION_FIND = load("/icons/actions/Find.png");
   public static final Icon ACTION_INSTALL = load("/icons/actions/Install.png");
-  public static final Icon ACTION_KILL = load("/icons/actions/Kill.png");
+  public static final Icon ACTION_STOP = load("/icons/actions/Stop.png");
   public static final Icon ACTION_PROJECT = load("/icons/actions/Project.png");
   public static final Icon ACTION_RUN = load("/icons/actions/Run.png");
   public static final Icon ACTION_TEST = load("/icons/actions/Test.png");

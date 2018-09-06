@@ -26,7 +26,7 @@ public class BuckKillCommandHandler extends BuckCommandHandler {
 
   public BuckKillCommandHandler(
       final Project project, final VirtualFile root, final BuckCommand command) {
-    super(project, VfsUtil.virtualToIoFile(root), command);
+    super(project, VfsUtil.virtualToIoFile(root), command, true);
   }
 
   @Override

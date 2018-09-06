@@ -290,6 +290,7 @@
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckBuildAction" id="buck.Build">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift S"/>
       </action>
+      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckStopAction" id="buck.Stop" />
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckTestAction" id="buck.Test">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift Y"/>
       </action>
@@ -305,12 +306,12 @@
         id="buck.Uninstall">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
       </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckKillAction" id="buck.Kill">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L"/>
-      </action>
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckProjectGenerationAction"
         id="buck.ProjectGeneration">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift B"/>
+      </action>
+      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckKillAction" id="buck.Kill">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L"/>
       </action>
       <action class="com.facebook.buck.intellij.ideabuck.actions.ScrollToEndAction" id="buck.ScrollToEnd" />
       <action class="com.facebook.buck.intellij.ideabuck.actions.ClearTreeViewPanelAction" id="buck.Clear" />
