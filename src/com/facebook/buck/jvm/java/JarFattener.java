@@ -53,12 +53,12 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
-import javax.xml.bind.JAXBException;
 
 /** Build a fat JAR that packages an inner JAR along with any required native libraries. */
 public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -236,7 +236,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             try {
               fatJar.store(bytes);
-            } catch (JAXBException e) {
+            } catch (IOException e) {
               throw new RuntimeException(e);
             }
             return new ByteArrayInputStream(bytes.toByteArray());
