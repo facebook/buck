@@ -1519,4 +1519,17 @@ public class AppleBundleIntegrationTest {
             .get();
     assertThat(nmFramework, containsString("S _OBJC_CLASS_$_Hello"));
   }
+
+  @Test
+  public void bundleWithCxxLibrary() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_cxx_library", tmp);
+
+    workspace.setUp();
+    BuildTarget target =
+        workspace.newBuildTarget(
+            "//:app_bundle#iphoneos-armv7");
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+  }
 }

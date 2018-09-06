@@ -1,0 +1,17 @@
+apple_binary(
+    name = "app_binary",
+    srcs = ["main.mm"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    visibility = ["PUBLIC"],
+    deps = ["//dep:cxx_lib"],
+)
+
+apple_bundle(
+    name = "app_bundle",
+    binary = ":app_binary",
+    extension = "app",
+    info_plist = "Info.plist",
+    platform_binary = [("iphonesimulator-x86_64", ":app_binary")],
+)

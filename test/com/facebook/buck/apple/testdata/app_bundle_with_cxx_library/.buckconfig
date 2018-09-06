@@ -1,0 +1,3 @@
+[cxx]
+  default_platform = macosx-x86_64
+  cxxflags = -std=c++14 -Wno-unused-variable
