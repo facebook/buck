@@ -97,6 +97,8 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
         propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
         propagateIfInstanceOf(e.getCause(), BuildTargetException.class);
       }
+      propagateIfInstanceOf(e, BuildFileParseException.class);
+      propagateIfInstanceOf(e, BuildTargetException.class);
       propagateCauseIfInstanceOf(e, ExecutionException.class);
       propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
       throw new RuntimeException(e);

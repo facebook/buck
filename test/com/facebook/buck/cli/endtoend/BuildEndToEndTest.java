@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cli.endtoend;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
+
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
 import com.facebook.buck.testutil.endtoend.EndToEndRunner;
@@ -23,6 +26,7 @@ import com.facebook.buck.testutil.endtoend.EndToEndTestDescriptor;
 import com.facebook.buck.testutil.endtoend.EndToEndWorkspace;
 import com.facebook.buck.testutil.endtoend.Environment;
 import com.facebook.buck.testutil.endtoend.EnvironmentFor;
+import com.facebook.buck.testutil.endtoend.ToggleState;
 import com.google.common.collect.ImmutableMap;
 import java.util.regex.Pattern;
 import org.junit.Assert;
@@ -35,7 +39,6 @@ public class BuildEndToEndTest {
   @Environment
   public static EndToEndEnvironment getBaseEnvironment() {
     return new EndToEndEnvironment()
-        .addTemplates("cli")
         .withCommand("build")
         .addLocalConfigSet(
             ImmutableMap.of("parser", ImmutableMap.of("default_build_file_syntax", "SKYLARK")))
@@ -45,12 +48,24 @@ public class BuildEndToEndTest {
 
   @EnvironmentFor(testNames = {"shouldRewriteFailureMessagesAndAppendThem"})
   public static EndToEndEnvironment setTargetPathThatCallsFail() {
-    return getBaseEnvironment().withTargets("//parse_failure/fail_message:fail");
+    return getBaseEnvironment()
+        .addTemplates("cli")
+        .withTargets("//parse_failure/fail_message:fail");
   }
 
   @EnvironmentFor(testNames = {"shouldRewriteFailureMessagesForInvalidTargets"})
   public static EndToEndEnvironment setTargetPathThatHasBadTargets() {
-    return getBaseEnvironment().withTargets("//parse_failure/invalid_deps:main");
+    return getBaseEnvironment()
+        .addTemplates("cli")
+        .withTargets("//parse_failure/invalid_deps:main");
+  }
+
+  @EnvironmentFor(testNames = {"testMissingTargetLocationIsShowAfterRebuild"})
+  public static EndToEndEnvironment setTargetPathWithMissingDep() {
+    return getBaseEnvironment()
+        .addTemplates("missing_dep")
+        .withTargets("//:a")
+        .withBuckdToggled(ToggleState.ON);
   }
 
   @Test
@@ -94,5 +109,26 @@ public class BuildEndToEndTest {
     Assert.assertTrue(
         String.format("'%s' was not contained in '%s'", expected.pattern(), result.getStderr()),
         expected.matcher(result.getStderr()).find());
+  }
+
+  @Test
+  public void testMissingTargetLocationIsShowAfterRebuild(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
+    ProcessResult result = workspace.runBuckCommand(test);
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "No build file at missing/BUCK when resolving target //missing:dep.\n"
+                + "\n"
+                + "This error happened while trying to get dependency '//missing:dep' of target '//:a'"));
+    result = workspace.runBuckCommand(test);
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "No build file at missing/BUCK when resolving target //missing:dep.\n"
+                + "\n"
+                + "This error happened while trying to get dependency '//missing:dep' of target '//:a'"));
   }
 }
