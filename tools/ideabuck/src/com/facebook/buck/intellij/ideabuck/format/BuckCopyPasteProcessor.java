@@ -243,7 +243,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
         file = virtualFileManager.findFileByUrl("temp://" + reference);
       }
       if (file != null) {
-        return BuckBuildUtil.getBuckFileFromDirectory(file.getParent());
+        return getBuckFileFromDirectory(file.getParent());
       }
     }
 
@@ -266,7 +266,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
       }
       if (foundClass != null) {
         VirtualFile file = PsiUtilCore.getVirtualFile(foundClass);
-        return BuckBuildUtil.getBuckFileFromDirectory(file.getParent());
+        return getBuckFileFromDirectory(file.getParent());
       }
     }
 
@@ -274,7 +274,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
     PsiPackage packageElement = JavaPsiFacade.getInstance(project).findPackage(reference);
     if (packageElement != null) {
       PsiDirectory directory = packageElement.getDirectories()[0];
-      return BuckBuildUtil.getBuckFileFromDirectory(directory.getVirtualFile());
+      return getBuckFileFromDirectory(directory.getVirtualFile());
     }
 
     // Extract the package from the reference.
@@ -288,8 +288,23 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
     packageElement = JavaPsiFacade.getInstance(project).findPackage(reference);
     if (packageElement != null) {
       PsiDirectory directory = packageElement.getDirectories()[0];
-      return BuckBuildUtil.getBuckFileFromDirectory(directory.getVirtualFile());
+      return getBuckFileFromDirectory(directory.getVirtualFile());
     }
     return null;
+  }
+
+  /**
+   * Find the buck file from a directory. TODO(#7908675): We should use Buck's own classes for it.
+   */
+  private VirtualFile getBuckFileFromDirectory(VirtualFile file) {
+    if (file == null) {
+      return null;
+    }
+    VirtualFile buckFile = file.findChild(BuckBuildUtil.BUCK_FILE_NAME);
+    while (buckFile == null && file != null) {
+      buckFile = file.findChild(BuckBuildUtil.BUCK_FILE_NAME);
+      file = file.getParent();
+    }
+    return buckFile;
   }
 }

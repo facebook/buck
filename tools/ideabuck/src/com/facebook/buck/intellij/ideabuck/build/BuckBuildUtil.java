@@ -68,7 +68,6 @@ public final class BuckBuildUtil {
    */
   @Nullable
   public static VirtualFile resolveExtensionFile(BuckLoadTargetArgument loadTarget) {
-    Project project = loadTarget.getProject();
     String target = loadTarget.getText();
     target = target.substring(1, target.length() - 1); // strip quotes
     if (!BuckBuildUtil.isValidAbsoluteTarget(target)) {
@@ -76,6 +75,7 @@ public final class BuckBuildUtil {
     }
     String packagePath = BuckBuildUtil.extractAbsoluteTarget(target);
     String fileName = BuckBuildUtil.extractTargetName(target);
+    Project project = loadTarget.getProject();
     @Nullable
     VirtualFile packageDirectory = project.getBaseDir().findFileByRelativePath(packagePath);
     return packageDirectory != null ? packageDirectory.findChild(fileName) : null;
@@ -141,20 +141,5 @@ public final class BuckBuildUtil {
       }
     }
     return null;
-  }
-
-  /**
-   * Find the buck file from a directory. TODO(#7908675): We should use Buck's own classes for it.
-   */
-  public static VirtualFile getBuckFileFromDirectory(VirtualFile file) {
-    if (file == null) {
-      return null;
-    }
-    VirtualFile buckFile = file.findChild(BUCK_FILE_NAME);
-    while (buckFile == null && file != null) {
-      buckFile = file.findChild(BUCK_FILE_NAME);
-      file = file.getParent();
-    }
-    return buckFile;
   }
 }
