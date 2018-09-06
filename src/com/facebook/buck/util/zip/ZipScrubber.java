@@ -17,6 +17,7 @@
 package com.facebook.buck.util.zip;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
@@ -132,7 +133,10 @@ public class ZipScrubber {
   @SuppressWarnings("unused")
   private static String localEntryName(ByteBuffer entry) {
     byte[] nameBytes = new byte[entry.getShort(ZipEntry.LOCNAM)];
-    ((ByteBuffer) entry.slice().position(ZipEntry.LOCHDR)).get(nameBytes);
+    // Note: This strange looking casting exists to enable building on both Java 8 and Java 9+.
+    //       Java 9 introduced ByteBuffer::position, which returns a ByteBuffer, unlike
+    //       Buffer::position, which returns a Buffer.
+    ((ByteBuffer) ((Buffer) entry.slice()).position(ZipEntry.LOCHDR)).get(nameBytes);
     return new String(nameBytes);
   }
 
