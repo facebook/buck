@@ -14,10 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rules.impl;
 
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import java.util.stream.Stream;
 
 public final class DependencyAggregationTestUtil {

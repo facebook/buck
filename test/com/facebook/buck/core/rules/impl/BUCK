@@ -29,3 +29,17 @@ java_test(
         "//third-party/java/junit:junit",
     ],
 )
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/rules/impl:impl",
+    ],
+)
