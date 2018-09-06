@@ -295,6 +295,9 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
     if (scheduler.isPresent()) {
       schedulerDone = scheduler.get().isTerminated();
     }
-    return taskPool.isTerminated() && schedulerDone && !schedulingOpen.get();
+    return taskPool.isTerminated()
+        && timeoutPool.isTerminated()
+        && schedulerDone
+        && !schedulingOpen.get();
   }
 }
