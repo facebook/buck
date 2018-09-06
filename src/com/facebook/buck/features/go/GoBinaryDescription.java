@@ -33,6 +33,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -78,6 +79,7 @@ public class GoBinaryDescription
         params,
         context.getActionGraphBuilder(),
         goBuckConfig,
+        args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
         args.getSrcs(),
         args.getResources(),
         args.getCompilerFlags(),
@@ -119,6 +121,8 @@ public class GoBinaryDescription
   @Value.Immutable
   interface AbstractGoBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
     Optional<Flavor> getPlatform();
+
+    Optional<Linker.LinkableDepType> getLinkStyle();
 
     ImmutableList<String> getCompilerFlags();
 

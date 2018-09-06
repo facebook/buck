@@ -20,3 +20,11 @@ cxx_library(
         "PUBLIC",
     ],
 )
+
+# shared link style
+go_binary(
+    name = "bin-shared",
+    srcs = ["main.go"],
+    link_style = "shared",
+    deps = [":cgo"],
+)

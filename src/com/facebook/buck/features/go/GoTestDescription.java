@@ -45,6 +45,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.versions.Version;
@@ -308,6 +309,7 @@ public class GoTestDescription
                 .withExtraDeps(ImmutableSortedSet.of(generatedTestMain)),
             graphBuilder,
             goBuckConfig,
+            args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
             ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
             createResourcesSymlinkTree ? args.getResources() : ImmutableSortedSet.of(),
             args.getCompilerFlags(),
@@ -482,6 +484,8 @@ public class GoTestDescription
     Optional<String> getPackageName();
 
     Optional<GoTestCoverStep.Mode> getCoverageMode();
+
+    Optional<Linker.LinkableDepType> getLinkStyle();
 
     ImmutableList<String> getCompilerFlags();
 

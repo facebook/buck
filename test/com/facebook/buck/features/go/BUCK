@@ -137,6 +137,7 @@ java_test(
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//src/com/facebook/buck/cxx/toolchain/linker:linker",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

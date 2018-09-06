@@ -34,8 +34,10 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.go.GoListStep.ListType;
@@ -209,15 +211,7 @@ abstract class GoDescriptors {
     return ImmutableMap.copyOf(importMapBuilder);
   }
 
-  static ImmutableList<Arg> getCxxLinkerArgs(
-      ActionGraphBuilder graphBuilder,
-      CxxPlatform cxxPlatform,
-      Iterable<BuildRule> deps,
-      Linker.LinkableDepType linkStyle,
-      Iterable<Arg> externalLinkerFlags) {
-
-    // find all the CGoLibraries being in direct or non direct dependency to
-    // declared deps
+  static Iterable<BuildRule> getCgoLinkableDeps(Iterable<BuildRule> deps) {
     ImmutableSet.Builder<BuildRule> linkables = ImmutableSet.builder();
     new AbstractBreadthFirstTraversal<BuildRule>(deps) {
       @Override
@@ -230,17 +224,24 @@ abstract class GoDescriptors {
       }
     }.start();
 
+    return linkables.build();
+  }
+
+  static ImmutableList<Arg> getCxxLinkerArgs(
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
+      Iterable<BuildRule> linkables,
+      Linker.LinkableDepType linkStyle,
+      Iterable<Arg> externalLinkerFlags) {
+
     // cgo library might have C/C++ dependencies which needs to be linked to the
     // go binary. This piece of code collects the linker args from all the
     // CGoLibrary cxx dependencies.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
     NativeLinkableInput linkableInput =
         NativeLinkables.getTransitiveNativeLinkableInput(
-            cxxPlatform,
-            graphBuilder,
-            linkables.build(),
-            Linker.LinkableDepType.STATIC_PIC,
-            r -> Optional.empty());
+            cxxPlatform, graphBuilder, linkables, linkStyle, r -> Optional.empty());
 
     // skip setting any arg if no linkable inputs are present
     if (linkableInput.getArgs().size() == 0 && Iterables.size(externalLinkerFlags) == 0) {
@@ -255,8 +256,8 @@ abstract class GoDescriptors {
 
     // add all arguments needed to link in the C/C++ platform runtime.
     argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(linkStyle)));
-    argsBuilder.addAll(linkableInput.getArgs());
     argsBuilder.addAll(externalLinkerFlags);
+    argsBuilder.addAll(linkableInput.getArgs());
 
     return argsBuilder.build();
   }
@@ -267,6 +268,7 @@ abstract class GoDescriptors {
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       GoBuckConfig goBuckConfig,
+      Linker.LinkableDepType linkStyle,
       ImmutableSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
       List<String> compilerFlags,
@@ -274,11 +276,12 @@ abstract class GoDescriptors {
       List<String> linkerFlags,
       List<String> externalLinkerFlags,
       GoPlatform platform) {
-    BuildTarget libraryTarget =
-        buildTarget.withAppendedFlavors(InternalFlavor.of("compile"), platform.getFlavor());
+
+    ImmutableList.Builder<BuildRule> extraDeps = ImmutableList.builder();
+
     GoCompile library =
         GoDescriptors.createGoCompileRule(
-            libraryTarget,
+            buildTarget.withAppendedFlavors(InternalFlavor.of("compile"), platform.getFlavor()),
             projectFilesystem,
             params,
             graphBuilder,
@@ -297,6 +300,7 @@ abstract class GoDescriptors {
             ImmutableList.of(),
             Arrays.asList(ListType.GoFiles));
     graphBuilder.addToIndex(library);
+    extraDeps.add(library);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -319,8 +323,44 @@ abstract class GoDescriptors {
                     .collect(ImmutableList.toImmutableList()),
                 /* includeSelf */ false));
     graphBuilder.addToIndex(symlinkTree);
+    extraDeps.add(symlinkTree);
 
     LOG.verbose("Symlink tree for linking of %s: %s", buildTarget, symlinkTree);
+
+    // find all the CGoLibraries being in direct or non direct dependency to
+    // declared deps
+    Iterable<BuildRule> cgoLinkables = getCgoLinkableDeps(library.getBuildDeps());
+    ImmutableSet.Builder<String> extraFlags = ImmutableSet.builder();
+
+    if (linkStyle == Linker.LinkableDepType.SHARED) {
+      // Create a symlink tree with for all shared libraries needed by this binary.
+      SymlinkTree sharedLibraries =
+          graphBuilder.addToIndex(
+              CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
+                  buildTarget,
+                  projectFilesystem,
+                  graphBuilder,
+                  ruleFinder,
+                  platform.getCxxPlatform(),
+                  cgoLinkables,
+                  r -> Optional.empty()));
+      extraDeps.add(sharedLibraries);
+
+      // Embed a origin-relative library path into the binary so it can find the shared libraries.
+      // The shared libraries root is absolute. Also need an absolute path to the linkOutput
+      Path absBinaryDir =
+          buildTarget
+              .getCellPath()
+              .resolve(BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"));
+
+      extraFlags.addAll(
+          Linkers.iXlinker(
+              "-rpath",
+              String.format(
+                  "%s/%s",
+                  platform.getCxxPlatform().getLd().resolve(graphBuilder).origin(),
+                  absBinaryDir.relativize(sharedLibraries.getRoot()).toString())));
+    }
 
     Linker cxxLinker = platform.getCxxPlatform().getLd().resolve(graphBuilder);
     return new GoBinary(
@@ -330,8 +370,7 @@ abstract class GoDescriptors {
             .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ruleFinder.filterBuildRuleInputs(symlinkTree.getLinks().values()))
-                    .add(symlinkTree)
-                    .add(library)
+                    .addAll(extraDeps.build())
                     .addAll(BuildableSupport.getDepsCollection(cxxLinker, ruleFinder))
                     .build())
             .withoutExtraDeps(),
@@ -344,10 +383,11 @@ abstract class GoDescriptors {
         getCxxLinkerArgs(
             graphBuilder,
             platform.getCxxPlatform(),
-            library.getBuildDeps(),
-            Linker.LinkableDepType.STATIC_PIC,
+            cgoLinkables,
+            linkStyle,
             StringArg.from(
-                Iterables.concat(platform.getExternalLinkerFlags(), externalLinkerFlags))),
+                Iterables.concat(
+                    platform.getExternalLinkerFlags(), extraFlags.build(), externalLinkerFlags))),
         platform);
   }
 
@@ -392,6 +432,7 @@ abstract class GoDescriptors {
                       .withExtraDeps(ImmutableSortedSet.of(writeFile)),
                   graphBuilder,
                   goBuckConfig,
+                  Linker.LinkableDepType.STATIC_PIC,
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),
                   ImmutableSortedSet.of(),
                   ImmutableList.of(),

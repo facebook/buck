@@ -17,7 +17,6 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -101,11 +100,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
       CgoLibraryDescriptionArg args,
       Iterable<BuildTarget> cxxDeps,
       Tool cgo) {
-
-    if (args.getLinkStyle().isPresent()
-        && args.getLinkStyle().get() != Linker.LinkableDepType.STATIC_PIC) {
-      throw new HumanReadableException("CGoLibrary currently supports only static_pic link style.");
-    }
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     CxxDeps allDeps =
@@ -241,7 +235,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                         BuildTargetPaths.getGenPath(projectFilesystem, target, "%s/_all"),
                         ImmutableMap.of(),
                         cxxArgs, // collection of selected object files
-                        Linker.LinkableDepType.STATIC_PIC,
+                        args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
                         CxxLinkOptions.of(),
                         Optional.empty()));
 
@@ -364,7 +358,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             ImmutableSet.of(),
             Optional.empty(),
             Optional.empty(),
-            Linker.LinkableDepType.STATIC_PIC,
+            args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
             CxxLinkOptions.of(),
             args.getPreprocessorFlags(),
             args.getPlatformPreprocessorFlags(),
