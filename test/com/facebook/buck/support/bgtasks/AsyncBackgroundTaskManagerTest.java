@@ -141,7 +141,7 @@ public class AsyncBackgroundTaskManagerTest {
     assertTrue(manager.isShutDown());
   }
 
-  @Test(timeout = 2 * TIMEOUT_MILLIS)
+  @Test(timeout = 8 * TIMEOUT_MILLIS)
   public void testBlockingTimeout() {
     CountDownLatch blocker = new CountDownLatch(1);
     BackgroundTask<TestArgs> task =
@@ -344,7 +344,7 @@ public class AsyncBackgroundTaskManagerTest {
     assertEquals(0, manager.getScheduledTasks().size());
   }
 
-  @Test
+  @Test(timeout = 8 * TIMEOUT_MILLIS)
   public void testNonblockingTimeout() throws InterruptedException {
     CountDownLatch firstBlocker = new CountDownLatch(1);
     CountDownLatch secondBlocker = new CountDownLatch(1);
