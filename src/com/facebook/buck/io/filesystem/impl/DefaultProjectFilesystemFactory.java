@@ -32,9 +32,7 @@ import com.google.common.collect.ImmutableSet.Builder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -99,27 +97,21 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     config
         .getListWithoutComments(projectKey, ignoreKey)
         .stream()
-        .map(
-            new Function<String, PathOrGlobMatcher>() {
-              @Nullable
-              @Override
-              public PathOrGlobMatcher apply(String input) {
-                // We don't really want to ignore the output directory when doing things like
-                // filesystem
-                // walks, so return null
-                if (buckPaths.getBuckOut().toString().equals(input)) {
-                  return null; // root.getFileSystem().getPathMatcher("glob:**");
-                }
-
-                if (GLOB_CHARS.matcher(input).find()) {
-                  return new PathOrGlobMatcher(input);
-                }
-                return new PathOrGlobMatcher(Paths.get(input));
+        .forEach(
+            input -> {
+              // We don't really want to ignore the output directory when doing things like
+              // filesystem
+              // walks, so return null
+              if (buckPaths.getBuckOut().toString().equals(input)) {
+                return; // root.getFileSystem().getPathMatcher("glob:**");
               }
-            })
-        // And now remove any null patterns
-        .filter(Objects::nonNull)
-        .forEach(builder::add);
+
+              if (GLOB_CHARS.matcher(input).find()) {
+                builder.add(new PathOrGlobMatcher(input));
+                return;
+              }
+              addPathMatcherRelativeToRepo(root, builder, Paths.get(input));
+            });
 
     return builder.build();
   }
