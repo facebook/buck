@@ -20,7 +20,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.config.Config;
@@ -54,7 +53,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   @Override
-  public ProjectFilesystem createProjectFilesystem(
+  public DefaultProjectFilesystem createProjectFilesystem(
       Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
     BuckPaths buckPaths = getConfiguredBuckPaths(root, config, embeddedCellBuckOutInfo);
     return new DefaultProjectFilesystem(
@@ -67,12 +66,12 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   @Override
-  public ProjectFilesystem createProjectFilesystem(Path root, Config config) {
+  public DefaultProjectFilesystem createProjectFilesystem(Path root, Config config) {
     return createProjectFilesystem(root, config, Optional.empty());
   }
 
   @Override
-  public ProjectFilesystem createProjectFilesystem(Path root) {
+  public DefaultProjectFilesystem createProjectFilesystem(Path root) {
     return createProjectFilesystem(root, new Config());
   }
 
@@ -150,7 +149,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   @Override
-  public ProjectFilesystem createOrThrow(Path path) {
+  public DefaultProjectFilesystem createOrThrow(Path path) {
     try {
       // toRealPath() is necessary to resolve symlinks, allowing us to later
       // check whether files are inside or outside of the project without issue.

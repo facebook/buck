@@ -93,7 +93,7 @@ public class DefaultProjectFilesystemTest {
 
   @Rule public ExpectedException expected = ExpectedException.none();
 
-  private ProjectFilesystem filesystem;
+  private DefaultProjectFilesystem filesystem;
 
   @Before
   public void setUp() throws InterruptedException {

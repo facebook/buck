@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.util.config.Config;
 import java.nio.file.Path;
@@ -24,11 +25,11 @@ public class TestProjectFilesystems {
 
   private TestProjectFilesystems() {}
 
-  public static ProjectFilesystem createProjectFilesystem(Path root, Config config) {
+  public static DefaultProjectFilesystem createProjectFilesystem(Path root, Config config) {
     return new DefaultProjectFilesystemFactory().createProjectFilesystem(root, config);
   }
 
-  public static ProjectFilesystem createProjectFilesystem(Path root) {
+  public static DefaultProjectFilesystem createProjectFilesystem(Path root) {
     return new DefaultProjectFilesystemFactory().createProjectFilesystem(root);
   }
 }

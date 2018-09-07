@@ -8,6 +8,7 @@ java_library(
     ),
     exported_deps = [
         "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
     ],
     visibility = [
         "PUBLIC",
