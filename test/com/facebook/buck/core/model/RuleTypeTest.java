@@ -14,17 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.model.RuleType;
 import org.junit.Test;
 
-public class BuildRuleTypeTest {
+public class RuleTypeTest {
 
   @Test(expected = NullPointerException.class)
   public void typeNamesMustNotBeNull() {
