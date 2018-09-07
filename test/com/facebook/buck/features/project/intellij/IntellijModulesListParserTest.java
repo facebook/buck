@@ -24,6 +24,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -142,7 +143,7 @@ public class IntellijModulesListParserTest {
     IntellijModulesListParser parser = new IntellijModulesListParser();
     final ImmutableSortedSet<String> parsedModulePaths =
         parser
-            .getAllModules(modulesPath)
+            .getAllModules(new FileInputStream(modulesPath.toFile()))
             .stream()
             .map(ModuleIndexEntry::getFilePath)
             .map(Path::toString)

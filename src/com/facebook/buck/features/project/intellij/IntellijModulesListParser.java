@@ -23,7 +23,7 @@ import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.nio.file.Paths;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -39,14 +39,14 @@ public class IntellijModulesListParser {
   private static Logger LOG = Logger.get(IntellijModulesListParser.class);
 
   /**
-   * @param modulesFilePath an absolute path to the modules file to parse
+   * @param modulesFile modules.xml input stream
    * @return A list of module entries as specified by the modules.xml file
    * @throws IOException
    */
-  public ImmutableSet<ModuleIndexEntry> getAllModules(Path modulesFilePath) throws IOException {
+  public ImmutableSet<ModuleIndexEntry> getAllModules(InputStream modulesFile) throws IOException {
     final Document doc;
     try {
-      doc = XmlDomParser.parse(modulesFilePath);
+      doc = XmlDomParser.parse(modulesFile);
     } catch (SAXException e) {
       LOG.error("Cannot read modules.xml file", e);
       throw new HumanReadableException(

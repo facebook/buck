@@ -30,12 +30,17 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.AbstractFakeClock;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import org.junit.Test;
 
 public class IjProjectWriterTest {
@@ -45,15 +50,16 @@ public class IjProjectWriterTest {
   private final Path PROJECT_ROOT = Paths.get("projectRoot");
   private final Path MODULES_XML = PROJECT_ROOT.resolve(".idea/modules.xml");
   private final Path WORKSPACE_XML = PROJECT_ROOT.resolve(".idea/workspace.xml");
+  private final Path TARGET_MODULES_JSON = PROJECT_ROOT.resolve(".idea/target-modules.json");
 
   @Test
   public void testModuleChangeOverwrite() throws IOException {
     FakeDynamicClock fakeClock = new FakeDynamicClock(TIMESTAMP_A);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(fakeClock);
-    write(filesystem, filesystem, moduleGraph1());
+    writer(filesystem, filesystem, moduleGraph1()).write();
     assertEquals(TIMESTAMP_A, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
     fakeClock.currentTime = TIMESTAMP_B;
-    write(filesystem, filesystem, moduleGraph2());
+    writer(filesystem, filesystem, moduleGraph2()).write();
     assertEquals(TIMESTAMP_B, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
   }
 
@@ -61,10 +67,10 @@ public class IjProjectWriterTest {
   public void testNoModuleChangeNoOverwrite() throws IOException {
     FakeDynamicClock fakeClock = new FakeDynamicClock(TIMESTAMP_A);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(fakeClock);
-    write(filesystem, filesystem, moduleGraph1());
+    writer(filesystem, filesystem, moduleGraph1()).write();
     assertEquals(TIMESTAMP_A, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
     fakeClock.currentTime = TIMESTAMP_B;
-    write(filesystem, filesystem, moduleGraph1());
+    writer(filesystem, filesystem, moduleGraph1()).write();
     assertEquals(TIMESTAMP_A, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
   }
 
@@ -73,11 +79,40 @@ public class IjProjectWriterTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path tmp = Files.createTempDirectory("IjProjectWriterTest");
     FakeProjectFilesystem outFilesystem = new FakeProjectFilesystem(tmp);
-    write(filesystem, outFilesystem, moduleGraph1());
+    writer(filesystem, outFilesystem, moduleGraph1()).write();
     assertFalse(filesystem.exists(MODULES_XML));
     assertFalse(filesystem.exists(WORKSPACE_XML));
     assertTrue(outFilesystem.exists(MODULES_XML));
     assertTrue(outFilesystem.exists(WORKSPACE_XML));
+  }
+
+  private <T> T readJson(ProjectFilesystem filesystem, Path path, TypeReference<T> typeReference)
+      throws IOException {
+    JsonParser parser = ObjectMappers.createParser(filesystem.newFileInputStream(path));
+    return parser.readValueAs(typeReference);
+  }
+
+  @Test
+  public void testTargetModuleMap() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    writer(filesystem, filesystem, moduleGraph1()).write();
+    Map<String, String> targetModuleMap =
+        readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
+    assertEquals(
+        targetModuleMap,
+        ImmutableMap.of(
+            "//java/com/example/base:base", "java_com_example_base",
+            "//third_party/guava:guava", "third_party_guava"));
+
+    writer(filesystem, filesystem, moduleGraph2()).update();
+    targetModuleMap =
+        readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
+    assertEquals(
+        targetModuleMap,
+        ImmutableMap.of(
+            "//java/com/example/base:base", "java_com_example_base",
+            "//java/com/example/base2:base2", "java_com_example_base2",
+            "//third_party/guava:guava", "third_party_guava"));
   }
 
   private IjModuleGraph moduleGraph1() {
@@ -100,23 +135,20 @@ public class IjProjectWriterTest {
   private IjModuleGraph moduleGraph2() {
     TargetNode<?> baseTargetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance("//java/com/example/base:base"))
+                BuildTargetFactory.newInstance("//java/com/example/base2:base2"))
             .addSrc(Paths.get("java/com/example/base/Base.java"))
             .build();
 
     return IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode));
   }
 
-  private void write(
-      ProjectFilesystem filesystem, ProjectFilesystem outFilesystem, IjModuleGraph moduleGraph)
-      throws IOException {
+  private IjProjectWriter writer(
+      ProjectFilesystem filesystem, ProjectFilesystem outFilesystem, IjModuleGraph moduleGraph) {
     IjProjectTemplateDataPreparer dataPreparer = dataPreparer(filesystem, moduleGraph);
     IntellijModulesListParser parser = new IntellijModulesListParser();
     IjProjectConfig config = projectConfig();
     IJProjectCleaner cleaner = new IJProjectCleaner(filesystem);
-    IjProjectWriter writer =
-        new IjProjectWriter(dataPreparer, config, filesystem, parser, cleaner, outFilesystem);
-    writer.write();
+    return new IjProjectWriter(dataPreparer, config, filesystem, parser, cleaner, outFilesystem);
   }
 
   private IjProjectTemplateDataPreparer dataPreparer(
@@ -130,7 +162,10 @@ public class IjProjectWriterTest {
 
   private IjProjectConfig projectConfig() {
     return IjProjectBuckConfig.create(
-        FakeBuckConfig.builder().build(),
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of("intellij", ImmutableMap.of("generate_target_module_map", "true")))
+            .build(),
         null,
         null,
         PROJECT_ROOT.toString(),

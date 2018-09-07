@@ -132,6 +132,9 @@ public class IjProjectBuckConfig {
         .setGeneratingAndroidManifestEnabled(
             buckConfig.getBooleanValue(
                 INTELLIJ_BUCK_CONFIG_SECTION, "generate_android_manifest", false))
+        .setGeneratingTargetModuleMapEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate_target_module_map", false))
         .setOutputUrl(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "project_compiler_output_url"))
         .setExtraCompilerOutputModulesPath(

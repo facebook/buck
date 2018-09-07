@@ -18,6 +18,7 @@ package com.facebook.buck.features.project.intellij;
 
 import static com.facebook.buck.features.project.intellij.IjProjectPaths.getUrl;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.features.project.intellij.model.ContentRoot;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
@@ -25,6 +26,9 @@ import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -33,6 +37,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.stringtemplate.v4.ST;
@@ -78,6 +84,28 @@ public class IjProjectWriter {
     }
     writeModulesIndex(projectDataPreparer.getModuleIndexEntries());
     writeWorkspace();
+
+    if (projectConfig.isGeneratingTargetModuleMapEnabled()) {
+      updateTargetModuleMap();
+    }
+  }
+
+  private void updateTargetModuleMap() throws IOException {
+    Path targetModulesPath = getIdeaConfigDir().resolve("target-modules.json");
+    Map<String, String> targetModules =
+        outFilesystem.exists(targetModulesPath)
+            ? ObjectMappers.createParser(outFilesystem.newFileInputStream(targetModulesPath))
+                .readValueAs(new TypeReference<Map<String, String>>() {})
+            : new HashMap<>();
+    for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
+      for (BuildTarget target : module.getTargets()) {
+        targetModules.put(target.getFullyQualifiedName(), module.getName());
+      }
+    }
+    try (JsonGenerator generator =
+        ObjectMappers.createGenerator(outFilesystem.newFileOutputStream(targetModulesPath))) {
+      generator.writeObject(targetModules);
+    }
   }
 
   private boolean writeModule(IjModule module, ImmutableList<ContentRoot> contentRoots)
@@ -228,12 +256,17 @@ public class IjProjectWriter {
       writeLibrary(library);
     }
     updateModulesIndex(modulesEdited.build());
+
+    if (projectConfig.isGeneratingTargetModuleMapEnabled()) {
+      updateTargetModuleMap();
+    }
   }
 
   /** Update the modules.xml file with any new modules from the given set */
   private void updateModulesIndex(ImmutableSet<IjModule> modulesEdited) throws IOException {
-    Path path = projectFilesystem.resolve(getIdeaConfigDir().resolve("modules.xml"));
-    final Set<ModuleIndexEntry> existingModules = modulesParser.getAllModules(path);
+    final Set<ModuleIndexEntry> existingModules =
+        modulesParser.getAllModules(
+            projectFilesystem.newFileInputStream(getIdeaConfigDir().resolve("modules.xml")));
     final Set<Path> existingModuleFilepaths =
         existingModules
             .stream()
