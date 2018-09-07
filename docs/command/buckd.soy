@@ -3,66 +3,104 @@
 /***/
 {template .soyweb}
   {call buck.page}
-    {param title: 'buckd' /}
+    {param title: 'Buck Daemon (buckd)' /}
     {param navid: 'command_buckd' /}
     {param description}
       A command that starts a buck daemon process that the client will talk to.
     {/param}
     {param content}
 
-Starts a buck daemon process
+<p>
+The first time that you run a Buck command, Buck starts a daemon process
+for the current project in the current working directory. For subsequent
+commands, Buck checks for the running daemon process and if found,
+uses the daemon to execute the command. Using the Buck daemon can save
+significant time as it avoids the overhead of starting a Java virtual
+machine (JVM) and loading the Buck class files. It also enables Buck to
+take advantage of caches for build-file parsing, and for Buck's target
+graph and action graph.
+</p>
 
-<pre>buckd</pre>
+<p>
+The Buck daemon writes its port, process id, and log output to files in
+a <code>.buckd</code>{sp} directory that the daemon creates in the
+project root directory.  Subsequent Buck commands use these files to 
+find the daemon process, and a new Buck daemon process will use
+them to kill any already-existing daemon process.
+</p>
 
 <p>
-This command starts a Buck daemon process for the current project in
-the current working directory. When running other commands, Buck first
-checks for a running daemon process and if found uses that daemon to
-execute the command. Using a Buck daemon can save significant
-amounts of time as it avoids the overhead of starting a Java virtual
-machine, loading the buck class files and parsing the build files for
-each command.
+It is safe to run multiple Buck daemons started from different project
+directories as they do not interfere with each other, 
+making <code>buckd</code> suitable for use in shared-server environments 
+or where several projects are being worked on concurrently.
 </p>
+
 <p>
-The buck daemon writes its port, process id and log output to a <code>.buckd</code>{sp}
-directory it creates inside the project root directory. Subsequent
-buck commands use these files to find the daemon process and the buckd command
-uses them to kill any existing daemon process for the project when it is run.
+While it runs, the Buck daemon process monitors the project's file
+system and invalidates cached build rules if any build input files
+change. The Buck daemon excludes from monitoring any subtrees of the 
+project file system that are specified in
+the {call buck.concept_link_heading}{param page : 'buckconfig' /}{param heading : 'project' /}{param name : 'project.ignore' /}{/call} setting
+of <code>.buckconfig</code>. By adding project-specific output 
+directories and source-control directories, such as<code>.git</code>, to 
+this setting, you can significantly improve performance; this might be necessary
+to avoid file-change overflows when using Buck daemons to build large
+projects.
 </p>
+
 <p>
-It is safe to run several buck daemons started from different project
-directories and they will not interfere with each other, making buckd
-suitable for use in shared server environments or where several
-projects are being worked on concurrently.
+By default, Buck daemon processes ignore changes to temporary files
+created by text editors.
 </p>
+
+<h4>Killing or disabling the Buck daemon</h4>
 <p>
-Buck daemon processes monitor the project file system while running and
-invalidate cached build rules if any non source files are changed. Subtrees
-within the project file system that are specified via the "ignore" setting of the
-"project" section of .buckconfig are excluded from monitoring. Adding
-project-specific output directories and source control directories like .git
-can significantly improve performance and may be necessary to avoid file
-change overflows when buck daemons are being used to build very large projects.
-</p>
-<p>
-By default, Buck daemon processes ignore changes to editor temporary files.
-</p>
-<p>
-A buckd process will be killed if:
+The Buck daemon process is killed if
 <ul>
 <li>
-  The buck config (e.g. the contents of .buckconfig) changes unless that change is to a config option whitelisted
-  in <a href="https://github.com/facebook/buck/blob/master/src/com/facebook/buck/cli/BuckConfig.java#L100">this file</a>
+  the Buck configuration changes&mdash;unless that change is to a setting that is whitelisted 
+  by <code>IGNORE_FIELDS_FOR_DAEMON_RESTART</code> in <a href="https://github.com/facebook/buck/blob/master/src/com/facebook/buck/core/config/BuckConfig.java"><code>BuckConfig.java</code></a>.
 </li>
-<li><code>buck clean</code> is run</li>
-<li>The daemon has been idle for 24 hours</li>
-<li>The .buckd directory in the workspace is deleted</li>
+<li>the <code>buck clean</code> command is run.</li>
+<li>the <code>.buckd</code> directory in the project root directory is deleted.</li>
+<li>the daemon has been idle for 24 hours.</li>
 </ul>
-The buckd process can also be explicitly killed by running <code>buck kill</code>.
 </p>
+
 <p>
-To disable the daemon from starting, set the environment variable
-{sp}<code>NO_BUCKD</code> to <code>1</code>.
+You can also kill the Buck daemon explicitly by running <code>buck kill</code> in 
+the directory tree for your project. Note that if&mdash;for some
+reason&mdash;multiple instances of the daemon are running, 
+the <code>buck kill</code> command kills only one of them.
+</p>
+
+<p>
+<em>If the daemon is killed, you might experience a significant delay
+the next time that you invoke a Buck command as the daemon
+restarts.</em>
+</p>
+
+<p>
+To disable the daemon and prevent it from starting, set the environment 
+variable {sp}<code>NO_BUCKD</code> to <code>1</code>. For example:
+</p>
+
+<p>
+<pre>
+{literal}
+NO_BUCKD=1
+buck build project_name
+{/literal}
+</pre>
+</p>
+
+
+<h4>Note about Buck configuration changes</h4>
+<p>
+A Buck configuration change that kills the Buck daemon can be caused <em>not only by</em> explicitly 
+changing a setting in <code>.buckconfig</code> or <code>.buckconfig.local</code>, but also by using 
+the <code>--config</code>, <code>--flagfile</code>, or <code>--config-file</code> {call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: ' command-line parameters' /}{/call}. 
 </p>
 
     {/param}  // content
