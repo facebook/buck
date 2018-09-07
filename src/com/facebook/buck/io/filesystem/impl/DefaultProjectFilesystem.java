@@ -55,6 +55,7 @@ import java.io.Writer;
 import java.nio.channels.Channels;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
+import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystemLoopException;
@@ -459,7 +460,12 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   public void walkFileTree(
       Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor, boolean skipIgnored)
       throws IOException {
-    new FileTreeWalker(root, options, fileVisitor, skipIgnored).walk();
+    new FileTreeWalker(
+            root,
+            options,
+            fileVisitor,
+            skipIgnored ? input -> !isIgnored(relativize(input)) : input -> true)
+        .walk();
   }
 
   @Override
@@ -1041,28 +1047,23 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     private final FileVisitor<Path> visitor;
     private final Path root;
     private final boolean followLinks;
-    private final boolean skipIgnored;
     private final ArrayDeque<DirWalkState> state;
+    private final Filter<? super Path> ignoreFilter;
 
     FileTreeWalker(
         Path root,
         Set<FileVisitOption> options,
         FileVisitor<Path> pathFileVisitor,
-        boolean skipIgnored) {
+        DirectoryStream.Filter<? super Path> ignoreFilter) {
       this.followLinks = options.contains(FileVisitOption.FOLLOW_LINKS);
       this.visitor = pathFileVisitor;
       this.root = root;
       this.state = new ArrayDeque<>();
-      this.skipIgnored = skipIgnored;
+      this.ignoreFilter = ignoreFilter;
     }
 
     private ImmutableList<Path> getContents(Path root) throws IOException {
-      DirectoryStream.Filter<? super Path> skipIgnoredFilter =
-          input -> !isIgnored(relativize(input));
-      DirectoryStream.Filter<? super Path> doNotSkipFilter = input -> true;
-      DirectoryStream.Filter<? super Path> filter =
-          skipIgnored ? skipIgnoredFilter : doNotSkipFilter;
-      try (DirectoryStream<Path> stream = Files.newDirectoryStream(root, filter)) {
+      try (DirectoryStream<Path> stream = Files.newDirectoryStream(root, ignoreFilter)) {
         return FluentIterable.from(stream).toSortedList(Comparator.naturalOrder());
       }
     }
