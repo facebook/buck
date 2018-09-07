@@ -87,7 +87,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
     String buckdDirProperty = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
     if (!Strings.isNullOrEmpty(buckdDirProperty)) {
-      builder.add(new PathOrGlobMatcher(Paths.get(buckdDirProperty)));
+      addPathMatcherRelativeToRepo(root, builder, Paths.get(buckdDirProperty));
     }
 
     Path cacheDir =
