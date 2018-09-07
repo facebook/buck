@@ -1526,7 +1526,7 @@ public class AppleBundleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_cxx_library", tmp);
 
     workspace.setUp();
-    BuildTarget target = workspace.newBuildTarget("//:app_bundle#iphoneos-armv7");
+    BuildTarget target = workspace.newBuildTarget("//app:app_bundle#iphonesimulator-x86_64");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
   }
 }
