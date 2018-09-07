@@ -415,7 +415,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
         skipIgnored ? input -> !isIgnored(relativize(input)) : input -> true);
   }
 
-  private void walkRelativeFileTree(
+  void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor,
@@ -426,7 +426,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
         rootPath, visitOptions, fileVisitor, ignoreFilter, path -> relativize(path));
   }
 
-  private void walkFileTreeWithPathMapping(
+  void walkFileTreeWithPathMapping(
       Path root,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor,
@@ -490,7 +490,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
         skipIgnored ? input -> !isIgnored(relativize(input)) : input -> true);
   }
 
-  private void walkFileTree(
+  void walkFileTree(
       Path root,
       Set<FileVisitOption> options,
       FileVisitor<Path> fileVisitor,
