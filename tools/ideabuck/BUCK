@@ -60,6 +60,9 @@ java_library(
     ),
     provided_deps = [
         "//third-party/java/intellij:intellij-plugin-sdk",
+        # IntelliJ will provide these, too...
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
     ],
     source = "1.8",
     target = "1.8",
@@ -69,14 +72,12 @@ java_library(
         "//src/com/facebook/buck/event/external:external_lib",
         "//third-party/java/android:ddmlib",
         "//third-party/java/gson:gson",
-        "//third-party/java/guava:guava",
         "//third-party/java/ini4j:ini4j",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jackson:jackson-datatype-guava",
         "//third-party/java/jackson:jackson-mrbean",
         "//third-party/java/jetty:jetty",
-        "//third-party/java/jsr:jsr305",
     ],
 )
 
