@@ -60,6 +60,7 @@
     R_PARENTHESES = ')'
     R_BRACKET = ']'
     R_CURLY = '}'
+    PERCENT = '%'
 
     NUMBER = 'regexp:-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d*)?'
     IDENTIFIER = 'regexp:[:jletter:] [:jletterdigit:]*'
@@ -77,9 +78,9 @@ property ::= property_lvalue '=' expression
 private operator ::= PLUS
 expression ::= (value operator)* [value | IDENTIFIER ]
 
-private string ::= DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING
+private string ::= (DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING) (PERCENT value) ?
 
-value ::= NONE | BOOLEAN | NUMBER | MACROS | string | value_array | list | object | glob_block | function_call
+value ::= NONE | BOOLEAN | NUMBER | IDENTIFIER | MACROS | string | value_array | list | object | glob_block | function_call
 
 list ::= '(' list_elements ')'
 list_elements ::= (value ',')* [value [',']]

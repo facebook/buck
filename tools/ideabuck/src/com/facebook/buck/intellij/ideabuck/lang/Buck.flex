@@ -69,6 +69,7 @@ IDENTIFIER=[:jletter:] [:jletterdigit:]*
   "}"                         { return R_CURLY; }
   "{"                         { return L_CURLY; }
   ":"                         { return COLUMN; }
+  "%"                         { return PERCENT; }
 
   {BOOLEAN}                   { return BOOLEAN; }
   {LINE_COMMENT}              { return LINE_COMMENT; }
