@@ -400,12 +400,38 @@ $ buck targets --resolve-alias app#src_jar
 {call buckconfig.entry}
   {param section: 'apple' /}
   {param name: 'xctool_default_destination_specifier' /}
-  {param example_value: 'platform=iOS Simulator' /}
   {param description}
-    This setting is passed directly to <code>xctool</code>, and then to <code>xcodebuild</code> as
-    the <code>-destination</code> argument.  See the
-    {sp}<a href="https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/xcodebuild.1.html">
-    man page</a> for the proper syntax.
+  <p>
+  This setting is passed directly to <code>xctool</code>, and then to
+  <code>xcodebuild</code> as the <code>-destination</code> argument.
+  </p>
+
+<p>
+<pre class="prettyprint lang-ini">
+{literal}
+[apple]
+  xctool_default_destination_specifier = platform=iOS Simulator
+{/literal}
+</pre>
+</p>
+
+  <p>
+  For more detail, see the man page for <code>xcodebuild</code>. To
+  access the man page, type the following from your Terminal prompt:
+  </p>
+
+<p>
+<pre>
+{literal}
+man xcodebuild
+{/literal}
+</pre>
+</p>
+
+<p>
+and then use <code>/</code> to search for the string <code>Destinations</code>. 
+</p>
+
   {/param}
 {/call}
 
