@@ -82,6 +82,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.jar.JarFile;
@@ -420,8 +421,19 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       FileVisitor<Path> fileVisitor,
       DirectoryStream.Filter<? super Path> ignoreFilter)
       throws IOException {
+    Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
+    walkFileTreeWithPathMapping(
+        rootPath, visitOptions, fileVisitor, ignoreFilter, path -> relativize(path));
+  }
 
-    FileVisitor<Path> relativizingVisitor =
+  private void walkFileTreeWithPathMapping(
+      Path root,
+      EnumSet<FileVisitOption> visitOptions,
+      FileVisitor<Path> fileVisitor,
+      DirectoryStream.Filter<? super Path> ignoreFilter,
+      Function<Path, Path> pathMapper)
+      throws IOException {
+    FileVisitor<Path> pathMappingVisitor =
         new FileVisitor<Path>() {
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
@@ -433,27 +445,26 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
             if (EDEN_MAGIC_PATH_ELEMENT.equals(dir.getFileName())) {
               return FileVisitResult.SKIP_SUBTREE;
             }
-            return fileVisitor.preVisitDirectory(relativize(dir), attrs);
+            return fileVisitor.preVisitDirectory(pathMapper.apply(dir), attrs);
           }
 
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
               throws IOException {
-            return fileVisitor.visitFile(relativize(file), attrs);
+            return fileVisitor.visitFile(pathMapper.apply(file), attrs);
           }
 
           @Override
           public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-            return fileVisitor.visitFileFailed(relativize(file), exc);
+            return fileVisitor.visitFileFailed(pathMapper.apply(file), exc);
           }
 
           @Override
           public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-            return fileVisitor.postVisitDirectory(relativize(dir), exc);
+            return fileVisitor.postVisitDirectory(pathMapper.apply(dir), exc);
           }
         };
-    Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
-    walkFileTree(rootPath, visitOptions, relativizingVisitor, ignoreFilter);
+    walkFileTree(root, visitOptions, pathMappingVisitor, ignoreFilter);
   }
 
   /** Allows {@link Files#walkFileTree} to be faked in tests. */
