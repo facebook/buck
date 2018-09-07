@@ -459,7 +459,6 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   /** Allows {@link Files#walkFileTree} to be faked in tests. */
   @Override
   public void walkFileTree(Path root, FileVisitor<Path> fileVisitor) throws IOException {
-    root = getPathForRelativePath(root);
     walkFileTree(root, EnumSet.noneOf(FileVisitOption.class), fileVisitor);
   }
 
@@ -486,6 +485,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       FileVisitor<Path> fileVisitor,
       DirectoryStream.Filter<? super Path> ignoreFilter)
       throws IOException {
+    root = getPathForRelativePath(root);
     new FileTreeWalker(root, options, fileVisitor, ignoreFilter).walk();
   }
 
