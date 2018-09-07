@@ -407,6 +407,19 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       FileVisitor<Path> fileVisitor,
       boolean skipIgnored)
       throws IOException {
+    walkRelativeFileTree(
+        pathRelativeToProjectRoot,
+        visitOptions,
+        fileVisitor,
+        skipIgnored ? input -> !isIgnored(relativize(input)) : input -> true);
+  }
+
+  private void walkRelativeFileTree(
+      Path pathRelativeToProjectRoot,
+      EnumSet<FileVisitOption> visitOptions,
+      FileVisitor<Path> fileVisitor,
+      DirectoryStream.Filter<? super Path> ignoreFilter)
+      throws IOException {
 
     FileVisitor<Path> relativizingVisitor =
         new FileVisitor<Path>() {
@@ -440,7 +453,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
           }
         };
     Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
-    walkFileTree(rootPath, visitOptions, relativizingVisitor, skipIgnored);
+    walkFileTree(rootPath, visitOptions, relativizingVisitor, ignoreFilter);
   }
 
   /** Allows {@link Files#walkFileTree} to be faked in tests. */
