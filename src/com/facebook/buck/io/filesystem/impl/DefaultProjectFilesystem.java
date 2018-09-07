@@ -460,12 +460,20 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   public void walkFileTree(
       Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor, boolean skipIgnored)
       throws IOException {
-    new FileTreeWalker(
-            root,
-            options,
-            fileVisitor,
-            skipIgnored ? input -> !isIgnored(relativize(input)) : input -> true)
-        .walk();
+    walkFileTree(
+        root,
+        options,
+        fileVisitor,
+        skipIgnored ? input -> !isIgnored(relativize(input)) : input -> true);
+  }
+
+  private void walkFileTree(
+      Path root,
+      Set<FileVisitOption> options,
+      FileVisitor<Path> fileVisitor,
+      DirectoryStream.Filter<? super Path> ignoreFilter)
+      throws IOException {
+    new FileTreeWalker(root, options, fileVisitor, ignoreFilter).walk();
   }
 
   @Override
