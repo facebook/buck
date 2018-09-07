@@ -32,6 +32,7 @@ public class RDotTxtEntryOrderingTest {
   private RDotTxtEntry entry1;
   private RDotTxtEntry entry2;
   private int result;
+  private int resultWithValueOrdering;
 
   @Parameterized.Parameters
   public static Collection<Object[]> testData() {
@@ -46,6 +47,7 @@ public class RDotTxtEntryOrderingTest {
                 "ActionBar_contentInsetEnd__android",
                 "0",
                 "ActionBar"),
+            -1,
             -1
           },
           {
@@ -55,17 +57,20 @@ public class RDotTxtEntryOrderingTest {
                 RType.STYLEABLE,
                 "AnchorLayout_Layout",
                 "{ 0x7f020002,0x7f020003 }"),
+            -1,
             -1
           },
           {
             new RDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "AnchorLayout", "{ 0x7f020001 }"),
             new RDotTxtEntry(
                 IdType.INT, RType.STYLEABLE, "AnchorLayout_attr1", "0", "AnchorLayout"),
+            -1,
             -1
           },
           {
             new RDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "AnchorLayout", "{ 0x7f020001 }"),
             new RDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "BlahLayout", "{ 0x7f020002 }"),
+            -1,
             -1
           },
           {
@@ -73,6 +78,7 @@ public class RDotTxtEntryOrderingTest {
                 IdType.INT_ARRAY, RType.STYLEABLE, "AnchorLayout_Layout", "{ 0x7f020001 }"),
             new RDotTxtEntry(
                 IdType.INT_ARRAY, RType.STYLEABLE, "BlahLayout_Layout", "{ 0x7f020002 }"),
+            -1,
             -1
           },
           {
@@ -80,6 +86,7 @@ public class RDotTxtEntryOrderingTest {
                 IdType.INT, RType.STYLEABLE, "AnchorLayout_attr1", "0", "AnchorLayout"),
             new RDotTxtEntry(
                 IdType.INT_ARRAY, RType.STYLEABLE, "BlahLayout_Layout", "{ 0x7f020002 }"),
+            -1,
             -1
           },
           {
@@ -90,6 +97,7 @@ public class RDotTxtEntryOrderingTest {
                 RType.STYLEABLE,
                 "AnchorLayout_Layout",
                 "{ 0x7f020002,0x7f020003 }"),
+            -1,
             -1
           },
           {
@@ -99,18 +107,21 @@ public class RDotTxtEntryOrderingTest {
                 RType.STYLEABLE,
                 "AnchorLayout_Layout",
                 "{ 0x7f020002,0x7f020003 }"),
+            -1,
             -1
           },
           {
             new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "BlahLayout_attr1", "0", "BlahLayout"),
             new RDotTxtEntry(
                 IdType.INT_ARRAY, RType.STYLEABLE, "AnchorLayout_Layout", "{ 0x7f020002 }"),
+            1,
             1
           },
           {
             new RDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "BlahLayout", "{ 0x7f020001 }"),
             new RDotTxtEntry(
                 IdType.INT_ARRAY, RType.STYLEABLE, "AnchorLayout_Layout", "{ 0x7f020002 }"),
+            1,
             1
           },
           {
@@ -122,19 +133,33 @@ public class RDotTxtEntryOrderingTest {
                 "AlertDialog_buttonPanelSideLayout",
                 "1",
                 "AlertDialog"),
+            -1,
+            -1
+          },
+          {
+            new RDotTxtEntry(IdType.INT, RType.COLOR, "DuplicateColor", "0x7f020001"),
+            new RDotTxtEntry(IdType.INT, RType.COLOR, "DuplicateColor", "0x80020001"),
+            0,
             -1
           },
         });
   }
 
-  public RDotTxtEntryOrderingTest(RDotTxtEntry entry1, RDotTxtEntry entry2, int result) {
+  public RDotTxtEntryOrderingTest(
+      RDotTxtEntry entry1, RDotTxtEntry entry2, int result, int resultWithValueOrdering) {
     this.entry1 = entry1;
     this.entry2 = entry2;
     this.result = result;
+    this.resultWithValueOrdering = resultWithValueOrdering;
   }
 
   @Test
   public void testOrdering() {
     assertEquals(result, entry1.compareTo(entry2));
+  }
+
+  @Test
+  public void testOrderingWithValues() {
+    assertEquals(resultWithValueOrdering, entry1.compareWithValue(entry2));
   }
 }

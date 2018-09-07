@@ -227,6 +227,7 @@ public class MergeAndroidResourcesStep implements Step {
                             throw new RuntimeException(e);
                           }
                         })
+                    .sorted((left, right) -> left.compareWithValue(right))
                     .distinct()
                     .collect(ImmutableMap.toImmutableMap(input -> input, b -> b.idValue)));
       }

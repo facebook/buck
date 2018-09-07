@@ -276,7 +276,21 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
             .compare(this.type, that.type)
             .compare(this.parent, that.parent)
             .compare(this.name, that.name);
+    return comparisonChain.result();
+  }
 
+  /** compare entries including the id value so that they can be fully sorted */
+  public int compareWithValue(RDotTxtEntry that) {
+    if (this == that) {
+      return 0;
+    }
+
+    ComparisonChain comparisonChain =
+        ComparisonChain.start()
+            .compare(this.type, that.type)
+            .compare(this.parent, that.parent)
+            .compare(this.name, that.name)
+            .compare(this.idValue, that.idValue);
     return comparisonChain.result();
   }
 
