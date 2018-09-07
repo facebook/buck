@@ -34,7 +34,7 @@
     A <strong><em>{call buck.concept_link}{param name: 'build file' /}{param page: 'build_file' /}{/call}</em></strong> defines 
     one or more build rules. In Buck, build files are typically named <code>BUCK</code>. 
     A <code>BUCK</code> file is analogous to the <code>Makefile</code> used by the Make utility. 
-    In your project, you will usually have a separate a <code>BUCK</code> file for each buildable 
+    In your project, you will usually have a separate <code>BUCK</code> file for each buildable 
     unit of software&mdash;such as a binary or library. For large projects, you could have hundreds 
     of <code>BUCK</code> files.
   </li>
@@ -130,7 +130,7 @@
   Buck requires the graph to be acyclic.  When building the output of a build rule, 
   all of the rule's transitive dependencies are built first.  This means
   that the graph is built in a "bottom-up" fashion. A build rule knows only which rules it depends on, 
-  not which rules depends on it. This makes the graph easier to reason
+  not which rules depend on it. This makes the graph easier to reason
   about and enables Buck to identify independent subgraphs that can be built in parallel. 
   It also enables Buck to determine the minimal set of build targets that need to be rebuilt.
 </p>
