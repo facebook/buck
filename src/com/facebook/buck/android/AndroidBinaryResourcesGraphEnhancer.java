@@ -159,7 +159,6 @@ class AndroidBinaryResourcesGraphEnhancer {
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractAndroidBinaryResourcesGraphEnhancementResult {
-    SourcePath getPathToRDotTxt();
 
     Optional<SourcePath> getRDotJavaDir();
 
@@ -167,7 +166,7 @@ class AndroidBinaryResourcesGraphEnhancer {
 
     SourcePath getAndroidManifestXml();
 
-    SourcePath getAaptGeneratedProguardConfigFile();
+    ImmutableList<SourcePath> getAaptGeneratedProguardConfigFiles();
 
     Optional<PackageStringAssets> getPackageStringAssets();
 
@@ -294,10 +293,81 @@ class AndroidBinaryResourcesGraphEnhancer {
         throw new RuntimeException("Unexpected aaptMode: " + aaptMode);
     }
 
+    Optional<PackageStringAssets> packageStringAssets = Optional.empty();
+    if (resourceCompressionMode.isStoreStringsAsAssets()) {
+      // TODO(cjhopman): we should be able to support this in exo-for-resources
+      if (exopackageForResources) {
+        throw new HumanReadableException(
+            "exopackage_modes and resource_compression_mode for android_binary %s are "
+                + "incompatible. Either remove %s from exopackage_modes or disable storing strings "
+                + "as assets.",
+            buildTarget, ExopackageMode.RESOURCES);
+      }
+      packageStringAssets =
+          Optional.of(
+              createPackageStringAssets(
+                  resourceRules,
+                  rulesWithResourceDirectories,
+                  filteredResourcesProvider,
+                  aaptOutputInfo));
+      graphBuilder.addToIndex(packageStringAssets.get());
+    }
+
     AndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder =
         AndroidBinaryResourcesGraphEnhancementResult.builder();
 
+    resultBuilder.setPackageStringAssets(packageStringAssets);
+
+    SourcePath pathToRDotTxt;
+    ImmutableList<ExopackagePathAndHash> exoResources;
+    if (exopackageForResources) {
+      MergeAssets mergeAssets =
+          createMergeAssetsRule(
+              packageableCollection.getAssetsDirectories().values(), Optional.empty());
+      SplitResources splitResources =
+          createSplitResourcesRule(
+              aaptOutputInfo.getPrimaryResourcesApkPath(), aaptOutputInfo.getPathToRDotTxt());
+      MergeThirdPartyJarResources mergeThirdPartyJarResource =
+          createMergeThirdPartyJarResources(
+              packageableCollection.getPathsToThirdPartyJars().values());
+
+      graphBuilder.addToIndex(mergeAssets);
+      graphBuilder.addToIndex(splitResources);
+      graphBuilder.addToIndex(mergeThirdPartyJarResource);
+
+      pathToRDotTxt = splitResources.getPathToRDotTxt();
+      resultBuilder.setPrimaryResourcesApkPath(splitResources.getPathToPrimaryResources());
+
+      exoResources =
+          ImmutableList.of(
+              withFileHashCodeRule(splitResources.getPathToExoResources(), "exo_resources"),
+              withFileHashCodeRule(mergeAssets.getSourcePathToOutput(), "merged_assets"),
+              withFileHashCodeRule(
+                  mergeThirdPartyJarResource.getSourcePathToOutput(), "third_party_jar_resources"));
+
+      graphBuilder.addToIndex(splitResources);
+      graphBuilder.addToIndex(mergeAssets);
+    } else {
+      MergeAssets mergeAssets =
+          createMergeAssetsRule(
+              packageableCollection.getAssetsDirectories().values(),
+              Optional.of(aaptOutputInfo.getPrimaryResourcesApkPath()));
+      graphBuilder.addToIndex(mergeAssets);
+
+      pathToRDotTxt = aaptOutputInfo.getPathToRDotTxt();
+      resultBuilder.setPrimaryResourcesApkPath(mergeAssets.getSourcePathToOutput());
+      if (packageStringAssets.isPresent()) {
+        resultBuilder.addPrimaryApkAssetZips(
+            packageStringAssets.get().getSourcePathToStringAssetsZip());
+      }
+      exoResources = ImmutableList.of();
+    }
+    resultBuilder.setExoResources(exoResources);
+    resultBuilder.addAaptGeneratedProguardConfigFiles(
+        aaptOutputInfo.getAaptGeneratedProguardConfigFile());
+
     ImmutableSet.Builder<SourcePath> pathToRDotTxtFiles = ImmutableSet.builder();
+    pathToRDotTxtFiles.add(pathToRDotTxt);
 
     int packageIdOffset = 1;
     if (moduleManifestSkeleton.isPresent()) {
@@ -322,6 +392,8 @@ class AndroidBinaryResourcesGraphEnhancer {
             ruleFinder.filterBuildRuleInputs(moduleResourceDetails.getResourceDirectories());
 
         FilteredResourcesProvider moduleFilteredResourcesProvider;
+
+        AaptOutputInfo moduleAaptOutputInfo;
 
         if (needsResourceFiltering) {
           ResourcesFilter resourcesFilter =
@@ -372,10 +444,7 @@ class AndroidBinaryResourcesGraphEnhancer {
                       false,
                       ManifestEntries.empty());
               graphBuilder.addToIndex(aaptModule);
-              resultBuilder.putModuleResourceApkPaths(
-                  module, aaptModule.getAaptOutputInfo().getPrimaryResourcesApkPath());
-              apkResourceDependencyList.add(
-                  aaptModule.getAaptOutputInfo().getPrimaryResourcesApkPath());
+              moduleAaptOutputInfo = aaptModule.getAaptOutputInfo();
             }
             break;
 
@@ -393,87 +462,21 @@ class AndroidBinaryResourcesGraphEnhancer {
                       ImmutableList.copyOf(apkResourceDependencyList),
                       useProtoFormat);
               graphBuilder.addToIndex(aapt2ModuleLink);
-              SourcePath moduleResourceApk =
-                  aapt2ModuleLink.getAaptOutputInfo().getPrimaryResourcesApkPath();
-              pathToRDotTxtFiles.add(aapt2ModuleLink.getAaptOutputInfo().getPathToRDotTxt());
-              resultBuilder.putModuleResourceApkPaths(module, moduleResourceApk);
-              apkResourceDependencyList.add(moduleResourceApk);
+              moduleAaptOutputInfo = aapt2ModuleLink.getAaptOutputInfo();
             }
             break;
 
           default:
             throw new RuntimeException("Unexpected aaptMode: " + aaptMode);
         }
+        SourcePath moduleResourceApk = moduleAaptOutputInfo.getPrimaryResourcesApkPath();
+        resultBuilder.putModuleResourceApkPaths(module, moduleResourceApk);
+        resultBuilder.addAaptGeneratedProguardConfigFiles(
+            moduleAaptOutputInfo.getAaptGeneratedProguardConfigFile());
+        pathToRDotTxtFiles.add(moduleAaptOutputInfo.getPathToRDotTxt());
+        apkResourceDependencyList.add(moduleResourceApk);
       }
     }
-
-    Optional<PackageStringAssets> packageStringAssets = Optional.empty();
-    if (resourceCompressionMode.isStoreStringsAsAssets()) {
-      // TODO(cjhopman): we should be able to support this in exo-for-resources
-      if (exopackageForResources) {
-        throw new HumanReadableException(
-            "exopackage_modes and resource_compression_mode for android_binary %s are "
-                + "incompatible. Either remove %s from exopackage_modes or disable storing strings "
-                + "as assets.",
-            buildTarget, ExopackageMode.RESOURCES);
-      }
-      packageStringAssets =
-          Optional.of(
-              createPackageStringAssets(
-                  resourceRules,
-                  rulesWithResourceDirectories,
-                  filteredResourcesProvider,
-                  aaptOutputInfo));
-      graphBuilder.addToIndex(packageStringAssets.get());
-    }
-    resultBuilder.setPackageStringAssets(packageStringAssets);
-
-    SourcePath pathToRDotTxt;
-    ImmutableList<ExopackagePathAndHash> exoResources;
-    if (exopackageForResources) {
-      MergeAssets mergeAssets =
-          createMergeAssetsRule(
-              packageableCollection.getAssetsDirectories().values(), Optional.empty());
-      SplitResources splitResources =
-          createSplitResourcesRule(
-              aaptOutputInfo.getPrimaryResourcesApkPath(), aaptOutputInfo.getPathToRDotTxt());
-      MergeThirdPartyJarResources mergeThirdPartyJarResource =
-          createMergeThirdPartyJarResources(
-              packageableCollection.getPathsToThirdPartyJars().values());
-
-      graphBuilder.addToIndex(mergeAssets);
-      graphBuilder.addToIndex(splitResources);
-      graphBuilder.addToIndex(mergeThirdPartyJarResource);
-
-      pathToRDotTxt = splitResources.getPathToRDotTxt();
-      resultBuilder.setPrimaryResourcesApkPath(splitResources.getPathToPrimaryResources());
-
-      exoResources =
-          ImmutableList.of(
-              withFileHashCodeRule(splitResources.getPathToExoResources(), "exo_resources"),
-              withFileHashCodeRule(mergeAssets.getSourcePathToOutput(), "merged_assets"),
-              withFileHashCodeRule(
-                  mergeThirdPartyJarResource.getSourcePathToOutput(), "third_party_jar_resources"));
-
-      graphBuilder.addToIndex(splitResources);
-      graphBuilder.addToIndex(mergeAssets);
-    } else {
-      MergeAssets mergeAssets =
-          createMergeAssetsRule(
-              packageableCollection.getAssetsDirectories().values(),
-              Optional.of(aaptOutputInfo.getPrimaryResourcesApkPath()));
-      graphBuilder.addToIndex(mergeAssets);
-
-      pathToRDotTxt = aaptOutputInfo.getPathToRDotTxt();
-      resultBuilder.setPrimaryResourcesApkPath(mergeAssets.getSourcePathToOutput());
-      if (packageStringAssets.isPresent()) {
-        resultBuilder.addPrimaryApkAssetZips(
-            packageStringAssets.get().getSourcePathToStringAssetsZip());
-      }
-      exoResources = ImmutableList.of();
-    }
-    resultBuilder.setExoResources(exoResources);
-    pathToRDotTxtFiles.add(pathToRDotTxt);
 
     Optional<GenerateRDotJava> generateRDotJava = Optional.empty();
     if (filteredResourcesProvider.hasResources()) {
@@ -512,9 +515,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     graphBuilder.addToIndex(manifestCopyRule);
 
     return resultBuilder
-        .setAaptGeneratedProguardConfigFile(aaptOutputInfo.getAaptGeneratedProguardConfigFile())
         .setAndroidManifestXml(manifestCopyRule.getSourcePathToOutput())
-        .setPathToRDotTxt(aaptOutputInfo.getPathToRDotTxt())
         .setRDotJavaDir(
             generateRDotJava.map(GenerateRDotJava::getSourcePathToGeneratedRDotJavaSrcFiles))
         .build();
