@@ -108,7 +108,7 @@ public class ParseContext {
   /** Get the {@link ParseContext} by looking up in the environment. */
   public static ParseContext getParseContext(Environment env, FuncallExpression ast)
       throws EvalException {
-    @Nullable ParseContext value = (ParseContext) env.lookup(PARSE_CONTEXT);
+    @Nullable ParseContext value = (ParseContext) env.dynamicLookup(PARSE_CONTEXT);
     if (value == null) {
       // if PARSE_CONTEXT is missing, we're not called from a build file. This happens if someone
       // uses native.some_func() in the wrong place.

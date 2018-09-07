@@ -63,7 +63,7 @@ public class SkylarkNativeModuleTest {
 
   @Test
   public void defaultValueIsReturned() throws Exception {
-    assertThat(evaluate("pkg = package_name()").lookup("pkg"), equalTo("my/package"));
+    assertThat(evaluate("pkg = package_name()").moduleLookup("pkg"), equalTo("my/package"));
   }
 
   private Environment evaluate(String expression) throws IOException, InterruptedException {
