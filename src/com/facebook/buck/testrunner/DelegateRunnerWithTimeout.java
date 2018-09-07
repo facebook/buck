@@ -18,11 +18,10 @@ package com.facebook.buck.testrunner;
 
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -106,7 +105,7 @@ class DelegateRunnerWithTimeout extends Runner {
       return;
     }
 
-    CompletableFuture<Boolean> testCompleted = new CompletableFuture<>();
+    AtomicBoolean testsCompleted = new AtomicBoolean(false);
 
     // We run the Runner in an Executor so that we can tear it down if we need to.
     executor
@@ -115,12 +114,10 @@ class DelegateRunnerWithTimeout extends Runner {
             () -> {
               try {
                 delegate.run(wrapper);
-                if (!wrapper.hasTestThatExceededTimeout()) {
-                  testCompleted.complete(true);
-                }
-              } catch (Throwable t) {
-                testCompleted.completeExceptionally(t);
               } finally {
+                if (!wrapper.hasTestThatExceededTimeout()) {
+                  testsCompleted.set(true);
+                }
                 completionSemaphore.release();
               }
             });
@@ -129,22 +126,9 @@ class DelegateRunnerWithTimeout extends Runner {
     // the default timeout, we cancel the Runner to protect against the case where the test hangs
     // forever.
     while (true) {
-      if (testCompleted.isDone()) {
-        try {
-          testCompleted.join();
-          // Normal termination: hooray!
-          return;
-        } catch (CompletionException completionException) {
-          // Unwrap and re-throw original RuntimeException or Error
-          if (completionException.getCause() instanceof RuntimeException) {
-            throw (RuntimeException) completionException.getCause();
-          } else if (completionException.getCause() instanceof Error) {
-            throw (Error) completionException.getCause();
-          } else {
-            // Checked exception should never be thrown from Runner.
-            throw completionException;
-          }
-        }
+      if (testsCompleted.get()) {
+        // Normal termination: hooray!
+        return;
       }
 
       if (wrapper.hasTestThatExceededTimeout()) {
