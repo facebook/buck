@@ -81,7 +81,8 @@ public class HasConsecutiveItemsMatcher<T>
   @SafeVarargs
   public static <T> Matcher<Collection<? extends T>> hasConsecutiveItems(
       Matcher<? super T>... matchers) {
-    return hasConsecutiveItems(Arrays.asList(matchers));
+    List<Matcher<? super T>> matchersList = Arrays.asList(matchers);
+    return hasConsecutiveItems(matchersList);
   }
 
   public static <T> Matcher<Collection<? extends T>> hasConsecutiveItems(
