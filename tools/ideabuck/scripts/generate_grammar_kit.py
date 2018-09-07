@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
-import subprocess
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import os
+import subprocess
 
 # The location of the generate grammar kit script
 DIR = os.path.dirname(__file__)
@@ -18,12 +20,26 @@ GRAMMAR_KIT_JAR = os.path.join(GRAMMAR_KIT, "grammar-kit.jar")
 GRAMMAR_KIT_JFLEX_JAR = os.path.join(GRAMMAR_KIT, "JFlex.jar")
 
 JFLEX_SKELETON = os.path.join(PLUGIN_PATH, "resources/idea-flex.skeleton")
-FLEX_FILE = os.path.join(PLUGIN_PATH, "src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex")
-BNF_FILE = os.path.join(PLUGIN_PATH, "src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf")
+FLEX_FILE = os.path.join(
+    PLUGIN_PATH, "src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex"
+)
+BNF_FILE = os.path.join(
+    PLUGIN_PATH, "src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf"
+)
 
-print FLEX_OUT_DIR
+print(FLEX_OUT_DIR)
 
-subprocess.call(['java', '-jar', GRAMMAR_KIT_JAR, OUT_DIR, BNF_FILE])
-subprocess.call([
-    'java', '-jar', GRAMMAR_KIT_JFLEX_JAR, '-sliceandcharat', '-skel',
-    JFLEX_SKELETON, '-d', FLEX_OUT_DIR, FLEX_FILE])
+subprocess.call(["java", "-jar", GRAMMAR_KIT_JAR, OUT_DIR, BNF_FILE])
+subprocess.call(
+    [
+        "java",
+        "-jar",
+        GRAMMAR_KIT_JFLEX_JAR,
+        "-sliceandcharat",
+        "-skel",
+        JFLEX_SKELETON,
+        "-d",
+        FLEX_OUT_DIR,
+        FLEX_FILE,
+    ]
+)
