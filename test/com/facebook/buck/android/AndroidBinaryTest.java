@@ -20,12 +20,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -134,7 +136,9 @@ public class AndroidBinaryTest {
             buildContext);
 
     BuildTarget aaptPackageTarget =
-        binaryBuildTarget.withFlavors(AndroidBinaryResourcesGraphEnhancer.AAPT_PACKAGE_FLAVOR);
+        binaryBuildTarget.withFlavors(
+            AndroidBinaryResourcesGraphEnhancer.AAPT_PACKAGE_FLAVOR,
+            InternalFlavor.of(APKModuleGraph.ROOT_APKMODULE_NAME));
     Path aaptProguardDir =
         BuildTargetPaths.getGenPath(
             androidBinary.getProjectFilesystem(), aaptPackageTarget, "%s/proguard/");
@@ -440,7 +444,7 @@ public class AndroidBinaryTest {
     AndroidBinary androidBinary = builder.build(graphBuilder);
 
     BuildRule aaptPackageRule =
-        graphBuilder.getRule(BuildTargetFactory.newInstance("//:target#aapt_package"));
+        graphBuilder.getRule(BuildTargetFactory.newInstance("//:target#aapt_package,dex"));
     ResourcesFilter resourcesFilter =
         (ResourcesFilter) ((AaptPackageResources) aaptPackageRule).getFilteredResourcesProvider();
     ImmutableList.Builder<Step> stepsBuilder = new ImmutableList.Builder<>();
