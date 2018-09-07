@@ -30,7 +30,7 @@ from .glob_watchman import SyncCookieState, glob_watchman
 from .json_encoder import BuckJSONEncoder
 from .module_whitelist import ImportWhitelistManager
 from .profiler import Profiler
-from .struct import Struct
+from .struct import struct
 from .util import (
     Diagnostic,
     cygwin_adjusted_path,
@@ -1264,7 +1264,7 @@ class BuildFileProcessor(object):
             info = SomeInfo(x = 2, foo = foo)
             print(info.x + info.foo())  # prints 5
         """
-        return Struct
+        return struct
 
     def _add_build_file_dep(self, name):
         # type: (str) -> None
@@ -1429,7 +1429,7 @@ class BuildFileProcessor(object):
                 "glob": self._glob,
                 "subdir_glob": self._subdir_glob,
                 "load": functools.partial(self._load, is_implicit_include),
-                "struct": Struct,
+                "struct": struct,
                 "provider": self._provider,
                 "host_info": self._host_info,
                 "native": self._create_native_module(),

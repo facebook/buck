@@ -25,22 +25,8 @@ class StructTest(unittest.TestCase):
         )
 
     def testCannotMutateAField(self):
-        with self.assertRaisesRegexp(
-            AttributeError, "Mutation of struct attributes \('foo'\) is not allowed."
-        ):
+        with self.assertRaisesRegexp(AttributeError, "can't set attribute"):
             struct.struct(foo="foo").foo = "bar"
-
-    def testCanCopy(self):
-        original = struct.struct(foo="bar")
-        copied = copy.copy(original)
-        self.assertEqual(original, copied)
-        self.assertIsNot(original, copied)
-
-    def testCanDeepCopy(self):
-        original = struct.struct(foo="bar")
-        deepcopied = copy.deepcopy(original)
-        self.assertEqual(original, deepcopied)
-        self.assertIsNot(original, deepcopied)
 
     def testInequality(self):
         x = struct.struct(foo="bar")
@@ -70,7 +56,7 @@ class StructTest(unittest.TestCase):
 
     def testRepr(self):
         x = struct.struct(foo="bar", bar="baz")
-        self.assertEqual("struct(foo='bar',bar='baz')", repr(x))
+        self.assertEqual("struct(foo='bar', bar='baz')", repr(x))
 
     def testNestedRepr(self):
         x = struct.struct(foo="bar")
