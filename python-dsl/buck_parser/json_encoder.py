@@ -7,7 +7,7 @@ from json import JSONEncoder
 # A JSONEncoder subclass which handles map-like and list-like objects.
 class BuckJSONEncoder(JSONEncoder):
     def __init__(self):
-        super(BuckJSONEncoder, self).__init__(self, sort_keys=True)
+        super(BuckJSONEncoder, self).__init__(self)
 
     def default(self, obj):
         if isinstance(obj, collections.Mapping) and isinstance(

@@ -1769,42 +1769,6 @@ foo_rule(
             decoded_result["values"][0].get("options", {}),
         )
 
-    def test_sort_keys(self):
-        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
-        fake_stdout = StringIO.StringIO()
-        build_file = ProjectFile(
-            self.project_root,
-            path="BUCK",
-            contents=(
-                """
-foo_rule(
-  name="foo",
-  srcs=[],
-  options={'foo':'bar','baz':'blech'},
-)
-"""
-            ),
-        )
-        self.write_file(build_file)
-        with build_file_processor.with_builtins(__builtin__.__dict__):
-            process_with_diagnostics(
-                {
-                    "buildFile": self.build_file_name,
-                    "watchRoot": "",
-                    "projectPrefix": self.project_root,
-                },
-                build_file_processor,
-                fake_stdout,
-            )
-        result = fake_stdout.getvalue()
-        self.assertEquals(
-            '{"values": [{"buck.base_path": "", "buck.type": "foo", "name": '
-            '"foo", "options": {"baz": "blech", "foo": "bar"}, "srcs": [], '
-            '"visibility": []}, {"__includes": ["BUCK"]}, {"__configs": {}}, '
-            '{"__env": {}}]}',
-            result,
-        )
-
     def test_file_parsed_as_build_file_and_include_def(self):
         """
         Test that paths can be parsed as both build files and include defs.

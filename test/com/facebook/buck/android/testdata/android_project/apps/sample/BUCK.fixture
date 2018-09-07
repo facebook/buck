@@ -892,8 +892,8 @@ android_binary(
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_map = {
-        "lib1.so": [".*/merge:[AB]"],
-        "lib2.so": [".*/merge:[BC]"],
+        "lib1.so": [".*/merge:[CD]"],
+        "lib2.so": [".*/merge:[DE]"],
     },
     deps = [
         "//java/com/sample/lib:lib",
