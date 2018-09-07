@@ -18,12 +18,16 @@ package com.facebook.buck.intellij.ideabuck.config;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 
@@ -198,6 +202,24 @@ public class BuckProjectSettingsProvider extends AbstractProjectComponent
     state.customizedInstallSettingCommand = customizedInstallSettingCommand;
   }
 
+  /** Returns a list of buck cells in this project. */
+  public List<BuckCell> getCells() {
+    List<BuckCell> result = new ArrayList<>(state.cells.size());
+    for (BuckCell cell : state.cells) {
+      result.add(cell.copy());
+    }
+    return result;
+  }
+
+  /** Sets a list of buck cells in this project. */
+  public void setCells(List<BuckCell> cells) {
+    ImmutableList.Builder<BuckCell> builder = ImmutableList.builder();
+    for (BuckCell cell : cells) {
+      builder.add(cell.copy());
+    }
+    this.state.cells = builder.build();
+  }
+
   @Override
   public void initComponent() {}
 
@@ -250,6 +272,9 @@ public class BuckProjectSettingsProvider extends AbstractProjectComponent
     /** User's customized install command string, e.g. "-a -b -c". */
     public String customizedInstallSettingCommand = "";
 
+    /** Buck cells supported in this project. */
+    public List<BuckCell> cells = Lists.newArrayList(BuckCell.DEFAULT_CELL);
+
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -268,7 +293,8 @@ public class BuckProjectSettingsProvider extends AbstractProjectComponent
           && Objects.equal(lastAlias, state.lastAlias)
           && Objects.equal(buckExecutable, state.buckExecutable)
           && Objects.equal(adbExecutable, state.adbExecutable)
-          && Objects.equal(customizedInstallSettingCommand, state.customizedInstallSettingCommand);
+          && Objects.equal(customizedInstallSettingCommand, state.customizedInstallSettingCommand)
+          && Objects.equal(cells, state.cells);
     }
 
     @Override
@@ -283,7 +309,8 @@ public class BuckProjectSettingsProvider extends AbstractProjectComponent
           multiInstallMode,
           uninstallBeforeInstalling,
           customizedInstallSetting,
-          customizedInstallSettingCommand);
+          customizedInstallSettingCommand,
+          cells);
     }
   }
 }
