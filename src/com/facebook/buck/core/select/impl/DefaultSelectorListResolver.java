@@ -19,6 +19,7 @@ package com.facebook.buck.core.select.impl;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.select.Selectable;
+import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
@@ -49,10 +50,13 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
 
   @Override
   public <T> T resolveList(
-      BuildTarget buildTarget, String attributeName, SelectorList<T> selectorList) {
+      SelectableConfigurationContext configurationContext,
+      BuildTarget buildTarget,
+      String attributeName,
+      SelectorList<T> selectorList) {
     List<T> resolvedList = new ArrayList<>();
     for (Selector<T> selector : selectorList.getSelectors()) {
-      T selectorValue = resolveSelector(buildTarget, attributeName, selector);
+      T selectorValue = resolveSelector(configurationContext, buildTarget, attributeName, selector);
       if (selectorValue != null) {
         resolvedList.add(selectorValue);
       }
@@ -65,8 +69,12 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
   @Nullable
   @SuppressWarnings("unchecked")
   private <T> T resolveSelector(
-      BuildTarget buildTarget, String attributeName, Selector<T> selector) {
-    Map<Selectable, Object> matchingConditions = findMatchingConditions(selector);
+      SelectableConfigurationContext configurationContext,
+      BuildTarget buildTarget,
+      String attributeName,
+      Selector<T> selector) {
+    Map<Selectable, Object> matchingConditions =
+        findMatchingConditions(configurationContext, selector);
 
     Object matchingResult = null;
     assertNotMultipleMatches(matchingConditions, attributeName, buildTarget);
@@ -82,27 +90,31 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
     return matchingResult == NULL_VALUE ? null : (T) matchingResult;
   }
 
-  private <T> Map<Selectable, Object> findMatchingConditions(Selector<T> selector) {
+  private <T> Map<Selectable, Object> findMatchingConditions(
+      SelectableConfigurationContext configurationContext, Selector<T> selector) {
     Map<Selectable, Object> matchingConditions = new LinkedHashMap<>();
 
     for (Map.Entry<SelectorKey, T> entry : selector.getConditions().entrySet()) {
-      handleSelector(matchingConditions, entry.getKey(), entry.getValue());
+      handleSelector(configurationContext, matchingConditions, entry.getKey(), entry.getValue());
     }
     for (SelectorKey selectorKey : selector.getNullConditions()) {
-      handleSelector(matchingConditions, selectorKey, NULL_VALUE);
+      handleSelector(configurationContext, matchingConditions, selectorKey, NULL_VALUE);
     }
     return matchingConditions;
   }
 
   private void handleSelector(
-      Map<Selectable, Object> matchingConditions, SelectorKey selectorKey, Object value) {
+      SelectableConfigurationContext configurationContext,
+      Map<Selectable, Object> matchingConditions,
+      SelectorKey selectorKey,
+      Object value) {
     if (selectorKey.isReserved()) {
       return;
     }
 
     Selectable selectable = selectableResolver.getSelectable(selectorKey.getBuildTarget());
 
-    if (selectable.matches()) {
+    if (selectable.matches(configurationContext)) {
       updateConditions(matchingConditions, selectable, value);
     }
   }

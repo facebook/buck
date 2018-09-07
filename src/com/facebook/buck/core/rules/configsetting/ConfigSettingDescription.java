@@ -57,7 +57,7 @@ public class ConfigSettingDescription implements ConfigurationRuleDescription<Co
       Cell cell,
       BuildTarget buildTarget,
       ConfigSettingArg arg) {
-    return new ConfigSettingRule(cell.getBuckConfig(), buildTarget, arg.getValues());
+    return new ConfigSettingRule(buildTarget, arg.getValues());
   }
 
   @BuckStyleImmutable

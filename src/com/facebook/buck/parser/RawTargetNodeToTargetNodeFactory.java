@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -24,6 +25,7 @@ import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.event.PerfEventId;
@@ -81,7 +83,10 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
             description.getConstructorArgType(),
             declaredDeps,
             configureRawTargetNodeAttributes(
-                selectorListResolver, target, rawTargetNode.getAttributes().getAll()));
+                cell.getBuckConfig(),
+                selectorListResolver,
+                target,
+                rawTargetNode.getAttributes().getAll()));
 
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(
@@ -107,15 +112,23 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   }
 
   private ImmutableMap<String, Object> configureRawTargetNodeAttributes(
+      BuckConfig buckConfig,
       SelectorListResolver selectorListResolver,
       BuildTarget buildTarget,
       ImmutableMap<String, Object> rawTargetNodeAttributes) {
+    SelectableConfigurationContext configurationContext =
+        DefaultSelectableConfigurationContext.of(buckConfig);
+
     ImmutableMap.Builder<String, Object> configuredAttributes = ImmutableMap.builder();
 
     for (Map.Entry<String, ?> entry : rawTargetNodeAttributes.entrySet()) {
       Object value =
           configureAttributeValue(
-              selectorListResolver, buildTarget, entry.getKey(), entry.getValue());
+              configurationContext,
+              selectorListResolver,
+              buildTarget,
+              entry.getKey(),
+              entry.getValue());
       if (value != null) {
         configuredAttributes.put(entry.getKey(), value);
       }
@@ -126,6 +139,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
 
   @SuppressWarnings("unchecked")
   private <T> T configureAttributeValue(
+      SelectableConfigurationContext configurationContext,
       SelectorListResolver selectorListResolver,
       BuildTarget buildTarget,
       String attributeName,
@@ -133,7 +147,9 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
     T value;
     if (rawAttributeValue instanceof SelectorList) {
       SelectorList<T> selectorList = (SelectorList<T>) rawAttributeValue;
-      value = selectorListResolver.resolveList(buildTarget, attributeName, selectorList);
+      value =
+          selectorListResolver.resolveList(
+              configurationContext, buildTarget, attributeName, selectorList);
     } else {
       value = (T) rawAttributeValue;
     }

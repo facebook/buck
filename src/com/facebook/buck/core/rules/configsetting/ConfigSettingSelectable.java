@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.configsetting;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.select.Selectable;
+import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -35,18 +36,17 @@ public class ConfigSettingSelectable implements Selectable {
 
   private final BuildTarget buildTarget;
   private final ImmutableMap<String, String> values;
-  private final boolean matches;
 
-  public ConfigSettingSelectable(
-      BuckConfig buckConfig, BuildTarget buildTarget, ImmutableMap<String, String> values) {
+  public ConfigSettingSelectable(BuildTarget buildTarget, ImmutableMap<String, String> values) {
     this.buildTarget = buildTarget;
     this.values = values;
-    matches = calculateMatches(buckConfig, values);
   }
 
   @Override
-  public boolean matches() {
-    return matches;
+  public boolean matches(SelectableConfigurationContext configurationContext) {
+    ConfigSettingSelectableConfigurationContext context =
+        (ConfigSettingSelectableConfigurationContext) configurationContext;
+    return calculateMatches(context.getBuckConfig(), values);
   }
 
   @Override

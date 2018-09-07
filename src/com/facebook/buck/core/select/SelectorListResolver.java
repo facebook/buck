@@ -34,5 +34,9 @@ public interface SelectorListResolver {
    * @param <T> the type of elements stored in the provided selectable list
    * @return an object produced by concatenating resolved elements of the given list.
    */
-  <T> T resolveList(BuildTarget buildTarget, String attributeName, SelectorList<T> selectorList);
+  <T> T resolveList(
+      SelectableConfigurationContext configurationContext,
+      BuildTarget buildTarget,
+      String attributeName,
+      SelectorList<T> selectorList);
 }

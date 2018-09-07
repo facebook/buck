@@ -28,7 +28,7 @@ import com.facebook.buck.core.model.BuildTarget;
 public interface Selectable {
 
   /** @return <code>true</code> if this condition matches the configuration */
-  boolean matches();
+  boolean matches(SelectableConfigurationContext configurationContext);
 
   /** @return <code>true</code> if this condition is more specialized than the given one */
   boolean refines(Selectable other);

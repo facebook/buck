@@ -5,6 +5,7 @@ java_immutables_library(
     srcs = [
         "AbstractBuildFileSpec.java",
         "AbstractBuildTargetSpec.java",
+        "AbstractDefaultSelectableConfigurationContext.java",
         "AbstractParserConfig.java",
         "AbstractTargetNodePredicateSpec.java",
         "BuildTargetPatternTargetNodeParser.java",
@@ -68,6 +69,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
         "//src/com/facebook/buck/core/rules/config:config",
         "//src/com/facebook/buck/core/rules/config/impl:impl",
+        "//src/com/facebook/buck/core/rules/configsetting:configsetting",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/select:select",
         "//src/com/facebook/buck/core/select/impl:impl",

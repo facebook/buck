@@ -38,7 +38,7 @@ public class TestSelectable implements Selectable {
   }
 
   @Override
-  public boolean matches() {
+  public boolean matches(SelectableConfigurationContext configurationContext) {
     return matches;
   }
 
