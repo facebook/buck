@@ -24,17 +24,35 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
+import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matchers;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class ArtifactCachesTest {
   @Rule public TemporaryPaths tempDir = new TemporaryPaths();
+
+  private BackgroundTaskManager bgTaskManager;
+
+  @Before
+  public void setUp() {
+    bgTaskManager = new TestBackgroundTaskManager();
+  }
+
+  @After
+  public void tearDown() throws InterruptedException {
+    bgTaskManager.shutdown(1, TimeUnit.SECONDS);
+  }
 
   @Test
   public void testCreateHttpCacheOnly() throws Exception {
@@ -51,9 +69,11 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService())
+                bgTaskManager)
             .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
+    artifactCache.close();
+    bgTaskManager.notify(Notification.COMMAND_END);
   }
 
   @Test
@@ -71,10 +91,12 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService())
+                bgTaskManager)
             .newInstance();
 
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
+    artifactCache.close();
+    bgTaskManager.notify(Notification.COMMAND_END);
   }
 
   @Test
@@ -94,10 +116,12 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService())
+                bgTaskManager)
             .newInstance();
 
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(SQLiteArtifactCache.class));
+    artifactCache.close();
+    bgTaskManager.notify(Notification.COMMAND_END);
   }
 
   @Test
@@ -124,7 +148,7 @@ public class ArtifactCachesTest {
                     MoreExecutors.newDirectExecutorService(),
                     MoreExecutors.newDirectExecutorService(),
                     MoreExecutors.newDirectExecutorService(),
-                    MoreExecutors.newDirectExecutorService())
+                    bgTaskManager)
                 .newInstance());
 
     assertThat(artifactCache, Matchers.instanceOf(MultiArtifactCache.class));
@@ -144,6 +168,8 @@ public class ArtifactCachesTest {
     DirArtifactCache dir2 = (DirArtifactCache) c2;
     assertThat(dir2.getCacheDir(), Matchers.equalTo(Paths.get("dir2").toAbsolutePath()));
     assertThat(dir2.getCacheReadMode(), Matchers.equalTo(CacheReadMode.READONLY));
+    artifactCache.close();
+    bgTaskManager.notify(Notification.COMMAND_END);
   }
 
   @Test
@@ -171,7 +197,7 @@ public class ArtifactCachesTest {
                     MoreExecutors.newDirectExecutorService(),
                     MoreExecutors.newDirectExecutorService(),
                     MoreExecutors.newDirectExecutorService(),
-                    MoreExecutors.newDirectExecutorService())
+                    bgTaskManager)
                 .newInstance());
 
     assertThat(artifactCache, Matchers.instanceOf(MultiArtifactCache.class));
@@ -194,6 +220,9 @@ public class ArtifactCachesTest {
 
     SQLiteArtifactCache cache3 = (SQLiteArtifactCache) c3;
     assertThat(cache3.getCacheReadMode(), Matchers.equalTo(CacheReadMode.READONLY));
+
+    artifactCache.close();
+    bgTaskManager.notify(Notification.COMMAND_END);
   }
 
   @Test
@@ -211,9 +240,11 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService())
+                bgTaskManager)
             .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(MultiArtifactCache.class));
+    artifactCache.close();
+    bgTaskManager.notify(Notification.COMMAND_END);
   }
 
   @Test
@@ -232,9 +263,11 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService())
+                bgTaskManager)
             .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
+    artifactCache.close();
+    bgTaskManager.notify(Notification.COMMAND_END);
   }
 
   @Test
@@ -252,9 +285,11 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService())
+                bgTaskManager)
             .remoteOnlyInstance(false, false);
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
+    artifactCache.close();
+    bgTaskManager.notify(Notification.COMMAND_END);
   }
 
   @Test
@@ -272,9 +307,11 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService())
+                bgTaskManager)
             .localOnlyInstance(false, false);
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
+    artifactCache.close();
+    bgTaskManager.notify(Notification.COMMAND_END);
   }
 
   private static ArtifactCache stripDecorators(ArtifactCache artifactCache) {

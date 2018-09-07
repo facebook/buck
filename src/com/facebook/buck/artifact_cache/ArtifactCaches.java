@@ -39,6 +39,11 @@ import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SingleUriService;
+import com.facebook.buck.support.bgtasks.BackgroundTask;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
+import com.facebook.buck.support.bgtasks.TaskAction;
+import com.facebook.buck.support.bgtasks.Timeout;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.CharMatcher;
@@ -55,7 +60,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
@@ -74,6 +78,7 @@ import okio.Source;
 public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
 
   private static final Logger LOG = Logger.get(ArtifactCaches.class);
+  private static final int TIMEOUT_SECONDS = 60;
 
   private final ArtifactCacheBuckConfig buckConfig;
   private final BuckEventBus buckEventBus;
@@ -82,22 +87,36 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private final ListeningExecutorService httpWriteExecutorService;
   private final ListeningExecutorService httpFetchExecutorService;
   private final ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService;
-  private final ExecutorService artifactCacheCloseExecutorService;
   private List<ArtifactCache> artifactCaches = new ArrayList<>();
+  private final BackgroundTaskManager bgTaskManager;
+
+  /** {@link TaskAction} implementation for {@link ArtifactCaches}. */
+  static class ArtifactCachesCloseAction implements TaskAction<List<ArtifactCache>> {
+    @Override
+    public void run(List<ArtifactCache> artifactCaches) {
+      for (ArtifactCache cache : artifactCaches) {
+        try {
+          cache.close();
+        } catch (Exception e) {
+          LOG.warn(e, "Exception when closing %s.", cache);
+        }
+      }
+    }
+  }
 
   @Override
   public void close() {
-    // close all artifact caches asynchronously using a separate executor
-    for (ArtifactCache artifactCache : artifactCaches) {
-      artifactCacheCloseExecutorService.submit(
-          () -> {
-            try {
-              artifactCache.close();
-            } catch (Exception e) {
-              LOG.warn(e, "Exception when performing async close of %s.", artifactCache);
-            }
-          });
-    }
+    // We clean up beyond client connection lifetime since it can take a
+    // long time to stat and cleanup large disk artifact cache directories
+    // See https://github.com/facebook/buck/issues/1842
+    BackgroundTask<List<ArtifactCache>> closeTask =
+        ImmutableBackgroundTask.<List<ArtifactCache>>builder()
+            .setAction(new ArtifactCachesCloseAction())
+            .setActionArgs(artifactCaches)
+            .setName("ArtifactCaches_close")
+            .setTimeout(Timeout.of(TIMEOUT_SECONDS, TimeUnit.SECONDS))
+            .build();
+    bgTaskManager.schedule(closeTask);
 
     buckEventBus.post(HttpArtifactCacheEvent.newShutdownEvent());
   }
@@ -113,8 +132,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
    * @param buckEventBus event bus
    * @param projectFilesystem filesystem to store files on
    * @param wifiSsid current WiFi ssid to decide if we want the http cache or not
-   * @param artifactCacheCloseExecutorService executor (like thread pool) that will process closing
-   *     tasks of all artifact caches created by this factory
    */
   public ArtifactCaches(
       ArtifactCacheBuckConfig buckConfig,
@@ -124,7 +141,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
       ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService,
-      ExecutorService artifactCacheCloseExecutorService) {
+      BackgroundTaskManager bgTaskManager) {
     this.buckConfig = buckConfig;
     this.buckEventBus = buckEventBus;
     this.projectFilesystem = projectFilesystem;
@@ -132,7 +149,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     this.httpWriteExecutorService = httpWriteExecutorService;
     this.httpFetchExecutorService = httpFetchExecutorService;
     this.downloadHeavyBuildHttpFetchExecutorService = downloadHeavyBuildHttpFetchExecutorService;
-    this.artifactCacheCloseExecutorService = artifactCacheCloseExecutorService;
+    this.bgTaskManager = bgTaskManager;
   }
 
   private static Request.Builder addHeadersToBuilder(
@@ -213,7 +230,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         httpWriteExecutorService,
         httpFetchExecutorService,
         downloadHeavyBuildHttpFetchExecutorService,
-        artifactCacheCloseExecutorService);
+        bgTaskManager);
   }
 
   /**

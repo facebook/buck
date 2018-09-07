@@ -119,6 +119,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/slb:slb",
+        "//src/com/facebook/buck/support/bgtasks:bgtasks",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/randomizedtrial:randomizedtrial",
