@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import javax.annotation.concurrent.GuardedBy;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /** BuildTargetsQueue implementation used to run in the Remote Execution model. */
 public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
@@ -174,6 +173,6 @@ public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
   @Override
   public DistributableBuildGraph getDistributableBuildGraph() {
     // This class has no knowledge of the build graph.
-    throw new NotImplementedException();
+    throw new UnsupportedOperationException();
   }
 }
