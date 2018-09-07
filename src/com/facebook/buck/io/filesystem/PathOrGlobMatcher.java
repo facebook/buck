@@ -30,10 +30,10 @@ import java.util.Set;
 public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMatcher {
 
   @Override
-  public ImmutableList<?> toWatchmanMatchQuery(Path projectRoot, Set<Capability> capabilities) {
+  public ImmutableList<?> toWatchmanMatchQuery(Set<Capability> capabilities) {
     switch (getType()) {
       case PATH:
-        return pathPrefixMatcher.get().toWatchmanMatchQuery(projectRoot, capabilities);
+        return pathPrefixMatcher.get().toWatchmanMatchQuery(capabilities);
       case GLOB:
         String ignoreGlob = getGlob();
         return ImmutableList.of(

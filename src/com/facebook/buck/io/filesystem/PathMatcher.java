@@ -28,5 +28,5 @@ public interface PathMatcher extends java.nio.file.PathMatcher {
    * Transforms this matcher into a Watchman match query arguments matching the same set of paths as
    * this matcher.
    */
-  ImmutableList<?> toWatchmanMatchQuery(Path projectRoot, Set<Capability> capabilities);
+  ImmutableList<?> toWatchmanMatchQuery(Set<Capability> capabilities);
 }

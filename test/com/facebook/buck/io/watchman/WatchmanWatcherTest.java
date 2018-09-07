@@ -442,8 +442,8 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of(watchRoot, Optional.empty()),
             ImmutableSet.of(
-                new PathOrGlobMatcher(Paths.get("/path/to/repo/foo").toAbsolutePath()),
-                new PathOrGlobMatcher(Paths.get("/path/to/repo/bar/baz").toAbsolutePath())),
+                new PathOrGlobMatcher(Paths.get("foo")),
+                new PathOrGlobMatcher(Paths.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
         WatchmanQuery.of(

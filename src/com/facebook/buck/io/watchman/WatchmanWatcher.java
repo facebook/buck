@@ -153,9 +153,6 @@ public class WatchmanWatcher {
     // Exclude all directories.
     excludeAnyOf.add(Lists.newArrayList("type", "d"));
 
-    Path projectRoot = Paths.get(watchRoot);
-    projectRoot = projectRoot.resolve(watchPrefix.orElse(""));
-
     // Exclude all files under directories in project.ignorePaths.
     //
     // Note that it's OK to exclude .git in a query (event though it's
@@ -163,7 +160,7 @@ public class WatchmanWatcher {
     // because watchman's .git cookie magic is done before the query
     // is applied.
     for (PathOrGlobMatcher ignorePathOrGlob : ignorePaths) {
-      excludeAnyOf.add(ignorePathOrGlob.toWatchmanMatchQuery(projectRoot, watchmanCapabilities));
+      excludeAnyOf.add(ignorePathOrGlob.toWatchmanMatchQuery(watchmanCapabilities));
     }
 
     // Note that we use LinkedHashMap so insertion order is preserved. That
