@@ -17,6 +17,8 @@
 package com.facebook.buck.core.rules.graphbuilder;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
+import com.facebook.buck.core.graph.transformation.GraphTransformer;
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -33,12 +35,10 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 /**
- * Context information used for construction of ActionGraph in {@link
- * com.facebook.buck.core.graph.transformation.AsyncTransformationEngine}.
+ * Context information used for construction of ActionGraph in {@link GraphTransformationEngine}.
  *
  * <p>This wraps the {@link BuildRuleCreationContext} needed for constructing {@link BuildRule}s
- * with {@link TransformationEnvironment} from the {@link
- * com.facebook.buck.core.graph.transformation.AsyncTransformationEngine}.
+ * with {@link TransformationEnvironment} from the {@link GraphTransformationEngine}.
  *
  * <p>Access to the {@link TransformationEnvironment} is limited to restrict access of BuildRule
  * construction logic to {@link BuildRule}s. Construction phase can only access information to
@@ -48,8 +48,7 @@ import java.util.function.Function;
  * <p>This context is not part of the {@link BuildRuleKey} as {@link TransformationEnvironment}
  * should not be part of the identifier of what {@link BuildRule} to compute.
  *
- * <p>Instances should only be created in {@link
- * com.facebook.buck.core.graph.transformation.AsyncTransformer#transform(Object,
+ * <p>Instances should only be created in {@link GraphTransformer#transform(Object,
  * TransformationEnvironment)} implementation for ActionGraph construction. Hence, we have
  * package-private implementation which hides constructor.
  */

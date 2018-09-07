@@ -22,7 +22,7 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import org.junit.Test;
 
-public class DefaultAsyncTransformationEngineStackUseTest {
+public class DefaultGraphTransformationEngineStackUseTest {
 
   @Test
   public void largeGraphShouldNotStackOverflow() {
@@ -39,7 +39,7 @@ public class DefaultAsyncTransformationEngineStackUseTest {
     assertEquals(
         (Long) 18003000L, // arithmetic series from 1 to 6000
         // https://www.wolframalpha.com/input/?i=sum+from+1+to+6000
-        new DefaultAsyncTransformationEngine<>(transformer, graph.nodes().size())
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size())
             .computeUnchecked(1L));
   }
 }

@@ -20,12 +20,12 @@ import com.google.common.graph.MutableGraph;
 import java.util.concurrent.CompletionStage;
 
 /**
- * Demonstration of usage of {@link AsyncTransformer}.
+ * Demonstration of usage of {@link GraphTransformer}.
  *
  * <p>This returns the value of the sum of its input graph's chidren and itself. For the above graph
  * in {@code graph}, operating on the root would result in 19.
  */
-class ChildrenAdder implements AsyncTransformer<Long, Long> {
+class ChildrenAdder implements GraphTransformer<Long, Long> {
 
   private final MutableGraph<Long> input;
 

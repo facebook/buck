@@ -16,15 +16,15 @@
 
 package com.facebook.buck.core.rules.graphbuilder;
 
+import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRule;
 
 /**
- * An Immutable Key to a {@link BuildRule} for computation in {@link
- * com.facebook.buck.core.graph.transformation.AsyncTransformationEngine}. The Key is used to
- * represent what {@link BuildRule} subgraph we are attempting to compute.
+ * An Immutable Key to a {@link BuildRule} for computation in {@link GraphTransformationEngine}. The
+ * Key is used to represent what {@link BuildRule} subgraph we are attempting to compute.
  *
  * <p>The {@link BuildRule} subgraph is identified by:
  *

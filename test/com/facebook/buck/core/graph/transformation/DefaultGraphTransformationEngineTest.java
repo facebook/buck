@@ -44,8 +44,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 
-/** Test and demonstration of {@link DefaultAsyncTransformationEngine} */
-public class DefaultAsyncTransformationEngineTest {
+/** Test and demonstration of {@link DefaultGraphTransformationEngine} */
+public class DefaultGraphTransformationEngineTest {
 
   @Rule public Timeout timeout = Timeout.seconds(10);
 
@@ -85,10 +85,10 @@ public class DefaultAsyncTransformationEngineTest {
   }
 
   /**
-   * Demonstration of usage of {@link TransformationEngineCache} with stats tracking used to verify
-   * behaviour of the {@link DefaultAsyncTransformationEngine}.
+   * Demonstration of usage of {@link GraphEngineCache} with stats tracking used to verify behaviour
+   * of the {@link DefaultGraphTransformationEngine}.
    */
-  private final class TrackingCache implements TransformationEngineCache<Long, Long> {
+  private final class TrackingCache implements GraphEngineCache<Long, Long> {
 
     private final ConcurrentHashMap<Long, Long> cache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, LongAdder> hitStats = new ConcurrentHashMap<>();
@@ -118,8 +118,8 @@ public class DefaultAsyncTransformationEngineTest {
   @Test
   public void requestOnLeafResultsSameValue() {
     ChildrenAdder transformer = new ChildrenAdder(graph);
-    DefaultAsyncTransformationEngine<Long, Long> engine =
-        new DefaultAsyncTransformationEngine<>(
+    DefaultGraphTransformationEngine<Long, Long> engine =
+        new DefaultGraphTransformationEngine<>(
             transformer, graph.nodes().size(), ForkJoinPool.commonPool());
     assertEquals((Long) 3L, engine.computeUnchecked(3L));
 
@@ -129,8 +129,8 @@ public class DefaultAsyncTransformationEngineTest {
   @Test
   public void requestOnRootCorrectValue() {
     ChildrenAdder transformer = new ChildrenAdder(graph);
-    DefaultAsyncTransformationEngine<Long, Long> engine =
-        new DefaultAsyncTransformationEngine<>(
+    DefaultGraphTransformationEngine<Long, Long> engine =
+        new DefaultGraphTransformationEngine<>(
             transformer, graph.nodes().size(), ForkJoinPool.commonPool());
     assertEquals((Long) 19L, engine.computeUnchecked(1L));
 
@@ -142,15 +142,15 @@ public class DefaultAsyncTransformationEngineTest {
   public void requestOnRootCorrectValueWithCustomExecutor() {
     ChildrenAdder transformer = new ChildrenAdder(graph);
     ExecutorService executor = Executors.newFixedThreadPool(3);
-    DefaultAsyncTransformationEngine<Long, Long> engine =
-        new DefaultAsyncTransformationEngine<>(transformer, graph.nodes().size(), executor);
+    DefaultGraphTransformationEngine<Long, Long> engine =
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), executor);
     assertEquals((Long) 19L, engine.computeUnchecked(1L));
     assertComputationIndexBecomesEmpty(engine.computationIndex);
 
     executor.shutdown();
 
-    DefaultAsyncTransformationEngine<Long, Long> engine2 =
-        new DefaultAsyncTransformationEngine<>(transformer, graph.nodes().size(), executor);
+    DefaultGraphTransformationEngine<Long, Long> engine2 =
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), executor);
     try {
       engine2.computeUnchecked(1L);
       Assert.fail(
@@ -164,8 +164,8 @@ public class DefaultAsyncTransformationEngineTest {
   public void canReuseCachedResult() {
     ChildrenAdder transformer = new ChildrenAdder(graph);
 
-    DefaultAsyncTransformationEngine<Long, Long> engine =
-        new DefaultAsyncTransformationEngine<>(
+    DefaultGraphTransformationEngine<Long, Long> engine =
+        new DefaultGraphTransformationEngine<>(
             transformer, graph.nodes().size(), cache, ForkJoinPool.commonPool());
     Long result = engine.computeUnchecked(3L);
 
@@ -182,7 +182,7 @@ public class DefaultAsyncTransformationEngineTest {
         };
 
     engine =
-        new DefaultAsyncTransformationEngine<>(
+        new DefaultGraphTransformationEngine<>(
             transformer, graph.nodes().size(), cache, ForkJoinPool.commonPool());
     Long newResult = engine.computeUnchecked(3L);
 
@@ -197,8 +197,8 @@ public class DefaultAsyncTransformationEngineTest {
   @Test
   public void canReusePartiallyCachedResult() {
     ChildrenAdder transformer = new ChildrenAdder(graph);
-    DefaultAsyncTransformationEngine<Long, Long> engine =
-        new DefaultAsyncTransformationEngine<>(
+    DefaultGraphTransformationEngine<Long, Long> engine =
+        new DefaultGraphTransformationEngine<>(
             transformer, graph.nodes().size(), cache, ForkJoinPool.commonPool());
 
     assertEquals((Long) 9L, engine.computeUnchecked(5L));
@@ -229,7 +229,7 @@ public class DefaultAsyncTransformationEngineTest {
           }
         };
     engine =
-        new DefaultAsyncTransformationEngine<>(
+        new DefaultGraphTransformationEngine<>(
             transformer, graph.nodes().size(), cache, ForkJoinPool.commonPool());
 
     // reuse the cache
@@ -248,7 +248,7 @@ public class DefaultAsyncTransformationEngineTest {
   @Test
   public void environmentCanEvaluateAllAndCollect() {
     final int maxValue = 20;
-    AsyncTransformer<Integer, ConcurrentHashMap<Integer, Set<Integer>>> transformer =
+    GraphTransformer<Integer, ConcurrentHashMap<Integer, Set<Integer>>> transformer =
         (integer, env) -> {
           if (integer < maxValue) {
             return env.evaluateAllAndCollectAsync(
@@ -277,8 +277,8 @@ public class DefaultAsyncTransformationEngineTest {
           return CompletableFuture.completedFuture(
               new ConcurrentHashMap<>(ImmutableMap.of(maxValue, ImmutableSet.of(maxValue))));
         };
-    DefaultAsyncTransformationEngine<Integer, ConcurrentHashMap<Integer, Set<Integer>>> engine =
-        new DefaultAsyncTransformationEngine<>(transformer, maxValue);
+    DefaultGraphTransformationEngine<Integer, ConcurrentHashMap<Integer, Set<Integer>>> engine =
+        new DefaultGraphTransformationEngine<>(transformer, maxValue);
 
     Map<Integer, Set<Integer>> result = engine.computeUnchecked(0);
     assertEquals(
@@ -291,7 +291,7 @@ public class DefaultAsyncTransformationEngineTest {
   }
 
   /**
-   * Asserts that the computationIndex of the {@link AsyncTransformationEngine} eventually becomes
+   * Asserts that the computationIndex of the {@link GraphTransformationEngine} eventually becomes
    * empty.
    *
    * @param computationIndex the computationIndex of the engine

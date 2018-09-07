@@ -22,7 +22,7 @@ import java.util.function.Function;
 
 /**
  * Transformation engine that transforms supplied ComputeKey into ComputeResult via {@link
- * AsyncTransformer}. This engine is able to asynchronously run graph based computation, reusing
+ * GraphTransformer}. This engine is able to asynchronously run graph based computation, reusing
  * results when possible. Note that the computation graph must be an acyclic graph.
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
@@ -30,9 +30,9 @@ import java.util.function.Function;
  * TransformationEnvironment#evaluate(Object, Function)}.
  *
  * <p>Implementations should have all methods of this class as tail recursive and non-blocking when
- * working together with {@link TransformationEnvironment} and {@link AsyncTransformer}.
+ * working together with {@link TransformationEnvironment} and {@link GraphTransformer}.
  */
-public interface AsyncTransformationEngine<ComputeKey, ComputeResult> {
+public interface GraphTransformationEngine<ComputeKey, ComputeResult> {
 
   /**
    * Asynchronously computes the result for the given key

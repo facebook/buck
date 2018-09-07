@@ -25,26 +25,26 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 /**
- * A computation environment that {@link AsyncTransformer} can access. This class provides ability
- * of {@link AsyncTransformer}s to request and execute their dependencies on the engine, without
+ * A computation environment that {@link GraphTransformer} can access. This class provides ability
+ * of {@link GraphTransformer}s to request and execute their dependencies on the engine, without
  * exposing blocking operations.
  */
 final class DefaultTransformationEnvironment<ComputeKey, ComputeResult>
     implements TransformationEnvironment<ComputeKey, ComputeResult> {
 
-  private final DefaultAsyncTransformationEngine<ComputeKey, ComputeResult> engine;
+  private final DefaultGraphTransformationEngine<ComputeKey, ComputeResult> engine;
 
   private final Executor executor;
 
   /**
-   * Package protected constructor so only {@link DefaultAsyncTransformationEngine} can create the
+   * Package protected constructor so only {@link DefaultGraphTransformationEngine} can create the
    * environment
    *
-   * @param engine the {@link DefaultAsyncTransformationEngine} that manages this environment
+   * @param engine the {@link DefaultGraphTransformationEngine} that manages this environment
    * @param executor the {@link Executor} the engine uses to execute tasks
    */
   DefaultTransformationEnvironment(
-      DefaultAsyncTransformationEngine<ComputeKey, ComputeResult> engine, Executor executor) {
+      DefaultGraphTransformationEngine<ComputeKey, ComputeResult> engine, Executor executor) {
     this.engine = engine;
     this.executor = executor;
   }

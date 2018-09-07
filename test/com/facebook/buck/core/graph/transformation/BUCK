@@ -18,7 +18,7 @@ java_test(
     name = "transformation_unit",
     srcs = glob(
         ["*Test.java"],
-        exclude = ["DefaultAsyncTransformationEngineStackUseTest.java"],
+        exclude = ["DefaultGraphTransformationEngineStackUseTest.java"],
     ),
     deps = [
         ":testutil",
@@ -28,7 +28,7 @@ java_test(
 
 java_test(
     name = "transformation_stackuse",
-    srcs = ["DefaultAsyncTransformationEngineStackUseTest.java"],
+    srcs = ["DefaultGraphTransformationEngineStackUseTest.java"],
     vm_args = ["-Xss500k"],  #explicitly set a small stack for testing stack use
     deps = [
         ":testutil",

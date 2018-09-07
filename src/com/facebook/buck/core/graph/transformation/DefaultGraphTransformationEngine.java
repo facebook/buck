@@ -34,7 +34,7 @@ import java.util.function.Function;
 
 /**
  * Transformation engine that transforms supplied ComputeKey into ComputeResult via {@link
- * AsyncTransformer}. This engine is able to asynchronously run graph based computation, reusing
+ * GraphTransformer}. This engine is able to asynchronously run graph based computation, reusing
  * results when possible. Note that the computation graph must be an acyclic graph.
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
@@ -69,22 +69,22 @@ import java.util.function.Function;
  * com.facebook.buck.core.model.actiongraph.ActionGraph}, but theoretically this can be extended to
  * work with any computation.
  */
-public final class DefaultAsyncTransformationEngine<ComputeKey, ComputeResult>
-    implements AsyncTransformationEngine<ComputeKey, ComputeResult> {
+public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
+    implements GraphTransformationEngine<ComputeKey, ComputeResult> {
 
   /**
-   * Internally, on the first request, AsyncTransformation schedules the requested key to be
-   * completed via a Future, and stores the Future in a map with key of ComputeKey. Subsequent
-   * requests for the same ComputeKey will reuse the stored Future, where async operations are then
-   * added to the scheduled Future.
+   * Internally, on the first request, Transformation schedules the requested key to be completed
+   * via a Future, and stores the Future in a map with key of ComputeKey. Subsequent requests for
+   * the same ComputeKey will reuse the stored Future, where async operations are then added to the
+   * scheduled Future.
    *
    * <p>Due to memory overhead of the Future, upon Future completion, the future is deleted from the
    * stored map to allow it to be garbage collected. The raw result will be put into the result
    * cache. Subsequent requests will reuse the raw result from the cache directly.
    */
-  private static final Logger LOG = Logger.get(DefaultAsyncTransformationEngine.class);
+  private static final Logger LOG = Logger.get(DefaultGraphTransformationEngine.class);
 
-  private final AsyncTransformer<ComputeKey, ComputeResult> transformer;
+  private final GraphTransformer<ComputeKey, ComputeResult> transformer;
 
   private final Executor executor;
 
@@ -92,39 +92,39 @@ public final class DefaultAsyncTransformationEngine<ComputeKey, ComputeResult>
   final ConcurrentHashMap<ComputeKey, CompletableFuture<ComputeResult>> computationIndex;
 
   // for caching the completed results.
-  private final TransformationEngineCache<ComputeKey, ComputeResult> resultCache;
+  private final GraphEngineCache<ComputeKey, ComputeResult> resultCache;
 
   /**
-   * Constructs a {@link DefaultAsyncTransformationEngine} with an internal cache that uses the
+   * Constructs a {@link DefaultGraphTransformationEngine} with an internal cache that uses the
    * {@link ComputeKey} for reusability and uses {@link ForkJoinPool#commonPool()} to execute tasks.
    *
-   * @param transformer the {@link AsyncTransformer} this engine executes
+   * @param transformer the {@link GraphTransformer} this engine executes
    * @param estimatedNumOps the estimated number of operations this engine will execute given a
    *     computation, to reserve the size of its computation index
    */
-  public DefaultAsyncTransformationEngine(
-      AsyncTransformer<ComputeKey, ComputeResult> transformer, int estimatedNumOps) {
+  public DefaultGraphTransformationEngine(
+      GraphTransformer<ComputeKey, ComputeResult> transformer, int estimatedNumOps) {
     this(transformer, estimatedNumOps, ForkJoinPool.commonPool());
   }
 
   /**
-   * Constructs a {@link DefaultAsyncTransformationEngine} with an internal cache that uses the
+   * Constructs a {@link DefaultGraphTransformationEngine} with an internal cache that uses the
    * {@link ComputeKey} for reusability.
    *
-   * @param transformer the {@link AsyncTransformer} this engine executes
+   * @param transformer the {@link GraphTransformer} this engine executes
    * @param estimatedNumOps the estimated number of operations this engine will execute given a
    *     computation, to reserve the size of its computation index
    * @param executor the custom {@link Executor} the engine uses to execute tasks
    */
-  public DefaultAsyncTransformationEngine(
-      AsyncTransformer<ComputeKey, ComputeResult> transformer,
+  public DefaultGraphTransformationEngine(
+      GraphTransformer<ComputeKey, ComputeResult> transformer,
       int estimatedNumOps,
       Executor executor) {
     this(
         transformer,
         estimatedNumOps,
         // Default Cache is just a ConcurrentHashMap
-        new TransformationEngineCache<ComputeKey, ComputeResult>() {
+        new GraphEngineCache<ComputeKey, ComputeResult>() {
           private final ConcurrentHashMap<ComputeKey, ComputeResult> map =
               new ConcurrentHashMap<>(estimatedNumOps);
 
@@ -142,19 +142,19 @@ public final class DefaultAsyncTransformationEngine<ComputeKey, ComputeResult>
   }
 
   /**
-   * Constructs a {@link DefaultAsyncTransformationEngine} with an internal cache that uses the
+   * Constructs a {@link DefaultGraphTransformationEngine} with an internal cache that uses the
    * {@link ComputeKey} for reusability.
    *
-   * @param transformer the {@link AsyncTransformer} this engine executes
+   * @param transformer the {@link GraphTransformer} this engine executes
    * @param estimatedNumOps the estimated number of operations this engine will execute given a
    *     computation, to reserve the size of its computation index
    * @param cache the cache to store the computed results
    * @param executor the custom {@link Executor} the engine uses to execute tasks
    */
-  public DefaultAsyncTransformationEngine(
-      AsyncTransformer<ComputeKey, ComputeResult> transformer,
+  public DefaultGraphTransformationEngine(
+      GraphTransformer<ComputeKey, ComputeResult> transformer,
       int estimatedNumOps,
-      TransformationEngineCache<ComputeKey, ComputeResult> cache,
+      GraphEngineCache<ComputeKey, ComputeResult> cache,
       Executor executor) {
     this.transformer = transformer;
     this.computationIndex = new ConcurrentHashMap<>(estimatedNumOps);

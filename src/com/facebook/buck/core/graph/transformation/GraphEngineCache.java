@@ -19,7 +19,7 @@ package com.facebook.buck.core.graph.transformation;
 import java.util.Optional;
 
 /**
- * Interface for a Cache object that {@link DefaultAsyncTransformationEngine} uses to store results
+ * Interface for a Cache object that {@link DefaultGraphTransformationEngine} uses to store results
  * that have finished computing so that the results can be reused.
  *
  * <p>The cache should be thread safe
@@ -27,7 +27,7 @@ import java.util.Optional;
  * @param <Key> Key to the cache
  * @param <Value> Value stored by Cache
  */
-public interface TransformationEngineCache<Key, Value> {
+public interface GraphEngineCache<Key, Value> {
 
   /**
    * Optionally returns the cached result given the key

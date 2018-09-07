@@ -19,13 +19,13 @@ package com.facebook.buck.core.graph.transformation;
 import java.util.concurrent.CompletionStage;
 
 /**
- * Functional interface for transformations with the {@link AsyncTransformationEngine}.
+ * Functional interface for transformations with the {@link GraphTransformationEngine}.
  *
  * @param <Key> The types of Keys used to query for the result on the graph computation
  * @param <Result> The result of the computation given a specific key
  */
 @FunctionalInterface
-public interface AsyncTransformer<Key, Result> {
+public interface GraphTransformer<Key, Result> {
 
   /**
    * @param key The Key of the requested result

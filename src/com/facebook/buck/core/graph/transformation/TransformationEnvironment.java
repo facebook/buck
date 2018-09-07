@@ -22,7 +22,7 @@ import java.util.function.Function;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * A computation environment that {@link AsyncTransformer} can access. This class provides ability
+ * A computation environment that {@link GraphTransformer} can access. This class provides ability
  * of Transformers to request and execute their dependencies on the engine, without exposing
  * blocking operations.
  *
@@ -32,7 +32,7 @@ import javax.annotation.concurrent.ThreadSafe;
 public interface TransformationEnvironment<ComputeKey, ComputeResult> {
 
   /**
-   * Method used for {@link AsyncTransformer} to get dependency results, and then construct the
+   * Method used for {@link GraphTransformer} to get dependency results, and then construct the
    * {@link ComputeResult} for the current requested Key with the supplied asyncTransformation using
    * the dependency result.
    *
@@ -45,7 +45,7 @@ public interface TransformationEnvironment<ComputeKey, ComputeResult> {
       ComputeKey key, Function<ComputeResult, ComputeResult> asyncTransformation);
 
   /**
-   * Method used for {@link AsyncTransformer} to get multiple dependency results, and then construct
+   * Method used for {@link GraphTransformer} to get multiple dependency results, and then construct
    * the {@link ComputeResult} for the current requested Key with the supplied asyncTransformation
    * using the dependency result.
    *
@@ -59,7 +59,7 @@ public interface TransformationEnvironment<ComputeKey, ComputeResult> {
       Function<ImmutableMap<ComputeKey, ComputeResult>, ComputeResult> asyncTransformation);
 
   /**
-   * Method used for {@link AsyncTransformer} to get multiple dependency results, and then construct
+   * Method used for {@link GraphTransformer} to get multiple dependency results, and then construct
    * the {@link ComputeResult} for the current requested Key. When any individual dependency result
    * is done, {@link AsyncSink#sink(Object, Object)} is called with that result asynchronously. When
    * all dependency results and corresponding calls to {@link AsyncSink#sink(Object, Object)} is
