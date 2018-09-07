@@ -65,7 +65,9 @@ official Android documentation</a> for details about the <code>.aar</code> forma
   {param default : '[]' /}
   {param desc}
   List of build targets whose corresponding compiled Java code,
-  Android resources, and native libraries will be included in the AAR.
+  Android resources, and native libraries will be included in the AAR along with their transitive
+  dependencies. For compile time deps which should not be included in the final AAR,
+  use <code>provided_deps</code> instead.
   <ul>
     <li><code>android_library()</code> Will be included in the final <code>classes.jar</code>
     <li><code>android_resource()</code> Will be included in the final <code>R.txt</code>,
