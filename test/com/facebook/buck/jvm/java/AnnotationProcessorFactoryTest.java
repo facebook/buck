@@ -65,15 +65,15 @@ public class AnnotationProcessorFactoryTest {
                 .setCanReuseClassLoader(canReuseClasspath)
                 .setDoesNotAffectAbi(false)
                 .setSupportsAbiGenerationFromSource(false)
-                .build(),
-            filesystem,
-            DefaultSourcePathResolver.from(null));
+                .build());
 
     try (AnnotationProcessorFactory factory1 =
             new AnnotationProcessorFactory(null, baseClassLoader, classLoaderCache, buildTarget);
         AnnotationProcessorFactory factory2 =
             new AnnotationProcessorFactory(null, baseClassLoader, classLoaderCache, buildTarget)) {
-      JavacPluginJsr199Fields fields = processorGroup.getJavacPluginJsr199Fields();
+      JavacPluginJsr199Fields fields =
+          processorGroup.getJavacPluginJsr199Fields(
+              DefaultSourcePathResolver.from(null), filesystem);
       ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroup(fields);
       ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroup(fields);
       return classLoader1 == classLoader2;

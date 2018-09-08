@@ -20,7 +20,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
@@ -120,16 +119,13 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
         && getParameters().isEmpty();
   }
 
-  public ImmutableList<ResolvedJavacPluginProperties> getAnnotationProcessors(
-      ProjectFilesystem filesystem, SourcePathResolver resolver) {
+  public ImmutableList<ResolvedJavacPluginProperties> getAnnotationProcessors() {
     if (getLegacyProcessors().isEmpty()) {
       return getModernProcessors();
     }
 
     return Stream.concat(
-            getLegacyProcessors()
-                .stream()
-                .map(processorGroup -> processorGroup.resolve(filesystem, resolver)),
+            getLegacyProcessors().stream().map(processorGroup -> processorGroup.resolve()),
             getModernProcessors().stream())
         .collect(ImmutableList.toImmutableList());
   }

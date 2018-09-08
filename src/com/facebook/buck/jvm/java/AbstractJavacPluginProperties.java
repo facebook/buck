@@ -21,9 +21,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.google.common.collect.ImmutableList;
@@ -67,9 +65,8 @@ abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
     return getProcessorNames().isEmpty() && getClasspathEntries().isEmpty();
   }
 
-  public ResolvedJavacPluginProperties resolve(
-      ProjectFilesystem filesystem, SourcePathResolver resolver) {
-    return new ResolvedJavacPluginProperties(this, filesystem, resolver);
+  public ResolvedJavacPluginProperties resolve() {
+    return new ResolvedJavacPluginProperties((JavacPluginProperties) this);
   }
 
   abstract static class Builder {

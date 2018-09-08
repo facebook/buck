@@ -21,47 +21,21 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.Memoizer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.function.Supplier;
 
 public class ResolvedJavacPluginProperties implements AddsToRuleKey {
-  @AddToRuleKey private final AbstractJavacPluginProperties inner;
-  private final Supplier<URL[]> classpathSupplier;
+  @AddToRuleKey private final JavacPluginProperties inner;
 
-  public ResolvedJavacPluginProperties(
-      AbstractJavacPluginProperties inner,
-      ProjectFilesystem filesystem,
-      SourcePathResolver resolver) {
+  private final Memoizer<URL[]> classpathSupplier;
+
+  public ResolvedJavacPluginProperties(JavacPluginProperties inner) {
     this.inner = inner;
-
-    classpathSupplier =
-        MoreSuppliers.memoize(
-            () ->
-                inner
-                    .getClasspathEntries()
-                    .stream()
-                    .map(resolver::getAbsolutePath)
-                    .map(filesystem::resolve)
-                    .map(Path::toUri)
-                    .map(
-                        uri -> {
-                          try {
-                            return uri.toURL();
-                          } catch (MalformedURLException e) {
-                            // The paths we're being given should have all been resolved from the
-                            // file
-                            // system already. We'd need to be unfortunate to get here. Bubble up a
-                            // runtime
-                            // exception.
-                            throw new RuntimeException(e);
-                          }
-                        })
-                    .toArray(size -> new URL[size]));
+    this.classpathSupplier = new Memoizer<>();
   }
 
   public boolean getCanReuseClassLoader() {
@@ -80,18 +54,42 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
     return inner.getProcessorNames();
   }
 
-  public URL[] getClasspath() {
-    return classpathSupplier.get();
+  /** Get the classpath for the plugin. */
+  public URL[] getClasspath(SourcePathResolver resolver, ProjectFilesystem filesystem) {
+    return classpathSupplier.get(
+        () ->
+            inner
+                .getClasspathEntries()
+                .stream()
+                .map(resolver::getAbsolutePath)
+                .map(filesystem::resolve)
+                .map(Path::toUri)
+                .map(
+                    uri -> {
+                      try {
+                        return uri.toURL();
+                      } catch (MalformedURLException e) {
+                        // The paths we're being given should have all been resolved from the
+                        // file
+                        // system already. We'd need to be unfortunate to get here. Bubble up a
+                        // runtime
+                        // exception.
+                        throw new RuntimeException(e);
+                      }
+                    })
+                .toArray(size -> new URL[size]));
   }
 
   public ImmutableSortedSet<SourcePath> getInputs() {
     return inner.getInputs();
   }
 
-  public JavacPluginJsr199Fields getJavacPluginJsr199Fields() {
+  /** Get the javac plugin fields. */
+  public JavacPluginJsr199Fields getJavacPluginJsr199Fields(
+      SourcePathResolver resolver, ProjectFilesystem filesystem) {
     return JavacPluginJsr199Fields.builder()
         .setCanReuseClassLoader(getCanReuseClassLoader())
-        .setClasspath(ImmutableList.copyOf(getClasspath()))
+        .setClasspath(ImmutableList.copyOf(getClasspath(resolver, filesystem)))
         .setProcessorNames(getProcessorNames())
         .build();
   }

@@ -116,9 +116,9 @@ public class JavacPipelineState implements RulePipelineState {
           ImmutableList.copyOf(
               javacOptions
                   .getAnnotationProcessingParams()
-                  .getAnnotationProcessors(filesystem, resolver)
+                  .getAnnotationProcessors()
                   .stream()
-                  .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
+                  .map(properties -> properties.getJavacPluginJsr199Fields(resolver, filesystem))
                   .collect(Collectors.toList()));
 
       invocation =

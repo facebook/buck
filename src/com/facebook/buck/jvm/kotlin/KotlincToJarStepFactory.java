@@ -35,7 +35,6 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.jvm.java.ResolvedJavacPluginProperties;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -306,9 +305,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         ImmutableList.copyOf(
             javacOptions
                 .getAnnotationProcessingParams()
-                .getAnnotationProcessors(filesystem, resolver)
+                .getAnnotationProcessors()
                 .stream()
-                .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
+                .map(
+                    resolvedJavacPluginProperties ->
+                        resolvedJavacPluginProperties.getJavacPluginJsr199Fields(
+                            resolver, filesystem))
                 .map(JavacPluginJsr199Fields::getClasspath)
                 .flatMap(List::stream)
                 .map(url -> AP_CLASSPATH_ARG + url.getFile())

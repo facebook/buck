@@ -354,7 +354,7 @@ public abstract class DefaultJavaLibraryRules {
     ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
         Preconditions.checkNotNull(getJavacOptions())
             .getAnnotationProcessingParams()
-            .getAnnotationProcessors(getProjectFilesystem(), getSourcePathResolver());
+            .getAnnotationProcessors();
 
     for (ResolvedJavacPluginProperties annotationProcessor : annotationProcessors) {
       if (!annotationProcessor.getDoesNotAffectAbi()

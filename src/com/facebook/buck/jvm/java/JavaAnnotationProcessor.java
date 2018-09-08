@@ -21,7 +21,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 public class JavaAnnotationProcessor extends NoopBuildRuleWithDeclaredAndExtraDeps
@@ -33,14 +32,12 @@ public class JavaAnnotationProcessor extends NoopBuildRuleWithDeclaredAndExtraDe
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       JavacPluginProperties properties) {
     super(buildTarget, projectFilesystem, params);
 
     this.properties = properties;
 
-    resolvedProperties =
-        new ResolvedJavacPluginProperties(properties, getProjectFilesystem(), pathResolver);
+    resolvedProperties = new ResolvedJavacPluginProperties(properties);
   }
 
   public JavacPluginProperties getUnresolvedProperties() {

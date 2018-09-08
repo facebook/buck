@@ -192,14 +192,14 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     AnnotationProcessingParams annotationProcessingParams = getAnnotationProcessingParams();
     if (!annotationProcessingParams.isEmpty()) {
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
-          annotationProcessingParams.getAnnotationProcessors(filesystem, pathResolver);
+          annotationProcessingParams.getAnnotationProcessors();
 
       // Specify processorpath to search for processors.
       optionsConsumer.addOptionValue(
           "processorpath",
           annotationProcessors
               .stream()
-              .map(ResolvedJavacPluginProperties::getClasspath)
+              .map(properties -> properties.getClasspath(pathResolver, filesystem))
               .flatMap(Arrays::stream)
               .distinct()
               .map(
