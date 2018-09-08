@@ -50,8 +50,7 @@ public final class JavacOptionsFactory {
     builder.addAllExtraArguments(jvmLibraryArg.getExtraArguments());
 
     AnnotationProcessingParams annotationParams =
-        jvmLibraryArg.buildAnnotationProcessingParams(
-            buildTarget, projectFilesystem, resolver, defaultOptions.getSafeAnnotationProcessors());
+        jvmLibraryArg.buildAnnotationProcessingParams(buildTarget, projectFilesystem, resolver);
     builder.setAnnotationProcessingParams(annotationParams);
 
     return builder.build();

@@ -100,7 +100,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -1483,9 +1482,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     private final AnnotationProcessingParams.Builder annotationProcessingParamsBuilder;
 
     public AnnotationProcessingScenario() {
-      annotationProcessingParamsBuilder =
-          AnnotationProcessingParams.builder()
-              .setLegacySafeAnnotationProcessors(Collections.emptySet());
+      annotationProcessingParamsBuilder = AnnotationProcessingParams.builder();
     }
 
     public AnnotationProcessingParams.Builder getAnnotationProcessingParamsBuilder() {

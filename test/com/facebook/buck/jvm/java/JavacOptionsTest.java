@@ -73,7 +73,6 @@ public class JavacOptionsTest {
   public void shouldSetTheAnnotationSource() {
     AnnotationProcessingParams params =
         AnnotationProcessingParams.builder()
-            .setLegacySafeAnnotationProcessors(Collections.emptySet())
             .setLegacyAnnotationProcessorNames(Collections.singleton("processor"))
             .setProcessOnly(true)
             .setProjectFilesystem(FakeProjectFilesystem.createJavaOnlyFilesystem())

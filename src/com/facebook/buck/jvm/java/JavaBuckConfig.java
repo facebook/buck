@@ -100,9 +100,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     ImmutableList<String> extraArguments =
         delegate.getListWithoutComments(SECTION, "extra_arguments");
 
-    ImmutableList<String> safeAnnotationProcessors =
-        delegate.getListWithoutComments(SECTION, "safe_annotation_processors");
-
     builder.setTrackClassUsage(trackClassUsage());
     Optional<Boolean> trackJavacPhaseEvents =
         delegate.getBoolean(SECTION, "track_javac_phase_events");
@@ -127,7 +124,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return builder
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)
-        .setSafeAnnotationProcessors(safeAnnotationProcessors)
         .build();
   }
 

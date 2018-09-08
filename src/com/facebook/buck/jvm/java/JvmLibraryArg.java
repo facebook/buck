@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -131,10 +130,7 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
 
   @Value.Derived
   default AnnotationProcessingParams buildAnnotationProcessingParams(
-      BuildTarget owner,
-      ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
-      Set<String> safeAnnotationProcessors) {
+      BuildTarget owner, ProjectFilesystem filesystem, BuildRuleResolver resolver) {
     if (getAnnotationProcessors().isEmpty()
         && getPlugins().isEmpty()
         && getAnnotationProcessorDeps().isEmpty()) {
@@ -142,7 +138,6 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
     }
 
     AnnotationProcessingParams.Builder builder = AnnotationProcessingParams.builder();
-    builder.setLegacySafeAnnotationProcessors(safeAnnotationProcessors);
     builder.setProjectFilesystem(filesystem);
 
     addLegacyProcessors(builder, resolver);
