@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
@@ -396,11 +395,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @Override
   protected Optional<String> getBootClasspath(BuildContext context) {
     return javacOptions.withBootclasspathFromContext(extraClassPath).getBootclasspath();
-  }
-
-  @Override
-  public Tool getCompiler() {
-    return kotlinc;
   }
 
   private void addCreateFolderStep(

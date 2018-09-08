@@ -233,7 +233,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               dummyRDotJava -> {
                 delegateBuilder.setDeps(
                     new JavaLibraryDeps.Builder(graphBuilder)
-                        .from(JavaLibraryDeps.newInstance(args, graphBuilder))
+                        .from(JavaLibraryDeps.newInstance(args, graphBuilder, compilerFactory))
                         .addDepTargets(dummyRDotJava.getBuildTarget())
                         .build());
               });

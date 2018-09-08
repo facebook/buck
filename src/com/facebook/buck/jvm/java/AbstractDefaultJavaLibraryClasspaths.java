@@ -50,8 +50,6 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
   abstract JavaLibraryDeps getDeps();
 
-  abstract ConfiguredCompiler getConfiguredCompiler();
-
   @Value.Default
   public CompileAgainstLibraryType getCompileAgainstLibraryType() {
     return CompileAgainstLibraryType.FULL;
@@ -74,15 +72,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
       return ImmutableSortedSet.of();
     }
 
-    return ImmutableSortedSet.copyOf(getAllFirstOrderNonProvidedDeps());
-  }
-
-  @Value.Lazy
-  ImmutableList<BuildRule> getAllFirstOrderNonProvidedDeps() {
-    return ImmutableList.copyOf(
-        Iterables.concat(
-            Preconditions.checkNotNull(getDeps()).getDeps(),
-            getConfiguredCompiler().getDeclaredDeps(getSourcePathRuleFinder())));
+    return getDeps().getDeps();
   }
 
   @Value.Lazy
@@ -149,7 +139,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   @Value.Lazy
   protected Iterable<BuildRule> getCompileTimeFirstOrderDeps() {
     return Iterables.concat(
-        getAllFirstOrderNonProvidedDeps(),
+        getDeps().getDeps(),
         Preconditions.checkNotNull(getDeps()).getProvidedDeps(),
         Preconditions.checkNotNull(getDeps()).getExportedProvidedDeps());
   }

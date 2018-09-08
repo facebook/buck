@@ -39,7 +39,9 @@ import org.immutables.value.Value;
     visibility = Value.Style.ImplementationVisibility.PACKAGE)
 public abstract class JavaLibraryDeps {
   public static JavaLibraryDeps newInstance(
-      JavaLibraryDescription.CoreArg args, BuildRuleResolver resolver) {
+      JavaLibraryDescription.CoreArg args,
+      BuildRuleResolver resolver,
+      ConfiguredCompilerFactory compilerFactory) {
     Builder builder =
         new Builder(resolver)
             .setDepTargets(args.getDeps())
@@ -47,6 +49,7 @@ public abstract class JavaLibraryDeps {
             .setProvidedDepTargets(args.getProvidedDeps())
             .setExportedProvidedDepTargets(args.getExportedProvidedDeps())
             .setSourceOnlyAbiDepTargets(args.getSourceOnlyAbiDeps());
+    compilerFactory.getNonProvidedClasspathDeps(builder::addDepTargets);
 
     if (args instanceof HasDepsQuery) {
       builder.setDepsQuery(((HasDepsQuery) args).getDepsQuery());

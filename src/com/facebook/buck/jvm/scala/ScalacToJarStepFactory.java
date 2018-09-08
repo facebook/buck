@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
@@ -49,7 +48,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
   private static final PathOrGlobMatcher SCALA_PATH_MATCHER = new PathOrGlobMatcher("**.scala");
 
   @AddToRuleKey private final Tool scalac;
-  private final BuildRule scalaLibraryTarget;
   @AddToRuleKey private final ImmutableList<String> configCompilerFlags;
   @AddToRuleKey private final ImmutableList<String> extraArguments;
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerPlugins;
@@ -59,7 +57,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
 
   public ScalacToJarStepFactory(
       Tool scalac,
-      BuildRule scalaLibraryTarget,
       ImmutableList<String> configCompilerFlags,
       ImmutableList<String> extraArguments,
       ImmutableSet<BuildRule> compilerPlugins,
@@ -67,7 +64,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClassPath) {
     this.scalac = scalac;
-    this.scalaLibraryTarget = scalaLibraryTarget;
     this.configCompilerFlags = configCompilerFlags;
     this.extraArguments = extraArguments;
     this.compilerPlugins =
@@ -145,16 +141,5 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
           .createCompileStep(
               context, projectFilesystem, invokingRule, javacParameters, steps, buildableContext);
     }
-  }
-
-  @Override
-  public Tool getCompiler() {
-    return scalac;
-  }
-
-  @Override
-  public Iterable<BuildRule> getDeclaredDeps(SourcePathRuleFinder ruleFinder) {
-    return Iterables.concat(
-        super.getDeclaredDeps(ruleFinder), ImmutableList.of(scalaLibraryTarget));
   }
 }

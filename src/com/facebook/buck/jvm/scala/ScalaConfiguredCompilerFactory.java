@@ -21,7 +21,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.jvm.java.ConfiguredCompiler;
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.Javac;
@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -61,15 +62,13 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
-  public ConfiguredCompiler configure(
+  public CompileToJarStepFactory configure(
       @Nullable JvmLibraryArg arg,
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
       ToolchainProvider toolchainProvider) {
-
     return new ScalacToJarStepFactory(
         getScalac(buildRuleResolver),
-        buildRuleResolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
         scalaBuckConfig.getCompilerFlags(),
         Preconditions.checkNotNull(arg).getExtraArguments(),
         buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
@@ -87,6 +86,11 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         .add(scalaBuckConfig.getScalaLibraryTarget())
         .addAll(scalaBuckConfig.getCompilerPlugins());
     Optionals.addIfPresent(scalaBuckConfig.getScalacTarget(), extraDepsBuilder);
+  }
+
+  @Override
+  public void getNonProvidedClasspathDeps(Consumer<BuildTarget> depsConsumer) {
+    depsConsumer.accept(scalaBuckConfig.getScalaLibraryTarget());
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {

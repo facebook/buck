@@ -20,13 +20,14 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableCollection;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 public abstract class ConfiguredCompilerFactory {
 
   // TODO(jkeljo): args is not actually Nullable in all subclasses, but it is also not
   // straightforward to create a safe "empty" default value. Find a fix.
-  public abstract ConfiguredCompiler configure(
+  public abstract CompileToJarStepFactory configure(
       @Nullable JvmLibraryArg args,
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
@@ -59,4 +60,7 @@ public abstract class ConfiguredCompilerFactory {
       @SuppressWarnings("unused") ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       @SuppressWarnings("unused")
           ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
+
+  public void getNonProvidedClasspathDeps(
+      @SuppressWarnings("unused") Consumer<BuildTarget> depsConsumer) {}
 }

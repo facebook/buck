@@ -66,7 +66,7 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
-  public ConfiguredCompiler configure(
+  public CompileToJarStepFactory configure(
       @Nullable JvmLibraryArg arg,
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,

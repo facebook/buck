@@ -491,7 +491,6 @@ public abstract class DefaultJavaLibraryRules {
   DefaultJavaLibraryClasspaths getClasspaths() {
     return DefaultJavaLibraryClasspaths.builder(getActionGraphBuilder())
         .setBuildRuleParams(getInitialParams())
-        .setConfiguredCompiler(getConfiguredCompiler())
         .setDeps(Preconditions.checkNotNull(getDeps()))
         .setCompileAgainstLibraryType(getCompileAgainstLibraryType())
         .build();
@@ -503,13 +502,13 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  ConfiguredCompiler getConfiguredCompiler() {
+  CompileToJarStepFactory getConfiguredCompiler() {
     return getConfiguredCompilerFactory()
         .configure(getArgs(), getJavacOptions(), getActionGraphBuilder(), getToolchainProvider());
   }
 
   @Value.Lazy
-  ConfiguredCompiler getConfiguredCompilerForSourceOnlyAbi() {
+  CompileToJarStepFactory getConfiguredCompilerForSourceOnlyAbi() {
     return getConfiguredCompilerFactory()
         .configure(
             getArgs(),
@@ -643,7 +642,7 @@ public abstract class DefaultJavaLibraryRules {
             .setResourcesRoot(args.getResourcesRoot())
             .setProguardConfig(args.getProguardConfig())
             .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
-            .setDeps(JavaLibraryDeps.newInstance(args, graphBuilder))
+            .setDeps(JavaLibraryDeps.newInstance(args, graphBuilder, configuredCompilerFactory))
             .setTests(args.getTests())
             .setManifestFile(args.getManifestFile())
             .setMavenCoords(args.getMavenCoords())

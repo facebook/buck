@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -53,6 +54,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -128,13 +130,6 @@ public class DummyRDotJava extends AbstractBuildRule
       boolean skipNonUnionRDotJava) {
     super(buildTarget, projectFilesystem);
 
-    // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
-    // that is used to build it
-    buildDeps =
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(ruleFinder.filterBuildRuleInputs(abiInputs))
-            .addAll(compileStepFactory.getBuildDeps(ruleFinder))
-            .build();
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps =
         androidResourceDeps
@@ -151,6 +146,10 @@ public class DummyRDotJava extends AbstractBuildRule
     this.abiInputs = abiInputs;
     this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
+
+    buildDeps =
+        BuildableSupport.deriveDeps(this, ruleFinder)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   private static ImmutableList<SourcePath> abiPaths(Iterable<HasAndroidResourceDeps> deps) {
