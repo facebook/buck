@@ -24,7 +24,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
@@ -50,8 +49,6 @@ abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
   // classpathEntries is not necessary because it is derived from inputs
   public abstract ImmutableSortedSet<SourcePath> getClasspathEntries();
 
-  public abstract ImmutableList<BuildRule> getClasspathDeps();
-
   @AddToRuleKey
   public abstract boolean getCanReuseClassLoader();
 
@@ -76,14 +73,9 @@ abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
 
     public abstract Builder addAllClasspathEntries(Iterable<? extends SourcePath> elements);
 
-    public abstract Builder addClasspathDeps(BuildRule... elements);
-
-    public abstract Builder addAllClasspathDeps(Iterable<? extends BuildRule> elements);
-
     public abstract JavacPluginProperties build();
 
     public JavacPluginProperties.Builder addDep(BuildRule rule) {
-      addClasspathDeps(rule);
       if (rule.getClass().isAnnotationPresent(BuildsAnnotationProcessor.class)) {
         SourcePath outputSourcePath = rule.getSourcePathToOutput();
         if (outputSourcePath != null) {
@@ -93,7 +85,6 @@ abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
       } else if (rule instanceof HasClasspathEntries) {
         HasClasspathEntries hasClasspathEntries = (HasClasspathEntries) rule;
         ImmutableSet<JavaLibrary> entries = hasClasspathEntries.getTransitiveClasspathDeps();
-        addAllClasspathDeps(entries);
         for (JavaLibrary entry : entries) {
           // Libraries may merely re-export other libraries' class paths, instead of having one
           // itself. In such cases do not add the library itself, and just move on.

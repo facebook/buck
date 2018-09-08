@@ -19,12 +19,10 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
-public class JavaAnnotationProcessor extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements SupportsInputBasedRuleKey {
+public class JavaAnnotationProcessor extends NoopBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final JavacPluginProperties properties;
   private final ResolvedJavacPluginProperties resolvedProperties;
 
@@ -34,10 +32,8 @@ public class JavaAnnotationProcessor extends NoopBuildRuleWithDeclaredAndExtraDe
       BuildRuleParams params,
       JavacPluginProperties properties) {
     super(buildTarget, projectFilesystem, params);
-
     this.properties = properties;
-
-    resolvedProperties = new ResolvedJavacPluginProperties(properties);
+    this.resolvedProperties = new ResolvedJavacPluginProperties(properties);
   }
 
   public JavacPluginProperties getUnresolvedProperties() {

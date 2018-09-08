@@ -81,10 +81,7 @@ public class JavaAnnotationProcessorDescription
     JavacPluginProperties properties = propsBuilder.build();
 
     return new JavaAnnotationProcessor(
-        buildTarget,
-        context.getProjectFilesystem(),
-        params.copyAppendingExtraDeps(properties.getClasspathDeps()),
-        properties);
+        buildTarget, context.getProjectFilesystem(), params, properties);
   }
 
   @BuckStyleImmutable
