@@ -421,12 +421,7 @@ def add_rule(rule, build_env):
 
 
 def glob(
-    includes,
-    excludes=None,
-    include_dotfiles=False,
-    build_env=None,
-    search_base=None,
-    allow_safe_import=None,
+    includes, excludes=None, include_dotfiles=False, build_env=None, search_base=None
 ):
     if excludes is None:
         excludes = []
@@ -515,13 +510,7 @@ def merge_maps(*header_maps):
 
 
 def single_subdir_glob(
-    dirpath,
-    glob_pattern,
-    excludes=None,
-    prefix=None,
-    build_env=None,
-    search_base=None,
-    allow_safe_import=None,
+    dirpath, glob_pattern, excludes=None, prefix=None, build_env=None, search_base=None
 ):
     if excludes is None:
         excludes = []
@@ -531,7 +520,6 @@ def single_subdir_glob(
         excludes=excludes,
         build_env=build_env,
         search_base=search_base,
-        allow_safe_import=allow_safe_import,
     )
     for f in files:
         if dirpath:
@@ -552,12 +540,7 @@ def single_subdir_glob(
 
 
 def subdir_glob(
-    glob_specs,
-    excludes=None,
-    prefix=None,
-    build_env=None,
-    search_base=None,
-    allow_safe_import=None,
+    glob_specs, excludes=None, prefix=None, build_env=None, search_base=None
 ):
     """
     Given a list of tuples, the form of (relative-sub-directory, glob-pattern),
@@ -575,13 +558,7 @@ def subdir_glob(
     for dirpath, glob_pattern in glob_specs:
         results.append(
             single_subdir_glob(
-                dirpath,
-                glob_pattern,
-                excludes,
-                prefix,
-                build_env,
-                search_base,
-                allow_safe_import=allow_safe_import,
+                dirpath, glob_pattern, excludes, prefix, build_env, search_base
             )
         )
 
@@ -1156,7 +1133,6 @@ class BuildFileProcessor(object):
             include_dotfiles=include_dotfiles,
             search_base=search_base,
             build_env=build_env,
-            allow_safe_import=self._import_whitelist_manager.allow_unsafe_import,
         )
 
     def _subdir_glob(self, glob_specs, excludes=None, prefix=None, search_base=None):
@@ -1167,7 +1143,6 @@ class BuildFileProcessor(object):
             prefix=prefix,
             search_base=search_base,
             build_env=build_env,
-            allow_safe_import=self._import_whitelist_manager.allow_unsafe_import,
         )
 
     def _record_env_var(self, name, value):
