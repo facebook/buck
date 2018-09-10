@@ -125,8 +125,16 @@ def struct(**kwargs):
     return struct_class(**kwargs)
 
 
+_CLASS_CACHE = {}
+
+
 def _create_struct_class(field_names):
     # type: (Tuple[str]) -> Type
+
+    struct_class = _CLASS_CACHE.get(field_names)
+    if struct_class:
+        return struct_class
+
     # Variables used in the methods and docstrings
 
     for name in field_names:
@@ -191,4 +199,6 @@ def _create_struct_class(field_names):
             cache[index] = itemgetter_object
         class_namespace[name] = property(itemgetter_object)
 
-    return type(_TYPENAME, (tuple,), class_namespace)
+    struct_class = type(_TYPENAME, (tuple,), class_namespace)
+    _CLASS_CACHE[field_names] = struct_class
+    return struct_class
