@@ -5989,6 +5989,197 @@ public class ProjectGeneratorTest {
         buildSettingsTest.get("HEADER_SEARCH_PATHS"));
   }
 
+  @Test
+  public void testMergedHeaderMapAbsoluteHeaderMap() throws IOException {
+    BuildTarget lib1Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib1");
+    BuildTarget lib2Target = BuildTargetFactory.newInstance(rootPath, "//bar", "lib2");
+    BuildTarget lib3Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib3");
+    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
+    BuildTarget lib4Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib4");
+
+    TargetNode<?> lib1Node =
+        AppleLibraryBuilder.createBuilder(lib1Target)
+            .setConfigs(ImmutableSortedMap.of("Default", ImmutableMap.of()))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("lib1.h")))
+            .setDeps(ImmutableSortedSet.of(lib2Target))
+            .setTests(ImmutableSortedSet.of(testTarget))
+            .build();
+
+    TargetNode<?> lib2Node =
+        AppleLibraryBuilder.createBuilder(lib2Target)
+            .setConfigs(ImmutableSortedMap.of("Default", ImmutableMap.of()))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("lib2.h")))
+            .build();
+
+    TargetNode<?> lib3Node =
+        AppleLibraryBuilder.createBuilder(lib3Target)
+            .setConfigs(ImmutableSortedMap.of("Default", ImmutableMap.of()))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("lib3.h")))
+            .build();
+
+    TargetNode<?> testNode =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setConfigs(ImmutableSortedMap.of("Default", ImmutableMap.of()))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setDeps(ImmutableSortedSet.of(lib1Target, lib4Target))
+            .build();
+
+    TargetNode<?> lib4Node =
+        AppleLibraryBuilder.createBuilder(lib4Target)
+            .setConfigs(ImmutableSortedMap.of("Default", ImmutableMap.of()))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("lib4.h")))
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            ImmutableSet.of(lib1Node, lib2Node, lib3Node, testNode, lib4Node));
+    AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
+    ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
+
+    XCodeDescriptions xcodeDescriptions =
+        XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
+
+    ProjectGenerator projectGeneratorLib2 =
+        new ProjectGenerator(
+            xcodeDescriptions,
+            targetGraph,
+            cache,
+            projStateCache,
+            ImmutableSet.of(lib2Target),
+            projectCell,
+            OUTPUT_DIRECTORY,
+            PROJECT_NAME,
+            "BUCK",
+            ProjectGeneratorOptions.builder()
+                .setShouldMergeHeaderMaps(true)
+                .setShouldUseAbsoluteHeaderMapPaths(true)
+                .build(),
+            TestRuleKeyConfigurationFactory.create(),
+            false, /* isMainProject */
+            Optional.of(lib1Target),
+            ImmutableSet.of(lib1Target, lib4Target),
+            FocusedModuleTargetMatcher.noFocus(),
+            DEFAULT_PLATFORM,
+            ImmutableSet.of(),
+            getActionGraphBuilderNodeFunction(targetGraph),
+            getFakeBuckEventBus(),
+            halideBuckConfig,
+            cxxBuckConfig,
+            appleConfig,
+            swiftBuckConfig);
+
+    projectGeneratorLib2.createXcodeProjects();
+
+    // The merged header map should not generated at this point.
+    Path hmapPath = Paths.get("buck-out/gen/_p/pub-hmap/.hmap");
+    assertFalse(hmapPath + " should NOT exist.", projectFilesystem.isFile(hmapPath));
+    // Checks the content of the header search paths.
+    PBXProject project2 = projectGeneratorLib2.getGeneratedProject();
+    PBXTarget testPBXTarget2 = assertTargetExistsAndReturnTarget(project2, "//bar:lib2");
+
+    ImmutableMap<String, String> buildSettings2 =
+        getBuildSettings(lib2Target, testPBXTarget2, "Default");
+
+    Path currentDirectory = Paths.get(".").toAbsolutePath();
+    assertEquals(
+        "test binary should use header symlink trees with absolute paths for both public and non-public headers "
+            + "of the tested library in HEADER_SEARCH_PATHS",
+        "$(inherited) "
+            + currentDirectory
+                .resolve("buck-out/gen/_p/YAYFR3hXIb-priv/.hmap")
+                .normalize()
+                .toString()
+            + " "
+            + currentDirectory.resolve("buck-out/gen/_p/pub-hmap/.hmap").normalize().toString(),
+        buildSettings2.get("HEADER_SEARCH_PATHS"));
+
+    ProjectGenerator projectGeneratorLib1 =
+        new ProjectGenerator(
+            xcodeDescriptions,
+            targetGraph,
+            cache,
+            projStateCache,
+            ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
+            projectCell,
+            OUTPUT_DIRECTORY,
+            PROJECT_NAME,
+            "BUCK",
+            ProjectGeneratorOptions.builder()
+                .setShouldMergeHeaderMaps(true)
+                .setShouldUseAbsoluteHeaderMapPaths(true)
+                .build(),
+            TestRuleKeyConfigurationFactory.create(),
+            true, /* isMainProject */
+            Optional.of(lib1Target),
+            ImmutableSet.of(lib1Target, lib4Target),
+            FocusedModuleTargetMatcher.noFocus(),
+            DEFAULT_PLATFORM,
+            ImmutableSet.of(),
+            getActionGraphBuilderNodeFunction(targetGraph),
+            getFakeBuckEventBus(),
+            halideBuckConfig,
+            cxxBuckConfig,
+            appleConfig,
+            swiftBuckConfig);
+
+    projectGeneratorLib1.createXcodeProjects();
+
+    // The merged header map should not generated at this point.
+    assertTrue(hmapPath + " should exist.", projectFilesystem.isFile(hmapPath));
+    assertThatHeaderMapWithoutSymLinksContains(
+        Paths.get("buck-out/gen/_p/pub-hmap"),
+        ImmutableMap.of(
+            "lib1/lib1.h",
+            "buck-out/gen/_p/WNl0jZWMBk-pub/lib1/lib1.h",
+            "lib2/lib2.h",
+            "buck-out/gen/_p/YAYFR3hXIb-pub/lib2/lib2.h",
+            "lib4/lib4.h",
+            "buck-out/gen/_p/nmnbF8ID6C-pub/lib4/lib4.h"));
+    // Checks the content of the header search paths.
+    PBXProject project1 = projectGeneratorLib1.getGeneratedProject();
+
+    // For //foo:lib1
+    PBXTarget testPBXTarget1 = assertTargetExistsAndReturnTarget(project1, "//foo:lib1");
+
+    ImmutableMap<String, String> buildSettings1 =
+        getBuildSettings(lib1Target, testPBXTarget1, "Default");
+
+    assertEquals(
+        "test binary should use header symlink trees with absolute paths for both public and non-public headers "
+            + "of the tested library in HEADER_SEARCH_PATHS",
+        "$(inherited) "
+            + currentDirectory
+                .resolve("buck-out/gen/_p/WNl0jZWMBk-priv/.hmap")
+                .normalize()
+                .toString()
+            + " "
+            + currentDirectory.resolve("buck-out/gen/_p/pub-hmap/.hmap").normalize().toString(),
+        buildSettings1.get("HEADER_SEARCH_PATHS"));
+
+    // For //foo:test
+    PBXTarget testPBXTargetTest = assertTargetExistsAndReturnTarget(project1, "//foo:test");
+
+    ImmutableMap<String, String> buildSettingsTest =
+        getBuildSettings(testTarget, testPBXTargetTest, "Default");
+
+    assertEquals(
+        "test binary should use header symlink trees with absolute paths for both public and non-public headers "
+            + "of the tested library in HEADER_SEARCH_PATHS",
+        "$(inherited) "
+            + currentDirectory
+                .resolve("buck-out/gen/_p/LpygK8zq5F-priv/.hmap")
+                .normalize()
+                .toString()
+            + " "
+            + currentDirectory.resolve("buck-out/gen/_p/pub-hmap/.hmap").normalize().toString()
+            + " "
+            + currentDirectory
+                .resolve("buck-out/gen/_p/WNl0jZWMBk-priv/.hmap")
+                .normalize()
+                .toString(),
+        buildSettingsTest.get("HEADER_SEARCH_PATHS"));
+  }
+
   private ProjectGenerator createProjectGenerator(Collection<TargetNode<?>> allNodes) {
     return createProjectGenerator(
         allNodes, allNodes, ProjectGeneratorOptions.builder().build(), ImmutableSet.of());

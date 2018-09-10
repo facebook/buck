@@ -3229,7 +3229,12 @@ public class ProjectGenerator {
       builder.add(
           getHeaderSearchPathFromSymlinkTreeRoot(
               getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
-      builder.add(getHeaderSearchPathFromSymlinkTreeRoot(getRelativePathToMergedHeaderMap()));
+      if (options.shouldUseAbsoluteHeaderMapPaths()) {
+        builder.add(
+            getHeaderSearchPathFromSymlinkTreeRoot(getPathToMergedHeaderMap().toAbsolutePath()));
+      } else {
+        builder.add(getHeaderSearchPathFromSymlinkTreeRoot(getRelativePathToMergedHeaderMap()));
+      }
       visitRecursivePrivateHeaderSymlinkTreesForTests(
           targetNode,
           (nativeNode, headerVisibility) -> {
