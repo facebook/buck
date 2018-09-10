@@ -13,20 +13,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.facebook.buck.core.rules.platform;
 
-package com.facebook.buck.core.rules.configsetting;
-
-import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.select.SelectableConfigurationContext;
+import com.facebook.buck.core.model.platform.ConstraintSetting;
+import com.facebook.buck.core.model.platform.ConstraintValue;
 
-/** {@link SelectableConfigurationContext} for {@link ConfigSettingSelectable}. */
-public interface ConfigSettingSelectableConfigurationContext
-    extends SelectableConfigurationContext {
-  BuckConfig getBuckConfig();
+public class ThrowingConstraintResolver implements ConstraintResolver {
+  @Override
+  public ConstraintSetting getConstraintSetting(BuildTarget buildTarget) {
+    throw new UnsupportedOperationException();
+  }
 
-  ConstraintResolver getConstraintResolver();
-
-  Platform getTargetPlatform();
+  @Override
+  public ConstraintValue getConstraintValue(BuildTarget buildTarget) {
+    throw new UnsupportedOperationException();
+  }
 }

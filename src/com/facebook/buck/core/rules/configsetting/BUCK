@@ -4,6 +4,7 @@ java_library_with_plugins(
     name = "configsetting",
     srcs = glob(["*.java"]),
     exported_deps = [
+        "//src/com/facebook/buck/core/model/platform:platform",
         "//src/com/facebook/buck/core/rules/config:config",
         "//src/com/facebook/buck/core/select:select",
     ],

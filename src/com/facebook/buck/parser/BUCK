@@ -49,6 +49,9 @@ java_immutables_library(
         "ThrowingPackageBoundaryChecker.java",
         "UnexpectedFlavorException.java",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/platform:platform",
+    ],
     tests = [
         "//test/com/facebook/buck/parser:integration",
         "//test/com/facebook/buck/parser:parser",
@@ -71,6 +74,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/rules/config/impl:impl",
         "//src/com/facebook/buck/core/rules/configsetting:configsetting",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/rules/platform:platform",
         "//src/com/facebook/buck/core/select:select",
         "//src/com/facebook/buck/core/select/impl:impl",
         "//src/com/facebook/buck/core/util/graph:graph",

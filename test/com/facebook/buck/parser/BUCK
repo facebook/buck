@@ -294,6 +294,7 @@ java_test(
         "//test/com/facebook/buck/core/config:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/knowntypes:testutil",
+        "//test/com/facebook/buck/core/rules/platform:testutil",
         "//test/com/facebook/buck/core/select:testutil",
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/event:testutil",

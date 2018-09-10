@@ -14,19 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.core.rules.configsetting;
+package com.facebook.buck.core.model.platform;
 
-import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.select.SelectableConfigurationContext;
+import com.facebook.buck.core.model.BuildTarget;
 
-/** {@link SelectableConfigurationContext} for {@link ConfigSettingSelectable}. */
-public interface ConfigSettingSelectableConfigurationContext
-    extends SelectableConfigurationContext {
-  BuckConfig getBuckConfig();
+/** An interface to access constraints using {@link BuildTarget}. */
+public interface ConstraintResolver {
 
-  ConstraintResolver getConstraintResolver();
+  /** @return {@link ConstraintSetting} identified by a given {@link BuildTarget}. */
+  ConstraintSetting getConstraintSetting(BuildTarget buildTarget);
 
-  Platform getTargetPlatform();
+  /** @return {@link ConstraintValue} identified by a given {@link BuildTarget}. */
+  ConstraintValue getConstraintValue(BuildTarget buildTarget);
 }

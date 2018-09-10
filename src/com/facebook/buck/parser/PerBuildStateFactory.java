@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
 import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResolver;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
@@ -158,7 +159,8 @@ public class PerBuildStateFactory {
               targetNodeFactory,
               packageBoundaryChecker,
               symlinkCheckers,
-              selectorListResolver);
+              selectorListResolver,
+              new RuleBasedConstraintResolver(configurationRuleResolver));
 
       targetNodeParsePipeline =
           new RawTargetNodeToTargetNodeParsePipeline(

@@ -21,6 +21,8 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
+import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -47,6 +49,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   private final PackageBoundaryChecker packageBoundaryChecker;
   private final TargetNodeListener<TargetNode<?>> nodeListener;
   private final SelectorListResolver selectorListResolver;
+  private final ConstraintResolver constraintResolver;
 
   public RawTargetNodeToTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider,
@@ -54,13 +57,15 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       TargetNodeFactory targetNodeFactory,
       PackageBoundaryChecker packageBoundaryChecker,
       TargetNodeListener<TargetNode<?>> nodeListener,
-      SelectorListResolver selectorListResolver) {
+      SelectorListResolver selectorListResolver,
+      ConstraintResolver constraintResolver) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
     this.targetNodeFactory = targetNodeFactory;
     this.packageBoundaryChecker = packageBoundaryChecker;
     this.nodeListener = nodeListener;
     this.selectorListResolver = selectorListResolver;
+    this.constraintResolver = constraintResolver;
   }
 
   @Override
@@ -117,7 +122,8 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       BuildTarget buildTarget,
       ImmutableMap<String, Object> rawTargetNodeAttributes) {
     SelectableConfigurationContext configurationContext =
-        DefaultSelectableConfigurationContext.of(buckConfig);
+        DefaultSelectableConfigurationContext.of(
+            buckConfig, constraintResolver, new ConstraintBasedPlatform(ImmutableSet.of()));
 
     ImmutableMap.Builder<String, Object> configuredAttributes = ImmutableMap.builder();
 
