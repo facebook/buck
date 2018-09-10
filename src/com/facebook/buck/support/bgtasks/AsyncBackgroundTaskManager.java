@@ -289,8 +289,7 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
 
   @VisibleForTesting
   public void schedule(BackgroundTask<?> task) {
-    ManagedBackgroundTask managedTask =
-        ManagedBackgroundTask.of(task, TaskId.of(task.getName(), new BuildId("TESTID")));
+    ManagedBackgroundTask managedTask = new ManagedBackgroundTask(task, new BuildId("TESTID"));
     schedule(managedTask);
   }
 

@@ -43,8 +43,7 @@ public class TaskManagerScope implements Scope {
    * @param task task to be run
    */
   public void schedule(BackgroundTask<?> task) {
-    ManagedBackgroundTask managedTask =
-        ManagedBackgroundTask.of(task, TaskId.of(task.getName(), buildId));
+    ManagedBackgroundTask managedTask = new ManagedBackgroundTask(task, buildId);
     manager.schedule(managedTask);
   }
 

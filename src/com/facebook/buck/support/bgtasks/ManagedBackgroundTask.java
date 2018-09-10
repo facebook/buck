@@ -24,17 +24,25 @@ import org.immutables.value.Value;
  * Wrapper class for {@link BackgroundTask} that includes data generated/ managed by the {@link
  * BackgroundTaskManager}, e.g. task ID.
  */
-@Value.Immutable(builder = false)
-@BuckStyleImmutable
-abstract class AbstractManagedBackgroundTask {
+class ManagedBackgroundTask {
 
-  @Value.Parameter
-  public abstract BackgroundTask<?> getTask();
+  private final BackgroundTask<?> task;
+  private final TaskId id;
 
-  @Value.Parameter
-  public abstract TaskId getId();
+  protected ManagedBackgroundTask(BackgroundTask<?> task, BuildId buildId) {
+    this.task = task;
+    this.id = TaskId.of(task.getName(), buildId);
+  }
 
-  /** Task ID object for {@link }. */
+  public BackgroundTask<?> getTask() {
+    return task;
+  }
+
+  public TaskId getId() {
+    return id;
+  }
+
+  /** Task ID object for {@link ManagedBackgroundTask}. */
   @Value.Immutable(builder = false)
   @BuckStyleImmutable
   abstract static class AbstractTaskId {
