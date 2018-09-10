@@ -19,7 +19,7 @@ import time
 import traceback
 import types
 from pathlib import Path, PurePath
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, TypeVar
 
 import pywatchman
 from pywatchman import WatchmanError
@@ -112,7 +112,7 @@ class AbstractContext(object):
     def merge(self, other):
         """Merge the context of an included file into the current context.
 
-        :param IncludeContext other: the include context to merge.
+        :param AbstractContext other: the include context to merge.
         :rtype: None
         """
         self.includes.update(other.includes)
@@ -210,6 +210,11 @@ class IncludeContext(AbstractContext):
     @property
     def diagnostics(self):
         return self._diagnostics
+
+
+# Generic context type that should be used in places where return and parameter
+# types are the same but could be either of the concrete contexts.
+_GCT = TypeVar("_GCT", IncludeContext, BuildFileContext)
 
 
 BuildInclude = collections.namedtuple("BuildInclude", ["cell_name", "path"])
@@ -923,7 +928,7 @@ class BuildFileProcessor(object):
 
     @staticmethod
     def _merge_explicit_globals(src, dst, whitelist=None, whitelist_mapping=None):
-        # type: (types.ModuleType, Dict[str, Any], List[str], Dict[str, str]) -> None
+        # type: (types.ModuleType, Dict[str, Any], Tuple[str], Dict[str, str]) -> None
         """Copy explicitly requested global definitions from one globals dict to another.
 
         If whitelist is set, only globals from the whitelist will be pulled in.
@@ -1202,7 +1207,7 @@ class BuildFileProcessor(object):
         build_env.merge(inner_env)
 
     def _load(self, is_implicit_include, name, *symbols, **symbol_kwargs):
-        # type: (str, *str, **str) -> None
+        # type: (bool, str, *str, **str) -> None
         """Pull the symbols from the named include into the current caller's context.
 
         This method is meant to be installed into the globals of any files or
@@ -1381,7 +1386,7 @@ class BuildFileProcessor(object):
                 yield
 
     def _process(self, build_env, path, is_implicit_include):
-        # type: (AbstractContext, str, bool) -> Tuple[AbstractContext, types.ModuleType]
+        # type: (_GCT, str, bool) -> Tuple[_GCT, types.ModuleType]
         """Process a build file or include at the given path.
 
         :param build_env: context of the file to process.
@@ -1469,6 +1474,7 @@ class BuildFileProcessor(object):
         return build_env, mod
 
     def _process_build_file(self, watch_root, project_prefix, path):
+        # type: (str, str, str) -> Tuple[BuildFileContext, types.ModuleType]
         """Process the build file at the given path."""
         # Create the build file context, including the base path and directory
         # name of the given path.
