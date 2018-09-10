@@ -1,0 +1,12 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "platform",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/model/platform:platform",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)
