@@ -16,6 +16,7 @@
 
 package com.facebook.buck.support.bgtasks;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -85,6 +86,11 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
     this(blocking, DEFAULT_THREADS);
   }
 
+  @Override
+  public TaskManagerScope getNewScope(BuildId buildId) {
+    return new TaskManagerScope(this, buildId);
+  }
+
   private void startSchedulingIfNeeded() {
     Preconditions.checkState(scheduler.isPresent());
     if (schedulerRunning.getAndSet(true)) {
@@ -122,21 +128,13 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
   }
 
   @Override
-  public void schedule(ImmutableList<? extends BackgroundTask<?>> taskList) {
-    for (BackgroundTask<?> task : taskList) {
-      schedule(task);
-    }
-  }
-
-  @Override
-  public void schedule(BackgroundTask<?> task) {
+  public void schedule(ManagedBackgroundTask task) {
     if (!schedulingOpen.get()) {
       LOG.warn("Manager is not accepting new tasks; newly scheduled tasks will not be run.");
       return;
     }
-    ManagedBackgroundTask managedTask = ManagedBackgroundTask.of(task);
     synchronized (scheduledTasks) {
-      scheduledTasks.add(managedTask);
+      scheduledTasks.add(task);
       scheduledTasks.notify();
     }
   }
@@ -151,10 +149,9 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
       BackgroundTask<?> task = managedTask.getTask();
       task.run();
     } catch (InterruptedException e) {
-      LOG.warn(e, "Task %s interrupted.", managedTask.getTask().getName());
+      LOG.warn(e, "Task %s interrupted.", managedTask.getId());
     } catch (Throwable e) {
-      LOG.warn(
-          e, "%s while running task %s", e.getClass().getName(), managedTask.getTask().getName());
+      LOG.warn(e, "%s while running task %s", e.getClass().getName(), managedTask.getId());
     }
   }
 
@@ -164,7 +161,7 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
       timeoutPool.schedule(
           () -> {
             if (taskHandler.cancel(true)) {
-              LOG.warn(String.format("Task %s timed out", task.getTask().getName()));
+              LOG.warn(String.format("Task %s timed out", task.getId()));
             }
           },
           timeout.get().timeout(),
@@ -281,6 +278,22 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
   @VisibleForTesting
   protected Queue<ManagedBackgroundTask> getScheduledTasks() {
     return scheduledTasks;
+  }
+
+  @VisibleForTesting
+  @Override
+  public void schedule(ImmutableList<? extends BackgroundTask<?>> taskList) {
+    for (BackgroundTask<?> task : taskList) {
+      schedule(task);
+    }
+  }
+
+  @VisibleForTesting
+  @Override
+  public void schedule(BackgroundTask<?> task) {
+    ManagedBackgroundTask managedTask =
+        ManagedBackgroundTask.of(task, TaskId.of(task.getName(), new BuildId("TESTID")));
+    schedule(managedTask);
   }
 
   /**

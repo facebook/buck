@@ -16,6 +16,7 @@
 
 package com.facebook.buck.support.bgtasks;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
@@ -23,10 +24,24 @@ import org.immutables.value.Value;
  * Wrapper class for {@link BackgroundTask} that includes data generated/ managed by the {@link
  * BackgroundTaskManager}, e.g. task ID.
  */
-@Value.Immutable
+@Value.Immutable(builder = false)
 @BuckStyleImmutable
 abstract class AbstractManagedBackgroundTask {
 
   @Value.Parameter
   public abstract BackgroundTask<?> getTask();
+
+  @Value.Parameter
+  public abstract TaskId getId();
+
+  /** Task ID object for {@link }. */
+  @Value.Immutable(builder = false)
+  @BuckStyleImmutable
+  abstract static class AbstractTaskId {
+    @Value.Parameter
+    abstract String name();
+
+    @Value.Parameter
+    abstract BuildId buildId();
+  }
 }

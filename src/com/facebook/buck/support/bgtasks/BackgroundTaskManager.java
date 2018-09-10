@@ -16,13 +16,14 @@
 
 package com.facebook.buck.support.bgtasks;
 
+import com.facebook.buck.core.model.BuildId;
 import com.google.common.collect.ImmutableList;
 import java.util.concurrent.TimeUnit;
 
 /**
  * BackgroundTaskManager schedules and runs background bgtasks like cleanup/logging. A manager
  * should be notified when a new command starts and when it finishes so that it can schedule bgtasks
- * appropriately.
+ * appropriately. Tasks should typically be scheduled through a {@link TaskManagerScope}.
  */
 public interface BackgroundTaskManager {
 
@@ -36,17 +37,23 @@ public interface BackgroundTaskManager {
   }
 
   /**
-   * Schedule a task to be run in the background.
+   * Returns a new {@link TaskManagerScope} for a build on this manager.
    *
-   * @param task {@link BackgroundTask} object to be run
+   * @return new scope
    */
-  void schedule(BackgroundTask<?> task);
+  TaskManagerScope getNewScope(BuildId buildId);
 
   /**
-   * Schedule a list of tasks to be run in the background.
+   * Schedule a task to be run in the background.
    *
-   * @param taskList List of {@link BackgroundTask} objects
+   * @param task {@link ManagedBackgroundTask} object to be run
    */
+  void schedule(ManagedBackgroundTask task);
+
+  // todo removed in stacked diff
+  void schedule(BackgroundTask<?> task);
+
+  // todo removed in stacked diff
   void schedule(ImmutableList<? extends BackgroundTask<?>> taskList);
 
   /**

@@ -6,8 +6,10 @@ java_test(
     has_immutable_types = True,
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
