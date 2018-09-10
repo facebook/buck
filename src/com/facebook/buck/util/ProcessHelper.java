@@ -45,8 +45,12 @@ public class ProcessHelper {
 
   private static final Logger LOG = Logger.get(ProcessHelper.class);
 
-  // Comparing with the string value to avoid a strong dependency on JDK 9
-  private static final boolean IS_JDK9 = SourceVersion.latest().toString().equals("RELEASE_9");
+  // Comparing with the string value to avoid a strong dependency on JDK 9+
+  // TODO: Remove the version checks once Buck has been migrated to Java 10/11.
+  private static final boolean IS_JDK9_OR_LATER =
+      SourceVersion.latest().toString().equals("RELEASE_9")
+          || SourceVersion.latest().toString().equals("RELEASE_10")
+          || SourceVersion.latest().toString().equals("RELEASE_11");
 
   private static final SystemInfo OSHI = new SystemInfo();
 
@@ -180,7 +184,7 @@ public class ProcessHelper {
 
   @Nullable
   private Long jdk9ProcessId(Object process) {
-    if (IS_JDK9) {
+    if (IS_JDK9_OR_LATER) {
       try {
         // Invoking via reflection to avoid a strong dependency on JDK 9
         Method getPid = Process.class.getMethod("pid");
