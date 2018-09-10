@@ -245,17 +245,14 @@ public class IjProjectWriter {
    */
   public void update() throws IOException {
     outFilesystem.mkdirs(getIdeaConfigDir());
-    ImmutableSet.Builder<IjModule> modulesEdited = ImmutableSet.builder();
     for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
       ImmutableList<ContentRoot> contentRoots = projectDataPreparer.getContentRoots(module);
-      if (writeModule(module, contentRoots)) {
-        modulesEdited.add(module);
-      }
+      writeModule(module, contentRoots);
     }
     for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
       writeLibrary(library);
     }
-    updateModulesIndex(modulesEdited.build());
+    updateModulesIndex(projectDataPreparer.getModulesToBeWritten());
 
     if (projectConfig.isGeneratingTargetModuleMapEnabled()) {
       updateTargetModuleMap();
