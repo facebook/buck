@@ -63,7 +63,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
       Optional<ExopackageInfo> exopackageInfo,
-      int apkCompressionLevel) {
+      int apkCompressionLevel,
+      ImmutableSet<String> packagingExcludePatterns) {
     super(
         buildTarget,
         projectFilesystem,
@@ -100,7 +101,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules()),
         exopackageInfo,
         apkCompressionLevel,
-        ImmutableSet.of());
+        packagingExcludePatterns);
     this.apkUnderTest = apkUnderTest;
   }
 

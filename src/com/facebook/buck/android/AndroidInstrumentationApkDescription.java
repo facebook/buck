@@ -240,7 +240,8 @@ public class AndroidInstrumentationApkDescription
         filesInfo.getNativeFilesInfo(),
         filesInfo.getResourceFilesInfo(),
         filesInfo.getExopackageInfo(),
-        apkConfig.getCompressionLevel());
+        apkConfig.getCompressionLevel(),
+        args.getPackagingExcludePatterns());
   }
 
   @BuckStyleImmutable
@@ -252,6 +253,8 @@ public class AndroidInstrumentationApkDescription
     Optional<SourcePath> getManifestSkeleton();
 
     BuildTarget getApk();
+
+    abstract ImmutableSet<String> getPackagingExcludePatterns();
 
     @Value.Default
     default AaptMode getAaptMode() {
