@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders.thrift.executionengine;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.modern.builders.Protocol;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
@@ -37,8 +38,10 @@ import com.facebook.remoteexecution.executionengine.ExecutionEngine.Client;
 import com.facebook.remoteexecution.executionengine.ExecutionEngineException;
 import com.facebook.remoteexecution.executionengine.GetExecuteOperationRequest;
 import com.facebook.thrift.TException;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -46,6 +49,7 @@ import java.util.stream.Collectors;
 
 /** A Thrift-based remote execution (execution engine) implementation. */
 public class ThriftExecutionEngine implements RemoteExecutionService {
+  private static final Logger LOG = Logger.get(ThriftExecutionEngine.class);
 
   private static final int INITIAL_POLL_INTERVAL_MS = 15;
   private static final int MAX_POLL_INTERVAL_MS = 500;
@@ -70,6 +74,7 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
     ExecuteRequest request =
         new ExecuteRequest(SKIP_CACHE_LOOKUP, ThriftProtocol.get(actionDigest));
 
+    ExecuteResponse response;
     try {
       ExecuteOperation operation;
       synchronized (client) {
@@ -77,15 +82,62 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
         // long-term. Will convert this to an async-client in the next diff.
         operation = client.execute(request);
       }
-      ExecuteResponse response = waitForResponse(operation);
-      ActionResult actionResult = response.result;
-      return actionResultToExecutionResult(actionResult);
+      response = waitForResponse(operation);
     } catch (TException | ExecutionEngineException e) {
+      // ExecutionEngineException thrown here means an Infra Failure.
       throw new RuntimeException(e);
+    }
+
+    try {
+      if (response.isSetResult()) {
+        ActionResult actionResult = response.result;
+        return actionResultToExecutionResult(actionResult);
+      } else if (response.isSetEx()) {
+        throw response.ex;
+      } else {
+        throw new IllegalStateException(
+            "Neither ActionResult nor ExecutionEngineException was set in ExecuteResponse.");
+      }
+    } catch (ExecutionEngineException e) {
+      // ExecutionEngineException thrown here means a failure while executing the action.
+      return new ExecutionResult() {
+        @Override
+        public List<OutputDirectory> getOutputDirectories() {
+          return new ArrayList<>();
+        }
+
+        @Override
+        public List<OutputFile> getOutputFiles() {
+          return new ArrayList<>();
+        }
+
+        @Override
+        public int getExitCode() {
+          // This is suppose to be non-zero, because we got an exception from the ExecutionEngine.
+          if (e.getCode() == 0) {
+            LOG.warn(
+                "Received an ExecutionEngineException with code 0. "
+                    + "Returning exit code -1 for this Execution.");
+            return -1;
+          }
+          return e.getCode();
+        }
+
+        @Override
+        public Optional<String> getStderr() {
+          String message = e.getMessage();
+          if (e.getDetails().size() > 0) {
+            message += String.format("\nDetails:\n%s", String.join("\n", e.getDetails()));
+          }
+
+          return Optional.of(message);
+        }
+      };
     }
   }
 
-  private ExecuteResponse waitForResponse(ExecuteOperation operation) throws TException {
+  private ExecuteResponse waitForResponse(ExecuteOperation operation)
+      throws TException, ExecutionEngineException {
     // TODO(orr): This is currently blocking and infinite, like the Grpc implementation. This is
     // not a good long-term solution:
     int pollInterval = INITIAL_POLL_INTERVAL_MS;
@@ -106,11 +158,19 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
         synchronized (client) {
           operation = client.getExecuteOperation(request);
         }
+        Preconditions.checkState(operation.isSetDone(), "Invalid ExecuteOperation received.");
       } catch (ExecutionEngineException e) {
         throw new RuntimeException(e);
       }
     }
-    return operation.response;
+    if (operation.isSetResponse()) {
+      return operation.response;
+    } else if (operation.isSetEx()) {
+      throw operation.ex;
+    } else {
+      throw new IllegalStateException(
+          "Neither ExecuteResponse nor ExecutionEngineException was set in ExecuteOperation.");
+    }
   }
 
   private ExecutionResult actionResultToExecutionResult(ActionResult actionResult) {
@@ -144,7 +204,7 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
 
         if (stderrRaw == null
             || (stderrRaw.length == 0 && actionResult.stderr_digest.size_bytes > 0)) {
-          System.err.println("Got stderr digest.");
+          LOG.warn("Got stderr digest.");
           try {
             ReadBlobRequest request = new ReadBlobRequest(actionResult.stderr_digest);
             ReadBlobResponse response;
@@ -157,7 +217,7 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
           }
         } else {
           String stderr = new String(stderrRaw, CHARSET);
-          System.err.println("Got raw stderr: " + stderr);
+          LOG.warn("Got raw stderr: " + stderr);
           return Optional.of(stderr);
         }
       }
