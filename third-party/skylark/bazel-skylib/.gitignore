@@ -1,1 +1,3 @@
 /bazel-*
+/.buckd/
+/buck-out/
