@@ -17,14 +17,9 @@
 package com.facebook.buck.rules.modern.builders.thrift;
 
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
-import com.facebook.remoteexecution.cas.ContentAddressableStorage.AsyncClient;
 import com.facebook.remoteexecution.executionengine.ExecutionEngine;
-import com.facebook.thrift.async.TAsyncClientManager;
-import com.facebook.thrift.protocol.TCompactProtocol;
 import com.facebook.thrift.protocol.THeaderProtocol;
 import com.facebook.thrift.transport.THeaderTransport;
-import com.facebook.thrift.transport.TNonblockingSocket;
-import com.facebook.thrift.transport.TNonblockingTransport;
 import com.facebook.thrift.transport.TSocket;
 import com.facebook.thrift.transport.TTransport;
 import com.facebook.thrift.transport.TTransportException;
@@ -51,9 +46,6 @@ class ThriftRemoteExecutionClients implements Closeable {
   @GuardedBy("internalStateLock")
   private final List<TTransport> transportsToClose;
 
-  @GuardedBy("internalStateLock")
-  private final List<TAsyncClientManager> clientManagersToClose;
-
   ThriftRemoteExecutionClients(
       String remoteExecutionEngineHost,
       int remoteExecutionEnginePort,
@@ -64,7 +56,6 @@ class ThriftRemoteExecutionClients implements Closeable {
     this.casHost = casHost;
     this.casPort = casPort;
     transportsToClose = new ArrayList<>();
-    clientManagersToClose = new ArrayList<>();
   }
 
   @Override
@@ -73,68 +64,34 @@ class ThriftRemoteExecutionClients implements Closeable {
       for (TTransport transport : transportsToClose) {
         transport.close();
       }
-
-      for (TAsyncClientManager clientManager : clientManagersToClose) {
-        try {
-          clientManager.stop();
-        } catch (InterruptedException e) {
-          // TODO(orr): How should we handle interrupted exception here? Probably swallow it.
-          e.printStackTrace();
-        }
-      }
     }
   }
 
   public ContentAddressableStorage.Client createCasClient() throws TTransportException {
-    THeaderTransport casTransport =
-        new THeaderTransport(new TSocket(casHost, casPort, SOCKET_TIMEOUT_MILLIS));
-    casTransport.open();
-    synchronized (internalStateLock) {
-      transportsToClose.add(casTransport);
-    }
+    THeaderTransport casTransport = createBlockingTransport(casHost, casPort);
     return new ContentAddressableStorage.Client(new THeaderProtocol(casTransport));
-  }
-
-  public ThriftAsyncClientFactory<ContentAddressableStorage.AsyncClient>
-      createAsyncCasClientFactory() throws IOException {
-    TAsyncClientManager clientManager = new TAsyncClientManager();
-    synchronized (internalStateLock) {
-      clientManagersToClose.add(clientManager);
-    }
-
-    ContentAddressableStorage.AsyncClient.Factory internalFactory =
-        new ContentAddressableStorage.AsyncClient.Factory(
-            clientManager, new TCompactProtocol.Factory());
-
-    return new ThriftAsyncClientFactory<AsyncClient>(internalFactory) {
-      @Override
-      protected TNonblockingTransport createTransport() throws IOException, TTransportException {
-        TNonblockingSocket nonblockingCasTransport =
-            new TNonblockingSocket(casHost, casPort, SOCKET_TIMEOUT_MILLIS);
-        synchronized (internalStateLock) {
-          transportsToClose.add(nonblockingCasTransport);
-        }
-        return nonblockingCasTransport;
-      }
-    };
   }
 
   public ExecutionEngine.Client createExecutionEngineClient() throws TTransportException {
     THeaderTransport remoteExecutionTransport =
-        new THeaderTransport(
-            new TSocket(
-                remoteExecutionHost,
-                remoteExecutionPort,
-                SOCKET_TIMEOUT_MILLIS,
-                CONNECTION_TIMEOUT_MILLIS));
+        createBlockingTransport(remoteExecutionHost, remoteExecutionPort);
+    return new ExecutionEngine.Client(new THeaderProtocol(remoteExecutionTransport));
+  }
 
-    remoteExecutionTransport.setHeader(
+  private THeaderTransport createBlockingTransport(String host, int port)
+      throws TTransportException {
+    THeaderTransport transport =
+        new THeaderTransport(
+            new TSocket(host, port, SOCKET_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_MILLIS));
+
+    transport.setHeader(
         "request_timeout", Integer.toString((int) (CONNECTION_TIMEOUT_MILLIS * 0.8)));
 
-    remoteExecutionTransport.open();
+    transport.open();
     synchronized (internalStateLock) {
-      transportsToClose.add(remoteExecutionTransport);
+      transportsToClose.add(transport);
     }
-    return new ExecutionEngine.Client(new THeaderProtocol(remoteExecutionTransport));
+
+    return transport;
   }
 }

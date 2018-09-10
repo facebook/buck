@@ -19,20 +19,15 @@ package com.facebook.buck.rules.modern.builders.thrift;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
-import com.facebook.remoteexecution.cas.ContentAddressableStorage.AsyncClient.findMissingBlobs_call;
 import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
 import com.facebook.remoteexecution.cas.Digest;
 import com.facebook.remoteexecution.cas.FindMissingBlobsRequest;
 import com.facebook.remoteexecution.cas.FindMissingBlobsResponse;
 import com.facebook.thrift.TException;
-import com.facebook.thrift.async.TAsyncMethodCall;
 import com.facebook.thrift.transport.TTransportException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -71,46 +66,6 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
     FindMissingBlobsResponse response = client.findMissingBlobs(request);
 
     Digest missingDigest = response.missing_blob_digests.get(0);
-    assertEquals(digest.hash, missingDigest.hash);
-    assertEquals(digest.size_bytes, missingDigest.size_bytes);
-  }
-
-  @Test
-  public void testAsyncCasClient() throws TException, InterruptedException, IOException {
-    ContentAddressableStorage.AsyncClient asyncClient =
-        clients.createAsyncCasClientFactory().getAsyncClient();
-    FindMissingBlobsRequest request = new FindMissingBlobsRequest(digests);
-
-    CountDownLatch latch = new CountDownLatch(1);
-    AtomicReference<FindMissingBlobsResponse> response = new AtomicReference<>();
-
-    asyncClient.findMissingBlobs(
-        request,
-        new com.facebook.thrift.async.AsyncMethodCallback() {
-          @Override
-          public void onComplete(TAsyncMethodCall tAsyncMethodCall) {
-            if (tAsyncMethodCall instanceof findMissingBlobs_call) {
-              FindMissingBlobsResponse r = null;
-              try {
-                r = ((findMissingBlobs_call) tAsyncMethodCall).getResult();
-              } catch (TException | ContentAddressableStorageException e) {
-                onError(e);
-              }
-              response.set(r);
-              latch.countDown();
-            } else {
-              throw new RuntimeException("Method callback type wasn't findMissingBlobs_call");
-            }
-          }
-
-          @Override
-          public void onError(Exception e) {
-            throw new RuntimeException(e);
-          }
-        });
-
-    latch.await(1, TimeUnit.SECONDS);
-    Digest missingDigest = response.get().missing_blob_digests.get(0);
     assertEquals(digest.hash, missingDigest.hash);
     assertEquals(digest.size_bytes, missingDigest.size_bytes);
   }
