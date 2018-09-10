@@ -69,6 +69,9 @@ NATIVE_FUNCTIONS = []
 # if not otherwise specified in .buckconfig
 DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0
 
+# Globals that should not be copied from one module into another
+_HIDDEN_GLOBALS = {"include_defs", "load"}
+
 ORIGINAL_IMPORT = __builtin__.__import__
 
 _LOAD_TARGET_PATH_RE = re.compile(
@@ -956,9 +959,6 @@ class BuildFileProcessor(object):
         Ignores special attributes and attributes starting with '_', which
         typically denote module-level private attributes.
         """
-
-        hidden = set(["include_defs", "load"])
-
         keys = getattr(mod, "__all__", mod.__dict__.keys())
 
         for key in keys:
@@ -968,7 +968,7 @@ class BuildFileProcessor(object):
             )
             if (
                 not key.startswith("_")
-                and key not in hidden
+                and key not in _HIDDEN_GLOBALS
                 and not block_copying_module
             ):
                 dst[key] = mod.__dict__[key]
