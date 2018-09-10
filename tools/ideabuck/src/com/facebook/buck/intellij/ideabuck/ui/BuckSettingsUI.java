@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -87,6 +88,7 @@ public class BuckSettingsUI extends JPanel {
   private JCheckBox customizedInstallSetting;
   private ListTableModel<BuckCell> cellTableModel;
   private BuckProjectSettingsProvider optionsProvider;
+  private Process process;
 
   public BuckSettingsUI(BuckProjectSettingsProvider buckProjectSettingsProvider) {
     optionsProvider = buckProjectSettingsProvider;
@@ -330,9 +332,19 @@ public class BuckSettingsUI extends JPanel {
                         BuckSettingsUI.this,
                         project.getBaseDir(),
                         file -> {
-                          BuckCell newCell =
-                              discoverCell(file.getName(), Paths.get(file.getPath()));
-                          cellTableModel.addRow(newCell);
+                          ProgressManager.getInstance()
+                              .run(
+                                  new Modal(project, "Checking buildfile.name for cell", true) {
+                                    @Override
+                                    public void run(@NotNull ProgressIndicator progressIndicator) {
+                                      BuckCell buckCell =
+                                          discoverCell(
+                                              file.getName(),
+                                              Paths.get(file.getCanonicalPath()),
+                                              progressIndicator);
+                                      cellTableModel.addRow(buckCell);
+                                    }
+                                  });
                         });
                   }
                 })
@@ -365,7 +377,7 @@ public class BuckSettingsUI extends JPanel {
         FileChooser.chooseFile(dirChooser, BuckSettingsUI.this, project, project.getBaseDir());
     ProgressManager.getInstance()
         .run(
-            new Modal(project, "Autodetecting buck cells", false) {
+            new Modal(project, "Autodetecting buck cells", true) {
               @Override
               public void run(@NotNull ProgressIndicator progressIndicator) {
                 discoverCells(buckExecutable, defaultCell, progressIndicator);
@@ -373,42 +385,58 @@ public class BuckSettingsUI extends JPanel {
             });
   }
 
+  private void waitUntilDoneOrCanceled(Process process, ProgressIndicator progressIndicator)
+      throws InterruptedException {
+    // waitFor timeout chosen to make the UI cancel button reasonably responsive.
+    while (!process.waitFor(50, TimeUnit.MILLISECONDS)) {
+      if (progressIndicator.isCanceled()) {
+        if (process.isAlive()) {
+          process.destroy();
+        }
+        throw new InterruptedException("User canceled");
+      }
+    }
+  }
+
   private void discoverCells(
       String buckExecutable, VirtualFile defaultCell, ProgressIndicator progressIndicator) {
+    Path mainCellRoot;
     try {
       progressIndicator.setIndeterminate(true);
       progressIndicator.setText("Finding root for " + defaultCell.getName());
-      Path mainCellRoot =
-          Paths.get(
-              new BufferedReader(
-                      new InputStreamReader(
-                          Runtime.getRuntime()
-                              .exec(
-                                  new String[] {buckExecutable, "root"},
-                                  null,
-                                  new File(defaultCell.getPath()))
-                              .getInputStream()))
-                  .readLine());
+      Process process =
+          new ProcessBuilder(buckExecutable, "root")
+              .directory(new File(defaultCell.getPath()))
+              .start();
+      waitUntilDoneOrCanceled(process, progressIndicator);
+      mainCellRoot =
+          Paths.get(new BufferedReader(new InputStreamReader(process.getInputStream())).readLine());
+    } catch (IOException | InterruptedException e) {
+      LOG.error("Failed to autodiscover cells", e);
+      return;
+    }
+    try {
       progressIndicator.setText("Finding other cells visible from " + mainCellRoot.getFileName());
       Gson gson = new Gson();
       Type type = new TypeToken<Map<String, String>>() {}.getType();
       Map<String, String> config;
-      try (InputStreamReader reader =
-          new InputStreamReader(
-              Runtime.getRuntime()
-                  .exec(
-                      new String[] {buckExecutable, "audit", "cell", "--json"},
-                      null,
-                      mainCellRoot.toFile())
-                  .getInputStream())) {
+      Process process =
+          new ProcessBuilder(buckExecutable, "audit", "cell", "--json")
+              .directory(mainCellRoot.toFile())
+              .start();
+      waitUntilDoneOrCanceled(process, progressIndicator);
+      try (InputStreamReader reader = new InputStreamReader(process.getInputStream())) {
         config = gson.fromJson(reader, type);
       }
       List<BuckCell> cells = new ArrayList<>();
       for (Map.Entry<String, String> entry : config.entrySet()) {
+        if (progressIndicator.isCanceled()) {
+          break;
+        }
         String name = entry.getKey();
         Path cellRoot = mainCellRoot.resolve(entry.getValue()).normalize();
         progressIndicator.setText("Checking cell " + name);
-        BuckCell cell = discoverCell(name, cellRoot);
+        BuckCell cell = discoverCell(name, cellRoot, progressIndicator);
         if (mainCellRoot.equals(cellRoot)) {
           cells.add(0, cell); // put default cell at front of cell list
         } else {
@@ -422,31 +450,31 @@ public class BuckSettingsUI extends JPanel {
         cells.add(new BuckCell());
       }
       cellTableModel.setItems(cells);
-    } catch (IOException e) {
+    } catch (IOException | InterruptedException e) {
       LOG.error("Failed to autodiscover cells", e);
     }
   }
 
   @Nonnull
-  private BuckCell discoverCell(String name, Path cellRoot) {
+  private BuckCell discoverCell(String name, Path cellRoot, ProgressIndicator progressIndicator) {
     String buckExecutable = buckPathField.getText().trim();
     Gson gson = new Gson();
     Type type = new TypeToken<Map<String, String>>() {}.getType();
     BuckCell cell = new BuckCell();
     cell.setName(name);
     cell.setRoot(cellRoot.toString());
-    try (InputStreamReader reader =
-        new InputStreamReader(
-            Runtime.getRuntime()
-                .exec(
-                    new String[] {buckExecutable, "audit", "config", "buildfile.name", "--json"},
-                    null,
-                    cellRoot.toFile())
-                .getInputStream())) {
-      Map<String, String> cellConfig = gson.fromJson(reader, type);
-      Optional.ofNullable(cellConfig.get("buildfile.name")).ifPresent(cell::setBuildFileName);
-    } catch (IOException e) {
-      LOG.error("Failed to autodiscover cell at " + cellRoot, e);
+    try {
+      process =
+          new ProcessBuilder(buckExecutable, "audit", "config", "buildfile.name", "--json")
+              .directory(cellRoot.toFile())
+              .start();
+      waitUntilDoneOrCanceled(process, progressIndicator);
+      try (InputStreamReader reader = new InputStreamReader(process.getInputStream())) {
+        Map<String, String> cellConfig = gson.fromJson(reader, type);
+        Optional.ofNullable(cellConfig.get("buildfile.name")).ifPresent(cell::setBuildFileName);
+      }
+    } catch (IOException | InterruptedException e) {
+      LOG.warn("Failed to discover buildfile.name of cell at " + cellRoot, e);
     }
     return cell;
   }
