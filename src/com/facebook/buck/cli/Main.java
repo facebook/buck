@@ -788,8 +788,7 @@ public final class Main {
       }
 
       BackgroundTaskManager bgTaskManager;
-      // todo(sch): have blocking read off config's flush_events
-      boolean blocking = true;
+      boolean blocking = rootCell.getBuckConfig().getFlushEventsBeforeExit();
       if (!blocking && !daemon.isPresent()) {
         LOG.warn(
             "Manager cannot be async (as currently set in config) when not on daemon. Initializing blocking manager.");

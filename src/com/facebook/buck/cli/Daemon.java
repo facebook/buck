@@ -144,8 +144,8 @@ final class Daemon implements Closeable {
     LOG.debug("Using Watchman Cursor: %s", cursor);
     persistentWorkerPools = new ConcurrentHashMap<>();
 
-    // todo(sch): have this read off config's flush_events
-    this.bgTaskManager = new AsyncBackgroundTaskManager(true);
+    this.bgTaskManager =
+        new AsyncBackgroundTaskManager(rootCell.getBuckConfig().getFlushEventsBeforeExit());
   }
 
   Cell getRootCell() {
