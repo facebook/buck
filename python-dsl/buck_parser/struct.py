@@ -12,6 +12,7 @@ from json.encoder import (
 )
 from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
+from typing import Tuple, Type
 
 
 class StructEncoder(JSONEncoder):
@@ -120,6 +121,13 @@ def struct(**kwargs):
      - does not support copy/deepcopy
     """
     field_names = tuple(kwargs.keys())
+    struct_class = _create_struct_class(field_names)
+    return struct_class(**kwargs)
+
+
+def _create_struct_class(field_names):
+    # type: (Tuple[str]) -> Type
+    # Variables used in the methods and docstrings
 
     for name in field_names:
         if not all(c.isalnum() or c == "_" for c in name):
@@ -132,7 +140,6 @@ def struct(**kwargs):
         if name[0].isdigit():
             raise ValueError("Field names cannot start with a number: %r" % name)
 
-    # Variables used in the methods and docstrings
     arg_list = repr(field_names).replace("'", "")[1:-1]
     repr_fmt = "(" + ", ".join(name + "=%r" for name in field_names) + ")"
     tuple_new = tuple.__new__
@@ -184,6 +191,4 @@ def struct(**kwargs):
             cache[index] = itemgetter_object
         class_namespace[name] = property(itemgetter_object)
 
-    result = type(_TYPENAME, (tuple,), class_namespace)
-
-    return result(**kwargs)
+    return type(_TYPENAME, (tuple,), class_namespace)
