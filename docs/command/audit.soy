@@ -70,6 +70,55 @@ For more examples, see the command descriptions and <strong>Examples</strong> se
    {/param}
   {/call}
 
+  {call buck.audit.param}
+    {param name: 'buck audit cell' /}
+    {param nodash: true /}
+    {param desc}
+
+    <p>
+    List the absolute paths to the cells that are specified in 
+    the <code>[repositories]</code> section of 
+    the {call buck.concept_link}{param page: 'buckconfig' /}{param name: 'buckconfig' /}{/call} that is in 
+    the root of the current cell. The path to each cell is prefixed
+    with the specified alias for that cell. For example:
+<p>
+<pre>
+{literal}
+$ buck audit cell 
+buck: /Users/buxster/local/buck
+bazel_skylib: /Users/buxster/local/buck/third-party/skylark/bazel-skylib
+{/literal}
+</pre>
+</p>
+
+<p>
+(In this example, <code>buxster</code> is the name of the current user.)
+</p>
+
+    <p>
+    If you specify the <code>--paths-only</code> parameter, Buck outputs
+    only the absolute paths to the cells, without the aliases.
+    </p>
+
+<p>
+<pre>
+{literal}
+$ buck audit cell --paths-only
+/Users/buxster/local/buck
+/Users/buxster/local/buck/third-party/skylark/bazel-skylib
+{/literal}
+</pre>
+</p>
+
+    <p>
+    If your <code>.buckconfig</code> does not contain a <code>[repositories]</code> 
+    section, then <code>buck audit cell</code> doesn't return any output.
+    </p>
+
+   {/param}
+  {/call}
+
+
   {call buck.param}
     {param name: 'classpath <targets>' /}
     {param nodash: true /}
