@@ -1601,9 +1601,7 @@ def encode_result(values, diagnostics, profile):
         return json_encoder.encode(result)
 
 
-def process_with_diagnostics(
-    build_file_query, build_file_processor, to_parent, should_profile=False
-):
+def process_with_diagnostics(build_file_query, build_file_processor, to_parent):
     start_time = time.time()
     build_file = build_file_query.get("buildFile")
     watch_root = build_file_query.get("watchRoot")
@@ -1880,7 +1878,7 @@ def main():
                     "projectPrefix": project_root,
                 }
                 duration = process_with_diagnostics(
-                    query, buildFileProcessor, to_parent, should_profile=options.profile
+                    query, buildFileProcessor, to_parent
                 )
                 processed_build_file.append(
                     {"buildFile": build_file, "duration": duration}
@@ -1900,10 +1898,7 @@ def main():
                     report_profile(options, to_parent, processed_build_file, profiler)
                 else:
                     duration = process_with_diagnostics(
-                        build_file_query,
-                        buildFileProcessor,
-                        to_parent,
-                        should_profile=options.profile,
+                        build_file_query, buildFileProcessor, to_parent
                     )
                     processed_build_file.append(
                         {
