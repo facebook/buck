@@ -48,7 +48,13 @@ public class BridgeMethods {
   }
 
   public List<BridgeMethod> getBridgeMethods(TypeElement typeElement) {
-    return allBridgeMethods.computeIfAbsent(typeElement, this::calculateBridgeMethods);
+    List<BridgeMethod> result = allBridgeMethods.get(typeElement);
+    if (result != null) {
+      return result;
+    }
+    result = calculateBridgeMethods(typeElement);
+    allBridgeMethods.put(typeElement, result);
+    return result;
   }
 
   public List<BridgeMethod> getBridgeMethods(TypeElement typeElement, Name name) {
