@@ -10,6 +10,7 @@ from json.encoder import (
     encode_basestring,
     encode_basestring_ascii,
 )
+from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
 
 
@@ -119,6 +120,17 @@ def struct(**kwargs):
      - does not support copy/deepcopy
     """
     field_names = tuple(kwargs.keys())
+
+    for name in field_names:
+        if not all(c.isalnum() or c == "_" for c in name):
+            raise ValueError(
+                "Field names can only contain alphanumeric characters and underscores: %r"
+                % name
+            )
+        if _iskeyword(name):
+            raise ValueError("Field names cannot be a keyword: %r" % name)
+        if name[0].isdigit():
+            raise ValueError("Field names cannot start with a number: %r" % name)
 
     # Variables used in the methods and docstrings
     arg_list = repr(field_names).replace("'", "")[1:-1]

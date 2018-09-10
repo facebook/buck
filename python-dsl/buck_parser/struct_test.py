@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function, with_statement
 
-import copy
 import unittest
 
 from . import struct
@@ -62,3 +61,29 @@ class StructTest(unittest.TestCase):
         x = struct.struct(foo="bar")
         y = struct.struct(x=x)
         self.assertEqual("struct(x=struct(foo='bar'))", repr(y))
+
+    def testDotsAreNotAllowedInFieldNames(self):
+        with self.assertRaisesRegexp(
+            ValueError,
+            "Field names can only contain alphanumeric characters and underscores: 'foo.bar'",
+        ):
+            struct.struct(**{"foo.bar": "foo"})
+
+    def testDashesAreNotAllowedInFieldNames(self):
+        with self.assertRaisesRegexp(
+            ValueError,
+            "Field names can only contain alphanumeric characters and underscores: 'foo-bar'",
+        ):
+            struct.struct(**{"foo-bar": "foo"})
+
+    def testDigitsAreNotAllowedInFieldNameStarts(self):
+        with self.assertRaisesRegexp(
+            ValueError, "Field names cannot start with a number: '2foo'"
+        ):
+            struct.struct(**{"2foo": "foo"})
+
+    def testKeywordsAreNotAllowedAsFieldNames(self):
+        with self.assertRaisesRegexp(
+            ValueError, "Field names cannot be a keyword: 'try'"
+        ):
+            struct.struct(**{"try": "foo"})
