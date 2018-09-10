@@ -42,8 +42,7 @@ import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInf
 import com.facebook.buck.event.listener.BuildTargetDurationListener.CriticalPathEntry;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -489,7 +488,7 @@ public class BuildTargetDurationListenerTest {
   public void testBuildStartFinishTimes() {
     final String target = "//:celik";
     BuildId buildId = new BuildId("19911501");
-    BackgroundTaskManager bgTaskManager = new TestBackgroundTaskManager();
+    TaskManagerScope managerScope = new TestBackgroundTaskManager().getNewScope(buildId);
     BuildTargetDurationListener listener =
         new BuildTargetDurationListener(
             InvocationInfo.of(
@@ -502,7 +501,7 @@ public class BuildTargetDurationListenerTest {
                 Paths.get(".")),
             new FakeProjectFilesystem(),
             1,
-            bgTaskManager);
+            managerScope);
     BuildRuleDurationTracker tracker = new BuildRuleDurationTracker();
     BuildRule rule =
         new FakeTestRule(
@@ -534,6 +533,6 @@ public class BuildTargetDurationListenerTest {
     BuildRuleInfo buildRuleInfo = listener.getBuildRuleInfos().get(target);
     assertEquals(42, buildRuleInfo.getWholeTargetDuration());
     listener.close();
-    bgTaskManager.notify(Notification.COMMAND_END);
+    managerScope.close();
   }
 }

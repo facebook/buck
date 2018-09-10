@@ -22,9 +22,9 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
@@ -42,19 +42,19 @@ public class LogUploaderListener implements BuckEventListener {
   private final Path logFilePath;
   private final Path logDirectoryPath;
   private final BuildId buildId;
-  private final BackgroundTaskManager bgTaskManager;
+  private final TaskManagerScope managerScope;
 
   public LogUploaderListener(
       ChromeTraceBuckConfig config,
       Path logFilePath,
       Path logDirectoryPath,
       BuildId buildId,
-      BackgroundTaskManager bgTaskManager) {
+      TaskManagerScope managerScope) {
     this.config = config;
     this.logFilePath = logFilePath;
     this.logDirectoryPath = logDirectoryPath;
     this.buildId = buildId;
-    this.bgTaskManager = bgTaskManager;
+    this.managerScope = managerScope;
   }
 
   @Subscribe
@@ -84,7 +84,7 @@ public class LogUploaderListener implements BuckEventListener {
             .setActionArgs(args)
             .setName("LogUploaderListener_close")
             .build();
-    bgTaskManager.schedule(task);
+    managerScope.schedule(task);
   }
 
   /**

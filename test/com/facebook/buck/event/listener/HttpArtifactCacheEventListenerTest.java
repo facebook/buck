@@ -25,8 +25,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.util.network.AbstractBatchingLogger;
 import com.google.common.base.Strings;
@@ -74,14 +73,14 @@ public class HttpArtifactCacheEventListenerTest {
 
   private TestBatchingLogger fetchLogger;
   private HttpArtifactCacheEventListener listener;
-  private BackgroundTaskManager bgTaskManager;
+  private TaskManagerScope managerScope;
 
   @Before
   public void setUp() {
     TestBatchingLogger storeLogger = new TestBatchingLogger(1);
     fetchLogger = new TestBatchingLogger(1);
-    bgTaskManager = new TestBackgroundTaskManager();
-    listener = new HttpArtifactCacheEventListener(storeLogger, fetchLogger, bgTaskManager);
+    managerScope = new TestBackgroundTaskManager().getNewScope(new BuildId("test"));
+    listener = new HttpArtifactCacheEventListener(storeLogger, fetchLogger, managerScope);
   }
 
   @Test
@@ -99,7 +98,7 @@ public class HttpArtifactCacheEventListenerTest {
     event.configure(-1, -1, -1, -1, BUILD_ID);
     listener.onHttpArtifactCacheEvent(event);
     listener.close();
-    bgTaskManager.notify(Notification.COMMAND_END);
+    managerScope.close();
     String actualLogLine = fetchLogger.getLogEntries().iterator().next();
     assertFalse(Strings.isNullOrEmpty(actualLogLine));
     assertTrue(actualLogLine.contains(errorMsg));

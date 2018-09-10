@@ -17,7 +17,6 @@
 package com.facebook.buck.support.bgtasks;
 
 import com.facebook.buck.core.model.BuildId;
-import com.google.common.collect.ImmutableList;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,12 +48,6 @@ public interface BackgroundTaskManager {
    * @param task {@link ManagedBackgroundTask} object to be run
    */
   void schedule(ManagedBackgroundTask task);
-
-  // todo removed in stacked diff
-  void schedule(BackgroundTask<?> task);
-
-  // todo removed in stacked diff
-  void schedule(ImmutableList<? extends BackgroundTask<?>> taskList);
 
   /**
    * Notify the manager of some event, e.g. command start/end. Exceptions should generally be caught

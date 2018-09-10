@@ -35,9 +35,9 @@ import com.facebook.buck.event.chrome_trace.ChromeTraceWriter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.bgtasks.Timeout;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -89,7 +89,7 @@ public class BuildTargetDurationListener implements BuckEventListener {
   private final InvocationInfo info;
   private final ProjectFilesystem filesystem;
   private final int criticalPathCount;
-  private final BackgroundTaskManager bgTaskManager;
+  private final TaskManagerScope managerScope;
 
   private Optional<ActionGraph> actionGraph = Optional.empty();
   private Optional<ImmutableSet<BuildTarget>> targetBuildRules = Optional.empty();
@@ -106,11 +106,11 @@ public class BuildTargetDurationListener implements BuckEventListener {
       InvocationInfo info,
       ProjectFilesystem filesystem,
       int criticalPathCount,
-      BackgroundTaskManager bgTaskManager) {
+      TaskManagerScope managerScope) {
     this.info = info;
     this.filesystem = filesystem;
     this.criticalPathCount = criticalPathCount;
-    this.bgTaskManager = bgTaskManager;
+    this.managerScope = managerScope;
   }
 
   /** Save start of the {@link BuildRuleEvent}. */
@@ -310,7 +310,7 @@ public class BuildTargetDurationListener implements BuckEventListener {
             .setTimeout(Timeout.of(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS))
             .build();
 
-    bgTaskManager.schedule(task);
+    managerScope.schedule(task);
   }
 
   /** {@link TaskAction} implementation for closing {@link BuildTargetDurationListener}. */

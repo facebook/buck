@@ -40,9 +40,9 @@ import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SingleUriService;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.bgtasks.Timeout;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -88,7 +88,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private final ListeningExecutorService httpFetchExecutorService;
   private final ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService;
   private List<ArtifactCache> artifactCaches = new ArrayList<>();
-  private final BackgroundTaskManager bgTaskManager;
+  private final TaskManagerScope managerScope;
 
   /** {@link TaskAction} implementation for {@link ArtifactCaches}. */
   static class ArtifactCachesCloseAction implements TaskAction<List<ArtifactCache>> {
@@ -116,7 +116,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             .setName("ArtifactCaches_close")
             .setTimeout(Timeout.of(TIMEOUT_SECONDS, TimeUnit.SECONDS))
             .build();
-    bgTaskManager.schedule(closeTask);
+    managerScope.schedule(closeTask);
 
     buckEventBus.post(HttpArtifactCacheEvent.newShutdownEvent());
   }
@@ -141,7 +141,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
       ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService,
-      BackgroundTaskManager bgTaskManager) {
+      TaskManagerScope managerScope) {
     this.buckConfig = buckConfig;
     this.buckEventBus = buckEventBus;
     this.projectFilesystem = projectFilesystem;
@@ -149,7 +149,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     this.httpWriteExecutorService = httpWriteExecutorService;
     this.httpFetchExecutorService = httpFetchExecutorService;
     this.downloadHeavyBuildHttpFetchExecutorService = downloadHeavyBuildHttpFetchExecutorService;
-    this.bgTaskManager = bgTaskManager;
+    this.managerScope = managerScope;
   }
 
   private static Request.Builder addHeadersToBuilder(
@@ -230,7 +230,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         httpWriteExecutorService,
         httpFetchExecutorService,
         downloadHeavyBuildHttpFetchExecutorService,
-        bgTaskManager);
+        managerScope);
   }
 
   /**

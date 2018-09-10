@@ -43,9 +43,9 @@ import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -84,7 +84,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final ObjectWriter objectWriter;
   private BufferedOutputStream outputStream;
 
-  private final BackgroundTaskManager bgTaskManager;
+  private final TaskManagerScope managerScope;
 
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHits = Maps.newConcurrentMap();
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeErrors = Maps.newConcurrentMap();
@@ -106,12 +106,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       ProjectFilesystem filesystem,
       ExecutorService executor,
       ImmutableSet<ArtifactCacheMode> cacheModes,
-      BackgroundTaskManager bgTaskManager)
+      TaskManagerScope managerScope)
       throws FileNotFoundException {
     this.info = info;
     this.filesystem = filesystem;
     this.executor = executor;
-    this.bgTaskManager = bgTaskManager;
+    this.managerScope = managerScope;
 
     for (ArtifactCacheMode mode : cacheModes) {
       cacheModeHits.put(mode, new AtomicInteger(0));
@@ -286,7 +286,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
             .setActionArgs(MachineReadableLoggerListenerCloseArgs.of(executor))
             .setName("MachineReadableLoggerListener_close")
             .build();
-    bgTaskManager.schedule(task);
+    managerScope.schedule(task);
   }
 
   /**

@@ -27,9 +27,9 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +62,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private final InvocationInfo info;
   private final ExecutorService outputExecutor;
 
-  private final BackgroundTaskManager bgTaskManager;
+  private final TaskManagerScope managerScope;
 
   private final int minDiagKeysForAutoFlush;
   private final int minSizeForAutoFlush;
@@ -81,7 +81,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       InvocationInfo info,
       ExecutorService outputExecutor,
-      BackgroundTaskManager bgTaskManager) {
+      TaskManagerScope managerScope) {
     this.projectFilesystem = projectFilesystem;
     this.info = info;
     this.outputExecutor = outputExecutor;
@@ -89,7 +89,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     this.minSizeForAutoFlush = DEFAULT_MIN_SIZE_FOR_AUTO_FLUSH;
     this.diagKeys = new ArrayList<>();
     this.diagKeysSize = 0;
-    this.bgTaskManager = bgTaskManager;
+    this.managerScope = managerScope;
   }
 
   @Subscribe
@@ -236,7 +236,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
             .setActionArgs(RuleKeyDiagnosticsListenerCloseArgs.of(outputExecutor))
             .setName("RuleKeyDiagnosticsListener_close")
             .build();
-    bgTaskManager.schedule(task);
+    managerScope.schedule(task);
   }
 
   /**

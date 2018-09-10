@@ -122,7 +122,7 @@ import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -796,7 +796,7 @@ public final class Main {
       }
       bgTaskManager =
           daemon.map((d) -> d.getBgTaskManager()).orElse(new AsyncBackgroundTaskManager(true));
-      bgTaskManager.notify(Notification.COMMAND_START);
+      TaskManagerScope managerScope = bgTaskManager.getNewScope(buildId);
 
       ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
 
@@ -995,7 +995,7 @@ public final class Main {
                     httpWriteExecutorService.get(),
                     httpFetchExecutorService.get(),
                     stampedeSyncBuildHttpFetchExecutorService.get(),
-                    bgTaskManager);
+                    managerScope);
 
             // Once command completes it should be safe to not wait for executors and other stateful
             // objects to terminate and release semaphore right away. It will help to retry
@@ -1070,7 +1070,7 @@ public final class Main {
                   consoleListener,
                   counterRegistry,
                   commandEventListeners,
-                  bgTaskManager);
+                  managerScope);
 
           if (buckConfig.isBuckConfigLocalWarningEnabled() && !console.getVerbosity().isSilent()) {
             ImmutableList<Path> localConfigFiles =
@@ -1275,7 +1275,7 @@ public final class Main {
           // TODO(buck_team): refactor eventListeners for RAII
           flushAndCloseEventListeners(console, eventListeners);
 
-          bgTaskManager.notify(Notification.COMMAND_END);
+          managerScope.close();
         }
       }
     }
@@ -1737,7 +1737,7 @@ public final class Main {
       AbstractConsoleEventBusListener consoleEventBusListener,
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners,
-      BackgroundTaskManager bgTaskManager) {
+      TaskManagerScope managerScope) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(consoleEventBusListener)
@@ -1752,7 +1752,7 @@ public final class Main {
       try {
         ChromeTraceBuildListener chromeTraceBuildListener =
             new ChromeTraceBuildListener(
-                projectFilesystem, invocationInfo, clock, chromeTraceConfig, bgTaskManager);
+                projectFilesystem, invocationInfo, clock, chromeTraceConfig, managerScope);
         eventListenersBuilder.add(chromeTraceBuildListener);
         fileEventBus.ifPresent(bus -> bus.register(chromeTraceBuildListener));
       } catch (IOException e) {
@@ -1778,7 +1778,7 @@ public final class Main {
             invocationInfo.getLogFilePath(),
             invocationInfo.getLogDirectoryPath(),
             invocationInfo.getBuildId(),
-            bgTaskManager));
+            managerScope));
     if (buckConfig.isRuleKeyLoggerEnabled()) {
       eventListenersBuilder.add(
           new RuleKeyLoggerListener(
@@ -1786,7 +1786,7 @@ public final class Main {
               invocationInfo,
               MostExecutors.newSingleThreadExecutor(
                   new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
-              bgTaskManager));
+              managerScope));
     }
 
     eventListenersBuilder.add(
@@ -1795,7 +1795,7 @@ public final class Main {
             invocationInfo,
             MostExecutors.newSingleThreadExecutor(
                 new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
-            bgTaskManager));
+            managerScope));
 
     if (buckConfig.isMachineReadableLoggerEnabled()) {
       try {
@@ -1806,7 +1806,7 @@ public final class Main {
                 MostExecutors.newSingleThreadExecutor(
                     new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
                 artifactCacheConfig.getArtifactCacheModes(),
-                bgTaskManager));
+                managerScope));
       } catch (FileNotFoundException e) {
         LOG.warn("Unable to open stream for machine readable log file.");
       }
@@ -1821,7 +1821,7 @@ public final class Main {
     if (buckConfig.isCriticalPathAnalysisEnabled()) {
       eventListenersBuilder.add(
           new BuildTargetDurationListener(
-              invocationInfo, projectFilesystem, buckConfig.getCriticalPathCount(), bgTaskManager));
+              invocationInfo, projectFilesystem, buckConfig.getCriticalPathCount(), managerScope));
     }
     eventListenersBuilder.addAll(commandSpecificEventListeners);
 

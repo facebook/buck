@@ -51,8 +51,8 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.util.Optionals;
@@ -123,7 +123,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final ThreadMXBean threadMXBean;
 
   private final ExecutorService outputExecutor;
-  private final BackgroundTaskManager bgTaskManager;
+  private final TaskManagerScope managerScope;
 
   private final BuildId buildId;
 
@@ -132,7 +132,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       InvocationInfo invocationInfo,
       Clock clock,
       ChromeTraceBuckConfig config,
-      BackgroundTaskManager bgTaskManager)
+      TaskManagerScope managerScope)
       throws IOException {
     this(
         projectFilesystem,
@@ -142,7 +142,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         TimeZone.getDefault(),
         ManagementFactory.getThreadMXBean(),
         config,
-        bgTaskManager);
+        managerScope);
   }
 
   @VisibleForTesting
@@ -154,7 +154,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       TimeZone timeZone,
       ThreadMXBean threadMXBean,
       ChromeTraceBuckConfig config,
-      BackgroundTaskManager bgTaskManager)
+      TaskManagerScope managerScope)
       throws IOException {
     this.logDirectoryPath = invocationInfo.getLogDirectoryPath();
     this.projectFilesystem = projectFilesystem;
@@ -171,7 +171,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         };
     this.threadMXBean = threadMXBean;
     this.config = config;
-    this.bgTaskManager = bgTaskManager;
+    this.managerScope = managerScope;
     this.outputExecutor =
         MostExecutors.newSingleThreadExecutor(
             new CommandThreadFactory(
@@ -255,7 +255,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             .setName("ChromeTraceBuildListener_close")
             .build();
 
-    bgTaskManager.schedule(task);
+    managerScope.schedule(task);
   }
 
   @Subscribe

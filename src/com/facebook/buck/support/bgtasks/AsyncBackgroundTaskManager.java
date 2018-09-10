@@ -281,7 +281,6 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
   }
 
   @VisibleForTesting
-  @Override
   public void schedule(ImmutableList<? extends BackgroundTask<?>> taskList) {
     for (BackgroundTask<?> task : taskList) {
       schedule(task);
@@ -289,7 +288,6 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
   }
 
   @VisibleForTesting
-  @Override
   public void schedule(BackgroundTask<?> task) {
     ManagedBackgroundTask managedTask =
         ManagedBackgroundTask.of(task, TaskId.of(task.getName(), new BuildId("TESTID")));

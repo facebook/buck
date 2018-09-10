@@ -30,6 +30,7 @@ import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -41,6 +42,7 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
@@ -71,6 +73,7 @@ public class ServedCacheIntegrationTest {
   private static final Path A_FILE_PATH = Paths.get("aFile");
   private static final String A_FILE_DATA = "somedata";
   public static final RuleKey A_FILE_RULE_KEY = new RuleKey("0123456789");
+  private static final BuildId BUILD_ID = new BuildId("test");
 
   private ProjectFilesystem projectFilesystem;
   private WebServer webServer = null;
@@ -83,6 +86,7 @@ public class ServedCacheIntegrationTest {
       MoreExecutors.newDirectExecutorService();
 
   private BackgroundTaskManager bgTaskManager;
+  private TaskManagerScope managerScope;
 
   @Before
   public void setUp() throws Exception {
@@ -96,6 +100,7 @@ public class ServedCacheIntegrationTest {
         BorrowablePath.notBorrowablePath(A_FILE_PATH));
 
     bgTaskManager = new TestBackgroundTaskManager();
+    managerScope = bgTaskManager.getNewScope(BUILD_ID);
   }
 
   @After
@@ -535,7 +540,7 @@ public class ServedCacheIntegrationTest {
             DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,
-            bgTaskManager)
+            managerScope)
         .newInstance();
   }
 }

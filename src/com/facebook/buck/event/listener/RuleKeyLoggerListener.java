@@ -29,9 +29,9 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.eventbus.Subscribe;
@@ -56,7 +56,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   private final ExecutorService outputExecutor;
   private final int minLinesForAutoFlush;
   private final ProjectFilesystem projectFilesystem;
-  private final BackgroundTaskManager bgTaskManager;
+  private final TaskManagerScope managerScope;
   private final Object lock;
 
   @GuardedBy("lock")
@@ -66,15 +66,15 @@ public class RuleKeyLoggerListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       InvocationInfo info,
       ExecutorService outputExecutor,
-      BackgroundTaskManager bgTaskManager) {
-    this(projectFilesystem, info, outputExecutor, bgTaskManager, DEFAULT_MIN_LINES_FOR_AUTO_FLUSH);
+      TaskManagerScope managerScope) {
+    this(projectFilesystem, info, outputExecutor, managerScope, DEFAULT_MIN_LINES_FOR_AUTO_FLUSH);
   }
 
   public RuleKeyLoggerListener(
       ProjectFilesystem projectFilesystem,
       InvocationInfo info,
       ExecutorService outputExecutor,
-      BackgroundTaskManager bgTaskManager,
+      TaskManagerScope managerScope,
       int minLinesForAutoFlush) {
     this.projectFilesystem = projectFilesystem;
     this.minLinesForAutoFlush = minLinesForAutoFlush;
@@ -82,7 +82,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     this.lock = new Object();
     this.outputExecutor = outputExecutor;
     this.logLines = new ArrayList<>();
-    this.bgTaskManager = bgTaskManager;
+    this.managerScope = managerScope;
   }
 
   @Subscribe
@@ -181,7 +181,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
             .setActionArgs(RuleKeyLoggerListenerCloseArgs.of(outputExecutor))
             .setName("RuleKeyLoggerListener_close")
             .build();
-    bgTaskManager.schedule(task);
+    managerScope.schedule(task);
   }
 
   /**
