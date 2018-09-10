@@ -130,6 +130,9 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   @Nullable
   private String skylarkProfile;
 
+  @Option(name = GlobalCliOptions.TARGET_PLATFORMS_LONG_ARG, usage = "Target platforms.")
+  private List<String> targetPlatforms = new ArrayList<>();
+
   @Override
   public LogConfigSetup getLogConfig() {
     return LogConfigSetup.DEFAULT_SETUP;
@@ -383,6 +386,11 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   @Override
   public boolean performsBuild() {
     return false;
+  }
+
+  @Override
+  public ImmutableList<String> getTargetPlatforms() {
+    return ImmutableList.copyOf(targetPlatforms);
   }
 
   /**

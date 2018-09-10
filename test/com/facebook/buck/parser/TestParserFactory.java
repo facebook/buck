@@ -26,6 +26,7 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.google.common.collect.ImmutableList;
 import org.pf4j.PluginManager;
 
 public class TestParserFactory {
@@ -73,6 +74,7 @@ public class TestParserFactory {
         perBuildStateFactory,
         new TargetSpecResolver(),
         WatchmanFactory.NULL_WATCHMAN,
-        eventBus);
+        eventBus,
+        ImmutableList::of);
   }
 }

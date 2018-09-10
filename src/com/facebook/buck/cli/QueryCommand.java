@@ -198,6 +198,7 @@ public class QueryCommand extends AbstractCommand {
                     params.getParser().getPermState(),
                     pool.getListeningExecutorService(),
                     params.getCell(),
+                    getTargetPlatforms(),
                     getEnableParserProfiling(),
                     SpeculativeParsing.ENABLED)) {
       ListeningExecutorService executor = pool.getListeningExecutorService();

@@ -199,6 +199,7 @@ public class DefaultParserTest {
                 parser.getPermState(),
                 executor,
                 cell,
+                ImmutableList.of(),
                 enableProfiling,
                 SpeculativeParsing.DISABLED)) {
       return DefaultParser.getTargetNodeRawAttributes(state, cell, buildFile);

@@ -89,6 +89,7 @@ public class AuditTestsCommand extends AbstractCommand {
                     params.getParser().getPermState(),
                     pool.getListeningExecutorService(),
                     params.getCell(),
+                    getTargetPlatforms(),
                     getEnableParserProfiling(),
                     SpeculativeParsing.ENABLED)) {
       BuckQueryEnvironment env =

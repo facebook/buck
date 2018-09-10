@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.ExitCode;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -74,4 +75,6 @@ public interface Command {
   void setPluginManager(PluginManager pluginManager);
 
   PluginManager getPluginManager();
+
+  ImmutableList<String> getTargetPlatforms();
 }

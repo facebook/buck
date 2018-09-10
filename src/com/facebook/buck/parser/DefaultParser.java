@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -69,18 +70,21 @@ public class DefaultParser implements Parser {
   private final TargetSpecResolver targetSpecResolver;
   private final Watchman watchman;
   private final BuckEventBus eventBus;
+  private final Supplier<ImmutableList<String>> targetPlatforms;
 
   public DefaultParser(
       DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
       TargetSpecResolver targetSpecResolver,
       Watchman watchman,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      Supplier<ImmutableList<String>> targetPlatforms) {
     this.perBuildStateFactory = perBuildStateFactory;
     this.watchman = watchman;
     this.permState = daemonicParserState;
     this.targetSpecResolver = targetSpecResolver;
     this.eventBus = eventBus;
+    this.targetPlatforms = targetPlatforms;
   }
 
   @Override
@@ -112,7 +116,12 @@ public class DefaultParser implements Parser {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
-            permState, executor, cell, enableProfiling, SpeculativeParsing.ENABLED)) {
+            permState,
+            executor,
+            cell,
+            targetPlatforms.get(),
+            enableProfiling,
+            SpeculativeParsing.ENABLED)) {
       return state.getAllTargetNodes(cell, buildFile);
     }
   }
@@ -123,7 +132,12 @@ public class DefaultParser implements Parser {
       throws BuildFileParseException {
     try (PerBuildState state =
         perBuildStateFactory.create(
-            permState, executor, cell, enableProfiling, SpeculativeParsing.DISABLED)) {
+            permState,
+            executor,
+            cell,
+            targetPlatforms.get(),
+            enableProfiling,
+            SpeculativeParsing.DISABLED)) {
       return state.getTargetNode(target);
     }
   }
@@ -187,7 +201,12 @@ public class DefaultParser implements Parser {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
-            permState, executor, cell, enableProfiling, SpeculativeParsing.DISABLED)) {
+            permState,
+            executor,
+            cell,
+            targetPlatforms.get(),
+            enableProfiling,
+            SpeculativeParsing.DISABLED)) {
       return getTargetNodeRawAttributes(state, cell, targetNode);
     }
   }
@@ -219,7 +238,12 @@ public class DefaultParser implements Parser {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
-            permState, executor, rootCell, enableProfiling, SpeculativeParsing.ENABLED)) {
+            permState,
+            executor,
+            rootCell,
+            targetPlatforms.get(),
+            enableProfiling,
+            SpeculativeParsing.ENABLED)) {
       return buildTargetGraph(state, toExplore);
     }
   }
@@ -330,7 +354,12 @@ public class DefaultParser implements Parser {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
-            permState, executor, rootCell, enableProfiling, SpeculativeParsing.ENABLED)) {
+            permState,
+            executor,
+            rootCell,
+            targetPlatforms.get(),
+            enableProfiling,
+            SpeculativeParsing.ENABLED)) {
 
       ImmutableSet<BuildTarget> buildTargets =
           ImmutableSet.copyOf(
@@ -371,7 +400,12 @@ public class DefaultParser implements Parser {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
-            permState, executor, rootCell, enableProfiling, speculativeParsing)) {
+            permState,
+            executor,
+            rootCell,
+            targetPlatforms.get(),
+            enableProfiling,
+            speculativeParsing)) {
       return targetSpecResolver.resolveTargetSpecs(
           eventBus,
           rootCell,

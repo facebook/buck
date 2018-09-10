@@ -34,6 +34,7 @@ public class GlobalCliOptions {
   public static final String SKYLARK_PROFILE_LONG_ARG = "--skylark-profile-output";
   public static final String VERBOSE_LONG_ARG = "--verbose";
   public static final String VERBOSE_SHORT_ARG = "-v";
+  public static final String TARGET_PLATFORMS_LONG_ARG = "--target-platforms";
 
   /**
    * Contains all options defined in this class. These options are considered global since they are
@@ -51,7 +52,8 @@ public class GlobalCliOptions {
           CONFIG_LONG_ARG,
           CONFIG_FILE_LONG_ARG,
           VERBOSE_LONG_ARG,
-          SKYLARK_PROFILE_LONG_ARG);
+          SKYLARK_PROFILE_LONG_ARG,
+          TARGET_PLATFORMS_LONG_ARG);
 
   public static boolean isGlobalOption(OptionHandler<?> optionHandler) {
     OptionDef option = optionHandler.option;

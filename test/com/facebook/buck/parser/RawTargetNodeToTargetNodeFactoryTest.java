@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.targetgraph.RawAttributes;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -80,7 +81,8 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             new NoopPackageBoundaryChecker(),
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(new TestSelectableResolver()),
-            new ThrowingConstraintResolver());
+            new ThrowingConstraintResolver(),
+            () -> new ConstraintBasedPlatform(ImmutableSet.of()));
 
     TargetNode<?> targetNode =
         factory.createTargetNode(

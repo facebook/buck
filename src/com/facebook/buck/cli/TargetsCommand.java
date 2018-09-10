@@ -839,6 +839,7 @@ public class TargetsCommand extends AbstractCommand {
                 params.getParser().getPermState(),
                 executor,
                 params.getCell(),
+                getTargetPlatforms(),
                 getEnableParserProfiling(),
                 SpeculativeParsing.DISABLED)) {
 

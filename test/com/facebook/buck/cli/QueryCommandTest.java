@@ -113,6 +113,7 @@ public class QueryCommandTest {
                 params.getParser().getPermState(),
                 executorService,
                 cell,
+                ImmutableList.of(),
                 false,
                 SpeculativeParsing.ENABLED);
     env =

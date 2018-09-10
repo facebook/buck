@@ -116,6 +116,7 @@ public class BuckQueryEnvironmentTest {
             parser.getPermState(),
             executor,
             cell,
+            ImmutableList.of(),
             /* enableProfiling */ false,
             SpeculativeParsing.ENABLED);
 

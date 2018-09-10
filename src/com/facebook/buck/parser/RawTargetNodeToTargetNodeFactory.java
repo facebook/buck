@@ -21,8 +21,8 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
+import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /** Creates {@link TargetNode} from {@link RawTargetNode}. */
 public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory<RawTargetNode> {
@@ -50,6 +51,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   private final TargetNodeListener<TargetNode<?>> nodeListener;
   private final SelectorListResolver selectorListResolver;
   private final ConstraintResolver constraintResolver;
+  private final Supplier<Platform> targetPlatform;
 
   public RawTargetNodeToTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider,
@@ -58,7 +60,8 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       PackageBoundaryChecker packageBoundaryChecker,
       TargetNodeListener<TargetNode<?>> nodeListener,
       SelectorListResolver selectorListResolver,
-      ConstraintResolver constraintResolver) {
+      ConstraintResolver constraintResolver,
+      Supplier<Platform> targetPlatform) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
     this.targetNodeFactory = targetNodeFactory;
@@ -66,6 +69,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
     this.nodeListener = nodeListener;
     this.selectorListResolver = selectorListResolver;
     this.constraintResolver = constraintResolver;
+    this.targetPlatform = targetPlatform;
   }
 
   @Override
@@ -123,7 +127,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       ImmutableMap<String, Object> rawTargetNodeAttributes) {
     SelectableConfigurationContext configurationContext =
         DefaultSelectableConfigurationContext.of(
-            buckConfig, constraintResolver, new ConstraintBasedPlatform(ImmutableSet.of()));
+            buckConfig, constraintResolver, targetPlatform.get());
 
     ImmutableMap.Builder<String, Object> configuredAttributes = ImmutableMap.builder();
 

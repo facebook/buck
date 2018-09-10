@@ -168,4 +168,13 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
     }
     return getSubcommand().get().performsBuild();
   }
+
+  @Override
+  public ImmutableList<String> getTargetPlatforms() {
+    return getSubcommand()
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException("Target platforms are not supported in this command"))
+        .getTargetPlatforms();
+  }
 }

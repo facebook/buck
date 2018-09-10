@@ -233,6 +233,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.CmdLineException;
@@ -1157,6 +1158,7 @@ public final class Main {
                   watchman,
                   knownRuleTypesProvider,
                   rootCell,
+                  command::getTargetPlatforms,
                   daemon,
                   buildEventBus,
                   forkJoinPoolSupplier,
@@ -1303,6 +1305,7 @@ public final class Main {
       Watchman watchman,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Cell rootCell,
+      Supplier<ImmutableList<String>> targetPlatforms,
       Optional<Daemon> daemonOptional,
       BuckEventBus buildEventBus,
       CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier,
@@ -1366,7 +1369,8 @@ public final class Main {
                   buildEventBus),
               new TargetSpecResolver(),
               watchman,
-              buildEventBus);
+              buildEventBus,
+              targetPlatforms);
       daemon.getFileEventBus().register(daemon.getDaemonicParserState());
 
       parserAndCaches =
@@ -1401,7 +1405,8 @@ public final class Main {
                       buildEventBus),
                   new TargetSpecResolver(),
                   watchman,
-                  buildEventBus),
+                  buildEventBus,
+                  targetPlatforms),
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),

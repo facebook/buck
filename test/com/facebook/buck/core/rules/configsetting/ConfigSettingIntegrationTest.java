@@ -120,4 +120,50 @@ public class ConfigSettingIntegrationTest {
     workspace.buildAndReturnOutput(
         "-c", "cat.file=a", "-c", "another.option=c", ":echo_with_one_none");
   }
+
+  @Test
+  public void testConfigSettingCanResolveConstraints() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_constraints", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput(
+            "-c", "cat.file=a", "--target-platforms", "//:osx_x86-64", ":cat");
+    assertEquals("a", Files.readAllLines(output).get(0));
+
+    output =
+        workspace.buildAndReturnOutput(
+            "-c", "cat.file=b", "--target-platforms", "//:linux_aarch64", ":cat");
+    assertEquals("b", Files.readAllLines(output).get(0));
+  }
+
+  @Test
+  public void testNonPlatformRuleCauseError() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_constraints", temporaryFolder);
+    workspace.setUp();
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "//:osx is used as a target platform, but not declared using `platform` rule");
+    workspace.runBuckBuild("--target-platforms", "//:osx", ":cat");
+  }
+
+  @Test
+  public void testNonMatchingPlatformCauseError() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_constraints", temporaryFolder);
+    workspace.setUp();
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "None of the conditions in attribute \"srcs\" match the configuration. Checked conditions:\n"
+            + " //:a_on_osx\n"
+            + " //:b_on_linux_aarch64");
+    workspace.runBuckBuild("-c", "cat.file=b", "--target-platforms", "//:linux_arm", ":cat");
+  }
 }

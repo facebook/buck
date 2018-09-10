@@ -190,7 +190,12 @@ public class TargetSpecResolverTest {
       throws IOException, InterruptedException {
     PerBuildState state =
         perBuildStateFactory.create(
-            parser.getPermState(), executorService, cell, false, SpeculativeParsing.DISABLED);
+            parser.getPermState(),
+            executorService,
+            cell,
+            ImmutableList.of(),
+            false,
+            SpeculativeParsing.DISABLED);
     return targetNodeTargetSpecResolver.resolveTargetSpecs(
         eventBus,
         cell,
