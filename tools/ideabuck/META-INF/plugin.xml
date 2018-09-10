@@ -1,30 +1,31 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.5-SNAPSHOT</version>
+  <version>3.5</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
   <description><![CDATA[
-      An IntelliJ plugin for Buck build system.<br>
-      <h3>Features:</h3>
-      <ul>
-        <li>Syntax highlighting for BUCK file</li>
-        <li>Keywords auto completion</li>
-        <li>Go to buck file with one click</li>
-        <li>Go to to paths of dependencies with one click</li>
-        <li>Buck file formatter</li>
-        <li>Buck line commenter</li>
-        <li>Buck dependencies sorter</li>
-      </ul>
-    ]]></description>
+    An IntelliJ plugin for <a href="https://buckbuild.com">the Buck build system.</a>
+    <h3>Features:</h3>
+    <ul>
+      <li>Syntax highlighting for BUCK file</li>
+      <li>Keywords auto completion</li>
+      <li>Go to buck file with one click</li>
+      <li>Go to to paths of dependencies with one click</li>
+      <li>Buck file formatter</li>
+      <li>Buck line commenter</li>
+      <li>Buck dependencies sorter</li>
+    </ul>
+  ]]></description>
 
   <change-notes><![CDATA[
 <h3>3.5</h3>
 <ul>
-  <li>Moved "Go to Buck file" action to Navigate menu and "Go To" popup menu.</li>
+  <li>Move "Go to Buck file" action to Navigate menu and "Go To" popup menu.</li>
   <li>Show warning about missing Buck server as a balloon.</li>
-  <li>Introduce project-level settings, stored in <code>.idea/ideabuck.xml</code></li>
+  <li>Add project-level settings, stored in <code>.idea/ideabuck.xml</code></li>
+  <li>Add limited support for cross-cell navigation in the editor.</li>
 </ul>
 
 <h3>3.4</h3>
