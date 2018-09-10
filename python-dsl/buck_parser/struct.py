@@ -141,7 +141,6 @@ def struct(**kwargs):
 
     def __repr__(self):
         """Return a nicely formatted representation string"""
-        print(repr_fmt)
         return self.__class__.__name__ + repr_fmt % self
 
     def _asdict(self):
