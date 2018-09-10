@@ -1834,7 +1834,7 @@ def main():
         with open(options.ignore_paths, "rb") as f:
             ignore_paths = [make_glob(i) for i in json.load(f)]
 
-    buildFileProcessor = BuildFileProcessor(
+    build_file_processor = BuildFileProcessor(
         project_root,
         cell_roots,
         options.cell_name,
@@ -1862,8 +1862,8 @@ def main():
 
     # Process the build files with the env var interceptors and builtins
     # installed.
-    with buildFileProcessor.with_env_interceptors():
-        with buildFileProcessor.with_builtins(__builtin__.__dict__):
+    with build_file_processor.with_env_interceptors():
+        with build_file_processor.with_builtins(__builtin__.__dict__):
             processed_build_file = []
 
             profiler = None
@@ -1878,7 +1878,7 @@ def main():
                     "projectPrefix": project_root,
                 }
                 duration = process_with_diagnostics(
-                    query, buildFileProcessor, to_parent
+                    query, build_file_processor, to_parent
                 )
                 processed_build_file.append(
                     {"buildFile": build_file, "duration": duration}
@@ -1898,7 +1898,7 @@ def main():
                     report_profile(options, to_parent, processed_build_file, profiler)
                 else:
                     duration = process_with_diagnostics(
-                        build_file_query, buildFileProcessor, to_parent
+                        build_file_query, build_file_processor, to_parent
                     )
                     processed_build_file.append(
                         {
