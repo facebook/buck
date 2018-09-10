@@ -339,6 +339,7 @@ public class BuckSettingsUI extends JPanel {
                                     public void run(@NotNull ProgressIndicator progressIndicator) {
                                       BuckCell buckCell =
                                           discoverCell(
+                                              buckExecutableForAutoDiscovery(),
                                               file.getName(),
                                               Paths.get(file.getCanonicalPath()),
                                               progressIndicator);
@@ -361,11 +362,7 @@ public class BuckSettingsUI extends JPanel {
     return panel;
   }
 
-  private void discoverCells() {
-    final FileChooserDescriptor dirChooser =
-        FileChooserDescriptorFactory.createSingleFolderDescriptor()
-            .withTitle("Select any directory within a buck cell");
-    Project project = optionsProvider.getProject();
+  private String buckExecutableForAutoDiscovery() {
     String buckExecutableText = buckPathField.getText().trim();
     String buckExecutable;
     if (buckExecutableText.isEmpty()) {
@@ -373,6 +370,14 @@ public class BuckSettingsUI extends JPanel {
     } else {
       buckExecutable = buckExecutableText;
     }
+    return buckExecutable;
+  }
+
+  private void discoverCells() {
+    final FileChooserDescriptor dirChooser =
+        FileChooserDescriptorFactory.createSingleFolderDescriptor()
+            .withTitle("Select any directory within a buck cell");
+    Project project = optionsProvider.getProject();
     VirtualFile defaultCell =
         FileChooser.chooseFile(dirChooser, BuckSettingsUI.this, project, project.getBaseDir());
     ProgressManager.getInstance()
@@ -380,7 +385,7 @@ public class BuckSettingsUI extends JPanel {
             new Modal(project, "Autodetecting buck cells", true) {
               @Override
               public void run(@NotNull ProgressIndicator progressIndicator) {
-                discoverCells(buckExecutable, defaultCell, progressIndicator);
+                discoverCells(buckExecutableForAutoDiscovery(), defaultCell, progressIndicator);
               }
             });
   }
@@ -436,7 +441,7 @@ public class BuckSettingsUI extends JPanel {
         String name = entry.getKey();
         Path cellRoot = mainCellRoot.resolve(entry.getValue()).normalize();
         progressIndicator.setText("Checking cell " + name);
-        BuckCell cell = discoverCell(name, cellRoot, progressIndicator);
+        BuckCell cell = discoverCell(buckExecutable, name, cellRoot, progressIndicator);
         if (mainCellRoot.equals(cellRoot)) {
           cells.add(0, cell); // put default cell at front of cell list
         } else {
@@ -456,8 +461,8 @@ public class BuckSettingsUI extends JPanel {
   }
 
   @Nonnull
-  private BuckCell discoverCell(String name, Path cellRoot, ProgressIndicator progressIndicator) {
-    String buckExecutable = buckPathField.getText().trim();
+  private BuckCell discoverCell(
+      String buckExecutable, String name, Path cellRoot, ProgressIndicator progressIndicator) {
     Gson gson = new Gson();
     Type type = new TypeToken<Map<String, String>>() {}.getType();
     BuckCell cell = new BuckCell();
