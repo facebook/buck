@@ -17,12 +17,12 @@ import java.util.HashMap;
 
 @SuppressWarnings({ "unused" })
 public class ExecutionEngineExceptionCode {
-  public static final int UNKNOWN = 0;
-  public static final int CANCELLED = 1;
-  public static final int TIMEOUT = 2;
-  public static final int SERVICE_OVERLOADED = 3;
-  public static final int ACTION_REJECTED = 4;
-  public static final int UNKNOWN_EXECUTION_ID = 5;
+  public static final int UNKNOWN = 100;
+  public static final int CANCELLED = 101;
+  public static final int TIMEOUT = 102;
+  public static final int SERVICE_OVERLOADED = 103;
+  public static final int ACTION_REJECTED = 104;
+  public static final int UNKNOWN_EXECUTION_ID = 105;
 
   public static final IntRangeSet VALID_VALUES;
   public static final Map<Integer, String> VALUES_TO_NAMES = new HashMap<Integer, String>();

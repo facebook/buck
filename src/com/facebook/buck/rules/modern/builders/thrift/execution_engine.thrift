@@ -396,35 +396,36 @@ struct ActionResult {
 enum ExecutionEngineExceptionCode {
   /*
    * Non-specific exception code.
+   * Intentionally avoiding code 0, since it usually indicates success.
    */
-  UNKNOWN = 0;
+  UNKNOWN = 100;
 
   /*
    * The execution was cancelled.
    */
-  CANCELLED = 1;
+  CANCELLED = 101;
 
   /*
    * The execution timed out.
    */
-  TIMEOUT = 2;
+  TIMEOUT = 102;
 
   /*
    * The service is overloaded and can't take any more executions at the moment.
    */
-  SERVICE_OVERLOADED = 3;
+  SERVICE_OVERLOADED = 103;
 
   /*
    * Action execution rejected. The action is either invalid, the service
    * lacks the required platrofm, or the timeout_secs in the action is higher
    * than the max allowed.
    */
-  ACTION_REJECTED = 4;
+  ACTION_REJECTED = 104;
 
   /*
    * Given execution id not known by the service.
    */
-  UNKNOWN_EXECUTION_ID = 5;
+  UNKNOWN_EXECUTION_ID = 105;
 }
 
 /*
