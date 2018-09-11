@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.tools;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.AbstractValueVisitor;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ExcludedValueTypeInfo;
 import com.facebook.buck.rules.modern.tools.CachedErrors.Builder;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.types.Pair;
@@ -107,6 +109,8 @@ public class IsolationChecker {
       reporter.reportNotMbr(instance);
       return;
     }
+    AtomicBoolean failure = new AtomicBoolean();
+
     String type = instance.getType();
     Buildable buildable = ((ModernBuildRule<?>) instance).getBuildable();
     String startingCrumb = String.format("%s[%s]", type, instance.getClass().getSimpleName());
@@ -116,6 +120,7 @@ public class IsolationChecker {
               String.format("failed with message: %s", ErrorLogger.getUserFriendlyMessage(e));
           reporter.reportSerializationFailure(
               instance, String.format("%s.%s", startingCrumb, crumbs), message);
+          failure.set(true);
         };
     BiConsumer<String, Path> pathHandler =
         (crumbs, path) -> {
@@ -123,8 +128,6 @@ public class IsolationChecker {
           reporter.reportAbsolutePath(
               instance, String.format("%s.%s", startingCrumb, crumbs), path);
         };
-
-    AtomicBoolean failure = new AtomicBoolean();
 
     checkSerialization(buildable).forEach(pathHandler, exceptionHandler);
     checkInputs(buildable).forEach(pathHandler, exceptionHandler);
@@ -187,6 +190,15 @@ public class IsolationChecker {
           return;
         }
       }
+
+      if (valueTypeInfo instanceof ExcludedValueTypeInfo) {
+        throw new HumanReadableException(
+            "Can't serialize excluded field %s with type %s (instance type %s)",
+            field.getName(),
+            field.getGenericType(),
+            value == null ? "<null>" : value.getClass().getName());
+      }
+
       valueTypeInfo.visit(value, fieldVisitor);
     }
 

@@ -41,6 +41,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -194,7 +195,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
             String error = String.format("%s %s", crumbs, message);
             Multimap<String, String> failedTargetsByMessage =
                 failuresByRuleType.computeIfAbsent(
-                    getRuleTypeString(instance), ignored -> ArrayListMultimap.create());
+                    getRuleTypeString(instance), ignored -> TreeMultimap.create());
             failedTargetsByMessage.put(error, instance.getFullyQualifiedName());
           }
 
@@ -202,7 +203,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
           public void reportAbsolutePath(BuildRule instance, String crumbs, Path path) {
             Multimap<String, String> inner =
                 absolutePathsRequired.computeIfAbsent(
-                    path.toString(), ignored -> ArrayListMultimap.create());
+                    path.toString(), ignored -> TreeMultimap.create());
             inner.put(crumbs, instance.getFullyQualifiedName());
           }
 
@@ -256,7 +257,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
           builder.addLine(
               "%s failures for rules of type %s.", failure.getValue().size(), failure.getKey());
           for (Entry<String, Collection<String>> instance : asSortedEntries(failure.getValue())) {
-            builder.addLine("  %s: %s", instance.getValue().size(), instance.getKey());
+            builder.addLine(" %s: %s", instance.getValue().size(), instance.getKey());
 
             int count = 0;
             int max = 3;
