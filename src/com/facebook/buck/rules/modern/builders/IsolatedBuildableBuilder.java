@@ -249,7 +249,10 @@ public abstract class IsolatedBuildableBuilder {
               // Sadly, some things assume this exists and writes to it.
               ProjectFilesystem fs = filesystemFunction.apply(Optional.of(name));
               BuckPaths configuredPaths = fs.getBuckPaths();
-              Files.createDirectories(configuredPaths.getTmpDir());
+
+              fs.mkdirs(configuredPaths.getTmpDir());
+              fs.mkdirs(configuredPaths.getBuckOut());
+              fs.createSymLink(configuredPaths.getProjectRootDir(), fs.getRootPath(), true);
 
               if (!configuredPaths.getConfiguredBuckOut().equals(configuredPaths.getBuckOut())
                   && buckConfig.getBuckOutCompatLink()
