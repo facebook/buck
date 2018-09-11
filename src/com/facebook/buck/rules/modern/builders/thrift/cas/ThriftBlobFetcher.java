@@ -28,18 +28,14 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import javax.annotation.concurrent.GuardedBy;
 
 /** A Thrift-based implementation of fetching outputs from the CAS. */
 // TODO(shivanker): Make this implementation actually async.
 public class ThriftBlobFetcher implements AsyncBlobFetcher {
 
-  private final Object clientLock = new Object();
+  private final ContentAddressableStorage.Iface client;
 
-  @GuardedBy("clientLock")
-  private final ContentAddressableStorage.Client client;
-
-  public ThriftBlobFetcher(ContentAddressableStorage.Client client) {
+  public ThriftBlobFetcher(ContentAddressableStorage.Iface client) {
     this.client = client;
   }
 
@@ -48,9 +44,7 @@ public class ThriftBlobFetcher implements AsyncBlobFetcher {
     ReadBlobRequest request = new ReadBlobRequest(ThriftProtocol.get(digest));
     try {
       ReadBlobResponse response;
-      synchronized (clientLock) {
-        response = client.readBlob(request);
-      }
+      response = client.readBlob(request);
       return Futures.immediateFuture(ByteBuffer.wrap(response.getData()));
     } catch (TException | ContentAddressableStorageException e) {
       return Futures.immediateFailedFuture(e);

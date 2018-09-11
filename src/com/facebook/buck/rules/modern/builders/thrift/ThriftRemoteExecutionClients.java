@@ -16,8 +16,27 @@
 
 package com.facebook.buck.rules.modern.builders.thrift;
 
+import com.facebook.remoteexecution.cas.BatchReadBlobsRequest;
+import com.facebook.remoteexecution.cas.BatchReadBlobsResponse;
+import com.facebook.remoteexecution.cas.BatchUpdateBlobsRequest;
+import com.facebook.remoteexecution.cas.BatchUpdateBlobsResponse;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
+import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
+import com.facebook.remoteexecution.cas.FindMissingBlobsRequest;
+import com.facebook.remoteexecution.cas.FindMissingBlobsResponse;
+import com.facebook.remoteexecution.cas.GetTreeRequest;
+import com.facebook.remoteexecution.cas.GetTreeResponse;
+import com.facebook.remoteexecution.cas.ReadBlobRequest;
+import com.facebook.remoteexecution.cas.ReadBlobResponse;
+import com.facebook.remoteexecution.cas.UpdateBlobRequest;
+import com.facebook.remoteexecution.cas.UpdateBlobResponse;
+import com.facebook.remoteexecution.executionengine.ExecuteOperation;
+import com.facebook.remoteexecution.executionengine.ExecuteRequest;
 import com.facebook.remoteexecution.executionengine.ExecutionEngine;
+import com.facebook.remoteexecution.executionengine.ExecutionEngine.Iface;
+import com.facebook.remoteexecution.executionengine.ExecutionEngineException;
+import com.facebook.remoteexecution.executionengine.GetExecuteOperationRequest;
+import com.facebook.thrift.TException;
 import com.facebook.thrift.protocol.THeaderProtocol;
 import com.facebook.thrift.transport.THeaderTransport;
 import com.facebook.thrift.transport.TSocket;
@@ -67,15 +86,17 @@ class ThriftRemoteExecutionClients implements Closeable {
     }
   }
 
-  public ContentAddressableStorage.Client createCasClient() throws TTransportException {
+  public ContentAddressableStorage.Iface createCasClient() throws TTransportException {
     THeaderTransport casTransport = createBlockingTransport(casHost, casPort);
-    return new ContentAddressableStorage.Client(new THeaderProtocol(casTransport));
+    return new SynchronizedContentAddressableStorageClient(
+        new ContentAddressableStorage.Client(new THeaderProtocol(casTransport)));
   }
 
-  public ExecutionEngine.Client createExecutionEngineClient() throws TTransportException {
+  public ExecutionEngine.Iface createExecutionEngineClient() throws TTransportException {
     THeaderTransport remoteExecutionTransport =
         createBlockingTransport(remoteExecutionHost, remoteExecutionPort);
-    return new ExecutionEngine.Client(new THeaderProtocol(remoteExecutionTransport));
+    return new SynchronizedExecutionEngineClient(
+        new ExecutionEngine.Client(new THeaderProtocol(remoteExecutionTransport)));
   }
 
   private THeaderTransport createBlockingTransport(String host, int port)
@@ -93,5 +114,71 @@ class ThriftRemoteExecutionClients implements Closeable {
     }
 
     return transport;
+  }
+
+  private static final class SynchronizedContentAddressableStorageClient
+      implements ContentAddressableStorage.Iface {
+
+    private final ContentAddressableStorage.Iface decorated;
+
+    public SynchronizedContentAddressableStorageClient(ContentAddressableStorage.Iface decorated) {
+      this.decorated = decorated;
+    }
+
+    @Override
+    public synchronized UpdateBlobResponse updateBlob(UpdateBlobRequest request)
+        throws ContentAddressableStorageException, TException {
+      return decorated.updateBlob(request);
+    }
+
+    @Override
+    public synchronized BatchUpdateBlobsResponse batchUpdateBlobs(BatchUpdateBlobsRequest request)
+        throws ContentAddressableStorageException, TException {
+      return decorated.batchUpdateBlobs(request);
+    }
+
+    @Override
+    public synchronized ReadBlobResponse readBlob(ReadBlobRequest request)
+        throws ContentAddressableStorageException, TException {
+      return decorated.readBlob(request);
+    }
+
+    @Override
+    public synchronized BatchReadBlobsResponse batchReadBlobs(BatchReadBlobsRequest request)
+        throws ContentAddressableStorageException, TException {
+      return decorated.batchReadBlobs(request);
+    }
+
+    @Override
+    public synchronized FindMissingBlobsResponse findMissingBlobs(FindMissingBlobsRequest request)
+        throws ContentAddressableStorageException, TException {
+      return decorated.findMissingBlobs(request);
+    }
+
+    @Override
+    public synchronized GetTreeResponse getTree(GetTreeRequest request)
+        throws ContentAddressableStorageException, TException {
+      return decorated.getTree(request);
+    }
+  }
+
+  private static final class SynchronizedExecutionEngineClient implements ExecutionEngine.Iface {
+    private final ExecutionEngine.Iface decorated;
+
+    private SynchronizedExecutionEngineClient(Iface decorated) {
+      this.decorated = decorated;
+    }
+
+    @Override
+    public synchronized ExecuteOperation execute(ExecuteRequest request)
+        throws ExecutionEngineException, TException {
+      return decorated.execute(request);
+    }
+
+    @Override
+    public synchronized ExecuteOperation getExecuteOperation(GetExecuteOperationRequest request)
+        throws ExecutionEngineException, TException {
+      return decorated.getExecuteOperation(request);
+    }
   }
 }

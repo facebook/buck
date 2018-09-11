@@ -45,19 +45,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import javax.annotation.concurrent.GuardedBy;
 
 /** A Thrift-based implementation of uploading inputs/outputs to the CAS. */
 public class ThriftCasBlobUploader implements CasBlobUploader {
 
   private static final Logger LOG = Logger.get(ThriftCasBlobUploader.class);
 
-  private final Object clientLock = new Object();
+  private final ContentAddressableStorage.Iface client;
 
-  @GuardedBy("clientLock")
-  private final ContentAddressableStorage.Client client;
-
-  public ThriftCasBlobUploader(ContentAddressableStorage.Client client) {
+  public ThriftCasBlobUploader(ContentAddressableStorage.Iface client) {
     // TODO(shivanker): The direct thrift client is not thread-safe, so we need to keep the requests
     // synchronized.
     this.client = client;
@@ -73,9 +69,7 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
     FindMissingBlobsResponse response;
 
     try {
-      synchronized (clientLock) {
-        response = client.findMissingBlobs(request);
-      }
+      response = client.findMissingBlobs(request);
     } catch (TException | ContentAddressableStorageException e) {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);
 
@@ -121,9 +115,7 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
     BatchUpdateBlobsResponse response;
 
     try {
-      synchronized (clientLock) {
-        response = client.batchUpdateBlobs(request);
-      }
+      response = client.batchUpdateBlobs(request);
     } catch (TException | ContentAddressableStorageException e) {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);
       String digests =

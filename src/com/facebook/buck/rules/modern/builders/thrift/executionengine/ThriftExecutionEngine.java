@@ -34,7 +34,6 @@ import com.facebook.remoteexecution.executionengine.ExecuteOperation;
 import com.facebook.remoteexecution.executionengine.ExecuteRequest;
 import com.facebook.remoteexecution.executionengine.ExecuteResponse;
 import com.facebook.remoteexecution.executionengine.ExecutionEngine;
-import com.facebook.remoteexecution.executionengine.ExecutionEngine.Client;
 import com.facebook.remoteexecution.executionengine.ExecutionEngineException;
 import com.facebook.remoteexecution.executionengine.GetExecuteOperationRequest;
 import com.facebook.thrift.TException;
@@ -58,12 +57,12 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
   private static final boolean SKIP_CACHE_LOOKUP = false;
   private static Charset CHARSET = Charset.forName("UTF-8");
 
-  private final Client client;
-  private final ContentAddressableStorage.Client casClient;
+  private final ExecutionEngine.Iface reeClient;
+  private final ContentAddressableStorage.Iface casClient;
 
   public ThriftExecutionEngine(
-      ExecutionEngine.Client client, ContentAddressableStorage.Client casClient) {
-    this.client = client;
+      ExecutionEngine.Iface reeClient, ContentAddressableStorage.Iface casClient) {
+    this.reeClient = reeClient;
     this.casClient = casClient;
   }
 
@@ -77,11 +76,7 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
     ExecuteResponse response;
     try {
       ExecuteOperation operation;
-      synchronized (client) {
-        // TODO(shivanker): Thrift client is not thread-safe. We *really* don't want this for the
-        // long-term. Will convert this to an async-client in the next diff.
-        operation = client.execute(request);
-      }
+      operation = reeClient.execute(request);
       response = waitForResponse(operation);
     } catch (TException | ExecutionEngineException e) {
       // ExecutionEngineException thrown here means an Infra Failure.
@@ -155,9 +150,7 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
       GetExecuteOperationRequest request = new GetExecuteOperationRequest(operation.execution_id);
 
       try {
-        synchronized (client) {
-          operation = client.getExecuteOperation(request);
-        }
+        operation = reeClient.getExecuteOperation(request);
         Preconditions.checkState(operation.isSetDone(), "Invalid ExecuteOperation received.");
       } catch (ExecutionEngineException e) {
         throw new RuntimeException(e);
@@ -208,9 +201,7 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
           try {
             ReadBlobRequest request = new ReadBlobRequest(actionResult.stderr_digest);
             ReadBlobResponse response;
-            synchronized (casClient) {
-              response = casClient.readBlob(request);
-            }
+            response = casClient.readBlob(request);
             return Optional.of(new String(response.data, CHARSET));
           } catch (TException | ContentAddressableStorageException e) {
             throw new RuntimeException(e);

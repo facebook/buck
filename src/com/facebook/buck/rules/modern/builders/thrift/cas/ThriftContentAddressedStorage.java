@@ -38,8 +38,8 @@ public class ThriftContentAddressedStorage implements ContentAddressedStorage {
   private final OutputsMaterializer materializer;
 
   public ThriftContentAddressedStorage(
-      ContentAddressableStorage.Client uploadClient,
-      ContentAddressableStorage.Client downloadClient) {
+      ContentAddressableStorage.Iface uploadClient,
+      ContentAddressableStorage.Iface downloadClient) {
     uploader =
         new MultiThreadedBlobUploader(
             1000,

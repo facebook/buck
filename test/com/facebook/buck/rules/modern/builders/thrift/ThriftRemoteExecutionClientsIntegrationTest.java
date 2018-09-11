@@ -61,7 +61,7 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
 
   @Test
   public void testSyncCasClient() throws TException, ContentAddressableStorageException {
-    ContentAddressableStorage.Client client = clients.createCasClient();
+    ContentAddressableStorage.Iface client = clients.createCasClient();
     FindMissingBlobsRequest request = new FindMissingBlobsRequest(digests);
     FindMissingBlobsResponse response = client.findMissingBlobs(request);
 
