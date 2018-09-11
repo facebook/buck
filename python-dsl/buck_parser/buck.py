@@ -78,6 +78,10 @@ _LOAD_TARGET_PATH_RE = re.compile(
     r"^(?P<root>(?P<cell>@?[\w\-.]+)?//)?(?P<package>.*):(?P<target>.*)$"
 )
 
+# matches anything equivalent to recursive glob on all dirs
+# e.g. "**/", "*/**/", "*/*/**/"
+_RECURSIVE_GLOB_PATTERN = re.compile("^(\*/)*\*\*/")
+
 
 class AbstractContext(object):
     """Superclass of execution contexts."""
@@ -448,9 +452,7 @@ def glob(
         search_base = Path(build_env.dirname)
 
     if build_env.dirname == build_env.project_root and any(
-        # match anything equivalent to recursive glob on all dirs e.g. "**/", "*/**/", "*/*/**/"
-        re.match(re.compile("^(\*\/)*\*\*\/"), pattern)
-        for pattern in includes
+        _RECURSIVE_GLOB_PATTERN.match(pattern) for pattern in includes
     ):
         fail(
             "Recursive globs are prohibited at top-level directory", build_env=build_env
