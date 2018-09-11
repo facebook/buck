@@ -129,6 +129,7 @@ class Profiler(object):
         )
 
     def generate_report(self):
+        # type: () -> str
         """Generate string with a nice visualization of the result of the profiling."""
         Profiler._recursive_mark_useful_leaf(self._aggregated_callstack)
 

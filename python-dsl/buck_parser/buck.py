@@ -19,7 +19,7 @@ import time
 import traceback
 import types
 from pathlib import Path, PurePath
-from typing import Any, Dict, List, Optional, Tuple, TypeVar
+from typing import Any, Dict, Iterator, List, Optional, Pattern, Set, Tuple, TypeVar
 
 import pywatchman
 from pywatchman import WatchmanError
@@ -67,20 +67,20 @@ NATIVE_FUNCTIONS = []
 
 # Wait this many seconds on recv() or send() in the pywatchman client
 # if not otherwise specified in .buckconfig
-DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0
+DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0  # type: float
 
 # Globals that should not be copied from one module into another
-_HIDDEN_GLOBALS = {"include_defs", "load"}
+_HIDDEN_GLOBALS = {"include_defs", "load"}  # type: Set[str]
 
 ORIGINAL_IMPORT = __builtin__.__import__
 
 _LOAD_TARGET_PATH_RE = re.compile(
     r"^(?P<root>(?P<cell>@?[\w\-.]+)?//)?(?P<package>.*):(?P<target>.*)$"
-)
+)  # type: Pattern[str]
 
 # matches anything equivalent to recursive glob on all dirs
 # e.g. "**/", "*/**/", "*/*/**/"
-_RECURSIVE_GLOB_PATTERN = re.compile("^(\*/)*\*\*/")
+_RECURSIVE_GLOB_PATTERN = re.compile("^(\*/)*\*\*/")  # type: Pattern[str]
 
 
 class AbstractContext(object):
@@ -117,6 +117,7 @@ class AbstractContext(object):
         raise NotImplementedError()
 
     def merge(self, other):
+        # type: (AbstractContext) -> None
         """Merge the context of an included file into the current context.
 
         :param AbstractContext other: the include context to merge.
@@ -1269,6 +1270,7 @@ class BuildFileProcessor(object):
 
     @contextlib.contextmanager
     def _set_build_env(self, build_env):
+        # type: (AbstractContext) -> Iterator[None]
         """Set the given build context as the current context, unsetting it upon exit."""
         old_env = self._current_build_env
         self._current_build_env = build_env
@@ -1280,6 +1282,7 @@ class BuildFileProcessor(object):
             self._update_functions(self._current_build_env)
 
     def _emit_warning(self, message, source):
+        # type: (str, str) -> None
         """
         Add a warning to the current build_env's diagnostics.
         """
@@ -1292,6 +1295,7 @@ class BuildFileProcessor(object):
 
     @staticmethod
     def _create_import_whitelist(project_import_whitelist):
+        # type: (List[str]) -> Set[str]
         """
         Creates import whitelist by joining the global whitelist with the project specific one
         defined in '.buckconfig'.
@@ -1568,6 +1572,7 @@ def format_exception_info(exception_info):
 
 
 def encode_result(values, diagnostics, profile):
+    # type: (List[Dict[str, object]], List[Diagnostic], Optional[str]) -> str
     result = {
         "values": [
             dict((k, v) for k, v in value.iteritems() if v is not None)
@@ -1978,6 +1983,7 @@ def report_profile(options, to_parent, processed_build_file, profiler):
 
 
 def make_glob(pat):
+    # type: (str) -> str
     if is_special(pat):
         return pat
     return pat + "/**"
