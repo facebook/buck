@@ -279,6 +279,16 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     context.addGeneratedSourceCodeFolder(
         folderFactory.create(
             annotationOutputPath, false, ImmutableSortedSet.of(annotationOutputPath)));
+    Optional<Path> abiAnnotationOutput =
+        moduleFactoryResolver.getAbiAnnotationOutputPath(jvmLibraryTargetNode);
+    if (!abiAnnotationOutput.isPresent()) {
+      return;
+    }
+
+    Path abiAnnotationOutputPath = abiAnnotationOutput.get();
+    context.addGeneratedSourceCodeFolder(
+        folderFactory.create(
+            abiAnnotationOutputPath, false, ImmutableSortedSet.of(abiAnnotationOutputPath)));
   }
 
   private void addGeneratedOutputIfNeeded(

@@ -73,6 +73,13 @@ public interface IjModuleFactoryResolver {
   Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg> targetNode);
 
   /**
+   * @param targetNode node which may use annotation processors.
+   * @return path to the annotation processor output of the associated abi target if any annotation
+   *     proceessors are configured for the given node.
+   */
+  Optional<Path> getAbiAnnotationOutputPath(TargetNode<? extends JvmLibraryArg> targetNode);
+
+  /**
    * @param targetNode node which may specify it's own compiler output path.
    * @return path to the classes that make up the compiler output.
    */

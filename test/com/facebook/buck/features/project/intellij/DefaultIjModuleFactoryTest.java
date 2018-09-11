@@ -749,6 +749,12 @@ public class DefaultIjModuleFactoryTest {
               }
 
               @Override
+              public Optional<Path> getAbiAnnotationOutputPath(
+                  TargetNode<? extends JvmLibraryArg> targetNode) {
+                return Optional.empty();
+              }
+
+              @Override
               public Optional<Path> getCompilerOutputPath(
                   TargetNode<? extends JvmLibraryArg> targetNode) {
                 return Optional.empty();
