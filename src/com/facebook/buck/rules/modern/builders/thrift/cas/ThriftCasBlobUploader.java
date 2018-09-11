@@ -80,7 +80,7 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
     } catch (TException | ContentAddressableStorageException e) {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);
 
-      String message = "Failed to get missing hashes. ";
+      String message = "";
       if (e.getMessage() != null && e.getMessage().length() > 0) {
         message += e.getMessage();
       }
@@ -92,6 +92,10 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
                 "Encountered TTransport exception of type: [%d]", transportException.getType());
       }
 
+      message +=
+          String.format(
+              "Failed to get missing hashes for request [%s]",
+              ThriftUtil.thriftToDebugJson(request));
       LOG.error(e, message);
       throw new BuckUncheckedExecutionException(e, message);
     }
@@ -133,7 +137,21 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
       }
     } catch (TException | ContentAddressableStorageException e) {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);
-      String message = String.format("Failed to batch update blobs: [%s]", e.getMessage());
+      String digests =
+          request
+              .getRequests()
+              .stream()
+              .map(
+                  blobRequest ->
+                      String.format(
+                          "%s:%d",
+                          blobRequest.getContent_digest().getHash(),
+                          blobRequest.getContent_digest().getSize_bytes()))
+              .reduce("", (digest1, digest2) -> digest1 + ", " + digest2);
+      String message =
+          String.format(
+              "Failed to batch update [%d] blobs for digests [%s].",
+              request.getRequests().size(), digests);
       LOG.error(e, message);
       throw new BuckUncheckedExecutionException(e, message);
     }
