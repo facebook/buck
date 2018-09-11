@@ -6,7 +6,6 @@ prebuilt_jar(
     source_jar = "sdklib-%s-sources.jar" % version,
     visibility = [
         "//src/com/facebook/buck/android:steps",
-        "//third-party/java/aosp:aosp",
     ],
 )
 

@@ -48,7 +48,6 @@ public class AndroidInstrumentationApkBuilder
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             new CxxBuckConfig(new FakeBuckConfig.Builder().build()),
             new DxConfig(FakeBuckConfig.builder().build()),
-            new ApkConfig(FakeBuckConfig.builder().build()),
             createToolchainProviderForAndroidInstrumentationApk()),
         target,
         new FakeProjectFilesystem(),

@@ -74,7 +74,6 @@ public class AndroidBundleDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
   private final AndroidInstallConfig androidInstallConfig;
-  private final ApkConfig apkConfig;
   private final ToolchainProvider toolchainProvider;
   private final AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory;
   private final AndroidBundleFactory androidBundleFactory;
@@ -86,7 +85,6 @@ public class AndroidBundleDescription
       BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
-      ApkConfig apkConfig,
       ToolchainProvider toolchainProvider,
       AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory,
       AndroidBundleFactory androidBundleFactory) {
@@ -96,7 +94,6 @@ public class AndroidBundleDescription
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
     this.androidInstallConfig = new AndroidInstallConfig(buckConfig);
-    this.apkConfig = apkConfig;
     this.toolchainProvider = toolchainProvider;
     this.androidBinaryGraphEnhancerFactory = androidBinaryGraphEnhancerFactory;
     this.androidBundleFactory = androidBundleFactory;
@@ -184,7 +181,6 @@ public class AndroidBundleDescription
             exopackageModes,
             resourceFilter,
             rulesToExcludeFromDex,
-            apkConfig,
             args);
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.

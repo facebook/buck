@@ -129,7 +129,6 @@ public class AndroidInstrumentationApkTest {
                     new ProGuardConfig(FakeBuckConfig.builder().build()),
                     CxxPlatformUtils.DEFAULT_CONFIG,
                     new DxConfig(FakeBuckConfig.builder().build()),
-                    new ApkConfig(FakeBuckConfig.builder().build()),
                     toolchainProvider)
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(

@@ -39,7 +39,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="guava" level="project" />
-    <orderEntry type="library" name="android-sdklib-25.3.0" level="project" />
     <orderEntry type="library" name="apksig" level="project" />
   </component>
 </module>

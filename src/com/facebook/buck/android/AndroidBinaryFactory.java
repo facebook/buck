@@ -61,7 +61,6 @@ public class AndroidBinaryFactory {
       EnumSet<ExopackageMode> exopackageModes,
       ResourceFilter resourceFilter,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      ApkConfig apkConfig,
       AndroidBinaryDescriptionArg args) {
 
     BuildRule keystore = graphBuilder.getRule(args.getKeystore());
@@ -142,7 +141,6 @@ public class AndroidBinaryFactory {
         filesInfo.getNativeFilesInfo(),
         filesInfo.getResourceFilesInfo(),
         ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
-        filesInfo.getExopackageInfo(),
-        apkConfig.getCompressionLevel());
+        filesInfo.getExopackageInfo());
   }
 }

@@ -69,7 +69,6 @@ public class AndroidBundleBuilder
             buckConfig,
             CxxPlatformUtils.DEFAULT_CONFIG,
             new DxConfig(buckConfig),
-            new ApkConfig(buckConfig),
             createToolchainProviderForAndroidBundle(),
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBundleFactory(new AndroidBuckConfig(buckConfig, Platform.detect()))),

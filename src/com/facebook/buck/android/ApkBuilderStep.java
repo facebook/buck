@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.android.common.sdklib.build.ApkBuilder;
+import com.android.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
@@ -57,7 +57,6 @@ public class ApkBuilderStep implements Step {
   private final ImmutableSet<Path> jarFilesThatMayContainResources;
   private final boolean debugMode;
   private final ImmutableList<String> javaRuntimeLauncher;
-  private final int apkCompressionLevel;
   private final AppBuilderBase appBuilderBase;
 
   /**
@@ -68,7 +67,6 @@ public class ApkBuilderStep implements Step {
    * @param nativeLibraryDirectories List of paths to native directories.
    * @param zipFiles List of paths to zipfiles to be included into the apk.
    * @param debugMode Whether or not to run ApkBuilder with debug mode turned on.
-   * @param apkCompressionLevel
    */
   public ApkBuilderStep(
       ProjectFilesystem filesystem,
@@ -82,8 +80,7 @@ public class ApkBuilderStep implements Step {
       Path pathToKeystore,
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       boolean debugMode,
-      ImmutableList<String> javaRuntimeLauncher,
-      int apkCompressionLevel) {
+      ImmutableList<String> javaRuntimeLauncher) {
     this.filesystem = filesystem;
     this.resourceApk = resourceApk;
     this.pathToOutputApkFile = pathToOutputApkFile;
@@ -94,7 +91,6 @@ public class ApkBuilderStep implements Step {
     this.zipFiles = zipFiles;
     this.debugMode = debugMode;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
-    this.apkCompressionLevel = apkCompressionLevel;
     this.appBuilderBase =
         new AppBuilderBase(filesystem, keystorePropertiesSupplier, pathToKeystore);
   }
@@ -117,8 +113,7 @@ public class ApkBuilderStep implements Step {
               filesystem.getPathForRelativePath(dexFile).toFile(),
               privateKeyAndCertificate.privateKey,
               privateKeyAndCertificate.certificate,
-              output,
-              apkCompressionLevel);
+              output);
       builder.setDebugMode(debugMode);
       for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
         builder.addNativeLibraries(

@@ -114,8 +114,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // Post-process resource compression
   @AddToRuleKey private final boolean isCompressResources;
 
-  @AddToRuleKey private final int apkCompressionLevel;
-
   @AddToRuleKey private final ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths;
 
   private final boolean isApk;
@@ -147,7 +145,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
       ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths,
-      int apkCompressionLevel,
       boolean isApk) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
@@ -169,7 +166,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.packageAssetLibraries = packageAssetLibraries;
     this.compressAssetLibraries = compressAssetLibraries;
     this.resourceFilesInfo = resourceFilesInfo;
-    this.apkCompressionLevel = apkCompressionLevel;
     this.isApk = isApk;
   }
 
@@ -278,8 +274,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               pathToKeystore,
               keystoreProperties,
               false,
-              javaRuntimeLauncher.getCommandPrefix(pathResolver),
-              apkCompressionLevel));
+              javaRuntimeLauncher.getCommandPrefix(pathResolver)));
     } else {
       Path tempBundleConfig =
           BuildTargetPaths.getGenPath(
@@ -349,7 +344,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               pathToKeystore,
               keystoreProperties,
               false,
-              apkCompressionLevel,
               tempBundleConfig,
               modulesInfo.build(),
               moduleNames));

@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.android.common.SdkConstants;
-import com.android.common.sdklib.build.ApkBuilder;
+import com.android.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.IArchiveBuilder;
@@ -57,7 +57,6 @@ public class AabBuilderStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Path pathToOutputApkFile;
   private final boolean debugMode;
-  private final int apkCompressionLevel;
   private final Path tempBundleConfig;
   private static final Pattern PATTERN_NATIVELIB_EXT =
       Pattern.compile("^.+\\.so$", Pattern.CASE_INSENSITIVE);
@@ -72,7 +71,6 @@ public class AabBuilderStep implements Step {
    *     this bundle
    * @param pathToOutputApkFile Path to output our APK to.
    * @param debugMode Whether or not to run ApkBuilder with debug mode turned on.
-   * @param apkCompressionLevel
    */
   public AabBuilderStep(
       ProjectFilesystem filesystem,
@@ -80,14 +78,12 @@ public class AabBuilderStep implements Step {
       Path pathToKeystore,
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       boolean debugMode,
-      int apkCompressionLevel,
       Path tempBundleConfig,
       ImmutableSet<ModuleInfo> modulesInfo,
       ImmutableSet<String> moduleNames) {
     this.filesystem = filesystem;
     this.pathToOutputApkFile = pathToOutputApkFile;
     this.debugMode = debugMode;
-    this.apkCompressionLevel = apkCompressionLevel;
     this.tempBundleConfig = tempBundleConfig;
     this.modulesInfo = modulesInfo;
     this.moduleNames = moduleNames;
@@ -116,8 +112,7 @@ public class AabBuilderStep implements Step {
               null,
               privateKeyAndCertificate.privateKey,
               privateKeyAndCertificate.certificate,
-              output,
-              apkCompressionLevel);
+              output);
       builder.setDebugMode(debugMode);
       Set<String> addedFiles = new HashSet<>();
       Set<Path> addedSourceFiles = new HashSet<>();

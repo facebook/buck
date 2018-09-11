@@ -69,7 +69,6 @@ public class AndroidBinaryBuilder
             buckConfig,
             CxxPlatformUtils.DEFAULT_CONFIG,
             new DxConfig(buckConfig),
-            new ApkConfig(buckConfig),
             createToolchainProviderForAndroidBinary(),
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBinaryFactory(new AndroidBuckConfig(buckConfig, Platform.detect()))),

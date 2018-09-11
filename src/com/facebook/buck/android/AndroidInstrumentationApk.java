@@ -61,8 +61,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
-      Optional<ExopackageInfo> exopackageInfo,
-      int apkCompressionLevel) {
+      Optional<ExopackageInfo> exopackageInfo) {
     super(
         buildTarget,
         projectFilesystem,
@@ -97,8 +96,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         nativeFilesInfo,
         resourceFilesInfo,
         ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules()),
-        exopackageInfo,
-        apkCompressionLevel);
+        exopackageInfo);
     this.apkUnderTest = apkUnderTest;
   }
 

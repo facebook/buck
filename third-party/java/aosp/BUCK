@@ -8,7 +8,6 @@ java_library(
     ],
     visibility=["PUBLIC"],
     deps=[
-        "//third-party/java/android:sdklib",
         "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
     ],
