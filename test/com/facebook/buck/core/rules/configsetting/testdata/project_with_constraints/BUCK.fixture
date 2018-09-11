@@ -56,6 +56,21 @@ platform(
 )
 
 config_setting(
+    name = "osx_config",
+    constraint_values = [
+        ":osx",
+    ],
+)
+
+config_setting(
+    name = "linux_aarch64_config",
+    constraint_values = [
+        ":linux",
+        ":aarch64",
+    ],
+)
+
+config_setting(
     name = "a_on_osx",
     constraint_values = [
         ":osx",
@@ -78,6 +93,16 @@ config_setting(
 
 genrule(
     name = "cat",
+    srcs = select({
+        ":osx_config": ["a.txt"],
+        ":linux_aarch64_config": ["b.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+)
+
+genrule(
+    name = "cat_with_constraints_and_values",
     srcs = select({
         ":a_on_osx": ["a.txt"],
         ":b_on_linux_aarch64": ["b.txt"],

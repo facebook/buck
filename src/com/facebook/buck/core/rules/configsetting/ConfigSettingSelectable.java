@@ -92,9 +92,6 @@ public class ConfigSettingSelectable implements Selectable {
       Platform targetPlatform,
       ImmutableList<BuildTarget> constraintValuesTargets,
       ImmutableMap<String, String> values) {
-    if (values.isEmpty()) {
-      return false;
-    }
     for (Map.Entry<String, String> entry : values.entrySet()) {
       if (!matches(buckConfig, entry.getKey(), entry.getValue())) {
         return false;

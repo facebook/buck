@@ -128,14 +128,36 @@ public class ConfigSettingIntegrationTest {
             this, "project_with_constraints", temporaryFolder);
     workspace.setUp();
 
+    Path output = workspace.buildAndReturnOutput("--target-platforms", "//:osx_x86-64", ":cat");
+    assertEquals("a", Files.readAllLines(output).get(0));
+
+    output = workspace.buildAndReturnOutput("--target-platforms", "//:linux_aarch64", ":cat");
+    assertEquals("b", Files.readAllLines(output).get(0));
+  }
+
+  @Test
+  public void testConfigSettingCanResolveConstraintsAndValues() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_constraints", temporaryFolder);
+    workspace.setUp();
+
     Path output =
         workspace.buildAndReturnOutput(
-            "-c", "cat.file=a", "--target-platforms", "//:osx_x86-64", ":cat");
+            "-c",
+            "cat.file=a",
+            "--target-platforms",
+            "//:osx_x86-64",
+            ":cat_with_constraints_and_values");
     assertEquals("a", Files.readAllLines(output).get(0));
 
     output =
         workspace.buildAndReturnOutput(
-            "-c", "cat.file=b", "--target-platforms", "//:linux_aarch64", ":cat");
+            "-c",
+            "cat.file=b",
+            "--target-platforms",
+            "//:linux_aarch64",
+            ":cat_with_constraints_and_values");
     assertEquals("b", Files.readAllLines(output).get(0));
   }
 
@@ -162,8 +184,8 @@ public class ConfigSettingIntegrationTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "None of the conditions in attribute \"srcs\" match the configuration. Checked conditions:\n"
-            + " //:a_on_osx\n"
-            + " //:b_on_linux_aarch64");
-    workspace.runBuckBuild("-c", "cat.file=b", "--target-platforms", "//:linux_arm", ":cat");
+            + " //:osx_config\n"
+            + " //:linux_aarch64_config");
+    workspace.runBuckBuild("--target-platforms", "//:linux_arm", ":cat");
   }
 }
