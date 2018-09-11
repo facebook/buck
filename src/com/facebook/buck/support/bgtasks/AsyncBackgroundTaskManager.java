@@ -49,7 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
 
   private static final Logger LOG = Logger.get(AsyncBackgroundTaskManager.class);
-  private static final int DEFAULT_THREADS = 1;
+  private static final int DEFAULT_THREADS = 3;
 
   private final Queue<ManagedBackgroundTask> scheduledTasks = new LinkedList<>();
   private final boolean blocking;
