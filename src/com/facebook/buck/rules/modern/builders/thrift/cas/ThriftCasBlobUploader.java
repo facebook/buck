@@ -23,6 +23,7 @@ import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadR
 import com.facebook.buck.rules.modern.builders.Protocol;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol.ThriftDigest;
+import com.facebook.buck.rules.modern.builders.thrift.ThriftUtil;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.remoteexecution.cas.BatchUpdateBlobsRequest;
@@ -98,10 +99,7 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
     if (response.missing_blob_digests.stream().anyMatch(Objects::isNull)) {
       LOG.error(
           "Found null digest in response. Requested digests were: [%s]",
-          digests
-              .stream()
-              .map(Digest::getHash)
-              .reduce((String a, String b) -> String.format("%s, %s", a, b)));
+          ThriftUtil.thriftToDebugJson(response));
     }
 
     return response
