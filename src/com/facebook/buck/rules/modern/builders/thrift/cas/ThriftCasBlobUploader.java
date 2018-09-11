@@ -36,7 +36,6 @@ import com.facebook.remoteexecution.cas.FindMissingBlobsResponse;
 import com.facebook.remoteexecution.cas.UpdateBlobRequest;
 import com.facebook.remoteexecution.cas.UpdateBlobResponse;
 import com.facebook.thrift.TException;
-import com.facebook.thrift.transport.TTransportException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
@@ -80,21 +79,11 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
     } catch (TException | ContentAddressableStorageException e) {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);
 
-      String message = "";
-      if (e.getMessage() != null && e.getMessage().length() > 0) {
-        message += e.getMessage();
-      }
-
-      if (e instanceof TTransportException) {
-        TTransportException transportException = (TTransportException) e;
-        message +=
-            String.format(
-                "Encountered TTransport exception of type: [%d]", transportException.getType());
-      }
-
-      message +=
+      String message =
           String.format(
-              "Failed to get missing hashes for request [%s]",
+              "Failed to get missing hashes. Message=[%s] Details=[%s] Request=[%s]",
+              e.getMessage(),
+              ThriftUtil.getExceptionDetails(e).orElse("NONE"),
               ThriftUtil.thriftToDebugJson(request));
       LOG.error(e, message);
       throw new BuckUncheckedExecutionException(e, message);
@@ -150,8 +139,10 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
               .reduce("", (digest1, digest2) -> digest1 + ", " + digest2);
       String message =
           String.format(
-              "Failed to batch update [%d] blobs for digests [%s].",
-              request.getRequests().size(), digests);
+              "Failed to batch update [%d] blobs for digests [%s]. Details=[%s]",
+              request.getRequests().size(),
+              digests,
+              ThriftUtil.getExceptionDetails(e).orElse("NONE"));
       LOG.error(e, message);
       throw new BuckUncheckedExecutionException(e, message);
     }

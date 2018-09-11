@@ -17,10 +17,13 @@
 package com.facebook.buck.rules.modern.builders.thrift;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
 import com.facebook.thrift.TBase;
 import com.facebook.thrift.TException;
 import com.facebook.thrift.TSerializer;
 import com.facebook.thrift.protocol.TCompactJSONProtocol;
+import com.facebook.thrift.transport.TTransportException;
+import java.util.Optional;
 
 /** Convenience methods to handle fbthrift. */
 public final class ThriftUtil {
@@ -34,7 +37,9 @@ public final class ThriftUtil {
   public static String thriftToDebugJson(TBase thriftObject) {
     TSerializer serializer = new TSerializer(new TCompactJSONProtocol.Factory());
     try {
-      return new String(serializer.serialize(thriftObject));
+      return String.format(
+          "%s%s",
+          thriftObject.getClass().getSimpleName(), new String(serializer.serialize(thriftObject)));
     } catch (TException e) {
       LOGGER.error(
           e,
@@ -43,5 +48,54 @@ public final class ThriftUtil {
               thriftObject.getClass().getName()));
       return "FAILED_TO_DESERIALIZE";
     }
+  }
+
+  /**
+   * Gets extra details about any thrift related exception or absent if not such details are
+   * available.
+   */
+  public static Optional<String> getExceptionDetails(Exception exception) {
+    if (exception instanceof TTransportException) {
+      TTransportException transportException = (TTransportException) exception;
+      return Optional.of(
+          String.format(
+              "Encountered TTransport exception of type [%s].",
+              getTTransportExceptionType(transportException)));
+    } else if (exception instanceof ContentAddressableStorageException) {
+      ContentAddressableStorageException casException =
+          (ContentAddressableStorageException) exception;
+      return Optional.of(
+          String.format(
+              "CAS Exception with contents: [%s].", ThriftUtil.thriftToDebugJson(casException)));
+    }
+
+    return Optional.empty();
+  }
+
+  /** A debug string representation of the TTransportException.type file. */
+  public static String getTTransportExceptionType(TTransportException exception) {
+    String typeString;
+    switch (exception.getType()) {
+      case TTransportException.UNKNOWN:
+        typeString = "UNKNOWN";
+        break;
+      case TTransportException.NOT_OPEN:
+        typeString = "NOT_OPEN";
+        break;
+      case TTransportException.ALREADY_OPEN:
+        typeString = "ALREADY_OPEN";
+        break;
+      case TTransportException.TIMED_OUT:
+        typeString = "TIMED_OUT";
+        break;
+      case TTransportException.END_OF_FILE:
+        typeString = "END_OF_FILE";
+        break;
+      default:
+        typeString = Integer.toString(exception.getType());
+        break;
+    }
+
+    return String.format("%d:%s", exception.getType(), typeString);
   }
 }
