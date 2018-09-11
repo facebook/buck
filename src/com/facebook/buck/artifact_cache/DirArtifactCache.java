@@ -106,12 +106,13 @@ public class DirArtifactCache implements ArtifactCache {
     CacheResult result;
     try {
       // First, build up the metadata from the metadata file.
-      ImmutableMap.Builder<String, String> metadata = ImmutableMap.builder();
+      ImmutableMap.Builder<String, String> metadata;
       try (DataInputStream in =
           new DataInputStream(
               filesystem.newFileInputStream(
                   getPathForRuleKey(ruleKey, Optional.of(".metadata"))))) {
         int sz = in.readInt();
+        metadata = ImmutableMap.builderWithExpectedSize(sz);
         for (int i = 0; i < sz; i++) {
           String key = in.readUTF();
           int valSize = in.readInt();
