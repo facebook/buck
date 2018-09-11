@@ -16,11 +16,16 @@
 
 package com.facebook.buck.rules.modern.builders.thrift;
 
+import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.Threads;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.remoteexecution.cas.BatchReadBlobsRequest;
 import com.facebook.remoteexecution.cas.BatchReadBlobsResponse;
 import com.facebook.remoteexecution.cas.BatchUpdateBlobsRequest;
 import com.facebook.remoteexecution.cas.BatchUpdateBlobsResponse;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
+import com.facebook.remoteexecution.cas.ContentAddressableStorage.Client;
 import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
 import com.facebook.remoteexecution.cas.FindMissingBlobsRequest;
 import com.facebook.remoteexecution.cas.FindMissingBlobsResponse;
@@ -33,7 +38,6 @@ import com.facebook.remoteexecution.cas.UpdateBlobResponse;
 import com.facebook.remoteexecution.executionengine.ExecuteOperation;
 import com.facebook.remoteexecution.executionengine.ExecuteRequest;
 import com.facebook.remoteexecution.executionengine.ExecutionEngine;
-import com.facebook.remoteexecution.executionengine.ExecutionEngine.Iface;
 import com.facebook.remoteexecution.executionengine.ExecutionEngineException;
 import com.facebook.remoteexecution.executionengine.GetExecuteOperationRequest;
 import com.facebook.thrift.TException;
@@ -46,10 +50,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.concurrent.GuardedBy;
 
 /** Thrift clients for the Thrift-based remote execution services. */
 class ThriftRemoteExecutionClients implements Closeable {
+  private static final Logger LOG = Logger.get(ThriftRemoteExecutionClients.class);
 
   private static final int SOCKET_TIMEOUT_MILLIS = 1000 * 30; // 30 seconds
   private static final int CONNECTION_TIMEOUT_MILLIS = 1000 * 10; // 10 seconds
@@ -86,10 +92,17 @@ class ThriftRemoteExecutionClients implements Closeable {
     }
   }
 
-  public ContentAddressableStorage.Iface createCasClient() throws TTransportException {
-    THeaderTransport casTransport = createBlockingTransport(casHost, casPort);
-    return new SynchronizedContentAddressableStorageClient(
-        new ContentAddressableStorage.Client(new THeaderProtocol(casTransport)));
+  public ContentAddressableStorage.Iface createCasClient() {
+    return new RetryingSynchronizedCASClient(
+        () -> {
+          THeaderTransport transport = null;
+          try {
+            transport = createBlockingTransport(casHost, casPort);
+          } catch (TTransportException e) {
+            throw new RuntimeException("Unable to create a connection to the CAS.", e);
+          }
+          return new Client(new THeaderProtocol(transport));
+        });
   }
 
   public ExecutionEngine.Iface createExecutionEngineClient() throws TTransportException {
@@ -116,56 +129,117 @@ class ThriftRemoteExecutionClients implements Closeable {
     return transport;
   }
 
-  private static final class SynchronizedContentAddressableStorageClient
+  /**
+   * Implementation of the ContentAddressableStorage.Iface which is synchronized and tries to create
+   * a new connection using the provided Supplier when it encounters a TTransportException.
+   */
+  public static final class RetryingSynchronizedCASClient
       implements ContentAddressableStorage.Iface {
 
-    private final ContentAddressableStorage.Iface decorated;
+    private final int BACKOFF_MILLIS = 100;
+    private final int NUM_RETRIES = 2;
 
-    public SynchronizedContentAddressableStorageClient(ContentAddressableStorage.Iface decorated) {
-      this.decorated = decorated;
+    @GuardedBy("this")
+    private final Supplier<ContentAddressableStorage.Iface> clientSupplier;
+
+    @GuardedBy("this")
+    private ContentAddressableStorage.Iface currentClient;
+
+    public RetryingSynchronizedCASClient(Supplier<ContentAddressableStorage.Iface> clientSupplier) {
+      this.clientSupplier = clientSupplier;
+      createNewClient();
+    }
+
+    private synchronized void createNewClient() {
+      currentClient = clientSupplier.get();
+    }
+
+    private void backOffDueToFailure() {
+      try {
+        Thread.sleep(BACKOFF_MILLIS);
+      } catch (InterruptedException interrupt) {
+        Threads.interruptCurrentThread(); // Re-set the interrupt flag.
+        throw new BuckUncheckedExecutionException(interrupt);
+      }
+    }
+
+    private synchronized Object retryOnTransportException(
+        ThrowingFunction<ContentAddressableStorage.Iface, Object, Exception> foo)
+        throws ContentAddressableStorageException, TException, TTransportException {
+      TTransportException capturedException = null;
+      for (int numIter = 0; numIter < NUM_RETRIES; numIter++) {
+
+        try {
+          return foo.apply(currentClient);
+        } catch (Exception e) {
+
+          if (e instanceof TTransportException) {
+            capturedException = (TTransportException) e;
+            LOG.warn(
+                "Creating a new connection to the CAS after getting a TTransportException. "
+                    + "Details=[%s]",
+                ThriftUtil.getExceptionDetails(e).orElse("NONE"));
+
+            backOffDueToFailure();
+            createNewClient();
+
+          } else if (e instanceof TException) {
+            throw (TException) e;
+          } else if (e instanceof ContentAddressableStorageException) {
+            throw (ContentAddressableStorageException) e;
+          } else {
+            throw new RuntimeException(e);
+          }
+        }
+      }
+
+      throw capturedException;
     }
 
     @Override
-    public synchronized UpdateBlobResponse updateBlob(UpdateBlobRequest request)
+    public UpdateBlobResponse updateBlob(UpdateBlobRequest request)
         throws ContentAddressableStorageException, TException {
-      return decorated.updateBlob(request);
+      return (UpdateBlobResponse) retryOnTransportException(client -> client.updateBlob(request));
     }
 
     @Override
-    public synchronized BatchUpdateBlobsResponse batchUpdateBlobs(BatchUpdateBlobsRequest request)
+    public BatchUpdateBlobsResponse batchUpdateBlobs(BatchUpdateBlobsRequest request)
         throws ContentAddressableStorageException, TException {
-      return decorated.batchUpdateBlobs(request);
+      return (BatchUpdateBlobsResponse)
+          retryOnTransportException(client -> client.batchUpdateBlobs(request));
     }
 
     @Override
-    public synchronized ReadBlobResponse readBlob(ReadBlobRequest request)
+    public ReadBlobResponse readBlob(ReadBlobRequest request)
         throws ContentAddressableStorageException, TException {
-      return decorated.readBlob(request);
+      return (ReadBlobResponse) retryOnTransportException(client -> client.readBlob(request));
     }
 
     @Override
-    public synchronized BatchReadBlobsResponse batchReadBlobs(BatchReadBlobsRequest request)
+    public BatchReadBlobsResponse batchReadBlobs(BatchReadBlobsRequest request)
         throws ContentAddressableStorageException, TException {
-      return decorated.batchReadBlobs(request);
+      return (BatchReadBlobsResponse)
+          retryOnTransportException(client -> client.batchReadBlobs(request));
     }
 
     @Override
-    public synchronized FindMissingBlobsResponse findMissingBlobs(FindMissingBlobsRequest request)
+    public FindMissingBlobsResponse findMissingBlobs(FindMissingBlobsRequest request)
         throws ContentAddressableStorageException, TException {
-      return decorated.findMissingBlobs(request);
+      return (FindMissingBlobsResponse)
+          retryOnTransportException(client -> client.findMissingBlobs(request));
     }
 
     @Override
-    public synchronized GetTreeResponse getTree(GetTreeRequest request)
+    public GetTreeResponse getTree(GetTreeRequest request)
         throws ContentAddressableStorageException, TException {
-      return decorated.getTree(request);
+      return (GetTreeResponse) retryOnTransportException(client -> client.getTree(request));
     }
   }
 
   private static final class SynchronizedExecutionEngineClient implements ExecutionEngine.Iface {
     private final ExecutionEngine.Iface decorated;
 
-    private SynchronizedExecutionEngineClient(Iface decorated) {
+    private SynchronizedExecutionEngineClient(ExecutionEngine.Iface decorated) {
       this.decorated = decorated;
     }
 
