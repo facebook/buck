@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -354,7 +353,7 @@ public abstract class DefaultJavaLibraryRules {
     ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
         Preconditions.checkNotNull(getJavacOptions())
             .getAnnotationProcessingParams()
-            .getAnnotationProcessors();
+            .getModernProcessors();
 
     for (ResolvedJavacPluginProperties annotationProcessor : annotationProcessors) {
       if (!annotationProcessor.getDoesNotAffectAbi()
@@ -526,17 +525,7 @@ public abstract class DefaultJavaLibraryRules {
 
   private AnnotationProcessingParams abiProcessorsOnly(
       AnnotationProcessingParams annotationProcessingParams) {
-    Preconditions.checkArgument(annotationProcessingParams.getLegacyProcessors().isEmpty());
-
-    return AnnotationProcessingParams.builder()
-        .from(annotationProcessingParams)
-        .setModernProcessors(
-            annotationProcessingParams
-                .getModernProcessors()
-                .stream()
-                .filter(processor -> !processor.getDoesNotAffectAbi())
-                .collect(Collectors.toList()))
-        .build();
+    return annotationProcessingParams.withAbiProcessorsOnly();
   }
 
   @Value.Lazy

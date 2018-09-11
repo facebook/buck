@@ -125,7 +125,6 @@ public class RobolectricTestDescription
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
-            projectFilesystem,
             graphBuilder,
             args);
 

@@ -19,16 +19,15 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.Stream;
-import javax.annotation.Nullable;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import org.immutables.value.Value;
 
 /**
@@ -43,87 +42,94 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
-  public static final AnnotationProcessingParams EMPTY =
-      AnnotationProcessingParams.builder()
-          .setProjectFilesystem(null)
-          .setModernProcessors(ImmutableList.of())
-          .setParameters(ImmutableSortedSet.of())
-          .setProcessOnly(false)
-          .build();
-
-  @Nullable
-  protected abstract ProjectFilesystem getProjectFilesystem();
-
-  protected abstract ImmutableList<BuildRule> getLegacyAnnotationProcessorDeps();
-
-  @Value.NaturalOrder
-  protected abstract ImmutableSortedSet<String> getLegacyAnnotationProcessorNames();
-
-  @AddToRuleKey
-  @Value.Derived
-  protected ImmutableList<JavacPluginProperties> getLegacyProcessors() {
-    JavacPluginProperties.Builder legacyUnsafeProcessorsBuilder =
-        JavacPluginProperties.builder()
-            .setCanReuseClassLoader(false)
-            .setDoesNotAffectAbi(false)
-            .setSupportsAbiGenerationFromSource(false)
-            .setProcessorNames(getLegacyAnnotationProcessorNames());
-
-    for (BuildRule dep : getLegacyAnnotationProcessorDeps()) {
-      legacyUnsafeProcessorsBuilder.addDep(dep);
-    }
-
-    JavacPluginProperties legacyUnsafeProcessors = legacyUnsafeProcessorsBuilder.build();
-    ImmutableList.Builder<JavacPluginProperties> resultBuilder = ImmutableList.builder();
-    if (!legacyUnsafeProcessors.isEmpty()) {
-      resultBuilder.add(legacyUnsafeProcessors);
-    }
-
-    return resultBuilder.build();
-  }
+  public static final AnnotationProcessingParams EMPTY = builder().build();
 
   @AddToRuleKey
   protected abstract ImmutableList<ResolvedJavacPluginProperties> getModernProcessors();
-
-  @Value.Check
-  protected void check() {
-    if (!isEmpty()) {
-      Preconditions.checkNotNull(getProjectFilesystem());
-    }
-  }
-
-  public boolean isEmpty() {
-    return getModernProcessors().isEmpty()
-        && getLegacyProcessors().isEmpty()
-        && getParameters().isEmpty();
-  }
-
-  public ImmutableList<ResolvedJavacPluginProperties> getAnnotationProcessors() {
-    if (getLegacyProcessors().isEmpty()) {
-      return getModernProcessors();
-    }
-
-    return Stream.concat(
-            getLegacyProcessors().stream().map(processorGroup -> processorGroup.resolve()),
-            getModernProcessors().stream())
-        .collect(ImmutableList.toImmutableList());
-  }
 
   @Value.NaturalOrder
   @AddToRuleKey
   public abstract ImmutableSortedSet<String> getParameters();
 
-  public ImmutableSortedSet<SourcePath> getInputs() {
-    return Stream.concat(
-            getLegacyProcessors().stream().map(JavacPluginProperties::getInputs),
-            getModernProcessors().stream().map(ResolvedJavacPluginProperties::getInputs))
-        .flatMap(Collection::stream)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-  }
-
   @Value.Default
   @AddToRuleKey
   protected boolean getProcessOnly() {
     return false;
+  }
+
+  public boolean isEmpty() {
+    return getModernProcessors().isEmpty() && getParameters().isEmpty();
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public AnnotationProcessingParams withAbiProcessorsOnly() {
+    return AnnotationProcessingParams.builder()
+        .setModernProcessors(
+            getModernProcessors()
+                .stream()
+                .filter(processor -> !processor.getDoesNotAffectAbi())
+                .collect(ImmutableList.toImmutableList()))
+        .setParameters(getParameters())
+        .setProcessOnly(getProcessOnly())
+        .build();
+  }
+
+  /** A customized Builder for AnnotationProcessingParams. */
+  @org.immutables.builder.Builder.AccessibleFields
+  public static class Builder extends AnnotationProcessingParams.Builder {
+    private Set<String> legacyAnnotationProcessorNames = new LinkedHashSet<>();
+    private List<BuildRule> legacyAnnotationProcessorDeps = new ArrayList<>();
+
+    private List<ResolvedJavacPluginProperties> resolveLegacyProcessors() {
+      if (getLegacyProcessors().isEmpty()) {
+        return ImmutableList.of();
+      }
+
+      return getLegacyProcessors()
+          .stream()
+          .map(AbstractJavacPluginProperties::resolve)
+          .collect(ImmutableList.toImmutableList());
+    }
+
+    private ImmutableList<JavacPluginProperties> getLegacyProcessors() {
+      JavacPluginProperties.Builder legacySafeProcessorsBuilder =
+          JavacPluginProperties.builder()
+              .setCanReuseClassLoader(true)
+              .setDoesNotAffectAbi(false)
+              .setSupportsAbiGenerationFromSource(false)
+              .setProcessorNames(legacyAnnotationProcessorNames);
+
+      for (BuildRule dep : legacyAnnotationProcessorDeps) {
+        legacySafeProcessorsBuilder.addDep(dep);
+      }
+
+      JavacPluginProperties legacySafeProcessors = legacySafeProcessorsBuilder.build();
+
+      ImmutableList.Builder<JavacPluginProperties> resultBuilder = ImmutableList.builder();
+      if (!legacySafeProcessors.isEmpty()) {
+        resultBuilder.add(legacySafeProcessors);
+      }
+
+      return resultBuilder.build();
+    }
+
+    @Override
+    public AnnotationProcessingParams build() {
+      addAllModernProcessors(resolveLegacyProcessors());
+      return super.build();
+    }
+
+    public Builder setLegacyAnnotationProcessorNames(Collection<String> annotationProcessors) {
+      legacyAnnotationProcessorNames = ImmutableSet.copyOf(annotationProcessors);
+      return this;
+    }
+
+    public Builder addLegacyAnnotationProcessorDeps(BuildRule dep) {
+      legacyAnnotationProcessorDeps.add(dep);
+      return this;
+    }
   }
 }

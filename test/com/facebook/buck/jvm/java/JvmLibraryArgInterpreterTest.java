@@ -250,11 +250,7 @@ public class JvmLibraryArgInterpreterTest {
 
   private JavacOptions createJavacOptions(JvmLibraryArg arg) {
     return JavacOptionsFactory.create(
-        defaults,
-        BuildTargetFactory.newInstance("//not:real"),
-        new FakeProjectFilesystem(),
-        graphBuilder,
-        arg);
+        defaults, BuildTargetFactory.newInstance("//not:real"), graphBuilder, arg);
   }
 
   @BuckStyleImmutable

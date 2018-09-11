@@ -123,8 +123,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     AnnotationProcessingParams annotationProcessingParams =
         targetNode
             .getConstructorArg()
-            .buildAnnotationProcessingParams(
-                targetNode.getBuildTarget(), projectFilesystem, graphBuilder);
+            .buildAnnotationProcessingParams(targetNode.getBuildTarget(), graphBuilder);
     if (annotationProcessingParams == null || annotationProcessingParams.isEmpty()) {
       return Optional.empty();
     }

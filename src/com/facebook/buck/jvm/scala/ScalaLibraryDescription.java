@@ -123,7 +123,6 @@ public class ScalaLibraryDescription
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
-            context.getProjectFilesystem(),
             context.getActionGraphBuilder(),
             args);
 

@@ -111,7 +111,6 @@ public class JavaTestDescription
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
-            projectFilesystem,
             graphBuilder,
             args);
 

@@ -305,7 +305,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         ImmutableList.copyOf(
             javacOptions
                 .getAnnotationProcessingParams()
-                .getAnnotationProcessors()
+                .getModernProcessors()
                 .stream()
                 .map(
                     resolvedJavacPluginProperties ->

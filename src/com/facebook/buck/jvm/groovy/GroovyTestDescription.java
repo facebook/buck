@@ -83,7 +83,6 @@ public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyT
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
-            projectFilesystem,
             graphBuilder,
             args);
 

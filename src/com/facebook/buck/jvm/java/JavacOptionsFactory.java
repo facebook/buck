@@ -18,13 +18,11 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 public final class JavacOptionsFactory {
   public static JavacOptions create(
       JavacOptions defaultOptions,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       JvmLibraryArg jvmLibraryArg) {
     if ((jvmLibraryArg.getSource().isPresent() || jvmLibraryArg.getTarget().isPresent())
@@ -50,7 +48,7 @@ public final class JavacOptionsFactory {
     builder.addAllExtraArguments(jvmLibraryArg.getExtraArguments());
 
     AnnotationProcessingParams annotationParams =
-        jvmLibraryArg.buildAnnotationProcessingParams(buildTarget, projectFilesystem, resolver);
+        jvmLibraryArg.buildAnnotationProcessingParams(buildTarget, resolver);
     builder.setAnnotationProcessingParams(annotationParams);
 
     return builder.build();

@@ -26,7 +26,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.Lists;
 import java.util.Collections;
 import org.hamcrest.Matcher;
@@ -75,7 +74,6 @@ public class JavacOptionsTest {
         AnnotationProcessingParams.builder()
             .setLegacyAnnotationProcessorNames(Collections.singleton("processor"))
             .setProcessOnly(true)
-            .setProjectFilesystem(FakeProjectFilesystem.createJavaOnlyFilesystem())
             .build();
 
     JavacOptions options = createStandardBuilder().setAnnotationProcessingParams(params).build();
@@ -87,10 +85,8 @@ public class JavacOptionsTest {
   public void shouldAddAllAddedAnnotationProcessors() {
     AnnotationProcessingParams params =
         AnnotationProcessingParams.builder()
-            .setLegacyAnnotationProcessorDeps(Collections.emptySet())
             .setLegacyAnnotationProcessorNames(Lists.newArrayList("myproc", "theirproc"))
             .setProcessOnly(true)
-            .setProjectFilesystem(FakeProjectFilesystem.createJavaOnlyFilesystem())
             .build();
 
     JavacOptions options = createStandardBuilder().setAnnotationProcessingParams(params).build();

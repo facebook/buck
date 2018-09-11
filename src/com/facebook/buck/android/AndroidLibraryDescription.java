@@ -105,7 +105,6 @@ public class AndroidLibraryDescription
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
-            projectFilesystem,
             context.getActionGraphBuilder(),
             args);
     JavacFactory javacFactory = JavacFactory.getDefault(toolchainProvider);

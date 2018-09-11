@@ -72,7 +72,6 @@ public class GroovyLibraryDescription
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
-            projectFilesystem,
             graphBuilder,
             args);
     DefaultJavaLibraryRules defaultJavaLibraryRules =

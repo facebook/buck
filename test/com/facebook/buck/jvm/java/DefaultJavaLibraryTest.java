@@ -1479,13 +1479,13 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
   // Captures all the common code between the different annotation processing test scenarios.
   private class AnnotationProcessingScenario {
-    private final AnnotationProcessingParams.Builder annotationProcessingParamsBuilder;
+    private final AbstractAnnotationProcessingParams.Builder annotationProcessingParamsBuilder;
 
     public AnnotationProcessingScenario() {
       annotationProcessingParamsBuilder = AnnotationProcessingParams.builder();
     }
 
-    public AnnotationProcessingParams.Builder getAnnotationProcessingParamsBuilder() {
+    public AbstractAnnotationProcessingParams.Builder getAnnotationProcessingParamsBuilder() {
       return annotationProcessingParamsBuilder;
     }
 
@@ -1519,7 +1519,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     private DefaultJavaLibrary createJavaLibraryRule(ProjectFilesystem projectFilesystem)
         throws IOException, NoSuchBuildTargetException {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);
-      annotationProcessingParamsBuilder.setProjectFilesystem(projectFilesystem);
 
       tmp.newFolder("android", "java", "src", "com", "facebook");
       String src = "android/java/src/com/facebook/Main.java";

@@ -22,7 +22,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
@@ -130,19 +129,16 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
 
   @Value.Derived
   default AnnotationProcessingParams buildAnnotationProcessingParams(
-      BuildTarget owner, ProjectFilesystem filesystem, BuildRuleResolver resolver) {
+      BuildTarget owner, BuildRuleResolver resolver) {
     if (getAnnotationProcessors().isEmpty()
         && getPlugins().isEmpty()
         && getAnnotationProcessorDeps().isEmpty()) {
       return AnnotationProcessingParams.EMPTY;
     }
 
-    AnnotationProcessingParams.Builder builder = AnnotationProcessingParams.builder();
-    builder.setProjectFilesystem(filesystem);
-
+    AbstractAnnotationProcessingParams.Builder builder = AnnotationProcessingParams.builder();
     addLegacyProcessors(builder, resolver);
     addProcessors(builder, resolver, owner);
-
     for (String processorParam : getAnnotationProcessorParams()) {
       builder.addParameters(processorParam);
     }
@@ -152,7 +148,9 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
   }
 
   default void addProcessors(
-      AnnotationProcessingParams.Builder builder, BuildRuleResolver resolver, BuildTarget owner) {
+      AbstractAnnotationProcessingParams.Builder builder,
+      BuildRuleResolver resolver,
+      BuildTarget owner) {
     for (BuildTarget pluginTarget : getPlugins()) {
       BuildRule pluginRule = resolver.getRule(pluginTarget);
       if (!(pluginRule instanceof JavaAnnotationProcessor)) {
@@ -168,7 +166,7 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
   }
 
   default void addLegacyProcessors(
-      AnnotationProcessingParams.Builder builder, BuildRuleResolver resolver) {
+      AbstractAnnotationProcessingParams.Builder builder, BuildRuleResolver resolver) {
     builder.setLegacyAnnotationProcessorNames(getAnnotationProcessors());
     ImmutableSortedSet<BuildRule> processorDeps =
         resolver.getAllRules(getAnnotationProcessorDeps());
