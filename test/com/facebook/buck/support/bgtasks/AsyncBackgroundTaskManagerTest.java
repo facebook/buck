@@ -373,6 +373,45 @@ public class AsyncBackgroundTaskManagerTest {
     assertFalse(nonblockingManager.isShutDown());
   }
 
+  @Test
+  public void testCancellableTasks() throws InterruptedException {
+    CountDownLatch blocker = new CountDownLatch(1);
+    CountDownLatch waiter = new CountDownLatch(2);
+    CountDownLatch started = new CountDownLatch(1);
+    BackgroundTask<TestArgs> firstTask =
+        ImmutableBackgroundTask.<TestArgs>builder()
+            .setAction(new TestAction())
+            .setActionArgs(new TestArgs(true, false, blocker, waiter, null))
+            .setName("cancelled")
+            .setShouldCancelOnRepeat(true)
+            .build();
+    BackgroundTask<TestArgs> secondTask =
+        ImmutableBackgroundTask.<TestArgs>builder()
+            .setAction(new TestAction())
+            .setActionArgs(new TestArgs(true, false, blocker, waiter, started))
+            .setName("cancellable but runs")
+            .setShouldCancelOnRepeat(true)
+            .build();
+    BackgroundTask<TestArgs> thirdTask =
+        ImmutableBackgroundTask.<TestArgs>builder()
+            .setAction(new TestAction())
+            .setActionArgs(new TestArgs(true, false, blocker, waiter, null))
+            .setName("thirdTask")
+            .build();
+    nonblockingManager.schedule(firstTask);
+    nonblockingManager.schedule(secondTask);
+    nonblockingManager.notify(Notification.COMMAND_END);
+    started.await();
+    nonblockingManager.schedule(thirdTask);
+    blocker.countDown();
+    waiter.await();
+    assertEquals("init", firstTask.getActionArgs().output);
+    assertEquals("succeeded", secondTask.getActionArgs().output);
+    assertEquals("succeeded", thirdTask.getActionArgs().output);
+    assertEquals(0, nonblockingManager.getScheduledTasks().size());
+    assertEquals(0, nonblockingManager.getCancellableTasks().size());
+  }
+
   /**
    * Action that waits on a {@link CountDownLatch} before executing and that notifies another {@link
    * CountDownLatch} after execution, used to test execution of multiple async tasks.

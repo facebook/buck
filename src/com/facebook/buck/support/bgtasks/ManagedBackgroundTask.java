@@ -28,10 +28,12 @@ class ManagedBackgroundTask {
 
   private final BackgroundTask<?> task;
   private final TaskId id;
+  private boolean toCancel;
 
   protected ManagedBackgroundTask(BackgroundTask<?> task, BuildId buildId) {
     this.task = task;
     this.id = TaskId.of(task.getName(), buildId);
+    this.toCancel = false;
   }
 
   public BackgroundTask<?> getTask() {
@@ -40,6 +42,14 @@ class ManagedBackgroundTask {
 
   public TaskId getId() {
     return id;
+  }
+
+  public boolean getToCancel() {
+    return toCancel;
+  }
+
+  protected void markToCancel() {
+    toCancel = true;
   }
 
   /** Task ID object for {@link ManagedBackgroundTask}. */

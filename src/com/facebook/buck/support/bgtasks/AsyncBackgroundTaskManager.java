@@ -23,9 +23,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -52,6 +54,7 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
   private static final int DEFAULT_THREADS = 3;
 
   private final Queue<ManagedBackgroundTask> scheduledTasks = new LinkedList<>();
+  private final Map<Class<?>, ManagedBackgroundTask> cancellableTasks = new ConcurrentHashMap<>();
   private final boolean blocking;
 
   private final AtomicBoolean schedulerRunning;
@@ -133,6 +136,15 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
       LOG.warn("Manager is not accepting new tasks; newly scheduled tasks will not be run.");
       return;
     }
+    Class<?> actionClass = task.getTask().getAction().getClass();
+    synchronized (cancellableTasks) {
+      if (cancellableTasks.containsKey(actionClass)) {
+        cancellableTasks.get(actionClass).markToCancel();
+      }
+      if (task.getTask().getShouldCancelOnRepeat()) {
+        cancellableTasks.put(actionClass, task);
+      }
+    }
     synchronized (scheduledTasks) {
       scheduledTasks.add(task);
       scheduledTasks.notify();
@@ -178,8 +190,7 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
     }
   }
 
-  private Future<?> submitTask() {
-    ManagedBackgroundTask task = scheduledTasks.remove();
+  private Future<?> submitTask(ManagedBackgroundTask task) {
     Future<?> handler =
         taskPool.submit(
             () -> {
@@ -188,6 +199,11 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
             });
     addTimeoutIfNeeded(handler, task);
     return handler;
+  }
+
+  private boolean taskCancelled(ManagedBackgroundTask task) {
+    cancellableTasks.remove(task.getTask().getAction().getClass(), task);
+    return task.getToCancel();
   }
 
   private void notifySync(Notification code) {
@@ -209,7 +225,12 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
                 break;
               }
               availableThreads.acquire();
-              futures.add(submitTask());
+              ManagedBackgroundTask task = scheduledTasks.remove();
+              if (taskCancelled(task)) {
+                availableThreads.release();
+                continue;
+              }
+              futures.add(submitTask(task));
             }
           }
           for (Future<?> future : futures) {
@@ -258,7 +279,12 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
           }
         }
         availableThreads.acquire();
-        submitTask();
+        ManagedBackgroundTask task = scheduledTasks.remove();
+        if (taskCancelled(task)) {
+          availableThreads.release();
+          continue;
+        }
+        submitTask(task);
       }
       LOG.info("Scheduler thread interrupted; shutting down manager");
     } catch (InterruptedException e) {
@@ -280,15 +306,27 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
     return scheduledTasks;
   }
 
+  /**
+   * Return map of tasks that might be cancelled (i.e. not run) if a task with the same action is
+   * subsequently scheduled. Tasks in this map are currently scheduled, not yet run. For
+   * debugging/testing.
+   *
+   * @return map of cancellable tasks
+   */
   @VisibleForTesting
-  public void schedule(ImmutableList<? extends BackgroundTask<?>> taskList) {
+  protected Map<Class<?>, ManagedBackgroundTask> getCancellableTasks() {
+    return cancellableTasks;
+  }
+
+  @VisibleForTesting
+  protected void schedule(ImmutableList<? extends BackgroundTask<?>> taskList) {
     for (BackgroundTask<?> task : taskList) {
       schedule(task);
     }
   }
 
   @VisibleForTesting
-  public void schedule(BackgroundTask<?> task) {
+  protected void schedule(BackgroundTask<?> task) {
     ManagedBackgroundTask managedTask = new ManagedBackgroundTask(task, new BuildId("TESTID"));
     schedule(managedTask);
   }
