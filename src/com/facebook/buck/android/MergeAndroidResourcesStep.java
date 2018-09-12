@@ -78,7 +78,7 @@ public class MergeAndroidResourcesStep implements Step {
   private final Optional<String> unionPackage;
   private final String rName;
   private final boolean useOldStyleableFormat;
-  private final ImmutableList<Path> overrideSymbolsPath;
+  private final Optional<Path> overrideSymbolsPath;
   private final boolean skipNonUnionRDotJava;
 
   /**
@@ -97,7 +97,7 @@ public class MergeAndroidResourcesStep implements Step {
       boolean forceFinalResourceIds,
       EnumSet<RType> bannedDuplicateResourceTypes,
       Optional<Path> duplicateResourceWhitelistPath,
-      ImmutableList<Path> overrideSymbolsPath,
+      Optional<Path> overrideSymbolsPath,
       Optional<String> unionPackage,
       Optional<String> rName,
       boolean useOldStyleableFormat,
@@ -136,7 +136,7 @@ public class MergeAndroidResourcesStep implements Step {
         forceFinalResourceIds,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
         Optional.empty(),
-        ImmutableList.of(),
+        Optional.empty(),
         unionPackage,
         rName,
         useOldStyleableFormat,
@@ -151,7 +151,7 @@ public class MergeAndroidResourcesStep implements Step {
       Path outputDir,
       EnumSet<RType> bannedDuplicateResourceTypes,
       Optional<Path> duplicateResourceWhitelistPath,
-      ImmutableList<Path> overrideSymbolsPath,
+      Optional<Path> overrideSymbolsPath,
       Optional<String> unionPackage) {
     return new MergeAndroidResourcesStep(
         filesystem,
@@ -227,7 +227,6 @@ public class MergeAndroidResourcesStep implements Step {
                             throw new RuntimeException(e);
                           }
                         })
-                    .sorted((left, right) -> left.compareWithValue(right))
                     .distinct()
                     .collect(ImmutableMap.toImmutableMap(input -> input, b -> b.idValue)));
       }
@@ -235,7 +234,9 @@ public class MergeAndroidResourcesStep implements Step {
       ImmutableMap<Path, String> symbolsFileToRDotJavaPackage = rDotTxtToPackage.build();
 
       Optional<SetMultimap<String, RDotTxtEntry>> overrideSymbols =
-          loadOverrideSymbols(overrideSymbolsPath);
+          overrideSymbolsPath.isPresent()
+              ? loadOverrideSymbols(overrideSymbolsPath.get())
+              : Optional.empty();
 
       ImmutableSet<String> duplciateResourceWhitelist =
           (duplicateResourceWhitelistPath.isPresent())
@@ -298,22 +299,20 @@ public class MergeAndroidResourcesStep implements Step {
     }
   }
 
-  private Optional<SetMultimap<String, RDotTxtEntry>> loadOverrideSymbols(Iterable<Path> paths)
+  private Optional<SetMultimap<String, RDotTxtEntry>> loadOverrideSymbols(Path path)
       throws IOException {
+    if (!Files.isRegularFile(path)) {
+      LOG.info("Override-symbols file %s is not present or not regular.  Skipping.", path);
+      return Optional.empty();
+    }
     ImmutableSetMultimap.Builder<String, RDotTxtEntry> symbolsBuilder =
         ImmutableSetMultimap.builder();
-    for (Path path : paths) {
-      if (!Files.isRegularFile(path)) {
-        LOG.info("Override-symbols file %s is not present or not regular.  Skipping.", path);
-        continue;
-      }
-      JsonNode jsonData = ObjectMappers.READER.readTree(ObjectMappers.createParser(path));
-      for (String packageName : (Iterable<String>) jsonData::fieldNames) {
-        Iterator<JsonNode> rDotTxtLines = jsonData.get(packageName).elements();
-        while (rDotTxtLines.hasNext()) {
-          String rDotTxtLine = rDotTxtLines.next().asText();
-          symbolsBuilder.put(packageName, parseEntryOrThrow(rDotTxtLine));
-        }
+    JsonNode jsonData = ObjectMappers.READER.readTree(ObjectMappers.createParser(path));
+    for (String packageName : (Iterable<String>) jsonData::fieldNames) {
+      Iterator<JsonNode> rDotTxtLines = jsonData.get(packageName).elements();
+      while (rDotTxtLines.hasNext()) {
+        String rDotTxtLine = rDotTxtLines.next().asText();
+        symbolsBuilder.put(packageName, parseEntryOrThrow(rDotTxtLine));
       }
     }
     return Optional.of(symbolsBuilder.build());

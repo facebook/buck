@@ -84,6 +84,7 @@ import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 class NonPreDexedDexBuildable extends AbstractBuildRule {
+  @AddToRuleKey private final Optional<SourcePath> aaptGeneratedProguardConfigFile;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> additionalJarsForProguard;
 
   @AddToRuleKey
@@ -160,6 +161,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   NonPreDexedDexBuildable(
       AndroidPlatformTarget androidPlatformTarget,
       SourcePathRuleFinder ruleFinder,
+      Optional<SourcePath> aaptGeneratedProguardConfigFile,
       ImmutableSortedSet<SourcePath> additionalJarsForProguard,
       ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap,
       Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths,
@@ -176,6 +178,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       String dexTool) {
     super(buildTarget, filesystem);
     this.androidPlatformTarget = androidPlatformTarget;
+    this.aaptGeneratedProguardConfigFile = aaptGeneratedProguardConfigFile;
     this.additionalJarsForProguard = additionalJarsForProguard;
     this.apkModuleMap = apkModuleMap;
     this.classpathEntriesToDexSourcePaths = classpathEntriesToDexSourcePaths;
@@ -563,9 +566,11 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       proguardConfigsBuilder.add(
           buildContext.getSourcePathResolver().getAbsolutePath(proguardConfig.get()));
     }
-    for (SourcePath aaptGeneratedProguardConfigFile : proguardConfigs) {
+    if (aaptGeneratedProguardConfigFile.isPresent()) {
       proguardConfigsBuilder.add(
-          buildContext.getSourcePathResolver().getAbsolutePath(aaptGeneratedProguardConfigFile));
+          buildContext
+              .getSourcePathResolver()
+              .getAbsolutePath(aaptGeneratedProguardConfigFile.get()));
     }
 
     // Transform our input classpath to a set of output locations for each input classpath.

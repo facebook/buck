@@ -45,12 +45,12 @@ import javax.annotation.Nullable;
 public class GenerateRDotJava extends AbstractBuildRule {
   @AddToRuleKey private final EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes;
   @AddToRuleKey private final ImmutableCollection<SourcePath> pathToRDotTxtFiles;
-  @AddToRuleKey private final ImmutableCollection<SourcePath> pathToOverrideSymbolsFile;
+  @AddToRuleKey private final Optional<SourcePath> pathToOverrideSymbolsFile;
   @AddToRuleKey private final Optional<SourcePath> duplicateResourceWhitelistPath;
   @AddToRuleKey private final Optional<String> resourceUnionPackage;
 
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
-  private final ImmutableCollection<FilteredResourcesProvider> resourcesProviders;
+  private FilteredResourcesProvider resourcesProvider;
   // TODO(cjhopman): allResourceDeps is used for getBuildDeps(), can that just use resourceDeps?
   private final ImmutableSortedSet<BuildRule> allResourceDeps;
   private final SourcePathRuleFinder ruleFinder;
@@ -64,7 +64,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
       ImmutableCollection<SourcePath> pathToRDotTxtFiles,
       Optional<String> resourceUnionPackage,
       ImmutableSortedSet<BuildRule> resourceDeps,
-      ImmutableCollection<FilteredResourcesProvider> resourcesProviders) {
+      FilteredResourcesProvider resourcesProvider) {
     super(buildTarget, projectFilesystem);
     this.ruleFinder = ruleFinder;
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
@@ -77,13 +77,8 @@ public class GenerateRDotJava extends AbstractBuildRule {
             .stream()
             .map(HasAndroidResourceDeps.class::cast)
             .collect(ImmutableList.toImmutableList());
-    this.resourcesProviders = resourcesProviders;
-    this.pathToOverrideSymbolsFile =
-        resourcesProviders
-            .stream()
-            .filter(provider -> provider.getOverrideSymbolsPath().isPresent())
-            .map(provider -> provider.getOverrideSymbolsPath().get())
-            .collect(ImmutableList.toImmutableList());
+    this.resourcesProvider = resourcesProvider;
+    this.pathToOverrideSymbolsFile = resourcesProvider.getOverrideSymbolsPath();
   }
 
   @Override
@@ -91,25 +86,13 @@ public class GenerateRDotJava extends AbstractBuildRule {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     builder
         .addAll(
-            resourcesProviders
-                .stream()
-                .filter(provider -> provider.getOverrideSymbolsPath().isPresent())
-                .flatMap(
-                    provider ->
-                        ruleFinder
-                            .filterBuildRuleInputs(provider.getOverrideSymbolsPath().get())
-                            .stream())
-                .collect(ImmutableList.toImmutableList()))
-        .addAll(
-            resourcesProviders
-                .stream()
-                .filter(provider -> provider.getResourceFilterRule().isPresent())
-                .map(provider -> provider.getResourceFilterRule().get())
-                .collect(ImmutableList.toImmutableList()))
+            ruleFinder.filterBuildRuleInputs(
+                resourcesProvider.getOverrideSymbolsPath().orElse(null)))
         .addAll(allResourceDeps);
     pathToRDotTxtFiles
         .stream()
         .forEach(pathToRDotTxt -> builder.addAll(ruleFinder.filterBuildRuleInputs(pathToRDotTxt)));
+    resourcesProvider.getResourceFilterRule().ifPresent(builder::add);
     duplicateResourceWhitelistPath.ifPresent(
         p -> builder.addAll(ruleFinder.filterBuildRuleInputs(p)));
     return builder.build();
@@ -142,10 +125,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
             rDotJavaSrc,
             bannedDuplicateResourceTypes,
             duplicateResourceWhitelistPath.map(pathResolver::getAbsolutePath),
-            pathToOverrideSymbolsFile
-                .stream()
-                .map(p -> pathResolver.getAbsolutePath(p))
-                .collect(ImmutableList.toImmutableList()),
+            pathToOverrideSymbolsFile.map(pathResolver::getAbsolutePath),
             resourceUnionPackage);
     steps.add(mergeStep);
 

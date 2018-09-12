@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -160,6 +159,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractAndroidBinaryResourcesGraphEnhancementResult {
+    SourcePath getPathToRDotTxt();
 
     Optional<SourcePath> getRDotJavaDir();
 
@@ -167,7 +167,7 @@ class AndroidBinaryResourcesGraphEnhancer {
 
     SourcePath getAndroidManifestXml();
 
-    ImmutableList<SourcePath> getAaptGeneratedProguardConfigFiles();
+    SourcePath getAaptGeneratedProguardConfigFile();
 
     Optional<PackageStringAssets> getPackageStringAssets();
 
@@ -181,62 +181,163 @@ class AndroidBinaryResourcesGraphEnhancer {
   AndroidBinaryResourcesGraphEnhancementResult enhance(
       AndroidPackageableCollection packageableCollection) {
 
+    AndroidPackageableCollection.ResourceDetails resourceDetails =
+        packageableCollection.getResourceDetails().get(apkModuleGraph.getRootAPKModule());
+    if (resourceDetails == null) {
+      throw new HumanReadableException("Resource details for the base APK were not found.");
+    }
+
+    ImmutableSortedSet<BuildRule> resourceRules =
+        getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir());
+
+    ImmutableCollection<BuildRule> rulesWithResourceDirectories =
+        ruleFinder.filterBuildRuleInputs(resourceDetails.getResourceDirectories());
+
+    FilteredResourcesProvider filteredResourcesProvider;
     boolean needsResourceFiltering =
         resourceFilter.isEnabled()
             || postFilterResourcesCmd.isPresent()
             || resourceCompressionMode.isStoreStringsAsAssets()
             || !locales.isEmpty();
 
-    int packageIdOffset = 0;
-    ImmutableSet.Builder<SourcePath> pathToRDotTxtFiles = ImmutableSet.builder();
+    if (needsResourceFiltering) {
+      ResourcesFilter resourcesFilter =
+          createResourcesFilter(
+              InternalFlavor.of(apkModuleGraph.getRootAPKModule().getName()),
+              resourceDetails,
+              resourceRules,
+              rulesWithResourceDirectories);
+      graphBuilder.addToIndex(resourcesFilter);
+      filteredResourcesProvider = resourcesFilter;
+      resourceRules = ImmutableSortedSet.of(resourcesFilter);
+    } else {
+      filteredResourcesProvider =
+          new IdentityResourcesProvider(resourceDetails.getResourceDirectories());
+    }
 
-    ImmutableMap.Builder<APKModule, FilteredResourcesProvider> filteredResourcesProviderBuilder =
-        ImmutableMap.builder();
+    SourcePath realManifest;
+    if (rawManifest.isPresent()) {
+      if (manifestSkeleton.isPresent()) {
+        throw new HumanReadableException(
+            "android_binary " + buildTarget + " specified both manifest and manifest_skeleton.");
+      }
+      realManifest = rawManifest.get();
+    } else if (manifestSkeleton.isPresent()) {
+      AndroidManifest manifestMergeRule =
+          new AndroidManifest(
+              buildTarget.withAppendedFlavors(MANIFEST_MERGE_FLAVOR),
+              projectFilesystem,
+              ruleFinder,
+              manifestSkeleton.get(),
+              apkModuleGraph.getRootAPKModule(),
+              packageableCollection.getAndroidManifestPieces().values());
+      graphBuilder.addToIndex(manifestMergeRule);
+      realManifest = manifestMergeRule.getSourcePathToOutput();
+    } else {
+      throw new HumanReadableException(
+          "android_binary " + buildTarget + " did not specify manifest or manifest_skeleton.");
+    }
+
+    List<SourcePath> apkResourceDependencyList = new ArrayList<>();
+
+    AaptOutputInfo aaptOutputInfo;
+    switch (aaptMode) {
+      case AAPT1:
+        {
+          // Create the AaptPackageResourcesBuildable.
+          AaptPackageResources aaptPackageResources =
+              createAaptPackageResources(realManifest, resourceDetails, filteredResourcesProvider);
+          graphBuilder.addToIndex(aaptPackageResources);
+          aaptOutputInfo = aaptPackageResources.getAaptOutputInfo();
+          apkResourceDependencyList.add(aaptOutputInfo.getPrimaryResourcesApkPath());
+        }
+        break;
+
+      case AAPT2:
+        {
+          Aapt2Link aapt2Link =
+              createAapt2Link(
+                  0,
+                  InternalFlavor.of(apkModuleGraph.getRootAPKModule().getName()),
+                  realManifest,
+                  resourceDetails,
+                  needsResourceFiltering
+                      ? Optional.of(filteredResourcesProvider)
+                      : Optional.empty(),
+                  ImmutableList.of(),
+                  useProtoFormat);
+          graphBuilder.addToIndex(aapt2Link);
+          if (useProtoFormat) {
+            Aapt2Link aapt2LinkArsc =
+                createAapt2Link(
+                    0,
+                    InternalFlavor.of(apkModuleGraph.getRootAPKModule().getName()),
+                    realManifest,
+                    resourceDetails,
+                    needsResourceFiltering
+                        ? Optional.of(filteredResourcesProvider)
+                        : Optional.empty(),
+                    ImmutableList.of(),
+                    false);
+            graphBuilder.addToIndex(aapt2LinkArsc);
+            apkResourceDependencyList.add(
+                aapt2LinkArsc.getAaptOutputInfo().getPrimaryResourcesApkPath());
+          } else {
+            apkResourceDependencyList.add(
+                aapt2Link.getAaptOutputInfo().getPrimaryResourcesApkPath());
+          }
+          aaptOutputInfo = aapt2Link.getAaptOutputInfo();
+        }
+        break;
+
+      default:
+        throw new RuntimeException("Unexpected aaptMode: " + aaptMode);
+    }
 
     AndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder =
         AndroidBinaryResourcesGraphEnhancementResult.builder();
 
-    List<SourcePath> apkResourceDependencyList = new ArrayList<>();
+    ImmutableSet.Builder<SourcePath> pathToRDotTxtFiles = ImmutableSet.builder();
 
-    for (APKModule module : apkModuleGraph.getAPKModules()) {
-      AndroidPackageableCollection.ResourceDetails resourceDetails =
-          packageableCollection.getResourceDetails().get(module);
-      if (resourceDetails == null) {
-        throw new RuntimeException(
-            String.format("Missing resource details for module %s", module.getName()));
-      }
-
-      ImmutableSortedSet<BuildRule> resourceRules =
-          getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir());
-
-      ImmutableCollection<BuildRule> rulesWithResourceDirectories =
-          ruleFinder.filterBuildRuleInputs(resourceDetails.getResourceDirectories());
-
-      InternalFlavor moduleFlavor = InternalFlavor.of(module.getName());
-
-      FilteredResourcesProvider filteredResourcesProvider;
-      if (needsResourceFiltering) {
-        ResourcesFilter resourcesFilter =
-            createResourcesFilter(
-                moduleFlavor, resourceDetails, resourceRules, rulesWithResourceDirectories);
-        graphBuilder.addToIndex(resourcesFilter);
-        filteredResourcesProvider = resourcesFilter;
-        resourceRules = ImmutableSortedSet.of(resourcesFilter);
-      } else {
-        filteredResourcesProvider =
-            new IdentityResourcesProvider(resourceDetails.getResourceDirectories());
-      }
-      filteredResourcesProviderBuilder.put(module, filteredResourcesProvider);
-
-      AaptOutputInfo aaptOutputInfo;
-
-      SourcePath manifestPath;
-      if (module.isRootModule()) {
-        manifestPath = createBaseManifestRule(packageableCollection, module);
-      } else {
-        if (!moduleManifestSkeleton.isPresent()) {
+    int packageIdOffset = 1;
+    if (moduleManifestSkeleton.isPresent()) {
+      for (APKModule module : apkModuleGraph.getAPKModules()) {
+        if (module.isRootModule()) {
           continue;
         }
+
+        AndroidPackageableCollection.ResourceDetails moduleResourceDetails =
+            packageableCollection.getResourceDetails().get(module);
+        if (moduleResourceDetails == null) {
+          throw new RuntimeException(
+              String.format("Missing resource details for module %s", module.getName()));
+        }
+
+        InternalFlavor moduleFlavor = InternalFlavor.of(module.getName());
+
+        ImmutableSortedSet<BuildRule> moduleResourceRules =
+            getTargetsAsRules(moduleResourceDetails.getResourcesWithNonEmptyResDir());
+
+        ImmutableCollection<BuildRule> moduleRulesWithResourceDirectories =
+            ruleFinder.filterBuildRuleInputs(moduleResourceDetails.getResourceDirectories());
+
+        FilteredResourcesProvider moduleFilteredResourcesProvider;
+
+        if (needsResourceFiltering) {
+          ResourcesFilter resourcesFilter =
+              createResourcesFilter(
+                  moduleFlavor,
+                  moduleResourceDetails,
+                  moduleResourceRules,
+                  moduleRulesWithResourceDirectories);
+          graphBuilder.addToIndex(resourcesFilter);
+          moduleFilteredResourcesProvider = resourcesFilter;
+          moduleResourceRules = ImmutableSortedSet.of(resourcesFilter);
+        } else {
+          moduleFilteredResourcesProvider =
+              new IdentityResourcesProvider(moduleResourceDetails.getResourceDirectories());
+        }
+
         AndroidManifest moduleManifestMergeRule =
             new AndroidManifest(
                 buildTarget.withAppendedFlavors(MANIFEST_MERGE_FLAVOR, moduleFlavor),
@@ -246,160 +347,87 @@ class AndroidBinaryResourcesGraphEnhancer {
                 module,
                 packageableCollection.getAndroidManifestPieces().get(module));
         graphBuilder.addToIndex(moduleManifestMergeRule);
-        manifestPath = moduleManifestMergeRule.getSourcePathToOutput();
-      }
 
-      switch (aaptMode) {
-        case AAPT1:
-          {
-            // Create the AaptPackageResourcesBuildable.
-            AaptPackageResources aaptPackageResources =
-                createAaptPackageResources(
-                    buildTarget.withAppendedFlavors(AAPT_PACKAGE_FLAVOR, moduleFlavor),
-                    manifestPath,
-                    ImmutableList.copyOf(apkResourceDependencyList),
-                    resourceDetails,
-                    filteredResourcesProvider);
-            graphBuilder.addToIndex(aaptPackageResources);
-            aaptOutputInfo = aaptPackageResources.getAaptOutputInfo();
-            apkResourceDependencyList.add(aaptOutputInfo.getPrimaryResourcesApkPath());
-          }
-          break;
+        switch (aaptMode) {
+          case AAPT1:
+            {
+              if (module.hasResources()) {
+                throw new HumanReadableException(
+                    "Resources in modules is only supported with aapt_mode=\"aapt2\". %s is"
+                        + " declared to have resources",
+                    module.getName());
+              }
+              AaptPackageResources aaptModule =
+                  new AaptPackageResources(
+                      buildTarget.withAppendedFlavors(AAPT_PACKAGE_FLAVOR, moduleFlavor),
+                      projectFilesystem,
+                      androidPlatformTarget,
+                      ruleFinder,
+                      graphBuilder,
+                      moduleManifestMergeRule.getSourcePathToOutput(),
+                      ImmutableList.copyOf(apkResourceDependencyList),
+                      new IdentityResourcesProvider(ImmutableList.of()),
+                      ImmutableList.of(),
+                      true,
+                      false,
+                      ManifestEntries.empty());
+              graphBuilder.addToIndex(aaptModule);
+              resultBuilder.putModuleResourceApkPaths(
+                  module, aaptModule.getAaptOutputInfo().getPrimaryResourcesApkPath());
+              apkResourceDependencyList.add(
+                  aaptModule.getAaptOutputInfo().getPrimaryResourcesApkPath());
+            }
+            break;
 
-        case AAPT2:
-          {
-            Aapt2Link aapt2Link =
-                createAapt2Link(
-                    packageIdOffset,
-                    moduleFlavor,
-                    manifestPath,
-                    resourceDetails,
-                    needsResourceFiltering
-                        ? Optional.of(filteredResourcesProvider)
-                        : Optional.empty(),
-                    ImmutableList.copyOf(apkResourceDependencyList),
-                    useProtoFormat);
-            graphBuilder.addToIndex(aapt2Link);
-            if (useProtoFormat) {
-              // also build an ARSC flavor that we can use to as parent dependencies to other
-              // modules
-              Aapt2Link aapt2LinkArsc =
+          case AAPT2:
+            {
+              Aapt2Link aapt2ModuleLink =
                   createAapt2Link(
-                      packageIdOffset,
+                      packageIdOffset++,
                       moduleFlavor,
-                      manifestPath,
-                      resourceDetails,
+                      moduleManifestMergeRule.getSourcePathToOutput(),
+                      moduleResourceDetails,
                       needsResourceFiltering
-                          ? Optional.of(filteredResourcesProvider)
+                          ? Optional.of(moduleFilteredResourcesProvider)
                           : Optional.empty(),
                       ImmutableList.copyOf(apkResourceDependencyList),
-                      false);
-              graphBuilder.addToIndex(aapt2LinkArsc);
-              apkResourceDependencyList.add(
-                  aapt2LinkArsc.getAaptOutputInfo().getPrimaryResourcesApkPath());
-            } else {
-              apkResourceDependencyList.add(
-                  aapt2Link.getAaptOutputInfo().getPrimaryResourcesApkPath());
+                      useProtoFormat);
+              graphBuilder.addToIndex(aapt2ModuleLink);
+              SourcePath moduleResourceApk =
+                  aapt2ModuleLink.getAaptOutputInfo().getPrimaryResourcesApkPath();
+              pathToRDotTxtFiles.add(aapt2ModuleLink.getAaptOutputInfo().getPathToRDotTxt());
+              resultBuilder.putModuleResourceApkPaths(module, moduleResourceApk);
+              apkResourceDependencyList.add(moduleResourceApk);
             }
-            aaptOutputInfo = aapt2Link.getAaptOutputInfo();
-          }
-          break;
+            break;
 
-        default:
-          throw new RuntimeException("Unexpected aaptMode: " + aaptMode);
-      }
-
-      if (module.isRootModule()) {
-        Optional<PackageStringAssets> packageStringAssets = Optional.empty();
-        if (resourceCompressionMode.isStoreStringsAsAssets()) {
-          // TODO(cjhopman): we should be able to support this in exo-for-resources
-          if (exopackageForResources) {
-            throw new HumanReadableException(
-                "exopackage_modes and resource_compression_mode for android_binary %s are "
-                    + "incompatible. Either remove %s from exopackage_modes or disable storing strings "
-                    + "as assets.",
-                buildTarget, ExopackageMode.RESOURCES);
-          }
-          packageStringAssets =
-              Optional.of(
-                  createPackageStringAssets(
-                      resourceRules,
-                      rulesWithResourceDirectories,
-                      filteredResourcesProvider,
-                      aaptOutputInfo));
-          graphBuilder.addToIndex(packageStringAssets.get());
+          default:
+            throw new RuntimeException("Unexpected aaptMode: " + aaptMode);
         }
-
-        resultBuilder.setPackageStringAssets(packageStringAssets);
-
-        createMergeAndExoResources(
-            packageableCollection,
-            pathToRDotTxtFiles,
-            resultBuilder,
-            aaptOutputInfo,
-            packageStringAssets);
-
-        // Create a rule that copies the AndroidManifest. This allows the AndroidBinary rule (and
-        // exopackage installation rules) to have a runtime dep on the manifest without having to
-        // have a runtime dep on the full aapt output.
-        ExportFile manifestCopyRule =
-            new ExportFile(
-                originalBuildTarget.withAppendedFlavors(COPY_MANIFEST_FLAVOR),
-                projectFilesystem,
-                ruleFinder,
-                "AndroidManifest.xml",
-                ExportFileDescription.Mode.COPY,
-                aaptOutputInfo.getAndroidManifestXml(),
-                ExportFileDirectoryAction.FAIL);
-        graphBuilder.addToIndex(manifestCopyRule);
-        resultBuilder.setAndroidManifestXml(manifestCopyRule.getSourcePathToOutput());
-      } else {
-        resultBuilder.putModuleResourceApkPaths(
-            module, aaptOutputInfo.getPrimaryResourcesApkPath());
       }
-      resultBuilder.addAaptGeneratedProguardConfigFiles(
-          aaptOutputInfo.getAaptGeneratedProguardConfigFile());
-      pathToRDotTxtFiles.add(aaptOutputInfo.getPathToRDotTxt());
-      packageIdOffset++;
     }
 
-    Optional<GenerateRDotJava> generateRDotJava = Optional.empty();
-    ImmutableMap<APKModule, FilteredResourcesProvider> allFilteredResourceProviders =
-        filteredResourcesProviderBuilder.build();
-    if (allFilteredResourceProviders.values().stream().anyMatch(f -> f.hasResources())) {
-      generateRDotJava =
+    Optional<PackageStringAssets> packageStringAssets = Optional.empty();
+    if (resourceCompressionMode.isStoreStringsAsAssets()) {
+      // TODO(cjhopman): we should be able to support this in exo-for-resources
+      if (exopackageForResources) {
+        throw new HumanReadableException(
+            "exopackage_modes and resource_compression_mode for android_binary %s are "
+                + "incompatible. Either remove %s from exopackage_modes or disable storing strings "
+                + "as assets.",
+            buildTarget, ExopackageMode.RESOURCES);
+      }
+      packageStringAssets =
           Optional.of(
-              createGenerateRDotJava(
-                  pathToRDotTxtFiles.build(),
-                  getTargetsAsRules(
-                      packageableCollection
-                          .getResourceDetails()
-                          .values()
-                          .stream()
-                          .flatMap(r -> r.getResourcesWithNonEmptyResDir().stream())
-                          .collect(ImmutableList.toImmutableList())),
-                  allFilteredResourceProviders.values()));
-
-      graphBuilder.addToIndex(generateRDotJava.get());
-
-      if (shouldBuildStringSourceMap) {
-        graphBuilder.addToIndex(
-            createGenerateStringResources(allFilteredResourceProviders.values().asList()));
-      }
+              createPackageStringAssets(
+                  resourceRules,
+                  rulesWithResourceDirectories,
+                  filteredResourcesProvider,
+                  aaptOutputInfo));
+      graphBuilder.addToIndex(packageStringAssets.get());
     }
+    resultBuilder.setPackageStringAssets(packageStringAssets);
 
-    return resultBuilder
-        .setRDotJavaDir(
-            generateRDotJava.map(GenerateRDotJava::getSourcePathToGeneratedRDotJavaSrcFiles))
-        .build();
-  }
-
-  private void createMergeAndExoResources(
-      AndroidPackageableCollection packageableCollection,
-      Builder<SourcePath> pathToRDotTxtFiles,
-      AndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder,
-      AaptOutputInfo aaptOutputInfo,
-      Optional<PackageStringAssets> packageStringAssets) {
     SourcePath pathToRDotTxt;
     ImmutableList<ExopackagePathAndHash> exoResources;
     if (exopackageForResources) {
@@ -446,33 +474,50 @@ class AndroidBinaryResourcesGraphEnhancer {
     }
     resultBuilder.setExoResources(exoResources);
     pathToRDotTxtFiles.add(pathToRDotTxt);
-  }
 
-  private SourcePath createBaseManifestRule(
-      AndroidPackageableCollection packageableCollection, APKModule module) {
-    SourcePath realManifest;
-    if (rawManifest.isPresent()) {
-      if (manifestSkeleton.isPresent()) {
-        throw new HumanReadableException(
-            "android_binary " + buildTarget + " specified both manifest and manifest_skeleton.");
+    Optional<GenerateRDotJava> generateRDotJava = Optional.empty();
+    if (filteredResourcesProvider.hasResources()) {
+      generateRDotJava =
+          Optional.of(
+              createGenerateRDotJava(
+                  pathToRDotTxtFiles.build(),
+                  getTargetsAsRules(
+                      packageableCollection
+                          .getResourceDetails()
+                          .values()
+                          .stream()
+                          .flatMap(r -> r.getResourcesWithNonEmptyResDir().stream())
+                          .collect(ImmutableList.toImmutableList())),
+                  filteredResourcesProvider));
+
+      graphBuilder.addToIndex(generateRDotJava.get());
+
+      if (shouldBuildStringSourceMap) {
+        graphBuilder.addToIndex(createGenerateStringResources(filteredResourcesProvider));
       }
-      realManifest = rawManifest.get();
-    } else if (manifestSkeleton.isPresent()) {
-      AndroidManifest manifestMergeRule =
-          new AndroidManifest(
-              buildTarget.withAppendedFlavors(MANIFEST_MERGE_FLAVOR),
-              projectFilesystem,
-              ruleFinder,
-              manifestSkeleton.get(),
-              module,
-              packageableCollection.getAndroidManifestPieces().values());
-      graphBuilder.addToIndex(manifestMergeRule);
-      realManifest = manifestMergeRule.getSourcePathToOutput();
-    } else {
-      throw new HumanReadableException(
-          "android_binary " + buildTarget + " did not specify manifest or manifest_skeleton.");
     }
-    return realManifest;
+
+    // Create a rule that copies the AndroidManifest. This allows the AndroidBinary rule (and
+    // exopackage installation rules) to have a runtime dep on the manifest without having to have
+    // a runtime dep on the full aapt output.
+    ExportFile manifestCopyRule =
+        new ExportFile(
+            originalBuildTarget.withAppendedFlavors(COPY_MANIFEST_FLAVOR),
+            projectFilesystem,
+            ruleFinder,
+            "AndroidManifest.xml",
+            ExportFileDescription.Mode.COPY,
+            aaptOutputInfo.getAndroidManifestXml(),
+            ExportFileDirectoryAction.FAIL);
+    graphBuilder.addToIndex(manifestCopyRule);
+
+    return resultBuilder
+        .setAaptGeneratedProguardConfigFile(aaptOutputInfo.getAaptGeneratedProguardConfigFile())
+        .setAndroidManifestXml(manifestCopyRule.getSourcePathToOutput())
+        .setPathToRDotTxt(aaptOutputInfo.getPathToRDotTxt())
+        .setRDotJavaDir(
+            generateRDotJava.map(GenerateRDotJava::getSourcePathToGeneratedRDotJavaSrcFiles))
+        .build();
   }
 
   private ExopackagePathAndHash withFileHashCodeRule(SourcePath pathToFile, String name) {
@@ -570,7 +615,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private GenerateRDotJava createGenerateRDotJava(
       ImmutableCollection<SourcePath> pathToRDotTxtFiles,
       ImmutableSortedSet<BuildRule> resourceDeps,
-      ImmutableCollection<FilteredResourcesProvider> resourcesProviders) {
+      FilteredResourcesProvider resourcesProvider) {
     return new GenerateRDotJava(
         buildTarget.withAppendedFlavors(GENERATE_RDOT_JAVA_FLAVOR),
         projectFilesystem,
@@ -580,16 +625,16 @@ class AndroidBinaryResourcesGraphEnhancer {
         pathToRDotTxtFiles,
         resourceUnionPackage,
         resourceDeps,
-        resourcesProviders);
+        resourcesProvider);
   }
 
   private GenerateStringResources createGenerateStringResources(
-      ImmutableList<FilteredResourcesProvider> filteredResourcesProviders) {
+      FilteredResourcesProvider filteredResourcesProvider) {
     return new GenerateStringResources(
         buildTarget.withAppendedFlavors(GENERATE_STRING_RESOURCES_FLAVOR),
         projectFilesystem,
         ruleFinder,
-        filteredResourcesProviders);
+        filteredResourcesProvider);
   }
 
   private ResourcesFilter createResourcesFilter(
@@ -613,19 +658,17 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   private AaptPackageResources createAaptPackageResources(
-      BuildTarget target,
       SourcePath realManifest,
-      ImmutableList<SourcePath> dependencyResourceApks,
       AndroidPackageableCollection.ResourceDetails resourceDetails,
       FilteredResourcesProvider filteredResourcesProvider) {
     return new AaptPackageResources(
-        target,
+        buildTarget.withAppendedFlavors(AAPT_PACKAGE_FLAVOR),
         projectFilesystem,
         androidPlatformTarget,
         ruleFinder,
         graphBuilder,
         realManifest,
-        dependencyResourceApks,
+        ImmutableList.of(),
         filteredResourcesProvider,
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         skipCrunchPngs,
