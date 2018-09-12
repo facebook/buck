@@ -330,6 +330,11 @@
       <loadForDefaultProject/>
     </component>
     <component>
+      <implementation-class>
+        com.facebook.buck.intellij.ideabuck.util.BuckCellFinder
+      </implementation-class>
+    </component>
+    <component>
       <implementation-class>com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider
       </implementation-class>
     </component>
