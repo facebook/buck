@@ -36,7 +36,6 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.AnActionButton;
-import com.intellij.ui.AnActionButtonRunnable;
 import com.intellij.ui.IdeBorderFactory;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.components.JBLabel;
@@ -46,6 +45,7 @@ import com.intellij.util.ui.ListTableModel;
 import com.intellij.util.ui.LocalPathCellEditor;
 import com.intellij.util.ui.table.TableModelEditor.EditableColumnInfo;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ItemEvent;
@@ -312,42 +312,41 @@ public class BuckSettingsUI extends JPanel {
   private JPanel initBuckCellSection() {
     JPanel panel = new JPanel(new BorderLayout());
     panel.setBorder(IdeBorderFactory.createTitledBorder("Cells", true));
-    cellTableModel =
-        new ListTableModel<BuckCell>(CELL_NAME_COLUMN, ROOT_COLUMN, BUILD_FILENAME_COLUMN);
+    cellTableModel = new ListTableModel<>(CELL_NAME_COLUMN, ROOT_COLUMN, BUILD_FILENAME_COLUMN);
     cellTableModel.setItems(optionsProvider.getCells());
-    TableView<BuckCell> cellTable = new TableView<BuckCell>(cellTableModel);
+    TableView<BuckCell> cellTable = new TableView<>(cellTableModel);
+    cellTable.setPreferredScrollableViewportSize(
+        new Dimension(
+            cellTable.getPreferredScrollableViewportSize().width, 8 * cellTable.getRowHeight()));
     ToolbarDecorator decorator =
         ToolbarDecorator.createDecorator(cellTable)
             .setAddAction(
-                new AnActionButtonRunnable() {
-                  @Override
-                  public void run(AnActionButton button) {
-                    final FileChooserDescriptor dirChooser =
-                        FileChooserDescriptorFactory.createSingleFolderDescriptor()
-                            .withTitle("Select root directory of buck cell");
-                    Project project = optionsProvider.getProject();
-                    FileChooser.chooseFile(
-                        dirChooser,
-                        project,
-                        BuckSettingsUI.this,
-                        project.getBaseDir(),
-                        file -> {
-                          ProgressManager.getInstance()
-                              .run(
-                                  new Modal(project, "Checking buildfile.name for cell", true) {
-                                    @Override
-                                    public void run(@NotNull ProgressIndicator progressIndicator) {
-                                      BuckCell buckCell =
-                                          discoverCell(
-                                              buckExecutableForAutoDiscovery(),
-                                              file.getName(),
-                                              Paths.get(file.getCanonicalPath()),
-                                              progressIndicator);
-                                      cellTableModel.addRow(buckCell);
-                                    }
-                                  });
-                        });
-                  }
+                (AnActionButton button) -> {
+                  final FileChooserDescriptor dirChooser =
+                      FileChooserDescriptorFactory.createSingleFolderDescriptor()
+                          .withTitle("Select root directory of buck cell");
+                  Project project = optionsProvider.getProject();
+                  FileChooser.chooseFile(
+                      dirChooser,
+                      project,
+                      BuckSettingsUI.this,
+                      project.getBaseDir(),
+                      file -> {
+                        ProgressManager.getInstance()
+                            .run(
+                                new Modal(project, "Checking buildfile.name for cell", true) {
+                                  @Override
+                                  public void run(@NotNull ProgressIndicator progressIndicator) {
+                                    BuckCell buckCell =
+                                        discoverCell(
+                                            buckExecutableForAutoDiscovery(),
+                                            file.getName(),
+                                            Paths.get(file.getPath()),
+                                            progressIndicator);
+                                    cellTableModel.addRow(buckCell);
+                                  }
+                                });
+                      });
                 })
             .addExtraAction(
                 new AnActionButton("Automatically discover cells", Actions.Find) {
@@ -378,16 +377,19 @@ public class BuckSettingsUI extends JPanel {
         FileChooserDescriptorFactory.createSingleFolderDescriptor()
             .withTitle("Select any directory within a buck cell");
     Project project = optionsProvider.getProject();
-    VirtualFile defaultCell =
-        FileChooser.chooseFile(dirChooser, BuckSettingsUI.this, project, project.getBaseDir());
-    ProgressManager.getInstance()
-        .run(
-            new Modal(project, "Autodetecting buck cells", true) {
-              @Override
-              public void run(@NotNull ProgressIndicator progressIndicator) {
-                discoverCells(buckExecutableForAutoDiscovery(), defaultCell, progressIndicator);
-              }
-            });
+    Optional.ofNullable(
+            FileChooser.chooseFile(dirChooser, BuckSettingsUI.this, project, project.getBaseDir()))
+        .ifPresent(
+            defaultCell ->
+                ProgressManager.getInstance()
+                    .run(
+                        new Modal(project, "Autodetecting buck cells", true) {
+                          @Override
+                          public void run(@NotNull ProgressIndicator progressIndicator) {
+                            discoverCells(
+                                buckExecutableForAutoDiscovery(), defaultCell, progressIndicator);
+                          }
+                        }));
   }
 
   private void waitUntilDoneOrCanceled(Process process, ProgressIndicator progressIndicator)
@@ -476,7 +478,9 @@ public class BuckSettingsUI extends JPanel {
       waitUntilDoneOrCanceled(process, progressIndicator);
       try (InputStreamReader reader = new InputStreamReader(process.getInputStream())) {
         Map<String, String> cellConfig = gson.fromJson(reader, type);
-        Optional.ofNullable(cellConfig.get("buildfile.name")).ifPresent(cell::setBuildFileName);
+        Optional.ofNullable(cellConfig)
+            .flatMap(config -> Optional.ofNullable(config.get("buildfile.name")))
+            .ifPresent(cell::setBuildFileName);
       }
     } catch (IOException | InterruptedException e) {
       LOG.warn("Failed to discover buildfile.name of cell at " + cellRoot, e);
@@ -484,26 +488,16 @@ public class BuckSettingsUI extends JPanel {
     return cell;
   }
 
-  // When displaying an empty Optional in a text field, use "".
-  private String optionalToText(Optional<String> optional) {
-    return optional.orElse("");
-  }
-
   // Empty or all-whitespace text fields should be parsed as Optional.empty()
-  private Optional<String> textToOptional(String text) {
-    if (text == null || text.trim().isEmpty()) {
-      return Optional.empty();
-    }
-    return Optional.of(text);
+  private Optional<String> textToOptional(@Nullable String text) {
+    return Optional.ofNullable(text).map(String::trim).filter(String::isEmpty);
   }
 
   public boolean isModified() {
     return !Comparing.equal(
-            buckPathField.getText().trim(),
-            optionalToText(optionsProvider.getBuckExecutableOverride()))
+            buckPathField.getText().trim(), optionsProvider.getBuckExecutableOverride().orElse(""))
         || !Comparing.equal(
-            adbPathField.getText().trim(),
-            optionalToText(optionsProvider.getAdbExecutableOverride()))
+            adbPathField.getText().trim(), optionsProvider.getAdbExecutableOverride().orElse(""))
         || optionsProvider.isRunAfterInstall() != runAfterInstall.isSelected()
         || optionsProvider.isShowDebugWindow() != showDebug.isSelected()
         || optionsProvider.isAutoDepsEnabled() != enableAutoDeps.isSelected()
@@ -526,7 +520,7 @@ public class BuckSettingsUI extends JPanel {
     optionsProvider.setUninstallBeforeInstalling(uninstallBeforeInstall.isSelected());
     optionsProvider.setUseCustomizedInstallSetting(customizedInstallSetting.isSelected());
     optionsProvider.setCustomizedInstallSettingCommand(customizedInstallSettingField.getText());
-    optionsProvider.setCells((List<BuckCell>) cellTableModel.getItems());
+    optionsProvider.setCells(cellTableModel.getItems());
   }
 
   public void reset() {
