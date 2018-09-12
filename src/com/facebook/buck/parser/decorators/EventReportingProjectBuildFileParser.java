@@ -24,7 +24,6 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -63,10 +62,10 @@ public class EventReportingProjectBuildFileParser implements ProjectBuildFilePar
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getBuildFileManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     maybePostStartEvent();
-    return delegate.getBuildFileManifest(buildFile, processedBytes);
+    return delegate.getBuildFileManifest(buildFile);
   }
 
   @Override

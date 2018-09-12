@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
 /**
@@ -55,9 +54,9 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getBuildFileManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    return getParserForBuildFile(buildFile).getBuildFileManifest(buildFile, processedBytes);
+    return getParserForBuildFile(buildFile).getBuildFileManifest(buildFile);
   }
 
   @Override

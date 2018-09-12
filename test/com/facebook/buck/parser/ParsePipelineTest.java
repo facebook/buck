@@ -69,7 +69,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import org.junit.Assert;
 import org.junit.Before;
@@ -392,8 +391,7 @@ public class ParsePipelineTest {
                 }
                 return buildFileParser;
               },
-              false,
-              new AtomicLong());
+              false);
       TargetNodeListener<TargetNode<?>> nodeListener = (buildFile, node) -> {};
       LoadingCache<Cell, BuildFileTree> buildFileTrees =
           CacheBuilder.newBuilder()
@@ -490,9 +488,9 @@ public class ParsePipelineTest {
     }
 
     @Override
-    public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
+    public BuildFileManifest getBuildFileManifest(Path buildFile)
         throws BuildFileParseException, InterruptedException, IOException {
-      return delegate.getBuildFileManifest(buildFile, processedBytes);
+      return delegate.getBuildFileManifest(buildFile);
     }
 
     @Override

@@ -53,6 +53,7 @@ import com.google.devtools.build.lib.syntax.Runtime;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class DefaultProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
   private final TypeCoercerFactory typeCoercerFactory;
@@ -60,31 +61,36 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private final ParserPythonInterpreterProvider pythonInterpreterProvider;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final boolean enableProfiling;
+  private final AtomicLong processedBytes;
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       Console console,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      boolean enableProfiling) {
+      boolean enableProfiling,
+      AtomicLong processedBytes) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.console = console;
     this.pythonInterpreterProvider = pythonInterpreterProvider;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.enableProfiling = enableProfiling;
+    this.processedBytes = processedBytes;
   }
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       boolean enableProfiling,
+      AtomicLong processedBytes,
       KnownRuleTypesProvider knownRuleTypesProvider) {
     this(
         typeCoercerFactory,
         Console.createNullConsole(),
         pythonInterpreterProvider,
         knownRuleTypesProvider,
-        enableProfiling);
+        enableProfiling,
+        processedBytes);
   }
 
   public DefaultProjectBuildFileParserFactory(
@@ -92,7 +98,13 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       Console console,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       KnownRuleTypesProvider knownRuleTypesProvider) {
-    this(typeCoercerFactory, console, pythonInterpreterProvider, knownRuleTypesProvider, false);
+    this(
+        typeCoercerFactory,
+        console,
+        pythonInterpreterProvider,
+        knownRuleTypesProvider,
+        false,
+        new AtomicLong());
   }
 
   /**
@@ -150,7 +162,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   }
 
   /** Creates a project build file parser based on Buck configuration settings. */
-  private static ProjectBuildFileParser createProjectBuildFileParser(
+  private ProjectBuildFileParser createProjectBuildFileParser(
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
       Console console,
@@ -203,7 +215,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     return parser;
   }
 
-  private static PythonDslProjectBuildFileParser newPythonParser(
+  private PythonDslProjectBuildFileParser newPythonParser(
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
       Console console,
@@ -214,7 +226,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         typeCoercerFactory,
         cell.getBuckConfig().getEnvironment(),
         eventBus,
-        new DefaultProcessExecutor(console));
+        new DefaultProcessExecutor(console),
+        processedBytes);
   }
 
   private static SkylarkProjectBuildFileParser newSkylarkParser(

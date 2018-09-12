@@ -30,7 +30,6 @@ import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +41,6 @@ public class EventReportingProjectBuildFileParserTest {
 
   private EventReportingProjectBuildFileParser parser;
   private ProjectBuildFileParseEventListener listener;
-  private AtomicLong processedBytes;
   private BuildFileManifest allRulesAndMetadata;
 
   private static class ProjectBuildFileParseEventListener {
@@ -80,7 +78,7 @@ public class EventReportingProjectBuildFileParserTest {
     private boolean isClosed;
 
     @Override
-    public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes) {
+    public BuildFileManifest getBuildFileManifest(Path buildFile) {
       return allRulesAndMetadata;
     }
 
@@ -106,14 +104,13 @@ public class EventReportingProjectBuildFileParserTest {
     listener = new ProjectBuildFileParseEventListener();
     eventBus.register(listener);
     parser = EventReportingProjectBuildFileParser.of(delegate, eventBus);
-    processedBytes = new AtomicLong();
   }
 
   @Test
   public void startEventIsRecordedOnlyOnce() throws Exception {
     assertFalse(listener.isStarted());
-    parser.getBuildFileManifest(SOME_PATH, processedBytes);
-    parser.getBuildFileManifest(SOME_PATH, processedBytes);
+    parser.getBuildFileManifest(SOME_PATH);
+    parser.getBuildFileManifest(SOME_PATH);
     assertTrue(listener.isStarted());
     assertThat(listener.getStartedCount(), Matchers.is(1));
   }
@@ -121,7 +118,7 @@ public class EventReportingProjectBuildFileParserTest {
   @Test
   public void getBuildFileManifestFiresStartEvent() throws Exception {
     assertFalse(listener.isStarted());
-    parser.getBuildFileManifest(SOME_PATH, processedBytes);
+    parser.getBuildFileManifest(SOME_PATH);
     assertTrue(listener.isStarted());
   }
 
@@ -134,7 +131,7 @@ public class EventReportingProjectBuildFileParserTest {
             ImmutableMap.of(),
             Optional.empty(),
             ImmutableMap.of());
-    assertSame(allRulesAndMetadata, parser.getBuildFileManifest(SOME_PATH, processedBytes));
+    assertSame(allRulesAndMetadata, parser.getBuildFileManifest(SOME_PATH));
   }
 
   @Test
@@ -146,7 +143,7 @@ public class EventReportingProjectBuildFileParserTest {
 
   @Test
   public void closeReportsFinishedEvent() throws Exception {
-    parser.getBuildFileManifest(SOME_PATH, processedBytes);
+    parser.getBuildFileManifest(SOME_PATH);
     assertFalse(listener.isFinished());
     parser.close();
     assertTrue(listener.isFinished());

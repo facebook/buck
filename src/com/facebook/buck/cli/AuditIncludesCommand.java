@@ -31,7 +31,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -82,8 +81,7 @@ public class AuditIncludesCommand extends AbstractCommand {
           path = root.resolve(path);
         }
 
-        Iterable<String> includes =
-            parser.getBuildFileManifest(path, new AtomicLong()).getIncludes();
+        Iterable<String> includes = parser.getBuildFileManifest(path).getIncludes();
         printIncludesToStdout(
             params, Preconditions.checkNotNull(includes, "__includes metadata entry is missing"));
       }

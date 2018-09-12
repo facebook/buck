@@ -33,7 +33,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -57,17 +56,12 @@ class ProjectBuildFileParserPool implements AutoCloseable {
   private final ProjectBuildFileParserFactory projectBuildFileParserFactory;
   private final AtomicBoolean closing;
   private final boolean enableProfiler;
-  private final AtomicLong parseProcessedBytes;
 
-  /**
-   * @param maxParsersPerCell maximum number of parsers to create for a single cell.
-   * @param parseProcessedBytes
-   */
+  /** @param maxParsersPerCell maximum number of parsers to create for a single cell. */
   public ProjectBuildFileParserPool(
       int maxParsersPerCell,
       ProjectBuildFileParserFactory projectBuildFileParserFactory,
-      boolean enableProfiler,
-      AtomicLong parseProcessedBytes) {
+      boolean enableProfiler) {
     Preconditions.checkArgument(maxParsersPerCell > 0);
 
     this.maxParsersPerCell = maxParsersPerCell;
@@ -76,7 +70,6 @@ class ProjectBuildFileParserPool implements AutoCloseable {
     this.projectBuildFileParserFactory = projectBuildFileParserFactory;
     this.closing = new AtomicBoolean(false);
     this.enableProfiler = enableProfiler;
-    this.parseProcessedBytes = parseProcessedBytes;
   }
 
   /**
@@ -97,12 +90,10 @@ class ProjectBuildFileParserPool implements AutoCloseable {
     if (shouldUsePoolForCell(cell)) {
       return getResourcePoolForCell(buckEventBus, cell, watchman)
           .scheduleOperationWithResource(
-              parser -> parser.getBuildFileManifest(buildFile, parseProcessedBytes),
-              executorService);
+              parser -> parser.getBuildFileManifest(buildFile), executorService);
     }
     ProjectBuildFileParser parser = getParserForCell(buckEventBus, cell, watchman);
-    return executorService.submit(
-        () -> parser.getBuildFileManifest(buildFile, parseProcessedBytes));
+    return executorService.submit(() -> parser.getBuildFileManifest(buildFile));
   }
 
   private synchronized ResourcePool<ProjectBuildFileParser> getResourcePoolForCell(

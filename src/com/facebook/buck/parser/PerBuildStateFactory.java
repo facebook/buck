@@ -84,19 +84,19 @@ public class PerBuildStateFactory {
     TargetNodeListener<TargetNode<?>> symlinkCheckers = cellManager::registerInputsUnderSymlinks;
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     int numParsingThreads = parserConfig.getNumParsingThreads();
+    AtomicLong parseProcessedBytes = new AtomicLong();
     DefaultProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             typeCoercerFactory,
             parserPythonInterpreterProvider,
             enableProfiling,
+            parseProcessedBytes,
             knownRuleTypesProvider);
-    AtomicLong parseProcessedBytes = new AtomicLong();
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
             projectBuildFileParserFactory,
-            enableProfiling,
-            parseProcessedBytes);
+            enableProfiling);
 
     RawNodeParsePipeline rawNodeParsePipeline =
         new RawNodeParsePipeline(

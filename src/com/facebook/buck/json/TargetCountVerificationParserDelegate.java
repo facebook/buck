@@ -24,7 +24,6 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Delegates to the aggregated parser to do the parsing, while warning the numbers of targets
@@ -70,9 +69,9 @@ public class TargetCountVerificationParserDelegate implements ProjectBuildFilePa
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getBuildFileManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    BuildFileManifest targetManifest = aggregate.getBuildFileManifest(buildFile, processedBytes);
+    BuildFileManifest targetManifest = aggregate.getBuildFileManifest(buildFile);
     maybePostWarningAboutTooManyTargets(buildFile, targetManifest.getTargets().size());
     return targetManifest;
   }

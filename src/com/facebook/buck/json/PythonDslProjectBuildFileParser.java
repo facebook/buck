@@ -100,6 +100,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private final BuckEventBus buckEventBus;
   private final ProcessExecutor processExecutor;
   private final AssertScopeExclusiveAccess assertSingleThreadedParsing;
+  private final AtomicLong processedBytes;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -114,7 +115,9 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       TypeCoercerFactory typeCoercerFactory,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
-      ProcessExecutor processExecutor) {
+      ProcessExecutor processExecutor,
+      AtomicLong processedBytes) {
+    this.processedBytes = processedBytes;
     this.buckPythonProgram = null;
     this.options = options;
     this.typeCoercerFactory = typeCoercerFactory;
@@ -357,10 +360,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getBuildFileManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException {
     try {
-      return getAllRulesInternal(buildFile, processedBytes);
+      return getAllRulesInternal(buildFile);
     } catch (IOException e) {
       LOG.warn(e, "Error getting all rules for %s", buildFile);
       MoreThrowables.propagateIfInterrupt(e);
@@ -369,7 +372,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @VisibleForTesting
-  protected BuildFileManifest getAllRulesInternal(Path buildFile, AtomicLong processedBytes)
+  protected BuildFileManifest getAllRulesInternal(Path buildFile)
       throws IOException, BuildFileParseException {
     ensureNotClosed();
     initIfNeeded();

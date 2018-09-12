@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +43,6 @@ public class TargetCountVerificationParserDelegateTest {
   private CapturingConsoleEventListener capturingConsoleEventListener;
   private Path path;
   private ProjectBuildFileParser parserMock;
-  private AtomicLong processedBytes;
   private ImmutableList<Map<String, Object>> rawTargets;
   private BuckEventBus eventBus;
 
@@ -54,7 +52,6 @@ public class TargetCountVerificationParserDelegateTest {
     capturingConsoleEventListener = new CapturingConsoleEventListener();
     eventBus.register(capturingConsoleEventListener);
     path = Paths.get("/foo/bar");
-    processedBytes = new AtomicLong();
     parserMock = EasyMock.createMock(ProjectBuildFileParser.class);
 
     Map<String, Object> retMap1 = new HashMap<>();
@@ -99,12 +96,12 @@ public class TargetCountVerificationParserDelegateTest {
   @Test
   public void givenTargetCountExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsEmitted()
       throws Exception {
-    EasyMock.expect(parserMock.getBuildFileManifest(path, processedBytes))
+    EasyMock.expect(parserMock.getBuildFileManifest(path))
         .andReturn(toBuildFileManifest(this.rawTargets));
 
     TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(3);
     EasyMock.replay(parserMock);
-    parserDelegate.getBuildFileManifest(path, processedBytes);
+    parserDelegate.getBuildFileManifest(path);
 
     assertWarningIsEmitted();
   }
@@ -122,12 +119,12 @@ public class TargetCountVerificationParserDelegateTest {
   public void
       givenTargetCountNotExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsNotEmitted()
           throws Exception {
-    EasyMock.expect(parserMock.getBuildFileManifest(path, processedBytes))
+    EasyMock.expect(parserMock.getBuildFileManifest(path))
         .andReturn(toBuildFileManifest(rawTargets));
 
     TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(6);
     EasyMock.replay(parserMock);
-    parserDelegate.getBuildFileManifest(path, processedBytes);
+    parserDelegate.getBuildFileManifest(path);
 
     assertWarningIsNotEmitted();
   }

@@ -48,7 +48,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
@@ -67,8 +66,7 @@ public class ProjectBuildFileParserPoolTest {
 
   private ProjectBuildFileParserPool createParserPool(
       int maxParsersPerCell, ProjectBuildFileParserFactory parserFactory) {
-    return new ProjectBuildFileParserPool(
-        maxParsersPerCell, parserFactory, false, new AtomicLong());
+    return new ProjectBuildFileParserPool(maxParsersPerCell, parserFactory, false);
   }
 
   private void assertHowManyParserInstancesAreCreated(
@@ -145,9 +143,7 @@ public class ProjectBuildFileParserPoolTest {
 
               ProjectBuildFileParser parser = EasyMock.createMock(ProjectBuildFileParser.class);
               try {
-                EasyMock.expect(
-                        parser.getBuildFileManifest(
-                            EasyMock.anyObject(Path.class), EasyMock.anyObject(AtomicLong.class)))
+                EasyMock.expect(parser.getBuildFileManifest(EasyMock.anyObject(Path.class)))
                     .andAnswer(
                         () -> {
                           createParserLatch.countDown();
@@ -366,9 +362,7 @@ public class ProjectBuildFileParserPoolTest {
   private ProjectBuildFileParser createMockParser(IAnswer<BuildFileManifest> parseFn) {
     ProjectBuildFileParser mock = EasyMock.createMock(ProjectBuildFileParser.class);
     try {
-      EasyMock.expect(
-              mock.getBuildFileManifest(
-                  EasyMock.anyObject(Path.class), EasyMock.anyObject(AtomicLong.class)))
+      EasyMock.expect(mock.getBuildFileManifest(EasyMock.anyObject(Path.class)))
           .andAnswer(parseFn)
           .anyTimes();
       mock.close();

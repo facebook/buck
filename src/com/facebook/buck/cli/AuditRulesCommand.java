@@ -54,7 +54,6 @@ import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
@@ -139,7 +138,7 @@ public class AuditRulesCommand extends AbstractCommand {
 
           // Parse the rules from the build file.
           List<Map<String, Object>> rawRules;
-          rawRules = parser.getBuildFileManifest(path, new AtomicLong()).getTargets();
+          rawRules = parser.getBuildFileManifest(path).getTargets();
 
           // Format and print the rules from the raw data, filtered by type.
           ImmutableSet<String> types = getTypes();

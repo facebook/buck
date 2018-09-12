@@ -133,7 +133,8 @@ public class ResolverIntegrationTest {
             new DefaultTypeCoercerFactory(),
             ImmutableMap.of(),
             BuckEventBusForTests.newInstance(),
-            new DefaultProcessExecutor(new TestConsole()));
+            new DefaultProcessExecutor(new TestConsole()),
+            new AtomicLong());
   }
 
   @AfterClass
@@ -202,9 +203,7 @@ public class ResolverIntegrationTest {
     assertEquals(expected, seen);
 
     List<Map<String, Object>> rules =
-        buildFileParser
-            .getBuildFileManifest(groupDir.resolve("BUCK"), new AtomicLong())
-            .getTargets();
+        buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
 
     assertEquals(1, rules.size());
     Map<String, Object> rule = rules.get(0);
@@ -230,9 +229,7 @@ public class ResolverIntegrationTest {
 
     Path groupDir = thirdParty.resolve("example");
     List<Map<String, Object>> rules =
-        buildFileParser
-            .getBuildFileManifest(groupDir.resolve("BUCK"), new AtomicLong())
-            .getTargets();
+        buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
 
     Map<String, Object> rule = rules.get(0);
     assertEquals("with-sources-1.0-sources.jar", rule.get("sourceJar"));
@@ -245,14 +242,13 @@ public class ResolverIntegrationTest {
     Path exampleDir = thirdPartyRelative.resolve("example");
     Map<String, Object> withDeps =
         buildFileParser
-            .getBuildFileManifest(
-                buckRepoRoot.resolve(exampleDir).resolve("BUCK"), new AtomicLong())
+            .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
             .getTargets()
             .get(0);
     Path otherDir = thirdPartyRelative.resolve("othercorp");
     Map<String, Object> noDeps =
         buildFileParser
-            .getBuildFileManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"), new AtomicLong())
+            .getBuildFileManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
             .getTargets()
             .get(0);
 
@@ -281,8 +277,7 @@ public class ResolverIntegrationTest {
     Path exampleDir = thirdPartyRelative.resolve("example");
     List<Map<String, Object>> allTargets =
         buildFileParser
-            .getBuildFileManifest(
-                buckRepoRoot.resolve(exampleDir).resolve("BUCK"), new AtomicLong())
+            .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
             .getTargets();
 
     assertEquals(2, allTargets.size());
