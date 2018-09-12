@@ -26,6 +26,8 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.shell.GenruleDescription;
+import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
@@ -45,7 +47,15 @@ public class ShallowTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       TargetNode<T> targetNode) {
     DescriptionWithTargetGraph<T> description =
         (DescriptionWithTargetGraph<T>) targetNode.getDescription();
+
     T arg = targetNode.getConstructorArg();
+
+    if (description.getClass().equals(GenruleDescription.class)) {
+      return new EmptyBuildRule(
+          targetNode.getBuildTarget(),
+          targetNode.getFilesystem(),
+          ((GenruleDescriptionArg) arg).getOut());
+    }
 
     BuildRuleParams params =
         new BuildRuleParams(
