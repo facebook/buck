@@ -67,7 +67,8 @@ public class ProjectBuildFileParserPoolTest {
 
   private ProjectBuildFileParserPool createParserPool(
       int maxParsersPerCell, ProjectBuildFileParserFactory parserFactory) {
-    return new ProjectBuildFileParserPool(maxParsersPerCell, parserFactory, false);
+    return new ProjectBuildFileParserPool(
+        maxParsersPerCell, parserFactory, false, new AtomicLong());
   }
 
   private void assertHowManyParserInstancesAreCreated(
@@ -357,7 +358,6 @@ public class ProjectBuildFileParserPoolTest {
               cell,
               WatchmanFactory.NULL_WATCHMAN,
               Paths.get("BUCK"),
-              new AtomicLong(),
               executorService));
     }
     return futures.build();

@@ -65,27 +65,27 @@ public class PerBuildState implements AutoCloseable {
   TargetNode<?> getTargetNode(BuildTarget target) throws BuildFileParseException {
     Cell owningCell = cellManager.getCell(target);
 
-    return targetNodeParsePipeline.getNode(owningCell, target, parseProcessedBytes);
+    return targetNodeParsePipeline.getNode(owningCell, target);
   }
 
   ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target) throws BuildTargetException {
     Cell owningCell = cellManager.getCell(target);
 
-    return targetNodeParsePipeline.getNodeJob(owningCell, target, parseProcessedBytes);
+    return targetNodeParsePipeline.getNodeJob(owningCell, target);
   }
 
   ImmutableSet<TargetNode<?>> getAllTargetNodes(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    return targetNodeParsePipeline.getAllNodes(cell, buildFile, parseProcessedBytes);
+    return targetNodeParsePipeline.getAllNodes(cell, buildFile);
   }
 
   ListenableFuture<ImmutableSet<TargetNode<?>>> getAllTargetNodesJob(Cell cell, Path buildFile)
       throws BuildTargetException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    return targetNodeParsePipeline.getAllNodesJob(cell, buildFile, parseProcessedBytes);
+    return targetNodeParsePipeline.getAllNodesJob(cell, buildFile);
   }
 
   ImmutableSet<Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)
@@ -93,7 +93,7 @@ public class PerBuildState implements AutoCloseable {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
-    return rawNodeParsePipeline.getAllNodes(cell, buildFile, parseProcessedBytes);
+    return rawNodeParsePipeline.getAllNodes(cell, buildFile);
   }
 
   long getParseProcessedBytes() {

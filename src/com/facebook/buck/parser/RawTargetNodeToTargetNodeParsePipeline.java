@@ -33,7 +33,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 public class RawTargetNodeToTargetNodeParsePipeline
@@ -81,7 +80,6 @@ public class RawTargetNodeToTargetNodeParsePipeline
       Cell cell,
       BuildTarget buildTarget,
       RawTargetNode rawNode,
-      AtomicLong processedBytes,
       Function<PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException {
     TargetNode<?> targetNode =
@@ -100,11 +98,9 @@ public class RawTargetNodeToTargetNodeParsePipeline
               try {
                 if (depTarget.isFlavored()) {
                   getNodeJob(
-                      depCell,
-                      ImmutableBuildTarget.of(depTarget.getUnflavoredBuildTarget()),
-                      processedBytes);
+                      depCell, ImmutableBuildTarget.of(depTarget.getUnflavoredBuildTarget()));
                 }
-                getNodeJob(depCell, depTarget, processedBytes);
+                getNodeJob(depCell, depTarget);
               } catch (BuildTargetException e) {
                 // No biggie, we'll hit the error again in the non-speculative path.
                 LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
@@ -117,14 +113,14 @@ public class RawTargetNodeToTargetNodeParsePipeline
 
   @Override
   protected ListenableFuture<ImmutableSet<RawTargetNode>> getItemsToConvert(
-      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException {
-    return rawTargetNodePipeline.getAllNodesJob(cell, buildFile, processedBytes);
+      Cell cell, Path buildFile) throws BuildTargetException {
+    return rawTargetNodePipeline.getAllNodesJob(cell, buildFile);
   }
 
   @Override
-  protected ListenableFuture<RawTargetNode> getItemToConvert(
-      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException {
-    return rawTargetNodePipeline.getNodeJob(cell, buildTarget, processedBytes);
+  protected ListenableFuture<RawTargetNode> getItemToConvert(Cell cell, BuildTarget buildTarget)
+      throws BuildTargetException {
+    return rawTargetNodePipeline.getNodeJob(cell, buildTarget);
   }
 
   @Override

@@ -123,9 +123,7 @@ public class ParsePipelineTest {
         fixture
             .getTargetNodeParsePipeline()
             .getNode(
-                cell,
-                BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:lib"),
-                new AtomicLong());
+                cell, BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:lib"));
 
     waitForAll(
         libTargetNode.getBuildDeps(),
@@ -142,7 +140,7 @@ public class ParsePipelineTest {
     ImmutableSet<TargetNode<?>> libTargetNodes =
         fixture
             .getTargetNodeParsePipeline()
-            .getAllNodes(cell, fixture.getCell().getFilesystem().resolve("BUCK"), new AtomicLong());
+            .getAllNodes(cell, fixture.getCell().getFilesystem().resolve("BUCK"));
     FluentIterable<BuildTarget> allDeps =
         FluentIterable.from(libTargetNodes).transformAndConcat(input -> input.getBuildDeps());
     waitForAll(
@@ -164,8 +162,7 @@ public class ParsePipelineTest {
           .getTargetNodeParsePipeline()
           .getNode(
               cell,
-              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:notthere"),
-              new AtomicLong());
+              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:notthere"));
     }
   }
 
@@ -178,7 +175,7 @@ public class ParsePipelineTest {
           stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
       fixture
           .getTargetNodeParsePipeline()
-          .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"), new AtomicLong());
+          .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"));
     }
   }
 
@@ -191,7 +188,7 @@ public class ParsePipelineTest {
           stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
       fixture
           .getRawNodeParsePipeline()
-          .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"), new AtomicLong());
+          .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"));
     }
   }
 
@@ -202,9 +199,7 @@ public class ParsePipelineTest {
       fixture
           .getTargetNodeParsePipeline()
           .getNode(
-              cell,
-              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:base"),
-              new AtomicLong());
+              cell, BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:base"));
     }
   }
 
@@ -219,7 +214,7 @@ public class ParsePipelineTest {
               cell, rootBuildFilePath, ImmutableSet.of(ImmutableMap.of("name", "bar")), eventBus);
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage("malformed raw data");
-      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath, new AtomicLong());
+      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
     }
   }
 
@@ -229,7 +224,7 @@ public class ParsePipelineTest {
       Cell cell = fixture.getCell();
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
-      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath, new AtomicLong());
+      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
       Optional<ImmutableSet<Map<String, Object>>> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()
@@ -240,7 +235,7 @@ public class ParsePipelineTest {
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage(
           "Raw data claims to come from [], but we tried rooting it at [a].");
-      fixture.getTargetNodeParsePipeline().getAllNodes(cell, aBuildFilePath, new AtomicLong());
+      fixture.getTargetNodeParsePipeline().getAllNodes(cell, aBuildFilePath);
     }
   }
 
@@ -253,7 +248,7 @@ public class ParsePipelineTest {
       Cell cell = fixture.getCell();
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
-      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath, new AtomicLong());
+      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
       Optional<ImmutableSet<Map<String, Object>>> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()
@@ -267,9 +262,7 @@ public class ParsePipelineTest {
       fixture
           .getTargetNodeParsePipeline()
           .getNode(
-              cell,
-              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//a:lib"),
-              new AtomicLong());
+              cell, BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//a:lib"));
     }
   }
 
@@ -282,8 +275,8 @@ public class ParsePipelineTest {
             .getTargetNodeParsePipeline()
             .getNode(
                 cell,
-                BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//error:error"),
-                new AtomicLong());
+                BuildTargetFactory.newInstance(
+                    cell.getFilesystem().getRootPath(), "//error:error"));
         Assert.fail("Expected BuildFileParseException");
       } catch (BuildFileParseException e) {
         assertThat(e.getMessage(), containsString("crash!"));
@@ -294,8 +287,7 @@ public class ParsePipelineTest {
           .getNode(
               cell,
               BuildTargetFactory.newInstance(
-                  cell.getFilesystem().getRootPath(), "//correct:correct"),
-              new AtomicLong());
+                  cell.getFilesystem().getRootPath(), "//correct:correct"));
     }
   }
 
@@ -400,7 +392,8 @@ public class ParsePipelineTest {
                 }
                 return buildFileParser;
               },
-              false);
+              false,
+              new AtomicLong());
       TargetNodeListener<TargetNode<?>> nodeListener = (buildFile, node) -> {};
       LoadingCache<Cell, BuildFileTree> buildFileTrees =
           CacheBuilder.newBuilder()

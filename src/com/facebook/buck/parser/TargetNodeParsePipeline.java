@@ -33,7 +33,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -100,7 +99,6 @@ public class TargetNodeParsePipeline
       Cell cell,
       BuildTarget buildTarget,
       Map<String, Object> rawNode,
-      AtomicLong processedBytes,
       Function<PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException {
     TargetNode<?> targetNode =
@@ -119,11 +117,9 @@ public class TargetNodeParsePipeline
               try {
                 if (depTarget.isFlavored()) {
                   getNodeJob(
-                      depCell,
-                      ImmutableBuildTarget.of(depTarget.getUnflavoredBuildTarget()),
-                      processedBytes);
+                      depCell, ImmutableBuildTarget.of(depTarget.getUnflavoredBuildTarget()));
                 }
-                getNodeJob(depCell, depTarget, processedBytes);
+                getNodeJob(depCell, depTarget);
               } catch (BuildTargetException e) {
                 // No biggie, we'll hit the error again in the non-speculative path.
                 LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
@@ -137,13 +133,13 @@ public class TargetNodeParsePipeline
 
   @Override
   protected ListenableFuture<ImmutableSet<Map<String, Object>>> getItemsToConvert(
-      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException {
-    return rawNodeParsePipeline.getAllNodesJob(cell, buildFile, processedBytes);
+      Cell cell, Path buildFile) throws BuildTargetException {
+    return rawNodeParsePipeline.getAllNodesJob(cell, buildFile);
   }
 
   @Override
   protected ListenableFuture<Map<String, Object>> getItemToConvert(
-      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException {
-    return rawNodeParsePipeline.getNodeJob(cell, buildTarget, processedBytes);
+      Cell cell, BuildTarget buildTarget) throws BuildTargetException {
+    return rawNodeParsePipeline.getNodeJob(cell, buildTarget);
   }
 }

@@ -26,7 +26,6 @@ import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 /** {@link ConvertingPipeline} that computes a node in a {@link SimplePerfEvent} scope. */
@@ -47,8 +46,7 @@ public abstract class ConvertingPipelineWithPerfEventScope<F, T> extends Convert
   }
 
   @Override
-  protected final T computeNode(
-      Cell cell, BuildTarget buildTarget, F rawNode, AtomicLong processedBytes)
+  protected final T computeNode(Cell cell, BuildTarget buildTarget, F rawNode)
       throws BuildTargetException {
 
     try (SimplePerfEvent.Scope scope =
@@ -65,7 +63,7 @@ public abstract class ConvertingPipelineWithPerfEventScope<F, T> extends Convert
               SimplePerfEvent.scopeIgnoringShortEvents(
                   eventBus, perfEventId, scope, getMinimumPerfEventTimeMs(), TimeUnit.MILLISECONDS);
 
-      return computeNodeInScope(cell, buildTarget, rawNode, processedBytes, perfEventScopeFunction);
+      return computeNodeInScope(cell, buildTarget, rawNode, perfEventScopeFunction);
     }
   }
 
@@ -73,7 +71,6 @@ public abstract class ConvertingPipelineWithPerfEventScope<F, T> extends Convert
       Cell cell,
       BuildTarget buildTarget,
       F rawNode,
-      AtomicLong processedBytes,
       Function<PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException;
 

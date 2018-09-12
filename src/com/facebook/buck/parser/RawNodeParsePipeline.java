@@ -33,7 +33,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
@@ -88,7 +87,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
   @Override
   public ListenableFuture<ImmutableSet<Map<String, Object>>> getAllNodesJob(
-      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException {
+      Cell cell, Path buildFile) throws BuildTargetException {
 
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
@@ -104,7 +103,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
           return Futures.transform(
               projectBuildFileParserPool.getBuildFileManifest(
-                  eventBus, cell, watchman, buildFile, processedBytes, executorService),
+                  eventBus, cell, watchman, buildFile, executorService),
               buildFileManifest -> buildFileManifest.toRawNodes(),
               executorService);
         },
@@ -112,10 +111,10 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
   }
 
   @Override
-  public ListenableFuture<Map<String, Object>> getNodeJob(
-      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException {
+  public ListenableFuture<Map<String, Object>> getNodeJob(Cell cell, BuildTarget buildTarget)
+      throws BuildTargetException {
     return Futures.transformAsync(
-        getAllNodesJob(cell, cell.getAbsolutePathToBuildFile(buildTarget), processedBytes),
+        getAllNodesJob(cell, cell.getAbsolutePathToBuildFile(buildTarget)),
         input -> {
           for (Map<String, Object> rawNode : input) {
             Object shortName = rawNode.get("name");

@@ -90,11 +90,13 @@ public class PerBuildStateFactory {
             parserPythonInterpreterProvider,
             enableProfiling,
             knownRuleTypesProvider);
+    AtomicLong parseProcessedBytes = new AtomicLong();
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
             projectBuildFileParserFactory,
-            enableProfiling);
+            enableProfiling,
+            parseProcessedBytes);
 
     RawNodeParsePipeline rawNodeParsePipeline =
         new RawNodeParsePipeline(
@@ -103,8 +105,6 @@ public class PerBuildStateFactory {
             executorService,
             eventBus,
             watchman);
-
-    AtomicLong parseProcessedBytes = new AtomicLong();
 
     ParsePipeline<TargetNode<?>> targetNodeParsePipeline;
 
@@ -153,8 +153,7 @@ public class PerBuildStateFactory {
           new SameThreadConfigurationRuleResolver(
               cellManager::getCell,
               (cell, buildTarget) ->
-                  nonResolvingTargetNodeParsePipeline.getNode(
-                      cell, buildTarget, parseProcessedBytes));
+                  nonResolvingTargetNodeParsePipeline.getNode(cell, buildTarget));
 
       SelectableResolver selectableResolver =
           new ConfigurationRuleSelectableResolver(configurationRuleResolver);

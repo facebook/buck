@@ -57,12 +57,17 @@ class ProjectBuildFileParserPool implements AutoCloseable {
   private final ProjectBuildFileParserFactory projectBuildFileParserFactory;
   private final AtomicBoolean closing;
   private final boolean enableProfiler;
+  private final AtomicLong parseProcessedBytes;
 
-  /** @param maxParsersPerCell maximum number of parsers to create for a single cell. */
+  /**
+   * @param maxParsersPerCell maximum number of parsers to create for a single cell.
+   * @param parseProcessedBytes
+   */
   public ProjectBuildFileParserPool(
       int maxParsersPerCell,
       ProjectBuildFileParserFactory projectBuildFileParserFactory,
-      boolean enableProfiler) {
+      boolean enableProfiler,
+      AtomicLong parseProcessedBytes) {
     Preconditions.checkArgument(maxParsersPerCell > 0);
 
     this.maxParsersPerCell = maxParsersPerCell;
@@ -71,6 +76,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
     this.projectBuildFileParserFactory = projectBuildFileParserFactory;
     this.closing = new AtomicBoolean(false);
     this.enableProfiler = enableProfiler;
+    this.parseProcessedBytes = parseProcessedBytes;
   }
 
   /**
@@ -85,17 +91,18 @@ class ProjectBuildFileParserPool implements AutoCloseable {
       Cell cell,
       Watchman watchman,
       Path buildFile,
-      AtomicLong processedBytes,
       ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
     if (shouldUsePoolForCell(cell)) {
       return getResourcePoolForCell(buckEventBus, cell, watchman)
           .scheduleOperationWithResource(
-              parser -> parser.getBuildFileManifest(buildFile, processedBytes), executorService);
+              parser -> parser.getBuildFileManifest(buildFile, parseProcessedBytes),
+              executorService);
     }
     ProjectBuildFileParser parser = getParserForCell(buckEventBus, cell, watchman);
-    return executorService.submit(() -> parser.getBuildFileManifest(buildFile, processedBytes));
+    return executorService.submit(
+        () -> parser.getBuildFileManifest(buildFile, parseProcessedBytes));
   }
 
   private synchronized ResourcePool<ProjectBuildFileParser> getResourcePoolForCell(
