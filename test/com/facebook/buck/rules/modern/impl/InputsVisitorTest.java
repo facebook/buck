@@ -34,6 +34,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
+import com.facebook.buck.rules.modern.DefaultFieldInputs;
 import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.collect.ImmutableList;
 import java.util.function.BiConsumer;
@@ -232,6 +233,7 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
   }
 
   private static final PathSourcePath otherPath = FakeSourcePath.of("some.path");;
+  private static final PathSourcePath oneMorePath = FakeSourcePath.of("hidden");
 
   private static class HasCustomInputs implements AddsToRuleKey, HasCustomInputsLogic {
     @AddToRuleKey
@@ -269,7 +271,7 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
     ImmutableList.Builder<SourcePath> inputsBuilder = ImmutableList.builder();
     DefaultClassInfoFactory.forInstance(withCustomFieldBehavior)
         .visit(withCustomFieldBehavior, new InputsVisitor(inputsBuilder::add));
-    assertEquals(ImmutableList.of(otherPath), inputsBuilder.build());
+    assertEquals(ImmutableList.of(otherPath, oneMorePath), inputsBuilder.build());
   }
 
   private static class WithCustomFieldBehavior implements AddsToRuleKey {
@@ -280,6 +282,12 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
     @CustomFieldBehavior(InjectableInputsBehavior.class)
     @AddToRuleKey
     private final String value = "value";
+
+    @CustomFieldBehavior(DefaultFieldInputs.class)
+    private final SourcePath hidden = oneMorePath;
+
+    @CustomFieldBehavior(DefaultFieldInputs.class)
+    private final String someString = "hello";
   }
 
   private static class IgnoredForInputsBehavior implements CustomFieldInputs<SourcePath> {

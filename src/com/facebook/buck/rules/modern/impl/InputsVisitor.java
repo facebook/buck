@@ -23,8 +23,10 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.CustomBehaviorUtils;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
+import com.facebook.buck.rules.modern.DefaultFieldInputs;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
+import com.google.common.reflect.TypeToken;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -50,19 +52,29 @@ public class InputsVisitor extends AbstractValueVisitor<RuntimeException> {
 
   @Override
   public <T> void visitField(
-      Field field,
-      T value,
-      ValueTypeInfo<T> valueTypeInfo,
-      Optional<CustomFieldBehavior> customBehavior)
+      Field field, T value, ValueTypeInfo<T> valueTypeInfo, Optional<CustomFieldBehavior> behavior)
       throws RuntimeException {
-    Optional<?> inputsTag = CustomBehaviorUtils.get(customBehavior, CustomFieldInputs.class);
-    if (inputsTag.isPresent()) {
-      @SuppressWarnings("unchecked")
-      CustomFieldInputs<T> customInputs = (CustomFieldInputs<T>) inputsTag.get();
-      customInputs.getInputs(value, inputsBuilder);
-    } else {
-      super.visitField(field, value, valueTypeInfo, customBehavior);
+    if (behavior.isPresent()) {
+      if (CustomBehaviorUtils.get(behavior.get(), DefaultFieldInputs.class).isPresent()) {
+        @SuppressWarnings("unchecked")
+        ValueTypeInfo<T> typeInfo =
+            (ValueTypeInfo<T>)
+                ValueTypeInfoFactory.forTypeToken(TypeToken.of(field.getGenericType()));
+
+        typeInfo.visit(value, this);
+        return;
+      }
+
+      Optional<?> inputsTag = CustomBehaviorUtils.get(behavior.get(), CustomFieldInputs.class);
+      if (inputsTag.isPresent()) {
+        @SuppressWarnings("unchecked")
+        CustomFieldInputs<T> customInputs = (CustomFieldInputs<T>) inputsTag.get();
+        customInputs.getInputs(value, inputsBuilder);
+        return;
+      }
     }
+
+    valueTypeInfo.visit(value, this);
   }
 
   @Override
