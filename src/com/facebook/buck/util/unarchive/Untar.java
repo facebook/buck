@@ -17,6 +17,7 @@
 package com.facebook.buck.util.unarchive;
 
 import com.facebook.buck.io.file.MorePosixFilePermissions;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -293,12 +294,19 @@ public class Untar extends Unarchiver {
   }
 
   /** Sets the modification time and the execution bit on a file */
-  private void setAttributes(ProjectFilesystem filesystem, Path path, TarArchiveEntry entry) {
-    File file = filesystem.getRootPath().resolve(path).toFile();
+  private void setAttributes(ProjectFilesystem filesystem, Path path, TarArchiveEntry entry)
+      throws IOException {
+    Path filePath = filesystem.getRootPath().resolve(path);
+    File file = filePath.toFile();
     file.setLastModified(entry.getModTime().getTime());
     Set<PosixFilePermission> posixPermissions = MorePosixFilePermissions.fromMode(entry.getMode());
     if (posixPermissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
-      file.setExecutable(true, true);
+      // setting posix file permissions on a symlink does not work, so use File API instead
+      if (entry.isSymbolicLink()) {
+        file.setExecutable(true, true);
+      } else {
+        MostFiles.makeExecutable(filePath);
+      }
     }
   }
 
