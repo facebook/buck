@@ -273,7 +273,7 @@ public class BuckProjectSettingsProvider extends AbstractProjectComponent
     public String customizedInstallSettingCommand = "";
 
     /** Buck cells supported in this project. */
-    public List<BuckCell> cells = Lists.newArrayList(BuckCell.DEFAULT_CELL);
+    public List<BuckCell> cells = Lists.newArrayList(new BuckCell());
 
     @Override
     public boolean equals(Object o) {

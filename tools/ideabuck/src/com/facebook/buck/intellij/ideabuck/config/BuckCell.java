@@ -24,8 +24,6 @@ public class BuckCell {
   public String root = "$PROJECT_DIR$";
   public String buildFileName = "BUCK";
 
-  public static BuckCell DEFAULT_CELL = new BuckCell();
-
   /** Returns a copy of this cell. */
   public BuckCell copy() {
     BuckCell result = new BuckCell();
