@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>NOTE: only a manager on buckd should be set/instantiated to nonblocking mode, otherwise
  * unexpected behavior might occur
  */
-public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
+public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
 
   private static final Logger LOG = Logger.get(AsyncBackgroundTaskManager.class);
   private static final int DEFAULT_THREADS = 3;
@@ -182,7 +182,7 @@ public class AsyncBackgroundTaskManager implements BackgroundTaskManager {
   }
 
   @Override
-  public void notify(Notification code) {
+  protected void notify(Notification code) {
     if (blocking) {
       notifySync(code);
     } else {

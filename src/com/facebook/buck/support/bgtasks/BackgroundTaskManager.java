@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * should be notified when a new command starts and when it finishes so that it can schedule bgtasks
  * appropriately. Tasks should typically be scheduled through a {@link TaskManagerScope}.
  */
-public interface BackgroundTaskManager {
+public abstract class BackgroundTaskManager {
 
   /**
    * Code passed to notify(). COMMAND_START: when buck command is started COMMAND_END: when buck
@@ -40,25 +40,10 @@ public interface BackgroundTaskManager {
    *
    * @return new scope
    */
-  TaskManagerScope getNewScope(BuildId buildId);
-
-  /**
-   * Schedule a task to be run in the background.
-   *
-   * @param task {@link ManagedBackgroundTask} object to be run
-   */
-  void schedule(ManagedBackgroundTask task);
-
-  /**
-   * Notify the manager of some event, e.g. command start/end. Exceptions should generally be caught
-   * and handled by the manager, except in test implementations.
-   *
-   * @param code Type of event to notify of
-   */
-  void notify(Notification code);
+  public abstract TaskManagerScope getNewScope(BuildId buildId);
 
   /** Shut down manager, without waiting for tasks to finish. */
-  void shutdownNow();
+  public abstract void shutdownNow();
 
   /**
    * Shut down manager, waiting until given timeout for tasks to finish.
@@ -66,5 +51,22 @@ public interface BackgroundTaskManager {
    * @param timeout timeout for tasks to finish
    * @param units units of timeout
    */
-  void shutdown(long timeout, TimeUnit units) throws InterruptedException;
+  public abstract void shutdown(long timeout, TimeUnit units) throws InterruptedException;
+
+  /**
+   * Schedule a task to be run in the background. Should be accessed through a {@link
+   * TaskManagerScope} implementation.
+   *
+   * @param task {@link ManagedBackgroundTask} object to be run
+   */
+  protected abstract void schedule(ManagedBackgroundTask task);
+
+  /**
+   * Notify the manager of some event, e.g. command start/end. Exceptions should generally be caught
+   * and handled by the manager, except in test implementations. Notification should be handled
+   * through a {@link TaskManagerScope}.
+   *
+   * @param code Type of event to notify of
+   */
+  protected abstract void notify(Notification code);
 }
