@@ -23,16 +23,16 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Test implementation of {@link BackgroundTaskManager}. Behaves same as blocking mode on {@link
- * AsyncBackgroundTaskManager} except that exceptions are caught and saved internally. Internal list
- * of tasks is also accessible.
+ * Test implementation of {@link BackgroundTaskManager}. Behaves same as single-threaded blocking
+ * mode on {@link AsyncBackgroundTaskManager} except that exceptions are caught and saved
+ * internally. Internal list of tasks is also accessible.
  */
 public class TestBackgroundTaskManager extends AsyncBackgroundTaskManager {
 
   private final Map<ManagedBackgroundTask, Optional<Exception>> statuses;
 
   public TestBackgroundTaskManager() {
-    super(true);
+    super(true, 1);
     this.statuses = new HashMap<>();
   }
 
