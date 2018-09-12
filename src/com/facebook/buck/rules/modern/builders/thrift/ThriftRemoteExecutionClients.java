@@ -65,7 +65,6 @@ class ThriftRemoteExecutionClients implements Closeable {
 
   private final String casHost;
   private final int casPort;
-
   private final Object internalStateLock = new Object();
 
   @GuardedBy("internalStateLock")

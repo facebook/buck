@@ -28,10 +28,10 @@ import com.facebook.thrift.protocol.*;
 @SuppressWarnings({ "unused", "serial" })
 public class ExecuteRequestMetadata implements TBase, java.io.Serializable, Cloneable, Comparable<ExecuteRequestMetadata> {
   private static final TStruct STRUCT_DESC = new TStruct("ExecuteRequestMetadata");
-  private static final TField ARTILLERY_TRACE_ID_FIELD_DESC = new TField("artillery_trace_id", TType.STRING, (short)1);
+  private static final TField TRACE_ID_FIELD_DESC = new TField("trace_id", TType.STRING, (short)1);
 
-  public String artillery_trace_id;
-  public static final int ARTILLERY_TRACE_ID = 1;
+  public String trace_id;
+  public static final int TRACE_ID = 1;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -39,7 +39,7 @@ public class ExecuteRequestMetadata implements TBase, java.io.Serializable, Clon
   public static final Map<Integer, FieldMetaData> metaDataMap;
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
-    tmpMetaDataMap.put(ARTILLERY_TRACE_ID, new FieldMetaData("artillery_trace_id", TFieldRequirementType.OPTIONAL, 
+    tmpMetaDataMap.put(TRACE_ID, new FieldMetaData("trace_id", TFieldRequirementType.OPTIONAL, 
         new FieldValueMetaData(TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
@@ -52,18 +52,18 @@ public class ExecuteRequestMetadata implements TBase, java.io.Serializable, Clon
   }
 
   public ExecuteRequestMetadata(
-    String artillery_trace_id)
+    String trace_id)
   {
     this();
-    this.artillery_trace_id = artillery_trace_id;
+    this.trace_id = trace_id;
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
   public ExecuteRequestMetadata(ExecuteRequestMetadata other) {
-    if (other.isSetArtillery_trace_id()) {
-      this.artillery_trace_id = TBaseHelper.deepCopy(other.artillery_trace_id);
+    if (other.isSetTrace_id()) {
+      this.trace_id = TBaseHelper.deepCopy(other.trace_id);
     }
   }
 
@@ -76,37 +76,37 @@ public class ExecuteRequestMetadata implements TBase, java.io.Serializable, Clon
     return new ExecuteRequestMetadata(this);
   }
 
-  public String  getArtillery_trace_id() {
-    return this.artillery_trace_id;
+  public String  getTrace_id() {
+    return this.trace_id;
   }
 
-  public ExecuteRequestMetadata setArtillery_trace_id(String artillery_trace_id) {
-    this.artillery_trace_id = artillery_trace_id;
+  public ExecuteRequestMetadata setTrace_id(String trace_id) {
+    this.trace_id = trace_id;
     return this;
   }
 
-  public void unsetArtillery_trace_id() {
-    this.artillery_trace_id = null;
+  public void unsetTrace_id() {
+    this.trace_id = null;
   }
 
-  // Returns true if field artillery_trace_id is set (has been assigned a value) and false otherwise
-  public boolean isSetArtillery_trace_id() {
-    return this.artillery_trace_id != null;
+  // Returns true if field trace_id is set (has been assigned a value) and false otherwise
+  public boolean isSetTrace_id() {
+    return this.trace_id != null;
   }
 
-  public void setArtillery_trace_idIsSet(boolean value) {
+  public void setTrace_idIsSet(boolean value) {
     if (!value) {
-      this.artillery_trace_id = null;
+      this.trace_id = null;
     }
   }
 
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
-    case ARTILLERY_TRACE_ID:
+    case TRACE_ID:
       if (value == null) {
-        unsetArtillery_trace_id();
+        unsetTrace_id();
       } else {
-        setArtillery_trace_id((String)value);
+        setTrace_id((String)value);
       }
       break;
 
@@ -117,8 +117,8 @@ public class ExecuteRequestMetadata implements TBase, java.io.Serializable, Clon
 
   public Object getFieldValue(int fieldID) {
     switch (fieldID) {
-    case ARTILLERY_TRACE_ID:
-      return getArtillery_trace_id();
+    case TRACE_ID:
+      return getTrace_id();
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -128,8 +128,8 @@ public class ExecuteRequestMetadata implements TBase, java.io.Serializable, Clon
   // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
   public boolean isSet(int fieldID) {
     switch (fieldID) {
-    case ARTILLERY_TRACE_ID:
-      return isSetArtillery_trace_id();
+    case TRACE_ID:
+      return isSetTrace_id();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -150,12 +150,12 @@ public class ExecuteRequestMetadata implements TBase, java.io.Serializable, Clon
     if (this == that)
       return true;
 
-    boolean this_present_artillery_trace_id = true && this.isSetArtillery_trace_id();
-    boolean that_present_artillery_trace_id = true && that.isSetArtillery_trace_id();
-    if (this_present_artillery_trace_id || that_present_artillery_trace_id) {
-      if (!(this_present_artillery_trace_id && that_present_artillery_trace_id))
+    boolean this_present_trace_id = true && this.isSetTrace_id();
+    boolean that_present_trace_id = true && that.isSetTrace_id();
+    if (this_present_trace_id || that_present_trace_id) {
+      if (!(this_present_trace_id && that_present_trace_id))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.artillery_trace_id, that.artillery_trace_id))
+      if (!TBaseHelper.equalsNobinary(this.trace_id, that.trace_id))
         return false;
     }
 
@@ -179,11 +179,11 @@ public class ExecuteRequestMetadata implements TBase, java.io.Serializable, Clon
     }
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetArtillery_trace_id()).compareTo(other.isSetArtillery_trace_id());
+    lastComparison = Boolean.valueOf(isSetTrace_id()).compareTo(other.isSetTrace_id());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = TBaseHelper.compareTo(artillery_trace_id, other.artillery_trace_id);
+    lastComparison = TBaseHelper.compareTo(trace_id, other.trace_id);
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -201,9 +201,9 @@ public class ExecuteRequestMetadata implements TBase, java.io.Serializable, Clon
       }
       switch (field.id)
       {
-        case ARTILLERY_TRACE_ID:
+        case TRACE_ID:
           if (field.type == TType.STRING) {
-            this.artillery_trace_id = iprot.readString();
+            this.trace_id = iprot.readString();
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -225,10 +225,10 @@ public class ExecuteRequestMetadata implements TBase, java.io.Serializable, Clon
     validate();
 
     oprot.writeStructBegin(STRUCT_DESC);
-    if (this.artillery_trace_id != null) {
-      if (isSetArtillery_trace_id()) {
-        oprot.writeFieldBegin(ARTILLERY_TRACE_ID_FIELD_DESC);
-        oprot.writeString(this.artillery_trace_id);
+    if (this.trace_id != null) {
+      if (isSetTrace_id()) {
+        oprot.writeFieldBegin(TRACE_ID_FIELD_DESC);
+        oprot.writeString(this.trace_id);
         oprot.writeFieldEnd();
       }
     }
@@ -257,16 +257,16 @@ String space = prettyPrint ? " " : "";
     sb.append(newLine);
     boolean first = true;
 
-    if (isSetArtillery_trace_id())
+    if (isSetTrace_id())
     {
       sb.append(indentStr);
-      sb.append("artillery_trace_id");
+      sb.append("trace_id");
       sb.append(space);
       sb.append(":").append(space);
-      if (this. getArtillery_trace_id() == null) {
+      if (this. getTrace_id() == null) {
         sb.append("null");
       } else {
-        sb.append(TBaseHelper.toString(this. getArtillery_trace_id(), indent + 1, prettyPrint));
+        sb.append(TBaseHelper.toString(this. getTrace_id(), indent + 1, prettyPrint));
       }
       first = false;
     }

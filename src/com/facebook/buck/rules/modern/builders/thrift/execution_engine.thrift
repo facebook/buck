@@ -551,7 +551,7 @@ struct ResultsCachePolicy {
 }
 
 struct ExecuteRequestMetadata {
-  1: optional string artillery_trace_id;
+  1: optional string trace_id;
 }
 
 /*

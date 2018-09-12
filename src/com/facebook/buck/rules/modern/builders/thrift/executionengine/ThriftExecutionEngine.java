@@ -32,6 +32,7 @@ import com.facebook.remoteexecution.cas.ReadBlobResponse;
 import com.facebook.remoteexecution.executionengine.ActionResult;
 import com.facebook.remoteexecution.executionengine.ExecuteOperation;
 import com.facebook.remoteexecution.executionengine.ExecuteRequest;
+import com.facebook.remoteexecution.executionengine.ExecuteRequestMetadata;
 import com.facebook.remoteexecution.executionengine.ExecuteResponse;
 import com.facebook.remoteexecution.executionengine.ExecutionEngine;
 import com.facebook.remoteexecution.executionengine.ExecutionEngineException;
@@ -59,11 +60,15 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
 
   private final ExecutionEngine.Iface reeClient;
   private final ContentAddressableStorage.Iface casClient;
+  private final Optional<String> traceId;
 
   public ThriftExecutionEngine(
-      ExecutionEngine.Iface reeClient, ContentAddressableStorage.Iface casClient) {
+      ExecutionEngine.Iface reeClient,
+      ContentAddressableStorage.Iface casClient,
+      Optional<String> traceId) {
     this.reeClient = reeClient;
     this.casClient = casClient;
+    this.traceId = traceId;
   }
 
   @Override
@@ -72,6 +77,9 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
 
     ExecuteRequest request =
         new ExecuteRequest(SKIP_CACHE_LOOKUP, ThriftProtocol.get(actionDigest));
+    ExecuteRequestMetadata metadata = new ExecuteRequestMetadata();
+    traceId.ifPresent(metadata::setTrace_id);
+    request.setMetadata(metadata);
 
     ExecuteResponse response;
     try {

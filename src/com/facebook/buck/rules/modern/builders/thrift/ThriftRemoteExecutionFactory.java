@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.modern.builders.IsolatedExecution;
 import com.facebook.thrift.transport.TTransportException;
 import java.io.IOException;
+import java.util.Optional;
 
 /** Factory for creating thrift-based strategies. */
 public class ThriftRemoteExecutionFactory {
@@ -30,13 +31,14 @@ public class ThriftRemoteExecutionFactory {
       int remoteExecutionEnginePort,
       String casHost,
       int casPort,
+      Optional<String> traceId,
       BuckEventBus eventBus)
       throws IOException {
     ThriftRemoteExecutionClients clients =
         new ThriftRemoteExecutionClients(
             remoteExecutionEngineHost, remoteExecutionEnginePort, casHost, casPort);
     try {
-      return new ThriftRemoteExecution(eventBus, clients) {
+      return new ThriftRemoteExecution(eventBus, clients, traceId) {
         @Override
         public void close() throws IOException {
           clients.close();

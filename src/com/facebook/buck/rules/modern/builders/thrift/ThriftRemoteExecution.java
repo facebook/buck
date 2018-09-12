@@ -25,6 +25,7 @@ import com.facebook.buck.rules.modern.builders.thrift.cas.ThriftContentAddressed
 import com.facebook.buck.rules.modern.builders.thrift.executionengine.ThriftExecutionEngine;
 import com.facebook.thrift.transport.TTransportException;
 import java.io.IOException;
+import java.util.Optional;
 
 /** A RemoteExecution that sends jobs to a thrift-based remote execution service. */
 public class ThriftRemoteExecution extends RemoteExecution {
@@ -33,13 +34,15 @@ public class ThriftRemoteExecution extends RemoteExecution {
   private final ThriftContentAddressedStorage storage;
   private final ThriftExecutionEngine remoteExecutionService;
 
-  ThriftRemoteExecution(BuckEventBus eventBus, ThriftRemoteExecutionClients clients)
+  ThriftRemoteExecution(
+      BuckEventBus eventBus, ThriftRemoteExecutionClients clients, Optional<String> traceId)
       throws IOException, TTransportException {
     super(eventBus, PROTOCOL);
     this.storage =
         new ThriftContentAddressedStorage(clients.createCasClient(), clients.createCasClient());
     this.remoteExecutionService =
-        new ThriftExecutionEngine(clients.createExecutionEngineClient(), clients.createCasClient());
+        new ThriftExecutionEngine(
+            clients.createExecutionEngineClient(), clients.createCasClient(), traceId);
   }
 
   @Override

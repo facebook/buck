@@ -78,7 +78,8 @@ public class ModernBuildRuleBuilderFactory {
                   config.getRemoteHost(),
                   config.getRemotePort(),
                   config.getCasHost(),
-                  config.getCasPort()));
+                  config.getCasPort(),
+                  config.getTraceID()));
         case DEBUG_RECONSTRUCT:
           return Optional.of(
               createReconstructing(new SourcePathRuleFinder(resolver), cellResolver, rootCell));
@@ -218,11 +219,17 @@ public class ModernBuildRuleBuilderFactory {
       String remoteExecutionEngineHost,
       int remoteExecutionEnginePort,
       String casHost,
-      int casPort)
+      int casPort,
+      Optional<String> traceId)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
         ThriftRemoteExecutionFactory.createRemote(
-            remoteExecutionEngineHost, remoteExecutionEnginePort, casHost, casPort, eventBus),
+            remoteExecutionEngineHost,
+            remoteExecutionEnginePort,
+            casHost,
+            casPort,
+            traceId,
+            eventBus),
         ruleFinder,
         cellResolver,
         rootCell,

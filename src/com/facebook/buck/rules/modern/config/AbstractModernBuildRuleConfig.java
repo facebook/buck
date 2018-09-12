@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Various configuration for ModernBuildRule behavior. */
@@ -47,6 +48,10 @@ abstract class AbstractModernBuildRuleConfig implements ConfigView<BuckConfig> {
 
   public int getCasPort() {
     return getDelegate().getInteger(SECTION, "cas_port").orElse(19031);
+  }
+
+  public Optional<String> getTraceID() {
+    return getDelegate().getValue(SECTION, "trace_id");
   }
 
   /**
