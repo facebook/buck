@@ -43,11 +43,13 @@ import com.facebook.buck.rules.modern.CustomClassSerialization;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.Deserializer;
 import com.facebook.buck.rules.modern.Deserializer.DataProvider;
+import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
 import com.facebook.buck.rules.modern.Serializer;
 import com.facebook.buck.rules.modern.Serializer.Delegate;
 import com.facebook.buck.rules.modern.SourcePathResolverSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.util.Memoizer;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -322,7 +324,10 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
   @Test
   public void customFieldBehavior() throws Exception {
-    test(new WithCustomFieldBehavior());
+    WithCustomFieldBehavior initialInstance = new WithCustomFieldBehavior();
+    initialInstance.memoizer.get(() -> "bad");
+    WithCustomFieldBehavior newInstance = test(initialInstance);
+    assertEquals("okay", newInstance.memoizer.get(() -> "okay"));
   }
 
   @Override
@@ -348,6 +353,9 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     @AddToRuleKey
     @CustomFieldBehavior(SpecialFieldSerialization.class)
     private final ImmutableList<String> paths = ImmutableList.of("Hello", " ", "world", "!");
+
+    @CustomFieldBehavior(EmptyMemoizerDeserialization.class)
+    private final Memoizer memoizer = new Memoizer();
   }
 
   private static class SpecialFieldSerialization
