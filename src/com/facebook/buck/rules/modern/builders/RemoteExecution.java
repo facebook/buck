@@ -202,8 +202,10 @@ public abstract class RemoteExecution implements IsolatedExecution {
       }
     } else {
       LOG.error(
-          "Execution returned non-zero exit code: [%d]. Skipping output materialization.",
-          result.getExitCode());
+          "Failed to build target [%s] with exit code [%d]. stderr: %s",
+          buildTarget.getFullyQualifiedName(),
+          result.getExitCode(),
+          result.getStderr().orElse("<empty>"));
       throw StepFailedException.createForFailingStepWithExitCode(
           new AbstractExecutionStep("remote_execution") {
             @Override
