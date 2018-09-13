@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -30,10 +31,18 @@ import java.util.function.Function;
 
 /** {@link ConvertingPipeline} that computes a node in a {@link SimplePerfEvent} scope. */
 public abstract class ConvertingPipelineWithPerfEventScope<F, T> extends ConvertingPipeline<F, T> {
+  private static final Logger LOG = Logger.get(ConvertingPipelineWithPerfEventScope.class);
 
   private final BuckEventBus eventBus;
   private final SimplePerfEvent.Scope perfEventScope;
   private final PerfEventId perfEventId;
+
+  /**
+   * minimum duration time for performance events to be logged (for use with {@link
+   * SimplePerfEvent}s). This is on the base class to make it simpler to enable verbose tracing for
+   * all of the parsing pipelines.
+   */
+  private final long minimumPerfEventTimeMs;
 
   public ConvertingPipelineWithPerfEventScope(
       ListeningExecutorService executorService,
@@ -45,6 +54,7 @@ public abstract class ConvertingPipelineWithPerfEventScope<F, T> extends Convert
     this.eventBus = eventBus;
     this.perfEventScope = perfEventScope;
     this.perfEventId = perfEventId;
+    this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 1;
   }
 
   @Override
@@ -58,12 +68,12 @@ public abstract class ConvertingPipelineWithPerfEventScope<F, T> extends Convert
             "target",
             buildTarget,
             perfEventScope,
-            getMinimumPerfEventTimeMs(),
+            minimumPerfEventTimeMs,
             TimeUnit.MILLISECONDS)) {
       Function<PerfEventId, Scope> perfEventScopeFunction =
           perfEventId ->
               SimplePerfEvent.scopeIgnoringShortEvents(
-                  eventBus, perfEventId, scope, getMinimumPerfEventTimeMs(), TimeUnit.MILLISECONDS);
+                  eventBus, perfEventId, scope, minimumPerfEventTimeMs, TimeUnit.MILLISECONDS);
 
       return computeNodeInScope(cell, buildTarget, rawNode, perfEventScopeFunction);
     }

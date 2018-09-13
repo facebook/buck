@@ -22,8 +22,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
@@ -41,14 +39,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @param <T> The type of node this pipeline will produce (raw nodes, target nodes, etc)
  */
 public abstract class ParsePipeline<T> implements AutoCloseable {
-  private static final Logger LOG = Logger.get(ParsePipeline.class);
 
   private final AtomicBoolean shuttingDown;
-  private final long minimumPerfEventTimeMs;
 
   public ParsePipeline() {
     this.shuttingDown = new AtomicBoolean(false);
-    this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 1;
   }
 
   /**
@@ -144,14 +139,5 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
 
   protected final boolean shuttingDown() {
     return shuttingDown.get();
-  }
-
-  /**
-   * @return minimum duration time for performance events to be logged ( for use with {@link
-   *     SimplePerfEvent}s). This is on the base class to make it simpler to enable verbose tracing
-   *     for all of the parsing pipelines.
-   */
-  protected final long getMinimumPerfEventTimeMs() {
-    return minimumPerfEventTimeMs;
   }
 }
