@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.6-SNAPSHOT</version>
+  <version>3.5.1-SNAPSHOT</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -20,8 +20,9 @@
   ]]></description>
 
   <change-notes><![CDATA[
-<h3>3.6</h3>
+<h3>3.5.1</h3>
 <ul>
+  <li>Fix bootstrapping issues with project-level prefs in 3.5</li>
 </ul>
 <h3>3.5</h3>
 <ul>
