@@ -72,15 +72,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
                       getBuildTarget(cell.getRoot(), cell.getCanonicalName(), buildFile, from);
                   allNodeJobs.add(
                       cache.getJobWithCacheLookup(
-                          cell,
-                          target,
-                          () -> {
-                            if (shuttingDown()) {
-                              return Futures.immediateCancelledFuture();
-                            }
-                            return dispatchComputeNode(cell, target, from);
-                          },
-                          eventBus));
+                          cell, target, () -> dispatchComputeNode(cell, target, from), eventBus));
                 }
               }
 
