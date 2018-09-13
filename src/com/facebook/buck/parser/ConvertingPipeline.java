@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -67,13 +66,11 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
               ImmutableList.Builder<ListenableFuture<T>> allNodeJobs = ImmutableList.builder();
 
               for (F from : allToConvert) {
-                if (isValid(from)) {
-                  BuildTarget target =
-                      getBuildTarget(cell.getRoot(), cell.getCanonicalName(), buildFile, from);
-                  allNodeJobs.add(
-                      cache.getJobWithCacheLookup(
-                          cell, target, () -> dispatchComputeNode(cell, target, from), eventBus));
-                }
+                BuildTarget target =
+                    getBuildTarget(cell.getRoot(), cell.getCanonicalName(), buildFile, from);
+                allNodeJobs.add(
+                    cache.getJobWithCacheLookup(
+                        cell, target, () -> dispatchComputeNode(cell, target, from), eventBus));
               }
 
               return Futures.allAsList(allNodeJobs.build());
@@ -96,10 +93,6 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
         eventBus);
   }
 
-  protected boolean isValid(F from) {
-    return from != null;
-  }
-
   protected abstract BuildTarget getBuildTarget(
       Path root, Optional<String> cellName, Path buildFile, F from);
 
@@ -117,10 +110,6 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
     // TODO(csarbora): would be nice to have the first half of this function pulled up into base
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
-    }
-
-    if (!isValid(from)) {
-      throw new NoSuchBuildTargetException(buildTarget);
     }
 
     Path pathToCheck = buildTarget.getBasePath();
