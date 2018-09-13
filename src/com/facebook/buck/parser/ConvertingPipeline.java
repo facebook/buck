@@ -16,7 +16,6 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
@@ -107,18 +106,9 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
 
   private ListenableFuture<T> dispatchComputeNode(Cell cell, BuildTarget buildTarget, F from)
       throws BuildTargetException {
-    // TODO(csarbora): would be nice to have the first half of this function pulled up into base
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
     }
-
-    Path pathToCheck = buildTarget.getBasePath();
-    if (cell.getFilesystem().isIgnored(pathToCheck)) {
-      throw new HumanReadableException(
-          "Content of '%s' cannot be built because" + " it is defined in an ignored directory.",
-          pathToCheck);
-    }
-
     return Futures.immediateFuture(computeNode(cell, buildTarget, from));
   }
 }

@@ -16,6 +16,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
@@ -117,6 +118,13 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
     return Futures.transformAsync(
         getAllNodesJob(cell, cell.getAbsolutePathToBuildFile(buildTarget)),
         input -> {
+          Path pathToCheck = buildTarget.getBasePath();
+          if (cell.getFilesystem().isIgnored(pathToCheck)) {
+            throw new HumanReadableException(
+                "Content of '%s' cannot be built because it is defined in an ignored directory.",
+                pathToCheck);
+          }
+
           for (Map<String, Object> rawNode : input) {
             Object shortName = rawNode.get("name");
             if (buildTarget.getShortName().equals(shortName)) {
