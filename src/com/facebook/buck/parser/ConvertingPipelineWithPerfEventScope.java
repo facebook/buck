@@ -31,6 +31,7 @@ import java.util.function.Function;
 /** {@link ConvertingPipeline} that computes a node in a {@link SimplePerfEvent} scope. */
 public abstract class ConvertingPipelineWithPerfEventScope<F, T> extends ConvertingPipeline<F, T> {
 
+  private final BuckEventBus eventBus;
   private final SimplePerfEvent.Scope perfEventScope;
   private final PerfEventId perfEventId;
 
@@ -41,6 +42,7 @@ public abstract class ConvertingPipelineWithPerfEventScope<F, T> extends Convert
       Scope perfEventScope,
       PerfEventId perfEventId) {
     super(executorService, cache, eventBus);
+    this.eventBus = eventBus;
     this.perfEventScope = perfEventScope;
     this.perfEventId = perfEventId;
   }

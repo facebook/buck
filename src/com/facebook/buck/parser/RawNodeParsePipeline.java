@@ -36,6 +36,7 @@ import java.util.Optional;
 
 public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
+  private final BuckEventBus eventBus;
   private final PipelineNodeCache<Path, ImmutableSet<Map<String, Object>>> cache;
   private final ListeningExecutorService executorService;
   private final ProjectBuildFileParserPool projectBuildFileParserPool;
@@ -47,7 +48,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
       Watchman watchman) {
-    super(eventBus);
+    this.eventBus = eventBus;
     this.executorService = executorService;
     this.cache = new PipelineNodeCache<>(cache);
     this.projectBuildFileParserPool = projectBuildFileParserPool;

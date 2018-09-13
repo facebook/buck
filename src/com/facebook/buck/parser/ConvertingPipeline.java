@@ -39,6 +39,7 @@ import java.util.Optional;
  * @param <T> Type to convert to (TargetNode, for example)
  */
 public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
+  private final BuckEventBus eventBus;
   private final PipelineNodeCache<BuildTarget, T> cache;
   protected final ListeningExecutorService executorService;
 
@@ -46,7 +47,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
       ListeningExecutorService executorService,
       Cache<BuildTarget, T> cache,
       BuckEventBus eventBus) {
-    super(eventBus);
+    this.eventBus = eventBus;
     this.cache = new PipelineNodeCache<>(cache);
     this.executorService = executorService;
   }

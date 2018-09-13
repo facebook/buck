@@ -23,7 +23,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -46,12 +45,10 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
 
   private final AtomicBoolean shuttingDown;
   private final long minimumPerfEventTimeMs;
-  protected final BuckEventBus eventBus;
 
-  public ParsePipeline(BuckEventBus eventBus) {
+  public ParsePipeline() {
     this.shuttingDown = new AtomicBoolean(false);
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 1;
-    this.eventBus = eventBus;
   }
 
   /**
