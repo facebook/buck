@@ -115,8 +115,8 @@ public class ThrowingPackageBoundaryCheckerTest {
     thrown.expectMessage(
         "Target '//a/b:c' refers to file '"
             + MorePaths.pathWithPlatformSeparators("a/b/Test.java")
-            + "', which doesn't belong to any package");
-
+            + "', which doesn't belong to any package. "
+            + "More info at:\nhttps://buckbuild.com/about/overview.html\n");
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build(),
         BuildTargetFactory.newInstance("//a/b:c"),

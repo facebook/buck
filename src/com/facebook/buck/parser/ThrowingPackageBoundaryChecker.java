@@ -59,7 +59,8 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
       if (!ancestor.isPresent()) {
         throw new IllegalStateException(
             String.format(
-                "Target '%s' refers to file '%s', which doesn't belong to any package",
+                "Target '%s' refers to file '%s', which doesn't belong to any package. "
+                    + "More info at:\nhttps://buckbuild.com/about/overview.html\n",
                 target, path));
       }
       if (!ancestor.get().equals(basePath)) {
