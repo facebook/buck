@@ -23,6 +23,7 @@
 <h3>3.5.1</h3>
 <ul>
   <li>Fix bootstrapping issues with project-level prefs in 3.5</li>
+  <li>Improved click-through navigation in the buck editor</li>
 </ul>
 <h3>3.5</h3>
 <ul>
