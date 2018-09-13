@@ -43,7 +43,13 @@ LINE_COMMENT=#.*
 GLOB_KEYWORD=(glob|subdir_glob)
 LOAD_KEYWORD=load
 MACROS=[A-Z_]([A-Z0-9_])+
-DOC_STRING=\"\"\".*\"\"\"?
+
+ANY_ESCAPE_SEQUENCE = \\[^]
+ONE_OR_TWO_QUOTES = (\"[^\\\"]) | (\"\\[^]) | (\"\"[^\\\"]) | (\"\"\\[^])
+THREE_QUOTES = (\"\"\")
+QUOTED_STRING_CHARS = [^\\\"] | {ANY_ESCAPE_SEQUENCE} | {ONE_OR_TWO_QUOTES}
+DOC_STRING = {THREE_QUOTES} {QUOTED_STRING_CHARS}* {THREE_QUOTES}?
+
 DOUBLE_QUOTED_STRING=\"([^\\\"\r\n]|\\[^\r\n])*\"?
 SINGLE_QUOTED_STRING='([^\\'\r\n]|\\[^\r\n])*'?
 NUMBER=-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]*)?

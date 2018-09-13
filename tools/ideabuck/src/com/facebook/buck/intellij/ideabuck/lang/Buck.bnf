@@ -50,7 +50,6 @@
 
     MACROS = "regexp:[A-Z_]([A-Z0-9_])+"
 
-    DOC_STRING="regexp:\"\"\".*\"\"\"?"
     DOUBLE_QUOTED_STRING="regexp:\"([^\\\"\r\n]|\\[^\r\n])*\"?"
     SINGLE_QUOTED_STRING="regexp:'([^\\\'\r\n]|\\[^\r\n])*'?"
 
