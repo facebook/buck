@@ -617,7 +617,6 @@ public final class Main {
     // If this command is not read only, acquire the command semaphore to become the only executing
     // read/write command. Early out will also help to not rotate log on each BUSY status which
     // happens in setupLogging().
-    boolean shouldCleanUpTrash = false;
     try (CloseableWrapper<Semaphore> semaphore = getSemaphoreWrapper(command)) {
       if (!command.isReadOnly() && semaphore == null) {
         LOG.warn("Buck server was busy executing a command. Maybe retrying later will help.");
@@ -710,7 +709,6 @@ public final class Main {
               filesystem.getBuckPaths().getGenDir(),
               filesystem.getBuckPaths().getScratchDir(),
               filesystem.getBuckPaths().getResDir());
-          shouldCleanUpTrash = true;
           filesystem.mkdirs(filesystem.getBuckPaths().getCurrentVersionFile().getParent());
           filesystem.writeContentsToPath(
               ruleKeyConfiguration.getCoreKey(), filesystem.getBuckPaths().getCurrentVersionFile());
@@ -780,7 +778,7 @@ public final class Main {
                       rootCell, knownRuleTypesProvider, watchman, console))
               : Optional.empty();
 
-      if (!daemon.isPresent() && shouldCleanUpTrash) {
+      if (!daemon.isPresent()) {
         // Clean up the trash on a background thread if this was a
         // non-buckd read-write command. (We don't bother waiting
         // for it to complete; the thread is a daemon thread which
@@ -1251,7 +1249,7 @@ public final class Main {
           // signal nailgun that we are not interested in client disconnect events anymore
           context.ifPresent(c -> c.removeAllClientListeners());
 
-          if (daemon.isPresent() && shouldCleanUpTrash) {
+          if (daemon.isPresent()) {
             // Clean up the trash in the background if this was a buckd
             // read-write command. (We don't bother waiting for it to
             // complete; the cleaner will ensure subsequent cleans are
