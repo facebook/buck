@@ -3,15 +3,18 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
+import shutil
 import subprocess
 
 # The location of the generate grammar kit script
 DIR = os.path.dirname(__file__)
 
 # The location of the plugin directory
-PLUGIN_PATH = os.path.join(DIR, "..")
+PLUGIN_PATH = os.path.abspath(os.path.join(DIR, ".."))
 # The location of the grammar-kit directory
-GRAMMAR_KIT = os.path.join(DIR, "../../../third-party/java/grammar-kit/")
+GRAMMAR_KIT = os.path.abspath(
+    os.path.join(DIR, "../../../third-party/java/grammar-kit/")
+)
 
 OUT_DIR = os.path.join(PLUGIN_PATH, "gen")
 FLEX_OUT_DIR = os.path.join(OUT_DIR, "com/facebook/buck/intellij/ideabuck/lang")
@@ -27,10 +30,15 @@ BNF_FILE = os.path.join(
     PLUGIN_PATH, "src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf"
 )
 
-print(FLEX_OUT_DIR)
 
-subprocess.call(["java", "-jar", GRAMMAR_KIT_JAR, OUT_DIR, BNF_FILE])
-subprocess.call(
+def subprocess_call(cmd):
+    print("Running: %s" % (" ".join(cmd)))
+    subprocess.call(cmd)
+
+
+shutil.rmtree(OUT_DIR, ignore_errors=True)
+subprocess_call(["java", "-jar", GRAMMAR_KIT_JAR, OUT_DIR, BNF_FILE])
+subprocess_call(
     [
         "java",
         "-jar",
