@@ -85,11 +85,7 @@ public class AndroidPackageableCollector {
     this.apkModuleGraph = apkModuleGraph;
     apkModuleGraph
         .getAPKModules()
-        .stream()
-        .forEach(
-            module -> {
-              resourceCollector.put(module, new ResourceCollector());
-            });
+        .forEach(module -> resourceCollector.put(module, new ResourceCollector()));
   }
 
   /** Add packageables */
@@ -275,12 +271,10 @@ public class AndroidPackageableCollector {
 
     apkModuleGraph
         .getAPKModules()
-        .stream()
         .forEach(
-            apkModule -> {
-              collectionBuilder.putResourceDetails(
-                  apkModule, resourceCollector.get(apkModule).getResourceDetails());
-            });
+            apkModule ->
+                collectionBuilder.putResourceDetails(
+                    apkModule, resourceCollector.get(apkModule).getResourceDetails()));
     return collectionBuilder.build();
   }
 

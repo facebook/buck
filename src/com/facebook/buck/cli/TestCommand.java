@@ -279,10 +279,8 @@ public class TestCommand extends BuildCommand {
     Optional<ImmutableList<String>> coverageExcludes =
         params.getBuckConfig().getOptionalListWithoutComments("test", "coverageExcludes", ',');
 
-    coverageIncludes.ifPresent(
-        strings -> builder.setCoverageIncludes(strings.stream().collect(Collectors.joining(","))));
-    coverageExcludes.ifPresent(
-        strings -> builder.setCoverageExcludes(strings.stream().collect(Collectors.joining(","))));
+    coverageIncludes.ifPresent(strings -> builder.setCoverageIncludes(String.join(",", strings)));
+    coverageExcludes.ifPresent(strings -> builder.setCoverageExcludes(String.join(",", strings)));
 
     return builder.build();
   }
@@ -779,7 +777,7 @@ public class TestCommand extends BuildCommand {
       }
 
       if (parsed.size() != 0) {
-        String invalidFormats = parsed.stream().collect(Collectors.joining(","));
+        String invalidFormats = String.join(",", parsed);
         if (option.isArgument()) {
           throw new CmdLineException(
               owner, Messages.ILLEGAL_OPERAND, option.toString(), invalidFormats);

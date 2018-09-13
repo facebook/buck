@@ -21,8 +21,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * * Provides simplified access to settings from the version_control section of a .buckconfig file.
@@ -78,12 +76,12 @@ public class VersionControlBuckConfig {
         throw new HumanReadableException(
             "Specified some of the pregenerated version control stats in the configs, "
                 + "but not all: "
-                + Stream.of(
-                        PREGENERATED_CURRENT_REVISION_ID,
-                        PREGENERATED_BASE_BOOKMARKS,
-                        PREGENERATED_BASE_REVISION_ID,
-                        PREGENERATED_BASE_REVISION_TIMESTAMP)
-                    .collect(Collectors.joining(", ")));
+                + String.join(
+                    ", ",
+                    PREGENERATED_CURRENT_REVISION_ID,
+                    PREGENERATED_BASE_BOOKMARKS,
+                    PREGENERATED_BASE_REVISION_ID,
+                    PREGENERATED_BASE_REVISION_TIMESTAMP));
       }
       return Optional.of(
           FastVersionControlStats.of(

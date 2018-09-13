@@ -28,8 +28,6 @@
  */
 package com.facebook.buck.jvm.java.coverage;
 
-import static java.util.stream.Collectors.joining;
-
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -124,8 +122,7 @@ public class ReportGenerator {
   private void createReport(IBundleCoverage bundleCoverage) throws IOException {
     Set<String> unknownFormats = Sets.difference(reportFormats, KNOWN_REPORT_FORMATS);
     if (!unknownFormats.isEmpty()) {
-      throw new RuntimeException(
-          "Unable to parse formats: " + reportFormats.stream().collect(joining(",")));
+      throw new RuntimeException("Unable to parse formats: " + String.join(",", reportFormats));
     }
 
     // Create a concrete report visitors based on some supplied

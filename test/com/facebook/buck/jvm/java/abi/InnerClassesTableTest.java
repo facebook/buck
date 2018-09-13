@@ -537,7 +537,7 @@ public class InnerClassesTableTest {
     private final TestCompiler compiler = new TestCompiler();
 
     public Tester setSourceFile(String name, String... lines) throws IOException {
-      compiler.addSourceFileContents(name, Arrays.stream(lines).collect(Collectors.joining("\n")));
+      compiler.addSourceFileContents(name, String.join("\n", lines));
       return this;
     }
 

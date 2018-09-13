@@ -335,14 +335,13 @@ public class Config {
     return getListWithoutComments(section, field, pairSeparatorChar)
         .stream()
         .map(kvp -> Splitter.on(keyValueSeparator).trimResults().splitToList(kvp))
-        .map(
+        .peek(
             kvp -> {
               if (kvp.size() != 2) {
                 throw new HumanReadableException(
                     ".buckconfig %s.%s: Got value %s which should have a key and value, separated by %s",
                     section, field, getValue(section, field), keyValueSeparator);
               }
-              return kvp;
             })
         .collect(ImmutableMap.toImmutableMap(kvp -> kvp.get(0), kvp -> kvp.get(1)));
   }

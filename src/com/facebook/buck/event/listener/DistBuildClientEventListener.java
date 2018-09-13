@@ -19,6 +19,7 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResult;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResultEvent;
 import com.facebook.buck.distributed.DistBuildClientCacheResult;
+import com.facebook.buck.distributed.DistBuildClientCacheResult.Builder;
 import com.facebook.buck.distributed.DistBuildClientCacheResultEvent;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
 import com.facebook.buck.event.BuckEventListener;
@@ -27,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -89,12 +91,10 @@ public class DistBuildClientEventListener implements BuckEventListener {
     }
 
     List<DistBuildClientCacheResult> cacheResults =
-        cacheResultsByKey
-            .values()
+        new HashSet<>(
+                cacheResultsByKey.values()) // deduplicate builders pointed to by multiple keys
             .stream()
-            .collect(Collectors.toSet()) // deduplicate builders pointed to by multiple keys
-            .stream()
-            .map(cacheResultBuilder -> cacheResultBuilder.build())
+            .map(Builder::build)
             .collect(Collectors.toList());
 
     return new DistBuildClientCacheResultEvent(cacheResults);

@@ -100,11 +100,7 @@ public class JsLibraryDescriptionTest {
     BuildRule library = scenario.graphBuilder.requireRule(target);
 
     BuildRule[] deps =
-        scenario
-            .graphBuilder
-            .getAllRules(Arrays.asList(depTargets))
-            .stream()
-            .toArray(BuildRule[]::new);
+        scenario.graphBuilder.getAllRules(Arrays.asList(depTargets)).toArray(new BuildRule[0]);
     assertThat(library.getBuildDeps(), hasItems(deps));
   }
 
@@ -130,15 +126,10 @@ public class JsLibraryDescriptionTest {
                 Stream.of(depTargets)
                     .map(x -> x.withAppendedFlavors(JsFlavors.RELEASE))
                     .collect(ImmutableList.toImmutableList()))
-            .stream()
-            .toArray(BuildRule[]::new);
+            .toArray(new BuildRule[0]);
     assertThat(library.getBuildDeps(), hasItems(flavoredDeps));
     BuildRule[] unflavoredDeps =
-        scenario
-            .graphBuilder
-            .getAllRules(Arrays.asList(depTargets))
-            .stream()
-            .toArray(BuildRule[]::new);
+        scenario.graphBuilder.getAllRules(Arrays.asList(depTargets)).toArray(new BuildRule[0]);
     assertThat(Arrays.asList(unflavoredDeps), everyItem(not(in(library.getBuildDeps()))));
   }
 

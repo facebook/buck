@@ -198,9 +198,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   public Iterable<? extends CompilationUnitTree> parse() throws IOException {
     Iterable<? extends CompilationUnitTree> result = getJavacTask().parse();
     if (!allowCompilationErrors && !diagnosticCollector.getDiagnosticMessages().isEmpty()) {
-      fail(
-          "Compilation failed! Diagnostics:\n"
-              + getDiagnosticMessages().stream().collect(Collectors.joining("\n")));
+      fail("Compilation failed! Diagnostics:\n" + String.join("\n", getDiagnosticMessages()));
     }
     return result;
   }
@@ -227,9 +225,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       throw new AssertionError(e);
     } finally {
       if (!allowCompilationErrors && !diagnosticCollector.getErrorMessages().isEmpty()) {
-        fail(
-            "Compilation failed! Diagnostics:\n"
-                + getDiagnosticMessages().stream().collect(Collectors.joining("\n")));
+        fail("Compilation failed! Diagnostics:\n" + String.join("\n", getDiagnosticMessages()));
       }
     }
   }
@@ -238,9 +234,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     boolean success = getJavacTask().call();
     if (!allowCompilationErrors) {
       if (!success) {
-        fail(
-            "Compilation failed! Diagnostics:\n"
-                + getDiagnosticMessages().stream().collect(Collectors.joining("\n")));
+        fail("Compilation failed! Diagnostics:\n" + String.join("\n", getDiagnosticMessages()));
       }
       assertTrue("Compilation encountered errors", success);
     }

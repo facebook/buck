@@ -377,7 +377,7 @@ public class ActionGraphBuilderTest {
                       assumeNoException(e);
                     }
 
-                    targetNode.getExtraDeps().stream().forEach(graphBuilder::requireRule);
+                    targetNode.getExtraDeps().forEach(graphBuilder::requireRule);
                   }
                   return new FakeBuildRule(targetNode.getBuildTarget());
                 }

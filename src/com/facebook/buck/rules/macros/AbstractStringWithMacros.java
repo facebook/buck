@@ -27,7 +27,6 @@ import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /** A class representing a string containing ordered, embedded, strongly typed macros. */
@@ -59,7 +58,7 @@ abstract class AbstractStringWithMacros implements TargetTranslatable<StringWith
    *     embedded {@link Macro}s.
    */
   public String format(Function<? super MacroContainer, ? extends CharSequence> mapper) {
-    return map(s -> s, mapper).stream().collect(Collectors.joining());
+    return String.join("", map(s -> s, mapper));
   }
 
   /**

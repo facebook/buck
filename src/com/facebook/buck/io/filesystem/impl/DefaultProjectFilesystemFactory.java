@@ -95,7 +95,6 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
     config
         .getListWithoutComments(projectKey, ignoreKey)
-        .stream()
         .forEach(
             input -> {
               // We don't really want to ignore the output directory when doing things like

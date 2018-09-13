@@ -106,12 +106,10 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
       }
 
       // Filter out empty strings and split comma separated parameters.
-      events
-          .stream()
-          .forEach(
-              e ->
-                  subscribedEvents.addAll(
-                      Splitter.on(',').trimResults().omitEmptyStrings().splitToList(e)));
+      events.forEach(
+          e ->
+              subscribedEvents.addAll(
+                  Splitter.on(',').trimResults().omitEmptyStrings().splitToList(e)));
     }
 
     @Override

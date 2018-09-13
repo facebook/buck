@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class HgCmdLineInterface implements VersionControlCmdLineInterface {
@@ -156,7 +155,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     throw new VersionControlCommandFailedException(
         String.format(
             "Unexpected number of lines output from '%s':\n%s",
-            FAST_STATS_COMMAND.stream().collect(Collectors.joining(" ")), output));
+            String.join(" ", FAST_STATS_COMMAND), output));
   }
 
   private FastVersionControlStats parseFastStats(
@@ -165,7 +164,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     String numberOfWordsMismatchFormat =
         String.format(
             "Unexpected number of words output from '%s', expected 3 or more:\n%%s",
-            FAST_STATS_COMMAND.stream().collect(Collectors.joining(" ")));
+            String.join(" ", FAST_STATS_COMMAND));
     String[] currentRevisionWords = currentRevisionLine.split(" ", 4);
     if (currentRevisionWords.length < 3) {
       throw new VersionControlCommandFailedException(

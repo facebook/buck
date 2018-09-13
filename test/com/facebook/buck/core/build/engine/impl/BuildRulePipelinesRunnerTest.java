@@ -349,7 +349,7 @@ public class BuildRulePipelinesRunnerTest {
         List<BuildRule> rules = new ArrayList<>(previousDeps.size() + 1);
         rules.addAll(previousDeps);
         rules.add(previous);
-        return rules.stream().toArray(BuildRule[]::new);
+        return rules.toArray(new BuildRule[0]);
       }
     }
 

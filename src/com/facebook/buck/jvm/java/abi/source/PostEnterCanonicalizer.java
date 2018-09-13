@@ -152,8 +152,7 @@ class PostEnterCanonicalizer {
                         underlyingTypeArgs,
                         treePath,
                         tree == null ? null : ((ParameterizedTypeTree) tree).getTypeArguments())
-                    .stream()
-                    .toArray(TypeMirror[]::new);
+                    .toArray(new TypeMirror[0]);
           }
 
           // While it is not possible to have a DeclaredType with an enclosing ErrorType (the only

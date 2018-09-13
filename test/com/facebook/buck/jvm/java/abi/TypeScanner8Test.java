@@ -22,10 +22,8 @@ import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -152,7 +150,7 @@ public class TypeScanner8Test {
     }
 
     public Tester addExtraCode(String... lines) {
-      extraCode = extraCode + Arrays.stream(lines).collect(Collectors.joining("\n"));
+      extraCode = extraCode + String.join("\n", lines);
       return this;
     }
 
@@ -185,7 +183,7 @@ public class TypeScanner8Test {
       if (typeParameters.isEmpty()) {
         return "";
       }
-      return String.format("<%s>", typeParameters.stream().collect(Collectors.joining(",")));
+      return String.format("<%s>", String.join(",", typeParameters));
     }
   }
 

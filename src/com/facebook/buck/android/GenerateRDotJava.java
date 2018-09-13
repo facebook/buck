@@ -89,9 +89,8 @@ public class GenerateRDotJava extends AbstractBuildRule {
             ruleFinder.filterBuildRuleInputs(
                 resourcesProvider.getOverrideSymbolsPath().orElse(null)))
         .addAll(allResourceDeps);
-    pathToRDotTxtFiles
-        .stream()
-        .forEach(pathToRDotTxt -> builder.addAll(ruleFinder.filterBuildRuleInputs(pathToRDotTxt)));
+    pathToRDotTxtFiles.forEach(
+        pathToRDotTxt -> builder.addAll(ruleFinder.filterBuildRuleInputs(pathToRDotTxt)));
     resourcesProvider.getResourceFilterRule().ifPresent(builder::add);
     duplicateResourceWhitelistPath.ifPresent(
         p -> builder.addAll(ruleFinder.filterBuildRuleInputs(p)));

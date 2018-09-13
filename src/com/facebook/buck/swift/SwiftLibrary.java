@@ -56,7 +56,6 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * An action graph representation of a Swift library from the target graph, providing the various
@@ -248,8 +247,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
     // overhead.
-    return Stream.concat(
-            getDeclaredDeps().stream(), StreamSupport.stream(exportedDeps.spliterator(), false))
+    return Stream.concat(getDeclaredDeps().stream(), exportedDeps.stream())
         .map(BuildRule::getBuildTarget);
   }
 
