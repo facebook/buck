@@ -50,7 +50,7 @@ public class AnsiEnvironmentChecking {
       outputIsTty = System.console() != null;
     }
 
-    boolean result = !isWindows && !isDumbTerminal && outputIsTty;
+    boolean result = !isDumbTerminal && outputIsTty;
 
     LOG.verbose(
         "windows=%s dumbterm=%s nailgun=%s ng stdout=%s ng stderr=%s output tty=%s result=%s",

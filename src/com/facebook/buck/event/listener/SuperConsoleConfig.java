@@ -115,8 +115,7 @@ public class SuperConsoleConfig {
       case DISABLED:
         return false;
       case AUTO:
-        return Platform.WINDOWS != platform
-            && console.getAnsi().isAnsiTerminal()
+        return console.getAnsi().isAnsiTerminal()
             && !console.getVerbosity().shouldPrintCommand()
             && console.getVerbosity().shouldPrintStandardInformation();
       default:

@@ -55,12 +55,12 @@ public class SuperConsoleConfigTest {
     SuperConsoleConfig autoConfig = createConfigWithSuperConsoleValue("auto");
     assertTrue(autoConfig.isEnabled(ansiConsole, Platform.LINUX));
     assertFalse(autoConfig.isEnabled(nonAnsiConsole, Platform.LINUX));
-    assertFalse(autoConfig.isEnabled(ansiConsole, Platform.WINDOWS));
+    assertTrue(autoConfig.isEnabled(ansiConsole, Platform.WINDOWS));
 
     SuperConsoleConfig emptyConfig = new SuperConsoleConfig(FakeBuckConfig.builder().build());
     assertTrue(emptyConfig.isEnabled(ansiConsole, Platform.LINUX));
     assertFalse(emptyConfig.isEnabled(nonAnsiConsole, Platform.LINUX));
-    assertFalse(emptyConfig.isEnabled(ansiConsole, Platform.WINDOWS));
+    assertTrue(emptyConfig.isEnabled(ansiConsole, Platform.WINDOWS));
   }
 
   private SuperConsoleConfig createConfigWithSuperConsoleValue(String enabled) {
