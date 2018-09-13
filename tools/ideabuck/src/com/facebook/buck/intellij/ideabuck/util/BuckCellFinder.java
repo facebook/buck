@@ -21,12 +21,15 @@ import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Ordering;
 import com.intellij.openapi.components.AbstractProjectComponent;
+import com.intellij.openapi.components.PathMacroManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,15 +40,30 @@ public class BuckCellFinder extends AbstractProjectComponent {
   }
 
   private BuckProjectSettingsProvider projectSettingsProvider;
+  private Function<String, String> pathMacroExpander;
 
   public BuckCellFinder(Project project) {
-    this(project, BuckProjectSettingsProvider.getInstance(project));
+    this(
+        project,
+        BuckProjectSettingsProvider.getInstance(project),
+        new Function<String, String>() {
+          final PathMacroManager manager = PathMacroManager.getInstance(project);
+
+          @Override
+          public String apply(String s) {
+            return manager.expandPath(s);
+          }
+        });
   }
 
   @VisibleForTesting
-  BuckCellFinder(Project project, BuckProjectSettingsProvider projectSettingsProvider) {
+  BuckCellFinder(
+      Project project,
+      BuckProjectSettingsProvider projectSettingsProvider,
+      Function<String, String> pathMacroExpander) {
     super(project);
     this.projectSettingsProvider = projectSettingsProvider;
+    this.pathMacroExpander = pathMacroExpander;
   }
 
   /** Returns the {@link BuckCell} containing the given {@link VirtualFile}. */
@@ -74,7 +92,7 @@ public class BuckCellFinder extends AbstractProjectComponent {
         .stream()
         .filter(
             cell -> {
-              String root = cell.getRoot();
+              String root = pathMacroExpander.apply(cell.getRoot());
               return canonicalPath.equals(root) || canonicalPath.startsWith(root + File.separator);
             })
         .max(Ordering.natural().onResultOf(cell -> cell.getRoot().length()));
@@ -85,13 +103,14 @@ public class BuckCellFinder extends AbstractProjectComponent {
     return findBuckCell(file)
         .flatMap(
             cell -> {
-              int cellRootLength = cell.getRoot().length();
+              String cellRoot = pathMacroExpander.apply(cell.getRoot());
+              int cellRootLength = cellRoot.length();
               String buildFilename = cell.getBuildFileName();
               File parent = file;
               while (parent.toString().length() >= cellRootLength) {
                 File buckFile = new File(parent, buildFilename);
                 if (buckFile.isFile()) {
-                  return Optional.ofNullable(buckFile);
+                  return Optional.of(buckFile);
                 }
                 parent = parent.getParentFile();
               }
@@ -109,13 +128,14 @@ public class BuckCellFinder extends AbstractProjectComponent {
     return findBuckCell(file)
         .flatMap(
             cell -> {
-              int cellRootLength = cell.getRoot().length();
+              String cellRoot = pathMacroExpander.apply(cell.getRoot());
+              int cellRootLength = cellRoot.length();
               String buildFilename = cell.getBuildFileName();
               VirtualFile parent = file;
-              while (parent.toString().length() >= cellRootLength) {
+              while (parent.getCanonicalPath().length() >= cellRootLength) {
                 VirtualFile buckFile = parent.findChild(buildFilename);
                 if (buckFile != null && buckFile.exists() && !buckFile.isDirectory()) {
-                  return Optional.ofNullable(buckFile);
+                  return Optional.of(buckFile);
                 }
                 parent = parent.getParent();
               }
@@ -132,27 +152,25 @@ public class BuckCellFinder extends AbstractProjectComponent {
     }
     String cellName = matcher.group(1);
     String pathFromCellRoot = matcher.group(2);
-
-    return findBuckCell(sourceFile)
-        .flatMap(
-            cell -> {
-              if ("".equals(cellName)) {
-                return Optional.of(cell);
-              } else {
-                return projectSettingsProvider
-                    .getCells()
-                    .stream()
-                    .filter(c -> c.getName().equals(cellName))
-                    .findFirst();
-              }
-            })
-        .flatMap(
-            cell -> {
-              return Optional.ofNullable(sourceFile.getFileSystem().findFileByPath(cell.getRoot()))
-                  .map(cellRoot -> cellRoot.findFileByRelativePath(pathFromCellRoot))
-                  .map(subDir -> subDir.findFileByRelativePath(cell.getBuildFileName()))
-                  .filter(VirtualFile::exists);
-            });
+    Optional<BuckCell> targetCell;
+    if ("".equals(cellName)) {
+      targetCell = findBuckCell(sourceFile);
+    } else {
+      targetCell =
+          projectSettingsProvider
+              .getCells()
+              .stream()
+              .filter(c -> c.getName().equals(cellName))
+              .findFirst();
+    }
+    return targetCell.flatMap(
+        cell -> {
+          return Optional.ofNullable(pathMacroExpander.apply(cell.getRoot()))
+              .map(s -> sourceFile.getFileSystem().findFileByPath(s))
+              .map(root -> VfsUtil.findRelativeFile(pathFromCellRoot, root))
+              .map(sub -> VfsUtil.findRelativeFile(cell.getBuildFileName(), sub))
+              .filter(VirtualFile::exists);
+        });
   }
 
   /** Finds an extension file, starting from the given sourceFile. */
@@ -186,7 +204,8 @@ public class BuckCellFinder extends AbstractProjectComponent {
             })
         .flatMap(
             cell -> {
-              return Optional.ofNullable(sourceFile.getFileSystem().findFileByPath(cell.getRoot()))
+              return Optional.ofNullable(pathMacroExpander.apply(cell.getRoot()))
+                  .map(s -> sourceFile.getFileSystem().findFileByPath(s))
                   .map(cellRoot -> cellRoot.findFileByRelativePath(pathFromCellRoot))
                   .map(subDir -> subDir.findFileByRelativePath(extensionFilename))
                   .filter(VirtualFile::exists);
