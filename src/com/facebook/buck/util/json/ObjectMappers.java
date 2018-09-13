@@ -42,7 +42,7 @@ import java.util.function.Function;
 public class ObjectMappers {
 
   // It's important to re-use these objects for perf:
-  // http://wiki.fasterxml.com/JacksonBestPracticesPerformance
+  // https://github.com/FasterXML/jackson-docs/wiki/Presentation:-Jackson-Performance
   public static final ObjectReader READER;
   public static final ObjectWriter WRITER;
 
