@@ -119,23 +119,16 @@ public class UserInput {
       output.printf("[%d]. %s.\n", i, entryFormatter.apply(entries.get(i)));
     }
 
-    Integer index = 0;
     try {
       String response = ask("(input individual number, for example 1 or 2)");
-      if (response.trim().isEmpty()) {
-        index = 0;
-      } else {
-        index = parseOne(response);
-      }
-
+      int index = response.trim().isEmpty() ? 0 : parseOne(response);
       Preconditions.checkArgument(
           index >= 0 && index < entries.size(), "Index %s out of bounds.", index);
+      return Optional.of(entries.get(index));
     } catch (IllegalArgumentException e) {
       output.printf("Illegal choice: %s\n", e.getMessage());
       return Optional.empty();
     }
-
-    return Optional.of(entries.get(index));
   }
 
   public <T> ImmutableSet<T> selectRange(
