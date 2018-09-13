@@ -35,7 +35,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Instant;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -311,16 +310,12 @@ public class UntarTest {
     assertExecutable(expectedPaths.get(0), true);
     if (tmpFolder.getRoot().getFileSystem().supportedFileAttributeViews().contains("posix")) {
       Path executablePath = tmpFolder.getRoot().resolve(expectedPaths.get(0));
-      Assert.assertEquals(
+      Assert.assertThat(
           Files.getPosixFilePermissions(executablePath),
-          EnumSet.of(
+          Matchers.hasItems(
               PosixFilePermission.OWNER_EXECUTE,
-              PosixFilePermission.OWNER_READ,
-              PosixFilePermission.OWNER_WRITE,
               PosixFilePermission.OTHERS_EXECUTE,
-              PosixFilePermission.GROUP_EXECUTE,
-              PosixFilePermission.OTHERS_READ,
-              PosixFilePermission.GROUP_READ));
+              PosixFilePermission.GROUP_EXECUTE));
     }
     assertExecutable(expectedPaths.subList(1, expectedPaths.size()), false);
   }
