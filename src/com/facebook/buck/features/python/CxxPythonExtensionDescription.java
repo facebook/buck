@@ -406,6 +406,7 @@ public class CxxPythonExtensionDescription
     if (type.isPresent()) {
 
       FlavorDomain<CxxPlatform> cxxPlatforms = getCxxPlatforms();
+      FlavorDomain<PythonPlatform> pythonPlatforms = getPythonPlatforms();
 
       // If we *are* building a specific type of this lib, call into the type specific rule builder
       // methods.
@@ -416,17 +417,39 @@ public class CxxPythonExtensionDescription
               projectFilesystem,
               graphBuilderLocal,
               cellRoots,
-              getPythonPlatforms().getRequiredValue(buildTarget),
+              pythonPlatforms.getRequiredValue(buildTarget),
               cxxPlatforms.getRequiredValue(buildTarget),
               args);
         case COMPILATION_DATABASE:
+          // so for the moment, when we get a target whose flavor is just #compilation-database
+          // we'll give it the default C++ and Python platforms to build with.
+          // of course, these may not be the desired/correct ones, but up until now
+          // the target would often end up without a Python platform at all, causing
+          // us to miss out on the compilation database altogether.
+          BuildTarget target = buildTarget;
+
+          if (!cxxPlatforms.containsAnyOf(target.getFlavors())) {
+            // constructor args *should* contain a default flavor, but
+            // we keep the platform default as a final fallback
+            ImmutableSet<Flavor> defaultCxxFlavors = args.getDefaultFlavors();
+            if (!cxxPlatforms.containsAnyOf(defaultCxxFlavors)) {
+              defaultCxxFlavors = ImmutableSet.of(getDefaultCxxPlatform().getFlavor());
+            }
+
+            target = target.withAppendedFlavors(defaultCxxFlavors);
+          }
+
+          if (!pythonPlatforms.containsAnyOf(target.getFlavors())) {
+            target = target.withAppendedFlavors(PythonBuckConfig.DEFAULT_PYTHON_PLATFORM);
+          }
+
           return createCompilationDatabase(
-              buildTarget,
+              target,
               projectFilesystem,
               graphBuilderLocal,
               cellRoots,
-              getPythonPlatforms().getRequiredValue(buildTarget),
-              cxxPlatforms.getRequiredValue(buildTarget),
+              pythonPlatforms.getRequiredValue(target),
+              cxxPlatforms.getRequiredValue(target),
               args);
       }
     }
@@ -562,6 +585,12 @@ public class CxxPythonExtensionDescription
     return toolchainProvider
         .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
         .getPythonPlatforms();
+  }
+
+  private CxxPlatform getDefaultCxxPlatform() {
+    return toolchainProvider
+        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getDefaultCxxPlatform();
   }
 
   private FlavorDomain<CxxPlatform> getCxxPlatforms() {

@@ -73,6 +73,8 @@ import org.junit.Test;
 
 public class CxxPythonExtensionDescriptionTest {
 
+  private static final PythonPlatform PY_DEFAULT = createPyDefaultPlatform();
+
   private static final BuildTarget PYTHON2_DEP_TARGET =
       BuildTargetFactory.newInstance("//:python2_dep");
   private static final PythonPlatform PY2 = createPy2Platform(Optional.empty());
@@ -80,6 +82,13 @@ public class CxxPythonExtensionDescriptionTest {
   private static final BuildTarget PYTHON3_DEP_TARGET =
       BuildTargetFactory.newInstance("//:python3_dep");
   private static final PythonPlatform PY3 = createPy3Platform(Optional.empty());
+
+  private static PythonPlatform createPyDefaultPlatform() {
+    return new TestPythonPlatform(
+        InternalFlavor.of("py-default"),
+        new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
+        Optional.empty());
+  }
 
   private static PythonPlatform createPy2Platform(Optional<BuildTarget> cxxLibrary) {
     return new TestPythonPlatform(
@@ -531,6 +540,24 @@ public class CxxPythonExtensionDescriptionTest {
                     CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
                     PY2.getFlavor(),
                     Type.COMPILATION_DATABASE.getFlavor()));
+    assertThat(rule, Matchers.instanceOf(CxxCompilationDatabase.class));
+  }
+
+  @Test
+  public void compilationDatabaseDefaults() {
+    CxxPythonExtensionBuilder builder =
+        new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:ext"),
+            FlavorDomain.of("Python Platform", PY_DEFAULT, PY2, PY3),
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxTestUtils.createDefaultPlatforms());
+
+    builder.setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.cpp"))));
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
+    BuildRule rule =
+        graphBuilder.requireRule(
+            builder.getTarget().withAppendedFlavors(Type.COMPILATION_DATABASE.getFlavor()));
     assertThat(rule, Matchers.instanceOf(CxxCompilationDatabase.class));
   }
 }
