@@ -21,11 +21,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -234,13 +234,8 @@ public class FileSystemMap<T> {
       return;
     }
 
-    child
-        .subLevels
-        .keySet()
-        .stream()
-        // copy collection of keys first to avoid removing from them while iterating
-        .collect(Collectors.toList())
-        .forEach(cp -> removeChild(child, cp));
+    // copy collection of keys first to avoid removing from them while iterating
+    new ArrayList<>(child.subLevels.keySet()).forEach(cp -> removeChild(child, cp));
   }
 
   /** Empties the trie leaving only the root node available. */
