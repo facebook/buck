@@ -124,7 +124,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
-            "//app:TestAppBundle#dwarf-and-dsym,include-frameworks,iphoneos-armv7,iphoneos-arm64");
+            "//app:TestAppBundle#dwarf-and-dsym,include-frameworks,ios,iphonesimulator-x86_64");
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
@@ -141,13 +141,12 @@ public class PrebuiltAppleFrameworkIntegrationTest {
             "lipo",
             includedFramework.resolve("BuckTest").toString(),
             "-verify_arch",
-            "armv7",
-            "arm64");
+            "x86_64");
     assertEquals(
         includedLipoVerifyResult.getStderr().orElse(""), 0, includedLipoVerifyResult.getExitCode());
     ProcessExecutor.Result removedLipoVerifyResult =
         workspace.runCommand(
-            "lipo", includedFramework.resolve("BuckTest").toString(), "-verify_arch", "x86_64");
+            "lipo", includedFramework.resolve("BuckTest").toString(), "-verify_arch", "armv7", "arm64");
     assertEquals(
         removedLipoVerifyResult.getStderr().orElse(""), 1, removedLipoVerifyResult.getExitCode());
   }
