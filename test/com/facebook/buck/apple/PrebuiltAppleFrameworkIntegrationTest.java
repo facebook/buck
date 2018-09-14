@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -33,6 +34,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
@@ -97,7 +99,8 @@ public class PrebuiltAppleFrameworkIntegrationTest {
   }
 
   @Test
-  public void testPrebuiltAppleFrameworkCopiedToBundle() throws IOException {
+  public void testPrebuiltAppleFrameworkCopiedToBundle() throws IOException, InterruptedException {
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "prebuilt_apple_framework_links", tmp);
@@ -105,8 +108,23 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
+    Path originalFramework = workspace.getPath("prebuilt/BuckTest.framework");
+    assertTrue(Files.isDirectory(originalFramework));
+    assertTrue(Files.isDirectory(originalFramework.resolve("Headers")));
+    ProcessExecutor.Result originalLipoVerifyResult =
+        workspace.runCommand(
+            "lipo",
+            originalFramework.resolve("BuckTest").toString(),
+            "-verify_arch",
+            "armv7",
+            "arm64",
+            "x86_64");
+    assertEquals(
+        originalLipoVerifyResult.getStderr().orElse(""), 0, originalLipoVerifyResult.getExitCode());
+
     BuildTarget target =
-        BuildTargetFactory.newInstance("//app:TestAppBundle#dwarf-and-dsym,include-frameworks");
+        BuildTargetFactory.newInstance(
+            "//app:TestAppBundle#dwarf-and-dsym,include-frameworks,ios,iphonesimulator-x86_64");
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
@@ -117,6 +135,21 @@ public class PrebuiltAppleFrameworkIntegrationTest {
             .resolve("Frameworks")
             .resolve("BuckTest.framework");
     assertTrue(Files.isDirectory(includedFramework));
+    assertFalse(Files.isDirectory(includedFramework.resolve("Headers")));
+    ProcessExecutor.Result includedLipoVerifyResult =
+        workspace.runCommand(
+            "lipo", includedFramework.resolve("BuckTest").toString(), "-verify_arch", "x86_64");
+    assertEquals(
+        includedLipoVerifyResult.getStderr().orElse(""), 0, includedLipoVerifyResult.getExitCode());
+    ProcessExecutor.Result removedLipoVerifyResult =
+        workspace.runCommand(
+            "lipo",
+            includedFramework.resolve("BuckTest").toString(),
+            "-verify_arch",
+            "armv7",
+            "arm64");
+    assertEquals(
+        removedLipoVerifyResult.getStderr().orElse(""), 1, removedLipoVerifyResult.getExitCode());
   }
 
   @Test
