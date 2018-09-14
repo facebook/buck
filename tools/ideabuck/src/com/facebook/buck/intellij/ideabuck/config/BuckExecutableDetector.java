@@ -32,6 +32,8 @@ public interface BuckExecutableDetector {
 
   String getBuckExecutable();
 
+  String getNamedExecutable(String name);
+
   static BuckExecutableDetector newInstance() {
     return new Impl();
   }
@@ -79,6 +81,11 @@ public interface BuckExecutableDetector {
       }
       path += androidAdkPlatformTools.toAbsolutePath().toString();
       env.put("PATH", path);
+    }
+
+    @Override
+    public String getNamedExecutable(String name) {
+      return getExecutable(Paths.get(name), env);
     }
 
     public String getExecutable(Path suggestedExecutable, Map<String, String> env) {

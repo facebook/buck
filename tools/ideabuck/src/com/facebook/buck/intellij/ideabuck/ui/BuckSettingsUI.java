@@ -31,6 +31,7 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task.Modal;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.TextComponentAccessor;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Comparing;
@@ -48,6 +49,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.io.BufferedReader;
 import java.io.File;
@@ -62,9 +65,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.table.TableCellEditor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -88,10 +93,11 @@ public class BuckSettingsUI extends JPanel {
   private JCheckBox customizedInstallSetting;
   private ListTableModel<BuckCell> cellTableModel;
   private BuckProjectSettingsProvider optionsProvider;
-  private Process process;
+  private BuckExecutableDetector executableDetector;
 
   public BuckSettingsUI(BuckProjectSettingsProvider buckProjectSettingsProvider) {
     optionsProvider = buckProjectSettingsProvider;
+    executableDetector = BuckExecutableDetector.newInstance();
     init();
   }
 
@@ -109,6 +115,49 @@ public class BuckSettingsUI extends JPanel {
         fileChooserDescriptor,
         TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT);
     return field;
+  }
+
+  private void checkFieldIsExecutable(
+      String name, JTextField textField, Optional<String> defaultValue) {
+    String text = textField.getText();
+    String executable = textToOptional(text).orElse(defaultValue.orElse(null));
+    if (executable == null) {
+      Messages.showErrorDialog(
+          getProject(),
+          "No " + name + " executable was specified or auto-detected for this field.",
+          "No Executable Specified");
+    } else {
+      try {
+        String found = executableDetector.getNamedExecutable(executable);
+        Messages.showInfoMessage(
+            getProject(),
+            found + " appears to be a valid executable",
+            "Found Executable " + executable);
+      } catch (RuntimeException e) {
+        Messages.showErrorDialog(
+            getProject(),
+            executable + " could not be resolved to a valid executable.",
+            "Invalid Executable");
+      }
+    }
+  }
+
+  private JButton createExecutableFieldTestingButton(
+      String executableName,
+      Optional<String> defaultExecutable,
+      TextFieldWithBrowseButton executableField) {
+    JButton button = new JButton();
+    button.setText("Test " + executableName);
+    button.setToolTipText("Verify that the supplied " + executableName + " is a valid executable");
+    button.addActionListener(
+        new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            checkFieldIsExecutable(
+                executableName, executableField.getTextField(), defaultExecutable);
+          }
+        });
+    return button;
   }
 
   private void init() {
@@ -134,35 +183,48 @@ public class BuckSettingsUI extends JPanel {
     this.add(container, BorderLayout.NORTH);
   }
 
+  private Project getProject() {
+    return optionsProvider.getProject();
+  }
+
+  private Optional<String> detectBuckExecutable() {
+    try {
+      return Optional.ofNullable(executableDetector.getBuckExecutable());
+    } catch (RuntimeException e) {
+      return Optional.empty();
+    }
+  }
+
+  private Optional<String> detectAdbExecutable() {
+    try {
+      return Optional.ofNullable(executableDetector.getAdbExecutable());
+    } catch (RuntimeException e) {
+      return Optional.empty();
+    }
+  }
+
   private JPanel initExecutablesSection() {
-    BuckExecutableDetector executableDetector = BuckExecutableDetector.newInstance();
-    String emptyTextForBuckExecutable;
-    try {
-      emptyTextForBuckExecutable = "Default: " + executableDetector.getBuckExecutable();
-    } catch (RuntimeException e) {
-      emptyTextForBuckExecutable = "No buck found on path";
-    }
-    String emptyTextForAdbExecutable;
-    try {
-      emptyTextForAdbExecutable = "Default: " + executableDetector.getAdbExecutable();
-    } catch (RuntimeException e) {
-      emptyTextForAdbExecutable = "No adb found on path";
-    }
+    final Optional<String> detectedBuckExecutable = detectBuckExecutable();
+    final Optional<String> detectedAdbExecutable = detectAdbExecutable();
     buckPathField =
         createTextFieldWithBrowseButton(
-            emptyTextForBuckExecutable,
+            detectedBuckExecutable.map(s -> "Default: " + s).orElse("No 'buck' found on path"),
             "Buck Executable",
             "Specify the buck executable to use (for this project)",
             null);
+    JButton testBuckPathButton =
+        createExecutableFieldTestingButton("buck", detectedBuckExecutable, buckPathField);
 
     adbPathField =
         createTextFieldWithBrowseButton(
-            emptyTextForAdbExecutable,
+            detectedAdbExecutable.map(s -> "Default: " + s).orElse("No 'adb' found on path"),
             "Adb Executable",
             "Specify the adb executable to use (for this project)",
             optionsProvider.getProject());
+    JButton testAdbPathButton =
+        createExecutableFieldTestingButton("adb", detectedAdbExecutable, adbPathField);
 
-    JPanel panel = new JPanel(new GridBagLayout());
+    final JPanel panel = new JPanel(new GridBagLayout());
     panel.setBorder(IdeBorderFactory.createTitledBorder("Executables", true));
 
     GridBagConstraints leftSide = new GridBagConstraints();
@@ -171,20 +233,27 @@ public class BuckSettingsUI extends JPanel {
     leftSide.gridx = 0;
     leftSide.weightx = 0;
 
+    GridBagConstraints middle = new GridBagConstraints();
+    middle.fill = GridBagConstraints.HORIZONTAL;
+    middle.anchor = GridBagConstraints.LINE_START;
+    middle.gridx = 1;
+    middle.weightx = 1;
+
     GridBagConstraints rightSide = new GridBagConstraints();
-    rightSide.fill = GridBagConstraints.HORIZONTAL;
-    rightSide.anchor = GridBagConstraints.LINE_START;
-    leftSide.gridx = 1;
-    rightSide.weightx = 1;
+    rightSide.fill = GridBagConstraints.NONE;
+    rightSide.anchor = GridBagConstraints.LINE_END;
+    rightSide.gridx = 2;
+    rightSide.weightx = 0;
 
-    leftSide.gridy = rightSide.gridy = 0;
+    leftSide.gridy = middle.gridy = rightSide.gridy = 0;
     panel.add(new JLabel("Buck Executable:"), leftSide);
-    panel.add(buckPathField, rightSide);
+    panel.add(buckPathField, middle);
+    panel.add(testBuckPathButton, rightSide);
 
-    leftSide.gridy = rightSide.gridy = 1;
+    leftSide.gridy = middle.gridy = rightSide.gridy = 1;
     panel.add(new JLabel("Adb Executable:"), leftSide);
-    panel.add(adbPathField, rightSide);
-
+    panel.add(adbPathField, middle);
+    panel.add(testAdbPathButton, rightSide);
     return panel;
   }
 
@@ -471,7 +540,7 @@ public class BuckSettingsUI extends JPanel {
     cell.setName(name);
     cell.setRoot(cellRoot.toString());
     try {
-      process =
+      Process process =
           new ProcessBuilder(buckExecutable, "audit", "config", "buildfile.name", "--json")
               .directory(cellRoot.toFile())
               .start();
@@ -490,7 +559,7 @@ public class BuckSettingsUI extends JPanel {
 
   // Empty or all-whitespace text fields should be parsed as Optional.empty()
   private Optional<String> textToOptional(@Nullable String text) {
-    return Optional.ofNullable(text).map(String::trim).filter(String::isEmpty);
+    return Optional.ofNullable(text).map(String::trim).filter(s -> !s.isEmpty());
   }
 
   public boolean isModified() {
