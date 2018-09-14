@@ -220,6 +220,11 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   }
 
   @Override
+  public DefaultProjectFilesystemView asView() {
+    return new DefaultProjectFilesystemView(this, Paths.get(""), projectRoot, ImmutableMap.of());
+  }
+
+  @Override
   public final Path getRootPath() {
     return projectRoot;
   }

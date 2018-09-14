@@ -101,6 +101,19 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
+  public void asViewCreatesEmptyViewAtRoot() {
+    DefaultProjectFilesystemView view = filesystem.asView();
+
+    // view should be relative to root
+    assertEquals(Paths.get(""), view.projectRoot);
+    assertEquals(filesystem.getRootPath(), view.resolvedProjectRoot);
+    assertEquals(Paths.get(""), view.relativize(tmp.getRoot()));
+
+    // view should have no ignores
+    assertTrue(view.ignoredPaths.isEmpty());
+  }
+
+  @Test
   public void testIsFile() throws IOException {
     tmp.newFolder("foo");
     tmp.newFile("foo/bar.txt");

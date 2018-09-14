@@ -19,6 +19,7 @@ package com.facebook.buck.io.filesystem.impl;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -46,12 +47,12 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
    * an relative path representing the root of this view relative to the {@code filesystemParent}'s
    * root
    */
-  private final Path projectRoot;
+  @VisibleForTesting final Path projectRoot;
 
   /** the relative project root resolved against the filesystem */
-  private final Path resolvedProjectRoot;
+  @VisibleForTesting final Path resolvedProjectRoot;
 
-  private final ImmutableMap<PathMatcher, Predicate<Path>> ignoredPaths;
+  @VisibleForTesting final ImmutableMap<PathMatcher, Predicate<Path>> ignoredPaths;
 
   DefaultProjectFilesystemView(
       DefaultProjectFilesystem filesystemParent,

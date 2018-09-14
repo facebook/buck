@@ -46,6 +46,12 @@ import java.util.jar.Manifest;
 /** An injectable service for interacting with the filesystem relative to the project root. */
 public interface ProjectFilesystem {
 
+  /**
+   * @return the default view over this project filesystem, where the view root is the project root,
+   *     and no ignored paths.
+   */
+  ProjectFilesystemView asView();
+
   Path getRootPath();
 
   /**
