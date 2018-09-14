@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.util.environment.Architecture;
@@ -26,9 +28,9 @@ import java.util.Optional;
 import org.junit.Test;
 
 public class CliConfigTest {
-
   @Test
-  public void testCreateAnsi() {
+  public void testCreateAnsiForWindows() {
+    assumeThat(Platform.detect(), is(Platform.WINDOWS));
     CliConfig windowsConfig =
         FakeBuckConfig.builder()
             .setArchitecture(Architecture.X86_64)
@@ -40,7 +42,11 @@ public class CliConfigTest {
     assertFalse(windowsConfig.createAnsi(Optional.of("auto")).isAnsiTerminal());
     assertTrue(windowsConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
     assertFalse(windowsConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
+  }
 
+  @Test
+  public void testCreateAnsiForLinux() {
+    assumeThat(Platform.detect(), is(Platform.LINUX));
     CliConfig linuxConfig =
         FakeBuckConfig.builder()
             .setArchitecture(Architecture.I386)
