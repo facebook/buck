@@ -12,7 +12,7 @@ from json.encoder import (
 )
 from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
-from typing import Tuple, Type
+from typing import Type, Iterable
 
 
 class StructEncoder(JSONEncoder):
@@ -120,17 +120,17 @@ def struct(**kwargs):
      - does not implement methods for pickling
      - does not support copy/deepcopy
     """
-    field_names = tuple(kwargs.keys())
-    struct_class = _create_struct_class(field_names)
+    struct_class = create_struct_class(kwargs.keys())
     return struct_class(**kwargs)
 
 
 _CLASS_CACHE = {}
 
 
-def _create_struct_class(field_names):
-    # type: (Tuple[str]) -> Type
+def create_struct_class(field_names):
+    # type: (Iterable[str]) -> Type
 
+    field_names = tuple(field_names)
     struct_class = _CLASS_CACHE.get(field_names)
     if struct_class:
         return struct_class

@@ -19,7 +19,18 @@ import time
 import traceback
 import types
 from pathlib import Path, PurePath
-from typing import Any, Dict, Iterator, List, Optional, Pattern, Set, Tuple, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Pattern,
+    Set,
+    Tuple,
+    TypeVar,
+)
 
 import pywatchman
 from pywatchman import WatchmanError
@@ -30,7 +41,7 @@ from .glob_watchman import SyncCookieState, glob_watchman
 from .json_encoder import BuckJSONEncoder
 from .module_whitelist import ImportWhitelistManager
 from .profiler import Profiler
-from .struct import struct
+from .struct import create_struct_class, struct
 from .util import (
     Diagnostic,
     cygwin_adjusted_path,
@@ -1236,7 +1247,8 @@ class BuildFileProcessor(object):
         build_env.includes.add(build_include.path)
         build_env.merge(inner_env)
 
-    def _provider(self):
+    def _provider(self, doc="", fields=None):
+        # type: (str, *str) -> Callable
         """Creates a declared provider factory.
 
         The return value of this function can be used to create "struct-like"
@@ -1247,6 +1259,8 @@ class BuildFileProcessor(object):
             info = SomeInfo(x = 2, foo = foo)
             print(info.x + info.foo())  # prints 5
         """
+        if fields:
+            return create_struct_class(fields)
         return struct
 
     def _add_build_file_dep(self, name):
