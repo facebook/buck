@@ -1,4 +1,4 @@
-<idea-plugin version="2">
+<idea-plugin>
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
   <version>3.6-SNAPSHOT</version>
