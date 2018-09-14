@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -38,6 +39,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -47,6 +49,8 @@ import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
@@ -55,6 +59,8 @@ public class PrebuiltAppleFrameworkDescription
     implements DescriptionWithTargetGraph<PrebuiltAppleFrameworkDescriptionArg>,
         Flavored,
         MetadataProvidingDescription<PrebuiltAppleFrameworkDescriptionArg> {
+
+  public static final Flavor FRAMEWORK_BINARY_FLAVOR = InternalFlavor.of("framework-binary");
 
   private final ToolchainProvider toolchainProvider;
   private final ImmutableSet<Flavor> declaredPlatforms;
@@ -111,11 +117,26 @@ public class PrebuiltAppleFrameworkDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltAppleFrameworkDescriptionArg args) {
+    DefaultSourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(context.getActionGraphBuilder()));
+
+    if (getAppleCxxPlatformsFlavorDomain().containsAnyOf(buildTarget.getFlavors())) {
+      BuildRule binaryBuildRule = getBinaryBuildRule(context, buildTarget, params);
+
+      return new PrebuiltAppleFrameworkFlavored(
+          buildTarget,
+          context.getProjectFilesystem(),
+          params.copyAppendingExtraDeps(binaryBuildRule),
+          pathResolver,
+          args.getFramework(),
+          binaryBuildRule.getSourcePathToOutput());
+    }
+
     return new PrebuiltAppleFramework(
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(context.getActionGraphBuilder())),
+        pathResolver,
         args.getFramework(),
         args.getPreferredLinkage(),
         args.getFrameworks(),
@@ -126,6 +147,55 @@ public class PrebuiltAppleFrameworkDescription
         getAppleCxxPlatformsFlavorDomain());
   }
 
+  private BuildRule getBinaryBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
+      BuildRuleParams params) {
+    buildTarget = buildTarget.withAppendedFlavors(FRAMEWORK_BINARY_FLAVOR);
+
+    Optional<MultiarchFileInfo> multiarchFileInfo =
+        MultiarchFileInfos.create(getAppleCxxPlatformsFlavorDomain(), buildTarget);
+    if (multiarchFileInfo.isPresent()) {
+      ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
+      for (BuildTarget thinTarget : multiarchFileInfo.get().getThinTargets()) {
+        thinRules.add(getThinBinaryRule(thinTarget, params, context));
+      }
+
+      BuildRule fatBinaryRule =
+          MultiarchFileInfos.requireMultiarchRule(
+              buildTarget,
+              context.getProjectFilesystem(),
+              params,
+              context.getActionGraphBuilder(),
+              multiarchFileInfo.get(),
+              thinRules.build());
+      return fatBinaryRule;
+    }
+    return getThinBinaryRule(buildTarget, params, context);
+  }
+
+  private BuildRule getThinBinaryRule(
+      BuildTarget thinTarget,
+      BuildRuleParams params,
+      BuildRuleCreationContextWithTargetGraph context) {
+    AppleCxxPlatform cxxPlatform = getAppleCxxPlatformsFlavorDomain().getRequiredValue(thinTarget);
+    PrebuiltAppleFramework baseRule =
+        (PrebuiltAppleFramework)
+            context.getActionGraphBuilder().requireRule(thinTarget.withFlavors());
+    return context
+        .getActionGraphBuilder()
+        .computeIfAbsent(
+            thinTarget,
+            (ignored) ->
+                new ThinMultiArchFile(
+                    thinTarget,
+                    context.getProjectFilesystem(),
+                    params.copyAppendingExtraDeps(baseRule),
+                    cxxPlatform.getLipo(),
+                    baseRule.getSourcePathToBinary(),
+                    cxxPlatform.getTargetAchitecture()));
+  }
+
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
@@ -134,6 +204,23 @@ public class PrebuiltAppleFrameworkDescription
       PrebuiltAppleFrameworkDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
+    if (metadataClass.isAssignableFrom(AppleBundleIncludableDependenies.class)) {
+      Builder<SourcePath> frameworksBuilder = ImmutableSet.builder();
+      frameworksBuilder.addAll(
+          AppleDescriptions.getAppleNativeTargetBundleIncludableDependencies(
+              buildTarget, graphBuilder, getCxxPlatformsProvider(), args.getDeps()));
+      switch (args.getPreferredLinkage()) {
+        case SHARED:
+          frameworksBuilder.add(graphBuilder.requireRule(buildTarget).getSourcePathToOutput());
+          break;
+        case ANY:
+        case STATIC:
+          // TODO implement resource copying for static prebuilt libs, for now use apple_resource
+          break;
+      }
+      return Optional.of(
+          metadataClass.cast(AppleBundleIncludableDependenies.of(frameworksBuilder.build())));
+    }
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       BuildRule buildRule = graphBuilder.requireRule(buildTarget);
       ImmutableSet<SourcePath> sourcePaths = ImmutableSet.of(buildRule.getSourcePathToOutput());
@@ -158,5 +245,10 @@ public class PrebuiltAppleFrameworkDescription
     }
 
     NativeLinkable.Linkage getPreferredLinkage();
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 }

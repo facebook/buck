@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -153,6 +154,11 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), out);
+  }
+
+  public SourcePath getSourcePathToBinary() {
+    return ExplicitBuildTargetSourcePath.of(
+        getBuildTarget(), out.resolve(MorePaths.getNameWithoutExtension(out)));
   }
 
   @Override

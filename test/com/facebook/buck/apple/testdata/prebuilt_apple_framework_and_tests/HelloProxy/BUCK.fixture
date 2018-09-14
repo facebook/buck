@@ -1,0 +1,7 @@
+apple_library(
+    name = "HelloProxy",
+    srcs = ["HelloProxy.m"],
+    exported_headers = ["HelloProxy.h"],
+    deps = ["//prebuilt:BuckTest"],
+    visibility = ["PUBLIC"],
+)

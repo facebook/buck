@@ -1,0 +1,17 @@
+apple_binary(
+    name = "TestApp",
+    srcs = ["main.m"],
+    info_plist = "Info.plist",
+    frameworks = ["$SDKROOT/System/Library/Frameworks/Foundation.framework"],
+    visibility = ["PUBLIC"],
+    deps = ["//HelloProxy:HelloProxy"],
+)
+
+apple_bundle(
+    name = "TestAppBundle",
+    binary = ":TestApp",
+    extension = "app",
+    info_plist = "Info.plist",
+    product_name = "TestAppBundle",
+    deps = [":TestApp"],
+)
