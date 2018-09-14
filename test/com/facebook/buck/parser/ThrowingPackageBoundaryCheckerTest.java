@@ -153,14 +153,14 @@ public class ThrowingPackageBoundaryCheckerTest {
             + "' can only be referenced from '"
             + dPath
             + "' \nwhich is its closest parent 'BUCK' file.\n\n"
-            + "You should find or create the rule in '"
+            + "You should find or create a rule in '"
             + dPath
             + "' that references\n'"
             + testPath
             + "' and use that in '//a/b:c'\ninstead of directly referencing '"
             + testPath
-            + "'.\n\nThis may also be due to a bug in buckd's caching.\n"
-            + "Please check whether using `buck kill` will resolve it.");
+            + "'.\n\nThis issue might also be caused by a bug in buckd's caching.\n"
+            + "Please check whether using `buck kill` resolves it.");
 
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build(),
