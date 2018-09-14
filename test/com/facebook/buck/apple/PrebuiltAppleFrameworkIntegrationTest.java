@@ -138,15 +138,16 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     assertFalse(Files.isDirectory(includedFramework.resolve("Headers")));
     ProcessExecutor.Result includedLipoVerifyResult =
         workspace.runCommand(
-            "lipo",
-            includedFramework.resolve("BuckTest").toString(),
-            "-verify_arch",
-            "x86_64");
+            "lipo", includedFramework.resolve("BuckTest").toString(), "-verify_arch", "x86_64");
     assertEquals(
         includedLipoVerifyResult.getStderr().orElse(""), 0, includedLipoVerifyResult.getExitCode());
     ProcessExecutor.Result removedLipoVerifyResult =
         workspace.runCommand(
-            "lipo", includedFramework.resolve("BuckTest").toString(), "-verify_arch", "armv7", "arm64");
+            "lipo",
+            includedFramework.resolve("BuckTest").toString(),
+            "-verify_arch",
+            "armv7",
+            "arm64");
     assertEquals(
         removedLipoVerifyResult.getStderr().orElse(""), 1, removedLipoVerifyResult.getExitCode());
   }
