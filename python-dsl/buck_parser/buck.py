@@ -857,6 +857,25 @@ class BuildFileProcessor(object):
             safe_modules_config=self.SAFE_MODULES_CONFIG,
             path_predicate=lambda path: is_in_dir(path, self._project_root),
         )
+        # Set of helpers callable from the child environment.
+        self._default_globals = self._create_default_globals(False)
+        self._default_globals_for_implicit_include = self._create_default_globals(True)
+
+    def _create_default_globals(self, is_implicit_include=False):
+        # type: (bool) -> Dict[str, Callable]
+        return {
+            "include_defs": functools.partial(self._include_defs, is_implicit_include),
+            "add_build_file_dep": self._add_build_file_dep,
+            "read_config": self._read_config,
+            "allow_unsafe_import": self._import_whitelist_manager.allow_unsafe_import,
+            "glob": self._glob,
+            "subdir_glob": self._subdir_glob,
+            "load": functools.partial(self._load, is_implicit_include),
+            "struct": struct,
+            "provider": self._provider,
+            "host_info": self._host_info,
+            "native": self._create_native_module(),
+        }
 
     def _create_native_module(self):
         """
@@ -1417,32 +1436,21 @@ class BuildFileProcessor(object):
         :returns: build context (potentially different if retrieved from cache) and loaded module.
         """
 
+        default_globals = (
+            self._default_globals_for_implicit_include
+            if is_implicit_include
+            else self._default_globals
+        )
+
         # Install the build context for this input as the current context.
         with self._set_build_env(build_env):
-            # Set of helpers callable from the child environment.
-            default_globals = {
-                "include_defs": functools.partial(
-                    self._include_defs, is_implicit_include
-                ),
-                "add_build_file_dep": self._add_build_file_dep,
-                "read_config": self._read_config,
-                "allow_unsafe_import": self._import_whitelist_manager.allow_unsafe_import,
-                "glob": self._glob,
-                "subdir_glob": self._subdir_glob,
-                "load": functools.partial(self._load, is_implicit_include),
-                "struct": struct,
-                "provider": self._provider,
-                "host_info": self._host_info,
-                "native": self._create_native_module(),
-            }
-
             # Don't include implicit includes if the current file being
             # processed is an implicit include
             if not is_implicit_include:
                 for include in self._implicit_includes:
                     build_include = self._resolve_include(include)
                     inner_env, mod = self._process_include(build_include, True)
-                    self._merge_globals(mod, default_globals)
+                    self._merge_globals(mod, self._default_globals)
                     build_env.includes.add(build_include.path)
                     build_env.merge(inner_env)
 
