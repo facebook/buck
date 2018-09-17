@@ -68,6 +68,11 @@ public class WindowsCompiler extends DefaultCompiler {
   }
 
   @Override
+  public boolean needsToRemoveCompiledFilenamesFromOutput() {
+    return true;
+  }
+
+  @Override
   public Optional<String> getStderr(ProcessExecutor.Result result) {
     return result.getStdout();
   }

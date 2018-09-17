@@ -81,6 +81,11 @@ public abstract class DefaultCompiler extends DelegatingTool implements Compiler
   }
 
   @Override
+  public boolean needsToRemoveCompiledFilenamesFromOutput() {
+    return false;
+  }
+
+  @Override
   public Optional<String> getStderr(ProcessExecutor.Result result) {
     return result.getStderr();
   }

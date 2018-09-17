@@ -53,6 +53,19 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
+  public void testFilenameIsFilteredOut() throws IOException {
+    ProcessResult runResult = workspace.runBuckCommand("build", "//simple:simple#windows-x86_64");
+    runResult.assertSuccess();
+    final String input = "simple.cpp";
+    assertThat(
+        runResult.getStderr().split("\n"),
+        Matchers.not(Matchers.hasItemInArray(Matchers.matchesPattern(input + "\\s*"))));
+    assertThat(
+        runResult.getStdout().split("\n"),
+        Matchers.not(Matchers.hasItemInArray(Matchers.matchesPattern(input + "\\s*"))));
+  }
+
+  @Test
   public void simpleBinary64() throws IOException {
     ProcessResult runResult = workspace.runBuckCommand("run", "//app:hello#windows-x86_64");
     runResult.assertSuccess();
