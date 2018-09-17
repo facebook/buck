@@ -1122,8 +1122,9 @@ class BuildFileProcessor(object):
         build_env = self._current_build_env
 
         # Lookup the value and record it in this build file's context.
-        value = self._configs.get((section, field))
-        build_env.used_configs[(section, field)] = value
+        key = section, field
+        value = self._configs.get(key)
+        build_env.used_configs[key] = value
 
         # If no config setting was found, return the default.
         if value is None:
