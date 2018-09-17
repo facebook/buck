@@ -265,11 +265,7 @@ public class PrebuiltCxxLibraryDescription
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .addAllArgs(
-                StringArg.from(
-                    CxxFlags.getFlagsWithPlatformMacroExpansion(
-                        args.getExportedLinkerFlags(),
-                        args.getExportedPlatformLinkerFlags(),
-                        cxxPlatform)))
+                getExportedLinkerArgs(cxxPlatform, args, buildTarget, cellRoots, graphBuilder))
             .addAllArgs(
                 cxxPlatform
                     .getLd()
@@ -531,9 +527,9 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public ImmutableList<String> getExportedLinkerFlags(CxxPlatform cxxPlatform) {
-        return CxxFlags.getFlagsWithPlatformMacroExpansion(
-            args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), cxxPlatform);
+      public ImmutableList<Arg> getExportedLinkerArgs(CxxPlatform cxxPlatform) {
+        return PrebuiltCxxLibraryDescription.this.getExportedLinkerArgs(
+            cxxPlatform, args, buildTarget, cellRoots, graphBuilder);
       }
 
       @Override
@@ -702,8 +698,7 @@ public class PrebuiltCxxLibraryDescription
         // Build the library path and linker arguments that we pass through the
         // {@link NativeLinkable} interface for linking.
         ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
-        linkerArgsBuilder.addAll(
-            StringArg.from(Preconditions.checkNotNull(getExportedLinkerFlags(cxxPlatform))));
+        linkerArgsBuilder.addAll(getExportedLinkerArgs(cxxPlatform));
 
         if (!args.isHeaderOnly()) {
           if (type == Linker.LinkableDepType.SHARED) {
@@ -862,7 +857,7 @@ public class PrebuiltCxxLibraryDescription
                   SourcePathResolver pathResolver,
                   SourcePathRuleFinder ruleFinder) {
                 return NativeLinkableInput.builder()
-                    .addAllArgs(StringArg.from(getExportedLinkerFlags(cxxPlatform)))
+                    .addAllArgs(getExportedLinkerArgs(cxxPlatform))
                     .addAllArgs(
                         cxxPlatform
                             .getLd()
@@ -882,6 +877,22 @@ public class PrebuiltCxxLibraryDescription
             });
       }
     };
+  }
+
+  private ImmutableList<Arg> getExportedLinkerArgs(
+      CxxPlatform cxxPlatform,
+      PrebuiltCxxLibraryDescriptionArg args,
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      ActionGraphBuilder graphBuilder) {
+    return CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+            args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), cxxPlatform)
+        .stream()
+        .map(
+            s ->
+                CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                    buildTarget, cellRoots, graphBuilder, cxxPlatform, s))
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override
@@ -1005,12 +1016,13 @@ public class PrebuiltCxxLibraryDescription
       return VersionMatchedCollection.of();
     }
 
-    ImmutableList<String> getExportedLinkerFlags();
+    ImmutableList<StringWithMacros> getExportedLinkerFlags();
 
     ImmutableList<String> getExportedPostLinkerFlags();
 
     @Value.Default
-    default PatternMatchedCollection<ImmutableList<String>> getExportedPlatformLinkerFlags() {
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>>
+        getExportedPlatformLinkerFlags() {
       return PatternMatchedCollection.of();
     }
 

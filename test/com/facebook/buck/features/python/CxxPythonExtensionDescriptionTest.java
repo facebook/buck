@@ -271,11 +271,11 @@ public class CxxPythonExtensionDescriptionTest {
     PrebuiltCxxLibraryBuilder python2Builder =
         new PrebuiltCxxLibraryBuilder(PYTHON2_DEP_TARGET)
             .setHeaderOnly(true)
-            .setExportedLinkerFlags(ImmutableList.of("-lpython2"));
+            .setExportedLinkerFlags("-lpython2");
     PrebuiltCxxLibraryBuilder python3Builder =
         new PrebuiltCxxLibraryBuilder(PYTHON3_DEP_TARGET)
             .setHeaderOnly(true)
-            .setExportedLinkerFlags(ImmutableList.of("-lpython3"));
+            .setExportedLinkerFlags("-lpython3");
 
     PythonPlatform py2 = createPy2Platform(Optional.of(PYTHON2_DEP_TARGET));
     PythonPlatform py3 = createPy3Platform(Optional.of(PYTHON3_DEP_TARGET));

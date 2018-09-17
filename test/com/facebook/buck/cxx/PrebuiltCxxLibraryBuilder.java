@@ -30,9 +30,11 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -125,9 +127,14 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(ImmutableList<String> linkerFlags) {
+  public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(
+      ImmutableList<StringWithMacros> linkerFlags) {
     getArgForPopulating().setExportedLinkerFlags(linkerFlags);
     return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(String... linkerFlags) {
+    return setExportedLinkerFlags(StringWithMacrosUtils.fromStrings(Arrays.asList(linkerFlags)));
   }
 
   public PrebuiltCxxLibraryBuilder setSoname(String soname) {

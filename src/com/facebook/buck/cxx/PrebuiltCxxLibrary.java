@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.CanProvideNativeLinkTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -35,7 +36,7 @@ public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExt
     super(buildTarget, projectFilesystem, params);
   }
 
-  public abstract ImmutableList<String> getExportedLinkerFlags(CxxPlatform cxxPlatform);
+  public abstract ImmutableList<Arg> getExportedLinkerArgs(CxxPlatform cxxPlatform);
 
   public abstract ImmutableList<String> getExportedPostLinkerFlags(CxxPlatform cxxPlatform);
 
