@@ -346,7 +346,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       Futures.allAsList(depsFuture).get();
     } catch (ExecutionException e) {
       if (e.getCause() != null) {
-        throw new QueryException(e.getCause(), "Failed parsing: " + e.getLocalizedMessage());
+        throw new QueryException(
+            e.getCause(),
+            "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e.getCause()));
       }
       propagateCauseIfInstanceOf(e, ExecutionException.class);
       propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);

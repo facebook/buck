@@ -23,10 +23,15 @@ public class MoreExceptions {
 
   private MoreExceptions() {}
 
-  public static String getHumanReadableOrLocalizedMessage(Exception e) {
-    if (e instanceof HumanReadableException) {
-      return ((HumanReadableException) e).getHumanReadableErrorMessage();
+  /**
+   * @param throwable the Throwable to get error message from
+   * @return a human readable error message in the case of HumanReadableException, otherwise the
+   *     localized error message of the innermost root cause
+   */
+  public static String getHumanReadableOrLocalizedMessage(Throwable throwable) {
+    if (throwable instanceof HumanReadableException) {
+      return ((HumanReadableException) throwable).getHumanReadableErrorMessage();
     }
-    return Throwables.getRootCause(e).getLocalizedMessage();
+    return Throwables.getRootCause(throwable).getLocalizedMessage();
   }
 }
