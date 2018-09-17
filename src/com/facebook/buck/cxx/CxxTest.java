@@ -62,9 +62,9 @@ import java.util.stream.Stream;
 public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, BinaryBuildRule {
 
-  @AddToRuleKey private final ImmutableMap<String, Arg> env;
-  @AddToRuleKey private final ImmutableList<Arg> args;
-  @AddToRuleKey private final Tool executable;
+  private final ImmutableMap<String, Arg> env;
+  private final ImmutableList<Arg> args;
+  private final Tool executable;
 
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
