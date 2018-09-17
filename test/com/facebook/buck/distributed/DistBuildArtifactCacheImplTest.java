@@ -16,9 +16,9 @@
 
 package com.facebook.buck.distributed;
 
-import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.LEFT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.RIGHT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.ROOT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActionGraphBuilderFactory.LEFT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActionGraphBuilderFactory.RIGHT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActionGraphBuilderFactory.ROOT_TARGET;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
@@ -39,7 +39,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
+import com.facebook.buck.distributed.testutil.CustomActionGraphBuilderFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
@@ -72,7 +72,7 @@ public class DistBuildArtifactCacheImplTest {
       ArtifactCache remoteCache, Optional<ArtifactCache> localCache) {
 
     graphBuilder =
-        CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf();
+        CustomActionGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf();
     eventBus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
 
     return new DistBuildArtifactCacheImpl(

@@ -37,7 +37,7 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class CustomActiongGraphBuilderFactory {
+public class CustomActionGraphBuilderFactory {
 
   public static final String ROOT_TARGET = "//foo:one";
   public static final String CACHABLE_D = ROOT_TARGET + "cacheable_d";
@@ -123,8 +123,8 @@ public class CustomActiongGraphBuilderFactory {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildRule uncacheableB =
-        newUncacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_B);
-    newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_A, uncacheableB);
+        newUncacheableRule(graphBuilder, CustomActionGraphBuilderFactory.UNCACHABLE_B);
+    newCacheableRule(graphBuilder, CustomActionGraphBuilderFactory.CACHABLE_A, uncacheableB);
 
     return graphBuilder;
   }
@@ -138,31 +138,31 @@ public class CustomActiongGraphBuilderFactory {
 
     // uncacheable_d -> cacheable_b -> uncacheable_e
     BuildRule cacheableC =
-        newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_C);
+        newCacheableRule(graphBuilder, CustomActionGraphBuilderFactory.CACHABLE_C);
     BuildRule uncacheableE =
-        newUncacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_E, cacheableC);
+        newUncacheableRule(graphBuilder, CustomActionGraphBuilderFactory.UNCACHABLE_E, cacheableC);
     BuildRule cacheableB =
-        newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_B, uncacheableE);
+        newCacheableRule(graphBuilder, CustomActionGraphBuilderFactory.CACHABLE_B, uncacheableE);
     BuildRule uncacheableD =
-        newUncacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_D, cacheableB);
+        newUncacheableRule(graphBuilder, CustomActionGraphBuilderFactory.UNCACHABLE_D, cacheableB);
 
     // uncacheable_a -> uncacheable b \
     BuildRule uncacheableB =
         newUncacheableRule(
-            graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_B, uncacheableD);
+            graphBuilder, CustomActionGraphBuilderFactory.UNCACHABLE_B, uncacheableD);
     BuildRule uncacheableA =
         newUncacheableRule(
-            graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_A, uncacheableB);
+            graphBuilder, CustomActionGraphBuilderFactory.UNCACHABLE_A, uncacheableB);
 
     // uncacheable_c -> cacheable a /
     BuildRule cacheableA =
-        newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_A, uncacheableD);
+        newCacheableRule(graphBuilder, CustomActionGraphBuilderFactory.CACHABLE_A, uncacheableD);
     BuildRule uncacheableC =
-        newUncacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_C, cacheableA);
+        newUncacheableRule(graphBuilder, CustomActionGraphBuilderFactory.UNCACHABLE_C, cacheableA);
 
     // uncacheable_root
     newUncacheableRule(
-        graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_ROOT, uncacheableA, uncacheableC);
+        graphBuilder, CustomActionGraphBuilderFactory.UNCACHABLE_ROOT, uncacheableA, uncacheableC);
 
     return graphBuilder;
   }
@@ -257,27 +257,27 @@ public class CustomActiongGraphBuilderFactory {
 
     // build_locally_a - cacheable_d
     BuildRule cacheableD =
-        newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_D);
+        newCacheableRule(graphBuilder, CustomActionGraphBuilderFactory.CACHABLE_D);
     BuildRule cacheableBuildLocallyA =
         newCacheableBuildLocallyRule(
-            graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_BUILD_LOCALLY_A, cacheableD);
+            graphBuilder, CustomActionGraphBuilderFactory.CACHABLE_BUILD_LOCALLY_A, cacheableD);
 
     // uncachaeable_a /
     BuildRule uncacheableA =
         newUncacheableRule(
-            graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_A, cacheableBuildLocallyA);
+            graphBuilder, CustomActionGraphBuilderFactory.UNCACHABLE_A, cacheableBuildLocallyA);
 
     // cacheable_b, cacheable_c
     BuildRule cacheableB =
         newCacheableRule(
             graphBuilder,
-            CustomActiongGraphBuilderFactory.CACHABLE_B,
+            CustomActionGraphBuilderFactory.CACHABLE_B,
             uncacheableA,
             cacheableBuildLocallyA);
-    newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_C, uncacheableA);
+    newCacheableRule(graphBuilder, CustomActionGraphBuilderFactory.CACHABLE_C, uncacheableA);
 
     // cacheable_a - cacheable_b
-    newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_A, cacheableB);
+    newCacheableRule(graphBuilder, CustomActionGraphBuilderFactory.CACHABLE_A, cacheableB);
 
     return graphBuilder;
   }

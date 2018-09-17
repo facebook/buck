@@ -28,7 +28,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.build_slave.MinionWorkloadAllocator.WorkloadAllocationResult;
-import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
+import com.facebook.buck.distributed.testutil.CustomActionGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.WorkUnit;
@@ -66,7 +66,7 @@ public class MinionWorkloadAllocatorTest {
 
   private BuildTargetsQueue createQueueUsingResolver(BuildRuleResolver resolver) {
     BuildTarget target =
-        BuildTargetFactory.newInstance(CustomActiongGraphBuilderFactory.ROOT_TARGET);
+        BuildTargetFactory.newInstance(CustomActionGraphBuilderFactory.ROOT_TARGET);
     BuildTargetsQueue queue =
         new CacheOptimizedBuildTargetsQueueFactory(
                 resolver,
@@ -87,7 +87,7 @@ public class MinionWorkloadAllocatorTest {
     MinionWorkloadAllocator allocator =
         new MinionWorkloadAllocator(
             createQueueUsingResolver(
-                CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf()),
+                CustomActionGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf()),
             tracker,
             Optional.of(MINION_THREE),
             true);
@@ -100,8 +100,8 @@ public class MinionWorkloadAllocatorTest {
         ImmutableList.of(),
         ImmutableList.of(
             ImmutableList.of(
-                CustomActiongGraphBuilderFactory.LEAF_TARGET,
-                CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET)));
+                CustomActionGraphBuilderFactory.LEAF_TARGET,
+                CustomActionGraphBuilderFactory.CHAIN_TOP_TARGET)));
 
     // Simulate failure of minion one
     simulateAndAssertMinionFailure(allocator, MINION_ONE);
@@ -119,8 +119,8 @@ public class MinionWorkloadAllocatorTest {
         ImmutableList.of(),
         ImmutableList.of(
             ImmutableList.of(
-                CustomActiongGraphBuilderFactory.LEAF_TARGET,
-                CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET)));
+                CustomActionGraphBuilderFactory.LEAF_TARGET,
+                CustomActionGraphBuilderFactory.CHAIN_TOP_TARGET)));
 
     // Minion 3 completes nodes and gets more work
     List<WorkUnit> minionTwoWorkFromRequestTwo =
@@ -128,8 +128,8 @@ public class MinionWorkloadAllocatorTest {
                 MINION_THREE,
                 STANDARD_SPEC,
                 ImmutableList.of(
-                    CustomActiongGraphBuilderFactory.LEAF_TARGET,
-                    CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET),
+                    CustomActionGraphBuilderFactory.LEAF_TARGET,
+                    CustomActionGraphBuilderFactory.CHAIN_TOP_TARGET),
                 MAX_WORK_UNITS_TO_FETCH)
             .newWorkUnitsForMinion;
     Assert.assertEquals(2, minionTwoWorkFromRequestTwo.size());
@@ -140,7 +140,7 @@ public class MinionWorkloadAllocatorTest {
     MinionWorkloadAllocator allocator =
         new MinionWorkloadAllocator(
             createQueueUsingResolver(
-                CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf()),
+                CustomActionGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf()),
             tracker,
             Optional.of(MINION_FOUR),
             true);
@@ -153,8 +153,8 @@ public class MinionWorkloadAllocatorTest {
         ImmutableList.of(),
         ImmutableList.of(
             ImmutableList.of(
-                CustomActiongGraphBuilderFactory.LEAF_TARGET,
-                CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET)));
+                CustomActionGraphBuilderFactory.LEAF_TARGET,
+                CustomActionGraphBuilderFactory.CHAIN_TOP_TARGET)));
 
     // Simulate failure of minion one
     simulateAndAssertMinionFailure(allocator, MINION_ONE);
@@ -167,15 +167,15 @@ public class MinionWorkloadAllocatorTest {
         ImmutableList.of(),
         ImmutableList.of(
             ImmutableList.of(
-                CustomActiongGraphBuilderFactory.LEAF_TARGET,
-                CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET)));
+                CustomActionGraphBuilderFactory.LEAF_TARGET,
+                CustomActionGraphBuilderFactory.CHAIN_TOP_TARGET)));
 
     // Minion 2 completes the first item in the work unit it was given. Doesn't get anything new
     allocateWorkWithNoReleaseAndAssert(
         allocator,
         MINION_TWO,
         STANDARD_SPEC,
-        ImmutableList.of(CustomActiongGraphBuilderFactory.LEAF_TARGET),
+        ImmutableList.of(CustomActionGraphBuilderFactory.LEAF_TARGET),
         ImmutableList.of());
 
     // Simulate failure of minion two.
@@ -187,14 +187,14 @@ public class MinionWorkloadAllocatorTest {
         MINION_THREE,
         STANDARD_SPEC,
         ImmutableList.of(),
-        ImmutableList.of(ImmutableList.of(CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET)));
+        ImmutableList.of(ImmutableList.of(CustomActionGraphBuilderFactory.CHAIN_TOP_TARGET)));
 
     // Minion three completes node at top of chain, and now gets two more work units, left and right
     List<WorkUnit> minionThreeWorkFromRequestTwo =
         allocator.updateMinionWorkloadAllocation(
                 MINION_THREE,
                 STANDARD_SPEC,
-                ImmutableList.of(CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET),
+                ImmutableList.of(CustomActionGraphBuilderFactory.CHAIN_TOP_TARGET),
                 MAX_WORK_UNITS_TO_FETCH)
             .newWorkUnitsForMinion;
     Assert.assertEquals(2, minionThreeWorkFromRequestTwo.size());
@@ -204,7 +204,7 @@ public class MinionWorkloadAllocatorTest {
         allocator,
         MINION_THREE,
         STANDARD_SPEC,
-        ImmutableList.of(CustomActiongGraphBuilderFactory.LEFT_TARGET),
+        ImmutableList.of(CustomActionGraphBuilderFactory.LEFT_TARGET),
         ImmutableList.of());
 
     // Minion three fails.
@@ -216,22 +216,22 @@ public class MinionWorkloadAllocatorTest {
         MINION_FOUR,
         STANDARD_SPEC,
         ImmutableList.of(),
-        ImmutableList.of(ImmutableList.of(CustomActiongGraphBuilderFactory.RIGHT_TARGET)));
+        ImmutableList.of(ImmutableList.of(CustomActionGraphBuilderFactory.RIGHT_TARGET)));
 
     // Minion four completes right node. gets final root node back
     allocateWorkWithNoReleaseAndAssert(
         allocator,
         MINION_FOUR,
         STANDARD_SPEC,
-        ImmutableList.of(CustomActiongGraphBuilderFactory.RIGHT_TARGET),
-        ImmutableList.of(ImmutableList.of(CustomActiongGraphBuilderFactory.ROOT_TARGET)));
+        ImmutableList.of(CustomActionGraphBuilderFactory.RIGHT_TARGET),
+        ImmutableList.of(ImmutableList.of(CustomActionGraphBuilderFactory.ROOT_TARGET)));
 
     // Minion four completes the build
     List<WorkUnit> minionFourWorkFromRequestThree =
         allocator.updateMinionWorkloadAllocation(
                 MINION_FOUR,
                 STANDARD_SPEC,
-                ImmutableList.of(CustomActiongGraphBuilderFactory.ROOT_TARGET),
+                ImmutableList.of(CustomActionGraphBuilderFactory.ROOT_TARGET),
                 MAX_WORK_UNITS_TO_FETCH)
             .newWorkUnitsForMinion;
     Assert.assertEquals(0, minionFourWorkFromRequestThree.size());
@@ -243,7 +243,7 @@ public class MinionWorkloadAllocatorTest {
     MinionWorkloadAllocator allocator =
         new MinionWorkloadAllocator(
             createQueueUsingResolver(
-                CustomActiongGraphBuilderFactory.createDiamondDependencyGraph()),
+                CustomActionGraphBuilderFactory.createDiamondDependencyGraph()),
             tracker,
             Optional.of(MINION_ONE),
             true);
@@ -260,7 +260,7 @@ public class MinionWorkloadAllocatorTest {
         allocator.updateMinionWorkloadAllocation(
                 MINION_ONE,
                 STANDARD_SPEC,
-                ImmutableList.of(CustomActiongGraphBuilderFactory.LEAF_TARGET),
+                ImmutableList.of(CustomActionGraphBuilderFactory.LEAF_TARGET),
                 MAX_WORK_UNITS_TO_FETCH)
             .newWorkUnitsForMinion;
     Assert.assertEquals(2, secondTargets.size());
@@ -271,8 +271,8 @@ public class MinionWorkloadAllocatorTest {
                 MINION_ONE,
                 STANDARD_SPEC,
                 ImmutableList.of(
-                    CustomActiongGraphBuilderFactory.LEFT_TARGET,
-                    CustomActiongGraphBuilderFactory.RIGHT_TARGET),
+                    CustomActionGraphBuilderFactory.LEFT_TARGET,
+                    CustomActionGraphBuilderFactory.RIGHT_TARGET),
                 MAX_WORK_UNITS_TO_FETCH)
             .newWorkUnitsForMinion;
     Assert.assertEquals(1, thirdTargets.size());
@@ -282,7 +282,7 @@ public class MinionWorkloadAllocatorTest {
         allocator.updateMinionWorkloadAllocation(
                 MINION_ONE,
                 STANDARD_SPEC,
-                ImmutableList.of(CustomActiongGraphBuilderFactory.ROOT_TARGET),
+                ImmutableList.of(CustomActionGraphBuilderFactory.ROOT_TARGET),
                 MAX_WORK_UNITS_TO_FETCH)
             .newWorkUnitsForMinion;
     Assert.assertEquals(0, fourthTargets.size());

@@ -56,7 +56,7 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.DistLocalBuildMode;
-import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
+import com.facebook.buck.distributed.testutil.CustomActionGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildMode;
@@ -215,10 +215,10 @@ public class BuildPhaseTest {
   public void testCoordinatorIsRunInLocalCoordinatorMode()
       throws IOException, InterruptedException, ExecutionException {
     // Create the full BuildPhase for local coordinator mode.
-    ActionGraphBuilder graphBuilder = CustomActiongGraphBuilderFactory.createSimpleBuilder();
+    ActionGraphBuilder graphBuilder = CustomActionGraphBuilderFactory.createSimpleBuilder();
     ImmutableSet<BuildTarget> targets =
         ImmutableSet.of(
-            BuildTargetFactory.newInstance(CustomActiongGraphBuilderFactory.ROOT_TARGET));
+            BuildTargetFactory.newInstance(CustomActionGraphBuilderFactory.ROOT_TARGET));
 
     ActionAndTargetGraphs graphs =
         ActionAndTargetGraphs.builder()
