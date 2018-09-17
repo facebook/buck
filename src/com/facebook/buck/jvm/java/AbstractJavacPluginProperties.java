@@ -20,6 +20,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
@@ -46,6 +48,7 @@ abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
   public abstract ImmutableSortedSet<SourcePath> getInputs();
 
   @Value.NaturalOrder
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
   // classpathEntries is not necessary because it is derived from inputs
   public abstract ImmutableSortedSet<SourcePath> getClasspathEntries();
 

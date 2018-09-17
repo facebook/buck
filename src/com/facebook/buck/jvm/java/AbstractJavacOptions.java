@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -75,11 +77,13 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
   }
 
   @Value.Default
+  @AddToRuleKey
   protected boolean isProductionBuild() {
     return false;
   }
 
   @Value.Default
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
   protected boolean isVerbose() {
     return false;
   }
@@ -109,7 +113,8 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
   @AddToRuleKey
   protected abstract Optional<String> getBootclasspath();
 
-  // TODO(cjhopman): Should this be added to the rulekey?
+  // TODO(cjhopman): Should this be added to the rulekey? Is this the right way to serialize it?
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
   protected abstract Map<String, String> getSourceToBootclasspath();
 
   @AddToRuleKey
@@ -124,6 +129,7 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
   }
 
   @Value.Default
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
   protected boolean trackJavacPhaseEvents() {
     return false;
   }

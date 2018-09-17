@@ -18,9 +18,11 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
 import com.facebook.buck.util.Memoizer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -31,6 +33,7 @@ import java.nio.file.Path;
 public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   @AddToRuleKey private final JavacPluginProperties inner;
 
+  @CustomFieldBehavior(EmptyMemoizerDeserialization.class)
   private final Memoizer<URL[]> classpathSupplier;
 
   public ResolvedJavacPluginProperties(JavacPluginProperties inner) {

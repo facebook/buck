@@ -21,6 +21,8 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -28,10 +30,13 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PipelinedBuildable;
 import com.facebook.buck.rules.modern.PublicOutputPath;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -58,8 +63,10 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   @AddToRuleKey private final OutputPath annotationsOutputPath;
 
   @AddToRuleKey(stringify = true)
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
   private final BuildTarget buildTarget;
 
+  @CustomFieldBehavior(SerializeAsEmptyOptional.class)
   private final Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory;
 
   DefaultJavaLibraryBuildable(
@@ -198,5 +205,16 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   public RulePipelineStateFactory<JavacPipelineState> getPipelineStateFactory() {
     return jarBuildStepsFactory;
+  }
+
+  private static class SerializeAsEmptyOptional<T>
+      implements CustomFieldSerialization<Optional<T>> {
+    @Override
+    public <E extends Exception> void serialize(Optional<T> value, ValueVisitor<E> serializer) {}
+
+    @Override
+    public <E extends Exception> Optional<T> deserialize(ValueCreator<E> deserializer) {
+      return Optional.empty();
+    }
   }
 }
