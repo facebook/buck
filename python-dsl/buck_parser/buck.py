@@ -1502,7 +1502,7 @@ class BuildFileProcessor(object):
         relative_path_to_build_file = os.path.relpath(path, self._project_root).replace(
             "\\", "/"
         )
-        len_suffix = -len("/" + self._build_file_name)
+        len_suffix = -len(self._build_file_name) - 1
         base_path = relative_path_to_build_file[:len_suffix]
         dirname = os.path.dirname(path)
 
