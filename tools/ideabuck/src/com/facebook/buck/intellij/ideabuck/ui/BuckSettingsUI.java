@@ -461,6 +461,12 @@ public class BuckSettingsUI extends JPanel {
                         }));
   }
 
+  private ProcessBuilder noBuckdProcessBuilder(String... cmd) {
+    ProcessBuilder processBuilder = new ProcessBuilder(cmd);
+    processBuilder.environment().put("NO_BUCKD", "1"); // don't launch a daemon for these...
+    return processBuilder;
+  }
+
   private void waitUntilDoneOrCanceled(Process process, ProgressIndicator progressIndicator)
       throws InterruptedException {
     // waitFor timeout chosen to make the UI cancel button reasonably responsive.
@@ -481,7 +487,7 @@ public class BuckSettingsUI extends JPanel {
       progressIndicator.setIndeterminate(true);
       progressIndicator.setText("Finding root for " + defaultCell.getName());
       Process process =
-          new ProcessBuilder(buckExecutable, "root")
+          noBuckdProcessBuilder(buckExecutable, "root")
               .directory(new File(defaultCell.getPath()))
               .start();
       waitUntilDoneOrCanceled(process, progressIndicator);
@@ -497,7 +503,7 @@ public class BuckSettingsUI extends JPanel {
       Type type = new TypeToken<Map<String, String>>() {}.getType();
       Map<String, String> config;
       Process process =
-          new ProcessBuilder(buckExecutable, "audit", "cell", "--json")
+          noBuckdProcessBuilder(buckExecutable, "audit", "cell", "--json")
               .directory(mainCellRoot.toFile())
               .start();
       waitUntilDoneOrCanceled(process, progressIndicator);
@@ -541,7 +547,7 @@ public class BuckSettingsUI extends JPanel {
     cell.setRoot(cellRoot.toString());
     try {
       Process process =
-          new ProcessBuilder(buckExecutable, "audit", "config", "buildfile.name", "--json")
+          noBuckdProcessBuilder(buckExecutable, "audit", "config", "buildfile.name", "--json")
               .directory(cellRoot.toFile())
               .start();
       waitUntilDoneOrCanceled(process, progressIndicator);
