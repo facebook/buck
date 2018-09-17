@@ -109,7 +109,7 @@ class AbstractContext(object):
     @abc.abstractproperty
     def used_configs(self):
         """
-        :rtype: dict[Tuple[str, str], str]
+        :rtype: dict[str, dict[str, str]]
         """
         raise NotImplementedError()
 
@@ -161,7 +161,7 @@ class BuildFileContext(AbstractContext):
     ):
         self.globals = {}
         self._includes = set()
-        self._used_configs = {}
+        self._used_configs = collections.defaultdict(dict)
         self._used_env_vars = {}
         self._diagnostics = []
         self.rules = {}
@@ -210,7 +210,7 @@ class IncludeContext(AbstractContext):
         self.path = path
         self.globals = {}
         self._includes = set()
-        self._used_configs = {}
+        self._used_configs = collections.defaultdict(dict)
         self._used_env_vars = {}
         self._diagnostics = []
 
@@ -1143,7 +1143,7 @@ class BuildFileProcessor(object):
         # Lookup the value and record it in this build file's context.
         key = section, field
         value = self._configs.get(key)
-        build_env.used_configs[key] = value
+        build_env.used_configs[section][field] = value
 
         # If no config setting was found, return the default.
         if value is None:
@@ -1546,11 +1546,7 @@ class BuildFileProcessor(object):
         values.append({"__includes": [path] + sorted(build_env.includes)})
 
         # Add in tracked used config settings as a special meta rule.
-        configs = {}
-        for (section, field), value in build_env.used_configs.iteritems():
-            configs.setdefault(section, {})
-            configs[section][field] = value
-        values.append({"__configs": configs})
+        values.append({"__configs": build_env.used_configs})
 
         # Add in used environment variables as a special meta rule.
         values.append({"__env": build_env.used_env_vars})
