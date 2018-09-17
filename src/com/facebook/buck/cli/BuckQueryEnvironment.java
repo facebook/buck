@@ -282,9 +282,18 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   @Override
   public Set<QueryTarget> getInputs(QueryTarget target) throws QueryException {
     TargetNode<?> node = getNode(target);
+    Preconditions.checkState(target instanceof QueryBuildTarget);
+    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+    Cell cell = rootCell.getCell(buildTarget);
     return node.getInputs()
         .stream()
-        .map(path -> PathSourcePath.of(node.getFilesystem(), path))
+        .map(
+            path ->
+                PathSourcePath.of(
+                    cell.getFilesystem(),
+                    MorePaths.relativize(
+                        rootCell.getFilesystem().getRootPath(),
+                        cell.getFilesystem().resolve(path))))
         .map(QueryFileTarget::of)
         .collect(ImmutableSet.toImmutableSet());
   }

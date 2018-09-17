@@ -893,6 +893,19 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testInputsUsesPathsRelativeToRootCell() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command_cross_cell", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(workspace.resolve("cell1"), "query", "inputs(cell2//foo:test)");
+
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("../cell2/foo/foo.txt\n")));
+  }
+
+  @Test
   public void testInputsTwoTargets() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
