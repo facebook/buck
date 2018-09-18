@@ -35,7 +35,6 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -160,29 +159,24 @@ public class DefaultParser implements Parser {
   @Override
   public SortedMap<String, Object> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
-    try {
+    Cell owningCell = cell.getCell(targetNode.getBuildTarget());
+    ImmutableSet<Map<String, Object>> allRawNodes =
+        getTargetNodeRawAttributes(
+            state, owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
 
-      Cell owningCell = cell.getCell(targetNode.getBuildTarget());
-      ImmutableSet<Map<String, Object>> allRawNodes =
-          getTargetNodeRawAttributes(
-              state, owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
-
-      String shortName = targetNode.getBuildTarget().getShortName();
-      for (Map<String, Object> rawNode : allRawNodes) {
-        if (shortName.equals(rawNode.get("name"))) {
-          SortedMap<String, Object> toReturn = new TreeMap<>(rawNode);
-          toReturn.put(
-              "buck.direct_dependencies",
-              targetNode
-                  .getParseDeps()
-                  .stream()
-                  .map(Object::toString)
-                  .collect(ImmutableList.toImmutableList()));
-          return toReturn;
-        }
+    String shortName = targetNode.getBuildTarget().getShortName();
+    for (Map<String, Object> rawNode : allRawNodes) {
+      if (shortName.equals(rawNode.get("name"))) {
+        SortedMap<String, Object> toReturn = new TreeMap<>(rawNode);
+        toReturn.put(
+            "buck.direct_dependencies",
+            targetNode
+                .getParseDeps()
+                .stream()
+                .map(Object::toString)
+                .collect(ImmutableList.toImmutableList()));
+        return toReturn;
       }
-    } catch (MissingBuildFileException e) {
-      throw new RuntimeException("Deeply unlikely to be true: the cell is missing: " + targetNode);
     }
     return null;
   }
