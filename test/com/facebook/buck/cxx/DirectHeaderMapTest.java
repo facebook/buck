@@ -122,6 +122,7 @@ public class DirectHeaderMapTest {
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
+    Path includeRoot = projectFilesystem.resolve(buildRule.getIncludeRoot());
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
             RmStep.of(
@@ -145,8 +146,8 @@ public class DirectHeaderMapTest {
                 projectFilesystem,
                 headerMapPath,
                 ImmutableMap.of(
-                    Paths.get("file"), file1,
-                    Paths.get("directory/then/file"), file2)));
+                    Paths.get("file"), includeRoot.relativize(file1),
+                    Paths.get("directory/then/file"), includeRoot.relativize(file2))));
     ImmutableList<Step> actualBuildSteps = buildRule.getBuildSteps(buildContext, buildableContext);
     assertEquals(expectedBuildSteps, actualBuildSteps.subList(1, actualBuildSteps.size()));
   }
