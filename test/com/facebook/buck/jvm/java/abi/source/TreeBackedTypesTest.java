@@ -45,10 +45,10 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     compile("class Foo { }");
 
     TypeElement fooElement = elements.getTypeElement("Foo");
-    TypeMirror fooTypeMirror = types.getDeclaredType(fooElement);
+    DeclaredType fooTypeMirror = types.getDeclaredType(fooElement);
 
     assertEquals(TypeKind.DECLARED, fooTypeMirror.getKind());
-    DeclaredType fooDeclaredType = (DeclaredType) fooTypeMirror;
+    DeclaredType fooDeclaredType = fooTypeMirror;
     assertNotSame(fooElement.asType(), fooDeclaredType);
     assertSame(fooElement, fooDeclaredType.asElement());
     assertEquals(0, fooDeclaredType.getTypeArguments().size());
@@ -63,10 +63,10 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     compile("class Foo<T> { }");
 
     TypeElement fooElement = elements.getTypeElement("Foo");
-    TypeMirror fooTypeMirror = types.getDeclaredType(fooElement);
+    DeclaredType fooTypeMirror = types.getDeclaredType(fooElement);
 
     assertEquals(TypeKind.DECLARED, fooTypeMirror.getKind());
-    DeclaredType fooDeclaredType = (DeclaredType) fooTypeMirror;
+    DeclaredType fooDeclaredType = fooTypeMirror;
     assertNotSame(fooElement.asType(), fooDeclaredType);
     assertSame(fooElement, fooDeclaredType.asElement());
     assertEquals(0, fooDeclaredType.getTypeArguments().size());

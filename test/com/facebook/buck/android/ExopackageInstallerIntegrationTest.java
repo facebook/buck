@@ -564,7 +564,7 @@ public class ExopackageInstallerIntegrationTest {
               libsContents.get(k));
           expectedMetadata
               .append(prefix)
-              .append(k.substring(k.lastIndexOf("/") + 1, k.length() - 3))
+              .append(k, k.lastIndexOf("/") + 1, k.length() - 3)
               .append(" native-")
               .append(libHash)
               .append(".so");

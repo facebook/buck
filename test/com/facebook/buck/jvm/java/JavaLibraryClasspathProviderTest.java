@@ -206,7 +206,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
         ImmutableSet.of(z, c, e),
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps((JavaLibrary) z));
 
-    BuildRule mavenCoord =
+    JavaLibrary mavenCoord =
         new JavaLibraryBuilder(
                 BuildTargetFactory.newInstance("//has:output"),
                 filesystem,
@@ -218,7 +218,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     assertEquals(
         "Does appear if no output jar but maven coordinate present.",
         ImmutableSet.of(z, c, e, mavenCoord),
-        JavaLibraryClasspathProvider.getTransitiveClasspathDeps((JavaLibrary) mavenCoord));
+        JavaLibraryClasspathProvider.getTransitiveClasspathDeps(mavenCoord));
   }
 
   @Test
