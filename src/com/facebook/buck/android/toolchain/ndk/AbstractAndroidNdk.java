@@ -31,6 +31,11 @@ import org.immutables.value.Value;
 public abstract class AbstractAndroidNdk implements ComparableToolchain {
   public static final String DEFAULT_NAME = "android-ndk-location";
 
+  @Override
+  public String getName() {
+    return DEFAULT_NAME;
+  }
+
   @Value.Parameter
   public abstract String getNdkVersion();
 

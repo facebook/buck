@@ -29,4 +29,9 @@ public interface AbstractAndroidBuildToolsLocation extends Toolchain {
 
   /** @return {@code Path} pointing to Android SDK build tools */
   Path getBuildToolsPath();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

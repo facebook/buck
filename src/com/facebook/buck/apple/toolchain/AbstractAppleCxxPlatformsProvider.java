@@ -44,4 +44,9 @@ public abstract class AbstractAppleCxxPlatformsProvider implements CxxPlatformsS
     }
     return cxxSystemPlatformsBuilder.build();
   }
+
+  @Override
+  public String getName() {
+    return DEFAULT_NAME;
+  }
 }

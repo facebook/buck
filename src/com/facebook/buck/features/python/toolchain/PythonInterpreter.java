@@ -26,4 +26,9 @@ public interface PythonInterpreter extends Toolchain {
 
   /** @return the {@link Path} to the default python interpreter. */
   Path getPythonInterpreterPath();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

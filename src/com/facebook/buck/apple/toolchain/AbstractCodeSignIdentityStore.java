@@ -30,4 +30,9 @@ public interface AbstractCodeSignIdentityStore extends Toolchain {
 
   @Value.Parameter
   Supplier<ImmutableList<CodeSignIdentity>> getIdentitiesSupplier();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

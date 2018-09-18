@@ -24,4 +24,9 @@ public interface PexToolProvider extends Toolchain {
   String DEFAULT_NAME = "pex-tool";
 
   Tool getPexTool(BuildRuleResolver resolver);
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

@@ -32,4 +32,9 @@ public interface AbstractHaskellPlatformsProvider extends Toolchain {
 
   @Value.Parameter
   FlavorDomain<HaskellPlatform> getHaskellPlatforms();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

@@ -31,4 +31,9 @@ interface AbstractOcamlToolchain extends Toolchain {
   OcamlPlatform getDefaultOcamlPlatform();
 
   FlavorDomain<OcamlPlatform> getOcamlPlatforms();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

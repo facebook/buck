@@ -27,5 +27,10 @@ import org.immutables.value.Value;
 interface AbstractJavaToolchain extends Toolchain {
   String DEFAULT_NAME = "java-toolchain";
 
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
+
   JavacProvider getJavacProvider();
 }

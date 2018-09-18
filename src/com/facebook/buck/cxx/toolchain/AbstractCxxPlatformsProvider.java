@@ -32,4 +32,9 @@ public abstract class AbstractCxxPlatformsProvider implements Toolchain {
 
   @Value.Parameter
   public abstract FlavorDomain<CxxPlatform> getCxxPlatforms();
+
+  @Override
+  public String getName() {
+    return DEFAULT_NAME;
+  }
 }

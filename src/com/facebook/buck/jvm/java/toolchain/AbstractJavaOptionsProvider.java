@@ -32,4 +32,9 @@ public interface AbstractJavaOptionsProvider extends Toolchain {
 
   @Value.Parameter
   JavaOptions getJavaOptionsForTests();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

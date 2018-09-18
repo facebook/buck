@@ -60,7 +60,7 @@ public class AndroidPlatformTargetProducerTest {
             additionalJarPaths,
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty());
-    assertEquals(name, androidPlatformTarget.getName());
+    assertEquals(name, androidPlatformTarget.getPlatformName());
     assertEquals(
         ImmutableList.of(
             MorePathsForTests.rootRelativePath("home/android/platforms/android-16/android.jar")),
@@ -156,7 +156,7 @@ public class AndroidPlatformTargetProducerTest {
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty());
 
-    assertEquals(platformId, androidPlatformTarget.getName());
+    assertEquals(platformId, androidPlatformTarget.getPlatformName());
     assertEquals(
         ImmutableList.of(
             pathToAndroidSdkDir.resolve("platforms/android-23/android.jar"),
@@ -260,7 +260,7 @@ public class AndroidPlatformTargetProducerTest {
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty());
 
-    assertEquals(platformId, androidPlatformTarget.getName());
+    assertEquals(platformId, androidPlatformTarget.getPlatformName());
     assertEquals(
         pathToAndroidSdkDir.resolve("build-tools/17.0.0/zipalign"),
         androidPlatformTarget.getZipalignExecutable());
@@ -275,7 +275,7 @@ public class AndroidPlatformTargetProducerTest {
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty());
-    assertEquals(platformId, androidPlatformTarget.getName());
+    assertEquals(platformId, androidPlatformTarget.getPlatformName());
     assertEquals(
         pathToAndroidSdkDir.resolve("tools/zipalign"),
         androidPlatformTarget.getZipalignExecutable());

@@ -28,4 +28,9 @@ public interface AbstractAppleToolchainProvider extends ComparableToolchain {
 
   @Value.Parameter
   ImmutableMap<String, AppleToolchain> getAppleToolchains();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

@@ -33,4 +33,9 @@ public interface AbstractAppleDeveloperDirectoryForTestsProvider extends Toolcha
 
   @Value.Parameter
   Path getAppleDeveloperDirectoryForTests();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

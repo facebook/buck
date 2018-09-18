@@ -32,4 +32,9 @@ public abstract class AbstractGoToolchain implements Toolchain {
 
   @Value.Parameter
   public abstract GoPlatform getDefaultPlatform();
+
+  @Override
+  public String getName() {
+    return DEFAULT_NAME;
+  }
 }

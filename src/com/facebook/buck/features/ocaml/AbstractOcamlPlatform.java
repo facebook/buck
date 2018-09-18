@@ -70,4 +70,9 @@ interface AbstractOcamlPlatform extends Toolchain, FlavorConvertible {
 
   /** @return the {@link CxxPlatform} to use for C/C++ dependencies. */
   CxxPlatform getCxxPlatform();
+
+  @Override
+  default String getName() {
+    throw new UnsupportedOperationException();
+  }
 }

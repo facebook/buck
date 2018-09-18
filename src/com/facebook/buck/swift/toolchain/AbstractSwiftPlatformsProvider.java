@@ -29,4 +29,9 @@ public interface AbstractSwiftPlatformsProvider extends Toolchain {
 
   @Value.Parameter
   FlavorDomain<SwiftPlatform> getSwiftCxxPlatforms();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

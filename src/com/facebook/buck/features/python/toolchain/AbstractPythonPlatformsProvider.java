@@ -28,4 +28,9 @@ public interface AbstractPythonPlatformsProvider extends Toolchain {
 
   @Value.Parameter
   FlavorDomain<PythonPlatform> getPythonPlatforms();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

@@ -28,4 +28,9 @@ public interface AbstractJavaCxxPlatformProvider extends Toolchain {
 
   @Value.Parameter
   CxxPlatform getDefaultJavaCxxPlatform();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

@@ -29,4 +29,9 @@ public interface AbstractJavacOptionsProvider extends Toolchain {
 
   @Value.Parameter
   JavacOptions getJavacOptions();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

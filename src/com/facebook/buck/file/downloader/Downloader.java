@@ -35,4 +35,9 @@ public interface Downloader extends Toolchain {
    * @throws IOException Should an exception be thrown when downloading.
    */
   boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException;
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

@@ -29,4 +29,9 @@ public interface AbstractAndroidSdkLocation extends ComparableToolchain {
 
   @Value.Parameter
   Path getSdkRootPath();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

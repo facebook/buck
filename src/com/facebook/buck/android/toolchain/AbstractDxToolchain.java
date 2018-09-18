@@ -30,4 +30,9 @@ public interface AbstractDxToolchain extends Toolchain {
   /** Executor service exclusively for the smart dexing step. */
   @Value.Parameter
   ListeningExecutorService getDxExecutorService();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

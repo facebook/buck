@@ -30,4 +30,9 @@ public interface AbstractAppleDeveloperDirectoryProvider extends Toolchain {
 
   @Value.Parameter
   Path getAppleDeveloperDirectory();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

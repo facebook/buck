@@ -21,4 +21,6 @@ package com.facebook.buck.core.toolchain;
  *
  * <p>Use {@link ToolchainProvider} to get a toolchain by a name.
  */
-public interface Toolchain {}
+public interface Toolchain {
+  String getName();
+}

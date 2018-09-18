@@ -49,6 +49,11 @@ public class DefaultToolchainProviderTest {
 
   public interface NoopToolchain extends Toolchain {
     String DEFAULT_NAME = "no-op-toolchain";
+
+    @Override
+    default String getName() {
+      return DEFAULT_NAME;
+    }
   }
 
   public static class ThrowingToolchainFactory implements ToolchainFactory<NoopToolchain> {

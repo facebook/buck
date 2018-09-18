@@ -32,4 +32,9 @@ public interface AbstractLuaPlatformsProvider extends Toolchain {
 
   @Value.Parameter
   FlavorDomain<LuaPlatform> getLuaPlatforms();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

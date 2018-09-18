@@ -260,4 +260,9 @@ public abstract class AbstractProvisioningProfileStore implements AddsToRuleKey,
   public static ProvisioningProfileStore empty() {
     return ProvisioningProfileStore.of(Suppliers.ofInstance(ImmutableList.of()));
   }
+
+  @Override
+  public String getName() {
+    return DEFAULT_NAME;
+  }
 }

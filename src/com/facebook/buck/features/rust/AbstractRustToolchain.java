@@ -25,8 +25,12 @@ import org.immutables.value.Value;
 @Value.Immutable(copy = false, builder = false)
 @BuckStyleImmutable
 public interface AbstractRustToolchain extends Toolchain {
-
   String DEFAULT_NAME = "rust-platforms";
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 
   @Value.Parameter
   RustPlatform getDefaultRustPlatform();

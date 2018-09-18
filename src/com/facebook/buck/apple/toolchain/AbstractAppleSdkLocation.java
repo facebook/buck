@@ -30,4 +30,9 @@ public interface AbstractAppleSdkLocation extends ComparableToolchain {
 
   @Parameter
   ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths();
+
+  @Override
+  default String getName() {
+    return DEFAULT_NAME;
+  }
 }

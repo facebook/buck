@@ -46,4 +46,9 @@ public abstract class AbstractNdkCxxPlatformsProvider extends BaseToolchain
     }
     return cxxSystemPlatformsBuilder.build();
   }
+
+  @Override
+  public String getName() {
+    return DEFAULT_NAME;
+  }
 }

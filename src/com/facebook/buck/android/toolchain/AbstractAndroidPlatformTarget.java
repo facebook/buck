@@ -34,13 +34,18 @@ public abstract class AbstractAndroidPlatformTarget implements Toolchain {
 
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "android-23";
 
+  @Override
+  public String getName() {
+    return DEFAULT_NAME;
+  }
+
   /** This is likely something like {@code "Google Inc.:Google APIs:21"}. */
   @Value.Parameter
-  public abstract String getName();
+  public abstract String getPlatformName();
 
   @Override
   public String toString() {
-    return getName();
+    return getPlatformName();
   }
 
   @Value.Parameter
