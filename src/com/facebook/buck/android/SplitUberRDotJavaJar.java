@@ -59,7 +59,7 @@ public class SplitUberRDotJavaJar extends ModernBuildRule<SplitUberRDotJavaJar>
   @AddToRuleKey private final SourcePath uberRDotJavaJar;
   @AddToRuleKey private final DexSplitMode dexSplitMode;
 
-  private final ImmutableMap<String, OutputPath> outputs;
+  @AddToRuleKey private final ImmutableMap<String, OutputPath> outputs;
 
   public SplitUberRDotJavaJar(
       BuildTarget buildTarget,
@@ -71,7 +71,8 @@ public class SplitUberRDotJavaJar extends ModernBuildRule<SplitUberRDotJavaJar>
     this.uberRDotJavaJar = uberRDotJavaJar;
     this.dexSplitMode = dexSplitMode;
 
-    ImmutableMap.Builder<String, OutputPath> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, OutputPath> builder =
+        ImmutableMap.builderWithExpectedSize(RESOURCE_TYPES.size());
     for (String rtype : RESOURCE_TYPES) {
       builder.put(rtype, new OutputPath(rtype + ".jar"));
     }
