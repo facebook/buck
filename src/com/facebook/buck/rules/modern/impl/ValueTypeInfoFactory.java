@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
@@ -140,6 +141,10 @@ public class ValueTypeInfoFactory {
         return BuildTargetTypeInfo.INSTANCE;
       } else if (Pattern.class.isAssignableFrom(rawClass)) {
         return PatternValueTypeInfo.INSTANCE;
+      } else if (Toolchain.class.isAssignableFrom(rawClass)) {
+        @SuppressWarnings("unchecked")
+        Class<? extends Toolchain> asToolchain = (Class<? extends Toolchain>) rawClass;
+        return new ToolchainTypeInfo<>(asToolchain);
       } else if (AddsToRuleKey.class.isAssignableFrom(rawClass)) {
         return DynamicTypeInfo.INSTANCE;
       }

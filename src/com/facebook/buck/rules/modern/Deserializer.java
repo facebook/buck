@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
@@ -89,14 +90,17 @@ public class Deserializer {
   private final Function<Optional<String>, ProjectFilesystem> cellMap;
   private final ClassFinder classFinder;
   private final Supplier<SourcePathResolver> pathResolver;
+  private final ToolchainProvider toolchainProvider;
 
   public Deserializer(
       Function<Optional<String>, ProjectFilesystem> cellMap,
       ClassFinder classFinder,
-      Supplier<SourcePathResolver> pathResolver) {
+      Supplier<SourcePathResolver> pathResolver,
+      ToolchainProvider toolchainProvider) {
     this.cellMap = cellMap;
     this.classFinder = classFinder;
     this.pathResolver = pathResolver;
+    this.toolchainProvider = toolchainProvider;
   }
 
   public <T extends AddsToRuleKey> T deserialize(DataProvider provider, Class<T> clazz)
@@ -121,6 +125,10 @@ public class Deserializer {
         Preconditions.checkState(args.length == 0);
         @SuppressWarnings("unchecked")
         T value = (T) pathResolver.get();
+        return value;
+      } else if (valueClass.equals(ToolchainProvider.class)) {
+        @SuppressWarnings("unchecked")
+        T value = (T) toolchainProvider;
         return value;
       }
       throw new IllegalArgumentException();

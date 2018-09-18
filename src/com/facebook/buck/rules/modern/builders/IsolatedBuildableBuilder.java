@@ -35,6 +35,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.event.BuckEventBus;
@@ -94,6 +95,7 @@ public abstract class IsolatedBuildableBuilder {
   private final Deserializer.ClassFinder classFinder;
   private final Path dataRoot;
   private final BuckEventBus eventBus;
+  private final Function<Optional<String>, ToolchainProvider> toolchainProviderFunction;
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   IsolatedBuildableBuilder(Path workRoot, Path projectRoot) throws IOException {
@@ -232,6 +234,12 @@ public abstract class IsolatedBuildableBuilder {
             .setShouldDeleteTemporaries(buckConfig.getShouldDeleteTemporaries())
             .build();
 
+    this.toolchainProviderFunction =
+        cellName ->
+            cellProvider
+                .getCellByPath(cellPathResolver.getCellPath(cellName).get())
+                .getToolchainProvider();
+
     RichStream.from(cellPathResolver.getCellPaths().keySet())
         .forEachThrowing(
             name -> {
@@ -269,7 +277,13 @@ public abstract class IsolatedBuildableBuilder {
   /** Deserializes the BuildableAndTarget corresponding to hash and builds it. */
   public void build(HashCode hash) throws IOException, StepFailedException, InterruptedException {
     Deserializer deserializer =
-        new Deserializer(filesystemFunction, classFinder, buildContext::getSourcePathResolver);
+        new Deserializer(
+            filesystemFunction,
+            classFinder,
+            buildContext::getSourcePathResolver,
+            // TODO(cjhopman): This gets toolchains from the root cell (instead of the cell the rule
+            // is in).
+            toolchainProviderFunction.apply(Optional.empty()));
 
     BuildableAndTarget reconstructed;
     try (Scope ignored = LeafEvents.scope(eventBus, "deserializing")) {

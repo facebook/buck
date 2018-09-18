@@ -71,7 +71,8 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
                     .getCellByPath(cellResolver.getCellPathOrThrow(name))
                     .getFilesystem(),
             Class::forName,
-            () -> DefaultSourcePathResolver.from(ruleFinder));
+            () -> DefaultSourcePathResolver.from(ruleFinder),
+            rootCell.getToolchainProvider());
   }
 
   DataProvider getProvider(HashCode hash) {
