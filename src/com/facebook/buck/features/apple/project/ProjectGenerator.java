@@ -1751,7 +1751,8 @@ public class ProjectGenerator {
               generateConfigKey("OTHER_LDFLAGS", platform),
               Streams.stream(
                       Iterables.transform(
-                          Iterables.concat(platformLinkerFlags.get(platform)),
+                          Iterables.concat(
+                              otherLdFlags, Iterables.concat(platformLinkerFlags.get(platform))),
                           Escaper.BASH_ESCAPER::apply))
                   .collect(Collectors.joining(" ")));
         }
