@@ -20,8 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
@@ -64,7 +63,7 @@ import java.util.stream.Stream;
 
 /** Helper class for handling preprocessing related tasks of a cxx compilation rule. */
 @CustomClassBehavior(PreprocessorDelegate.SerializationBehavior.class)
-final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogic {
+final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
 
   // Fields that are added to rule key as is.
   @AddToRuleKey private final Preprocessor preprocessor;
@@ -328,9 +327,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
   public Optional<ConflictingHeadersResult> checkConflictingHeaders() {
     return lazyConflictingHeadersCheckResult.get();
   }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {}
 
   @Override
   public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
