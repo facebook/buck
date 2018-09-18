@@ -50,7 +50,7 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class TargetNodeParsePipeline
-    extends ConvertingPipelineWithPerfEventScope<Map<String, Object>, TargetNode<?>> {
+    extends ConvertingPipeline<Map<String, Object>, TargetNode<?>> {
 
   private static final Logger LOG = Logger.get(TargetNodeParsePipeline.class);
 

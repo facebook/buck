@@ -35,8 +35,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 /** Converts nodes in a raw form (taken from build file parsers) into {@link RawTargetNode}. */
-public class RawTargetNodePipeline
-    extends ConvertingPipelineWithPerfEventScope<Map<String, Object>, RawTargetNode> {
+public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object>, RawTargetNode> {
 
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory;

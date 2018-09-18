@@ -36,7 +36,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class RawTargetNodeToTargetNodeParsePipeline
-    extends ConvertingPipelineWithPerfEventScope<RawTargetNode, TargetNode<?>> {
+    extends ConvertingPipeline<RawTargetNode, TargetNode<?>> {
 
   private static final Logger LOG = Logger.get(RawTargetNodeToTargetNodeParsePipeline.class);
 

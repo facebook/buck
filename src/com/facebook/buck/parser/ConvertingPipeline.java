@@ -17,7 +17,11 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.collect.ImmutableList;
@@ -29,6 +33,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * Base class for a parse pipeline that converts data one item at a time.
@@ -37,17 +43,33 @@ import java.util.Optional;
  * @param <T> Type to convert to (TargetNode, for example)
  */
 public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
+  private static final Logger LOG = Logger.get(ConvertingPipeline.class);
+
   private final BuckEventBus eventBus;
   private final PipelineNodeCache<BuildTarget, T> cache;
   protected final ListeningExecutorService executorService;
+  private final SimplePerfEvent.Scope perfEventScope;
+  private final PerfEventId perfEventId;
+
+  /**
+   * minimum duration time for performance events to be logged (for use with {@link
+   * SimplePerfEvent}s). This is on the base class to make it simpler to enable verbose tracing for
+   * all of the parsing pipelines.
+   */
+  private final long minimumPerfEventTimeMs;
 
   public ConvertingPipeline(
       ListeningExecutorService executorService,
       Cache<BuildTarget, T> cache,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      Scope perfEventScope,
+      PerfEventId perfEventId) {
     this.eventBus = eventBus;
     this.cache = new PipelineNodeCache<>(cache);
     this.executorService = executorService;
+    this.perfEventScope = perfEventScope;
+    this.perfEventId = perfEventId;
+    this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 1;
   }
 
   @Override
@@ -95,7 +117,11 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   protected abstract BuildTarget getBuildTarget(
       Path root, Optional<String> cellName, Path buildFile, F from);
 
-  protected abstract T computeNode(Cell cell, BuildTarget buildTarget, F rawNode)
+  protected abstract T computeNodeInScope(
+      Cell cell,
+      BuildTarget buildTarget,
+      F rawNode,
+      Function<PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException;
 
   protected abstract ListenableFuture<ImmutableSet<F>> getItemsToConvert(Cell cell, Path buildFile)
@@ -104,11 +130,37 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   protected abstract ListenableFuture<F> getItemToConvert(Cell cell, BuildTarget buildTarget)
       throws BuildTargetException;
 
+  private T computeNode(Cell cell, BuildTarget buildTarget, F rawNode) throws BuildTargetException {
+
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scopeIgnoringShortEvents(
+            eventBus,
+            perfEventId,
+            "target",
+            buildTarget,
+            perfEventScope,
+            minimumPerfEventTimeMs,
+            TimeUnit.MILLISECONDS)) {
+      Function<PerfEventId, Scope> perfEventScopeFunction =
+          perfEventId ->
+              SimplePerfEvent.scopeIgnoringShortEvents(
+                  eventBus, perfEventId, scope, minimumPerfEventTimeMs, TimeUnit.MILLISECONDS);
+
+      return computeNodeInScope(cell, buildTarget, rawNode, perfEventScopeFunction);
+    }
+  }
+
   private ListenableFuture<T> dispatchComputeNode(Cell cell, BuildTarget buildTarget, F from)
       throws BuildTargetException {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
     }
     return Futures.immediateFuture(computeNode(cell, buildTarget, from));
+  }
+
+  @Override
+  public void close() {
+    perfEventScope.close();
+    super.close();
   }
 }
