@@ -1835,6 +1835,14 @@ public class ProjectGenerator {
         collectRecursiveLibraryDepsMinusBundleLoaderDeps(
             targetNode, depTargetNodes, bundleLoaderNode);
 
+    ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
+    frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(targetNode));
+    frameworksBuilder.addAll(targetNode.getConstructorArg().getFrameworks());
+    frameworksBuilder.addAll(targetNode.getConstructorArg().getLibraries());
+    ImmutableSet<FrameworkPath> systemFwkOrLibs = frameworksBuilder.build();
+    ImmutableList<String> systemFwkOrLibFlags =
+        collectSystemLibraryAndFrameworkLinkerFlags(systemFwkOrLibs);
+
     if (options.shouldForceLoadLinkWholeLibraries() || options.shouldAddLinkedLibrariesAsFlags()) {
       ImmutableList<String> forceLoadLocal =
           collectForceLoadLinkerFlags(
@@ -1924,7 +1932,10 @@ public class ProjectGenerator {
               Streams.stream(focusedFrameworkFlags).collect(Collectors.joining(" ")))
           .put(
               "BUCK_LINKER_FLAGS_FRAMEWORK_OTHER",
-              Streams.stream(otherFrameworkFlags).collect(Collectors.joining(" ")));
+              Streams.stream(otherFrameworkFlags).collect(Collectors.joining(" ")))
+          .put(
+              "BUCK_LINKER_FLAGS_SYSTEM",
+              Streams.stream(systemFwkOrLibFlags).collect(Collectors.joining(" ")));
     }
 
     Stream<String> otherLdFlagsStream = Streams.stream(otherLdFlags).map(Escaper.BASH_ESCAPER);
@@ -1943,7 +1954,8 @@ public class ProjectGenerator {
                       "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER",
                       "$BUCK_LINKER_FLAGS_LIBRARY_LOCAL",
                       "$BUCK_LINKER_FLAGS_LIBRARY_FOCUSED",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_OTHER"))
+                      "$BUCK_LINKER_FLAGS_LIBRARY_OTHER",
+                      "$BUCK_LINKER_FLAGS_SYSTEM"))
               .collect(Collectors.joining(" ")));
     } else if (options.shouldForceLoadLinkWholeLibraries()
         && !options.shouldAddLinkedLibrariesAsFlags()) {
@@ -1967,7 +1979,8 @@ public class ProjectGenerator {
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_OTHER",
                       "$BUCK_LINKER_FLAGS_LIBRARY_LOCAL",
                       "$BUCK_LINKER_FLAGS_LIBRARY_FOCUSED",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_OTHER"))
+                      "$BUCK_LINKER_FLAGS_LIBRARY_OTHER",
+                      "$BUCK_LINKER_FLAGS_SYSTEM"))
               .collect(Collectors.joining(" ")));
     } else {
       appendConfigsBuilder.put(
@@ -3746,6 +3759,16 @@ public class ProjectGenerator {
     }
   }
 
+  private ImmutableList<String> collectSystemLibraryAndFrameworkLinkerFlags(
+      ImmutableSet<FrameworkPath> paths) {
+    FluentIterable<FrameworkPath> pathList = FluentIterable.from(paths);
+    return pathList
+        .transform(fwkOrLib -> getSystemFrameworkOrLibraryLinkerFlag(fwkOrLib))
+        .filter(Optional::isPresent)
+        .transform(input -> input.get())
+        .toList();
+  }
+
   private ImmutableList<String> collectLibraryLinkerFlags(
       FluentIterable<TargetNode<?>> targetNodes) {
     return targetNodes
@@ -3804,6 +3827,22 @@ public class ProjectGenerator {
     } else {
       return Optional.empty();
     }
+  }
+
+  private Optional<String> getSystemFrameworkOrLibraryLinkerFlag(FrameworkPath frameworkPath) {
+    String nameWithoutExtension =
+        MorePaths.getNameWithoutExtension(
+            frameworkPath.getFileName(this.defaultPathResolver::getRelativePath));
+
+    if (nameWithoutExtension.length() > 0) {
+      String libraryPrefix = "lib";
+      if (nameWithoutExtension.startsWith(libraryPrefix)) {
+        return Optional.of("-l" + nameWithoutExtension.substring(libraryPrefix.length()));
+      } else {
+        return Optional.of("-framework " + nameWithoutExtension);
+      }
+    }
+    return Optional.empty();
   }
 
   private Optional<String> getLibraryLinkerFlag(TargetNode<?> targetNode) {

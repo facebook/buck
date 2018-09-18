@@ -2474,6 +2474,25 @@ public class ProjectGeneratorTest {
                     halideTarget))
             .setLinkWhole(true)
             .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello5")))
+            .setFrameworks(
+                ImmutableSortedSet.of(
+                    FrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("SomeSystem.framework"),
+                            Optional.empty()))))
+            .setLibraries(
+                ImmutableSortedSet.of(
+                    FrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("libSomeSystem1.a"),
+                            Optional.empty())),
+                    FrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("libSomeSystem2.dylib"),
+                            Optional.empty()))))
             .build();
 
     ProjectGenerator projectGenerator =
@@ -2517,7 +2536,7 @@ public class ProjectGeneratorTest {
 
     if (shouldEnableForceLoad && shouldEnableAddLibrariesAsFlags) {
       assertEquals(
-          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_FOCUSED $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FOCUSED $BUCK_LINKER_FLAGS_LIBRARY_OTHER",
+          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_FOCUSED $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FOCUSED $BUCK_LINKER_FLAGS_LIBRARY_OTHER $BUCK_LINKER_FLAGS_SYSTEM",
           settings.get("OTHER_LDFLAGS"));
     } else if (shouldEnableForceLoad) {
 
@@ -2528,7 +2547,7 @@ public class ProjectGeneratorTest {
     } else if (shouldEnableAddLibrariesAsFlags) {
 
       assertEquals(
-          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FOCUSED $BUCK_LINKER_FLAGS_LIBRARY_OTHER",
+          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FOCUSED $BUCK_LINKER_FLAGS_LIBRARY_OTHER $BUCK_LINKER_FLAGS_SYSTEM",
           settings.get("OTHER_LDFLAGS"));
     } else {
       assertEquals(
@@ -2574,8 +2593,11 @@ public class ProjectGeneratorTest {
 
       // for tests everything is considered focused so, OTHER should be empty
       assertEquals("$(inherited) ", settings.get("BUCK_LINKER_FLAGS_LIBRARY_OTHER"));
-
       assertEquals("$(inherited) ", settings.get("BUCK_LINKER_FLAGS_FRAMEWORK_OTHER"));
+
+      assertEquals(
+          "$(inherited) -framework SomeSystem -lSomeSystem1 -lSomeSystem2",
+          settings.get("BUCK_LINKER_FLAGS_SYSTEM"));
     }
 
     // for tests everything is considered focused so, OTHER should be empty
@@ -2727,6 +2749,25 @@ public class ProjectGeneratorTest {
                     dependentframeworkTarget2,
                     halideTarget))
             .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello5")))
+            .setFrameworks(
+                ImmutableSortedSet.of(
+                    FrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("SomeSystem.framework"),
+                            Optional.empty()))))
+            .setLibraries(
+                ImmutableSortedSet.of(
+                    FrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("libSomeSystem1.a"),
+                            Optional.empty())),
+                    FrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("libSomeSystem2.dylib"),
+                            Optional.empty()))))
             .build();
 
     ProjectGenerator projectGenerator =
