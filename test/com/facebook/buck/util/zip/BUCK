@@ -4,10 +4,8 @@ java_test(
     name = "zip",
     srcs = glob(["*Test.java"]),
     resources = [
-        # The sample bytes are a class file. We use the ".properties" extension so that IJ will copy
-        # the file to the output dir when compiling, allowing us to test in the IDE.
-        "macbeth.properties",
-        "sample-bytes.properties",
+        "macbeth.dat",
+        "sample-bytes.dat",
     ],
     source_only_abi_deps = ["//src/com/facebook/buck/util/zip:zip"],
     deps = [

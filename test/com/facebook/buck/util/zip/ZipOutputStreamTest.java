@@ -221,7 +221,7 @@ public class ZipOutputStreamTest {
     public void compressionCanBeSetOnAPerFileBasisAndIsHonoured() throws IOException {
       // Create some input that can be compressed.
       String packageName = getClass().getPackage().getName().replace('.', '/');
-      URL sample = Resources.getResource(packageName + "/sample-bytes.properties");
+      URL sample = Resources.getResource(packageName + "/sample-bytes.dat");
       byte[] input = Resources.toByteArray(sample);
 
       try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, mode)) {
@@ -267,12 +267,12 @@ public class ZipOutputStreamTest {
     public void packingALargeFileShouldGenerateTheSameOutputAsReferenceImpl() throws IOException {
       File reference = File.createTempFile("reference", ".zip");
       String packageName = getClass().getPackage().getName().replace('.', '/');
-      URL sample = Resources.getResource(packageName + "/macbeth.properties");
+      URL sample = Resources.getResource(packageName + "/macbeth.dat");
       byte[] input = Resources.toByteArray(sample);
 
       try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, mode);
           ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
-        CustomZipEntry entry = new CustomZipEntry("macbeth.properties");
+        CustomZipEntry entry = new CustomZipEntry("macbeth.dat");
         entry.setTime(System.currentTimeMillis());
         out.putNextEntry(entry);
         ref.putNextEntry(entry);
@@ -283,7 +283,7 @@ public class ZipOutputStreamTest {
       // Make sure the output is valid.
       try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
         ZipEntry entry = in.getNextEntry();
-        assertEquals("macbeth.properties", entry.getName());
+        assertEquals("macbeth.dat", entry.getName());
         assertArrayEquals(input, ByteStreams.toByteArray(in));
         assertNull(in.getNextEntry());
       }

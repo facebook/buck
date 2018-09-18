@@ -55,7 +55,7 @@ public class RepackZipEntriesStepTest {
       ZipEntry entry = new ZipEntry("file");
       stream.putNextEntry(entry);
       String packageName = getClass().getPackage().getName().replace('.', '/');
-      URL sample = Resources.getResource(packageName + "/sample-bytes.properties");
+      URL sample = Resources.getResource(packageName + "/sample-bytes.dat");
       stream.write(Resources.toByteArray(sample));
     }
   }
