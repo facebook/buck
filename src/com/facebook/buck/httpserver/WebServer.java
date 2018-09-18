@@ -23,6 +23,7 @@ import com.facebook.buck.util.trace.BuildTraces;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -78,7 +80,8 @@ public class WebServer {
 
   /** @return The port that web server is listening on. */
   public int getPort() {
-    return server.getURI().getPort();
+    @Nullable URI uri = server.getURI();
+    return uri != null ? uri.getPort() : -1;
   }
 
   public WebServerBuckEventListener createListener() {
