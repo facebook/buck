@@ -17,9 +17,15 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.cell.CellConfig;
+import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.module.BuckModuleManager;
+import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
+import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.AbstractBuildRuleResolver;
 import com.facebook.buck.core.rules.BuildRule;
@@ -29,10 +35,12 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
+import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.BuckPaths;
-import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
@@ -69,7 +77,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import org.pf4j.PluginManager;
 import org.pf4j.PluginWrapper;
@@ -125,23 +132,6 @@ public abstract class IsolatedBuildableBuilder {
       throw new RuntimeException(e);
     }
 
-    ConcurrentHashMap<Path, ProjectFilesystem> filesystemMap = new ConcurrentHashMap<>();
-    ConcurrentHashMap<Path, Config> configMap = new ConcurrentHashMap<>();
-
-    Function<Path, Config> configFunction =
-        (path) ->
-            configMap.computeIfAbsent(
-                path,
-                ignored -> {
-                  try {
-                    return Configs.createDefaultConfig(path);
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                });
-
-    filesystemMap.put(canonicalProjectRoot, filesystem);
-
     Architecture architecture = Architecture.detect();
     Platform platform = Platform.detect();
 
@@ -149,6 +139,7 @@ public abstract class IsolatedBuildableBuilder {
 
     DefaultCellPathResolver cellPathResolver =
         DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+
     BuckConfig buckConfig =
         new BuckConfig(
             config,
@@ -160,40 +151,38 @@ public abstract class IsolatedBuildableBuilder {
                 BuildTargetParser.INSTANCE.parse(
                     target, BuildTargetPatternParser.fullyQualified(), cellPathResolver));
 
+    BuckModuleManager moduleManager =
+        new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
+
+    Console console = createConsole();
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
+    ExecutableFinder executableFinder = new ExecutableFinder();
+
+    ToolchainProviderFactory toolchainProviderFactory =
+        new DefaultToolchainProviderFactory(
+            pluginManager, clientEnvironment, processExecutor, executableFinder);
+
+    CellProvider cellProvider =
+        LocalCellProviderFactory.create(
+            filesystem,
+            buckConfig,
+            CellConfig.of(),
+            cellPathResolver.getPathMapping(),
+            cellPathResolver,
+            moduleManager,
+            toolchainProviderFactory,
+            projectFilesystemFactory);
+
     this.filesystemFunction =
-        (cellName) -> {
-          Path cellPath =
-              cellName == null
-                  ? cellPathResolver.getCellPath(Optional.empty()).get()
-                  : cellPathResolver.getCellPath(cellName).get();
-          Preconditions.checkNotNull(cellPath);
-          return filesystemMap.computeIfAbsent(
-              cellPath,
-              ignored -> {
-                try {
-                  Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo = Optional.empty();
-                  Optional<String> canonicalCellName =
-                      cellPathResolver.getCanonicalCellName(cellPath);
-                  if (buckConfig.isEmbeddedCellBuckOutEnabled() && canonicalCellName.isPresent()) {
-                    embeddedCellBuckOutInfo =
-                        Optional.of(
-                            EmbeddedCellBuckOutInfo.of(
-                                filesystem.resolve(filesystem.getBuckPaths().getBuckOut()),
-                                canonicalCellName.get()));
-                  }
-                  return projectFilesystemFactory.createProjectFilesystem(
-                      cellPath, configFunction.apply(cellPath), embeddedCellBuckOutInfo);
-                } catch (InterruptedException e) {
-                  throw new RuntimeException(e);
-                }
-              });
-        };
+        (cellName) ->
+            cellProvider
+                .getCellByPath(cellPathResolver.getCellPath(cellName).get())
+                .getFilesystem();
 
     JavaPackageFinder javaPackageFinder =
         buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
-    Console console = createConsole();
+
     this.eventBus = createEventBus(console);
-    ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
 
     this.executionContext =
         ExecutionContext.of(
