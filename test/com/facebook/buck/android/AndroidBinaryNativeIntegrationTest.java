@@ -27,6 +27,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolGetter;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolsAndDtNeeded;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -51,10 +52,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private ProjectWorkspace workspace;
 
@@ -188,50 +192,45 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testNativeLibraryMergeErrors() throws IOException {
-    try {
-      workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");
-      Assert.fail("No exception from trying to merge lib into two targets.");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage(), Matchers.containsString("into both"));
-    }
+  public void throwIfLibMergedIntoTwoTargets() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("attempted to merge");
+    thrown.expectMessage("into both");
 
-    try {
-      workspace.runBuckBuild("//apps/sample:app_with_cross_asset_merged_libs");
-      Assert.fail("No exception from trying to merge between asset and non-asset.");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage(), Matchers.containsString("contains both asset and non-asset"));
-    }
+    workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");
+  }
 
-    // An older version of the code made this illegal.
-    // Keep the test around in case we want to restore this behavior.
-    //    try {
-    //      workspace.runBuckBuild("//apps/sample:app_with_merge_into_existing_lib");
-    //      Assert.fail("No exception from trying to merge into existing name.");
-    //    } catch (RuntimeException e) {
-    //      assertThat(e.getMessage(), Matchers.containsString("already a library name"));
-    //    }
+  @Test
+  public void throwIfLibMergedContainsAssetsAndNonAssets() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("contains both asset and non-asset libraries");
 
-    try {
-      workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs");
-      Assert.fail("No exception from trying circular merged dep.");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage(), Matchers.containsString("Dependency cycle"));
-    }
+    workspace.runBuckBuild("//apps/sample:app_with_cross_asset_merged_libs");
+  }
 
-    try {
-      workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs_including_root");
-      Assert.fail("No exception from trying circular merged dep.");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage(), Matchers.containsString("Dependency cycle"));
-    }
+  @Test
+  public void throwIfMergeHasCircularDependency() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("Error: Dependency cycle detected");
 
-    try {
-      workspace.runBuckBuild("//apps/sample:app_with_invalid_native_lib_merge_glue");
-      Assert.fail("No exception from trying invalid glue.");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage(), Matchers.matchesPattern(".*glue.*is not linkable.*"));
-    }
+    workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs");
+  }
+
+  @Test
+  public void throwIfMergedHasCircularDependencyIncludeRoot() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("Error: Dependency cycle detected");
+
+    workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs_including_root");
+  }
+
+  @Test
+  public void throwIfMergedWithInvalidGlue() throws IOException {
+    thrown.expect(RuntimeException.class);
+    thrown.expectMessage("Native library merge glue");
+    thrown.expectMessage("is not linkable");
+
+    workspace.runBuckBuild("//apps/sample:app_with_invalid_native_lib_merge_glue");
   }
 
   @Test

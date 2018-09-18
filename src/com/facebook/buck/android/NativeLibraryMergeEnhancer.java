@@ -21,6 +21,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -294,9 +295,9 @@ class NativeLibraryMergeEnhancer {
 
       for (NativeLinkable linkable : constituents.getLinkables()) {
         if (linkableMembership.containsKey(linkable)) {
-          throw new RuntimeException(
+          throw new HumanReadableException(
               String.format(
-                  "When processing %s, attempted to merge %s into both %s and %s",
+                  "Error: When processing %s, attempted to merge %s into both %s and %s",
                   buildTarget, linkable, linkableMembership.get(linkable), constituents));
         }
         linkableMembership.put(linkable, constituents);
@@ -311,7 +312,7 @@ class NativeLibraryMergeEnhancer {
         StringBuilder sb = new StringBuilder();
         sb.append(
             String.format(
-                "When processing %s, merged lib '%s' contains both asset and non-asset libraries.\n",
+                "Error: When processing %s, merged lib '%s' contains both asset and non-asset libraries.\n",
                 buildTarget, constituents));
         for (NativeLinkable linkable : constituents.getLinkables()) {
           sb.append(
@@ -319,7 +320,7 @@ class NativeLibraryMergeEnhancer {
                   "  %s -> %s\n",
                   linkable, linkableAssetSet.contains(linkable) ? "asset" : "not asset"));
         }
-        throw new RuntimeException(sb.toString());
+        throw new HumanReadableException(sb.toString());
       }
     }
 
@@ -416,8 +417,8 @@ class NativeLibraryMergeEnhancer {
       }
       cycleString.append(item);
       cycleString.append(" ]");
-      throw new RuntimeException(
-          "Dependency cycle detected when merging native libs for "
+      throw new HumanReadableException(
+          "Error: Dependency cycle detected when merging native libs for "
               + buildTarget
               + ": "
               + cycleString);
