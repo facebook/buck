@@ -24,6 +24,7 @@
       <entry name="?*.stg" />
       <entry name="?*.jar" />
       <entry name="?*.in" />
+      <entry name="?*.dat" />
     </wildcardResourcePatterns>
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true">
