@@ -236,9 +236,7 @@ public class PythonBinaryDescriptionTest {
         binary.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     PexStep pexStep = FluentIterable.from(buildSteps).filter(PexStep.class).get(0);
-    assertThat(
-        pexStep.getCommandPrefix(),
-        Matchers.hasItems(buildArgs.toArray(new String[buildArgs.size()])));
+    assertThat(pexStep.getCommandPrefix(), Matchers.hasItems(buildArgs.toArray(new String[0])));
   }
 
   @Test

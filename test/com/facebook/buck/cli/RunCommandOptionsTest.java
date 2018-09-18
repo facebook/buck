@@ -31,7 +31,7 @@ public class RunCommandOptionsTest {
     RunCommand command = new RunCommand();
     AdditionalOptionsCmdLineParser parser = CmdLineParserFactory.create(command);
     parser.parseArgument(args);
-    return command.getArguments().toArray(new String[command.getArguments().size()]);
+    return command.getArguments().toArray(new String[0]);
   }
 
   @Test

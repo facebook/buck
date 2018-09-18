@@ -155,9 +155,7 @@ public class PythonTestDescriptionTest {
         binary.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     PexStep pexStep = RichStream.from(buildSteps).filter(PexStep.class).toImmutableList().get(0);
-    assertThat(
-        pexStep.getCommandPrefix(),
-        Matchers.hasItems(buildArgs.toArray(new String[buildArgs.size()])));
+    assertThat(pexStep.getCommandPrefix(), Matchers.hasItems(buildArgs.toArray(new String[0])));
   }
 
   @Test

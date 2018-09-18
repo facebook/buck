@@ -267,7 +267,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.
     ImmutableList<String> buildArgs =
         ImmutableList.<String>builder().add("--show-output").add(args).build();
-    ProcessResult buildResult = runBuckBuild(buildArgs.toArray(new String[buildArgs.size()]));
+    ProcessResult buildResult = runBuckBuild(buildArgs.toArray(new String[0]));
     buildResult.assertSuccess();
 
     // Grab the stdout lines, which have the build outputs.

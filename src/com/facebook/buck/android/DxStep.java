@@ -346,7 +346,7 @@ public class DxStep extends ShellStep {
         com.android.dx.command.dexer.Main.Arguments arguments =
             new com.android.dx.command.dexer.Main.Arguments();
         com.android.dx.command.dexer.Main dexer = new com.android.dx.command.dexer.Main(dxContext);
-        arguments.parseCommandLine(args.toArray(new String[args.size()]), dxContext);
+        arguments.parseCommandLine(args.toArray(new String[0]), dxContext);
         int returncode = dexer.run(arguments);
         String stdErrOutput = stderr.toString();
         if (!stdErrOutput.isEmpty()) {

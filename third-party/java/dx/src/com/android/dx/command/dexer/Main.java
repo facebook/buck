@@ -521,7 +521,7 @@ public class Main {
             return null;
         }
         DexMerger dexMerger = new DexMerger(
-            dexes.toArray(new Dex[dexes.size()]),
+            dexes.toArray(new Dex[0]),
             CollisionPolicy.FAIL,
             context);
         Dex merged = dexMerger.merge();
@@ -1488,7 +1488,7 @@ public class Main {
             if(inputList != null && !inputList.isEmpty()) {
                 // append the file names to the end of the input list
                 inputList.addAll(Arrays.asList(fileNames));
-                fileNames = inputList.toArray(new String[inputList.size()]);
+                fileNames = inputList.toArray(new String[0]);
             }
 
             if (fileNames.length == 0) {

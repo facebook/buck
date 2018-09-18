@@ -675,7 +675,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         writeBytesToPath(
             fileContents.get(normalizedSourcePath),
             normalizedTargetPath,
-            attrs.toArray(new FileAttribute[attrs.size()]));
+            attrs.toArray(new FileAttribute[0]));
         break;
       case DIRECTORY_CONTENTS_ONLY:
       case DIRECTORY_AND_CONTENTS:

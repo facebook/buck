@@ -107,7 +107,7 @@ class HaskellTestUtils {
 
     // Find the major version of the haskell compiler.
     ImmutableList<String> cmd = ImmutableList.of(compilerOptional.get().toString(), "--version");
-    Process process = Runtime.getRuntime().exec(cmd.toArray(new String[cmd.size()]));
+    Process process = Runtime.getRuntime().exec(cmd.toArray(new String[0]));
     String output = new String(ByteStreams.toByteArray(process.getInputStream()), Charsets.UTF_8);
     Pattern versionPattern = Pattern.compile(".*version ([0-9]+).*");
     Matcher matcher = versionPattern.matcher(output.trim());

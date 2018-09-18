@@ -49,7 +49,7 @@ class RegisterDebugSymbolsStep implements Step {
     ImmutableList<String> lldbCommandPrefix = lldb.getCommandPrefix(resolver);
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
-            .addCommand(lldbCommandPrefix.toArray(new String[lldbCommandPrefix.size()]))
+            .addCommand(lldbCommandPrefix.toArray(new String[0]))
             .build();
     return StepExecutionResult.of(
         context

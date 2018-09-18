@@ -141,7 +141,7 @@ public class HaskellLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, graphBuilder);
     assertThat(
         Arg.stringify(staticInput.getArgs(), pathResolver),
-        hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
+        hasItems(linkWholeFlags.toArray(new String[0])));
 
     // Test static-pic dep type.
     NativeLinkableInput staticPicInput =
@@ -149,7 +149,7 @@ public class HaskellLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC, graphBuilder);
     assertThat(
         Arg.stringify(staticPicInput.getArgs(), pathResolver),
-        hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
+        hasItems(linkWholeFlags.toArray(new String[0])));
 
     // Test shared dep type.
     NativeLinkableInput sharedInput =
@@ -157,7 +157,7 @@ public class HaskellLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, graphBuilder);
     assertThat(
         Arg.stringify(sharedInput.getArgs(), pathResolver),
-        not(hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()]))));
+        not(hasItems(linkWholeFlags.toArray(new String[0]))));
   }
 
   @Test

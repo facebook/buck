@@ -71,7 +71,7 @@ public class TestSelectorsJUnitVersionsIntegrationTest {
 
   private void assertPassingTests(Set<String> expectedPassingTests, List<String> buckArgs)
       throws IOException {
-    String[] args = buckArgs.toArray(new String[buckArgs.size()]);
+    String[] args = buckArgs.toArray(new String[0]);
     ProcessResult result = workspace.runBuckCommand(args);
     String[] lines = result.getStderr().split("\n");
     ImmutableSet.Builder<String> actualPassingTestsBuilder = new ImmutableSet.Builder<>();

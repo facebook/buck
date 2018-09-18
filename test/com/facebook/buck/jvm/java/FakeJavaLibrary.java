@@ -44,7 +44,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   public FakeJavaLibrary(
       BuildTarget target, ProjectFilesystem filesystem, ImmutableSortedSet<BuildRule> deps) {
-    super(target, filesystem, deps.toArray(new BuildRule[deps.size()]));
+    super(target, filesystem, deps.toArray(new BuildRule[0]));
   }
 
   public FakeJavaLibrary(BuildTarget target, ImmutableSortedSet<BuildRule> deps) {

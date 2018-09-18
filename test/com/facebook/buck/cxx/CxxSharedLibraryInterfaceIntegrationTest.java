@@ -132,7 +132,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.platform=" + platform,
             sharedBinaryTarget.getFullyQualifiedName());
-    String[] argv = args.toArray(new String[args.size()]);
+    String[] argv = args.toArray(new String[0]);
     workspace.runBuckBuild(argv).assertSuccess();
     assertTrue(workspace.replaceFileContents("library.cpp", "bar1", "bar2"));
     workspace.runBuckBuild(argv).assertSuccess();
@@ -155,7 +155,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.platform=" + platform,
             sharedBinaryTarget.getFullyQualifiedName());
-    String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
+    String[] iArgv = iArgs.toArray(new String[0]);
     workspace.runBuckBuild(iArgv).assertSuccess();
     assertTrue(workspace.replaceFileContents("library.cpp", "bar2", "bar3"));
     workspace.runBuckBuild(iArgv).assertSuccess();
@@ -181,7 +181,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.platform=" + platform,
             sharedBinaryTarget.getFullyQualifiedName());
-    String[] argv = args.toArray(new String[args.size()]);
+    String[] argv = args.toArray(new String[0]);
     workspace.runBuckBuild(argv).assertSuccess();
     assertTrue(workspace.replaceFileContents("library.cpp", "bar1 = 0", "bar1 = 1"));
     workspace.runBuckBuild(argv).assertSuccess();
@@ -204,7 +204,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.platform=" + platform,
             sharedBinaryTarget.getFullyQualifiedName());
-    String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
+    String[] iArgv = iArgs.toArray(new String[0]);
     workspace.runBuckBuild(iArgv).assertSuccess();
     assertTrue(workspace.replaceFileContents("library.cpp", "bar1 = 1", "bar1 = 2"));
     workspace.runBuckBuild(iArgv).assertSuccess();
@@ -230,7 +230,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.platform=" + platform,
             sharedBinaryTarget.getFullyQualifiedName());
-    String[] argv = args.toArray(new String[args.size()]);
+    String[] argv = args.toArray(new String[0]);
     workspace.runBuckBuild(argv).assertSuccess();
     assertTrue(workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 += 15"));
     workspace.runBuckBuild(argv).assertSuccess();
@@ -256,7 +256,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.platform=" + platform,
             sharedBinaryTarget.getFullyQualifiedName());
-    String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
+    String[] iArgv = iArgs.toArray(new String[0]);
     workspace.runBuckBuild(iArgv).assertSuccess();
     assertTrue(workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 += 15"));
     workspace.runBuckBuild(iArgv).assertSuccess();
@@ -280,7 +280,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.platform=" + platform,
             sharedBinaryTarget.getFullyQualifiedName());
-    String[] argv = args.toArray(new String[args.size()]);
+    String[] argv = args.toArray(new String[0]);
     workspace.runBuckBuild(argv).assertSuccess();
     assertTrue(workspace.replaceFileContents("library.cpp", "foo", "bar"));
     workspace.runBuckBuild(argv).assertFailure();
@@ -302,7 +302,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.platform=" + platform,
             staticBinaryTarget.getFullyQualifiedName());
-    String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
+    String[] iArgv = iArgs.toArray(new String[0]);
     workspace.runBuckBuild(iArgv).assertSuccess();
     assertTrue(workspace.replaceFileContents("library.cpp", "bar1", "bar2"));
     workspace.runBuckBuild(iArgv).assertSuccess();
@@ -326,7 +326,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.platform=" + platform,
             sharedBinaryTarget.getFullyQualifiedName());
-    String[] argv = args.toArray(new String[args.size()]);
+    String[] argv = args.toArray(new String[0]);
     workspace.runBuckBuild(argv).assertSuccess();
     assertTrue(workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 + bar2"));
     workspace.runBuckBuild(argv).assertSuccess();
@@ -350,7 +350,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.platform=" + platform,
             sharedBinaryTarget.getFullyQualifiedName());
-    String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
+    String[] iArgv = iArgs.toArray(new String[0]);
     workspace.runBuckBuild(iArgv).assertSuccess();
     assertTrue(workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 + bar2"));
     workspace.runBuckBuild(iArgv).assertSuccess();

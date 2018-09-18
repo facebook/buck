@@ -82,8 +82,7 @@ public class ParallelActionGraphFactory implements ActionGraphFactoryDelegate {
     // Wait for completion. The results are ignored as we only care about the rules populated in
     // the graphBuilder, which is a superset of the rules generated directly from target nodes.
     try {
-      CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[futures.size()]))
-          .join();
+      CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[0])).join();
     } catch (CompletionException e) {
       Throwables.throwIfUnchecked(e.getCause());
       throw new IllegalStateException("unexpected checked exception", e);

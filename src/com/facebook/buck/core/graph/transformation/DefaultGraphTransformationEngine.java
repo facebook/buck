@@ -228,8 +228,7 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
 
   final <K, V> CompletableFuture<ImmutableMap<K, V>> collectFutures(
       Map<K, CompletableFuture<V>> toCollect) {
-    return CompletableFuture.allOf(
-            toCollect.values().toArray(new CompletableFuture[toCollect.size()]))
+    return CompletableFuture.allOf(toCollect.values().toArray(new CompletableFuture[0]))
         .thenApplyAsync(
             voidType ->
                 toCollect
