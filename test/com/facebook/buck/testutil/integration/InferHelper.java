@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -122,11 +123,7 @@ public class InferHelper {
             ImmutableList.of("--config", "*//infer.blacklist_regex=" + rawBlacklistRegex.get());
       }
 
-      return ImmutableList.builder()
-          .addAll(baseConfig)
-          .addAll(blacklistRegex)
-          .build()
-          .toArray(new String[baseConfig.size() + blacklistRegex.size()]);
+      return FluentIterable.concat(baseConfig, blacklistRegex).toArray(String.class);
     }
 
     public String toBuckConfigLines() {
