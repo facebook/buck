@@ -36,9 +36,10 @@ import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.cxx.RelativeLinkArg;
 import com.facebook.buck.rules.modern.CustomClassSerialization;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.Deserializer;
@@ -59,6 +60,7 @@ import com.google.common.hash.HashCode;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
@@ -112,11 +114,11 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     };
   }
 
-  <T extends Buildable> T test(T instance) throws IOException {
+  <T extends AddsToRuleKey> T test(T instance) throws IOException {
     return test(instance, expected -> expected);
   }
 
-  <T extends Buildable> T test(T instance, Function<String, String> expectedMapper)
+  <T extends AddsToRuleKey> T test(T instance, Function<String, String> expectedMapper)
       throws IOException {
     replay(cellResolver, ruleFinder);
 
@@ -412,5 +414,16 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   private static class WithSourcePathResolver implements FakeBuildable {
     @CustomFieldBehavior(SourcePathResolverSerialization.class)
     private final SourcePathResolver resolver = null;
+  }
+
+  @Test
+  public void relativeLinkArg() throws Exception {
+    Path relativeDir = rootFilesystem.getPath("some", "relative");
+    RelativeLinkArg linkArg =
+        new RelativeLinkArg(PathSourcePath.of(rootFilesystem, relativeDir.resolve("libname")));
+    RelativeLinkArg deserialized = test(linkArg);
+
+    assertEquals(
+        String.format("-L%s -lname", rootFilesystem.resolve(relativeDir)), deserialized.toString());
   }
 }

@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 
 /** Relative link arg. */
 @CustomClassBehavior(RelativeLinkArg.SerializationBehavior.class)
-class RelativeLinkArg implements Arg {
+public class RelativeLinkArg implements Arg {
   @AddToRuleKey private final PathSourcePath library;
   private final ImmutableList<String> link;
 
