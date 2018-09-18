@@ -36,7 +36,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.TargetSpecResolver.FlavorEnhancer;
+import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -45,6 +47,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -202,7 +205,19 @@ public class TargetSpecResolverTest {
         WatchmanFactory.NULL_WATCHMAN,
         specs,
         flavorEnhancer,
-        state.getTargetNodeProviderForSpecResolver(),
+        new TargetNodeProviderForSpecResolver<TargetNode<?>>() {
+          @Override
+          public ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target)
+              throws BuildTargetException {
+            return state.getTargetNodeJob(target);
+          }
+
+          @Override
+          public ListenableFuture<ImmutableSet<TargetNode<?>>> getAllTargetNodesJob(
+              Cell cell, Path buildFile) throws BuildTargetException {
+            return state.getAllTargetNodesJob(cell, buildFile);
+          }
+        },
         (spec, nodes) -> spec.filter(nodes));
   }
 }

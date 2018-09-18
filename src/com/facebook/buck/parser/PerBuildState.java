@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
@@ -33,21 +32,6 @@ public class PerBuildState implements AutoCloseable {
   private final CellManager cellManager;
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final ParsePipeline<TargetNode<?>> targetNodeParsePipeline;
-
-  private final TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProviderForSpecResolver =
-      new TargetNodeProviderForSpecResolver<TargetNode<?>>() {
-        @Override
-        public ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target)
-            throws BuildTargetException {
-          return PerBuildState.this.getTargetNodeJob(target);
-        }
-
-        @Override
-        public ListenableFuture<ImmutableSet<TargetNode<?>>> getAllTargetNodesJob(
-            Cell cell, Path buildFile) throws BuildTargetException {
-          return PerBuildState.this.getAllTargetNodesJob(cell, buildFile);
-        }
-      };
 
   PerBuildState(
       CellManager cellManager,
@@ -90,10 +74,6 @@ public class PerBuildState implements AutoCloseable {
 
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
     return rawNodeParsePipeline.getAllNodes(cell, buildFile);
-  }
-
-  TargetNodeProviderForSpecResolver<TargetNode<?>> getTargetNodeProviderForSpecResolver() {
-    return targetNodeProviderForSpecResolver;
   }
 
   @Override

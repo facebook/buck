@@ -32,6 +32,7 @@ import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
@@ -366,6 +367,9 @@ public class DefaultParser implements Parser {
             processedBytes,
             SpeculativeParsing.ENABLED)) {
 
+      TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
+          createTargetNodeProviderForSpecResolver(state);
+
       ImmutableSet<BuildTarget> buildTargets =
           ImmutableSet.copyOf(
               Iterables.concat(
@@ -377,7 +381,7 @@ public class DefaultParser implements Parser {
                       (buildTarget, targetNode, targetType) ->
                           applyDefaultFlavors(
                               buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
-                      state.getTargetNodeProviderForSpecResolver(),
+                      targetNodeProvider,
                       (spec, nodes) -> spec.filter(nodes))));
       TargetGraph graph = buildTargetGraph(state, buildTargets, processedBytes);
 
@@ -386,6 +390,23 @@ public class DefaultParser implements Parser {
           .setTargetGraph(graph)
           .build();
     }
+  }
+
+  static TargetNodeProviderForSpecResolver<TargetNode<?>> createTargetNodeProviderForSpecResolver(
+      PerBuildState state) {
+    return new TargetNodeProviderForSpecResolver<TargetNode<?>>() {
+      @Override
+      public ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target)
+          throws BuildTargetException {
+        return state.getTargetNodeJob(target);
+      }
+
+      @Override
+      public ListenableFuture<ImmutableSet<TargetNode<?>>> getAllTargetNodesJob(
+          Cell cell, Path buildFile) throws BuildTargetException {
+        return state.getAllTargetNodesJob(cell, buildFile);
+      }
+    };
   }
 
   @Override
@@ -411,6 +432,8 @@ public class DefaultParser implements Parser {
             targetPlatforms.get(),
             enableProfiling,
             speculativeParsing)) {
+      TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
+          createTargetNodeProviderForSpecResolver(state);
       return targetSpecResolver.resolveTargetSpecs(
           eventBus,
           rootCell,
@@ -418,7 +441,7 @@ public class DefaultParser implements Parser {
           specs,
           (buildTarget, targetNode, targetType) ->
               applyDefaultFlavors(buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
-          state.getTargetNodeProviderForSpecResolver(),
+          targetNodeProvider,
           (spec, nodes) -> spec.filter(nodes));
     }
   }
