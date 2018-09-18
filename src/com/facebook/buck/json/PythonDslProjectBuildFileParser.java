@@ -91,7 +91,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private Supplier<Path> ignorePathsJson;
 
   @Nullable private ProcessExecutor.LaunchedProcess buckPyProcess;
-  @Nullable private CountingInputStream buckPyProcessInput;
+  @Nullable private ParserInputStream buckPyProcessInput;
   @Nullable private JsonGenerator buckPyProcessJsonGenerator;
   @Nullable private JsonParser buckPyProcessJsonParser;
 
@@ -100,7 +100,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private final BuckEventBus buckEventBus;
   private final ProcessExecutor processExecutor;
   private final AssertScopeExclusiveAccess assertSingleThreadedParsing;
-  private final AtomicLong processedBytes;
+  private final Optional<AtomicLong> processedBytes;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -116,7 +116,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor,
-      AtomicLong processedBytes) {
+      Optional<AtomicLong> processedBytes) {
     this.processedBytes = processedBytes;
     this.buckPythonProgram = null;
     this.options = options;
@@ -225,7 +225,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           params.getCommand(), params.getEnvironment());
       buckPyProcess = processExecutor.launchProcess(params);
       LOG.debug("Started process %s successfully", buckPyProcess);
-      buckPyProcessInput = new CountingInputStream(buckPyProcess.getInputStream());
+      buckPyProcessInput =
+          createParserInputStream(
+              Preconditions.checkNotNull(buckPyProcess).getInputStream(),
+              processedBytes.isPresent());
       buckPyProcessJsonGenerator = ObjectMappers.createGenerator(buckPyProcess.getOutputStream());
       // We have to wait to create the JsonParser until after we write our
       // first request, because Jackson "helpfully" synchronously reads
@@ -429,7 +432,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       return toBuildFileManifest(values);
     } finally {
       long parsedBytes = buckPyProcessInput.getCount() - alreadyReadBytes;
-      processedBytes.addAndGet(parsedBytes);
+      processedBytes.ifPresent(processedBytes -> processedBytes.addAndGet(parsedBytes));
       buckEventBus.post(
           ParseBuckFileEvent.finished(parseBuckFileStarted, values, parsedBytes, profile));
     }
@@ -488,8 +491,9 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       // Since buck.py doesn't write any data until after it receives
       // a query, creating the JsonParser any earlier than this would
       // hang indefinitely.
-      Preconditions.checkNotNull(buckPyProcessInput);
-      buckPyProcessJsonParser = ObjectMappers.createParser(buckPyProcessInput);
+      buckPyProcessJsonParser =
+          ObjectMappers.createParser(
+              Preconditions.checkNotNull(buckPyProcessInput).getInputStream());
     }
     LOG.verbose("Parsing output of process %s...", buckPyProcess);
     BuildFilePythonResult resultObject;
@@ -793,5 +797,57 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
               typeCoercerFactory, descriptions, !options.getEnableProfiling());
     }
     return buckPythonProgram.getExecutablePath();
+  }
+
+  private static ParserInputStream createParserInputStream(
+      InputStream inputStream, boolean withCounting) {
+    return withCounting
+        ? new CountingParserInputStream(inputStream)
+        : new NonCountingParserInputStream(inputStream);
+  }
+
+  /** Encapsulates {@link InputStream} to use {@link CountingInputStream} when needed. */
+  private abstract static class ParserInputStream {
+    private final InputStream inputStream;
+
+    private ParserInputStream(InputStream inputStream) {
+      this.inputStream = inputStream;
+    }
+
+    public abstract long getCount();
+
+    public InputStream getInputStream() {
+      return inputStream;
+    }
+  }
+
+  private static class CountingParserInputStream extends ParserInputStream {
+    private final CountingInputStream countingInputStream;
+
+    private CountingParserInputStream(InputStream inputStream) {
+      this(new CountingInputStream(inputStream));
+    }
+
+    private CountingParserInputStream(CountingInputStream inputStream) {
+      super(inputStream);
+      this.countingInputStream = inputStream;
+    }
+
+    @Override
+    public long getCount() {
+      return countingInputStream.getCount();
+    }
+  }
+
+  private static class NonCountingParserInputStream extends ParserInputStream {
+
+    private NonCountingParserInputStream(InputStream inputStream) {
+      super(inputStream);
+    }
+
+    @Override
+    public long getCount() {
+      return 0;
+    }
   }
 }

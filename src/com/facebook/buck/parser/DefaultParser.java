@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -236,6 +237,7 @@ public class DefaultParser implements Parser {
       return TargetGraph.EMPTY;
     }
 
+    AtomicLong processedBytes = new AtomicLong();
     try (PerBuildState state =
         perBuildStateFactory.create(
             permState,
@@ -243,12 +245,14 @@ public class DefaultParser implements Parser {
             rootCell,
             targetPlatforms.get(),
             enableProfiling,
+            processedBytes,
             SpeculativeParsing.ENABLED)) {
-      return buildTargetGraph(state, toExplore);
+      return buildTargetGraph(state, toExplore, processedBytes);
     }
   }
 
-  private TargetGraph buildTargetGraph(PerBuildState state, Iterable<BuildTarget> toExplore)
+  private TargetGraph buildTargetGraph(
+      PerBuildState state, Iterable<BuildTarget> toExplore, AtomicLong processedBytes)
       throws IOException, InterruptedException, BuildFileParseException {
 
     if (Iterables.isEmpty(toExplore)) {
@@ -315,8 +319,7 @@ public class DefaultParser implements Parser {
       throw propagateRuntimeCause(e);
     } finally {
       eventBus.post(
-          ParseEvent.finished(
-              parseStart, state.getParseProcessedBytes(), Optional.ofNullable(targetGraph)));
+          ParseEvent.finished(parseStart, processedBytes.get(), Optional.ofNullable(targetGraph)));
     }
   }
 
@@ -352,6 +355,7 @@ public class DefaultParser implements Parser {
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, IOException, InterruptedException {
 
+    AtomicLong processedBytes = new AtomicLong();
     try (PerBuildState state =
         perBuildStateFactory.create(
             permState,
@@ -359,6 +363,7 @@ public class DefaultParser implements Parser {
             rootCell,
             targetPlatforms.get(),
             enableProfiling,
+            processedBytes,
             SpeculativeParsing.ENABLED)) {
 
       ImmutableSet<BuildTarget> buildTargets =
@@ -374,7 +379,7 @@ public class DefaultParser implements Parser {
                               buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
                       state.getTargetNodeProviderForSpecResolver(),
                       (spec, nodes) -> spec.filter(nodes))));
-      TargetGraph graph = buildTargetGraph(state, buildTargets);
+      TargetGraph graph = buildTargetGraph(state, buildTargets, processedBytes);
 
       return TargetGraphAndBuildTargets.builder()
           .setBuildTargets(buildTargets)

@@ -59,7 +59,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -582,7 +581,7 @@ public class PythonDslProjectBuildFileParserTest {
             ImmutableMap.of(),
             buckEventBus,
             processExecutor,
-            new AtomicLong());
+            Optional.empty());
       }
     }
   }

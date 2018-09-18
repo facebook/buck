@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PerBuildStateFactory {
@@ -77,6 +78,42 @@ public class PerBuildStateFactory {
       ImmutableList<String> targetPlatforms,
       boolean enableProfiling,
       SpeculativeParsing speculativeParsing) {
+    return create(
+        daemonicParserState,
+        executorService,
+        rootCell,
+        targetPlatforms,
+        enableProfiling,
+        Optional.empty(),
+        speculativeParsing);
+  }
+
+  public PerBuildState create(
+      DaemonicParserState daemonicParserState,
+      ListeningExecutorService executorService,
+      Cell rootCell,
+      ImmutableList<String> targetPlatforms,
+      boolean enableProfiling,
+      AtomicLong processedBytes,
+      SpeculativeParsing speculativeParsing) {
+    return create(
+        daemonicParserState,
+        executorService,
+        rootCell,
+        targetPlatforms,
+        enableProfiling,
+        Optional.of(processedBytes),
+        speculativeParsing);
+  }
+
+  private PerBuildState create(
+      DaemonicParserState daemonicParserState,
+      ListeningExecutorService executorService,
+      Cell rootCell,
+      ImmutableList<String> targetPlatforms,
+      boolean enableProfiling,
+      Optional<AtomicLong> parseProcessedBytes,
+      SpeculativeParsing speculativeParsing) {
 
     SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
     CellManager cellManager = new CellManager(symlinkCache);
@@ -84,7 +121,6 @@ public class PerBuildStateFactory {
     TargetNodeListener<TargetNode<?>> symlinkCheckers = cellManager::registerInputsUnderSymlinks;
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     int numParsingThreads = parserConfig.getNumParsingThreads();
-    AtomicLong parseProcessedBytes = new AtomicLong();
     DefaultProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             typeCoercerFactory,
@@ -214,8 +250,7 @@ public class PerBuildStateFactory {
 
     cellManager.register(rootCell);
 
-    return new PerBuildState(
-        parseProcessedBytes, cellManager, rawNodeParsePipeline, targetNodeParsePipeline);
+    return new PerBuildState(cellManager, rawNodeParsePipeline, targetNodeParsePipeline);
   }
 
   private Platform getTargetPlatform(

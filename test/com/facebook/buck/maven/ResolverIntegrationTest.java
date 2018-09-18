@@ -66,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -134,7 +133,7 @@ public class ResolverIntegrationTest {
             ImmutableMap.of(),
             BuckEventBusForTests.newInstance(),
             new DefaultProcessExecutor(new TestConsole()),
-            new AtomicLong());
+            Optional.empty());
   }
 
   @AfterClass

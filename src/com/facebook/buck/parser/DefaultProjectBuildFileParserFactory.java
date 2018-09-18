@@ -61,7 +61,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private final ParserPythonInterpreterProvider pythonInterpreterProvider;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final boolean enableProfiling;
-  private final AtomicLong processedBytes;
+  private final Optional<AtomicLong> processedBytes;
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
@@ -69,7 +69,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       KnownRuleTypesProvider knownRuleTypesProvider,
       boolean enableProfiling,
-      AtomicLong processedBytes) {
+      Optional<AtomicLong> processedBytes) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.console = console;
     this.pythonInterpreterProvider = pythonInterpreterProvider;
@@ -82,7 +82,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       TypeCoercerFactory typeCoercerFactory,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       boolean enableProfiling,
-      AtomicLong processedBytes,
+      Optional<AtomicLong> processedBytes,
       KnownRuleTypesProvider knownRuleTypesProvider) {
     this(
         typeCoercerFactory,
@@ -104,7 +104,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         pythonInterpreterProvider,
         knownRuleTypesProvider,
         false,
-        new AtomicLong());
+        Optional.empty());
   }
 
   /**

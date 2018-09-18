@@ -27,11 +27,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class PerBuildState implements AutoCloseable {
 
-  private final AtomicLong parseProcessedBytes;
   private final CellManager cellManager;
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final ParsePipeline<TargetNode<?>> targetNodeParsePipeline;
@@ -52,11 +50,9 @@ public class PerBuildState implements AutoCloseable {
       };
 
   PerBuildState(
-      AtomicLong parseProcessedBytes,
       CellManager cellManager,
       RawNodeParsePipeline rawNodeParsePipeline,
       ParsePipeline<TargetNode<?>> targetNodeParsePipeline) {
-    this.parseProcessedBytes = parseProcessedBytes;
     this.cellManager = cellManager;
     this.rawNodeParsePipeline = rawNodeParsePipeline;
     this.targetNodeParsePipeline = targetNodeParsePipeline;
@@ -94,10 +90,6 @@ public class PerBuildState implements AutoCloseable {
 
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
     return rawNodeParsePipeline.getAllNodes(cell, buildFile);
-  }
-
-  long getParseProcessedBytes() {
-    return parseProcessedBytes.get();
   }
 
   TargetNodeProviderForSpecResolver<TargetNode<?>> getTargetNodeProviderForSpecResolver() {
