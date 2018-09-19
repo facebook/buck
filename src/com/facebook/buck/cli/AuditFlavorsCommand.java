@@ -26,6 +26,8 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
@@ -91,16 +93,21 @@ public class AuditFlavorsCommand extends AbstractCommand {
 
     ImmutableList.Builder<TargetNode<?>> builder = ImmutableList.builder();
     try (CommandThreadManager pool =
-        new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
-      for (BuildTarget target : targets) {
-        TargetNode<?> targetNode =
+            new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()));
+        PerBuildState parserState =
             params
                 .getParser()
-                .getTargetNode(
-                    params.getCell(),
-                    getEnableParserProfiling(),
+                .getPerBuildStateFactory()
+                .create(
+                    params.getParser().getPermState(),
                     pool.getListeningExecutorService(),
-                    target);
+                    params.getCell(),
+                    getTargetPlatforms(),
+                    getEnableParserProfiling(),
+                    SpeculativeParsing.ENABLED)) {
+
+      for (BuildTarget target : targets) {
+        TargetNode<?> targetNode = params.getParser().getTargetNode(parserState, target);
         builder.add(targetNode);
       }
     } catch (BuildFileParseException e) {
