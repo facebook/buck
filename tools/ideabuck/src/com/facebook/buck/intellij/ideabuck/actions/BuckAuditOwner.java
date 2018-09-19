@@ -35,6 +35,7 @@ public class BuckAuditOwner {
     ApplicationManager.getApplication()
         .executeOnPooledThread(
             new Runnable() {
+              @Override
               public void run() {
                 BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
                 BuckModule buckModule = project.getComponent(BuckModule.class);

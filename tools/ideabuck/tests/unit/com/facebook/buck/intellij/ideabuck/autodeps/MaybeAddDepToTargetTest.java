@@ -25,15 +25,16 @@ public class MaybeAddDepToTargetTest {
   @Test
   public void addsWhenDepIsAbsent() {
     String buckInput =
-        buckFile("# Comment", "rule(", "\tname = 'foo',", "\tdeps = [", "\t\t'/this',", "\t]", ")");
+        buckFile(
+            "# Comment", "rule(", "\tname = \"foo\",", "\tdeps = [", "\t\t\"/this\",", "\t]", ")");
     String expected =
         buckFile(
             "# Comment",
             "rule(",
-            "\tname = 'foo',",
+            "\tname = \"foo\",",
             "\tdeps = [",
-            "\t\t'/other:thing',",
-            "\t\t'/this',",
+            "\t\t\"/other:thing\",",
+            "\t\t\"/this\",",
             "\t]",
             ")");
     String actual = BuckDeps.maybeAddDepToTarget(buckInput, "/other:thing", "foo");
@@ -43,7 +44,8 @@ public class MaybeAddDepToTargetTest {
   @Test
   public void unchangedWhenDepExists() {
     String buckInput =
-        buckFile("# Comment", "rule(", "\tname = 'foo',", "\tdeps = [", "\t\t'/this',", "\t]", ")");
+        buckFile(
+            "# Comment", "rule(", "\tname = \"foo\",", "\tdeps = [", "\t\t\"/this\",", "\t]", ")");
     String expected = buckInput;
     String actual = BuckDeps.maybeAddDepToTarget(buckInput, "/this", "foo");
     assertEquals(expected, actual);
@@ -55,12 +57,12 @@ public class MaybeAddDepToTargetTest {
         buckFile(
             "# Comment",
             "rule(",
-            "\tname = 'foo',",
+            "\tname = \"foo\",",
             "\texported_deps = [",
-            "\t\t'/this',",
+            "\t\t\"/this\",",
             "\t]",
             "\tdeps = [",
-            "\t\t'/that',",
+            "\t\t\"/that\",",
             "\t]",
             ")");
     String expected = buckInput;
@@ -74,10 +76,10 @@ public class MaybeAddDepToTargetTest {
         buckFile(
             "# Comment",
             "rule(",
-            "\tname = 'foo',",
+            "\tname = \"foo\",",
             "\tautodeps = True",
             "\tdeps = [",
-            "\t\t'/this',",
+            "\t\t\"/this\",",
             "\t]",
             ")");
     String expected = buckInput;
@@ -88,7 +90,8 @@ public class MaybeAddDepToTargetTest {
   @Test
   public void unchangedWhenCantFindRule() {
     String buckInput =
-        buckFile("# Comment", "rule(", "\tname = 'bar',", "\tdeps = [", "\t\t'/this',", "\t]", ")");
+        buckFile(
+            "# Comment", "rule(", "\tname = \"bar\",", "\tdeps = [", "\t\t\"/this\",", "\t]", ")");
     String expected = buckInput;
     String actual = BuckDeps.maybeAddDepToTarget(buckInput, "/that", "foo");
     assertEquals(expected, actual);
@@ -100,9 +103,9 @@ public class MaybeAddDepToTargetTest {
         buckFile(
             "# Comment",
             "rule(",
-            "\tname = 'foo',",
+            "\tname = \"foo\",",
             "\tdeps = [",
-            "\t\t'/this',",
+            "\t\t\"/this\",",
             "\t]",
             "# No closing paren");
     String expected = buckInput;

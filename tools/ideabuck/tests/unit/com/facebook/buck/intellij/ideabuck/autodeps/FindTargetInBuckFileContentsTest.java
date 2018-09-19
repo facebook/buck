@@ -34,11 +34,11 @@ public class FindTargetInBuckFileContentsTest {
 
   @Test
   public void canFindTargetInMiddleOfFile() {
-    String buckInput =
+    String buckInputSingleQuotes =
         buckFile(
             "# Comment",
             "rule(",
-            "\tname = 'foo',",
+            "\tname = \'foo',",
             "\tdeps = [",
             "\t\t'/this',",
             "\t]",
@@ -56,7 +56,10 @@ public class FindTargetInBuckFileContentsTest {
             "\t]",
             ")");
     int expected[] = {61, 103};
-    int actual[] = BuckDeps.findTargetInBuckFileContents(buckInput, "bar");
+    int actual[] = BuckDeps.findTargetInBuckFileContents(buckInputSingleQuotes, "bar");
+    assertArrayEquals(expected, actual);
+    String buckInputDoubleQuotes = buckInputSingleQuotes.replace('\'', '\"');
+    actual = BuckDeps.findTargetInBuckFileContents(buckInputDoubleQuotes, "bar");
     assertArrayEquals(expected, actual);
   }
 

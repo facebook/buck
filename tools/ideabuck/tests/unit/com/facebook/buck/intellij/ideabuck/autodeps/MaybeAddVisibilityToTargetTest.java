@@ -29,9 +29,25 @@ public class MaybeAddVisibilityToTargetTest {
         buckFile(
             "# Comment",
             "rule(",
-            "\tname = 'foo',",
+            "\tname = \"foo\",",
             "\tvisibility = [",
-            "\t\t'/this',",
+            "\t\t\"/this\",",
+            "\t]",
+            ")");
+    String expected = buckInput;
+    String actual = BuckDeps.maybeAddVisibilityToTarget(buckInput, "/this", "foo");
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void doesNothingWhenTargetIncludesPUBLIC() {
+    String buckInput =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = \"foo\",",
+            "\tvisibility = [",
+            "\t\t\"PUBLIC\",",
             "\t]",
             ")");
     String expected = buckInput;
@@ -45,19 +61,19 @@ public class MaybeAddVisibilityToTargetTest {
         buckFile(
             "# Comment",
             "rule(",
-            "\tname = 'foo',",
+            "\tname = \"foo\",",
             "\tvisibility = [",
-            "\t\t'/this',",
+            "\t\t\"/this\",",
             "\t]",
             ")");
     String expected =
         buckFile(
             "# Comment",
             "rule(",
-            "\tname = 'foo',",
+            "\tname = \"foo\",",
             "\tvisibility = [",
-            "\t\t'/other:thing',",
-            "\t\t'/this',",
+            "\t\t\"/other:thing\",",
+            "\t\t\"/this\",",
             "\t]",
             ")");
     String actual = BuckDeps.maybeAddVisibilityToTarget(buckInput, "/other:thing", "foo");

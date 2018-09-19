@@ -77,7 +77,10 @@ public class BuckDeps {
    */
   @VisibleForTesting
   static int[] findTargetInBuckFileContents(String contents, String target) {
-    int nameOffset = contents.indexOf("'" + target + "'");
+    int nameOffset = contents.indexOf("\"" + target + "\"");
+    if (nameOffset == -1) {
+      nameOffset = contents.indexOf("'" + target + "'");
+    }
     if (nameOffset == -1) {
       return null; // target not found
     }
@@ -158,9 +161,9 @@ public class BuckDeps {
     }
     int offset = targetOffset[0] + depsMatcher.start(1);
     return buckContents.substring(0, offset)
-        + "\n\t\t'"
+        + "\n\t\t\""
         + dependency
-        + "',"
+        + "\","
         + buckContents.substring(offset);
   }
 
@@ -190,12 +193,15 @@ public class BuckDeps {
     if (visibilityMatcher.group(1).contains(visibility)) {
       return buckContents; // already visibile to this caller
     }
+    if (visibilityMatcher.group(1).contains("PUBLIC")) {
+      return buckContents; // already visible everywhere
+    }
     int offset = targetOffset[0] + visibilityMatcher.start(1);
     buckContents =
         buckContents.substring(0, offset)
-            + "\n\t\t'"
+            + "\n\t\t\""
             + visibility
-            + "',"
+            + "\","
             + buckContents.substring(offset);
     return buckContents;
   }
