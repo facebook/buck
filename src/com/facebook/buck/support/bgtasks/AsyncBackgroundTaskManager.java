@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map;
@@ -316,19 +315,6 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   @VisibleForTesting
   protected Map<Class<?>, ManagedBackgroundTask> getCancellableTasks() {
     return cancellableTasks;
-  }
-
-  @VisibleForTesting
-  protected void schedule(ImmutableList<? extends BackgroundTask<?>> taskList) {
-    for (BackgroundTask<?> task : taskList) {
-      schedule(task);
-    }
-  }
-
-  @VisibleForTesting
-  protected void schedule(BackgroundTask<?> task) {
-    ManagedBackgroundTask managedTask = new ManagedBackgroundTask(task, new BuildId("TESTID"));
-    schedule(managedTask);
   }
 
   /**
