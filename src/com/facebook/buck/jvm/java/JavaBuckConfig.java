@@ -33,9 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -166,24 +164,19 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   @VisibleForTesting
-  Optional<PathSourcePath> getJavacPath() {
-    return getPathToExecutable("javac").map(delegate::getPathSourcePath);
+  Optional<SourcePath> getJavacPath() {
+    Optional<SourcePath> sourcePath = delegate.getSourcePath("tools", "javac");
+    if (sourcePath.isPresent() && sourcePath.get() instanceof PathSourcePath) {
+      PathSourcePath pathSourcePath = (PathSourcePath) sourcePath.get();
+      if (!pathSourcePath.getFilesystem().isExecutable(pathSourcePath.getRelativePath())) {
+        throw new HumanReadableException("javac is not executable: %s", pathSourcePath);
+      }
+    }
+    return sourcePath;
   }
 
   private Optional<SourcePath> getJavacJarPath() {
     return delegate.getSourcePath("tools", "javac_jar");
-  }
-
-  private Optional<Path> getPathToExecutable(String executableName) {
-    Optional<Path> path = delegate.getPath("tools", executableName);
-    if (path.isPresent()) {
-      File file = path.get().toFile();
-      if (!file.canExecute()) {
-        throw new HumanReadableException(executableName + " is not executable: " + file.getPath());
-      }
-      return Optional.of(file.toPath());
-    }
-    return Optional.empty();
   }
 
   private Optional<Tool> getToolForExecutable(String executableName) {

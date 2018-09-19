@@ -922,6 +922,51 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testCustomJavacInBuckConfig() throws IOException {
+    setUpProjectWorkspaceForScenario("custom_javac");
+
+    String javacTarget = "//python:javac";
+    String libTarget = "//root_java:lib_with_default_javac";
+
+    workspace.addBuckConfigLocalOption("tools", "javac", "//python:javac");
+
+    BuildTarget target = BuildTargetFactory.newInstance(libTarget);
+    ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally(javacTarget);
+    workspace.getBuildLog().assertTargetBuiltLocally(libTarget);
+
+    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+
+    assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
+    ArrayList<String> classFiles = new ArrayList<>();
+    for (File file : classesDir.toFile().listFiles()) {
+      classFiles.add(file.getName());
+    }
+    assertThat(
+        "There should be 2 class files saved to disk from the compiler", classFiles, hasSize(2));
+    assertThat(classFiles, hasItem("JavacMain.class"));
+    assertThat(classFiles, hasItem("Extra.class"));
+
+    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
+    assertTrue(Files.exists(jarPath));
+
+    // Check that normal and member classes were removed as expected.
+    ZipInspector zipInspector = new ZipInspector(jarPath);
+    zipInspector.assertFileExists("JavacMain.class");
+    zipInspector.assertFileExists("Extra.class");
+
+    // Test that editing the custom compiler causes rebuilds correctly.
+    workspace.replaceFileContents("python/javac.py", "Extra.class", "Extra2.class");
+    result = workspace.runBuckBuild(target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally(javacTarget);
+    workspace.getBuildLog().assertTargetBuiltLocally(libTarget);
+  }
+
+  @Test
   public void testSpoolClassFilesDirectlyToJarWithRemoveClasses() throws IOException {
     setUpProjectWorkspaceForScenario("spool_class_files_directly_to_jar_with_remove_classes");
 

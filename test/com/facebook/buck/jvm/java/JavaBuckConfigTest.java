@@ -33,9 +33,12 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -169,6 +172,16 @@ public class JavaBuckConfigTest {
   }
 
   @Test
+  public void whenJavacIsABuildTargetThenCorrectPathIsReturned() throws IOException {
+    BuildTarget javacTarget = BuildTargetFactory.newInstance(defaultFilesystem, "//:javac");
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n').join("[tools]", "    javac = " + javacTarget.getFullyQualifiedName()));
+    JavaBuckConfig config = createWithDefaultFilesystem(reader);
+    assertEquals(DefaultBuildTargetSourcePath.of(javacTarget), config.getJavacPath().get());
+  }
+
+  @Test
   public void whenJavacDoesNotExistThenHumanReadableExceptionIsThrown() throws IOException {
     String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
     Reader reader =
@@ -196,7 +209,10 @@ public class JavaBuckConfigTest {
     Reader reader = new StringReader(Joiner.on('\n').join("[tools]", "    javac = " + javac));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
-      config.getJavacPath();
+      config
+          .getJavacSpec()
+          .getJavacProvider()
+          .resolve(new SourcePathRuleFinder(new TestActionGraphBuilder()));
       fail("Should throw exception as javac file is not executable.");
     } catch (HumanReadableException e) {
       assertEquals(e.getHumanReadableErrorMessage(), "javac is not executable: " + javac);
