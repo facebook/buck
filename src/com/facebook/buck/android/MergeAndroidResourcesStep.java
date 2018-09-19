@@ -215,22 +215,22 @@ public class MergeAndroidResourcesStep implements Step {
         uberRDotTxtIds = Optional.empty();
       } else {
         // re-assign Ids
+        ImmutableSet.Builder<RDotTxtEntry> uberRdotTxtEntries = ImmutableSet.builder();
+        uberRDotTxt.forEach(
+            rDot -> {
+              try {
+                RDotTxtEntry.readResources(filesystem, rDot).forEach(uberRdotTxtEntries::add);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
         uberRDotTxtIds =
             Optional.of(
-                FluentIterable.from(uberRDotTxt)
+                uberRdotTxtEntries
+                    .build()
                     .stream()
-                    .flatMap(
-                        rDot -> {
-                          try {
-                            return RDotTxtEntry.readResources(filesystem, rDot).stream();
-                          } catch (IOException e) {
-                            throw new RuntimeException(e);
-                          }
-                        })
-                    .distinct()
-                    .collect(ImmutableMap.toImmutableMap(input -> input, b -> b.idValue)));
+                    .collect(ImmutableMap.toImmutableMap(input -> input, input -> input.idValue)));
       }
-
       ImmutableMap<Path, String> symbolsFileToRDotJavaPackage = rDotTxtToPackage.build();
 
       Optional<SetMultimap<String, RDotTxtEntry>> overrideSymbols =
