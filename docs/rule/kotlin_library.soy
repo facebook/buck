@@ -48,7 +48,7 @@ the <code>resources</code> argument.
 
 {call buck.arg}
   {param name: 'srcs' /}
-  {param default: '[]' /}
+  {param default: '{}' /}
   {param desc}
   The set of <code>.kt</code>, <code>.java</code> or <code>.kts</code> files to compile for this rule.
   If any of the files in this list end in <code>.src.zip</code>,
@@ -94,6 +94,20 @@ the <code>resources</code> argument.
   it for Java sources too.
   "javac" works only against Java sources, Kotlin sources won't have access to generated
   classes at compile time.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'kapt_apoptions' /}
+  {param default : '[]' /}
+  {param desc}
+  Map of annotation processor options to pass into kapt via the apoptions plugin option.
+  E.g.
+  kapt_apoptions = {
+    'someAnnotationOption': 'someValue'
+  }
+  They will be encoded and passed into kapt as documented here:
+  https://kotlinlang.org/docs/reference/kapt.html
   {/param}
 {/call}
 

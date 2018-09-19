@@ -172,4 +172,11 @@ public class KotlinLibraryIntegrationTest {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/zip:zip");
     buildResult.assertSuccess("Build should have succeeded.");
   }
+
+  @Test
+  public void shouldPassApoptionsToKapt() throws Exception {
+    ProcessResult buildResult = workspace.runBuckCommand(
+        "build", "//com/example/ap/kapt-apoptions:kotlin");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
 }
