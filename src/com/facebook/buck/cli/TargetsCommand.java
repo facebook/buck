@@ -304,16 +304,25 @@ public class TargetsCommand extends AbstractCommand {
 
     try (CommandThreadManager pool =
         new CommandThreadManager("Targets", getConcurrencyLimit(params.getBuckConfig())); ) {
-      ListeningExecutorService executor = pool.getListeningExecutorService();
-
       // Exit early if --resolve-alias is passed in: no need to parse any build files.
       if (isResolveAlias) {
-        ResolveAliasHelper.resolveAlias(
-            params, executor, getEnableParserProfiling(), getArguments());
+        try (PerBuildState parserState =
+            params
+                .getParser()
+                .getPerBuildStateFactory()
+                .create(
+                    params.getParser().getPermState(),
+                    pool.getListeningExecutorService(),
+                    params.getCell(),
+                    getTargetPlatforms(),
+                    getEnableParserProfiling(),
+                    SpeculativeParsing.ENABLED)) {
+          ResolveAliasHelper.resolveAlias(params, parserState, getArguments());
+        }
         return ExitCode.SUCCESS;
       }
 
-      return runWithExecutor(params, executor);
+      return runWithExecutor(params, pool.getListeningExecutorService());
     } catch (BuildFileParseException | CycleException | VersionException e) {
       params
           .getBuckEventBus()
