@@ -288,7 +288,10 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
       this.addPremadeTemplate(template);
     }
     ImmutableList.Builder<String> commandBuilder = platformUtils.getBuckCommandBuilder();
-    List<String> command = commandBuilder.addAll(ImmutableList.copyOf(args)).build();
+    List<String> command =
+        commandBuilder
+            .addAll(ImmutableList.copyOf(args))
+            .build();
     ranWithBuckd = ranWithBuckd || buckdEnabled;
     return runCommand(buckdEnabled, environmentOverrides, command, Optional.empty());
   }
