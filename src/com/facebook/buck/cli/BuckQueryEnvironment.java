@@ -162,7 +162,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       boolean enableProfiling) {
     return from(
         params.getCell(),
-        OwnersReport.builder(params.getCell(), params.getParser()),
+        OwnersReport.builder(params.getCell(), params.getParser(), parserState),
         params.getParser(),
         parserState,
         executor,
@@ -490,7 +490,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   @Override
   public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files) {
-    OwnersReport report = ownersReportBuilder.build(buildFileTrees, executor, files);
+    OwnersReport report = ownersReportBuilder.build(buildFileTrees, files);
     report
         .getInputsWithNoOwners()
         .forEach(path -> eventBus.post(ConsoleEvent.warning("No owner was found for %s", path)));

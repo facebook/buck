@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -31,7 +32,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -148,22 +148,23 @@ final class OwnersReport {
     }
   }
 
-  static Builder builder(Cell rootCell, Parser parser) {
-    return new Builder(rootCell, parser);
+  static Builder builder(Cell rootCell, Parser parser, PerBuildState parserState) {
+    return new Builder(rootCell, parser, parserState);
   }
 
   static final class Builder {
     private final Cell rootCell;
     private final Parser parser;
+    private final PerBuildState parserState;
 
-    private Builder(Cell rootCell, Parser parser) {
+    private Builder(Cell rootCell, Parser parser, PerBuildState parserState) {
       this.rootCell = rootCell;
       this.parser = parser;
+      this.parserState = parserState;
     }
 
     private OwnersReport getReportForBasePath(
         Map<Path, ImmutableSet<TargetNode<?>>> map,
-        ListeningExecutorService executor,
         Cell cell,
         Path basePath,
         Path cellRelativePath) {
@@ -173,8 +174,7 @@ final class OwnersReport {
               buckFile,
               basePath1 -> {
                 try {
-                  return parser.getAllTargetNodes(
-                      cell, /* enable profiling */ false, executor, basePath1);
+                  return parser.getAllTargetNodes(parserState, cell, basePath1);
                 } catch (BuildFileParseException e) {
                   throw new HumanReadableException(e);
                 }
@@ -204,9 +204,7 @@ final class OwnersReport {
     }
 
     OwnersReport build(
-        ImmutableMap<Cell, BuildFileTree> buildFileTrees,
-        ListeningExecutorService executor,
-        Iterable<String> arguments) {
+        ImmutableMap<Cell, BuildFileTree> buildFileTrees, Iterable<String> arguments) {
       ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
       Path rootPath = rootCellFilesystem.getRootPath();
       Preconditions.checkState(rootPath.isAbsolute());
@@ -279,9 +277,7 @@ final class OwnersReport {
           report =
               basePaths
                   .stream()
-                  .map(
-                      basePath ->
-                          getReportForBasePath(map, executor, cell, basePath, cellRelativePath))
+                  .map(basePath -> getReportForBasePath(map, cell, basePath, cellRelativePath))
                   .reduce(report, OwnersReport::updatedWith);
         }
       }

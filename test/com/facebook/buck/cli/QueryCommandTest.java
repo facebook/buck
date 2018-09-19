@@ -119,7 +119,7 @@ public class QueryCommandTest {
     env =
         new FakeBuckQueryEnvironment(
             cell,
-            OwnersReport.builder(params.getCell(), params.getParser()),
+            OwnersReport.builder(params.getCell(), params.getParser(), perBuildState),
             params.getParser(),
             perBuildState,
             executorService,

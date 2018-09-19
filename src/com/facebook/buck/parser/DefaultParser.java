@@ -93,6 +93,11 @@ public class DefaultParser implements Parser {
     return permState;
   }
 
+  @Override
+  public PerBuildStateFactory getPerBuildStateFactory() {
+    return perBuildStateFactory;
+  }
+
   @VisibleForTesting
   static ImmutableSet<Map<String, Object>> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
@@ -125,6 +130,12 @@ public class DefaultParser implements Parser {
             SpeculativeParsing.ENABLED)) {
       return state.getAllTargetNodes(cell, buildFile);
     }
+  }
+
+  @Override
+  public ImmutableSet<TargetNode<?>> getAllTargetNodes(
+      PerBuildState perBuildState, Cell cell, Path buildFile) throws BuildFileParseException {
+    return perBuildState.getAllTargetNodes(cell, buildFile);
   }
 
   @Override

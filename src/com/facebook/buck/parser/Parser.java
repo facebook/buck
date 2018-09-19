@@ -41,6 +41,8 @@ public interface Parser {
 
   DaemonicParserState getPermState();
 
+  PerBuildStateFactory getPerBuildStateFactory();
+
   ImmutableSet<TargetNode<?>> getAllTargetNodes(
       Cell cell, boolean enableProfiling, ListeningExecutorService executor, Path buildFile)
       throws BuildFileParseException;
@@ -48,6 +50,9 @@ public interface Parser {
   TargetNode<?> getTargetNode(
       Cell cell, boolean enableProfiling, ListeningExecutorService executor, BuildTarget target)
       throws BuildFileParseException;
+
+  ImmutableSet<TargetNode<?>> getAllTargetNodes(
+      PerBuildState perBuildState, Cell cell, Path buildFile) throws BuildFileParseException;
 
   TargetNode<?> getTargetNode(PerBuildState perBuildState, BuildTarget target)
       throws BuildFileParseException;
