@@ -42,6 +42,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     BuckConfig config = context.getBuckConfig();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
+
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
     DxConfig dxConfig = new DxConfig(config);
     ScalaBuckConfig scalaConfig = new ScalaBuckConfig(config);
@@ -59,8 +60,8 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new AndroidAppModularityDescription(),
         new AndroidBinaryDescription(
             javaConfig,
-            androidBuckConfig,
             proGuardConfig,
+            androidBuckConfig,
             config,
             cxxBuckConfig,
             dxConfig,
@@ -80,7 +81,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             new AndroidBundleFactory(androidBuckConfig)),
         new AndroidInstrumentationApkDescription(
             javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, toolchainProvider),
-        new AndroidInstrumentationTestDescription(config),
+        new AndroidInstrumentationTestDescription(config, toolchainProvider),
         new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory, toolchainProvider),
         new AndroidPrebuiltAarDescription(toolchainProvider),
         new AndroidResourceDescription(androidBuckConfig),

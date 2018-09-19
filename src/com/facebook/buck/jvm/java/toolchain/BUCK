@@ -12,5 +12,6 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/util:util",
     ],
 )

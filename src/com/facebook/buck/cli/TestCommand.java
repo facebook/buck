@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
@@ -297,6 +298,7 @@ public class TestCommand extends BuildCommand {
 
   private ExitCode runTestsInternal(
       CommandRunnerParams params,
+      BuildRuleResolver ruleResolver,
       BuildEngine buildEngine,
       Build build,
       BuildContext buildContext,
@@ -314,6 +316,7 @@ public class TestCommand extends BuildCommand {
       int exitCodeInt =
           TestRunning.runTests(
               params,
+              ruleResolver,
               testRules,
               build.getExecutionContext(),
               getTestRunningOptions(params),
@@ -663,7 +666,13 @@ public class TestCommand extends BuildCommand {
             return runTestsExternal(
                 params, build, externalTestRunner.get(), testRules, buildContext);
           }
-          return runTestsInternal(params, cachingBuildEngine, build, buildContext, testRules);
+          return runTestsInternal(
+              params,
+              actionGraphAndBuilder.getActionGraphBuilder(),
+              cachingBuildEngine,
+              build,
+              buildContext,
+              testRules);
         }
       }
     }

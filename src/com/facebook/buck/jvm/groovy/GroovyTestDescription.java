@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -30,6 +31,7 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -38,18 +40,24 @@ import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
-public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyTestDescriptionArg> {
+/** Description for groovy_test. */
+public class GroovyTestDescription
+    implements DescriptionWithTargetGraph<GroovyTestDescriptionArg>,
+        ImplicitDepsInferringDescription<GroovyTestDescriptionArg> {
 
   private final ToolchainProvider toolchainProvider;
   private final GroovyBuckConfig groovyBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final Supplier<JavaOptions> javaOptionsForTests;
 
   public GroovyTestDescription(
       ToolchainProvider toolchainProvider,
@@ -58,6 +66,7 @@ public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyT
     this.toolchainProvider = toolchainProvider;
     this.groovyBuckConfig = groovyBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
   }
 
   @Override
@@ -121,10 +130,7 @@ public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyT
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
-        toolchainProvider
-            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
-            .getJavaOptionsForTests()
-            .getJavaRuntimeLauncher(),
+        javaOptionsForTests.get().getJavaRuntimeLauncher(graphBuilder),
         args.getVmArgs(),
         /* nativeLibsEnvironment */ ImmutableMap.of(),
         args.getTestRuleTimeoutMs()
@@ -138,6 +144,16 @@ public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyT
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
         args.getUnbundledResourcesRoot());
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      GroovyTestDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javaOptionsForTests.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
   }
 
   @BuckStyleImmutable

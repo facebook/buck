@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.google.common.collect.ImmutableList;
 
@@ -28,8 +27,7 @@ public class JavaCompilationConstants {
 
   public static final ImmutableList<String> DEFAULT_JAVA_COMMAND_PREFIX = ImmutableList.of("java");
 
-  public static final JavaOptions DEFAULT_JAVA_OPTIONS =
-      JavaOptions.of(new CommandTool.Builder().addArg("java").build());
+  public static final JavaOptions DEFAULT_JAVA_OPTIONS = JavaBuckConfig.DEFAULT_JAVA_OPTIONS;
 
   public static final JavacOptions DEFAULT_JAVAC_OPTIONS =
       JavacOptions.builderForUseInJavaBuckConfig().setSourceLevel("7").setTargetLevel("7").build();

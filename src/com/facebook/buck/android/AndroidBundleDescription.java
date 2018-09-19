@@ -43,6 +43,9 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaOptions;
+import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -52,6 +55,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AndroidBundleDescription
@@ -77,6 +81,8 @@ public class AndroidBundleDescription
   private final ToolchainProvider toolchainProvider;
   private final AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory;
   private final AndroidBundleFactory androidBundleFactory;
+  private final JavacFactory javacFactory;
+  private final Supplier<JavaOptions> javaOptions;
 
   public AndroidBundleDescription(
       JavaBuckConfig javaBuckConfig,
@@ -97,6 +103,8 @@ public class AndroidBundleDescription
     this.toolchainProvider = toolchainProvider;
     this.androidBinaryGraphEnhancerFactory = androidBinaryGraphEnhancerFactory;
     this.androidBundleFactory = androidBundleFactory;
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
   }
 
   @Override
@@ -167,7 +175,9 @@ public class AndroidBundleDescription
             exopackageModes,
             rulesToExcludeFromDex,
             args,
-            true);
+            true,
+            javaOptions.get(),
+            javacFactory);
     AndroidBundle androidBundle =
         androidBundleFactory.create(
             toolchainProvider,
@@ -181,7 +191,8 @@ public class AndroidBundleDescription
             exopackageModes,
             resourceFilter,
             rulesToExcludeFromDex,
-            args);
+            args,
+            javaOptions.get());
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.
     new AndroidBinaryInstallGraphEnhancer(
@@ -230,6 +241,8 @@ public class AndroidBundleDescription
       AbstractAndroidBundleDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
     if (constructorArg.getRedex()) {
       // If specified, this option may point to either a BuildTarget or a file.
       Optional<BuildTarget> redexTarget = androidBuckConfig.getRedexTarget();

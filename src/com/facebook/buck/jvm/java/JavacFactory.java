@@ -16,15 +16,19 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
+import com.facebook.buck.util.MoreSuppliers;
+import com.google.common.collect.ImmutableCollection;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public final class JavacFactory {
-  private final JavacProvider javacProvider;
+  private final Supplier<JavacProvider> javacProvider;
 
-  public JavacFactory(JavacProvider javacProvider) {
+  public JavacFactory(Supplier<JavacProvider> javacProvider) {
     this.javacProvider = javacProvider;
   }
 
@@ -36,14 +40,28 @@ public final class JavacFactory {
         return spec.getJavacProvider().resolve(ruleFinder);
       }
     }
-    return javacProvider.resolve(ruleFinder);
+    return javacProvider.get().resolve(ruleFinder);
   }
 
   /** Creates a JavacFactory for the default Java toolchain. */
   public static JavacFactory getDefault(ToolchainProvider toolchainProvider) {
     return new JavacFactory(
-        toolchainProvider
-            .getByName(JavaToolchain.DEFAULT_NAME, JavaToolchain.class)
-            .getJavacProvider());
+        MoreSuppliers.memoize(
+            () ->
+                toolchainProvider
+                    .getByName(JavaToolchain.DEFAULT_NAME, JavaToolchain.class)
+                    .getJavacProvider()));
+  }
+
+  /**
+   * Adds the parse time deps required for javac based on the args. If the args has a spec for
+   * javac, we assume that the parse time deps will be derived elsewhere.
+   */
+  public void addParseTimeDeps(
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder,
+      @Nullable JvmLibraryArg args) {
+    if (args == null || !args.hasJavacSpec()) {
+      javacProvider.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    }
   }
 }

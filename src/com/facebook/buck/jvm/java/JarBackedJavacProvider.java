@@ -16,12 +16,14 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -58,4 +60,7 @@ public class JarBackedJavacProvider implements JavacProvider, AddsToRuleKey {
 
     return javac;
   }
+
+  @Override
+  public void addParseTimeDeps(ImmutableCollection.Builder<BuildTarget> depsConsumer) {}
 }

@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
@@ -61,10 +62,14 @@ public class JavaBinaryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
+  private final Supplier<JavaOptions> javaOptions;
 
   public JavaBinaryDescription(ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
+    this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
   @Override
@@ -106,10 +111,6 @@ public class JavaBinaryDescription
       binaryBuildTarget = binaryBuildTarget.withAppendedFlavors(FAT_JAR_INNER_JAR_FLAVOR);
     }
 
-    JavaOptions javaOptions =
-        toolchainProvider
-            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
-            .getJavaOptions();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     // Construct the build rule to build the binary JAR.
@@ -122,7 +123,7 @@ public class JavaBinaryDescription
             binaryBuildTarget,
             projectFilesystem,
             binaryParams.copyAppendingExtraDeps(transitiveClasspathDeps),
-            javaOptions.getJavaRuntimeLauncher(),
+            javaOptions.get().getJavaRuntimeLauncher(graphBuilder),
             args.getMainClass().orElse(null),
             args.getManifestFile().orElse(null),
             args.getMergeManifests().orElse(true),
@@ -160,7 +161,7 @@ public class JavaBinaryDescription
               innerJar,
               javaBinary,
               nativeLibraries,
-              javaOptions.getJavaRuntimeLauncher());
+              javaOptions.get().getJavaRuntimeLauncher(graphBuilder));
     }
 
     return rule;
@@ -175,6 +176,8 @@ public class JavaBinaryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
         CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
   }
 
   @BuckStyleImmutable

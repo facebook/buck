@@ -33,6 +33,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -59,8 +60,9 @@ import org.junit.Test;
 
 public class JavaBuckConfigTest {
 
+  public static final BuildRuleResolver RULE_RESOLVER = new TestActionGraphBuilder();
   private static final SourcePathResolver PATH_RESOLVER =
-      DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+      DefaultSourcePathResolver.from(new SourcePathRuleFinder(RULE_RESOLVER));
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectFilesystem defaultFilesystem;
@@ -76,12 +78,12 @@ public class JavaBuckConfigTest {
     JavaOptions javaOptions = config.getDefaultJavaOptions();
     assertEquals(
         ImmutableList.of("java"),
-        javaOptions.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
+        javaOptions.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of("java"),
-        javaForTestsOptions.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
+        javaForTestsOptions.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -105,12 +107,12 @@ public class JavaBuckConfigTest {
     JavaOptions javaOptions = config.getDefaultJavaOptions();
     assertEquals(
         ImmutableList.of(javaCommand),
-        javaOptions.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
+        javaOptions.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of(javaForTestsCommand),
-        javaForTestsOptions.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
+        javaForTestsOptions.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -127,7 +129,7 @@ public class JavaBuckConfigTest {
     JavaOptions options = config.getDefaultJavaOptions();
     assertEquals(
         ImmutableList.of(java.toString()),
-        options.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
+        options.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -144,7 +146,7 @@ public class JavaBuckConfigTest {
     JavaOptions options = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of(javaCommand),
-        options.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
+        options.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test

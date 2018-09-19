@@ -16,8 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.google.common.collect.ImmutableCollection;
 
 public interface JavacProvider {
   Javac resolve(SourcePathRuleFinder ruleFinder);
+
+  void addParseTimeDeps(ImmutableCollection.Builder<BuildTarget> depsConsumer);
 }

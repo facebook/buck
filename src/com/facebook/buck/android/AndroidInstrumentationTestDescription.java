@@ -17,10 +17,12 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
@@ -31,21 +33,28 @@ import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.util.PackagedResource;
+import com.google.common.collect.ImmutableCollection.Builder;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AndroidInstrumentationTestDescription
-    implements DescriptionWithTargetGraph<AndroidInstrumentationTestDescriptionArg> {
+    implements DescriptionWithTargetGraph<AndroidInstrumentationTestDescriptionArg>,
+        ImplicitDepsInferringDescription<AndroidInstrumentationTestDescriptionArg> {
 
   private final BuckConfig buckConfig;
   private final ConcurrentHashMap<ProjectFilesystem, ConcurrentHashMap<String, PackagedResource>>
       resourceSupplierCache;
+  private final Supplier<JavaOptions> javaOptions;
 
-  public AndroidInstrumentationTestDescription(BuckConfig buckConfig) {
+  public AndroidInstrumentationTestDescription(
+      BuckConfig buckConfig, ToolchainProvider toolchainProvider) {
     this.buckConfig = buckConfig;
+    this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
     this.resourceSupplierCache = new ConcurrentHashMap<>();
   }
 
@@ -79,10 +88,7 @@ public class AndroidInstrumentationTestDescription
         (HasInstallableApk) apk,
         args.getLabels(),
         args.getContacts(),
-        toolchainProvider
-            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
-            .getJavaOptions()
-            .getJavaRuntimeLauncher(),
+        javaOptions.get().getJavaRuntimeLauncher(context.getActionGraphBuilder()),
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
             .orElse(buckConfig.getDefaultTestRuleTimeoutMs()),
@@ -107,6 +113,16 @@ public class AndroidInstrumentationTestDescription
             resource ->
                 new PackagedResource(
                     projectFilesystem, AndroidInstrumentationTestDescription.class, resource));
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AndroidInstrumentationTestDescriptionArg constructorArg,
+      Builder<BuildTarget> extraDepsBuilder,
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
   }
 
   @BuckStyleImmutable

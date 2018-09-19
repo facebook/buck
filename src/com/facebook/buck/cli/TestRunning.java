@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -30,6 +31,7 @@ import com.facebook.buck.core.test.event.TestStatusMessageEvent;
 import com.facebook.buck.core.test.event.TestSummaryEvent;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -42,6 +44,7 @@ import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryWithTests;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.step.ExecutionContext;
@@ -117,6 +120,7 @@ public class TestRunning {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public static int runTests(
       CommandRunnerParams params,
+      BuildRuleResolver ruleResolver,
       Iterable<TestRule> tests,
       ExecutionContext executionContext,
       TestRunningOptions options,
@@ -404,12 +408,19 @@ public class TestRunning {
         JavaBuckConfig javaBuckConfig = params.getBuckConfig().getView(JavaBuckConfig.class);
         DefaultJavaPackageFinder defaultJavaPackageFinder =
             javaBuckConfig.createDefaultJavaPackageFinder();
+
+        JavaOptions javaOptions = javaBuckConfig.getDefaultJavaOptions();
+        ToolProvider javaRuntimeProvider = javaOptions.getJavaRuntimeProvider();
+        Preconditions.checkState(
+            Iterables.isEmpty(javaRuntimeProvider.getParseTimeDeps()),
+            "Using a rule-defined java runtime does not currently support generating code coverage.");
+
         stepRunner.runStepForBuildTarget(
             executionContext,
             getReportCommand(
                 rulesUnderTestForCoverage,
                 defaultJavaPackageFinder,
-                javaBuckConfig.getDefaultJavaOptions().getJavaRuntimeLauncher(),
+                javaRuntimeProvider.resolve(ruleResolver),
                 params.getCell().getFilesystem(),
                 buildContext.getSourcePathResolver(),
                 ruleFinder,

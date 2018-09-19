@@ -18,6 +18,6 @@ package com.facebook.buck.jvm.java;
 
 public class JavacFactoryHelper {
   public static JavacFactory createJavacFactory(JavaBuckConfig config) {
-    return new JavacFactory(config.getJavacSpec().getJavacProvider());
+    return new JavacFactory(() -> config.getJavacSpec().getJavacProvider());
   }
 }

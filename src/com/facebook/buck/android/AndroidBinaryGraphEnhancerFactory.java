@@ -31,8 +31,8 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
-import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
@@ -67,13 +67,13 @@ public class AndroidBinaryGraphEnhancerFactory {
       EnumSet<ExopackageMode> exopackageModes,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancerArgs args,
-      boolean useProtoFormat) {
+      boolean useProtoFormat,
+      JavaOptions javaOptions,
+      JavacFactory javacFactory) {
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
             AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
-    JavaOptionsProvider javaOptionsProvider =
-        toolchainProvider.getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class);
 
     ListeningExecutorService dxExecutorService =
         toolchainProvider
@@ -124,7 +124,7 @@ public class AndroidBinaryGraphEnhancerFactory {
             .setOptimizationPasses(args.getOptimizationPasses())
             .setProguardJvmArgs(args.getProguardJvmArgs())
             .setSkipProguard(args.isSkipProguard())
-            .setJavaRuntimeLauncher(javaOptionsProvider.getJavaOptions().getJavaRuntimeLauncher())
+            .setJavaRuntimeLauncher(javaOptions.getJavaRuntimeLauncher(graphBuilder))
             .setProguardConfigPath(args.getProguardConfig())
             .setShouldProguard(shouldProguard)
             .build();
@@ -161,7 +161,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.isNoVersionTransitionsResources(),
         args.isNoAutoAddOverlayResources(),
         javaBuckConfig,
-        JavacFactory.getDefault(toolchainProvider),
+        javacFactory,
         toolchainProvider
             .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
             .getJavacOptions(),

@@ -23,6 +23,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -46,8 +47,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public static final String SECTION = "java";
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
-  private static final JavaOptions DEFAULT_JAVA_OPTIONS =
-      JavaOptions.of(new CommandTool.Builder().addArg("java").build());
+  public static final CommandTool DEFAULT_JAVA_TOOL =
+      new CommandTool.Builder().addArg("java").build();
+  static final JavaOptions DEFAULT_JAVA_OPTIONS =
+      JavaOptions.of(new ConstantToolProvider(DEFAULT_JAVA_TOOL));
 
   private final BuckConfig delegate;
   private final Supplier<JavacSpec> javacSpecSupplier;
@@ -75,11 +78,15 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public JavaOptions getDefaultJavaOptions() {
-    return getToolForExecutable("java").map(JavaOptions::of).orElse(DEFAULT_JAVA_OPTIONS);
+    return getToolForExecutable("java")
+        .map(ConstantToolProvider::new)
+        .map(JavaOptions::of)
+        .orElse(DEFAULT_JAVA_OPTIONS);
   }
 
   public JavaOptions getDefaultJavaOptionsForTests() {
     return getToolForExecutable("java_for_tests")
+        .map(ConstantToolProvider::new)
         .map(JavaOptions::of)
         .orElseGet(this::getDefaultJavaOptions);
   }

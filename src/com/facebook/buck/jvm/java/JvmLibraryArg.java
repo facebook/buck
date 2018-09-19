@@ -87,10 +87,14 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
     }
   }
 
+  default boolean hasJavacSpec() {
+    return getCompiler().isPresent() || getJavac().isPresent() || getJavacJar().isPresent();
+  }
+
   @Value.Derived
   @Nullable
   default JavacSpec getJavacSpec(SourcePathRuleFinder ruleFinder) {
-    if (!getCompiler().isPresent() && !getJavac().isPresent() && !getJavacJar().isPresent()) {
+    if (!hasJavacSpec()) {
       return null;
     }
 

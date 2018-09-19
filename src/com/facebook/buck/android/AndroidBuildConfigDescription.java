@@ -16,7 +16,9 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -38,18 +40,20 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 public class AndroidBuildConfigDescription
-    implements DescriptionWithTargetGraph<AndroidBuildConfigDescriptionArg> {
+    implements DescriptionWithTargetGraph<AndroidBuildConfigDescriptionArg>,
+        ImplicitDepsInferringDescription<AndroidBuildConfigDescriptionArg> {
 
   private static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
 
-  private final ToolchainProvider toolchainProvider;
+  private final JavacFactory javacFactory;
 
   public AndroidBuildConfigDescription(ToolchainProvider toolchainProvider) {
-    this.toolchainProvider = toolchainProvider;
+    javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
   @Override
@@ -84,7 +88,7 @@ public class AndroidBuildConfigDescription
         args.getValues(),
         args.getValuesFile(),
         /* useConstantExpressions */ false,
-        JavacFactory.getDefault(toolchainProvider).create(ruleFinder, null),
+        javacFactory.create(ruleFinder, null),
         context
             .getToolchainProvider()
             .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
@@ -161,6 +165,16 @@ public class AndroidBuildConfigDescription
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     return new AndroidBuildConfigJavaLibrary(
         buildTarget, projectFilesystem, ruleFinder, javac, javacOptions, androidBuildConfig);
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AndroidBuildConfigDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
   }
 
   @BuckStyleImmutable

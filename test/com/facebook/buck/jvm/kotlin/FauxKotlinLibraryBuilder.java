@@ -25,6 +25,8 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavacSpec;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.hash.HashCode;
@@ -47,6 +49,11 @@ public class FauxKotlinLibraryBuilder
                 .withToolchain(
                     JavacOptionsProvider.DEFAULT_NAME,
                     JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+                .withToolchain(
+                    JavaToolchain.DEFAULT_NAME,
+                    JavaToolchain.builder()
+                        .setJavacProvider(JavacSpec.builder().build().getJavacProvider())
+                        .build())
                 .build(),
             null,
             null),

@@ -88,7 +88,7 @@ public class JavaBinaryTest {
                 target,
                 new FakeProjectFilesystem(),
                 params,
-                JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher(),
+                JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher(graphBuilder),
                 "com.facebook.base.Main",
                 null,
                 /* merge manifests */ true,

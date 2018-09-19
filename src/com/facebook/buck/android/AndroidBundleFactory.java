@@ -32,8 +32,8 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.Keystore;
-import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -61,7 +61,8 @@ public class AndroidBundleFactory {
       EnumSet<ExopackageMode> exopackageModes,
       ResourceFilter resourceFilter,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      AndroidBundleDescriptionArg args) {
+      AndroidBundleDescriptionArg args,
+      JavaOptions javaOptions) {
 
     BuildRule keystore = graphBuilder.getRule(args.getKeystore());
     if (!(keystore instanceof Keystore)) {
@@ -79,9 +80,6 @@ public class AndroidBundleFactory {
 
     AndroidBinaryFilesInfo filesInfo =
         new AndroidBinaryFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
-
-    JavaOptionsProvider javaOptionsProvider =
-        toolchainProvider.getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class);
 
     Optional<BuildRule> moduleVerification;
     if (args.getAndroidAppModularityResult().isPresent()) {
@@ -134,7 +132,7 @@ public class AndroidBundleFactory {
         args.isPackageAssetLibraries(),
         args.isCompressAssetLibraries(),
         args.getManifestEntries(),
-        javaOptionsProvider.getJavaOptions().getJavaRuntimeLauncher(),
+        javaOptions.getJavaRuntimeLauncher(graphBuilder),
         args.getIsCacheable(),
         moduleVerification,
         filesInfo.getDexFilesInfo(),

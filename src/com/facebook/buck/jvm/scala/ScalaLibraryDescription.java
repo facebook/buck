@@ -60,6 +60,7 @@ public class ScalaLibraryDescription
   private final ToolchainProvider toolchainProvider;
   private final ScalaBuckConfig scalaBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
 
   public ScalaLibraryDescription(
       ToolchainProvider toolchainProvider,
@@ -68,6 +69,7 @@ public class ScalaLibraryDescription
     this.toolchainProvider = toolchainProvider;
     this.scalaBuckConfig = scalaBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
   @Override
@@ -137,7 +139,7 @@ public class ScalaLibraryDescription
                 scalaBuckConfig,
                 javaBuckConfig,
                 args,
-                JavacFactory.getDefault(toolchainProvider))
+                javacFactory)
             .setJavacOptions(javacOptions)
             .build();
 
@@ -172,6 +174,7 @@ public class ScalaLibraryDescription
         .add(scalaBuckConfig.getScalaLibraryTarget())
         .addAll(scalaBuckConfig.getCompilerPlugins());
     Optionals.addIfPresent(scalaBuckConfig.getScalacTarget(), extraDepsBuilder);
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
   }
 
   public interface CoreArg extends JavaLibraryDescription.CoreArg {

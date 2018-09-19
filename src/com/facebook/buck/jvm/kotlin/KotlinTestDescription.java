@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -29,6 +31,7 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -38,27 +41,42 @@ import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
-public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinTestDescriptionArg> {
+/** Description for kotlin_test. */
+public class KotlinTestDescription
+    implements DescriptionWithTargetGraph<KotlinTestDescriptionArg>,
+        ImplicitDepsInferringDescription<KotlinTestDescriptionArg> {
 
-  private final ToolchainProvider toolchainProvider;
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final Supplier<JavaOptions> javaOptionsForTests;
+  private final JavacFactory javacFactory;
+  private final Supplier<JavacOptions> defaultJavacOptions;
 
   public KotlinTestDescription(
       ToolchainProvider toolchainProvider,
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig) {
-    this.toolchainProvider = toolchainProvider;
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.defaultJavacOptions =
+        MoreSuppliers.memoize(
+            () ->
+                toolchainProvider
+                    .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                    .getJavacOptions());
   }
 
   @Override
@@ -78,13 +96,7 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(
-            toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
-                .getJavacOptions(),
-            buildTarget,
-            graphBuilder,
-            args);
+        JavacOptionsFactory.create(defaultJavacOptions.get(), buildTarget, graphBuilder, args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
         KotlinLibraryBuilder.newInstance(
@@ -97,7 +109,7 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
                 kotlinBuckConfig,
                 javaBuckConfig,
                 args,
-                JavacFactory.getDefault(toolchainProvider))
+                javacFactory)
             .setJavacOptions(javacOptions)
             .build();
 
@@ -123,10 +135,7 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
-        toolchainProvider
-            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
-            .getJavaOptionsForTests()
-            .getJavaRuntimeLauncher(),
+        javaOptionsForTests.get().getJavaRuntimeLauncher(graphBuilder),
         args.getVmArgs(),
         ImmutableMap.of(), /* nativeLibsEnvironment */
         args.getTestRuleTimeoutMs()
@@ -140,6 +149,17 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
         args.getUnbundledResourcesRoot());
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      KotlinTestDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+    javaOptionsForTests.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
   }
 
   @BuckStyleImmutable

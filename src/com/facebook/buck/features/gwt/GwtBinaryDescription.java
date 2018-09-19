@@ -16,8 +16,10 @@
 
 package com.facebook.buck.features.gwt;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
@@ -32,16 +34,22 @@ import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.features.gwt.GwtBinary.Style;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
-public class GwtBinaryDescription implements DescriptionWithTargetGraph<GwtBinaryDescriptionArg> {
+/** Description for gwt_binary. */
+public class GwtBinaryDescription
+    implements DescriptionWithTargetGraph<GwtBinaryDescriptionArg>,
+        ImplicitDepsInferringDescription<GwtBinaryDescriptionArg> {
 
   /** Default value for {@link GwtBinaryDescriptionArg#style}. */
   private static final Style DEFAULT_STYLE = Style.OBF;
@@ -58,10 +66,10 @@ public class GwtBinaryDescription implements DescriptionWithTargetGraph<GwtBinar
   /** This value is taken from GWT's source code: http://bit.ly/1nZtmMv */
   private static final Integer DEFAULT_OPTIMIZE = Integer.valueOf(9);
 
-  private final ToolchainProvider toolchainProvider;
+  private final Supplier<JavaOptions> javaOptions;
 
   public GwtBinaryDescription(ToolchainProvider toolchainProvider) {
-    this.toolchainProvider = toolchainProvider;
+    this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
   }
 
   @Override
@@ -145,10 +153,7 @@ public class GwtBinaryDescription implements DescriptionWithTargetGraph<GwtBinar
         context.getProjectFilesystem(),
         params.withExtraDeps(extraDeps.build()),
         args.getModules(),
-        toolchainProvider
-            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
-            .getJavaOptions()
-            .getJavaRuntimeLauncher(),
+        javaOptions.get().getJavaRuntimeLauncher(graphBuilder),
         args.getVmArgs(),
         args.getStyle().orElse(DEFAULT_STYLE),
         args.getDraftCompile().orElse(DEFAULT_DRAFT_COMPILE),
@@ -157,6 +162,16 @@ public class GwtBinaryDescription implements DescriptionWithTargetGraph<GwtBinar
         args.getStrict().orElse(DEFAULT_STRICT),
         args.getExperimentalArgs(),
         gwtModuleJarsBuilder.build());
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      GwtBinaryDescriptionArg constructorArg,
+      Builder<BuildTarget> extraDepsBuilder,
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
   }
 
   @BuckStyleImmutable

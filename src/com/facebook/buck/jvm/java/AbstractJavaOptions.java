@@ -16,15 +16,24 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.google.common.collect.ImmutableCollection;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractJavaOptions implements AddsToRuleKey {
-  @AddToRuleKey
-  public abstract Tool getJavaRuntimeLauncher();
+abstract class AbstractJavaOptions {
+  public abstract ToolProvider getJavaRuntimeProvider();
+
+  public Tool getJavaRuntimeLauncher(BuildRuleResolver ruleResolver) {
+    return getJavaRuntimeProvider().resolve(ruleResolver);
+  }
+
+  public void addParseTimeDeps(ImmutableCollection.Builder<BuildTarget> depsBuilder) {
+    depsBuilder.addAll(getJavaRuntimeProvider().getParseTimeDeps());
+  }
 }

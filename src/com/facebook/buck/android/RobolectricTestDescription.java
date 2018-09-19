@@ -38,6 +38,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -49,6 +50,7 @@ import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.DependencyMode;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -58,6 +60,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class RobolectricTestDescription
@@ -68,6 +71,9 @@ public class RobolectricTestDescription
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
+  private final Supplier<JavaOptions> javaOptionsForTests;
+  private final Supplier<JavacOptions> defaultJavacOptions;
+  private final JavacFactory javacFactory;
 
   public RobolectricTestDescription(
       ToolchainProvider toolchainProvider,
@@ -76,6 +82,14 @@ public class RobolectricTestDescription
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.compilerFactory = compilerFactory;
+    this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
+    this.defaultJavacOptions =
+        MoreSuppliers.memoize(
+            () ->
+                toolchainProvider
+                    .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                    .getJavacOptions());
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
   @Override
@@ -120,13 +134,7 @@ public class RobolectricTestDescription
     }
 
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(
-            toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
-                .getJavacOptions(),
-            buildTarget,
-            graphBuilder,
-            args);
+        JavacOptionsFactory.create(defaultJavacOptions.get(), buildTarget, graphBuilder, args);
 
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
@@ -135,7 +143,7 @@ public class RobolectricTestDescription
             ImmutableSortedSet.copyOf(
                 Iterables.concat(
                     params.getBuildDeps(), graphBuilder.getAllRules(args.getExportedDeps()))),
-            JavacFactory.getDefault(toolchainProvider).create(ruleFinder, args),
+            javacFactory.create(ruleFinder, args),
             javacOptions,
             DependencyMode.TRANSITIVE,
             args.isForceFinalResourceIds(),
@@ -191,7 +199,7 @@ public class RobolectricTestDescription
                     cellRoots,
                     compilerFactory.getCompiler(
                         args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA),
-                        JavacFactory.getDefault(toolchainProvider)),
+                        javacFactory),
                     javaBuckConfig,
                     testLibraryArgs)
                 .setJavacOptions(javacOptions)
@@ -218,9 +226,6 @@ public class RobolectricTestDescription
         args.getLabels(),
         args.getContacts(),
         TestType.JUNIT,
-        toolchainProvider
-            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
-            .getJavaOptionsForTests(),
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
         dummyRDotJava,
@@ -239,7 +244,8 @@ public class RobolectricTestDescription
         args.getRobolectricManifest(),
         javaBuckConfig
             .getDelegate()
-            .getBooleanValue("test", "pass_robolectric_directories_in_file", false));
+            .getBooleanValue("test", "pass_robolectric_directories_in_file", false),
+        javaOptionsForTests.get().getJavaRuntimeLauncher(graphBuilder));
   }
 
   @Override
@@ -253,6 +259,8 @@ public class RobolectricTestDescription
       targetGraphOnlyDepsBuilder.addAll(
           CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
     }
+    javaOptionsForTests.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
   }
 
   @BuckStyleImmutable

@@ -21,7 +21,6 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 
 public interface ToolProvider {
-
   /** @return the provided {@link Tool} object. */
   Tool resolve(BuildRuleResolver resolver);
 

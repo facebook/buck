@@ -16,11 +16,13 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasProvidedDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
@@ -42,6 +44,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -53,7 +56,8 @@ import org.immutables.value.Value;
 public class JavaLibraryDescription
     implements DescriptionWithTargetGraph<JavaLibraryDescriptionArg>,
         Flavored,
-        VersionPropagator<JavaLibraryDescriptionArg> {
+        VersionPropagator<JavaLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<JavaLibraryDescriptionArg> {
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(
@@ -65,13 +69,13 @@ public class JavaLibraryDescription
           JavaAbis.SOURCE_ONLY_ABI_FLAVOR,
           JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR);
 
-  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
 
   public JavaLibraryDescription(
       ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
-    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
   @Override
@@ -191,8 +195,7 @@ public class JavaLibraryDescription
                 params,
                 graphBuilder,
                 context.getCellPathResolver(),
-                new JavaConfiguredCompilerFactory(
-                    javaBuckConfig, JavacFactory.getDefault(toolchainProvider)),
+                new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
                 javaBuckConfig,
                 args)
             .setJavacOptions(javacOptions)
@@ -217,6 +220,16 @@ public class JavaLibraryDescription
           args.getMavenCoords(),
           args.getMavenPomTemplate());
     }
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      JavaLibraryDescriptionArg constructorArg,
+      Builder<BuildTarget> extraDepsBuilder,
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
   }
 
   public interface CoreArg

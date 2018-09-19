@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -27,7 +29,9 @@ import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
+import com.google.common.collect.ImmutableCollection.Builder;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 /**
@@ -36,11 +40,15 @@ import org.immutables.value.Value;
  * <p>The produced jar behaves similarly to a jar produced by java_binary, which means it can be
  * executed by {@code buck run} or using the {@code $(exe )} macro.
  */
-public class JarGenruleDescription extends AbstractGenruleDescription<JarGenruleDescriptionArg> {
+public class JarGenruleDescription extends AbstractGenruleDescription<JarGenruleDescriptionArg>
+    implements ImplicitDepsInferringDescription<JarGenruleDescriptionArg> {
+
+  private final Supplier<JavaOptions> javaOptions;
 
   public JarGenruleDescription(
       ToolchainProvider toolchainProvider, SandboxExecutionStrategy sandboxExecutionStrategy) {
     super(toolchainProvider, sandboxExecutionStrategy, false);
+    this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
   }
 
   @Override
@@ -58,10 +66,6 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
-    JavaOptions javaOptions =
-        toolchainProvider
-            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
-            .getJavaOptions();
 
     return new JarGenrule(
         buildTarget,
@@ -77,7 +81,17 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
         buildTarget.getShortName(),
         args.getCacheable().orElse(true),
         args.getEnvironmentExpansionSeparator(),
-        javaOptions.getJavaRuntimeLauncher());
+        javaOptions.get().getJavaRuntimeLauncher(graphBuilder));
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      JarGenruleDescriptionArg constructorArg,
+      Builder<BuildTarget> extraDepsBuilder,
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
   }
 
   /** jar_genrule constructor arg. */
