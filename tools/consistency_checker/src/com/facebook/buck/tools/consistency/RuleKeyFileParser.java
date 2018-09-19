@@ -42,7 +42,7 @@ public class RuleKeyFileParser {
   static class RuleKeyNode {
 
     public final FullRuleKey ruleKey;
-    public boolean visited = false;
+    public int lastVisitId;
 
     public RuleKeyNode(FullRuleKey ruleKey) {
       this.ruleKey = ruleKey;
@@ -70,12 +70,6 @@ public class RuleKeyFileParser {
       this.rootNodes = rootNodes;
       this.rules = rules;
       this.parseTime = parseTime;
-    }
-
-    public void resetVisits() {
-      for (RuleKeyNode node : rules.values()) {
-        node.visited = false;
-      }
     }
   }
 
