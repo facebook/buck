@@ -30,6 +30,7 @@ from typing import (
     Set,
     Tuple,
     TypeVar,
+    Union,
 )
 
 import pywatchman
@@ -1268,7 +1269,7 @@ class BuildFileProcessor(object):
         build_env.merge(inner_env)
 
     def _provider(self, doc="", fields=None):
-        # type: (str, *str) -> Callable
+        # type: (str, Union[List[str], Dict[str, str]]) -> Callable
         """Creates a declared provider factory.
 
         The return value of this function can be used to create "struct-like"
@@ -1278,6 +1279,12 @@ class BuildFileProcessor(object):
               return 3
             info = SomeInfo(x = 2, foo = foo)
             print(info.x + info.foo())  # prints 5
+
+        Optional fields can be used to restrict the set of allowed fields.
+        Example:
+             SomeInfo = provider(fields=["data"])
+             info = SomeInfo(data="data")  # valid
+             info = SomeInfo(foo="bar")  # runtime exception
         """
         if fields:
             return create_struct_class(fields)
