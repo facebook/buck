@@ -20,26 +20,24 @@ import com.facebook.buck.core.model.BuildId;
 import java.util.concurrent.TimeUnit;
 
 /**
- * BackgroundTaskManager schedules and runs background bgtasks like cleanup/logging. A manager
- * should be notified when a new command starts and when it finishes so that it can schedule bgtasks
+ * BackgroundTaskManager schedules and runs background tasks like cleanup and logging. A manager
+ * should be notified when a new command starts and when it finishes so that it can schedule tasks
  * appropriately. Tasks should typically be scheduled through a {@link TaskManagerScope}.
  */
 public abstract class BackgroundTaskManager {
 
-  /**
-   * Code passed to notify(). COMMAND_START: when buck command is started COMMAND_END: when buck
-   * command has finished, used to trigger background task execution
-   */
+  /** Type of notification passed to {@link #notify}. */
   enum Notification {
+    /** Indicates that a command has started */
     COMMAND_START,
+    /**
+     * Indicates that a command has finished. This notification may trigger execution of background
+     * tasks.
+     */
     COMMAND_END
   }
 
-  /**
-   * Returns a new {@link TaskManagerScope} for a build on this manager.
-   *
-   * @return new scope
-   */
+  /** Returns a new {@link TaskManagerScope} for a build on this manager. */
   public abstract TaskManagerScope getNewScope(BuildId buildId);
 
   /** Shut down manager, without waiting for tasks to finish. */
@@ -56,17 +54,13 @@ public abstract class BackgroundTaskManager {
   /**
    * Schedule a task to be run in the background. Should be accessed through a {@link
    * TaskManagerScope} implementation.
-   *
-   * @param task {@link ManagedBackgroundTask} object to be run
    */
   protected abstract void schedule(ManagedBackgroundTask task);
 
   /**
-   * Notify the manager of some event, e.g. command start/end. Exceptions should generally be caught
-   * and handled by the manager, except in test implementations. Notification should be handled
-   * through a {@link TaskManagerScope}.
-   *
-   * @param code Type of event to notify of
+   * Notify the manager of some event, e.g. command start or end. Exceptions should generally be
+   * caught and handled by the manager, except in test implementations. {@link Notification} should
+   * be handled through a {@link TaskManagerScope}.
    */
   protected abstract void notify(Notification code);
 }
