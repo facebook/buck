@@ -56,6 +56,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -79,7 +80,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closer;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -208,11 +208,22 @@ public class InstallCommand extends BuildCommand {
     BuildRunResult buildRunResult;
     try (CommandThreadManager pool =
             new CommandThreadManager("Install", getConcurrencyLimit(params.getBuckConfig()));
-        TriggerCloseable triggerCloseable = new TriggerCloseable(params)) {
+        TriggerCloseable triggerCloseable = new TriggerCloseable(params);
+        PerBuildState parserState =
+            params
+                .getParser()
+                .getPerBuildStateFactory()
+                .create(
+                    params.getParser().getPermState(),
+                    pool.getListeningExecutorService(),
+                    params.getCell(),
+                    getTargetPlatforms(),
+                    getEnableParserProfiling(),
+                    SpeculativeParsing.ENABLED)) {
       // Get the helper targets if present
       ImmutableSet<String> installHelperTargets;
       try {
-        installHelperTargets = getInstallHelperTargets(params, pool.getListeningExecutorService());
+        installHelperTargets = getInstallHelperTargets(params, parserState);
       } catch (BuildFileParseException e) {
         params
             .getBuckEventBus()
@@ -333,7 +344,7 @@ public class InstallCommand extends BuildCommand {
   }
 
   private ImmutableSet<String> getInstallHelperTargets(
-      CommandRunnerParams params, ListeningExecutorService executor)
+      CommandRunnerParams params, PerBuildState parserState)
       throws IOException, InterruptedException, BuildFileParseException {
 
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
@@ -354,20 +365,15 @@ public class InstallCommand extends BuildCommand {
                   params
                       .getParser()
                       .resolveTargetSpecs(
+                          parserState,
                           params.getCell(),
-                          getEnableParserProfiling(),
-                          executor,
                           ImmutableList.of(spec),
-                          SpeculativeParsing.DISABLED,
                           parserConfig.getDefaultFlavorsMode()))
               .transformAndConcat(Functions.identity())
               .first()
               .get();
 
-      TargetNode<?> node =
-          params
-              .getParser()
-              .getTargetNode(params.getCell(), getEnableParserProfiling(), executor, target);
+      TargetNode<?> node = params.getParser().getTargetNode(parserState, target);
 
       if (node != null
           && node.getRuleType()

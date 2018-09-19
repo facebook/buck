@@ -411,18 +411,29 @@ public class DefaultParser implements Parser {
             targetPlatforms.get(),
             enableProfiling,
             speculativeParsing)) {
-      TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
-          createTargetNodeProviderForSpecResolver(state);
-      return targetSpecResolver.resolveTargetSpecs(
-          eventBus,
-          rootCell,
-          watchman,
-          specs,
-          (buildTarget, targetNode, targetType) ->
-              applyDefaultFlavors(buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
-          targetNodeProvider,
-          (spec, nodes) -> spec.filter(nodes));
+      return resolveTargetSpecs(state, rootCell, specs, applyDefaultFlavorsMode);
     }
+  }
+
+  @Override
+  public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
+      PerBuildState state,
+      Cell rootCell,
+      Iterable<? extends TargetNodeSpec> specs,
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      throws BuildFileParseException, InterruptedException, IOException {
+
+    TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
+        createTargetNodeProviderForSpecResolver(state);
+    return targetSpecResolver.resolveTargetSpecs(
+        eventBus,
+        rootCell,
+        watchman,
+        specs,
+        (buildTarget, targetNode, targetType) ->
+            applyDefaultFlavors(buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
+        targetNodeProvider,
+        (spec, nodes) -> spec.filter(nodes));
   }
 
   @VisibleForTesting
