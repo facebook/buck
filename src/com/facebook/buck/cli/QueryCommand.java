@@ -50,7 +50,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringWriter;
@@ -201,9 +200,7 @@ public class QueryCommand extends AbstractCommand {
                     getTargetPlatforms(),
                     getEnableParserProfiling(),
                     SpeculativeParsing.ENABLED)) {
-      ListeningExecutorService executor = pool.getListeningExecutorService();
-      BuckQueryEnvironment env =
-          BuckQueryEnvironment.from(params, parserState, executor, getEnableParserProfiling());
+      BuckQueryEnvironment env = BuckQueryEnvironment.from(params, parserState);
       return formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);

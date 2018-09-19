@@ -24,7 +24,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.query.QueryBuildTarget;
@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -49,7 +48,7 @@ public class TargetPatternEvaluator {
   private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
 
   private final Parser parser;
-  private final boolean enableProfiling;
+  private final PerBuildState parserState;
   private final Path projectRoot;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
   private final BuckConfig buckConfig;
@@ -58,10 +57,10 @@ public class TargetPatternEvaluator {
   private Map<String, ImmutableSet<QueryTarget>> resolvedTargets = new HashMap<>();
 
   public TargetPatternEvaluator(
-      Cell rootCell, BuckConfig buckConfig, Parser parser, boolean enableProfiling) {
+      Cell rootCell, BuckConfig buckConfig, Parser parser, PerBuildState parserState) {
     this.rootCell = rootCell;
     this.parser = parser;
-    this.enableProfiling = enableProfiling;
+    this.parserState = parserState;
     this.buckConfig = buckConfig;
     this.projectRoot = rootCell.getFilesystem().getRootPath();
     this.targetNodeSpecParser =
@@ -69,13 +68,12 @@ public class TargetPatternEvaluator {
   }
 
   /** Attempts to parse and load the given collection of patterns. */
-  public void preloadTargetPatterns(Iterable<String> patterns, ListeningExecutorService executor)
+  public void preloadTargetPatterns(Iterable<String> patterns)
       throws InterruptedException, BuildFileParseException, IOException {
-    resolveTargetPatterns(patterns, executor);
+    resolveTargetPatterns(patterns);
   }
 
-  ImmutableMap<String, ImmutableSet<QueryTarget>> resolveTargetPatterns(
-      Iterable<String> patterns, ListeningExecutorService executor)
+  ImmutableMap<String, ImmutableSet<QueryTarget>> resolveTargetPatterns(Iterable<String> patterns)
       throws InterruptedException, BuildFileParseException, IOException {
     ImmutableMap.Builder<String, ImmutableSet<QueryTarget>> resolved = ImmutableMap.builder();
 
@@ -110,7 +108,7 @@ public class TargetPatternEvaluator {
     // Resolve any remaining target patterns using the parser.
     ImmutableMap<String, ImmutableSet<QueryTarget>> results =
         MoreMaps.transformKeys(
-            resolveBuildTargetPatterns(ImmutableList.copyOf(unresolved.keySet()), executor),
+            resolveBuildTargetPatterns(ImmutableList.copyOf(unresolved.keySet())),
             Functions.forMap(unresolved));
     resolved.putAll(results);
     resolvedTargets.putAll(results);
@@ -130,8 +128,7 @@ public class TargetPatternEvaluator {
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
-  ImmutableMap<String, ImmutableSet<QueryTarget>> resolveBuildTargetPatterns(
-      List<String> patterns, ListeningExecutorService executor)
+  ImmutableMap<String, ImmutableSet<QueryTarget>> resolveBuildTargetPatterns(List<String> patterns)
       throws InterruptedException, BuildFileParseException, IOException {
 
     // Build up an ordered list of patterns and pass them to the parse to get resolved in one go.
@@ -142,11 +139,9 @@ public class TargetPatternEvaluator {
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
         parser.resolveTargetSpecs(
+            parserState,
             rootCell,
-            enableProfiling,
-            executor,
             specs,
-            SpeculativeParsing.DISABLED,
             // We disable mapping //path/to:lib to //path/to:lib#default,static
             // because the query engine doesn't handle flavors very well.
             ParserConfig.ApplyDefaultFlavorsMode.DISABLED);

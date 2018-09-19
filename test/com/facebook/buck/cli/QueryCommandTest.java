@@ -122,9 +122,8 @@ public class QueryCommandTest {
             OwnersReport.builder(params.getCell(), params.getParser(), perBuildState),
             params.getParser(),
             perBuildState,
-            executorService,
             new TargetPatternEvaluator(
-                params.getCell(), params.getBuckConfig(), params.getParser(), false),
+                params.getCell(), params.getBuckConfig(), params.getParser(), perBuildState),
             eventBus,
             typeCoercerFactory);
   }
@@ -135,7 +134,6 @@ public class QueryCommandTest {
         Builder ownersReportBuilder,
         Parser parser,
         PerBuildState parserState,
-        ListeningExecutorService executor,
         TargetPatternEvaluator targetPatternEvaluator,
         BuckEventBus eventBus,
         TypeCoercerFactory typeCoercerFactory) {
@@ -144,7 +142,6 @@ public class QueryCommandTest {
           ownersReportBuilder,
           parser,
           parserState,
-          executor,
           targetPatternEvaluator,
           eventBus,
           typeCoercerFactory);

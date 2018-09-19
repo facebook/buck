@@ -78,9 +78,7 @@ public class AuditOwnerCommand extends AbstractCommand {
                     getTargetPlatforms(),
                     getEnableParserProfiling(),
                     SpeculativeParsing.ENABLED)) {
-      BuckQueryEnvironment env =
-          BuckQueryEnvironment.from(
-              params, parserState, pool.getListeningExecutorService(), getEnableParserProfiling());
+      BuckQueryEnvironment env = BuckQueryEnvironment.from(params, parserState);
       return QueryCommand.runMultipleQuery(
           params,
           env,
