@@ -135,7 +135,7 @@ public class ErrorLogger {
    * context.
    */
   @VisibleForTesting
-  static class DeconstructedException {
+  public static class DeconstructedException {
     private final Throwable rootCause;
     @Nullable private final Throwable parent;
     private final ImmutableList<String> context;
@@ -155,7 +155,8 @@ public class ErrorLogger {
                   .join(context.stream().map(c -> indent + c).collect(Collectors.toList())));
     }
 
-    private String getMessage(boolean suppressStackTraces) {
+    /** Returns the message (and optionally stack trace) for the root cause. */
+    public String getMessage(boolean suppressStackTraces) {
       if (rootCause instanceof HumanReadableException) {
         return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();
       }
@@ -222,6 +223,10 @@ public class ErrorLogger {
           && rootCause.getMessage().startsWith("No space left on device");
     }
 
+    public Throwable getRootCause() {
+      return rootCause;
+    }
+
     /**
      * Creates the user-friendly exception with context, masked stack trace (if not suppressed), and
      * with augmentations.
@@ -249,7 +254,7 @@ public class ErrorLogger {
 
   /** Deconstructs an exception to assist in creating user-friendly messages. */
   @VisibleForTesting
-  static DeconstructedException deconstruct(Throwable e) {
+  public static DeconstructedException deconstruct(Throwable e) {
     Throwable parent = null;
 
     // TODO(cjhopman): Think about how to handle multiline context strings.

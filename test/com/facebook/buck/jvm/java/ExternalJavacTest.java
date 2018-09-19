@@ -25,14 +25,32 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -43,7 +61,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.SortedSet;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
 import org.junit.Before;
@@ -68,9 +88,9 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   @Test
   public void testJavacCommand() {
-    ExternalJavac firstOrder = createTestStep();
-    ExternalJavac warn = createTestStep();
-    ExternalJavac transitive = createTestStep();
+    Javac firstOrder = createTestStep();
+    Javac warn = createTestStep();
+    Javac transitive = createTestStep();
 
     assertEquals(
         filesystem.resolve("fakeJavac")
@@ -107,7 +127,9 @@ public class ExternalJavacTest extends EasyMockSupport {
             .build();
     FakeProcess javacProc = new FakeProcess(0, "", "");
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
-    ExternalJavac compiler = new ExternalJavacFactory(executor).create(FakeSourcePath.of(javac));
+    Javac compiler =
+        new ExternalJavacProvider(executor, FakeSourcePath.of(javac))
+            .resolve(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     Capture<Supplier<Tool>> identifier = new Capture<>();
     expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
@@ -119,6 +141,79 @@ public class ExternalJavacTest extends EasyMockSupport {
 
     assertTrue(tool instanceof VersionedTool);
     assertEquals(javac.toString(), ((VersionedTool) tool).getVersion());
+  }
+
+  @Test
+  public void externalJavacWillUseTheToolFromABinaryBuildRule() throws IOException {
+    // TODO(cjhopman): This test name implies we should be hashing the external file not just
+    // adding its path.
+    Path javac = root.newExecutableFile();
+    ProcessExecutorParams javacExe =
+        ProcessExecutorParams.builder()
+            .addCommand(javac.toAbsolutePath().toString(), "-version")
+            .build();
+    FakeProcess javacProc = new FakeProcess(0, "", "");
+    FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
+
+    TestActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildTarget javacTarget = BuildTargetFactory.newInstance("//:javac");
+    ImmutableList<String> commandPrefix = ImmutableList.of("command", "prefix");
+    class SimpleBinaryRule extends AbstractBuildRule implements BinaryBuildRule {
+      protected SimpleBinaryRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+        super(buildTarget, projectFilesystem);
+      }
+
+      @Override
+      public Tool getExecutableCommand() {
+        return new Tool() {
+          @Override
+          public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+            return commandPrefix;
+          }
+
+          @Override
+          public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+            return ImmutableMap.of();
+          }
+        };
+      }
+
+      @Override
+      public SortedSet<BuildRule> getBuildDeps() {
+        return ImmutableSortedSet.of();
+      }
+
+      @Override
+      public ImmutableList<? extends Step> getBuildSteps(
+          BuildContext context, BuildableContext buildableContext) {
+        return ImmutableList.of();
+      }
+
+      @Nullable
+      @Override
+      public SourcePath getSourcePathToOutput() {
+        return ExplicitBuildTargetSourcePath.of(
+            javacTarget,
+            BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/javac"));
+      }
+    }
+    BinaryBuildRule binaryRule = new SimpleBinaryRule(javacTarget, filesystem);
+    graphBuilder.computeIfAbsent(javacTarget, ignored -> binaryRule);
+
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    Javac compiler =
+        new ExternalJavacProvider(executor, DefaultBuildTargetSourcePath.of(javacTarget))
+            .resolve(ruleFinder);
+    RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
+    Capture<Supplier<Tool>> identifier = new Capture<>();
+    expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
+    expect(sink.setReflectively(eq("javac"), capture(identifier))).andReturn(sink);
+    replay(sink);
+    AlterRuleKeys.amendKey(sink, compiler);
+    verify(sink);
+    Tool tool = identifier.getValue().get();
+
+    assertEquals(commandPrefix, tool.getCommandPrefix(DefaultSourcePathResolver.from(ruleFinder)));
   }
 
   @Test
@@ -135,7 +230,9 @@ public class ExternalJavacTest extends EasyMockSupport {
     FakeProcess javacProc = new FakeProcess(0, "", reportedJavacVersion);
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
 
-    ExternalJavac compiler = new ExternalJavacFactory(executor).create(FakeSourcePath.of(javac));
+    Javac compiler =
+        new ExternalJavacProvider(executor, FakeSourcePath.of(javac))
+            .resolve(new SourcePathRuleFinder(new TestActionGraphBuilder()));
 
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     Capture<Supplier<Tool>> identifier = new Capture<>();
@@ -155,8 +252,11 @@ public class ExternalJavacTest extends EasyMockSupport {
         .add("-source", "6", "-target", "6", "-g", "-d", ".", "-classpath");
   }
 
-  private ExternalJavac createTestStep() {
+  private Javac createTestStep() {
     Path fakeJavac = Paths.get("fakeJavac");
-    return new ExternalJavacFactory().create(FakeSourcePath.of(filesystem, fakeJavac));
+    return new ExternalJavacProvider(
+            new DefaultProcessExecutor(Console.createNullConsole()),
+            FakeSourcePath.of(filesystem, fakeJavac))
+        .resolve(new SourcePathRuleFinder(new TestActionGraphBuilder()));
   }
 }

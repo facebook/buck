@@ -16,7 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -30,26 +34,31 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Optional;
 
 /** Provides utilities for creating/providing javac instances. */
-public class ExternalJavacFactory {
+public class ExternalJavacProvider implements JavacProvider {
   private final ProcessExecutor processExecutor;
+  private final SourcePath javacPath;
 
   public static final String COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL =
       "com.sun.tools.javac.api.JavacTool";
 
   @VisibleForTesting
-  ExternalJavacFactory(ProcessExecutor processExecutor) {
+  ExternalJavacProvider(ProcessExecutor processExecutor, SourcePath javacPath) {
     this.processExecutor = processExecutor;
+    this.javacPath = javacPath;
   }
 
-  public ExternalJavacFactory() {
-    this(new DefaultProcessExecutor(Console.createNullConsole()));
+  public ExternalJavacProvider(SourcePath javacPath) {
+    this(new DefaultProcessExecutor(Console.createNullConsole()), javacPath);
   }
 
   /** Creates a JavacProvider based on a spec. */
@@ -59,9 +68,10 @@ public class ExternalJavacFactory {
     Javac.Source javacSource = spec.getJavacSource();
     switch (javacSource) {
       case EXTERNAL:
-        return new ConstantJavacProvider(
-            new ExternalJavacFactory().create(spec.getJavacPath().get()));
+        Preconditions.checkState(spec.getJavacPath().isPresent());
+        return new ExternalJavacProvider(spec.getJavacPath().get());
       case JAR:
+        Preconditions.checkState(spec.getJavacJarPath().isPresent());
         return new JarBackedJavacProvider(spec.getJavacJarPath().get(), compilerClassName);
       case JDK:
         return new ConstantJavacProvider(new JdkProvidedInMemoryJavac());
@@ -70,15 +80,19 @@ public class ExternalJavacFactory {
   }
 
   /** Creates an ExternalJavac. */
-  public ExternalJavac create(final SourcePath pathToJavac) {
-    if (pathToJavac instanceof BuildTargetSourcePath) {
-      BuildTargetSourcePath buildTargetPath = (BuildTargetSourcePath) pathToJavac;
+  @Override
+  public Javac resolve(SourcePathRuleFinder ruleFinder) {
+    if (javacPath instanceof BuildTargetSourcePath) {
+      BuildTargetSourcePath buildTargetPath = (BuildTargetSourcePath) javacPath;
+      BuildRule rule = ruleFinder.getRule(buildTargetPath);
       return new ExternalJavac(
-          () -> createNonHashingSourcePathJavac(buildTargetPath),
+          rule instanceof BinaryBuildRule
+              ? ((BinaryBuildRule) rule)::getExecutableCommand
+              : Suppliers.ofInstance(new NonHashingJavacTool(buildTargetPath)),
           buildTargetPath.getTarget().toString());
     } else {
       return new ExternalJavac(
-          () -> createVersionedJavac((PathSourcePath) pathToJavac), pathToJavac.toString());
+          () -> createVersionedJavac((PathSourcePath) javacPath), javacPath.toString());
     }
   }
 
@@ -104,22 +118,28 @@ public class ExternalJavacFactory {
     return VersionedTool.of(actualPath, "external_javac", version);
   }
 
-  // TODO(cjhopman): It's unclear why this is using a non-hashing sourcepath.
-  private static Tool createNonHashingSourcePathJavac(BuildTargetSourcePath buildTargetPath) {
-    return new Tool() {
-      @AddToRuleKey
-      private final NonHashableSourcePathContainer container =
-          new NonHashableSourcePathContainer(buildTargetPath);
+  @Override
+  public void addParseTimeDeps(Builder<BuildTarget> depsConsumer) {
+    if (javacPath instanceof BuildTargetSourcePath) {
+      depsConsumer.add(((BuildTargetSourcePath) javacPath).getTarget());
+    }
+  }
 
-      @Override
-      public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-        return ImmutableList.of(resolver.getAbsolutePath(container.getSourcePath()).toString());
-      }
+  private static class NonHashingJavacTool implements Tool {
+    @AddToRuleKey private final NonHashableSourcePathContainer container;
 
-      @Override
-      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-        return ImmutableMap.of();
-      }
-    };
+    public NonHashingJavacTool(BuildTargetSourcePath buildTargetPath) {
+      container = new NonHashableSourcePathContainer(buildTargetPath);
+    }
+
+    @Override
+    public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+      return ImmutableList.of(resolver.getAbsolutePath(container.getSourcePath()).toString());
+    }
+
+    @Override
+    public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+      return ImmutableMap.of();
+    }
   }
 }

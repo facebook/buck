@@ -33,7 +33,7 @@ abstract class AbstractJavacSpec {
 
   @Value.Lazy
   public JavacProvider getJavacProvider() {
-    return ExternalJavacFactory.getProviderForSpec((JavacSpec) this);
+    return ExternalJavacProvider.getProviderForSpec((JavacSpec) this);
   }
 
   public Javac.Source getJavacSource() {

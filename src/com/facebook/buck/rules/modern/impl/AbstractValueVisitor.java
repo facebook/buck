@@ -21,6 +21,7 @@ import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -92,7 +93,12 @@ public abstract class AbstractValueVisitor<E extends Exception> implements Value
       ValueTypeInfo<T> valueTypeInfo,
       Optional<CustomFieldBehavior> customBehavior)
       throws E {
-    valueTypeInfo.visit(value, this);
+    try {
+      valueTypeInfo.visit(value, this);
+    } catch (RuntimeException e) {
+      throw new BuckUncheckedExecutionException(
+          e, "When visiting %s.%s.", field.getDeclaringClass().getName(), field.getName());
+    }
   }
 
   @Override

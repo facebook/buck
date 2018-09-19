@@ -16,6 +16,9 @@
 
 package com.facebook.buck.rules.modern;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
+
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -28,6 +31,8 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.ErrorLogger;
+import com.facebook.buck.util.ErrorLogger.DeconstructedException;
 import com.google.common.collect.ImmutableList;
 import org.junit.Assert;
 import org.junit.Test;
@@ -46,10 +51,12 @@ public class ModernBuildRuleTest {
     try {
       rule.recordOutputs(buildableContext);
       Assert.fail("Should have thrown an exception.");
-    } catch (IllegalStateException e) {
-      Assert.assertTrue(
-          e.getMessage()
-              .contains("PublicOutputPath should not be inside rule temporary directory"));
+    } catch (Exception e) {
+      DeconstructedException deconstructed = ErrorLogger.deconstruct(e);
+      Assert.assertThat(deconstructed.getRootCause(), instanceOf(IllegalStateException.class));
+      Assert.assertThat(
+          deconstructed.getMessage(true),
+          containsString("PublicOutputPath should not be inside rule temporary directory"));
     }
   }
 
