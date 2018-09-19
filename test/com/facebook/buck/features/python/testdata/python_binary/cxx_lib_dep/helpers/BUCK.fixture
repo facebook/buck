@@ -1,0 +1,8 @@
+# Simple wrapper around C++ compiler.
+genrule(
+    name = "cxx",
+    out = "cxx.sh",
+    cmd = "echo -e '#!/bin/sh\ng++ \"$@\"\n' > \"$OUT\" && chmod +x \"$OUT\"",
+    executable = True,
+    visibility = ["PUBLIC"],
+)
