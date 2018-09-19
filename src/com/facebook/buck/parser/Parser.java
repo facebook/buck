@@ -43,10 +43,6 @@ public interface Parser {
 
   PerBuildStateFactory getPerBuildStateFactory();
 
-  ImmutableSet<TargetNode<?>> getAllTargetNodes(
-      Cell cell, boolean enableProfiling, ListeningExecutorService executor, Path buildFile)
-      throws BuildFileParseException;
-
   TargetNode<?> getTargetNode(
       Cell cell, boolean enableProfiling, ListeningExecutorService executor, BuildTarget target)
       throws BuildFileParseException;

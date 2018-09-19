@@ -108,32 +108,6 @@ public class DefaultParser implements Parser {
 
   @Override
   public ImmutableSet<TargetNode<?>> getAllTargetNodes(
-      Cell cell, boolean enableProfiling, ListeningExecutorService executor, Path buildFile)
-      throws BuildFileParseException {
-    Preconditions.checkState(
-        buildFile.isAbsolute(),
-        "Build file should be referred to using an absolute path: %s",
-        buildFile);
-    Preconditions.checkState(
-        buildFile.startsWith(cell.getRoot()),
-        "Roots do not match %s -> %s",
-        cell.getRoot(),
-        buildFile);
-
-    try (PerBuildState state =
-        perBuildStateFactory.create(
-            permState,
-            executor,
-            cell,
-            targetPlatforms.get(),
-            enableProfiling,
-            SpeculativeParsing.ENABLED)) {
-      return state.getAllTargetNodes(cell, buildFile);
-    }
-  }
-
-  @Override
-  public ImmutableSet<TargetNode<?>> getAllTargetNodes(
       PerBuildState perBuildState, Cell cell, Path buildFile) throws BuildFileParseException {
     return perBuildState.getAllTargetNodes(cell, buildFile);
   }
