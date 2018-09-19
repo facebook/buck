@@ -50,7 +50,7 @@ import javax.annotation.Nullable;
 public class GenerateStringResources extends AbstractBuildRule {
   @AddToRuleKey private final ImmutableList<SourcePath> filteredResources;
 
-  private final FilteredResourcesProvider filteredResourcesProvider;
+  private final ImmutableList<FilteredResourcesProvider> filteredResourcesProviders;
   private final SourcePathRuleFinder ruleFinder;
 
   private static final String VALUES = "values";
@@ -63,11 +63,15 @@ public class GenerateStringResources extends AbstractBuildRule {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      FilteredResourcesProvider filteredResourcesProvider) {
+      ImmutableList<FilteredResourcesProvider> filteredResourcesProviders) {
     super(buildTarget, projectFilesystem);
     this.ruleFinder = ruleFinder;
-    this.filteredResourcesProvider = filteredResourcesProvider;
-    this.filteredResources = filteredResourcesProvider.getResDirectories();
+    this.filteredResourcesProviders = filteredResourcesProviders;
+    this.filteredResources =
+        filteredResourcesProviders
+            .stream()
+            .flatMap(provider -> provider.getResDirectories().stream())
+            .collect(ImmutableList.toImmutableList());
   }
 
   @Override
@@ -95,8 +99,15 @@ public class GenerateStringResources extends AbstractBuildRule {
             ProjectFilesystem fileSystem = getProjectFilesystem();
             int i = 0;
             for (Path resDir :
-                filteredResourcesProvider.getRelativeResDirectories(
-                    fileSystem, buildContext.getSourcePathResolver())) {
+                filteredResourcesProviders
+                    .stream()
+                    .flatMap(
+                        provider ->
+                            provider
+                                .getRelativeResDirectories(
+                                    fileSystem, buildContext.getSourcePathResolver())
+                                .stream())
+                    .collect(ImmutableList.toImmutableList())) {
               Path stringsFilePath = resDir.resolve(VALUES).resolve(STRINGS_XML);
               if (fileSystem.exists(stringsFilePath)) {
                 // create <output_dir>/<new_res_dir>/values
