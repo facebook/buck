@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
+import java.util.OptionalLong;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -31,16 +32,20 @@ public class CommandEventTest {
   public void testEquals() {
     CommandEvent.Started startedDaemon =
         configureTestEvent(
-            CommandEvent.started("build", ImmutableList.of("sample-app"), true, 17L));
+            CommandEvent.started(
+                "build", ImmutableList.of("sample-app"), OptionalLong.of(12), 17L));
     CommandEvent.Started startedDaemonTwo =
         configureTestEvent(
-            CommandEvent.started("build", ImmutableList.of("sample-app"), true, 23L));
+            CommandEvent.started(
+                "build", ImmutableList.of("sample-app"), OptionalLong.of(20), 23L));
     CommandEvent.Started startedNoDaemon =
         configureTestEvent(
-            CommandEvent.started("build", ImmutableList.of("sample-app"), false, 3L));
+            CommandEvent.started(
+                "build", ImmutableList.of("sample-app"), OptionalLong.empty(), 3L));
     CommandEvent.Started startedDifferentName =
         configureTestEvent(
-            CommandEvent.started("test", ImmutableList.of("sample-app"), false, 11L));
+            CommandEvent.started(
+                "test", ImmutableList.of("sample-app"), OptionalLong.empty(), 11L));
     CommandEvent finishedDaemon =
         configureTestEvent(CommandEvent.finished(startedDaemon, ExitCode.SUCCESS));
     CommandEvent finishedDaemonFailed =

@@ -109,6 +109,7 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.Phaser;
@@ -646,7 +647,7 @@ public class SuperConsoleEventBusListenerTest {
             "HTTP CACHE UPLOAD... 2.10 Kbytes (2 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)"));
 
     CommandEvent.Started commandStarted =
-        CommandEvent.started("build", ImmutableList.of(), true, 1234);
+        CommandEvent.started("build", ImmutableList.of(), OptionalLong.of(100), 1234);
     eventBus.post(CommandEvent.finished(commandStarted, ExitCode.SUCCESS));
     if (buildDetailsTemplate.isPresent()) {
       validateBuildIdConsole(
@@ -2663,7 +2664,9 @@ public class SuperConsoleEventBusListenerTest {
     ProgressEstimator e = new ProgressEstimator(storagePath, eventBus);
     listener.setProgressEstimator(e);
 
-    eventBus.post(CommandEvent.started("project", ImmutableList.of("arg1", "arg2"), false, 23L));
+    eventBus.post(
+        CommandEvent.started(
+            "project", ImmutableList.of("arg1", "arg2"), OptionalLong.empty(), 23L));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -2722,7 +2725,9 @@ public class SuperConsoleEventBusListenerTest {
     ProgressEstimator e = new ProgressEstimator(storagePath, eventBus);
     listener.setProgressEstimator(e);
 
-    eventBus.post(CommandEvent.started("project", ImmutableList.of("arg1", "arg2"), false, 23L));
+    eventBus.post(
+        CommandEvent.started(
+            "project", ImmutableList.of("arg1", "arg2"), OptionalLong.empty(), 23L));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(

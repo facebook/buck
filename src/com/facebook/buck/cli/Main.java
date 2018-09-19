@@ -222,6 +222,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
@@ -775,7 +776,7 @@ public final class Main {
           context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)
               ? Optional.of(
                   daemonLifecycleManager.getDaemon(
-                      rootCell, knownRuleTypesProvider, watchman, console))
+                      rootCell, knownRuleTypesProvider, watchman, console, clock))
               : Optional.empty();
 
       if (!daemon.isPresent()) {
@@ -1140,7 +1141,9 @@ public final class Main {
               CommandEvent.started(
                   command.getDeclaredSubCommandName(),
                   remainingArgs,
-                  daemon.isPresent(),
+                  daemon.isPresent()
+                      ? OptionalLong.of(daemon.get().getUptime())
+                      : OptionalLong.empty(),
                   getBuckPID());
           buildEventBus.post(startedEvent);
 

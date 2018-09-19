@@ -18,30 +18,31 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
+import java.util.OptionalLong;
 
 /** Events tracking the start and stop of a buck command. */
 public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
   private final String commandName;
   private final ImmutableList<String> args;
-  private final boolean isDaemon;
+  private final OptionalLong daemonUptime;
   private final long pid;
 
   /**
    * @param commandName The name of the Buck subcommand, such as {@code build} or {@code test}.
    * @param args The arguments passed to the subcommand. These are often build targets.
-   * @param isDaemon Whether the daemon was in use.
+   * @param daemonUptime The time in millis since the daemon was started, or none if no daemon.
    * @param pid The process ID of the process.
    */
   private CommandEvent(
       EventKey eventKey,
       String commandName,
       ImmutableList<String> args,
-      boolean isDaemon,
+      OptionalLong daemonUptime,
       long pid) {
     super(eventKey);
     this.commandName = commandName;
     this.args = args;
-    this.isDaemon = isDaemon;
+    this.daemonUptime = daemonUptime;
     this.pid = pid;
   }
 
@@ -55,7 +56,11 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
   }
 
   public boolean isDaemon() {
-    return isDaemon;
+    return daemonUptime.isPresent();
+  }
+
+  public OptionalLong getDaemonUptime() {
+    return daemonUptime;
   }
 
   public long getPid() {
@@ -64,12 +69,12 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
 
   @Override
   protected String getValueString() {
-    return String.format("%s, isDaemon: %b", commandName, isDaemon);
+    return String.format("%s, isDaemon: %b", commandName, isDaemon());
   }
 
   public static Started started(
-      String commandName, ImmutableList<String> args, boolean isDaemon, long pid) {
-    return new Started(commandName, args, isDaemon, pid);
+      String commandName, ImmutableList<String> args, OptionalLong daemonUptime, long pid) {
+    return new Started(commandName, args, daemonUptime, pid);
   }
 
   public static Finished finished(Started started, ExitCode exitCode) {
@@ -81,8 +86,9 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
   }
 
   public static class Started extends CommandEvent {
-    private Started(String commandName, ImmutableList<String> args, boolean isDaemon, long pid) {
-      super(EventKey.unique(), commandName, args, isDaemon, pid);
+    private Started(
+        String commandName, ImmutableList<String> args, OptionalLong daemonUptime, long pid) {
+      super(EventKey.unique(), commandName, args, daemonUptime, pid);
     }
 
     @Override
@@ -99,7 +105,7 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
           started.getEventKey(),
           started.getCommandName(),
           started.getArgs(),
-          started.isDaemon(),
+          started.getDaemonUptime(),
           started.getPid());
       this.exitCode = exitCode;
     }
@@ -122,7 +128,7 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
           started.getEventKey(),
           started.getCommandName(),
           started.getArgs(),
-          started.isDaemon(),
+          started.getDaemonUptime(),
           started.getPid());
       this.exitCode = exitCode;
     }

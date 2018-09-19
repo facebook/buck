@@ -88,6 +88,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -329,7 +330,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.register(listener);
 
     CommandEvent.Started commandEventStarted =
-        CommandEvent.started("party", ImmutableList.of("arg1", "arg2"), true, 23L);
+        CommandEvent.started("party", ImmutableList.of("arg1", "arg2"), OptionalLong.of(100), 23L);
     eventBus.post(commandEventStarted);
     eventBus.post(
         new PerfStatsTracking.MemoryPerfStatsEvent(

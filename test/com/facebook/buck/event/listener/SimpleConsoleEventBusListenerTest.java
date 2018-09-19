@@ -68,6 +68,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
@@ -267,7 +268,7 @@ public class SimpleConsoleEventBusListenerTest {
     assertOutput(expectedOutput, console);
 
     CommandEvent.Started commandStarted =
-        CommandEvent.started("build", ImmutableList.of(), true, 1234);
+        CommandEvent.started("build", ImmutableList.of(), OptionalLong.of(100), 1234);
     eventBus.post(CommandEvent.finished(commandStarted, ExitCode.SUCCESS));
     if (buildDetailsTemplate.isPresent()) {
       expectedOutput +=

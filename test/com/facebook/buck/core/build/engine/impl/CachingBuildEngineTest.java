@@ -199,6 +199,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.SortedSet;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.ExecutionException;
@@ -432,7 +433,8 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
       buckEventBus.post(
           CommandEvent.finished(
-              CommandEvent.started("build", ImmutableList.of(), false, 23L), ExitCode.SUCCESS));
+              CommandEvent.started("build", ImmutableList.of(), OptionalLong.empty(), 23L),
+              ExitCode.SUCCESS));
       verifyAll();
 
       RuleKey ruleToTestKey = defaultRuleKeyFactory.build(ruleToTest);
@@ -601,7 +603,7 @@ public class CachingBuildEngineTest {
             .getEventBus()
             .post(
                 CommandEvent.finished(
-                    CommandEvent.started("build", ImmutableList.of(), false, 23L),
+                    CommandEvent.started("build", ImmutableList.of(), OptionalLong.empty(), 23L),
                     ExitCode.SUCCESS));
 
         BuildResult result = buildResult.get();
@@ -691,7 +693,7 @@ public class CachingBuildEngineTest {
             .getEventBus()
             .post(
                 CommandEvent.finished(
-                    CommandEvent.started("build", ImmutableList.of(), false, 23L),
+                    CommandEvent.started("build", ImmutableList.of(), OptionalLong.empty(), 23L),
                     ExitCode.SUCCESS));
 
         BuildResult result = buildResult.get();
