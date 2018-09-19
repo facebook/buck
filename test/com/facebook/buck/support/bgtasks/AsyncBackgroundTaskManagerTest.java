@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -32,8 +31,6 @@ import org.junit.After;
 import org.junit.Test;
 
 public class AsyncBackgroundTaskManagerTest {
-
-  private static final Logger LOG = Logger.get(AsyncBackgroundTaskManagerTest.class);
 
   private AsyncBackgroundTaskManager manager;
   // tests should pass with arbitrary assignments (within reason) to these values
@@ -77,7 +74,6 @@ public class AsyncBackgroundTaskManagerTest {
     }
   }
 
-  /** Basic tests *************************************************************************** */
   @Test
   public void testScheduleCreatesManagedTask() {
     manager = new AsyncBackgroundTaskManager(true, NTHREADS);
@@ -91,7 +87,6 @@ public class AsyncBackgroundTaskManagerTest {
     assertEquals(task, manager.getScheduledTasks().peek().getTask());
   }
 
-  /** Blocking mode tests ******************************************************************* */
   @Test
   public void testBlockingSuccessPath() {
     manager = new AsyncBackgroundTaskManager(true, NTHREADS);
@@ -150,7 +145,6 @@ public class AsyncBackgroundTaskManagerTest {
     assertFalse(manager.isShutDown());
   }
 
-  /** Nonblocking mode tests **************************************************************** */
   @Test
   public void testNonblockingNotify() throws InterruptedException {
     manager = new AsyncBackgroundTaskManager(false, NTHREADS);
@@ -185,17 +179,16 @@ public class AsyncBackgroundTaskManagerTest {
         generateWaitingTaskList(
             SECOND_COMMAND_TASKS, true, secondTaskBlocker, secondTaskWaiter, "nonOverlappingTask");
 
-    manager.notify(Notification.COMMAND_START); // start of first command
+    manager.notify(Notification.COMMAND_START);
     schedule(firstCommandTasks);
     manager.notify(Notification.COMMAND_END);
-    // task1 in run, waiting on taskBlocker
     assertOutputValuesEqual("init", firstCommandTasks);
-    firstTaskBlocker.countDown(); // enable all tasks in first command
+    firstTaskBlocker.countDown();
     firstTaskWaiter.await();
     assertOutputValuesEqual("succeeded", firstCommandTasks);
     assertEquals(0, manager.getScheduledTasks().size());
 
-    manager.notify(Notification.COMMAND_START); // new command comes in
+    manager.notify(Notification.COMMAND_START);
     schedule(secondCommandTasks);
     assertEquals(SECOND_COMMAND_TASKS, manager.getScheduledTasks().size());
     manager.notify(Notification.COMMAND_END);
@@ -233,14 +226,14 @@ public class AsyncBackgroundTaskManagerTest {
             laterTasksWaiter,
             "thirdCommandTask");
 
-    manager.notify(Notification.COMMAND_START); // start of first command
+    manager.notify(Notification.COMMAND_START);
     schedule(firstCommandTasks);
     manager.notify(Notification.COMMAND_END);
     firstTaskBlocker.countDown();
 
-    manager.notify(Notification.COMMAND_START); // second command comes in
+    manager.notify(Notification.COMMAND_START);
     schedule(secondCommandTasks);
-    manager.notify(Notification.COMMAND_START); // third command comes in
+    manager.notify(Notification.COMMAND_START);
     schedule(thirdCommandTasks);
     // signal once -- this should not permit tasks to be run as one command is still waiting
     manager.notify(Notification.COMMAND_END);
@@ -271,7 +264,7 @@ public class AsyncBackgroundTaskManagerTest {
     schedule(task);
     manager.notify(Notification.COMMAND_END);
     blocker.countDown();
-    waiter.await(1, TimeUnit.SECONDS); // since this waiter is never counted down
+    waiter.await(1, TimeUnit.SECONDS);
     assertFalse(manager.isShutDown());
     manager.shutdown(5, TimeUnit.SECONDS);
   }
@@ -293,7 +286,7 @@ public class AsyncBackgroundTaskManagerTest {
     manager.notify(Notification.COMMAND_END);
     taskStarted.await();
     manager.shutdownNow();
-    blocker.countDown(); // unblock tasks but manager should be already shut down
+    blocker.countDown();
     waiter.await(1, TimeUnit.SECONDS);
     assertEquals(0, manager.getScheduledTasks().size());
     assertEquals("init", task.getActionArgs().getOutput());
