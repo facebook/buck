@@ -113,22 +113,6 @@ public class DefaultParser implements Parser {
   }
 
   @Override
-  public TargetNode<?> getTargetNode(
-      Cell cell, boolean enableProfiling, ListeningExecutorService executor, BuildTarget target)
-      throws BuildFileParseException {
-    try (PerBuildState state =
-        perBuildStateFactory.create(
-            permState,
-            executor,
-            cell,
-            targetPlatforms.get(),
-            enableProfiling,
-            SpeculativeParsing.DISABLED)) {
-      return state.getTargetNode(target);
-    }
-  }
-
-  @Override
   public TargetNode<?> getTargetNode(PerBuildState perBuildState, BuildTarget target)
       throws BuildFileParseException {
     return perBuildState.getTargetNode(target);
