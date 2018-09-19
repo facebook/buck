@@ -492,6 +492,24 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void canUseProvidersInExtensionFiles() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//src/test:build_rules.bzl', 'jar')",
+            "prebuilt_jar(name='foo', binary_jar=jar)"));
+    Files.write(
+        extensionFile,
+        Arrays.asList("Info = provider(fields=['data'])", "s = Info(data='data')", "jar=s.data"));
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("binaryJar"), equalTo("data"));
+  }
+
+  @Test
   public void testImportFunction() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);

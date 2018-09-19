@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
+import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -29,6 +30,7 @@ import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
+import com.google.devtools.build.lib.syntax.Runtime;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Lazy;
 
@@ -54,6 +56,8 @@ abstract class AbstractBuckGlobals {
               .build();
       extensionEnv.setup("native", getNativeModule());
       extensionEnv.setup("struct", StructProvider.STRUCT);
+      // TODO(ttsugrii): switch to Runtime.setupSkylarkLibrary
+      Runtime.setupModuleGlobals(extensionEnv, SkylarkRuleFunctions.class);
       return extensionEnv.getGlobals();
     }
   }
