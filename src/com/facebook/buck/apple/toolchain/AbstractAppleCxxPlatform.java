@@ -72,8 +72,6 @@ abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
   // Xcode build identifier, e.g. 7C1002
   public abstract Optional<String> getXcodeBuildVersion();
 
-  public abstract String getTargetAchitecture();
-
   @Override
   public Flavor getFlavor() {
     return getCxxPlatform().getFlavor();

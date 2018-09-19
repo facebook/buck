@@ -1,6 +1,0 @@
-framework module BuckTest {
-  umbrella header "BuckTest.h"
-
-  export *
-  module * { export * }
-}

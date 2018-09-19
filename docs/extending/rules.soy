@@ -142,7 +142,7 @@ you'll see the first steps of a rule are something like:
 
 <pre class="prettyprint lang-java">
   // a "gen" path is where the ultimate outputs of a rule live.
-  Path outputDir = BuildTargetPaths.getGenPath(target, "%s-output");
+  Path outputDir = BuildTargets.getGenPath(target, "%s-output");
 
   // Or, if the path to the output has been calculated in the constructor
   // Path outputDir = outputPath.getParent();

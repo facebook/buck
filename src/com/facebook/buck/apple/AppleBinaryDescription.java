@@ -596,15 +596,6 @@ public class AppleBinaryDescription
       AppleBinaryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
-    if (metadataClass.isAssignableFrom(AppleBundleIncludableDependenies.class)) {
-      ImmutableSet<SourcePath> appleNativeTargetBundleIncludableDependencies =
-          AppleDescriptions.getAppleNativeTargetBundleIncludableDependencies(
-              buildTarget, graphBuilder, getCxxPlatformsProvider(), args.getDeps());
-      return Optional.of(
-          metadataClass.cast(
-              AppleBundleIncludableDependenies.of(appleNativeTargetBundleIncludableDependencies)));
-    }
-
     if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       CxxBinaryDescriptionArg.Builder delegateArg = CxxBinaryDescriptionArg.builder().from(args);
       AppleDescriptions.populateCxxBinaryDescriptionArg(

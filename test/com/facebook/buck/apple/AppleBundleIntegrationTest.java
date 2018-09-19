@@ -1487,46 +1487,4 @@ public class AppleBundleIntegrationTest {
     // Non-Swift target shouldn't include Frameworks/
     assertFalse(Files.exists(appPath.resolve("Frameworks")));
   }
-
-  @Test
-  public void bundleWithIncludedPrebuiltFrameworks() throws IOException, InterruptedException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "prebuilt_apple_framework_and_tests", tmp);
-
-    workspace.setUp();
-    BuildTarget target =
-        workspace.newBuildTarget(
-            "//app:TestAppBundle#dwarf-and-dsym,iphonesimulator-x86_64,include-frameworks");
-    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-
-    Path appPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, target, "%s")
-                .resolve(target.getShortName() + ".app"));
-    assertTrue(Files.exists(appPath.resolve("Frameworks")));
-
-    assertTrue(checkCodeSigning(appPath));
-    assertTrue(checkCodeSigning(appPath.resolve("Frameworks/BuckTest.framework/BuckTest")));
-    String nmBinary =
-        workspace.runCommand("nm", appPath.resolve("TestAppBundle").toString()).getStdout().get();
-    assertThat(nmBinary, containsString("U _OBJC_CLASS_$_Hello"));
-    assertThat(nmBinary, containsString("S _OBJC_CLASS_$_HelloProxy"));
-    String nmFramework =
-        workspace
-            .runCommand("nm", appPath.resolve("Frameworks/BuckTest.framework/BuckTest").toString())
-            .getStdout()
-            .get();
-    assertThat(nmFramework, containsString("S _OBJC_CLASS_$_Hello"));
-  }
-
-  @Test
-  public void bundleWithCxxLibrary() throws IOException, InterruptedException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_cxx_library", tmp);
-
-    workspace.setUp();
-    BuildTarget target = workspace.newBuildTarget("//app:app_bundle#iphonesimulator-x86_64");
-    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-  }
 }

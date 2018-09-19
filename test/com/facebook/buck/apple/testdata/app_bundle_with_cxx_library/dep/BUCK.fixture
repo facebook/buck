@@ -1,9 +1,0 @@
-cxx_library(
-    name = "cxx_lib",
-    srcs = ["TestClass.cpp"],
-    exported_headers = ["TestClass.hpp"],
-    force_static = True,
-    header_namespace = "",
-    headers = ["TestClass.hpp"],
-    visibility = ["PUBLIC"],
-)

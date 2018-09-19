@@ -737,14 +737,6 @@ public class AppleLibraryDescription
       CellPathResolver cellRoots,
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
-    if (metadataClass.isAssignableFrom(AppleBundleIncludableDependenies.class)) {
-      ImmutableSet<SourcePath> appleNativeTargetBundleIncludableDependencies =
-          AppleDescriptions.getAppleNativeTargetBundleIncludableDependencies(
-              buildTarget, graphBuilder, getCxxPlatformsProvider(), args.getDeps());
-      return Optional.of(
-          metadataClass.cast(
-              AppleBundleIncludableDependenies.of(appleNativeTargetBundleIncludableDependencies)));
-    }
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));

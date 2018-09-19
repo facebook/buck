@@ -743,7 +743,7 @@ public class ProjectGenerator {
             Optional.of(xcodeDescriptions.getXCodeDescriptions()));
     if (bundleRequiresRemovalOfAllTransitiveFrameworks(targetNode)) {
       copiedRules = rulesWithoutFrameworkBundles(copiedRules);
-    } else if (bundleRequiresAllTransitiveFrameworks(binaryNode)) {
+    } else if (bundleRequiresAllTransitiveFrameworks(binaryNode, bundleLoaderNode)) {
       copiedRules =
           ImmutableSet.<TargetNode<?>>builder()
               .addAll(copiedRules)
@@ -4026,9 +4026,11 @@ public class ProjectGenerator {
   }
 
   private static boolean bundleRequiresAllTransitiveFrameworks(
-      TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode) {
+      TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode,
+      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode) {
     return TargetNodes.castArg(binaryNode, AppleBinaryDescriptionArg.class).isPresent()
-        || TargetNodes.castArg(binaryNode, AppleTestDescriptionArg.class).isPresent();
+        || (!bundleLoaderNode.isPresent()
+            && TargetNodes.castArg(binaryNode, AppleTestDescriptionArg.class).isPresent());
   }
 
   private Path resolveSourcePath(SourcePath sourcePath) {

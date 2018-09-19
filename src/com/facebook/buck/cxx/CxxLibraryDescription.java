@@ -273,14 +273,8 @@ public class CxxLibraryDescription
       CxxLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
-    Optional<Map.Entry<Flavor, CxxLibraryDescription.MetadataType>> type =
-        CxxLibraryDescription.METADATA_TYPE.getFlavorAndValue(buildTarget);
-    if (type.isPresent()) {
-      return cxxLibraryMetadataFactory.createMetadata(
-          buildTarget, graphBuilder, cellRoots, args, metadataClass);
-    } else {
-      return Optional.empty();
-    }
+    return cxxLibraryMetadataFactory.createMetadata(
+        buildTarget, graphBuilder, cellRoots, args, metadataClass);
   }
 
   @Override
