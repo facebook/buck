@@ -1,8 +1,18 @@
+From 08f20551f8dc24290b6bddf22293e32bcc83f8cf Mon Sep 17 00:00:00 2001
+From: Taras Tsugrii <ttsugrii@fb.com>
+Date: Wed, 19 Sep 2018 16:33:59 -0700
+Subject: [PATCH] [Skylark] Create Skylark patch for Buck.
+
+---
+ src/main/java/com/google/devtools/build/lib/BUILD  |   50 +-
+ .../devtools/build/lib/packages/Attribute.java     | 2414 +-------------------
+ 2 files changed, 52 insertions(+), 2412 deletions(-)
+
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 07d8281e03..38563ded7c 100644
+index 7b64280829..a67cedc515 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -328,16 +328,56 @@ java_library(
+@@ -327,16 +327,56 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
@@ -65,10 +75,10 @@ index 07d8281e03..38563ded7c 100644
  )
  
 diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-index 91a26c2f1e..c7afa8a21d 100644
+index ef6496c211..321c106326 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-@@ -14,2299 +14,19 @@
+@@ -14,2333 +14,13 @@
  
  package com.google.devtools.build.lib.packages;
  
@@ -306,6 +316,11 @@ index 91a26c2f1e..c7afa8a21d 100644
 -     * Whether we should use output_licenses to check the licences on this attribute.
 -     */
 -    OUTPUT_LICENSES,
+-
+-    /**
+-     * Has a function-based split transition.
+-     */
+-    HAS_FUNCTION_TRANSITION,
 -  }
 -
 -  // TODO(bazel-team): modify this interface to extend Predicate and have an extra error
@@ -648,6 +663,14 @@ index 91a26c2f1e..c7afa8a21d 100644
 -    public Builder<TYPE> useOutputLicenses() {
 -      Preconditions.checkState(BuildType.isLabelType(type), "must be a label type");
 -      return setPropertyFlag(PropertyFlag.OUTPUT_LICENSES, "output_license");
+-    }
+-
+-    /**
+-     * Indicate the attribute uses function-based split transition.
+-     */
+-    public Builder<TYPE> hasFunctionTransition() {
+-      return setPropertyFlag(PropertyFlag.HAS_FUNCTION_TRANSITION,
+-          "function-based split transition");
 -    }
 -
 -    /**
@@ -2031,6 +2054,19 @@ index 91a26c2f1e..c7afa8a21d 100644
 -          "a late bound default value using the host configuration must use the host transition");
 -    }
 -
+-    if (name.equals(FunctionSplitTransitionWhitelist.WHITELIST_ATTRIBUTE_NAME)) {
+-      Preconditions.checkArgument(
+-          BuildType.isLabelType(type),
+-          "_whitelist_function_transition attribute must be a label");
+-      Preconditions.checkArgument(
+-          defaultValue != null,
+-          "_whitelist_function_transition attribute must have a default value");
+-      Preconditions.checkArgument(
+-          ((Label) defaultValue).equals(FunctionSplitTransitionWhitelist.WHITELIST_LABEL),
+-          "_whitelist_function_transition attribute does not have the expected value "
+-          + FunctionSplitTransitionWhitelist.WHITELIST_LABEL);
+-    }
+-
 -    this.name = name;
 -    this.type = type;
 -    this.propertyFlags = propertyFlags;
@@ -2139,6 +2175,14 @@ index 91a26c2f1e..c7afa8a21d 100644
 -   */
 -  public boolean useOutputLicenses() {
 -    return getPropertyFlag(PropertyFlag.OUTPUT_LICENSES);
+-  }
+-
+-  /**
+-   * Returns true if this attribute uses a function-based split transition provider.  See
+-   * {@link FunctionSplitTransitionProvider}.
+-   */
+-  public boolean hasFunctionTransition() {
+-    return getPropertyFlag(PropertyFlag.HAS_FUNCTION_TRANSITION);
 -  }
 -
 -  /**
@@ -2346,9 +2390,7 @@ index 91a26c2f1e..c7afa8a21d 100644
 -    Preconditions.checkState(isLateBound());
 -    return (LateBoundDefault<?, ?>) defaultValue;
 -  }
-+import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
-+import javax.annotation.concurrent.Immutable;
- 
+-
 -  /**
 -   * Returns true iff this attribute has a computed default or a condition.
 -   *
@@ -2359,16 +2401,7 @@ index 91a26c2f1e..c7afa8a21d 100644
 -        || (defaultValue instanceof SkylarkComputedDefaultTemplate)
 -        || (condition != null);
 -  }
-+/**
-+ * Metadata of a rule attribute. Contains the attribute name and type, and an default value to be
-+ * used if none is provided in a rule declaration in a BUILD file. Attributes are immutable, and may
-+ * be shared by more than one rule (for example, <code>foo_binary</code> and <code>foo_library
-+ * </code> may share many attributes in common).
-+ */
-+@Immutable
-+@AutoCodec
-+public final class Attribute {
- 
+-
 -  /**
 -   * Returns if this attribute is an implicit dependency according to the naming policy that
 -   * designates implicit attributes.
@@ -2376,10 +2409,17 @@ index 91a26c2f1e..c7afa8a21d 100644
 -  public boolean isImplicit() {
 -    return isImplicit(getName());
 -  }
++/**
++ * Metadata of a rule attribute. Contains the attribute name and type, and an default value to be
++ * used if none is provided in a rule declaration in a BUILD file. Attributes are immutable, and may
++ * be shared by more than one rule (for example, <code>foo_binary</code> and <code>foo_library
++ * </code> may share many attributes in common).
++ */
++public final class Attribute {
  
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2317,14 +37,6 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2351,14 +31,6 @@ public final class Attribute implements Comparable<Attribute> {
    }
  
    /**
@@ -2394,7 +2434,7 @@ index 91a26c2f1e..c7afa8a21d 100644
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
     */
-@@ -2348,76 +60,4 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2382,76 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
    }
@@ -2471,3 +2511,6 @@ index 91a26c2f1e..c7afa8a21d 100644
 -    return cloneBuilder(this.type);
 -  }
  }
+-- 
+2.13.5
+

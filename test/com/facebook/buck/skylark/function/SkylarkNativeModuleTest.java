@@ -33,10 +33,11 @@ import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.packages.BazelLibrary;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
-import com.google.devtools.build.lib.syntax.Environment.Phase;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
+import com.google.devtools.build.lib.syntax.SkylarkUtils;
+import com.google.devtools.build.lib.syntax.SkylarkUtils.Phase;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -88,9 +89,9 @@ public class SkylarkNativeModuleTest {
     Environment env =
         Environment.builder(mutability)
             .setGlobals(BazelLibrary.GLOBALS)
-            .setPhase(Phase.LOADING)
             .useDefaultSemantics()
             .build();
+    SkylarkUtils.setPhase(env, Phase.LOADING);
     new ParseContext(
             PackageContext.of(
                 NativeGlobber.create(root),

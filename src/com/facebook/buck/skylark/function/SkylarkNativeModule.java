@@ -30,6 +30,7 @@ import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.Type;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -63,7 +64,7 @@ public class SkylarkNativeModule {
       useAst = true,
       useEnvironment = true)
   public String packageName(FuncallExpression ast, Environment env) throws EvalException {
-    env.checkLoadingPhase("native.package_name", ast.getLocation());
+    SkylarkUtils.checkLoadingPhase(env, "native.package_name", ast.getLocation());
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
     return parseContext
         .getPackageContext()
@@ -85,7 +86,7 @@ public class SkylarkNativeModule {
       useEnvironment = true)
   public String repositoryName(Location location, FuncallExpression ast, Environment env)
       throws EvalException {
-    env.checkLoadingPhase("native.repository_name", location);
+    SkylarkUtils.checkLoadingPhase(env, "native.repository_name", location);
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
     return parseContext.getPackageContext().getPackageIdentifier().getRepository().getName();
   }
@@ -100,7 +101,7 @@ public class SkylarkNativeModule {
       useEnvironment = true)
   public Boolean ruleExists(String name, FuncallExpression ast, Environment env)
       throws EvalException {
-    env.checkLoadingOrWorkspacePhase("native.rule_exists", ast.getLocation());
+    SkylarkUtils.checkLoadingOrWorkspacePhase(env, "native.rule_exists", ast.getLocation());
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
     return parseContext.hasRule(name);
   }
