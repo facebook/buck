@@ -77,7 +77,6 @@ public interface Parser {
       throws IOException, InterruptedException, BuildFileParseException;
 
   /**
-   * @param eventBus used to log events while parsing.
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
    * @return the target graph containing the build targets and their related targets.
    */
@@ -89,7 +88,6 @@ public interface Parser {
       throws BuildFileParseException, IOException, InterruptedException;
 
   /**
-   * @param eventBus used to log events while parsing.
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
    * @return the target graph containing the build targets and their related targets.
    */
