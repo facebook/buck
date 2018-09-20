@@ -61,7 +61,7 @@ public class BadAndroidConfigIntegrationTest {
     assertThat(
         processResult.getStderr(),
         allOf(
-            containsString("Build failed:"),
+            containsString("BUILD FAILED"),
             containsString("'ANDROID_SDK'"),
             anyOf(
                 containsString("'/this/directory/does/not/exist'"),

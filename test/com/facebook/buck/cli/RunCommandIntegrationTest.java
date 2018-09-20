@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -51,13 +50,15 @@ public class RunCommandIntegrationTest {
 
   @Test
   public void testRunCommandWithNonExistentDirectory() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("//does/not/exist:exist references non-existent directory does/not/exist");
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
     workspace.setUp();
 
-    workspace.runBuckCommand("run", "//does/not/exist");
+    ProcessResult processResult = workspace.runBuckCommand("run", "//does/not/exist");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString("//does/not/exist:exist references non-existent directory does/not/exist"));
   }
 
   @Test

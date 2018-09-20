@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -115,9 +114,10 @@ public class GoTestIntegrationTest {
         workspace.resolve("testdata/input"));
   }
 
-  @Test(expected = HumanReadableException.class)
+  @Test
   public void testGoInternalTestInTestList() throws IOException {
-    workspace.runBuckCommand("test", "//:test-success-bad");
+    ProcessResult processResult = workspace.runBuckCommand("test", "//:test-success-bad");
+    processResult.assertFailure();
   }
 
   @Test

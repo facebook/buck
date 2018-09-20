@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.jvm.kotlin.KotlinTestAssumptions;
 import com.facebook.buck.testutil.ProcessResult;
@@ -118,10 +117,12 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
     result.assertSuccess();
   }
 
-  @Test(expected = HumanReadableException.class)
+  @Test
   public void testAndroidLibraryBuildFailsWithInvalidLanguageParam()
       throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    workspace.runBuckBuild("//scala/com/sample/invalid_lang:lib_with_invalid_language_param");
+    ProcessResult processResult =
+        workspace.runBuckBuild("//scala/com/sample/invalid_lang:lib_with_invalid_language_param");
+    processResult.assertFailure();
   }
 }

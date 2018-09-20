@@ -151,6 +151,7 @@ java_library(
         "//src/com/facebook/buck/apple/toolchain/impl:impl",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/cli/exceptions/handlers:handlers",
         "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",

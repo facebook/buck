@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -27,7 +28,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -44,13 +44,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class GenruleIntegrationTest {
-
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
-
-  @Rule public ExpectedException exception = ExpectedException.none();
 
   // When these tests fail, the failures contain buck output that is easy to confuse with the output
   // of the instance of buck that's running the test. This prepends each line with "> ".
@@ -101,11 +97,12 @@ public class GenruleIntegrationTest {
             this, "genrule_empty_out", temporaryFolder);
     workspace.setUp();
 
-    exception.expect(HumanReadableException.class);
-    exception.expectMessage(
-        "The 'out' parameter of genrule //:genrule is '', which is not a valid file name.");
-
-    workspace.runBuckCommand("build", "//:genrule");
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:genrule");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "The 'out' parameter of genrule //:genrule is '', which is not a valid file name."));
   }
 
   @Test
@@ -115,12 +112,13 @@ public class GenruleIntegrationTest {
             this, "genrule_absolute_out", temporaryFolder);
     workspace.setUp();
 
-    exception.expect(HumanReadableException.class);
-    exception.expectMessage(
-        "The 'out' parameter of genrule //:genrule is '/tmp/file', "
-            + "which is not a valid file name.");
-
-    workspace.runBuckCommand("build", "//:genrule");
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:genrule");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "The 'out' parameter of genrule //:genrule is '/tmp/file', "
+                + "which is not a valid file name."));
   }
 
   @Test

@@ -16,9 +16,10 @@
 
 package com.facebook.buck.features.rust;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -28,12 +29,9 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class RustLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
-
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void ensureRustIsAvailable() throws IOException, InterruptedException {
@@ -51,15 +49,14 @@ public class RustLibraryIntegrationTest {
 
   @Test
   public void rustLibraryAmbigFail() throws IOException {
-
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(Matchers.containsString("Can't find suitable top-level source file for"));
-
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
-    workspace.runBuckBuild("//messenger:messenger_ambig#rlib").assertFailure();
+    ProcessResult processResult = workspace.runBuckBuild("//messenger:messenger_ambig#rlib");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(), containsString("Can't find suitable top-level source file for"));
   }
 
   @Test
@@ -99,7 +96,7 @@ public class RustLibraryIntegrationTest {
                 "rust.rustc_check_flags=-Dwarnings --cfg \"feature=\\\"warning\\\"\"",
                 "//messenger:messenger#check")
             .getStderr(),
-        Matchers.containsString("error: method is never used: `unused`"));
+        containsString("error: method is never used: `unused`"));
   }
 
   @Test
@@ -115,7 +112,7 @@ public class RustLibraryIntegrationTest {
                 "rust.rustc_check_flags=--this-is-a-bad-option",
                 "//messenger:messenger#check")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
+        containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -146,7 +143,7 @@ public class RustLibraryIntegrationTest {
             .runBuckBuild(
                 "--config", "rust.rustc_flags=--this-is-a-bad-option", "//messenger:messenger#rlib")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
+        containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -162,7 +159,7 @@ public class RustLibraryIntegrationTest {
                 "rust.rustc_library_flags=--this-is-a-bad-option",
                 "//messenger:messenger#rlib")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
+        containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -191,7 +188,7 @@ public class RustLibraryIntegrationTest {
                 "rust.rustc_flags=--verbose --this-is-a-bad-option",
                 "//messenger:messenger#rlib")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
+        containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -202,7 +199,7 @@ public class RustLibraryIntegrationTest {
 
     assertThat(
         workspace.runBuckBuild("//messenger:messenger_flags#rlib").getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
+        containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -223,8 +220,7 @@ public class RustLibraryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Hello, world!"),
-            Matchers.containsString("I have a message to deliver to you")));
+            containsString("Hello, world!"), containsString("I have a message to deliver to you")));
   }
 
   @Test
@@ -236,7 +232,6 @@ public class RustLibraryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:hello_alias").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Hello, world!"),
-            Matchers.containsString("I have a message to deliver to you")));
+            containsString("Hello, world!"), containsString("I have a message to deliver to you")));
   }
 }

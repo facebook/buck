@@ -15,11 +15,12 @@
  */
 package com.facebook.buck.android;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -32,7 +33,6 @@ import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -53,13 +53,9 @@ public class GenAidlIntegrationTest {
     ProcessResult result = workspace.runBuckBuild("//:android-lib");
     result.assertSuccess();
 
-    try {
-      workspace.runBuckBuild("//:AServiceWithMissingDependency");
-      Assert.fail("An exception should've been thrown.");
-    } catch (HumanReadableException e) {
-      String msg = e.toString();
-      assertTrue("Received: " + msg, msg.contains("MyMissingDependency.aidl"));
-    }
+    result = workspace.runBuckBuild("//:AServiceWithMissingDependency");
+    result.assertFailure();
+    assertThat(result.getStderr(), containsString("MyMissingDependency.aidl"));
   }
 
   @Test

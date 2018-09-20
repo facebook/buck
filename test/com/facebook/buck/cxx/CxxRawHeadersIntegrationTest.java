@@ -38,7 +38,6 @@ import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Optional;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -245,16 +244,11 @@ public class CxxRawHeadersIntegrationTest {
   }
 
   @Test
-  public void headersUsage() {
-    Exception caughtException = null;
-    try {
-      runCommand("targets", "//lib5:lib5");
-    } catch (Exception e) {
-      caughtException = e;
-    }
-    Assert.assertTrue(caughtException != null);
+  public void headersUsage() throws IOException {
+    ProcessResult processResult = runCommand("targets", "//lib5:lib5");
+    processResult.assertFailure();
     assertThat(
-        caughtException.getMessage(),
+        processResult.getStderr(),
         containsString("Cannot use `headers` and `raw_headers` in the same rule"));
   }
 

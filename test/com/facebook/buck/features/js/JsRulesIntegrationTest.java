@@ -250,7 +250,9 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void bundleWithAndroidLibraryDependency() throws IOException {
+  public void bundleWithAndroidLibraryDependency() throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
     workspace.runBuckBuild("//js:bundle-with-android-lib#android,release").assertSuccess();
     workspace.verify(Paths.get("android_library_bundle.expected"), genPath);
   }

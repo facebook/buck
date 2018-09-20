@@ -17,15 +17,12 @@
 package com.facebook.buck.parser;
 
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.in;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -35,7 +32,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,11 +39,9 @@ import java.nio.file.Paths;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class ParserIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testParserFilesAreSandboxed() throws Exception {
@@ -73,17 +67,17 @@ public class ParserIntegrationTest {
    */
   @Test
   public void testParseRuleWithBadDependency() throws IOException {
-    // Ensure an exception with a specific message is thrown.
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "This error happened while trying to get dependency '//:bad-dep' of target '//:base'");
-
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "parse_rule_with_bad_dependency", temporaryFolder);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:base");
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:base");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "This error happened while trying to get dependency '//:bad-dep' of target '//:base'"));
   }
 
   /**
@@ -109,35 +103,32 @@ public class ParserIntegrationTest {
             this, "circular_dependency_detection", temporaryFolder);
     workspace.setUp();
 
-    try {
-      workspace.runBuckCommand("build", "//:A");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getHumanReadableErrorMessage(),
-          is(
-              in(
-                  ImmutableSet.of(
-                      linesToText(
-                          "Buck can't handle circular dependencies.",
-                          "The following circular dependency has been found:",
-                          "//:C -> //:E -> //:F -> //:C",
-                          "",
-                          "Please break the circular dependency and try again."),
-                      linesToText(
-                          "Buck can't handle circular dependencies.",
-                          "The following circular dependency has been found:",
-                          "//:E -> //:F -> //:C -> //:E",
-                          "",
-                          "Please break the circular dependency and try again."),
-                      linesToText(
-                          "Buck can't handle circular dependencies.",
-                          "The following circular dependency has been found:",
-                          "//:F -> //:C -> //:E -> //:F",
-                          "",
-                          "Please break the circular dependency and try again.")))));
-      return;
-    }
-    fail("An exception should have been thrown because of a circular dependency.");
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:A");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        anyOf(
+            containsString(
+                linesToText(
+                    "Buck can't handle circular dependencies.",
+                    "The following circular dependency has been found:",
+                    "//:C -> //:E -> //:F -> //:C",
+                    "",
+                    "Please break the circular dependency and try again.")),
+            containsString(
+                linesToText(
+                    "Buck can't handle circular dependencies.",
+                    "The following circular dependency has been found:",
+                    "//:E -> //:F -> //:C -> //:E",
+                    "",
+                    "Please break the circular dependency and try again.")),
+            containsString(
+                linesToText(
+                    "Buck can't handle circular dependencies.",
+                    "The following circular dependency has been found:",
+                    "//:F -> //:C -> //:E -> //:F",
+                    "",
+                    "Please break the circular dependency and try again."))));
   }
 
   /**
@@ -244,12 +235,10 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "package_boundaries", temporaryFolder);
     workspace.setUp();
-    try {
-      workspace.runBuckCommand("build", "//java:foo");
-      fail("Expected exception");
-    } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), containsString("can only be referenced from"));
-    }
+
+    ProcessResult processResult = workspace.runBuckCommand("build", "//java:foo");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("can only be referenced from"));
 
     workspace.addBuckConfigLocalOption("project", "check_package_boundary", "false");
     workspace.runBuckCommand("build", "//java:foo").assertSuccess();
@@ -257,12 +246,10 @@ public class ParserIntegrationTest {
     workspace.addBuckConfigLocalOption("project", "check_package_boundary", "true");
     workspace.addBuckConfigLocalOption("project", "package_boundary_exceptions", "java");
     workspace.runBuckCommand("build", "//java:foo").assertSuccess();
-    try {
-      workspace.runBuckCommand("build", "//java2:foo").assertSuccess();
-      fail("Expected exception");
-    } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), containsString("can only be referenced from"));
-    }
+
+    processResult = workspace.runBuckCommand("build", "//java2:foo");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("can only be referenced from"));
   }
 
   static class BigFileTree {

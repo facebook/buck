@@ -16,12 +16,10 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -81,12 +79,9 @@ public class AndroidBinaryFlavorsIntegrationTest {
 
   @Test
   public void testPackageStringAssetsFlavorDoesNotExist() throws IOException {
-    try {
-      String target = "//apps/sample:app#package_string_assets";
-      workspace.runBuckCommand("targets", "--show-output", target);
-      fail("The targets command should have thrown an exception");
-    } catch (HumanReadableException e) {
-      assertTrue(e.getHumanReadableErrorMessage().contains("could not be resolved"));
-    }
+    String target = "//apps/sample:app#package_string_assets";
+    ProcessResult processResult = workspace.runBuckCommand("targets", "--show-output", target);
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("could not be resolved"));
   }
 }

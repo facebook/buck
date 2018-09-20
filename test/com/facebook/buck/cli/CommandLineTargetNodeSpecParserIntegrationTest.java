@@ -18,9 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
@@ -63,29 +61,31 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.setUp();
 
     // First check for a correct usage.
-    ProcessResult result = workspace.runBuckCommand("targets", "//simple/...").assertSuccess();
+    ProcessResult processResult =
+        workspace.runBuckCommand("targets", "//simple/...").assertSuccess();
     assertEquals(
         ImmutableSet.of("//simple:simple", "//simple/foo:foo", "//simple/bar:bar"),
         ImmutableSet.copyOf(
-            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(result.getStdout())));
+            Splitter.on(System.lineSeparator())
+                .omitEmptyStrings()
+                .split(processResult.getStdout())));
 
     // Check for some expected failure cases.
-    try {
-      workspace.runBuckCommand("targets", "//simple:...");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString(
-              "No rule found when resolving target //simple:... in build file //simple/BUCK"));
-    }
-    try {
-      workspace.runBuckCommand("targets", "//simple/....");
-      fail("Should not reach this");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString("//simple/.... references non-existent directory simple"));
-    }
+
+    processResult = workspace.runBuckCommand("targets", "//simple:...");
+    processResult.assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(
+        processResult.getStderr(),
+        Matchers.allOf(
+            Matchers.containsString("The rule //simple:... could not be found."),
+            Matchers.containsString("check the spelling and whether it exists in"),
+            Matchers.containsString("BUCK")));
+
+    processResult = workspace.runBuckCommand("targets", "//simple/....");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.containsString("//simple/.... references non-existent directory simple"));
   }
 
   @Test

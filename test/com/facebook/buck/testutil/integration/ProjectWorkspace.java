@@ -27,6 +27,7 @@ import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.facebook.buck.cli.Main;
+import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
@@ -441,6 +442,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
       CapturingPrintStream stderr,
       String... args)
       throws IOException {
+    // TODO(cjhopman): This needs to be updated to actually get the correct error-handling from Main
+    // (which will require refactoring there).
     try {
       assertTrue("setUp() must be run before this method is invoked", isSetUp);
       CapturingPrintStream stdout = new CapturingPrintStream();
@@ -507,6 +510,9 @@ public class ProjectWorkspace extends AbstractWorkspace {
       } catch (BuildFileParseException e) {
         stderr.println(e.getHumanReadableErrorMessage());
         exitCode = ExitCode.PARSE_ERROR;
+      } catch (Exception e) {
+        e.printStackTrace(stderr);
+        exitCode = ExceptionHandlerRegistryFactory.create().handleException(e);
       }
 
       return new ProcessResult(

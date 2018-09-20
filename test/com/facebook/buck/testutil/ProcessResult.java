@@ -85,6 +85,10 @@ public class ProcessResult {
     return assertExitCode(message, ExitCode.BUILD_ERROR);
   }
 
+  public ProcessResult assertExitCode(ExitCode exitCode) {
+    return assertExitCode(null, exitCode);
+  }
+
   public ProcessResult assertExitCode(@Nullable String message, ExitCode exitCode) {
     if (exitCode == getExitCode()) {
       return this;

@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -28,10 +29,10 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.NamedTemporaryFile;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InvalidClassException;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -40,7 +41,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -66,7 +66,7 @@ public class ParserCacheCommandIntegrationTest {
     runBuckResult.assertSuccess();
     assertThat(
         runBuckResult.getStdout(),
-        Matchers.containsString(
+        containsString(
             linesToText(
                 "//Apps:TestAppsLibrary",
                 "//Libraries/Dep1:Dep1_1",
@@ -96,7 +96,7 @@ public class ParserCacheCommandIntegrationTest {
     runBuckResult.assertSuccess();
     assertThat(
         runBuckResult.getStdout(),
-        Matchers.containsString(
+        containsString(
             linesToText(
                 "//Apps:TestAppsLibrary",
                 "//Libraries/Dep1:Dep1_1",
@@ -117,7 +117,7 @@ public class ParserCacheCommandIntegrationTest {
     runBuckResult.assertSuccess();
     assertThat(
         runBuckResult.getStdout(),
-        Matchers.containsString(
+        containsString(
             linesToText(
                 "//Apps:TestAppsLibrary",
                 "//Libraries/Dep1:Dep1_1",
@@ -156,8 +156,7 @@ public class ParserCacheCommandIntegrationTest {
     try {
       workspace.runBuckdCommand(context, "query", "deps(//Apps:TestAppsLibrary)");
     } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(), Matchers.containsString("//Apps:TestAppsLibrary could not be found"));
+      assertThat(e.getMessage(), containsString("//Apps:TestAppsLibrary could not be found"));
     }
   }
 
@@ -179,9 +178,9 @@ public class ParserCacheCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "parser_with_cell", tmp);
     workspace.setUp();
 
-    // Load the invalid parser cache data.
-    thrown.expect(InvalidClassException.class);
-    thrown.expectMessage("Can't deserialize this class");
-    workspace.runBuckCommand("parser-cache", "--load", tempFile.get().toString());
+    ProcessResult processResult =
+        workspace.runBuckCommand("parser-cache", "--load", tempFile.get().toString());
+    processResult.assertExitCode(ExitCode.FATAL_IO);
+    assertThat(processResult.getStderr(), containsString("Can't deserialize this class"));
   }
 }

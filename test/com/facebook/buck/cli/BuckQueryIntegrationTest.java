@@ -16,16 +16,15 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import java.io.IOException;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,57 +61,32 @@ public class BuckQueryIntegrationTest {
 
   @Test
   public void testDependencyCycles() throws IOException {
-    try {
-      workspace.runBuckCommand("query", "deps(//cycles:a)");
-      fail("Should have detected a cycle.");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getHumanReadableErrorMessage(), Matchers.containsString("//cycles:a -> //cycles:a"));
-    }
+    ProcessResult processResult = workspace.runBuckCommand("query", "deps(//cycles:a)");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("//cycles:a -> //cycles:a"));
 
-    try {
-      workspace.runBuckCommand("query", "deps(//cycles:b)");
-      fail("Should have detected a cycle.");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getHumanReadableErrorMessage(), Matchers.containsString("//cycles:a -> //cycles:a"));
-    }
+    processResult = workspace.runBuckCommand("query", "deps(//cycles:b)");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("//cycles:a -> //cycles:a"));
 
-    try {
-      workspace.runBuckCommand("query", "deps(//cycles:c)");
-      fail("Should have detected a cycle.");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getHumanReadableErrorMessage(),
-          Matchers.containsString("//cycles:c -> //cycles:d -> //cycles:c"));
-    }
+    processResult = workspace.runBuckCommand("query", "deps(//cycles:c)");
+    processResult.assertFailure();
 
-    try {
-      workspace.runBuckCommand("query", "deps(//cycles:d)");
-      fail("Should have detected a cycle.");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getHumanReadableErrorMessage(),
-          Matchers.containsString("//cycles:d -> //cycles:c -> //cycles:d"));
-    }
+    assertThat(processResult.getStderr(), containsString("//cycles:c -> //cycles:d -> //cycles:c"));
 
-    try {
-      workspace.runBuckCommand("query", "deps(//cycles:e)");
-      fail("Should have detected a cycle.");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getHumanReadableErrorMessage(),
-          Matchers.containsString("//cycles:c -> //cycles:d -> //cycles:c"));
-    }
+    processResult = workspace.runBuckCommand("query", "deps(//cycles:d)");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("//cycles:d -> //cycles:c -> //cycles:d"));
 
-    try {
-      workspace.runBuckCommand("query", "deps(set(//cycles:f //cycles/dir:g))");
-      fail("Should have detected a cycle.");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getHumanReadableErrorMessage(),
-          Matchers.containsString(
-              "//cycles:f -> //cycles/dir:g -> //cycles:h -> " + "//cycles/dir:i -> //cycles:f"));
-    }
+    processResult = workspace.runBuckCommand("query", "deps(//cycles:e)");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("//cycles:c -> //cycles:d -> //cycles:c"));
+
+    processResult = workspace.runBuckCommand("query", "deps(set(//cycles:f //cycles/dir:g))");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "//cycles:f -> //cycles/dir:g -> //cycles:h -> " + "//cycles/dir:i -> //cycles:f"));
   }
 }

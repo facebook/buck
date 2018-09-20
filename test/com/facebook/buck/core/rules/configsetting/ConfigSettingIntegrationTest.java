@@ -16,9 +16,11 @@
 
 package com.facebook.buck.core.rules.configsetting;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -27,13 +29,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class ConfigSettingIntegrationTest {
-
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
-
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testSelectWorksWithConfigurationValues() throws IOException {
@@ -54,13 +52,14 @@ public class ConfigSettingIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
     workspace.setUp();
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "None of the conditions in attribute \"srcs\" match the configuration. Checked conditions:\n"
-            + " //:a\n"
-            + " //:b");
-
-    workspace.runBuckBuild(":cat");
+    ProcessResult processResult = workspace.runBuckBuild(":cat");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "None of the conditions in attribute \"srcs\" match the configuration. Checked conditions:\n"
+                + " //:a\n"
+                + " //:b"));
   }
 
   @Test
@@ -114,11 +113,13 @@ public class ConfigSettingIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
     workspace.setUp();
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "Multiple matches found when resolving configurable attribute \"cmd\" in //:echo_with_one_none");
-    workspace.buildAndReturnOutput(
-        "-c", "cat.file=a", "-c", "another.option=c", ":echo_with_one_none");
+    ProcessResult processResult =
+        workspace.runBuckBuild("-c", "cat.file=a", "-c", "another.option=c", ":echo_with_one_none");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "Multiple matches found when resolving configurable attribute \"cmd\" in //:echo_with_one_none"));
   }
 
   @Test
@@ -168,10 +169,12 @@ public class ConfigSettingIntegrationTest {
             this, "project_with_constraints", temporaryFolder);
     workspace.setUp();
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "//:osx is used as a target platform, but not declared using `platform` rule");
-    workspace.runBuckBuild("--target-platforms", "//:osx", ":cat");
+    ProcessResult processResult = workspace.runBuckBuild("--target-platforms", "//:osx", ":cat");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "//:osx is used as a target platform, but not declared using `platform` rule"));
   }
 
   @Test
@@ -181,11 +184,14 @@ public class ConfigSettingIntegrationTest {
             this, "project_with_constraints", temporaryFolder);
     workspace.setUp();
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "None of the conditions in attribute \"srcs\" match the configuration. Checked conditions:\n"
-            + " //:osx_config\n"
-            + " //:linux_aarch64_config");
-    workspace.runBuckBuild("--target-platforms", "//:linux_arm", ":cat");
+    ProcessResult processResult =
+        workspace.runBuckBuild("--target-platforms", "//:linux_arm", ":cat");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "None of the conditions in attribute \"srcs\" match the configuration. Checked conditions:\n"
+                + " //:osx_config\n"
+                + " //:linux_aarch64_config"));
   }
 }

@@ -19,8 +19,8 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.string.MoreStrings.withoutSuffix;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -63,13 +63,15 @@ public class ConfigOverrideIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
     workspace.setUp();
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "Overriding repository locations from the command line "
-            + "is not supported. Please place a .buckconfig.local in the appropriate location and "
-            + "use that instead.");
-
-    workspace.runBuckCommand("targets", "--config", "repositories.secondary=../secondary");
+    ProcessResult processResult =
+        workspace.runBuckCommand("targets", "--config", "repositories.secondary=../secondary");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "Overriding repository locations from the command line "
+                + "is not supported. Please place a .buckconfig.local in the appropriate location and "
+                + "use that instead."));
   }
 
   @Test
@@ -118,9 +120,11 @@ public class ConfigOverrideIntegrationTest {
         tmp.newFile("buckconfig"), ImmutableList.of("[buildfile]", "  includes = //includes.py"));
     workspace.setUp();
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(containsString("Unknown cell"));
-    workspace.runBuckCommand("targets", "--config-file", "no_such_repo=repo//buckconfig", "//...");
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "targets", "--config-file", "no_such_repo=repo//buckconfig", "//...");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("Unknown cell"));
   }
 
   @Test

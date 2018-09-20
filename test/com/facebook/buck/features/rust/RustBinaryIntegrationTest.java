@@ -16,10 +16,11 @@
 
 package com.facebook.buck.features.rust;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -58,7 +59,7 @@ public class RustBinaryIntegrationTest {
         workspace.runCommand(
             workspace.resolve("buck-out/gen/xyzzy#binary,default/xyzzy").toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
-    assertThat(result.getStdout().get(), Matchers.containsString("Hello, world!"));
+    assertThat(result.getStdout().get(), containsString("Hello, world!"));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
 
@@ -78,7 +79,7 @@ public class RustBinaryIntegrationTest {
     ProcessExecutor.Result result =
         workspace.runCommand(workspace.resolve("buck-out/gen/xyzzy#binary/xyzzy").toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
-    assertThat(result.getStdout().get(), Matchers.containsString("Hello, world!"));
+    assertThat(result.getStdout().get(), containsString("Hello, world!"));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
 
@@ -94,7 +95,7 @@ public class RustBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     thrown.expect(IOException.class);
-    thrown.expectMessage(Matchers.containsString("No such file or directory"));
+    thrown.expectMessage(containsString("No such file or directory"));
 
     workspace.runCommand(
         workspace.resolve("buck-out/gen/xyzzy#binary,check,default/xyzzy").toString());
@@ -114,7 +115,7 @@ public class RustBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     thrown.expect(IOException.class);
-    thrown.expectMessage(Matchers.containsString("No such file or directory"));
+    thrown.expectMessage(containsString("No such file or directory"));
 
     workspace.runCommand(
         workspace.resolve("buck-out/gen/xyzzy#binary,check,default/xyzzy").toString());
@@ -142,7 +143,7 @@ public class RustBinaryIntegrationTest {
     assertTrue(output.exists());
 
     thrown.expect(IOException.class);
-    thrown.expectMessage(Matchers.containsString("No such file or directory"));
+    thrown.expectMessage(containsString("No such file or directory"));
 
     workspace.runCommand(
         workspace.resolve("buck-out/gen/xyzzy#binary,save-analysis,default/xyzzy").toString());
@@ -173,7 +174,7 @@ public class RustBinaryIntegrationTest {
     assertTrue(output.exists());
 
     thrown.expect(IOException.class);
-    thrown.expectMessage(Matchers.containsString("No such file or directory"));
+    thrown.expectMessage(containsString("No such file or directory"));
 
     workspace.runCommand(
         workspace.resolve("buck-out/gen/xyzzy#binary,save-analysis,default/xyzzy").toString());
@@ -188,8 +189,8 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//:xyzzy").assertSuccess().getStderr(),
         Matchers.allOf(
-            Matchers.containsString("warning: constant item is never used: `foo`"),
-            Matchers.containsString(
+            containsString("warning: constant item is never used: `foo`"),
+            containsString(
                 "warning: constant `foo` should have an upper case name such as `FOO`")));
 
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -212,7 +213,7 @@ public class RustBinaryIntegrationTest {
         workspace.runCommand(
             workspace.resolve("buck-out/gen/xyzzy_aliased#binary,default/xyzzy").toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
-    assertThat(result.getStdout().get(), Matchers.containsString("Hello, world!"));
+    assertThat(result.getStdout().get(), containsString("Hello, world!"));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
 
@@ -233,7 +234,7 @@ public class RustBinaryIntegrationTest {
                 .resolve("buck-out/gen/xyzzy_crate_root#binary,default/xyzzy_crate_root")
                 .toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
-    assertThat(result.getStdout().get(), Matchers.containsString("Another top-level source"));
+    assertThat(result.getStdout().get(), containsString("Another top-level source"));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
 
@@ -252,8 +253,7 @@ public class RustBinaryIntegrationTest {
         workspace.runCommand(
             workspace.resolve("buck-out/gen/thing#binary,default/thing").toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
-    assertThat(
-        result.getStdout().get(), Matchers.containsString("info is: this is generated info"));
+    assertThat(result.getStdout().get(), containsString("info is: this is generated info"));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
 
@@ -268,7 +268,7 @@ public class RustBinaryIntegrationTest {
             .runBuckCommand(
                 "run", "--config", "rust.rustc_flags=--this-is-a-bad-option", "//:xyzzy")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
+        containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -282,7 +282,7 @@ public class RustBinaryIntegrationTest {
             .runBuckCommand(
                 "run", "--config", "rust.rustc_binary_flags=--this-is-a-bad-option", "//:xyzzy")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
+        containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -308,7 +308,7 @@ public class RustBinaryIntegrationTest {
             .runBuckCommand(
                 "run", "--config", "rust.rustc_flags=--verbose --this-is-a-bad-option", "//:xyzzy")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
+        containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -319,7 +319,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:xyzzy_flags").getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
+        containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -342,8 +342,7 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Hello, world!"),
-            Matchers.containsString("I have a message to deliver to you")));
+            containsString("Hello, world!"), containsString("I have a message to deliver to you")));
   }
 
   @Test
@@ -360,7 +359,7 @@ public class RustBinaryIntegrationTest {
     // XXX check messenger.rmeta exists
 
     thrown.expect(IOException.class);
-    thrown.expectMessage(Matchers.containsString("No such file or directory"));
+    thrown.expectMessage(containsString("No such file or directory"));
 
     workspace.runCommand(
         workspace.resolve("buck-out/gen/hello#binary,check,default/hello").toString());
@@ -375,8 +374,7 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:hello-shared").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Hello, world!"),
-            Matchers.containsString("I have a message to deliver to you")));
+            containsString("Hello, world!"), containsString("I have a message to deliver to you")));
   }
 
   @Test
@@ -391,8 +389,7 @@ public class RustBinaryIntegrationTest {
             .assertSuccess()
             .getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Hello, world!"),
-            Matchers.containsString("I have a message to deliver to you")));
+            containsString("Hello, world!"), containsString("I have a message to deliver to you")));
   }
 
   @Test
@@ -403,7 +400,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:hyphen").assertSuccess().getStdout(),
-        Matchers.containsString("Hyphenated: Audrey fforbes-Hamilton"));
+        containsString("Hyphenated: Audrey fforbes-Hamilton"));
   }
 
   @Test
@@ -415,8 +412,7 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:hello_alias").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Hello, world!"),
-            Matchers.containsString("I have a message to deliver to you")));
+            containsString("Hello, world!"), containsString("I have a message to deliver to you")));
   }
 
   @Test
@@ -427,7 +423,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:addtest_static").assertSuccess().getStdout(),
-        Matchers.containsString("10 + 15 = 25"));
+        containsString("10 + 15 = 25"));
   }
 
   @Test
@@ -438,7 +434,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:addtest_shared").assertSuccess().getStdout(),
-        Matchers.containsString("10 + 15 = 25"));
+        containsString("10 + 15 = 25"));
   }
 
   @Test
@@ -449,7 +445,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:addtest_prebuilt_static").assertSuccess().getStdout(),
-        Matchers.containsString("10 + 15 = 25"));
+        containsString("10 + 15 = 25"));
   }
 
   @Test
@@ -460,7 +456,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:addtest_prebuilt_shared").assertSuccess().getStdout(),
-        Matchers.containsString("10 + 15 = 25"));
+        containsString("10 + 15 = 25"));
   }
 
   @Test
@@ -472,9 +468,9 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Hello, world!"),
-            Matchers.containsString("I have a message to deliver to you"),
-            Matchers.containsString("thing handled")));
+            containsString("Hello, world!"),
+            containsString("I have a message to deliver to you"),
+            containsString("thing handled")));
   }
 
   @Test
@@ -486,9 +482,9 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:transitive").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Hello from transitive"),
-            Matchers.containsString("I have a message to deliver to you"),
-            Matchers.containsString("thing handled")));
+            containsString("Hello from transitive"),
+            containsString("I have a message to deliver to you"),
+            containsString("thing handled")));
   }
 
   @Test
@@ -499,7 +495,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:with_feature").assertSuccess().getStdout(),
-        Matchers.containsString("Hello, world!"));
+        containsString("Hello, world!"));
   }
 
   @Test
@@ -513,13 +509,13 @@ public class RustBinaryIntegrationTest {
 
   @Test
   public void featureWithDoubleQuoteErrors() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(Matchers.containsString("contains an invalid feature name"));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "feature_test", tmp);
     workspace.setUp();
 
-    workspace.runBuckBuild("//:illegal_feature_name").assertFailure();
+    ProcessResult processResult = workspace.runBuckBuild("//:illegal_feature_name");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("contains an invalid feature name"));
   }
 
   @Test
@@ -531,8 +527,7 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:greeter").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Hello, world!"),
-            Matchers.containsString("I have a message to deliver to you")));
+            containsString("Hello, world!"), containsString("I have a message to deliver to you")));
   }
 
   @Test
@@ -543,7 +538,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckBuild("//:greeter_fail").assertFailure().getStderr(),
-        Matchers.containsString("file not found for module `messenger`"));
+        containsString("file not found for module `messenger`"));
   }
 
   @Test
@@ -554,8 +549,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
-        Matchers.allOf(
-            Matchers.containsString("Hello, world!"), Matchers.containsString("plain old foo")));
+        Matchers.allOf(containsString("Hello, world!"), containsString("plain old foo")));
   }
 
   @Test
@@ -566,8 +560,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:hello_alias").assertSuccess().getStdout(),
-        Matchers.allOf(
-            Matchers.containsString("Hello, world!"), Matchers.containsString("plain old foo")));
+        Matchers.allOf(containsString("Hello, world!"), containsString("plain old foo")));
   }
 
   @Test
@@ -579,9 +572,9 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:hello_foobar").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Hello, world!"),
-            Matchers.containsString("this is foo, and here is my friend bar"),
-            Matchers.containsString("plain old bar")));
+            containsString("Hello, world!"),
+            containsString("this is foo, and here is my friend bar"),
+            containsString("plain old bar")));
   }
 
   @Test
@@ -593,9 +586,9 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Calling helloer"),
-            Matchers.containsString("I'm printing hello!"),
-            Matchers.containsString("Helloer called")));
+            containsString("Calling helloer"),
+            containsString("I'm printing hello!"),
+            containsString("Helloer called")));
   }
 
   @Test
@@ -607,9 +600,9 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:hello-shared").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Calling helloer"),
-            Matchers.containsString("I'm printing hello!"),
-            Matchers.containsString("Helloer called")));
+            containsString("Calling helloer"),
+            containsString("I'm printing hello!"),
+            containsString("Helloer called")));
   }
 
   @Test
@@ -624,9 +617,9 @@ public class RustBinaryIntegrationTest {
             .assertSuccess()
             .getStdout(),
         Matchers.allOf(
-            Matchers.containsString("Calling helloer"),
-            Matchers.containsString("I'm printing hello!"),
-            Matchers.containsString("Helloer called")));
+            containsString("Calling helloer"),
+            containsString("I'm printing hello!"),
+            containsString("Helloer called")));
   }
 
   @Test
@@ -643,9 +636,9 @@ public class RustBinaryIntegrationTest {
             .getStdout(),
         // Make sure we actually get the distinct crates we wanted.
         Matchers.allOf(
-            Matchers.containsString("I am top"),
-            Matchers.containsString("I am mid, calling thing\nthing2"),
-            Matchers.containsString("thing1")));
+            containsString("I am top"),
+            containsString("I am mid, calling thing\nthing2"),
+            containsString("thing1")));
   }
 
   @Test
@@ -657,9 +650,9 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:top_shared").assertSuccess().getStdout(),
         Matchers.allOf(
-            Matchers.containsString("I am top"),
-            Matchers.containsString("I am mid, calling thing\nthing2"),
-            Matchers.containsString("thing1")));
+            containsString("I am top"),
+            containsString("I am mid, calling thing\nthing2"),
+            containsString("thing1")));
   }
 
   @Test
@@ -694,7 +687,7 @@ public class RustBinaryIntegrationTest {
         // Check that we can build a procmacro crate
         workspace.runBuckCommand("run", "//:test").assertSuccess("link with procmacro").getStdout(),
         // Make sure we get a working executable.
-        Matchers.containsString("Hello"));
+        containsString("Hello"));
   }
 
   @Test
@@ -721,7 +714,7 @@ public class RustBinaryIntegrationTest {
             .assertSuccess("link with procmacro")
             .getStdout(),
         // Make sure we get a working executable
-        Matchers.containsString("Hello"));
+        containsString("Hello"));
   }
 
   @Test
@@ -737,6 +730,6 @@ public class RustBinaryIntegrationTest {
             .assertSuccess("link with procmacro")
             .getStdout(),
         // Make sure we get a working executable
-        Matchers.containsString("Hello"));
+        containsString("Hello"));
   }
 }

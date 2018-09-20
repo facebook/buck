@@ -25,7 +25,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.testutil.ProcessResult;
@@ -57,7 +56,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class DaemonIntegrationTest {
 
@@ -66,8 +64,6 @@ public class DaemonIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule public TestWithBuckd testWithBuckd = new TestWithBuckd(tmp);
-
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -236,15 +232,13 @@ public class DaemonIntegrationTest {
     String fileName = "java/com/example/activity/MyFirstActivity.java";
     Files.delete(workspace.getPath(fileName));
 
-    try {
-      workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
-      fail("Should have thrown HumanReadableException.");
-    } catch (java.lang.RuntimeException e) {
-      assertThat(
-          "Failure should have been due to file removal.",
-          e.getMessage(),
-          containsString("MyFirstActivity.java"));
-    }
+    ProcessResult processResult =
+        workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
+    processResult.assertFailure();
+    assertThat(
+        "Failure should have been due to file removal.",
+        processResult.getStderr(),
+        containsString("MyFirstActivity.java"));
   }
 
   @Test
@@ -257,10 +251,10 @@ public class DaemonIntegrationTest {
     String fileName = "java/com/example/activity/MyFirstActivity.java";
     Files.delete(workspace.getPath(fileName));
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(containsString("MyFirstActivity.java"));
-
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
+    ProcessResult processResult =
+        workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("MyFirstActivity.java"));
   }
 
   @Test
@@ -385,16 +379,12 @@ public class DaemonIntegrationTest {
     String fileName = "BUCK";
     Files.write(secondary.getPath(fileName), "Some Invalid Python".getBytes(Charsets.UTF_8));
 
-    try {
-      primary.runBuckdCommand("build", "//:cxxbinary");
-      fail("Did not expect parsing to succeed");
-    } catch (HumanReadableException expected) {
-      assertThat(
-          "Failure should be due to syntax error.",
-          expected.getHumanReadableErrorMessage(),
-          containsString(
-              "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'"));
-    }
+    ProcessResult processResult = primary.runBuckdCommand("build", "//:cxxbinary");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'"));
   }
 
   @Test

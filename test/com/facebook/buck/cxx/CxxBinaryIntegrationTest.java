@@ -83,13 +83,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class CxxBinaryIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
-
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() {
@@ -2068,10 +2065,11 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
     workspace.setUp();
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
+    ProcessResult processResult = workspace.runBuckBuild("//:clowny_binary");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
         Matchers.containsString("in the dependencies have the same output filename"));
-    workspace.runBuckBuild("//:clowny_binary");
   }
 
   @Test

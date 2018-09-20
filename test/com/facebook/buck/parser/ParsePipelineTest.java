@@ -22,7 +22,6 @@ import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -45,6 +44,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.visibility.VisibilityPatternFactory;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -95,11 +95,12 @@ public class ParsePipelineTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "ignored_dirs_err", tmp);
     workspace.setUp();
 
-    expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage(
-        " cannot be built because it is defined in an ignored directory.");
     // enforce creation of targetNode's
-    workspace.runBuckBuild("//libraries/path-to-ignore:ignored-lib");
+    ProcessResult processResult = workspace.runBuckBuild("//libraries/path-to-ignore:ignored-lib");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(" cannot be built because it is defined in an ignored directory."));
   }
 
   private <T> void waitForAll(Iterable<T> items, Predicate<T> predicate)

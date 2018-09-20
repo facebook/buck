@@ -19,7 +19,6 @@ package com.facebook.buck.testrunner;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -92,12 +91,9 @@ public class TestSelectorsIntegrationTest {
   @Test
   public void shouldReportRegularExpressionErrors() throws IOException {
     String error = "Regular expression error in 'Clown(': Unclosed group near index 7";
-    try {
-      workspace.runBuckCommand("test", "--all", "--filter", "Clown(");
-      fail("Did not catch expected exception!");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage(), containsString(error));
-    }
+    ProcessResult processResult = workspace.runBuckCommand("test", "--all", "--filter", "Clown(");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString(error));
   }
 
   @Test

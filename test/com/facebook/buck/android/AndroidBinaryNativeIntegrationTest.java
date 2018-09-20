@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -27,7 +29,6 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolGetter;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolsAndDtNeeded;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -35,12 +36,14 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -193,44 +196,47 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void throwIfLibMergedIntoTwoTargets() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("attempted to merge");
-    thrown.expectMessage("into both");
-
-    workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");
+    ProcessResult processResult =
+        workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        allOf(containsString("attempted to merge"), containsString("into both")));
   }
 
   @Test
   public void throwIfLibMergedContainsAssetsAndNonAssets() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("contains both asset and non-asset libraries");
-
-    workspace.runBuckBuild("//apps/sample:app_with_cross_asset_merged_libs");
+    ProcessResult processResult =
+        workspace.runBuckBuild("//apps/sample:app_with_cross_asset_merged_libs");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(), containsString("contains both asset and non-asset libraries"));
   }
 
   @Test
   public void throwIfMergeHasCircularDependency() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("Error: Dependency cycle detected");
-
-    workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs");
+    ProcessResult processResult =
+        workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("Error: Dependency cycle detected"));
   }
 
   @Test
   public void throwIfMergedHasCircularDependencyIncludeRoot() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("Error: Dependency cycle detected");
-
-    workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs_including_root");
+    ProcessResult processResult =
+        workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs_including_root");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("Error: Dependency cycle detected"));
   }
 
   @Test
   public void throwIfMergedWithInvalidGlue() throws IOException {
-    thrown.expect(RuntimeException.class);
-    thrown.expectMessage("Native library merge glue");
-    thrown.expectMessage("is not linkable");
-
-    workspace.runBuckBuild("//apps/sample:app_with_invalid_native_lib_merge_glue");
+    ProcessResult processResult =
+        workspace.runBuckBuild("//apps/sample:app_with_invalid_native_lib_merge_glue");
+    processResult.assertExitCode(ExitCode.FATAL_GENERIC);
+    assertThat(
+        processResult.getStderr(),
+        allOf(containsString("Native library merge glue"), containsString("is not linkable")));
   }
 
   @Test

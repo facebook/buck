@@ -16,14 +16,17 @@
 
 package com.facebook.buck.features.zip.rules;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -31,12 +34,10 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class ZipRuleIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
-  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void shouldZipSources() throws IOException {
@@ -159,11 +160,11 @@ public class ZipRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
     workspace.setUp();
 
-    expectedException.expect(java.lang.IllegalArgumentException.class);
-    expectedException.expectMessage(
-        Matchers.containsString("Illegal to define merge_source_zips when zip_srcs is present"));
-
-    workspace.runBuckBuild("//example:zipbreak");
+    ProcessResult processResult = workspace.runBuckBuild("//example:zipbreak");
+    processResult.assertExitCode(ExitCode.FATAL_GENERIC);
+    assertThat(
+        processResult.getStderr(),
+        containsString("Illegal to define merge_source_zips when zip_srcs is present"));
   }
 
   @Test

@@ -33,7 +33,6 @@ import com.dd.plist.NSNumber;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -855,16 +854,17 @@ public class AppleBundleIntegrationTest {
   @Test
   public void appleAssetCatalogsWithMoreThanOneAppIconOrLaunchImageShouldFail() throws IOException {
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("At most one asset catalog in the dependencies of");
-
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_asset_catalogs_are_included_in_bundle", tmp);
     workspace.setUp();
     BuildTarget target =
         BuildTargetFactory.newInstance("//:DemoAppWithMoreThanOneIconAndLaunchImage#no-debug");
-    workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult processResult = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString("At most one asset catalog in the dependencies of"));
   }
 
   @Test
@@ -1424,10 +1424,14 @@ public class AppleBundleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "app_bundle_with_platform_binary", tmp);
     workspace.setUp();
-    thrown.expectMessage(
-        "Binary matching target platform iphonesimulator-x86_64 cannot be found"
-            + " and binary default is not specified.");
-    workspace.runBuckBuild("//:bundle_without_binary#iphonesimulator-x86_64").assertFailure();
+    ProcessResult processResult =
+        workspace.runBuckBuild("//:bundle_without_binary#iphonesimulator-x86_64");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "Binary matching target platform iphonesimulator-x86_64 cannot be found"
+                + " and binary default is not specified."));
   }
 
   @Test
@@ -1436,13 +1440,15 @@ public class AppleBundleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "app_bundle_with_platform_binary", tmp);
     workspace.setUp();
-    thrown.expectMessage(
-        "There must be at most one binary matching the target platform "
-            + "iphonesimulator-x86_64 but all of [//:binary, //:binary] matched. "
-            + "Please make your pattern more precise and remove any duplicates.");
-    workspace
-        .runBuckBuild("//:bundle_with_multiple_matching_binaries#iphonesimulator-x86_64")
-        .assertFailure();
+    ProcessResult processResult =
+        workspace.runBuckBuild("//:bundle_with_multiple_matching_binaries#iphonesimulator-x86_64");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "There must be at most one binary matching the target platform "
+                + "iphonesimulator-x86_64 but all of [//:binary, //:binary] matched. "
+                + "Please make your pattern more precise and remove any duplicates."));
   }
 
   @Test

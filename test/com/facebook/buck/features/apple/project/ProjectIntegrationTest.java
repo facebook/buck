@@ -16,12 +16,13 @@
 
 package com.facebook.buck.features.apple.project;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -35,12 +36,8 @@ import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class ProjectIntegrationTest {
-
-  @Rule public ExpectedException thrown = ExpectedException.none();
-
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Before
@@ -243,16 +240,17 @@ public class ProjectIntegrationTest {
   @Test
   public void testAttemptingToGenerateWorkspaceFromResourceTargetIsABuildError()
       throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "//res:res must be a xcode_workspace_config, apple_binary, apple_bundle, or apple_library");
-
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "project_implicit_workspace_generation", temporaryFolder);
     workspace.setUp();
 
-    workspace.runBuckCommand("project", "//res:res");
+    ProcessResult processResult = workspace.runBuckCommand("project", "//res:res");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "//res:res must be a xcode_workspace_config, apple_binary, apple_bundle, or apple_library"));
   }
 
   @Test

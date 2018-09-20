@@ -1,11 +1,13 @@
 java_library(
     name = "handlers",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/exceptions/handler:handler",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/exceptions:exceptions",
-        "//src/com/facebook/buck/core/exceptions/handler:handler",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/util:process_executor",
