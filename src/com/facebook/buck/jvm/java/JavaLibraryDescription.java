@@ -26,7 +26,6 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -103,7 +102,7 @@ public class JavaLibraryDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (flavors.contains(Javadoc.DOC_JAR)) {
-      BuildTarget unflavored = ImmutableBuildTarget.of(buildTarget.getUnflavoredBuildTarget());
+      BuildTarget unflavored = buildTarget.withoutFlavors();
       BuildRule baseLibrary = graphBuilder.requireRule(unflavored);
 
       JarShape shape =

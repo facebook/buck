@@ -126,6 +126,11 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
   }
 
   @Override
+  public BuildTarget withoutFlavors() {
+    return ImmutableBuildTarget.of(getUnflavoredBuildTarget());
+  }
+
+  @Override
   public BuildTarget withAppendedFlavors(Set<Flavor> flavors) {
     return ImmutableBuildTarget.of(getUnflavoredBuildTarget(), Sets.union(getFlavors(), flavors));
   }

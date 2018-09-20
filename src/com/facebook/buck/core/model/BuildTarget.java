@@ -61,6 +61,8 @@ public interface BuildTarget extends Comparable<BuildTarget> {
 
   BuildTarget withoutFlavors(Flavor... flavors);
 
+  BuildTarget withoutFlavors();
+
   BuildTarget withFlavors(Flavor... flavors);
 
   BuildTarget withFlavors(Iterable<? extends Flavor> flavors);

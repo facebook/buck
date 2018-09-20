@@ -235,8 +235,7 @@ public class DistBuildTargetGraphCodec {
           MoreMaps.putIfAbsentCheckEquals(graphNodes, target, targetNode);
 
           if (target.isFlavored()) {
-            BuildTarget unflavoredTarget =
-                ImmutableBuildTarget.of(target.getUnflavoredBuildTarget());
+            BuildTarget unflavoredTarget = target.withoutFlavors();
             TargetNode<?> unflavoredTargetNode =
                 parserTargetNodeFactory.createTargetNode(
                     cell,

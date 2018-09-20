@@ -116,8 +116,7 @@ public class TargetNodeParsePipeline
               Cell depCell = cell.getCellIgnoringVisibilityCheck(depTarget.getCellPath());
               try {
                 if (depTarget.isFlavored()) {
-                  getNodeJob(
-                      depCell, ImmutableBuildTarget.of(depTarget.getUnflavoredBuildTarget()));
+                  getNodeJob(depCell, depTarget.withoutFlavors());
                 }
                 getNodeJob(depCell, depTarget);
               } catch (BuildTargetException e) {

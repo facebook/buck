@@ -17,7 +17,6 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -33,8 +32,7 @@ public class TargetGraphFactory {
     Map<BuildTarget, TargetNode<?>> builder = new HashMap<>();
     for (TargetNode<?> node : nodes) {
       builder.put(node.getBuildTarget(), node);
-      BuildTarget unflavoredTarget =
-          ImmutableBuildTarget.of(node.getBuildTarget().getUnflavoredBuildTarget());
+      BuildTarget unflavoredTarget = node.getBuildTarget().withoutFlavors();
       if (node.getBuildTarget().isFlavored() && !builder.containsKey(unflavoredTarget)) {
         builder.put(unflavoredTarget, node.withFlavors(ImmutableSet.of()));
       }

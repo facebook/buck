@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
@@ -97,8 +96,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
               Cell depCell = cell.getCellIgnoringVisibilityCheck(depTarget.getCellPath());
               try {
                 if (depTarget.isFlavored()) {
-                  getNodeJob(
-                      depCell, ImmutableBuildTarget.of(depTarget.getUnflavoredBuildTarget()));
+                  getNodeJob(depCell, depTarget.withoutFlavors());
                 }
                 getNodeJob(depCell, depTarget);
               } catch (BuildTargetException e) {
