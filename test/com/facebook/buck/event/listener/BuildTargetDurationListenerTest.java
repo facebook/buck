@@ -59,6 +59,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
@@ -496,8 +497,8 @@ public class BuildTargetDurationListenerTest {
                 false,
                 false,
                 "test",
-                Arrays.asList(target),
-                Arrays.asList(),
+                Collections.singletonList(target),
+                Collections.emptyList(),
                 Paths.get(".")),
             new FakeProjectFilesystem(),
             1,

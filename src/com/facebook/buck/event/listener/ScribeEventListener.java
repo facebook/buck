@@ -26,7 +26,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
@@ -70,7 +70,7 @@ public class ScribeEventListener implements BuckEventListener {
         () -> {
           try {
             String message = ObjectMappers.WRITER.writeValueAsString(event);
-            logger.log(category, Arrays.asList(message));
+            logger.log(category, Collections.singletonList(message));
           } catch (JsonProcessingException ex) {
             LOG.warn(ex, "Failed to create Scribe message");
           }

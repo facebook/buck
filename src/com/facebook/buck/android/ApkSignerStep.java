@@ -24,6 +24,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Path;
 import java.security.KeyStore;
@@ -32,7 +33,6 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -61,7 +61,7 @@ class ApkSignerStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
     try {
-      List<ApkSigner.SignerConfig> signerConfigs = getSignerConfigs();
+      ImmutableList<ApkSigner.SignerConfig> signerConfigs = getSignerConfigs();
       File inputApkFile = filesystem.getPathForRelativePath(inputApkPath).toFile();
       File outputApkFile = filesystem.getPathForRelativePath(outputApkPath).toFile();
       signApkFile(inputApkFile, outputApkFile, signerConfigs);
@@ -74,7 +74,7 @@ class ApkSignerStep implements Step {
 
   /** Sign the APK using Google's {@link com.android.apksig.ApkSigner} */
   private void signApkFile(
-      File inputApk, File outputApk, List<ApkSigner.SignerConfig> signerConfigs)
+      File inputApk, File outputApk, ImmutableList<ApkSigner.SignerConfig> signerConfigs)
       throws ApkCreationException {
     ApkSigner.Builder apkSignerBuilder = new ApkSigner.Builder(signerConfigs);
     // For non-redex build, apkSignerBuilder can look up minimum SDK version from
@@ -97,7 +97,7 @@ class ApkSignerStep implements Step {
     }
   }
 
-  private List<ApkSigner.SignerConfig> getSignerConfigs() throws KeyStoreException {
+  private ImmutableList<ApkSigner.SignerConfig> getSignerConfigs() throws KeyStoreException {
     KeystoreProperties keystoreProperties = keystorePropertiesSupplier.get();
     Path keystorePath = keystoreProperties.getKeystore();
     char[] keystorePassword = keystoreProperties.getStorepass().toCharArray();
@@ -108,8 +108,7 @@ class ApkSignerStep implements Step {
     List<X509Certificate> certs = loadCertificates(keystore, keyAlias);
     ApkSigner.SignerConfig signerConfig =
         new ApkSigner.SignerConfig.Builder("CERT", key, certs).build();
-    List<ApkSigner.SignerConfig> configs = new ArrayList<>(Arrays.asList(signerConfig));
-    return configs;
+    return ImmutableList.of(signerConfig);
   }
 
   private KeyStore loadKeyStore(Path keystorePath, char[] keystorePassword)

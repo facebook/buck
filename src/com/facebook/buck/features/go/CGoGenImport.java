@@ -38,7 +38,7 @@ import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.SortedSet;
 
@@ -96,7 +96,7 @@ public class CGoGenImport extends AbstractBuildRule {
             srcFile.getParent(),
             Optional.of(srcFile.getFileName()),
             platform,
-            Arrays.asList(ListType.Name));
+            Collections.singletonList(ListType.Name));
     steps.add(listStep);
 
     steps.add(

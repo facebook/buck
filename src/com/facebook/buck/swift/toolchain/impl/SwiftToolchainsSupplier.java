@@ -19,8 +19,8 @@ package com.facebook.buck.swift.toolchain.impl;
 import com.facebook.buck.core.toolchain.ToolchainDescriptor;
 import com.facebook.buck.core.toolchain.ToolchainSupplier;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import org.pf4j.Extension;
 
 @Extension
@@ -28,7 +28,7 @@ public class SwiftToolchainsSupplier implements ToolchainSupplier {
 
   @Override
   public Collection<ToolchainDescriptor<?>> getToolchainDescriptor() {
-    return Arrays.asList(
+    return Collections.singletonList(
         ToolchainDescriptor.of(
             SwiftPlatformsProvider.DEFAULT_NAME,
             SwiftPlatformsProvider.class,

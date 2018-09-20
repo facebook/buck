@@ -48,7 +48,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -148,7 +148,7 @@ public class GoLibraryDescription
               .addAll(args.getExportedDeps())
               .build(),
           ImmutableList.of(),
-          Arrays.asList(ListType.GoFiles));
+          Collections.singletonList(ListType.GoFiles));
     }
 
     return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);

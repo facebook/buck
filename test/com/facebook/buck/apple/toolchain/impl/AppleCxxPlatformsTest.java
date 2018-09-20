@@ -96,6 +96,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -921,7 +922,7 @@ public class AppleCxxPlatformsTest {
             .getCodesignProvider()
             .resolve(buildRuleResolver)
             .getCommandPrefix(sourcePathResolver),
-        is(Arrays.asList("/usr/bin/codesign")));
+        is(Collections.singletonList("/usr/bin/codesign")));
   }
 
   private abstract static class NoopBinaryBuildRule extends NoopBuildRuleWithDeclaredAndExtraDeps
@@ -986,7 +987,7 @@ public class AppleCxxPlatformsTest {
             .getCodesignProvider()
             .resolve(buildRuleResolver)
             .getCommandPrefix(sourcePathResolver),
-        is(Arrays.asList(codesignPath.toString())));
+        is(Collections.singletonList(codesignPath.toString())));
   }
 
   // The important aspects we check for in rule keys is that the host platform and the path

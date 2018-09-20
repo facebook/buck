@@ -62,7 +62,7 @@ import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -298,7 +298,7 @@ abstract class GoDescriptors {
                 .map(BuildRule::getBuildTarget)
                 .collect(ImmutableList.toImmutableList()),
             ImmutableList.of(),
-            Arrays.asList(ListType.GoFiles));
+            Collections.singletonList(ListType.GoFiles));
     graphBuilder.addToIndex(library);
     extraDeps.add(library);
 

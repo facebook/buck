@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.Collections;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -160,7 +160,7 @@ public class GoDescriptorsTest {
             goPlatform,
             ImmutableList.of(),
             ImmutableList.of(),
-            Arrays.asList(ListType.GoFiles));
+            Collections.singletonList(ListType.GoFiles));
 
     Assert.assertTrue(
         compile

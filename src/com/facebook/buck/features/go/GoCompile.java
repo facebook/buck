@@ -44,7 +44,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -191,7 +191,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList.Builder<Path> asmOutputs = ImmutableList.builder();
 
     FilteredSourceFiles filteredAsmSrcs =
-        new FilteredSourceFiles(rawAsmSrcs, platform, Arrays.asList(ListType.SFiles));
+        new FilteredSourceFiles(rawAsmSrcs, platform, Collections.singletonList(ListType.SFiles));
     steps.addAll(filteredAsmSrcs.getFilterSteps());
 
     if (!rawAsmSrcs.isEmpty()) {

@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -94,7 +95,7 @@ public class MostFilesIntegrationTest {
     assertEquals(diffLines, new ArrayList<String>());
 
     diffLines = MostFiles.diffFileContents(Arrays.asList("AAA", "BBB"), testFile);
-    assertEquals(diffLines, Arrays.asList("| CCC |  |"));
+    assertEquals(diffLines, Collections.singletonList("| CCC |  |"));
 
     diffLines = MostFiles.diffFileContents(Arrays.asList("AAA", "CCC"), testFile);
     assertEquals(diffLines, Arrays.asList("| BBB | CCC |", "| CCC |  |"));
@@ -102,20 +103,20 @@ public class MostFilesIntegrationTest {
     diffLines = MostFiles.diffFileContents(Arrays.asList("BBB", "CCC"), testFile);
     assertEquals(diffLines, Arrays.asList("| AAA | BBB |", "| BBB | CCC |", "| CCC |  |"));
 
-    diffLines = MostFiles.diffFileContents(Arrays.asList("AAA"), testFile);
+    diffLines = MostFiles.diffFileContents(Collections.singletonList("AAA"), testFile);
     assertEquals(diffLines, Arrays.asList("| BBB |  |", "| CCC |  |"));
 
-    diffLines = MostFiles.diffFileContents(Arrays.asList("BBB"), testFile);
+    diffLines = MostFiles.diffFileContents(Collections.singletonList("BBB"), testFile);
     assertEquals(diffLines, Arrays.asList("| AAA | BBB |", "| BBB |  |", "| CCC |  |"));
 
-    diffLines = MostFiles.diffFileContents(Arrays.asList("CCC"), testFile);
+    diffLines = MostFiles.diffFileContents(Collections.singletonList("CCC"), testFile);
     assertEquals(diffLines, Arrays.asList("| AAA | CCC |", "| BBB |  |", "| CCC |  |"));
 
     diffLines = MostFiles.diffFileContents(new ArrayList<String>(), testFile);
     assertEquals(diffLines, Arrays.asList("| AAA |  |", "| BBB |  |", "| CCC |  |"));
 
     diffLines = MostFiles.diffFileContents(Arrays.asList("AAA", "BBB", "CCC", "xxx"), testFile);
-    assertEquals(diffLines, Arrays.asList("|  | xxx |"));
+    assertEquals(diffLines, Collections.singletonList("|  | xxx |"));
 
     diffLines = MostFiles.diffFileContents(Arrays.asList("AAA", "BBB", "xxx", "CCC"), testFile);
     assertEquals(diffLines, Arrays.asList("| CCC | xxx |", "|  | CCC |"));
@@ -128,13 +129,13 @@ public class MostFilesIntegrationTest {
         diffLines, Arrays.asList("| AAA | xxx |", "| BBB | AAA |", "| CCC | BBB |", "|  | CCC |"));
 
     diffLines = MostFiles.diffFileContents(Arrays.asList("AAA", "BBB", "xxx"), testFile);
-    assertEquals(diffLines, Arrays.asList("| CCC | xxx |"));
+    assertEquals(diffLines, Collections.singletonList("| CCC | xxx |"));
 
     diffLines = MostFiles.diffFileContents(Arrays.asList("AAA", "xxx", "CCC"), testFile);
-    assertEquals(diffLines, Arrays.asList("| BBB | xxx |"));
+    assertEquals(diffLines, Collections.singletonList("| BBB | xxx |"));
 
     diffLines = MostFiles.diffFileContents(Arrays.asList("xxx", "BBB", "CCC"), testFile);
-    assertEquals(diffLines, Arrays.asList("| AAA | xxx |"));
+    assertEquals(diffLines, Collections.singletonList("| AAA | xxx |"));
 
     diffLines = MostFiles.diffFileContents(Arrays.asList("AAA", "xxx", "yyy"), testFile);
     assertEquals(diffLines, Arrays.asList("| BBB | xxx |", "| CCC | yyy |"));
