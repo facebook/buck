@@ -127,11 +127,7 @@ public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
       @SuppressWarnings("unchecked")
       public Entry<K, V> next() {
         Entry<K, Object> e = iteratorDelegate.next();
-        Entry<K, V> result =
-            e.getValue() == NULL
-                ? new AbstractMap.SimpleEntry<>(e.getKey(), null)
-                : (Map.Entry<K, V>) e;
-        return result;
+        return e.getValue() == NULL ? new SimpleEntry<>(e.getKey(), null) : (Entry<K, V>) e;
       }
     }
 

@@ -312,13 +312,10 @@ public class Build implements Closeable {
 
     setupBuildSymlinks();
 
-    List<BuildEngineResult> resultFutures =
-        rulesToBuild
-            .stream()
-            .map(rule -> buildEngine.build(buildContext, executionContext, rule))
-            .collect(ImmutableList.toImmutableList());
-
-    return resultFutures;
+    return rulesToBuild
+        .stream()
+        .map(rule -> buildEngine.build(buildContext, executionContext, rule))
+        .collect(ImmutableList.toImmutableList());
   }
 
   private BuildExecutionResult waitForBuildToFinish(

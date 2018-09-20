@@ -38,10 +38,8 @@ public class TestAndroidSdkLocationFactory {
             new ExecutableFinder(),
             TestRuleKeyConfigurationFactory.create());
 
-    AndroidSdkLocation androidSdkLocation =
-        new AndroidSdkLocationFactory()
-            .createToolchain(new ToolchainProviderBuilder().build(), toolchainCreationContext)
-            .get();
-    return androidSdkLocation;
+    return new AndroidSdkLocationFactory()
+        .createToolchain(new ToolchainProviderBuilder().build(), toolchainCreationContext)
+        .get();
   }
 }

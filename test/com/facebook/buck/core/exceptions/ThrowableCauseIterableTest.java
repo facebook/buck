@@ -40,8 +40,7 @@ public class ThrowableCauseIterableTest {
   private Exception getExceptionChain(int size) {
     Exception root = new Exception("0");
     for (int i = 1; i < size; i++) {
-      Exception ex = new Exception(String.valueOf(i), root);
-      root = ex;
+      root = new Exception(String.valueOf(i), root);
     }
     return root;
   }

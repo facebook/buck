@@ -1367,14 +1367,12 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
-    ActionGraphAndBuilder actionGraphAndBuilder =
-        params
-            .getActionGraphProvider()
-            .getActionGraph(
-                new DefaultTargetNodeToBuildRuleTransformer(),
-                targetGraphAndBuildTargets.getTargetGraph(),
-                ruleKeyLogger);
-    return actionGraphAndBuilder;
+    return params
+        .getActionGraphProvider()
+        .getActionGraph(
+            new DefaultTargetNodeToBuildRuleTransformer(),
+            targetGraphAndBuildTargets.getTargetGraph(),
+            ruleKeyLogger);
   }
 
   private static ImmutableSet<BuildTarget> getBuildTargets(

@@ -246,8 +246,7 @@ public abstract class TargetNodeTranslator {
       return (Optional<A>) translateBuildTarget((BuildTarget) object);
     } else if (object instanceof TargetTranslatable) {
       TargetTranslatable<A> targetTranslatable = (TargetTranslatable<A>) object;
-      Optional<A> res = targetTranslatable.translateTargets(cellPathResolver, pattern, this);
-      return res;
+      return targetTranslatable.translateTargets(cellPathResolver, pattern, this);
     } else {
       return Optional.empty();
     }

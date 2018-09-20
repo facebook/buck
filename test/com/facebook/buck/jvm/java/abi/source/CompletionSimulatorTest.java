@@ -301,15 +301,13 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
 
   private CompletedType completeSubclass(boolean transitive) {
     TypeElement subclass = elements.getTypeElement("com.facebook.subclass.Subclass");
-    CompletedType result = completer.complete(subclass, transitive);
 
-    return result;
+    return completer.complete(subclass, transitive);
   }
 
   private CompletedType completeSubclassMember(boolean transitive) {
     TypeElement subclass = elements.getTypeElement("com.facebook.subclass.Subclass.SubclassMember");
-    CompletedType result = completer.complete(subclass, transitive);
 
-    return result;
+    return completer.complete(subclass, transitive);
   }
 }

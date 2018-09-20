@@ -855,10 +855,9 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     if (reorderClassesIntraDex) {
       String primaryDexFileName = primaryDexPath.getFileName().toString();
       String smartDexPrimaryDexFileName = "smart-dex-" + primaryDexFileName;
-      Path smartDexPrimaryDexPath =
+      selectedPrimaryDexPath =
           Paths.get(
               primaryDexPath.toString().replace(primaryDexFileName, smartDexPrimaryDexFileName));
-      selectedPrimaryDexPath = smartDexPrimaryDexPath;
     }
     SmartDexingStep smartDexingCommand =
         new SmartDexingStep(

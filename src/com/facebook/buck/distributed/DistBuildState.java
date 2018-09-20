@@ -279,9 +279,7 @@ public class DistBuildState {
       return decoratedCache;
     }
 
-    ProjectFileHashCache remoteCache =
-        DistBuildFileHashes.createFileHashCache(decoratedCache, remoteFileHashes);
-    return remoteCache;
+    return DistBuildFileHashes.createFileHashCache(decoratedCache, remoteFileHashes);
   }
 
   public ProjectFileHashCache createMaterializerAndPreload(

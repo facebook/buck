@@ -174,23 +174,20 @@ public abstract class AbstractNodeBuilder<
               : rawHashCode;
       TargetNodeFactory factory = new TargetNodeFactory(TYPE_COERCER_FACTORY);
       TArg populatedArg = getPopulatedArg();
-      TargetNode<TArg> node =
-          factory
-              .createFromObject(
-                  // This hash will do in a pinch.
-                  hash,
-                  description,
-                  populatedArg,
-                  filesystem,
-                  target,
-                  getDepsFromArg(populatedArg),
-                  ImmutableSet.of(
-                      VISIBILITY_PATTERN_PARSER.parse(
-                          null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
-                  ImmutableSet.of(),
-                  cellRoots)
-              .withSelectedVersions(selectedVersions);
-      return node;
+      return factory
+          .createFromObject(
+              // This hash will do in a pinch.
+              hash,
+              description,
+              populatedArg,
+              filesystem,
+              target,
+              getDepsFromArg(populatedArg),
+              ImmutableSet.of(
+                  VISIBILITY_PATTERN_PARSER.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
+              ImmutableSet.of(),
+              cellRoots)
+          .withSelectedVersions(selectedVersions);
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
     }

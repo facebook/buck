@@ -67,19 +67,17 @@ public class MinionWorkloadAllocatorTest {
   private BuildTargetsQueue createQueueUsingResolver(BuildRuleResolver resolver) {
     BuildTarget target =
         BuildTargetFactory.newInstance(CustomActionGraphBuilderFactory.ROOT_TARGET);
-    BuildTargetsQueue queue =
-        new CacheOptimizedBuildTargetsQueueFactory(
-                resolver,
-                new NoopArtifactCacheByBuildRule(),
-                false,
-                new DefaultRuleDepsCache(resolver),
-                false)
-            .createBuildTargetsQueue(
-                ImmutableList.of(target),
-                new NoOpCoordinatorBuildRuleEventsPublisher(),
-                MOST_BUILD_RULES_FINISHED_PERCENTAGE);
 
-    return queue;
+    return new CacheOptimizedBuildTargetsQueueFactory(
+            resolver,
+            new NoopArtifactCacheByBuildRule(),
+            false,
+            new DefaultRuleDepsCache(resolver),
+            false)
+        .createBuildTargetsQueue(
+            ImmutableList.of(target),
+            new NoOpCoordinatorBuildRuleEventsPublisher(),
+            MOST_BUILD_RULES_FINISHED_PERCENTAGE);
   }
 
   @Test

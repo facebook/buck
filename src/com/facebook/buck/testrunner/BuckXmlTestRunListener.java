@@ -98,7 +98,6 @@ public class BuckXmlTestRunListener extends XmlTestRunListener {
    */
   @Override
   protected File getResultFile(File reportDir) {
-    File reportFile = new File(reportDir, TEST_RESULT_FILE);
-    return reportFile;
+    return new File(reportDir, TEST_RESULT_FILE);
   }
 }

@@ -146,11 +146,9 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         getObjCGeneratedHeader(buildTarget, graphBuilder, cxxPlatform, headerVisibility);
 
     Path outputPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
-    HeaderSymlinkTreeWithHeaderMap headerMapRule =
-        HeaderSymlinkTreeWithHeaderMap.create(
-            buildTarget, projectFilesystem, outputPath, headers, ruleFinder);
 
-    return headerMapRule;
+    return HeaderSymlinkTreeWithHeaderMap.create(
+        buildTarget, projectFilesystem, outputPath, headers, ruleFinder);
   }
 
   public static ImmutableMap<Path, SourcePath> getObjCGeneratedHeader(

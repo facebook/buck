@@ -103,7 +103,6 @@ public class JavaBinaryDescription
         JavaLibraryRules.getNativeLibraries(
             params.getBuildDeps(), getCxxPlatform(args), context.getActionGraphBuilder());
     BuildTarget binaryBuildTarget = buildTarget;
-    BuildRuleParams binaryParams = params;
 
     // If we're packaging native libraries, we'll build the binary JAR in a separate rule and
     // package it into the final fat JAR, so adjust it's params to use a flavored target.
@@ -115,14 +114,14 @@ public class JavaBinaryDescription
 
     // Construct the build rule to build the binary JAR.
     ImmutableSet<JavaLibrary> transitiveClasspathDeps =
-        JavaLibraryClasspathProvider.getClasspathDeps(binaryParams.getBuildDeps());
+        JavaLibraryClasspathProvider.getClasspathDeps(params.getBuildDeps());
     ImmutableSet<SourcePath> transitiveClasspaths =
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
     JavaBinary javaBinary =
         new JavaBinary(
             binaryBuildTarget,
             projectFilesystem,
-            binaryParams.copyAppendingExtraDeps(transitiveClasspathDeps),
+            params.copyAppendingExtraDeps(transitiveClasspathDeps),
             javaOptions.get().getJavaRuntimeLauncher(graphBuilder),
             args.getMainClass().orElse(null),
             args.getManifestFile().orElse(null),

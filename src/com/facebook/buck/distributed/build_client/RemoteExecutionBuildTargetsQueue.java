@@ -157,11 +157,9 @@ public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
 
   @Override
   public CoordinatorBuildProgress getBuildProgress() {
-    CoordinatorBuildProgress progress =
-        new CoordinatorBuildProgress()
-            .setBuiltRulesCount(totalTargetsBuilt)
-            .setTotalRulesCount(totalTargetsEnqueued);
-    return progress;
+    return new CoordinatorBuildProgress()
+        .setBuiltRulesCount(totalTargetsBuilt)
+        .setTotalRulesCount(totalTargetsEnqueued);
   }
 
   @Override

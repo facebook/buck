@@ -190,11 +190,11 @@ public class SmartDexingStep implements Step {
         if (!secondaryDexJarsMultimap.isEmpty()) {
           for (Map.Entry<Path, Collection<Path>> entry :
               secondaryDexJarsMultimap.asMap().entrySet()) {
-            Path store = entry.getKey();
+            Path secondaryCompressedBlobOutput = entry.getKey();
             Collection<Path> secondaryDexJars = entry.getValue();
             // Construct the output path for our solid blob and its compressed form.
-            Path secondaryBlobOutput = store.getParent().resolve("uncompressed.dex.blob");
-            Path secondaryCompressedBlobOutput = store;
+            Path secondaryBlobOutput =
+                secondaryCompressedBlobOutput.getParent().resolve("uncompressed.dex.blob");
             // Concatenate the jars into a blob and compress it.
             StepRunner stepRunner = new DefaultStepRunner();
             Step concatStep =

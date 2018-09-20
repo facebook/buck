@@ -146,9 +146,7 @@ public class DelegateAndGraphsInitializer {
   private ActionGraphAndBuilder createActionGraphAndResolver(TargetGraph targetGraph) {
     args.getTimingStatsTracker().startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     try {
-      ActionGraphAndBuilder actionGraphAndBuilder =
-          args.getActionGraphProvider().getActionGraph(Preconditions.checkNotNull(targetGraph));
-      return actionGraphAndBuilder;
+      return args.getActionGraphProvider().getActionGraph(Preconditions.checkNotNull(targetGraph));
     } finally {
       args.getTimingStatsTracker().stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     }

@@ -98,7 +98,7 @@ public class EndToEndTestDescriptor {
     if (nameIsCached) {
       return name;
     }
-    String stringBuilder =
+    name =
         "Test"
             + capitalizeAndJoin(templateSet)
             + capitalizeAndJoin(command)
@@ -107,7 +107,6 @@ public class EndToEndTestDescriptor {
             + capitalizeAndJoinMap(variableMap)
             + capitalizeAndJoinLocalConfigs(localConfigs)
             + method.getName();
-    name = stringBuilder;
     nameIsCached = true;
     return name;
   }
