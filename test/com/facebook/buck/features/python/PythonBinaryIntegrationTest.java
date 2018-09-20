@@ -426,19 +426,6 @@ public class PythonBinaryIntegrationTest {
         .assertSuccess();
   }
 
-  @Test
-  public void depOntoCxxLibrary() throws IOException {
-    workspace
-        .runBuckCommand(
-            "build",
-            "-c",
-            "cxx.cxx=//cxx_lib_dep/helpers:cxx",
-            "-c",
-            "cxx.cxx_type=gcc",
-            "//cxx_lib_dep:bin")
-        .assertSuccess();
-  }
-
   private PythonBuckConfig getPythonBuckConfig() throws IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =

@@ -2393,6 +2393,14 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  public void testPlatformDependenciesNotResolvedEagerly() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_binary_platform_deps", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild(":binary#working-platform").assertSuccess();
+  }
+
+  @Test
   public void testLinkMapCreated() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

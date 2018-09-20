@@ -243,7 +243,8 @@ public class CxxLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Get any parse time deps from the C/C++ platforms.
-    targetGraphOnlyDepsBuilder.addAll(cxxLibraryFactory.getPlatformParseTimeDeps());
+    targetGraphOnlyDepsBuilder.addAll(
+        cxxLibraryFactory.getPlatformParseTimeDeps(buildTarget, constructorArg));
   }
 
   /**
