@@ -2044,10 +2044,7 @@ public class DefaultParserTest {
   @Test
   public void readConfigReadsConfig() throws Exception {
     Path buckFile = cellRoot.resolve("BUCK");
-    BuildTarget buildTarget =
-        ImmutableBuildTarget.of(
-            ImmutableUnflavoredBuildTarget.of(
-                filesystem.getRootPath(), Optional.empty(), "//", "cake"));
+    BuildTarget buildTarget = ImmutableBuildTarget.of(filesystem.getRootPath(), "//", "cake");
     Files.write(
         buckFile,
         Joiner.on("")
