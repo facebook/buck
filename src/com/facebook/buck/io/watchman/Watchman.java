@@ -58,9 +58,7 @@ public abstract class Watchman {
   public ImmutableMap<Path, WatchmanCursor> buildNamedWatchmanCursorMap() {
     ImmutableMap.Builder<Path, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
     for (Path cellPath : projectWatches.keySet()) {
-      cursorBuilder.put(
-          cellPath,
-          new WatchmanCursor(new StringBuilder("n:buckd").append(UUID.randomUUID()).toString()));
+      cursorBuilder.put(cellPath, new WatchmanCursor("n:buckd" + UUID.randomUUID()));
     }
     return cursorBuilder.build();
   }

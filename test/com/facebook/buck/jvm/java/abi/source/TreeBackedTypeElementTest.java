@@ -463,16 +463,14 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
     // Note: the compiler Diagnostics emit 2 \n characthers when emitting '    ^' error.
     // That is why we go through the hassle below.n
-    StringBuilder result = new StringBuilder();
-    result.append(
-        String.join(
-            System.lineSeparator(),
-            "Foo.java:2: error: cannot find symbol generating source-only ABI",
-            "  Foo.Bar b;"));
 
-    result.append("\n     ^\n");
-    result.append(
-        "  Build the #source-abi flavor of this rule to see if the symbol is truly missing or if the rule just needs a source_only_abi_dep.");
-    assertError(result.toString());
+    String result =
+        String.join(
+                System.lineSeparator(),
+                "Foo.java:2: error: cannot find symbol generating source-only ABI",
+                "  Foo.Bar b;")
+            + "\n     ^\n"
+            + "  Build the #source-abi flavor of this rule to see if the symbol is truly missing or if the rule just needs a source_only_abi_dep.";
+    assertError(result);
   }
 }

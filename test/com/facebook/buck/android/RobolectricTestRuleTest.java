@@ -235,17 +235,6 @@ public class RobolectricTestRuleTest {
     Path resDep3 = Paths.get("res3");
     Path resDep4 = Paths.get("res4_to_ignore");
 
-    StringBuilder expectedVmArgBuilder = new StringBuilder();
-    expectedVmArgBuilder
-        .append("-D")
-        .append(RobolectricTest.LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME)
-        .append("=")
-        .append(resDep1)
-        .append(File.pathSeparator)
-        .append(resDep2)
-        .append(File.pathSeparator)
-        .append(resDep3);
-
     BuildTarget robolectricBuildTarget =
         BuildTargetFactory.newInstance(
             "//java/src/com/facebook/base/robolectricTest:robolectricTest");
@@ -273,7 +262,16 @@ public class RobolectricTestRuleTest {
                 new ResourceRule(FakeSourcePath.of(filesystem, resDep3)),
                 new ResourceRule(FakeSourcePath.of(filesystem, resDep4))));
 
-    assertEquals(expectedVmArgBuilder.toString(), result);
+    String expectedVmArgBuilder =
+        "-D"
+            + RobolectricTest.LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME
+            + "="
+            + resDep1
+            + File.pathSeparator
+            + resDep2
+            + File.pathSeparator
+            + resDep3;
+    assertEquals(expectedVmArgBuilder, result);
   }
 
   @Test
@@ -317,15 +315,6 @@ public class RobolectricTestRuleTest {
     Path assetsDep2 = Paths.get("assets2");
     Path assetsDep3 = Paths.get("assets3_to_ignore");
 
-    StringBuilder expectedVmArgBuilder = new StringBuilder();
-    expectedVmArgBuilder
-        .append("-D")
-        .append(RobolectricTest.LIST_OF_ASSETS_DIRECTORIES_PROPERTY_NAME)
-        .append("=")
-        .append(assetsDep1)
-        .append(File.pathSeparator)
-        .append(assetsDep2);
-
     BuildTarget robolectricBuildTarget =
         BuildTargetFactory.newInstance(
             "//java/src/com/facebook/base/robolectricTest:robolectricTest");
@@ -352,7 +341,14 @@ public class RobolectricTestRuleTest {
                 new ResourceRule(null, FakeSourcePath.of(filesystem, assetsDep2)),
                 new ResourceRule(null, FakeSourcePath.of(filesystem, assetsDep3))));
 
-    assertEquals(expectedVmArgBuilder.toString(), result);
+    String expectedVmArgBuilder =
+        "-D"
+            + RobolectricTest.LIST_OF_ASSETS_DIRECTORIES_PROPERTY_NAME
+            + "="
+            + assetsDep1
+            + File.pathSeparator
+            + assetsDep2;
+    assertEquals(expectedVmArgBuilder, result);
   }
 
   @Test

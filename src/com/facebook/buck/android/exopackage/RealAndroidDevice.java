@@ -472,16 +472,16 @@ public class RealAndroidDevice implements AndroidDevice {
     }
     String logMessage = loggingInfo.toString();
     if (!logMessage.isEmpty()) {
-      StringBuilder fullMessage = new StringBuilder();
-      fullMessage.append("============================================================\n");
-      fullMessage.append('\n');
-      fullMessage.append("HEY! LISTEN!\n");
-      fullMessage.append('\n');
-      fullMessage.append("The /data/local/tmp directory on your device isn't fully-functional.\n");
-      fullMessage.append("Here's some extra info:\n");
-      fullMessage.append(logMessage);
-      fullMessage.append("============================================================\n");
-      console.getStdErr().println(fullMessage.toString());
+      String fullMessage =
+          "============================================================\n"
+              + '\n'
+              + "HEY! LISTEN!\n"
+              + '\n'
+              + "The /data/local/tmp directory on your device isn't fully-functional.\n"
+              + "Here's some extra info:\n"
+              + logMessage
+              + "============================================================\n";
+      console.getStdErr().println(fullMessage);
     }
 
     return true;
