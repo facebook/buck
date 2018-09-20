@@ -66,12 +66,9 @@ class DirectHeaderMap extends HeaderSymlinkTree {
       BuildContext context, BuildableContext buildableContext) {
     LOG.debug("Generating build steps to write header map to %s", headerMapPath);
     ImmutableMap.Builder<Path, Path> entriesBuilder = ImmutableMap.builder();
-    Path absoluteIncludeRoot = getProjectFilesystem().resolve(getIncludeRoot());
     for (Map.Entry<Path, SourcePath> entry : getLinks().entrySet()) {
       entriesBuilder.put(
-          entry.getKey(),
-          absoluteIncludeRoot.relativize(
-              context.getSourcePathResolver().getAbsolutePath(entry.getValue())));
+          entry.getKey(), context.getSourcePathResolver().getAbsolutePath(entry.getValue()));
     }
     return ImmutableList.<Step>builder()
         .add(getVerifyStep())
@@ -95,11 +92,8 @@ class DirectHeaderMap extends HeaderSymlinkTree {
 
   @Override
   public PathSourcePath getIncludeSourcePath() {
-    return PathSourcePath.of(getProjectFilesystem(), getIncludeRoot());
-  }
-
-  public Path getIncludeRoot() {
-    return getProjectFilesystem().getBuckPaths().getBuckOut();
+    return PathSourcePath.of(
+        getProjectFilesystem(), getProjectFilesystem().getBuckPaths().getBuckOut());
   }
 
   @Override
