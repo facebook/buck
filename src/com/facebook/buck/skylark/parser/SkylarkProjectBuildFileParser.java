@@ -181,14 +181,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     try (Mutability mutability = Mutability.create("parsing " + buildFile)) {
       EnvironmentData envData =
           createBuildFileEvaluationEnvironment(
-              Label.createUnvalidated(
-                  PackageIdentifier.create(
-                      RepositoryName.createFromValidStrippedName(options.getCellName()),
-                      PathFragment.create(basePath)),
-                  "BUCK"),
-              buildFileAst,
-              mutability,
-              parseContext);
+              createContainingLabel(basePath), buildFileAst, mutability, parseContext);
       boolean exec = buildFileAst.exec(envData.getEnvironment(), eventHandler);
       if (!exec) {
         throw BuildFileParseException.createForUnknownParseError(
@@ -261,6 +254,14 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         eventHandler);
   }
 
+  private Label createContainingLabel(String basePath) {
+    return Label.createUnvalidated(
+        PackageIdentifier.create(
+            RepositoryName.createFromValidStrippedName(options.getCellName()),
+            PathFragment.create(basePath)),
+        "BUCK");
+  }
+
   private ImmutableList<String> toLoadedPaths(ImmutableList<ExtensionData> dependencies) {
     // expected size is used to reduce the number of unnecessary resize invocations
     int expectedSize = 0;
@@ -274,6 +275,73 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ExtensionData extensionData = dependencies.get(i);
       loadedPathsBuilder.add(extensionData.getPath().toString());
       loadedPathsBuilder.addAll(toLoadedPaths(extensionData.getDependencies()));
+    }
+    return loadedPathsBuilder.build();
+  }
+
+  /**
+   * Creates an {@code IncludesData} object from a {@code path}.
+   *
+   * @param loadImport an import label representing an extension to load.
+   */
+  private IncludesData loadInclude(LoadImport loadImport)
+      throws IOException, BuildFileParseException, InterruptedException {
+    Label label = loadImport.getLabel();
+    com.google.devtools.build.lib.vfs.Path filePath = getImportPath(label, loadImport.getImport());
+
+    BuildFileAST fileAst;
+    try {
+      fileAst = BuildFileAST.parseSkylarkFile(createInputSource(filePath), eventHandler);
+    } catch (FileNotFoundException e) {
+      throw BuildFileParseException.createForUnknownParseError(
+          String.format(
+              "%s cannot be loaded because it does not exist. It was referenced from %s",
+              filePath, loadImport.getContainingLabel()));
+    }
+    if (fileAst.containsErrors()) {
+      throw BuildFileParseException.createForUnknownParseError(
+          "Cannot parse included file " + loadImport.getImport().getImportString());
+    }
+
+    ImmutableList<IncludesData> dependencies =
+        fileAst.getImports().isEmpty()
+            ? ImmutableList.of()
+            : loadIncludes(label, fileAst.getImports());
+
+    return IncludesData.of(filePath, dependencies);
+  }
+
+  /** Collects all the included files identified by corresponding {@link SkylarkImport}s. */
+  private ImmutableList<IncludesData> loadIncludes(
+      Label containingLabel, ImmutableList<SkylarkImport> skylarkImports)
+      throws BuildFileParseException, IOException, InterruptedException {
+    Set<SkylarkImport> processed = new HashSet<>(skylarkImports.size());
+    ImmutableList.Builder<IncludesData> includes =
+        ImmutableList.builderWithExpectedSize(skylarkImports.size());
+    // foreach is not used to avoid iterator overhead
+    for (int i = 0; i < skylarkImports.size(); ++i) {
+      SkylarkImport skylarkImport = skylarkImports.get(i);
+      // sometimes users include the same extension multiple times...
+      if (!processed.add(skylarkImport)) continue;
+      LoadImport loadImport = LoadImport.of(containingLabel, skylarkImport);
+      includes.add(loadInclude(loadImport));
+    }
+    return includes.build();
+  }
+
+  private ImmutableList<String> toIncludedPaths(ImmutableList<IncludesData> dependencies) {
+    // expected size is used to reduce the number of unnecessary resize invocations
+    int expectedSize = 0;
+    for (int i = 0; i < dependencies.size(); ++i) {
+      expectedSize += dependencies.get(i).getLoadTransitiveClosureSize();
+    }
+    ImmutableList.Builder<String> loadedPathsBuilder =
+        ImmutableList.builderWithExpectedSize(expectedSize);
+    // for loop is used instead of foreach to avoid iterator overhead, since it's a hot spot
+    for (int i = 0; i < dependencies.size(); ++i) {
+      IncludesData includesData = dependencies.get(i);
+      loadedPathsBuilder.add(includesData.getPath().toString());
+      loadedPathsBuilder.addAll(toIncludedPaths(includesData.getDependencies()));
     }
     return loadedPathsBuilder.build();
   }
@@ -437,6 +505,31 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public void reportProfile() {
     // TODO(ttsugrii): implement
+  }
+
+  @Override
+  public ImmutableList<String> getIncludedFiles(Path buildFile)
+      throws BuildFileParseException, InterruptedException, IOException {
+    com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(buildFile.toString());
+
+    // TODO: lubol For now we need to see errors when trying to extract imports only.
+    // TODO: Lubol It is expected to have the same errors as when the file is fully parsed.
+    BuildFileAST buildFileAst =
+        BuildFileAST.parseBuildFile(createInputSource(buildFilePath), eventHandler);
+    if (buildFileAst.containsErrors()) {
+      throw BuildFileParseException.createForUnknownParseError(
+          "Cannot parse build file " + buildFile);
+    }
+
+    String basePath = getBasePath(buildFile);
+    Label containingLabel = createContainingLabel(basePath);
+
+    ImmutableList<IncludesData> dependencies =
+        loadIncludes(containingLabel, buildFileAst.getImports());
+
+    ImmutableList.Builder<String> builder =
+        ImmutableList.builderWithExpectedSize(dependencies.size() + 1);
+    return builder.add(buildFile.toString()).addAll(toIncludedPaths(dependencies)).build();
   }
 
   @Override

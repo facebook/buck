@@ -22,6 +22,7 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
@@ -71,6 +72,12 @@ public class EventReportingProjectBuildFileParser implements ProjectBuildFilePar
   @Override
   public void reportProfile() throws IOException {
     delegate.reportProfile();
+  }
+
+  @Override
+  public ImmutableList<String> getIncludedFiles(Path buildFile)
+      throws BuildFileParseException, InterruptedException, IOException {
+    return delegate.getIncludedFiles(buildFile);
   }
 
   @Override

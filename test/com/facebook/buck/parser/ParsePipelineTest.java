@@ -54,6 +54,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -496,6 +497,12 @@ public class ParsePipelineTest {
     @Override
     public void reportProfile() throws IOException {
       delegate.reportProfile();
+    }
+
+    @Override
+    public ImmutableList<String> getIncludedFiles(Path buildFile)
+        throws BuildFileParseException, InterruptedException, IOException {
+      return delegate.getIncludedFiles(buildFile);
     }
 
     @Override

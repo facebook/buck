@@ -713,6 +713,12 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
+  public ImmutableList<String> getIncludedFiles(Path buildFile)
+      throws BuildFileParseException, InterruptedException, IOException {
+    throw new UnsupportedOperationException("Not yet implemented!");
+  }
+
+  @Override
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void close() throws BuildFileParseException, InterruptedException, IOException {
     if (isClosed) {

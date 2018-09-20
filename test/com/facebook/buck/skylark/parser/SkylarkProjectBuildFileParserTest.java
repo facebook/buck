@@ -823,6 +823,30 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void parseIncludesIsReturned() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//src/test:build_rules.bzl', 'get_name')",
+            "prebuilt_jar(name='foo', binary_jar=get_name())"));
+    Files.write(extensionFile, Arrays.asList("def get_name():", "  return 'jar'"));
+    ImmutableList<String> includes = parser.getIncludedFiles(buildFile);
+    assertThat(includes, Matchers.hasSize(2));
+    assertThat(
+        includes
+            .stream()
+            .map(projectFilesystem::resolve)
+            .map(Path::getFileName) // simplify matching by stripping temporary path prefixes
+            .map(Object::toString)
+            .collect(ImmutableList.toImmutableList()),
+        equalTo(ImmutableList.of("BUCK", "build_rules.bzl")));
+  }
+
+  @Test
   public void parseMetadataIsReturned() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);

@@ -23,10 +23,12 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -85,6 +87,12 @@ public class EventReportingProjectBuildFileParserTest {
     @Override
     public void reportProfile() {
       isProfileReported = true;
+    }
+
+    @Override
+    public ImmutableList<String> getIncludedFiles(Path buildFile)
+        throws BuildFileParseException, InterruptedException, IOException {
+      return ImmutableList.of();
     }
 
     @Override

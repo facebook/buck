@@ -22,6 +22,7 @@ import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.IOException;
@@ -64,6 +65,12 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
     for (ProjectBuildFileParser parser : parsers.values()) {
       parser.reportProfile();
     }
+  }
+
+  @Override
+  public ImmutableList<String> getIncludedFiles(Path buildFile)
+      throws BuildFileParseException, InterruptedException, IOException {
+    return getParserForBuildFile(buildFile).getIncludedFiles(buildFile);
   }
 
   @Override

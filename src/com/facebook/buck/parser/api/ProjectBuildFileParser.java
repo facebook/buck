@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.api;
 
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -34,6 +35,14 @@ public interface ProjectBuildFileParser extends AutoCloseable {
 
   /** Reports profile information captured while parsing build files. */
   void reportProfile() throws IOException;
+
+  /**
+   * Collects the loaded build file and extensions when parsing the {@code buildFile} build spec.
+   *
+   * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
+   */
+  ImmutableList<String> getIncludedFiles(Path buildFile)
+      throws BuildFileParseException, InterruptedException, IOException;
 
   @Override
   void close() throws BuildFileParseException, InterruptedException, IOException;
