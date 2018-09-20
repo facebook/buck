@@ -16,11 +16,10 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.rules.modern.builders.Protocol.Directory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
-import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -30,6 +29,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -70,19 +70,12 @@ public class OutputsMaterializer {
               fetcher.fetch(directory.getTreeDigest()),
               data -> {
                 Protocol.Tree tree = protocol.parseTree(data);
-                Map<Protocol.Digest, Protocol.Directory> childMap =
-                    RichStream.from(tree.getChildrenList())
-                        .collect(
-                            ImmutableMap.toImmutableMap(
-                                d -> {
-                                  try {
-                                    return protocol.computeDigest(d);
-                                  } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                  }
-                                },
-                                child -> child));
-
+                Map<Protocol.Digest, Protocol.Directory> childMap = new HashMap<>();
+                // TODO(cjhopman): If a Tree contains multiple duplicate Directory nodes, is that
+                // valid? Should that be rejected?
+                for (Directory child : tree.getChildrenList()) {
+                  childMap.put(protocol.computeDigest(child), child);
+                }
                 ImmutableList.Builder<ListenableFuture<Void>> pendingFilesBuilder =
                     ImmutableList.builder();
                 materializeDirectory(childMap, tree.getRoot(), dirRoot, pendingFilesBuilder::add);

@@ -55,6 +55,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
@@ -78,7 +79,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
   private String failingStepTarget = "//:failing_step";
   private String largeDynamicTarget = "//:large_dynamic";
   private String hugeDynamicTarget = "//:huge_dynamic";
-  private String duplicateOutputsTarget = "//:duplicate_outputs";
+  private String duplicateOutputFilesTarget = "//:duplicate_output_files";
+  private String duplicateOutputDirsTarget = "//:duplicate_output_dirs";
   private String checkSerializationTarget = "//:check_serialization";
 
   @Parameterized.Parameters(name = "{0}")
@@ -347,7 +349,9 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @Value.Immutable
   @BuckStyleImmutable
-  interface AbstractDuplicateOutputsArg extends CommonDescriptionArg {}
+  interface AbstractDuplicateOutputsArg extends CommonDescriptionArg {
+    boolean getOutputsAreDirectories();
+  }
 
   private static class DuplicateOutputsDescription
       implements DescriptionWithTargetGraph<DuplicateOutputsArg> {
@@ -365,7 +369,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
       return new DuplicateOutputsRule(
           buildTarget,
           context.getProjectFilesystem(),
-          new SourcePathRuleFinder(context.getActionGraphBuilder()));
+          new SourcePathRuleFinder(context.getActionGraphBuilder()),
+          args.getOutputsAreDirectories());
     }
   }
 
@@ -373,10 +378,15 @@ public class ModernBuildRuleStrategyIntegrationTest {
       implements Buildable {
     @AddToRuleKey final OutputPath output1;
     @AddToRuleKey final OutputPath output2;
+    @AddToRuleKey final boolean outputsAreDirectories;
 
     DuplicateOutputsRule(
-        BuildTarget buildTarget, ProjectFilesystem filesystem, SourcePathRuleFinder finder) {
+        BuildTarget buildTarget,
+        ProjectFilesystem filesystem,
+        SourcePathRuleFinder finder,
+        boolean outputsAreDirectories) {
       super(buildTarget, filesystem, finder, DuplicateOutputsRule.class);
+      this.outputsAreDirectories = outputsAreDirectories;
       this.output1 = new OutputPath("output1");
       this.output2 = new OutputPath("output2");
     }
@@ -389,13 +399,21 @@ public class ModernBuildRuleStrategyIntegrationTest {
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of(
           new AbstractExecutionStep("blah") {
+            public void writeOutput(OutputPath path) throws IOException {
+              String data = "data";
+              Path resolved = outputPathResolver.resolvePath(path);
+              if (outputsAreDirectories) {
+                filesystem.mkdirs(resolved);
+                resolved = resolved.resolve("data");
+              }
+              filesystem.writeContentsToPath(data, resolved);
+            }
+
             @Override
             public StepExecutionResult execute(ExecutionContext context)
                 throws IOException, InterruptedException {
-              String data = "data";
-              filesystem.writeContentsToPath(data, outputPathResolver.resolvePath(output1));
-
-              filesystem.writeContentsToPath(data, outputPathResolver.resolvePath(output2));
+              writeOutput(output1);
+              writeOutput(output2);
               return StepExecutionResults.SUCCESS;
             }
           });
@@ -403,8 +421,14 @@ public class ModernBuildRuleStrategyIntegrationTest {
   }
 
   @Test
-  public void testBuildRuleWithDuplicateOutputs() throws Exception {
-    ProcessResult result = workspace.runBuckBuild(duplicateOutputsTarget);
+  public void testBuildRuleWithDuplicateOutputFiles() throws Exception {
+    ProcessResult result = workspace.runBuckBuild(duplicateOutputFilesTarget);
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testBuildRuleWithDuplicateOutputDirs() throws Exception {
+    ProcessResult result = workspace.runBuckBuild(duplicateOutputDirsTarget);
     result.assertSuccess();
   }
 

@@ -38,5 +38,11 @@ failing_rule(
 )
 
 duplicate_outputs(
-    name = "duplicate_outputs",
+    name = "duplicate_output_files",
+    outputs_are_directories = False,
+)
+
+duplicate_outputs(
+    name = "duplicate_output_dirs",
+    outputs_are_directories = True,
 )
