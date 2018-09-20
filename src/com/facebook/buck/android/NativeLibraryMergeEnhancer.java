@@ -249,7 +249,7 @@ class NativeLibraryMergeEnhancer {
             .append(linkable)
             .append(" has inconsistent application module mappings: ");
         for (NativeLinkable innerConstituent : linkable.constituents.getLinkables()) {
-          APKModule innerConstituentModule = linkableToModuleMap.get(constituent);
+          APKModule innerConstituentModule = linkableToModuleMap.get(innerConstituent);
           sb.append(innerConstituent).append(" -> ").append(innerConstituentModule).append(", ");
         }
         throw new RuntimeException(
