@@ -1469,14 +1469,12 @@ public class BuildCommand extends AbstractCommand {
       initializeBuildLatch.get().countDown();
     }
 
-    List<String> targetStrings =
-        FluentIterable.from(graphsAndBuildTargets.getBuildTargets())
-            .append(getAdditionalTargetsToBuild(graphsAndBuildTargets))
-            .transform(target -> target.getFullyQualifiedName())
-            .toList();
-    ExitCode code =
-        builder.buildLocallyAndReturnExitCode(
-            targetStrings, getPathToBuildReport(params.getBuckConfig()));
+    Iterable<BuildTarget> targets =
+        FluentIterable.concat(
+            graphsAndBuildTargets.getBuildTargets(),
+            getAdditionalTargetsToBuild(graphsAndBuildTargets));
+
+    ExitCode code = builder.buildTargets(targets, getPathToBuildReport(params.getBuckConfig()));
     builder.shutdown();
     return code;
   }
