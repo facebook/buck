@@ -161,3 +161,54 @@ java_binary(
         ":lib_a",
     ],
 )
+
+filegroup(
+    name = "resources_a",
+    srcs = [
+        "resources/A.txt",
+    ],
+    labels = [
+        "include",
+    ],
+)
+
+filegroup(
+    name = "resources_b",
+    srcs = [
+        "resources/B.txt",
+    ],
+    labels = [
+        "include",
+    ],
+)
+
+filegroup(
+    name = "resources_c",
+    srcs = [
+        "resources/C.txt",
+    ],
+    labels = [
+    ],
+)
+
+sh_binary(
+    name = "package",
+    main = "pacakge.sh",
+)
+
+genrule(
+    name = "package_deps",
+    srcs = [
+        ":resources_a",
+        ":resources_b",
+        ":resources_c",
+    ],
+    out = "none",
+    cmd = "echo 1 > $OUT",
+)
+
+genrule(
+    name = "package_genrule",
+    out = "labels.txt",
+    cmd = "echo  $(query_outputs 'attrfilter(labels,include,deps(:package_deps))') > $OUT",
+)
