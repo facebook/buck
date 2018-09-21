@@ -52,6 +52,7 @@ public class AndroidPlatformTargetFactory implements ToolchainFactory<AndroidPla
     try {
       return Optional.of(
           AndroidPlatformTargetProducer.getTargetForId(
+              context.getFilesystem(),
               androidPlatformTargetId,
               toolchainProvider.getByName(
                   AndroidBuildToolsLocation.DEFAULT_NAME, AndroidBuildToolsLocation.class),

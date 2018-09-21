@@ -21,12 +21,14 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.impl.AndroidPlatformTargetProducer;
 import com.facebook.buck.io.file.MorePathsForTests;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.util.Optional;
 
 public class TestAndroidPlatformTargetFactory {
 
   public static AndroidPlatformTarget create() {
     return AndroidPlatformTargetProducer.getDefaultPlatformTarget(
+        new FakeProjectFilesystem(),
         AndroidBuildToolsLocation.of(
             MorePathsForTests.rootRelativePath("AndroidSDK").resolve("build-tools")),
         AndroidSdkLocation.of(MorePathsForTests.rootRelativePath("AndroidSDK")),

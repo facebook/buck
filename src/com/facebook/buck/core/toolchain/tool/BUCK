@@ -1,10 +1,10 @@
 java_library(
     name = "tool",
     srcs = glob(["*.java"]),
-    visibility = ["PUBLIC"],
-    deps = [
+    exported_deps = [
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//third-party/java/guava:guava",
     ],
+    visibility = ["PUBLIC"],
 )

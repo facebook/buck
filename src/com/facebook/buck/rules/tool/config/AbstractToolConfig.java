@@ -29,6 +29,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, copy = false)
@@ -49,15 +50,26 @@ abstract class AbstractToolConfig implements ConfigView<BuckConfig> {
       return Optional.of(
           new BinaryBuildRuleToolProvider(target.get(), String.format("[%s] %s", section, field)));
     } else {
-      return Optional.of(
-          new ConstantToolProvider(
-              new HashedFileTool(
-                  () ->
-                      getDelegate()
-                          .getPathSourcePath(
-                              Paths.get(value.get()),
-                              String.format("Overridden %s:%s path not found", section, field)))));
+      return getPrebuiltTool(section, field, Paths::get).map(ConstantToolProvider::new);
     }
+  }
+
+  /**
+   * @return a {@link Tool} identified by a {@link Path} reference by the given section:field, if
+   *     set. This does not allow the tool to be provided by a @{link BuildTarget}.
+   */
+  public Optional<Tool> getPrebuiltTool(
+      String section, String field, Function<String, Path> valueToPathMapper) {
+    return getDelegate()
+        .getValue(section, field)
+        .map(
+            value ->
+                new HashedFileTool(
+                    () ->
+                        getDelegate()
+                            .getPathSourcePath(
+                                valueToPathMapper.apply(value),
+                                String.format("Overridden %s:%s path not found", section, field))));
   }
 
   public Optional<Tool> getTool(String section, String field, BuildRuleResolver resolver) {

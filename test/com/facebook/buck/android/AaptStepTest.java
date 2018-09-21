@@ -20,6 +20,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.ExecutionContext;
@@ -50,12 +54,13 @@ public class AaptStepTest {
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     return new AaptStep(
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
         AndroidPlatformTarget.of(
             "android",
             basePath.resolve("mock_android.jar"),
             Collections.emptyList(),
-            basePath.resolve("mock_aapt_bin"),
-            Paths.get(""),
+            () -> new SimpleTool("mock_aapt_bin"),
+            () -> new SimpleTool(""),
             Paths.get(""),
             Paths.get(""),
             Paths.get(""),

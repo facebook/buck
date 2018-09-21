@@ -33,6 +33,11 @@ import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
@@ -46,12 +51,14 @@ import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.Assume;
@@ -63,7 +70,7 @@ import org.junit.Test;
 public class AndroidResourceFilterIntegrationTest {
 
   private static boolean isBuildToolsNew;
-  private static Path pathToAapt;
+  private static Supplier<Tool> aaptProvider;
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
@@ -80,14 +87,17 @@ public class AndroidResourceFilterIntegrationTest {
     AndroidSdkLocation androidSdkLocation = TestAndroidSdkLocationFactory.create(filesystem);
     AndroidBuildToolsResolver buildToolsResolver =
         new AndroidBuildToolsResolver(AndroidNdkHelper.DEFAULT_CONFIG, androidSdkLocation);
-    pathToAapt =
+    AndroidBuildToolsLocation buildToolsLocation =
+        AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath());
+    aaptProvider =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
-                AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath()),
+                filesystem,
+                buildToolsLocation,
                 androidSdkLocation,
                 Optional.empty(),
                 Optional.empty())
             .getAaptExecutable();
-    String buildToolsVersion = pathToAapt.getParent().getFileName().toString();
+    String buildToolsVersion = buildToolsLocation.getBuildToolsPath().getFileName().toString();
     isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;
   }
 
@@ -394,13 +404,17 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   private int runAaptDumpResources(Path apkFile) throws IOException, InterruptedException {
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     Pattern pattern = Pattern.compile(".*com.example:string/base_button: t=.*");
     ProcessExecutor.Result result =
         workspace.runCommand(
-            pathToAapt.toAbsolutePath().toString(),
-            "dump",
-            "resources",
-            apkFile.toAbsolutePath().toString());
+            ImmutableList.<String>builder()
+                .addAll(aaptProvider.get().getCommandPrefix(pathResolver))
+                .add("dump")
+                .add("resources")
+                .add(apkFile.toAbsolutePath().toString())
+                .build());
     assertEquals(0, result.getExitCode());
     return FluentIterable.from(Splitter.on('\n').split(result.getStdout().orElse("")))
         .filter(input -> pattern.matcher(input).matches())

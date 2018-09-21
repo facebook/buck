@@ -38,6 +38,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -87,8 +88,8 @@ public class GenAidlTest {
             "android",
             Paths.get(""),
             Collections.emptyList(),
-            Paths.get(""),
-            Paths.get(""),
+            () -> new SimpleTool(""),
+            () -> new SimpleTool(""),
             Paths.get(""),
             Paths.get(pathToAidlExecutable),
             Paths.get(""),

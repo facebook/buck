@@ -20,11 +20,9 @@ import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.TestAndroidSdkLocationFactory;
 import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
-import com.facebook.buck.android.toolchain.impl.AndroidPlatformTargetProducer;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -109,14 +107,15 @@ public class AssumeAndroidPlatform {
         new AndroidBuildToolsResolver(
             AndroidNdkHelper.DEFAULT_CONFIG,
             AndroidSdkLocation.of(androidSdkLocation.getSdkRootPath()));
-    AndroidPlatformTarget androidPlatformTarget =
-        AndroidPlatformTargetProducer.getDefaultPlatformTarget(
-            AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath()),
-            AndroidSdkLocation.of(androidSdkLocation.getSdkRootPath()),
-            Optional.empty(),
-            Optional.empty());
-
-    assumeTrue(androidPlatformTarget.getAapt2Executable().toFile().exists());
+    AndroidBuildToolsLocation toolsLocation =
+        AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath());
+    // AndroidPlatformTarget ensures that aapt2 exists when getting the Tool.
+    assumeTrue(
+        androidSdkLocation
+            .getSdkRootPath()
+            .resolve(toolsLocation.getAapt2Path())
+            .toFile()
+            .exists());
   }
 
   /**

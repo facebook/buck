@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.Step;
@@ -286,8 +287,8 @@ public class SmartDexingStepTest {
         "android",
         Paths.get(""),
         Collections.emptyList(),
-        Paths.get(""),
-        Paths.get(""),
+        () -> new SimpleTool(""),
+        () -> new SimpleTool(""),
         Paths.get(""),
         Paths.get(""),
         Paths.get(""),

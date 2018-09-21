@@ -359,10 +359,15 @@ public class ProjectWorkspace extends AbstractWorkspace {
       throws IOException, InterruptedException {
     List<String> command =
         ImmutableList.<String>builder().add(exe).addAll(ImmutableList.copyOf(args)).build();
+    return runCommand(command);
+  }
+
+  public ProcessExecutor.Result runCommand(Iterable<String> command)
+      throws IOException, InterruptedException {
     return doRunCommand(command);
   }
 
-  private ProcessExecutor.Result doRunCommand(List<String> command)
+  private ProcessExecutor.Result doRunCommand(Iterable<String> command)
       throws IOException, InterruptedException {
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()

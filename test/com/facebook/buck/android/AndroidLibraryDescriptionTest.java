@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -209,8 +210,8 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
             "android",
             Paths.get(""),
             entries,
-            Paths.get(""),
-            Paths.get(""),
+            () -> new SimpleTool(""),
+            () -> new SimpleTool(""),
             Paths.get(""),
             Paths.get(""),
             Paths.get(""),

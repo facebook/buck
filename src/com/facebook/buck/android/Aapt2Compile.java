@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -76,6 +77,7 @@ public class Aapt2Compile extends AbstractBuildRule {
                 getOutputPath().getParent())));
     steps.add(
         new Aapt2CompileStep(
+            context.getSourcePathResolver(),
             getProjectFilesystem().getRootPath(),
             androidPlatformTarget,
             context.getSourcePathResolver().getAbsolutePath(resDir),
@@ -101,13 +103,16 @@ public class Aapt2Compile extends AbstractBuildRule {
     private final AndroidPlatformTarget androidPlatformTarget;
     private final Path resDirPath;
     private final Path outputPath;
+    private final SourcePathResolver pathResolver;
 
     Aapt2CompileStep(
+        SourcePathResolver pathResolver,
         Path workingDirectory,
         AndroidPlatformTarget androidPlatformTarget,
         Path resDirPath,
         Path outputPath) {
       super(workingDirectory);
+      this.pathResolver = pathResolver;
       this.androidPlatformTarget = androidPlatformTarget;
       this.resDirPath = resDirPath;
       this.outputPath = outputPath;
@@ -121,8 +126,9 @@ public class Aapt2Compile extends AbstractBuildRule {
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
+      builder.addAll(
+          androidPlatformTarget.getAapt2Executable().get().getCommandPrefix(pathResolver));
 
-      builder.add(androidPlatformTarget.getAapt2Executable().toString());
       builder.add("compile");
       builder.add("--legacy"); // TODO(dreiss): Maybe make this an option?
       builder.add("-o");

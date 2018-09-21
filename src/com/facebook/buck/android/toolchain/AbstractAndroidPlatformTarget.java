@@ -17,9 +17,11 @@
 package com.facebook.buck.android.toolchain;
 
 import com.facebook.buck.core.toolchain.Toolchain;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 /**
@@ -56,10 +58,10 @@ public abstract class AbstractAndroidPlatformTarget implements Toolchain {
   public abstract List<Path> getBootclasspathEntries();
 
   @Value.Parameter
-  public abstract Path getAaptExecutable();
+  public abstract Supplier<Tool> getAaptExecutable();
 
   @Value.Parameter
-  public abstract Path getAapt2Executable();
+  public abstract Supplier<Tool> getAapt2Executable();
 
   @Value.Parameter
   public abstract Path getAdbExecutable();

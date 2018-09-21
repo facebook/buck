@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -60,8 +61,8 @@ public class ProGuardObfuscateStepTest {
             "android",
             Paths.get(""),
             Collections.emptyList(),
-            Paths.get(""),
-            Paths.get(""),
+            () -> new SimpleTool(""),
+            () -> new SimpleTool(""),
             Paths.get(""),
             Paths.get(""),
             Paths.get(""),

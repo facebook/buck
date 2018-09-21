@@ -26,12 +26,13 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class AndroidBuckConfig {
 
@@ -149,7 +150,7 @@ public class AndroidBuckConfig {
    * Returns the path to the platform specific aapt executable that is overridden by the current
    * project. If not specified, the Android platform aapt will be used.
    */
-  public Optional<Path> getAaptOverride() {
+  public Optional<Supplier<Tool>> getAaptOverride() {
     return getToolOverride("aapt");
   }
 
@@ -157,7 +158,7 @@ public class AndroidBuckConfig {
    * Returns the path to the platform specific aapt2 executable that is overridden by the current
    * project. If not specified, the Android platform aapt will be used.
    */
-  public Optional<Path> getAapt2Override() {
+  public Optional<Supplier<Tool>> getAapt2Override() {
     return getToolOverride("aapt2");
   }
 
@@ -177,7 +178,7 @@ public class AndroidBuckConfig {
     return redexBinary.get();
   }
 
-  private Optional<Path> getToolOverride(String tool) {
+  private Optional<Supplier<Tool>> getToolOverride(String tool) {
     Optional<String> pathString = delegate.getValue("tools", tool);
     if (!pathString.isPresent()) {
       return Optional.empty();
@@ -194,10 +195,15 @@ public class AndroidBuckConfig {
       return Optional.empty();
     }
 
-    Path pathToTool = Paths.get(pathString.get(), platformDir, tool);
     return Optional.of(
-        delegate.checkPathExistsAndResolve(
-            pathToTool.toString(),
-            String.format("Overridden %s:%s path not found: ", "tools", tool)));
+        () -> {
+          Optional<Tool> optionalTool =
+              delegate
+                  .getView(ToolConfig.class)
+                  .getPrebuiltTool("tools", tool, value -> Paths.get(value, platformDir, tool));
+          // Should be present because we verified that the value is present above.
+          Preconditions.checkState(optionalTool.isPresent());
+          return optionalTool.get();
+        });
   }
 }

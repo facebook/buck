@@ -234,6 +234,7 @@ standard_java_test(
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
+        "//test/com/facebook/buck/core/toolchain/tool/impl/testutil:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
