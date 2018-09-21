@@ -64,7 +64,7 @@ For more examples, see the command descriptions and <strong>Examples</strong> se
     {param nodash: true /}
     {param desc}
     <p>
-    List the aliases declared in {call buck.concept_buckconfig /} and <code>.buckconfig.local</code>.
+    List the aliases declared in {call buck.buckconfig_link /} and <code>.buckconfig.local</code>.
     This command lists only the aliases, not their values. To see the values, use the <code>buck audit config</code> command.
     </p>
    {/param}
@@ -77,8 +77,8 @@ For more examples, see the command descriptions and <strong>Examples</strong> se
 
     <p>
     List the absolute paths to the cells that are specified in 
-    the <code>[repositories]</code> section of 
-    the {call buck.concept_link}{param page: 'buckconfig' /}{param name: 'buckconfig' /}{/call} that is in 
+    the {call buckconfig.repositories /} section of 
+    the <code>.buckconfig</code> file that is in 
     the root of the current cell. The path to each cell is prefixed
     with the specified alias for that cell. For example:
 <p>
@@ -632,7 +632,7 @@ buck audit dependencies --json /&#x2F;examples:two /&#x2F;examples:three
 <p>
 <ul>
 <li>{call buck.concept_link}{param page: 'build_file' /}{param name: 'Build File' /}{/call}</li>
-<li>{call buck.concept_link}{param page: 'buckconfig' /}{param name: 'buckconfig' /}{/call}</li>
+<li>{call buck.buckconfig_link /}</li>
 </ul>
 </p>
 

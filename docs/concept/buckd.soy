@@ -41,7 +41,7 @@ While it runs, the Buck daemon process monitors the project's file
 system and invalidates cached build rules if any build input files
 change. The Buck daemon excludes from monitoring any subtrees of the 
 project file system that are specified in
-the {call buck.concept_link_heading}{param page : 'buckconfig' /}{param heading : 'project' /}{param name : 'project.ignore' /}{/call} setting
+the {call buckconfig.project_ignore /} setting
 of <code>.buckconfig</code>. By adding project-specific output 
 directories and source-control directories, such as<code>.git</code>, to 
 this setting, you can significantly improve performance; this might be necessary

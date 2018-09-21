@@ -637,7 +637,7 @@ cd bucksamples/cross-platform-scale-2015-demo/
     <p><code>ios/BUCK</code>: The {call buck.build_file /} is what makes Buck work. It defines all the {call buck.build_rule /}s for your source code. A {call buck.build_rule /} may also include dependencies (via <code>deps</code>), which may be from other {call buck.build_file /}s.</p>
   </li>
   <li>
-    <p><code>.buckconfig</code>: A {call buck.concept_buckconfig /} file allows for various flag and alias settings for any project (even beyond iOS) within the root directory.</p>
+    <p><code>.buckconfig</code>: A {call buck.buckconfig_link /} file allows for various flag and alias settings for any project (even beyond iOS) within the root directory.</p>
   </li>
 </ul>
 
@@ -735,7 +735,7 @@ cd bucksamples/cross-platform-scale-2015-demo/
     <p><code>android/BUCK</code>: The {call buck.build_file /} is what makes Buck work. It defines all the {call buck.build_rule /}s for your source code. A {call buck.build_rule /} can also include dependencies (generally via <code>deps</code>), which may be from other {call buck.build_file /}s, as in the case of this app.</p>
   </li>
   <li>
-    <p><code>.buckconfig</code>: A {call buck.concept_buckconfig /} file allows for various flag and alias settings for any project (even beyond Android) within the root directory.</p>
+    <p><code>.buckconfig</code>: A {call buck.buckconfig_link /} file allows for various flag and alias settings for any project (even beyond Android) within the root directory.</p>
   </li>
 </ul>
 
@@ -759,11 +759,14 @@ ANDROID_SDK=&lt;path-to-sdk&gt;
 {/literal}
 
 <p>
-  Set the missing variables to the locations of Android SDK and Android NDK or set the paths in your {call buck.concept_buckconfig /} file.
+  Set the missing variables to the locations of Android SDK and Android
+  NDK or set the paths in your {call buck.buckconfig_link /} file.
 </p>
 
 <p>
-  Before building make sure you installed correct build tools and a target in Android SDK and correct version of Android NDK. You can find the required versions of these tools in {call buck.concept_buckconfig /}:
+  Before building make sure you installed correct build tools and a
+  target in Android SDK and correct version of Android NDK. You can find
+  the required versions of these tools in {call buck.buckconfig_link /}:
 </p>
 
 <ul>
@@ -788,7 +791,11 @@ Optionally:
 <h3>Build the Android sample</h3>
 
 <p>
-  In order to build the app, you use the {call buck.cmd_build /} command, specifying your app as the target. The target may be defined in the {call buckconfig.alias /} section in the {call buck.concept_buckconfig /} file or it would be the name of your Android project prepended by <code>//[the directory where your project is located]:</code> (e.g., <code>//android:demo-app</code>).
+  In order to build the app, you use the {call buck.cmd_build /}
+  command, specifying your app as the target. The target may be defined
+  in the {call buckconfig.alias /} section in the {call buck.buckconfig_link /} file 
+  or it would be the name of your Android project prepended 
+  by <code>//[the directory where your project is located]:</code> (e.g., <code>//android:demo-app</code>).
 </p>
 
 {literal}
@@ -892,7 +899,7 @@ cd bucksamples/hello-buck-java/
     <p><code>com/facebook/buck/demo/BUCK</code>: This {call buck.build_file /} is what makes Buck work and is the trigger for building the application. It defines all the {call buck.build_rule /}s for your source code. The key rules you will see in this file is {call buck.java_binary /} and {call buck.java_library /}. A {call buck.build_rule /} may also include dependencies (generally via <code>deps</code>), which may be from other {call buck.build_file /}s.</p>
   </li>
   <li>
-    <p><code>.buckconfig</code>: A {call buck.concept_buckconfig /} file allows for various flag and alias settings for any project (even beyond this Java application, if they existed) within the <code>hello-buck-java</code> directory.</p>
+    <p><code>.buckconfig</code>: A {call buck.buckconfig_link /} file allows for various flag and alias settings for any project (even beyond this Java application, if they existed) within the <code>hello-buck-java</code> directory.</p>
   </li>
 </ul>
 

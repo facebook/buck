@@ -157,8 +157,7 @@ grep --recursive "getVerbosity().shouldPrintOutput()" ~/local/buck/src
     <p>
       Disable the build artifact caches. If this parameter is specified, Buck
       ignores any artifacts in any of the caches specified in 
-      the <code>[cache]</code> section 
-      of {call buck.concept_link_heading}{param page : 'buckconfig' /}{param heading : 'cache' /}{param name : '.buckconfig' /}{/call}.
+      the {call buckconfig.cache /} section of <code>.buckconfig</code>. 
       These include the filesystem cache (<code>dir</code>), remote cache (<code>http</code>), 
       and SQLite cache (<code>sqlite</code>). 
     </p>
@@ -185,7 +184,7 @@ grep --recursive "getVerbosity().shouldPrintOutput()" ~/local/buck/src
 
   <p>
   Specify configuration settings or override existing settings 
-  in {call buck.concept_buckconfig /}.  For example:
+  in {call buck.buckconfig_link /}.  For example:
   </p>
 
 <p>
@@ -236,7 +235,7 @@ reproducing builds difficult.
 
 <p>
 Specify build-configuration settings in a file that uses the same syntax 
-as {call buck.concept_buckconfig /}.
+as {call buck.buckconfig_link /}.
 </p>
 
 <p>

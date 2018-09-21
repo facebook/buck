@@ -52,7 +52,7 @@
  * @param section The section the entry is in.
  */
 {template .section_link}
-<a href="{ROOT}concept/buckconfig.html#{$section}"><code>[{$section}]</code></a>
+<a href="{ROOT}files-and-dirs/buckconfig.html#{$section}"><code>[{$section}]</code></a>
 {/template}
 
 /***/
@@ -83,7 +83,7 @@
  * @param? link_text The text of the link
  */
 {template .entry_link}
-<a href="{ROOT}concept/buckconfig.html#{$section}.{$entry}">{if isNonnull($link_text)}{$link_text}{else}{$section}.{$entry}{/if}</a>
+<a href="{ROOT}files-and-dirs/buckconfig.html#{$section}.{$entry}">{if isNonnull($link_text)}{$link_text}{else}{$section}.{$entry}{/if}</a>
 {/template}
 
 /***/
@@ -175,6 +175,13 @@
 {/template}
 
 /***/
+{template .cache}
+{call .section_link}
+  {param section: 'cache' /}
+{/call}
+{/template}
+
+/***/
 {template .cache_mode}
 {call .entry_link}
   {param section: 'cache' /}
@@ -247,6 +254,21 @@
 {/template}
 
 /***/
+{template .project_ignore}
+{call .entry_link}
+    {param section: 'project' /}
+    {param entry: 'ignore' /}
+{/call}
+{/template}
+
+/***/
+{template .python}
+{call .section_link}
+  {param section: 'python' /}
+{/call}
+{/template}
+
+/***/
 {template .python_interpreter}
 {call .entry_link}
     {param section: 'python' /}
@@ -259,6 +281,13 @@
 {call .entry_link}
     {param section: 'python' /}
     {param entry: 'package_style' /}
+{/call}
+{/template}
+
+/***/
+{template .repositories}
+{call .section_link}
+  {param section: 'repositories' /}
 {/call}
 {/template}
 
