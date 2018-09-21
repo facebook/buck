@@ -123,7 +123,13 @@ public class AndroidBuckConfig {
   }
 
   public boolean isGrayscaleImageProcessingEnabled() {
-    return delegate.getBooleanValue("resources", "resource_grayscale_enabled", false);
+    return delegate.getBooleanValue(
+        "android",
+        "resource_grayscale_enabled",
+        // TODO: `android.resource_grayscale_enabled` is the canonical value. We used to use
+        // `resources.resource_grayscale_enabled` though, so temporarily use that as a fallback to
+        // allow users to migrate.
+        delegate.getBooleanValue("resources", "resource_grayscale_enabled", false));
   }
 
   /**
