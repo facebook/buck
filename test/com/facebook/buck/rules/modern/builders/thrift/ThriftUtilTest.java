@@ -19,7 +19,6 @@ package com.facebook.buck.rules.modern.builders.thrift;
 import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
 import com.facebook.remoteexecution.cas.GetTreeRequest;
 import com.facebook.thrift.transport.TTransportException;
-import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,22 +37,21 @@ public class ThriftUtilTest {
     ContentAddressableStorageException exception = new ContentAddressableStorageException();
     String msg = "smash";
     exception.setMessage(msg);
-    Optional<String> details = ThriftUtil.getExceptionDetails(exception);
-    Assert.assertTrue(details.isPresent());
-    Assert.assertTrue(details.get(), details.get().contains(msg));
+    String details = ThriftUtil.getExceptionDetails(exception);
+    Assert.assertTrue(details, details.contains(msg));
   }
 
   @Test
   public void testExtraDetailsForTTransportException() {
     TTransportException exception = new TTransportException(TTransportException.END_OF_FILE);
-    Optional<String> details = ThriftUtil.getExceptionDetails(exception);
-    Assert.assertTrue(details.isPresent());
-    Assert.assertTrue(details.get(), details.get().contains("END_OF_FILE"));
+    String details = ThriftUtil.getExceptionDetails(exception);
+    Assert.assertTrue(details, details.contains("END_OF_FILE"));
   }
 
   @Test
   public void testExtraDetailsWithRuntimeException() {
-    Optional<String> details = ThriftUtil.getExceptionDetails(new RuntimeException("topspin"));
-    Assert.assertFalse(details.isPresent());
+    String msg = "topspin";
+    String details = ThriftUtil.getExceptionDetails(new RuntimeException(msg));
+    Assert.assertTrue(details, details.contains(msg));
   }
 }

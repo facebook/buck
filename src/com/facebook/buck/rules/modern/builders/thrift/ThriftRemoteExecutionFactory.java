@@ -18,27 +18,19 @@ package com.facebook.buck.rules.modern.builders.thrift;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.modern.builders.IsolatedExecution;
+import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.thrift.transport.TTransportException;
 import java.io.IOException;
-import java.util.Optional;
 
 /** Factory for creating thrift-based strategies. */
 public class ThriftRemoteExecutionFactory {
 
   /** The remote strategy connects to a remote thrift remote execution service. */
-  public static IsolatedExecution createRemote(
-      String remoteExecutionEngineHost,
-      int remoteExecutionEnginePort,
-      String casHost,
-      int casPort,
-      Optional<String> traceId,
-      BuckEventBus eventBus)
+  public static IsolatedExecution createRemote(ModernBuildRuleConfig config, BuckEventBus eventBus)
       throws IOException {
-    ThriftRemoteExecutionClients clients =
-        new ThriftRemoteExecutionClients(
-            remoteExecutionEngineHost, remoteExecutionEnginePort, casHost, casPort);
+    ThriftRemoteExecutionClients clients = new ThriftRemoteExecutionClients(config);
     try {
-      return new ThriftRemoteExecution(eventBus, clients, traceId) {
+      return new ThriftRemoteExecution(eventBus, clients, config.getTraceID()) {
         @Override
         public void close() throws IOException {
           clients.close();

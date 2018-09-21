@@ -23,7 +23,6 @@ import com.facebook.thrift.TException;
 import com.facebook.thrift.TSerializer;
 import com.facebook.thrift.protocol.TCompactJSONProtocol;
 import com.facebook.thrift.transport.TTransportException;
-import java.util.Optional;
 
 /** Convenience methods to handle fbthrift. */
 public final class ThriftUtil {
@@ -54,22 +53,20 @@ public final class ThriftUtil {
    * Gets extra details about any thrift related exception or absent if not such details are
    * available.
    */
-  public static Optional<String> getExceptionDetails(Exception exception) {
+  public static String getExceptionDetails(Exception exception) {
     if (exception instanceof TTransportException) {
       TTransportException transportException = (TTransportException) exception;
-      return Optional.of(
-          String.format(
-              "Encountered TTransport exception of type [%s].",
-              getTTransportExceptionType(transportException)));
+      return String.format(
+          "Encountered TTransport exception of type [%s].",
+          getTTransportExceptionType(transportException));
     } else if (exception instanceof ContentAddressableStorageException) {
       ContentAddressableStorageException casException =
           (ContentAddressableStorageException) exception;
-      return Optional.of(
-          String.format(
-              "CAS Exception with contents: [%s].", ThriftUtil.thriftToDebugJson(casException)));
+      return String.format(
+          "CAS Exception with contents: [%s].", ThriftUtil.thriftToDebugJson(casException));
+    } else {
+      return exception.toString();
     }
-
-    return Optional.empty();
   }
 
   /** A debug string representation of the TTransportException.type file. */

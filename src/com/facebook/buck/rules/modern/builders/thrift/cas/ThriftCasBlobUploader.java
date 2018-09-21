@@ -77,7 +77,7 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
           String.format(
               "Failed to get missing hashes. Message=[%s] Details=[%s] Request=[%s]",
               e.getMessage(),
-              ThriftUtil.getExceptionDetails(e).orElse("NONE"),
+              ThriftUtil.getExceptionDetails(e),
               ThriftUtil.thriftToDebugJson(request));
       LOG.error(e, message);
       throw new BuckUncheckedExecutionException(e, message);
@@ -132,9 +132,7 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
       String message =
           String.format(
               "Failed to batch update [%d] blobs for digests [%s]. Details=[%s]",
-              request.getRequests().size(),
-              digests,
-              ThriftUtil.getExceptionDetails(e).orElse("NONE"));
+              request.getRequests().size(), digests, ThriftUtil.getExceptionDetails(e));
       LOG.error(e, message);
       throw new BuckUncheckedExecutionException(e, message);
     }

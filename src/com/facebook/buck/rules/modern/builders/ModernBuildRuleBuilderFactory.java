@@ -75,11 +75,7 @@ public class ModernBuildRuleBuilderFactory {
                   cellResolver,
                   rootCell,
                   hashLoader::get,
-                  config.getRemoteHost(),
-                  config.getRemotePort(),
-                  config.getCasHost(),
-                  config.getCasPort(),
-                  config.getTraceID()));
+                  config));
         case DEBUG_RECONSTRUCT:
           return Optional.of(
               createReconstructing(new SourcePathRuleFinder(resolver), cellResolver, rootCell));
@@ -216,20 +212,10 @@ public class ModernBuildRuleBuilderFactory {
       CellPathResolver cellResolver,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher,
-      String remoteExecutionEngineHost,
-      int remoteExecutionEnginePort,
-      String casHost,
-      int casPort,
-      Optional<String> traceId)
+      ModernBuildRuleConfig config)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
-        ThriftRemoteExecutionFactory.createRemote(
-            remoteExecutionEngineHost,
-            remoteExecutionEnginePort,
-            casHost,
-            casPort,
-            traceId,
-            eventBus),
+        ThriftRemoteExecutionFactory.createRemote(config, eventBus),
         ruleFinder,
         cellResolver,
         rootCell,
