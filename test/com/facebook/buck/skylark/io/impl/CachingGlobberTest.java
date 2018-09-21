@@ -21,9 +21,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.skylark.io.GlobSpec;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.Set;
@@ -82,19 +82,21 @@ public class CachingGlobberTest {
     assertThat(
         cachingGlobber.createGlobManifest(),
         equalTo(
-            ImmutableMap.of(
-                GlobSpec.builder()
-                    .setInclude(ImmutableList.of("path"))
-                    .setExclude(ImmutableList.of())
-                    .setExcludeDirectories(false)
-                    .build(),
-                ImmutableSet.of("path"),
-                GlobSpec.builder()
-                    .setInclude(ImmutableList.of("does_not_exist"))
-                    .setExclude(ImmutableList.of())
-                    .setExcludeDirectories(true)
-                    .build(),
-                ImmutableSet.of())));
+            ImmutableList.of(
+                GlobSpecWithResult.of(
+                    GlobSpec.builder()
+                        .setInclude(ImmutableList.of("does_not_exist"))
+                        .setExclude(ImmutableList.of())
+                        .setExcludeDirectories(true)
+                        .build(),
+                    ImmutableSet.of()),
+                GlobSpecWithResult.of(
+                    GlobSpec.builder()
+                        .setInclude(ImmutableList.of("path"))
+                        .setExclude(ImmutableList.of())
+                        .setExcludeDirectories(false)
+                        .build(),
+                    ImmutableSet.of("path")))));
   }
 
   private static class FakeGlobber implements Globber {

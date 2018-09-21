@@ -17,14 +17,13 @@
 package com.facebook.buck.parser.api;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.skylark.io.GlobSpec;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.immutables.value.Value;
 
 /** Describes the content of a build file, which includes defined targets and their metadata. */
@@ -50,9 +49,9 @@ abstract class AbstractBuildFileManifest {
   @Value.Parameter
   public abstract Optional<ImmutableMap<String, Optional<String>>> getEnv();
 
-  /** @return A mapping from a {@link GlobSpec} to the corresponding set of expanded paths. */
+  /** @return A list of the glob operations performed with their results. */
   @Value.Parameter
-  public abstract ImmutableMap<GlobSpec, Set<String>> getGlobManifest();
+  public abstract ImmutableList<GlobSpecWithResult> getGlobManifest();
 
   /**
    * Converts targets and their metadata into a single set of raw nodes.

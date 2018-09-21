@@ -29,6 +29,7 @@ import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -62,7 +63,7 @@ public class ProjectBuildFileParserPoolTest {
           ImmutableSortedSet.of(),
           ImmutableMap.of(),
           Optional.empty(),
-          ImmutableMap.of());
+          ImmutableList.of());
 
   private ProjectBuildFileParserPool createParserPool(
       int maxParsersPerCell, ProjectBuildFileParserFactory parserFactory) {

@@ -17,12 +17,14 @@
 package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.skylark.io.GlobSpec;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.Globber;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -82,8 +84,14 @@ public class CachingGlobber implements Globber {
    * @return Glob manifest that includes information about expanded paths for each requested {@link
    *     GlobSpec}.
    */
-  public ImmutableMap<GlobSpec, Set<String>> createGlobManifest() {
-    return ImmutableMap.copyOf(cache);
+  public ImmutableList<GlobSpecWithResult> createGlobManifest() {
+    final Set<Entry<GlobSpec, Set<String>>> entries = cache.entrySet();
+    ImmutableList.Builder<GlobSpecWithResult> globs =
+        ImmutableList.builderWithExpectedSize(entries.size());
+    for (Entry<GlobSpec, Set<String>> entry : entries) {
+      globs.add(GlobSpecWithResult.of(entry.getKey(), entry.getValue()));
+    }
+    return globs.build();
   }
 
   public static CachingGlobber of(Globber globber) {

@@ -136,7 +136,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         ImmutableSet.copyOf(parseResult.getLoadedPaths()),
         parseResult.getReadConfigurationOptions(),
         Optional.empty(),
-        parseResult.getGlobManifest());
+        parseResult.getGlobManifestWithResult());
   }
 
   /**

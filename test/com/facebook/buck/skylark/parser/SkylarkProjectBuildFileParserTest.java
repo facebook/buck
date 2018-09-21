@@ -43,6 +43,7 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.skylark.io.GlobSpec;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -265,13 +266,14 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(
         buildFileManifest.getGlobManifest(),
         equalTo(
-            ImmutableMap.of(
-                GlobSpec.builder()
-                    .setInclude(ImmutableList.of("f*"))
-                    .setExclude(ImmutableList.of())
-                    .setExcludeDirectories(true)
-                    .build(),
-                ImmutableSet.of("file1", "file2"))));
+            ImmutableList.of(
+                GlobSpecWithResult.of(
+                    GlobSpec.builder()
+                        .setInclude(ImmutableList.of("f*"))
+                        .setExclude(ImmutableList.of())
+                        .setExcludeDirectories(true)
+                        .build(),
+                    ImmutableSet.of("file1", "file2")))));
   }
 
   @Test

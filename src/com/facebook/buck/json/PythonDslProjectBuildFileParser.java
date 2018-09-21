@@ -427,7 +427,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
             Optional.empty(),
-            ImmutableMap.of());
+            ImmutableList.of());
       }
       return toBuildFileManifest(values);
     } finally {
@@ -453,7 +453,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                     Preconditions.checkNotNull(
                         (Map<String, String>) values.get(values.size() - 1).get("__env")),
                     Optional::ofNullable))),
-        ImmutableMap.of());
+        ImmutableList.of());
   }
 
   private BuildFilePythonResult performJsonRequest(ImmutableMap<String, String> request)

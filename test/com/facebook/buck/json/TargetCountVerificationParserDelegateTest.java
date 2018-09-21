@@ -112,7 +112,7 @@ public class TargetCountVerificationParserDelegateTest {
         ImmutableSortedSet.of(),
         ImmutableMap.of(),
         Optional.empty(),
-        ImmutableMap.of());
+        ImmutableList.of());
   }
 
   @Test
