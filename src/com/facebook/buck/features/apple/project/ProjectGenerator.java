@@ -1288,11 +1288,10 @@ public class ProjectGenerator {
       FluentIterable<TargetNode<?>> depTargetNodes = collectRecursiveLibraryDepTargets(targetNode);
 
       if (includeFrameworks && isFocusedOnTarget) {
-        ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
-        frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(targetNode));
-        frameworksBuilder.addAll(targetNode.getConstructorArg().getFrameworks());
-        frameworksBuilder.addAll(targetNode.getConstructorArg().getLibraries());
-        mutator.setFrameworks(frameworksBuilder.build());
+
+        if (!options.shouldAddLinkedLibrariesAsFlags()) {
+          mutator.setFrameworks(getSytemFrameworksLibsForTargetNode(targetNode));
+        }
 
         ImmutableSet<PBXFileReference> targetNodeDeps =
             filterRecursiveLibraryDependenciesForLinkerPhase(depTargetNodes);
@@ -1816,6 +1815,15 @@ public class ProjectGenerator {
     return target;
   }
 
+  private ImmutableSet<FrameworkPath> getSytemFrameworksLibsForTargetNode(
+      TargetNode<? extends CommonArg> targetNode) {
+    ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
+    frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(targetNode));
+    frameworksBuilder.addAll(targetNode.getConstructorArg().getFrameworks());
+    frameworksBuilder.addAll(targetNode.getConstructorArg().getLibraries());
+    return frameworksBuilder.build();
+  }
+
   /**
    * Subdivide the various deps and write out to the xcconfig file for scripts to post process if
    * needed*
@@ -1836,11 +1844,7 @@ public class ProjectGenerator {
         collectRecursiveLibraryDepsMinusBundleLoaderDeps(
             targetNode, depTargetNodes, bundleLoaderNode);
 
-    ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
-    frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(targetNode));
-    frameworksBuilder.addAll(targetNode.getConstructorArg().getFrameworks());
-    frameworksBuilder.addAll(targetNode.getConstructorArg().getLibraries());
-    ImmutableSet<FrameworkPath> systemFwkOrLibs = frameworksBuilder.build();
+    ImmutableSet<FrameworkPath> systemFwkOrLibs = getSytemFrameworksLibsForTargetNode(targetNode);
     ImmutableList<String> systemFwkOrLibFlags =
         collectSystemLibraryAndFrameworkLinkerFlags(systemFwkOrLibs);
 
@@ -1947,6 +1951,7 @@ public class ProjectGenerator {
           Streams.concat(
                   otherLdFlagsStream,
                   Stream.of(
+                      "$BUCK_LINKER_FLAGS_SYSTEM",
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL",
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED",
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_OTHER",
@@ -1955,8 +1960,7 @@ public class ProjectGenerator {
                       "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER",
                       "$BUCK_LINKER_FLAGS_LIBRARY_LOCAL",
                       "$BUCK_LINKER_FLAGS_LIBRARY_FOCUSED",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_OTHER",
-                      "$BUCK_LINKER_FLAGS_SYSTEM"))
+                      "$BUCK_LINKER_FLAGS_LIBRARY_OTHER"))
               .collect(Collectors.joining(" ")));
     } else if (options.shouldForceLoadLinkWholeLibraries()
         && !options.shouldAddLinkedLibrariesAsFlags()) {
@@ -1975,13 +1979,13 @@ public class ProjectGenerator {
           Streams.concat(
                   otherLdFlagsStream,
                   Stream.of(
+                      "$BUCK_LINKER_FLAGS_SYSTEM",
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL",
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED",
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_OTHER",
                       "$BUCK_LINKER_FLAGS_LIBRARY_LOCAL",
                       "$BUCK_LINKER_FLAGS_LIBRARY_FOCUSED",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_OTHER",
-                      "$BUCK_LINKER_FLAGS_SYSTEM"))
+                      "$BUCK_LINKER_FLAGS_LIBRARY_OTHER"))
               .collect(Collectors.joining(" ")));
     } else {
       appendConfigsBuilder.put(
@@ -3830,10 +3834,22 @@ public class ProjectGenerator {
     }
   }
 
-  private Optional<String> getSystemFrameworkOrLibraryLinkerFlag(FrameworkPath frameworkPath) {
-    String nameWithoutExtension =
-        MorePaths.getNameWithoutExtension(
-            frameworkPath.getFileName(this.defaultPathResolver::getRelativePath));
+  private Optional<String> getSystemFrameworkOrLibraryLinkerFlag(FrameworkPath framework) {
+
+    SourceTreePath sourceTreePath;
+    if (framework.getSourceTreePath().isPresent()) {
+      sourceTreePath = framework.getSourceTreePath().get();
+    } else if (framework.getSourcePath().isPresent()) {
+      sourceTreePath =
+          new SourceTreePath(
+              PBXReference.SourceTree.SOURCE_ROOT,
+              pathRelativizer.outputPathToSourcePath(framework.getSourcePath().get()),
+              Optional.empty());
+    } else {
+      return Optional.empty();
+    }
+
+    String nameWithoutExtension = MorePaths.getNameWithoutExtension(sourceTreePath.getPath());
 
     if (nameWithoutExtension.length() > 0) {
       String libraryPrefix = "lib";
