@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.step.StepFailedException;
@@ -33,6 +34,8 @@ import java.nio.file.Paths;
 
 /** This implements out of process rule execution. */
 public class OutOfProcessIsolatedBuilder {
+  private static final Logger LOG = Logger.get(OutOfProcessIsolatedBuilder.class);
+
   /**
    * Entry point for out of process rule execution. This should be run within the build root
    * directory (i.e. within the root cell's root).
@@ -42,6 +45,7 @@ public class OutOfProcessIsolatedBuilder {
    */
   public static void main(String[] args)
       throws IOException, StepFailedException, InterruptedException {
+    LOG.info(String.format("Started buck at time [%s].", new java.util.Date()));
     Thread.setDefaultUncaughtExceptionHandler(
         (thread, error) -> {
           error.printStackTrace(System.err);

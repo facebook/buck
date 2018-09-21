@@ -38,6 +38,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolve
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.ExecutableFinder;
@@ -89,6 +90,7 @@ import org.pf4j.PluginWrapper;
  * (see getProvider() below for the expected layout of this directory).
  */
 public abstract class IsolatedBuildableBuilder {
+  private static final Logger LOG = Logger.get(IsolatedBuildableBuilder.class);
   private final BuildContext buildContext;
   private final ExecutionContext executionContext;
   private final Function<Optional<String>, ProjectFilesystem> filesystemFunction;
@@ -305,12 +307,22 @@ public abstract class IsolatedBuildableBuilder {
                   throw new RuntimeException("Cannot resolve rules in deserialized MBR state.");
                 }
               }));
+
+      LOG.info(
+          String.format(
+              "Finished deserializing the rule at [%s]. Running the build now.",
+              new java.util.Date()));
+
       for (Step step :
           ModernBuildRule.stepsForBuildable(
               buildContext, reconstructed.buildable, filesystem, reconstructed.target)) {
         new DefaultStepRunner()
             .runStepForBuildTarget(executionContext, step, Optional.of(reconstructed.target));
       }
+
+      LOG.info(
+          String.format(
+              "Finished running the build at [%s]. Exiting buck now.", new java.util.Date()));
     }
   }
 
