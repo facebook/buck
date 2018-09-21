@@ -29,7 +29,9 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,6 +48,22 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "android_prebuilt_aar", tmp);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
+  }
+
+  @Test
+  public void thatAndroidToolchainIsNotRequired() throws IOException {
+    // It's kind of dumb that we enforce this, but it makes our lives easier.
+    String badSdkPath = tmp.getRoot().resolve("some_non_existent_path").toString();
+    workspace.addBuckConfigLocalOption("android", "sdk_path", badSdkPath);
+    workspace
+        .runBuckCommandWithEnvironmentOverridesAndContext(
+            tmp.getRoot(),
+            Optional.empty(),
+            ImmutableMap.of("ANDROID_SDK", badSdkPath, "ANDROID_HOME", badSdkPath),
+            "targets",
+            "--show-rulekey",
+            "//:aar")
+        .assertSuccess();
   }
 
   @Test

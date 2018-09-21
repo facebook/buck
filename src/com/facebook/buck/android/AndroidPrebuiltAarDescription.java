@@ -41,6 +41,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.MaybeRequiredForSourceOnlyAbiArg;
@@ -220,7 +221,7 @@ public class AndroidPrebuiltAarDescription
             toolchainProvider
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),
-            new AndroidClasspathProvider(toolchainProvider)),
+            ExtraClasspathProvider.EMPTY),
         /* exportedDeps */ javaDeps,
         args.getRequiredForSourceOnlyAbi(),
         args.getMavenCoords());

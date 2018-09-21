@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.toolchain;
 
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -30,8 +31,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
-public abstract class AbstractAndroidPlatformTarget implements Toolchain {
-
+public abstract class AbstractAndroidPlatformTarget implements Toolchain, AddsToRuleKey {
   public static final String DEFAULT_NAME = "android-platform-target";
 
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "android-23";
