@@ -147,6 +147,7 @@ The following sections are recognized by Buck:
     'parser',
     'project',
     'python',
+    'repositories',
     'resources',
     'resources_per_rule',
     'rust',
@@ -3730,6 +3731,66 @@ python -c "import platform; print( platform.python_version() )"
     <p>
       Example:
     </p>
+
+  {/param}
+{/call}
+
+
+{call buckconfig.section}
+  {param name: 'repositories' /}
+  {param description}
+
+  <p>
+    Lists the cells that constitute the Buck project. Buck builds that are
+    part of this project&mdash;that is, which use this <code>.buckconfig</code>&mdash;can 
+    access the cells specified in this section.
+  </p>
+
+<p>
+<pre>
+{literal}
+[repositories]
+    buck = .
+    bazel_skylib = ./third-party/skylark/bazel-skylib
+{/literal}
+</pre>
+</p>
+
+  <p>
+    The string on the left-hand side of the equals sign is the <em>alias</em> for 
+    the cell. The string on the right-hand side of the equals sign is
+    the path to the cell from the directory that contains 
+    this <code>.buckconfig</code> file.
+  </p>
+
+  <p>
+    It is not necessary to include the current cell in this section,
+    but we consider it a best practice to do so:
+  </p>
+
+<p>
+<pre>
+{literal}
+buck = .
+{/literal}
+</pre>
+</p>
+
+  <p>
+    You can view the contents of this section using 
+    the {call buck.cmd_link}{param name: 'audit' /}{param rendered_text: '<code>buck audit cell</code>' /}{/call} command.
+  </p>
+
+  <p>
+    Although the name of the section is <em>repositories</em>, the section
+    actually lists <em>cells</em>. In practice, Buck cells often
+    correspond to repositories, but this is not a requirement.
+  </p>
+
+  <p>
+    For more information about the relationship between Buck projects, cells, and repositories, see 
+    the {call buck.concept_link_heading}{param page : 'overview' /}{param heading : 'overview' /}{param name : 'Key Concepts' /}{/call} topic.
+  </p>
 
   {/param}
 {/call}
