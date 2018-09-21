@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.easymock.EasyMock.createMock;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasKey;
@@ -24,9 +23,18 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.Collections;
 import org.hamcrest.Matcher;
 import org.junit.Test;
@@ -122,20 +130,25 @@ public class JavacOptionsTest {
     JavacOptions options =
         createStandardBuilder()
             .setSourceLevel("5")
-            .putSourceToBootclasspath("5", "some-magic.jar:also.jar")
+            .putSourceToBootclasspath(
+                "5",
+                ImmutableList.of(
+                    FakeSourcePath.of("some-magic.jar"), FakeSourcePath.of("also.jar")))
             .build();
 
-    assertOptionsHasKeyValue(options, "bootclasspath", "some-magic.jar:also.jar");
+    assertOptionsHasKeyValue(
+        options, "bootclasspath", String.format("some-magic.jar%salso.jar", File.pathSeparator));
   }
 
   @Test
   public void shouldNotOverrideTheBootclasspathIfOneIsSet() {
-    String expectedBootClasspath = "some-magic.jar:also.jar";
+    String expectedBootClasspath = String.format("some-magic.jar%salso.jar", File.pathSeparator);
     JavacOptions options =
         createStandardBuilder()
             .setBootclasspath(expectedBootClasspath)
             .setSourceLevel("5")
-            .putSourceToBootclasspath("5", "not-the-right-path.jar")
+            .putSourceToBootclasspath(
+                "5", ImmutableList.of(FakeSourcePath.of("not-the-right-path.jar")))
             .build();
 
     assertOptionsHasKeyValue(options, "bootclasspath", expectedBootClasspath);
@@ -147,7 +160,10 @@ public class JavacOptionsTest {
         createStandardBuilder()
             .setBootclasspath("cake.jar")
             .setSourceLevel("6")
-            .putSourceToBootclasspath("5", "some-magic.jar:also.jar")
+            .putSourceToBootclasspath(
+                "5",
+                ImmutableList.of(
+                    FakeSourcePath.of("some-magic.jar"), FakeSourcePath.of("also.jar")))
             .build();
 
     assertOptionsHasKeyValue(options, "bootclasspath", "cake.jar");
@@ -158,11 +174,15 @@ public class JavacOptionsTest {
     JavacOptions original =
         createStandardBuilder()
             .setSourceLevel("5")
-            .putSourceToBootclasspath("5", "some-magic.jar:also.jar")
+            .putSourceToBootclasspath(
+                "5",
+                ImmutableList.of(
+                    FakeSourcePath.of("some-magic.jar"), FakeSourcePath.of("also.jar")))
             .build();
 
     JavacOptions copy = JavacOptions.builder(original).build();
-    assertOptionsHasKeyValue(copy, "bootclasspath", "some-magic.jar:also.jar");
+    assertOptionsHasKeyValue(
+        copy, "bootclasspath", String.format("some-magic.jar%salso.jar", File.pathSeparator));
   }
 
   @Test
@@ -183,7 +203,26 @@ public class JavacOptionsTest {
   private OptionAccumulator visitOptions(JavacOptions options) {
     OptionAccumulator optionsConsumer = new OptionAccumulator();
     options.appendOptionsTo(
-        optionsConsumer, createMock(SourcePathResolver.class), createMock(ProjectFilesystem.class));
+        optionsConsumer,
+        new AbstractSourcePathResolver() {
+          @Override
+          protected SourcePath resolveDefaultBuildTargetSourcePath(
+              DefaultBuildTargetSourcePath targetSourcePath) {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
+              BuildTargetSourcePath sourcePath) {
+            throw new UnsupportedOperationException();
+          }
+        },
+        TestProjectFilesystems.createProjectFilesystem(Paths.get("").toAbsolutePath()));
     return optionsConsumer;
   }
 

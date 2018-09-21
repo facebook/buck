@@ -33,7 +33,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -119,10 +121,20 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     }
 
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection(SECTION);
-    ImmutableMap.Builder<String, String> bootclasspaths = ImmutableMap.builder();
+    ImmutableMap.Builder<String, ImmutableList<PathSourcePath>> bootclasspaths =
+        ImmutableMap.builder();
     for (Map.Entry<String, String> entry : allEntries.entrySet()) {
-      if (entry.getKey().startsWith("bootclasspath-")) {
-        bootclasspaths.put(entry.getKey().substring("bootclasspath-".length()), entry.getValue());
+      String key = entry.getKey();
+      if (key.startsWith("bootclasspath-")) {
+        String[] values = entry.getValue().split(File.pathSeparator);
+        ImmutableList.Builder<PathSourcePath> pathsBuilder =
+            ImmutableList.builderWithExpectedSize(values.length);
+        for (String value : values) {
+          Preconditions.checkState(value != null);
+          pathsBuilder.add(PathSourcePath.of(delegate.getFilesystem(), Paths.get(value)));
+        }
+
+        bootclasspaths.put(key.substring("bootclasspath-".length()), pathsBuilder.build());
       }
     }
 

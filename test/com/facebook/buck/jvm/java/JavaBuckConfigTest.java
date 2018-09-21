@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavacOptions.TARGETED_JAVA_VERSION;
-import static org.easymock.EasyMock.createMock;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
@@ -38,8 +37,11 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -396,7 +398,26 @@ public class JavaBuckConfigTest {
   private OptionAccumulator visitOptions(JavacOptions options) {
     OptionAccumulator optionsConsumer = new OptionAccumulator();
     options.appendOptionsTo(
-        optionsConsumer, createMock(SourcePathResolver.class), defaultFilesystem);
+        optionsConsumer,
+        new AbstractSourcePathResolver() {
+          @Override
+          protected SourcePath resolveDefaultBuildTargetSourcePath(
+              DefaultBuildTargetSourcePath targetSourcePath) {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
+              BuildTargetSourcePath sourcePath) {
+            throw new UnsupportedOperationException();
+          }
+        },
+        defaultFilesystem);
     return optionsConsumer;
   }
 

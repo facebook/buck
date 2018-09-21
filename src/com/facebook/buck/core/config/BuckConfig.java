@@ -1004,4 +1004,8 @@ public class BuckConfig {
   public Optional<String> getBuildDetailsTemplate() {
     return config.get("log", "build_details_template");
   }
+
+  public ProjectFilesystem getFilesystem() {
+    return projectFilesystem;
+  }
 }

@@ -43,6 +43,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.jvm.java.testutil.Bootclasspath;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -270,7 +271,7 @@ public class InterCellIntegrationTest {
         prepare("inter-cell/java/primary", "inter-cell/java/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
-    String systemBootclasspath = System.getProperty("sun.boot.class.path");
+    String systemBootclasspath = Bootclasspath.getSystemBootclasspath();
     ProcessResult result =
         primary.runBuckBuild(
             "//:java-binary",
