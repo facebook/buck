@@ -28,7 +28,7 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.json.HybridProjectBuildFileParser;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
-import com.facebook.buck.json.TargetCountVerificationParserDelegate;
+import com.facebook.buck.json.TargetCountVerificationParserDecorator;
 import com.facebook.buck.parser.AbstractParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
@@ -158,7 +158,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   /** Creates a delegate wrapper that counts the number of targets declared in a parsed file */
   private static ProjectBuildFileParser createTargetCountingWrapper(
       ProjectBuildFileParser aggregate, int targetCountThreshold, BuckEventBus eventBus) {
-    return new TargetCountVerificationParserDelegate(aggregate, targetCountThreshold, eventBus);
+    return new TargetCountVerificationParserDecorator(aggregate, targetCountThreshold, eventBus);
   }
 
   /** Creates a project build file parser based on Buck configuration settings. */

@@ -30,22 +30,22 @@ import java.nio.file.Path;
  * Delegates to the aggregated parser to do the parsing, while warning the numbers of targets
  * exceeds a threshold.
  */
-public class TargetCountVerificationParserDelegate implements ProjectBuildFileParser {
-  private final ProjectBuildFileParser aggregate;
+public class TargetCountVerificationParserDecorator implements ProjectBuildFileParser {
+  private final ProjectBuildFileParser delegate;
   private final int targetWarnCount;
   private final BuckEventBus buckEventBus;
 
   /**
-   * @param aggregatedParser the aggregated parser.
+   * @param delegate the aggregated parser.
    * @param targetWarnCount the count of target which, if exceeded will log a warning.
    * @param eventBus The event buss where to post warning events for handling.
    */
-  public TargetCountVerificationParserDelegate(
-      ProjectBuildFileParser aggregatedParser, int targetWarnCount, BuckEventBus eventBus) {
-    Preconditions.checkNotNull(aggregatedParser);
+  public TargetCountVerificationParserDecorator(
+      ProjectBuildFileParser delegate, int targetWarnCount, BuckEventBus eventBus) {
+    Preconditions.checkNotNull(delegate);
     Preconditions.checkNotNull(eventBus, "Must have a valid eventBus set.");
 
-    aggregate = aggregatedParser;
+    this.delegate = delegate;
     this.targetWarnCount = targetWarnCount;
     buckEventBus = eventBus;
   }
@@ -72,24 +72,24 @@ public class TargetCountVerificationParserDelegate implements ProjectBuildFilePa
   @Override
   public BuildFileManifest getBuildFileManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    BuildFileManifest targetManifest = aggregate.getBuildFileManifest(buildFile);
+    BuildFileManifest targetManifest = delegate.getBuildFileManifest(buildFile);
     maybePostWarningAboutTooManyTargets(buildFile, targetManifest.getTargets().size());
     return targetManifest;
   }
 
   @Override
   public void reportProfile() throws IOException {
-    aggregate.reportProfile();
+    delegate.reportProfile();
   }
 
   @Override
   public ImmutableList<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    return aggregate.getIncludedFiles(buildFile);
+    return delegate.getIncludedFiles(buildFile);
   }
 
   @Override
   public void close() throws BuildFileParseException, InterruptedException, IOException {
-    aggregate.close();
+    delegate.close();
   }
 }
