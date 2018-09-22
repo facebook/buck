@@ -1059,26 +1059,35 @@ if (!foundHash) {
 
 /***/
 {template .active_developer_path}
-<p>
 <blockquote>
+<p>
 If you do not have Xcode installed and you get the following error 
+</p>
+
 <p>
 <pre>
 {literal}
-<code>error: active developer path ("/Applications/Xcode.app/Contents/Developer") does not exist</code>
+error: active developer path ("/Applications/Xcode.app/Contents/Developer") does not exist
 {/literal}
 </pre>
 </p>
+
+<p>
 then run 
+</p>
+
 <p>
 <pre>
 {literal}
-<code>xcode-select --reset</code> 
+xcode-select --reset 
 {/literal}
 </pre>
 </p>
+
+<p>
 to reset the command-line tools path to where the command line tools are installed.
 </blockquote>
 </p>
+
 {/template}
 
