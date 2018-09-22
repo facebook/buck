@@ -19,8 +19,9 @@ package com.facebook.buck.rules.modern.builders;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent;
+import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
@@ -144,13 +145,14 @@ public abstract class RemoteExecution implements IsolatedExecution {
     HashMap<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder;
     Digest actionDigest;
 
-    try (Scope ignored = LeafEvents.scope(eventBus, "deleting_stale_outputs")) {
+    try (Scope ignored =
+        RemoteExecutionActionEvent.sendEvent(eventBus, State.DELETING_STALE_OUTPUTS)) {
       for (Path path : outputs) {
         MostFiles.deleteRecursivelyIfExists(cellPrefixRoot.resolve(path));
       }
     }
 
-    try (Scope ignored = LeafEvents.scope(eventBus, "computing_action")) {
+    try (Scope ignored = RemoteExecutionActionEvent.sendEvent(eventBus, State.COMPUTING_ACTION)) {
       ImmutableList<Path> isolatedClasspath =
           processClasspath(inputsBuilder, cellPrefixRoot, classPath);
       ImmutableList<Path> isolatedBootstrapClasspath =
@@ -188,17 +190,22 @@ public abstract class RemoteExecution implements IsolatedExecution {
       requiredDataBuilder.put(actionDigest, () -> new ByteArrayInputStream(actionData));
     }
 
-    try (Scope scope = LeafEvents.scope(eventBus, "uploading_inputs")) {
+    try (Scope scope = RemoteExecutionActionEvent.sendEvent(eventBus, State.UPLOADING_INPUTS)) {
       getStorage().addMissing(ImmutableMap.copyOf(requiredDataBuilder));
     }
 
-    ExecutionResult result = getExecutionService().execute(actionDigest);
+    ExecutionResult result = null;
+    try (Scope scope = RemoteExecutionActionEvent.sendEvent(eventBus, State.EXECUTING)) {
+      result = getExecutionService().execute(actionDigest);
+    }
 
     if (result.getExitCode() == 0) {
-      try (Scope scope = LeafEvents.scope(eventBus, "materializing_outputs")) {
+      try (Scope scope =
+          RemoteExecutionActionEvent.sendEvent(eventBus, State.MATERIALIZING_OUTPUTS)) {
         getStorage()
             .materializeOutputs(
                 result.getOutputDirectories(), result.getOutputFiles(), cellPrefixRoot);
+        RemoteExecutionActionEvent.sendEvent(eventBus, State.ACTION_SUCCEEDED).close();
       }
     } else {
       LOG.error(
@@ -206,6 +213,7 @@ public abstract class RemoteExecution implements IsolatedExecution {
           buildTarget.getFullyQualifiedName(),
           result.getExitCode(),
           result.getStderr().orElse("<empty>"));
+      RemoteExecutionActionEvent.sendEvent(eventBus, State.ACTION_FAILED).close();
       throw StepFailedException.createForFailingStepWithExitCode(
           new AbstractExecutionStep("remote_execution") {
             @Override

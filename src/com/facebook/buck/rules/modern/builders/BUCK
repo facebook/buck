@@ -1,14 +1,34 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 load("//tools/build_rules:file_alias.bzl", "file_alias")
 
+INTERFACES = [
+    "Protocol.java",
+]
+
+java_immutables_library(
+    name = "interfaces",
+    srcs = INTERFACES,
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/log/views:views",
+        "//src/com/facebook/buck/util/function:function",
+        "//third-party/java/jackson:jackson-annotations",
+    ],
+)
+
 java_immutables_library(
     name = "builders",
     srcs = glob(
         ["**/*.java"],
-        exclude = ["grpc/server/**"],
+        exclude = ["grpc/server/**"] + INTERFACES,
     ),
+    exported_deps = [
+        ":interfaces",
+    ],
     visibility = ["PUBLIC"],
     deps = [
+        ":interfaces",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/android:utils_api",
         "//src/com/facebook/buck/core/cell/impl:impl",
@@ -30,6 +50,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/plugin/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/toolchain/impl:impl",
+        "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/rules/modern/config:config",
