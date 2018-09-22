@@ -720,6 +720,9 @@ def rule_exists(name, build_env=None):
     :return: True if a rule with provided name has already been defined in
       current file.
     """
+    assert isinstance(
+        build_env, BuildFileContext
+    ), "Cannot use `rule_exists()` at the top-level of an included file."
     return name in build_env.rules
 
 
