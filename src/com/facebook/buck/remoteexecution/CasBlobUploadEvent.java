@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.util.Scope;
+import com.google.common.annotations.VisibleForTesting;
 
 /** Started/Finished event pairs for CAS blob uploads . */
 public abstract class CasBlobUploadEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
@@ -40,7 +41,8 @@ public abstract class CasBlobUploadEvent extends AbstractBuckEvent implements Wo
     private final int blobCount;
     private final long sizeBytes;
 
-    public Started(int blobCount, long sizeBytes) {
+    @VisibleForTesting
+    Started(int blobCount, long sizeBytes) {
       super(EventKey.unique());
       this.blobCount = blobCount;
       this.sizeBytes = sizeBytes;
@@ -64,7 +66,8 @@ public abstract class CasBlobUploadEvent extends AbstractBuckEvent implements Wo
   public static class Finished extends CasBlobUploadEvent {
     private final Started startedEvent;
 
-    public Finished(Started startedEvent) {
+    @VisibleForTesting
+    Finished(Started startedEvent) {
       super(startedEvent.getEventKey());
       this.startedEvent = startedEvent;
     }

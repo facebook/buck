@@ -22,6 +22,8 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.util.Scope;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
 /** Tracks events related to Remote Execution Actions. */
 public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
@@ -64,12 +66,51 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     };
   }
 
+  /** Sends the terminal event of an action [FAIL|SUCCESS]. */
+  public static void sendTerminalEvent(BuckEventBus eventBus, State state) {
+    final Terminal event = new Terminal(state);
+    eventBus.post(event);
+  }
+
+  public static boolean isTerminalState(State state) {
+    return state == State.ACTION_FAILED || state == State.ACTION_SUCCEEDED;
+  }
+
+  /** Sends a one off terminal event for a Remote Execution Action. */
+  public static class Terminal extends RemoteExecutionActionEvent {
+    private final State state;
+
+    @VisibleForTesting
+    Terminal(State state) {
+      super(EventKey.unique());
+      Preconditions.checkArgument(
+          RemoteExecutionActionEvent.isTerminalState(state),
+          "State [%s] is not a terminal state.",
+          state);
+      this.state = state;
+    }
+
+    public State getState() {
+      return state;
+    }
+
+    @Override
+    protected String getValueString() {
+      return state.toString();
+    }
+  }
+
   /** An action just moved into this state. */
   public static class Started extends RemoteExecutionActionEvent {
     private final State state;
 
-    private Started(State state) {
+    @VisibleForTesting
+    Started(State state) {
       super(EventKey.unique());
+      Preconditions.checkArgument(
+          !RemoteExecutionActionEvent.isTerminalState(state),
+          "Argument state [%s] cannot be a terminal state.",
+          state);
       this.state = state;
     }
 
@@ -88,7 +129,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
     private final Started startedEvent;
 
-    private Finished(Started startedEvent) {
+    @VisibleForTesting
+    Finished(Started startedEvent) {
       super(startedEvent.getEventKey());
       this.startedEvent = startedEvent;
     }

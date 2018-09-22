@@ -52,18 +52,19 @@ public class RemoteExecutionActionEventTest {
   public void testSendEventAlsoSendsLeafEvents() throws IOException {
     int totalEvents = 0;
     for (State state : State.values()) {
+      if (RemoteExecutionActionEvent.isTerminalState(state)) {
+        continue;
+      }
       try (Scope scope = RemoteExecutionActionEvent.sendEvent(eventBus, state)) {
         Assert.assertEquals(totalEvents + 1, leafEvents.size());
         totalEvents += 2;
       }
     }
-
-    Assert.assertEquals(State.values().length * 2, leafEvents.size());
   }
 
   @Test
   public void testNotClosingScopeDoesNotSendFinishedEvent() {
-    RemoteExecutionActionEvent.sendEvent(eventBus, State.ACTION_FAILED);
+    RemoteExecutionActionEvent.sendEvent(eventBus, State.COMPUTING_ACTION);
     Assert.assertEquals(1, remoteExecutionActionEvents.size());
   }
 

@@ -205,7 +205,7 @@ public abstract class RemoteExecution implements IsolatedExecution {
         getStorage()
             .materializeOutputs(
                 result.getOutputDirectories(), result.getOutputFiles(), cellPrefixRoot);
-        RemoteExecutionActionEvent.sendEvent(eventBus, State.ACTION_SUCCEEDED).close();
+        RemoteExecutionActionEvent.sendTerminalEvent(eventBus, State.ACTION_SUCCEEDED);
       }
     } else {
       LOG.error(
@@ -213,7 +213,7 @@ public abstract class RemoteExecution implements IsolatedExecution {
           buildTarget.getFullyQualifiedName(),
           result.getExitCode(),
           result.getStderr().orElse("<empty>"));
-      RemoteExecutionActionEvent.sendEvent(eventBus, State.ACTION_FAILED).close();
+      RemoteExecutionActionEvent.sendTerminalEvent(eventBus, State.ACTION_FAILED);
       throw StepFailedException.createForFailingStepWithExitCode(
           new AbstractExecutionStep("remote_execution") {
             @Override
