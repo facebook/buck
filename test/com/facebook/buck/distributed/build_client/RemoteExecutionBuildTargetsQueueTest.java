@@ -35,7 +35,7 @@ public class RemoteExecutionBuildTargetsQueueTest {
   @Before
   public void setUp() {
     buckEventBus = EasyMock.createNiceMock(BuckEventBus.class);
-    queue = new RemoteExecutionBuildTargetsQueue(buckEventBus);
+    queue = new RemoteExecutionBuildTargetsQueue();
   }
 
   @Test

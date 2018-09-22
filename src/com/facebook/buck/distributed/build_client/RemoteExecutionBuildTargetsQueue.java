@@ -20,7 +20,6 @@ import com.facebook.buck.distributed.build_slave.BuildTargetsQueue;
 import com.facebook.buck.distributed.build_slave.DistributableBuildGraph;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.WorkUnit;
-import com.facebook.buck.event.BuckEventBus;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -39,8 +38,6 @@ public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
 
   @GuardedBy("this")
   private final Map<String, TargetToBuild> targetsBuilding;
-
-  private final BuckEventBus eventBus;
 
   private volatile boolean haveRemoteMachinesConnected;
   private volatile int totalTargetsEnqueued;
@@ -78,8 +75,7 @@ public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
     }
   }
 
-  public RemoteExecutionBuildTargetsQueue(BuckEventBus eventBus) {
-    this.eventBus = eventBus;
+  public RemoteExecutionBuildTargetsQueue() {
     this.targetsWaitingToBeBuilt = Queues.newArrayDeque();
     this.targetsBuilding = Maps.newConcurrentMap();
     this.haveRemoteMachinesConnected = false;
@@ -89,12 +85,6 @@ public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
 
   /** Async enqueues a build target to be executed remotely asap. */
   public ListenableFuture<?> enqueueForRemoteBuild(String buildTarget) {
-    eventBus.post(
-        new RemoteExecutionEvent(
-            RemoteExecutionInfo.builder()
-                .setState(RemoteExecutionState.ENQUEUED)
-                .setBuildTarget(buildTarget)
-                .build()));
     TargetToBuild target = new TargetToBuild(buildTarget);
     synchronized (this) {
       targetsWaitingToBeBuilt.add(target);
@@ -123,12 +113,6 @@ public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
       for (String finishedTarget : finishedNodes) {
         TargetToBuild target = Preconditions.checkNotNull(targetsBuilding.remove(finishedTarget));
         target.getCompletionFuture().set(null);
-        eventBus.post(
-            new RemoteExecutionEvent(
-                RemoteExecutionInfo.builder()
-                    .setState(RemoteExecutionState.REMOTE_BUILD_FINISHED)
-                    .setBuildTarget(target.getTargetName())
-                    .build()));
       }
 
       int newWorkCount = Math.min(targetsWaitingToBeBuilt.size(), maxUnitsOfWork);
@@ -137,13 +121,6 @@ public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
         targetsBuilding.put(target.getTargetName(), target);
         WorkUnit unit = new WorkUnit().setBuildTargets(Lists.newArrayList(target.getTargetName()));
         newWorkload.add(unit);
-
-        eventBus.post(
-            new RemoteExecutionEvent(
-                RemoteExecutionInfo.builder()
-                    .setState(RemoteExecutionState.REMOTE_BUILD_STARTED)
-                    .setBuildTarget(target.getTargetName())
-                    .build()));
       }
     }
 
