@@ -16,7 +16,7 @@ prebuilt_jar(
     licenses = [
         "license.html",
     ],
-    source_jar = "org.jacoco.core-0.8.0-sources.jar",
+    source_jar = "org.jacoco.core-0.8.2-sources.jar",
 )
 
 prebuilt_jar(
@@ -25,7 +25,7 @@ prebuilt_jar(
     licenses = [
         "license.html",
     ],
-    source_jar = "org.jacoco.report-0.8.0-sources.jar",
+    source_jar = "org.jacoco.report-0.8.2-sources.jar",
 )
 
 prebuilt_jar(
