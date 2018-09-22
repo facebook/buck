@@ -21,6 +21,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -30,7 +31,7 @@ import java.nio.file.Path;
  * Delegates to the aggregated parser to do the parsing, while warning the numbers of targets
  * exceeds a threshold.
  */
-public class TargetCountVerificationParserDecorator implements ProjectBuildFileParser {
+public class TargetCountVerificationParserDelegate implements ProjectBuildFileParser {
   private final ProjectBuildFileParser delegate;
   private final int targetWarnCount;
   private final BuckEventBus buckEventBus;
@@ -40,7 +41,7 @@ public class TargetCountVerificationParserDecorator implements ProjectBuildFileP
    * @param targetWarnCount the count of target which, if exceeded will log a warning.
    * @param eventBus The event buss where to post warning events for handling.
    */
-  public TargetCountVerificationParserDecorator(
+  public TargetCountVerificationParserDelegate(
       ProjectBuildFileParser delegate, int targetWarnCount, BuckEventBus eventBus) {
     Preconditions.checkNotNull(delegate);
     Preconditions.checkNotNull(eventBus, "Must have a valid eventBus set.");
@@ -86,6 +87,13 @@ public class TargetCountVerificationParserDecorator implements ProjectBuildFileP
   public ImmutableList<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return delegate.getIncludedFiles(buildFile);
+  }
+
+  @Override
+  public boolean globResultsMatchCurrentState(
+      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      throws IOException, InterruptedException {
+    return delegate.globResultsMatchCurrentState(buildFile, existingGlobsWithResults);
   }
 
   @Override

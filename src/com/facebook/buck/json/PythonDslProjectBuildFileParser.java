@@ -33,6 +33,7 @@ import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.MoreThrowables;
@@ -715,6 +716,13 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public ImmutableList<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
+    throw new UnsupportedOperationException("Not yet implemented!");
+  }
+
+  @Override
+  public boolean globResultsMatchCurrentState(
+      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      throws IOException, InterruptedException {
     throw new UnsupportedOperationException("Not yet implemented!");
   }
 

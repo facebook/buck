@@ -26,6 +26,8 @@ import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
+import com.facebook.buck.skylark.io.GlobSpec;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.skylark.io.impl.CachingGlobber;
@@ -532,6 +534,26 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList.Builder<String> builder =
         ImmutableList.builderWithExpectedSize(dependencies.size() + 1);
     return builder.add(buildFile.toString()).addAll(toIncludedPaths(dependencies)).build();
+  }
+
+  @Override
+  public boolean globResultsMatchCurrentState(
+      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      throws IOException, InterruptedException {
+    CachingGlobber globber =
+        CachingGlobber.of(
+            globberFactory.create(fileSystem.getPath(buildFile.getParent().toString())));
+    for (GlobSpecWithResult globSpecWithResult : existingGlobsWithResults) {
+      final GlobSpec globSpec = globSpecWithResult.getGlobSpec();
+      Set<String> globResult =
+          globber.run(
+              globSpec.getInclude(), globSpec.getExclude(), globSpec.getExcludeDirectories());
+      if (!globSpecWithResult.getFilePaths().equals(globResult)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   @Override

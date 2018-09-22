@@ -44,6 +44,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.visibility.VisibilityPatternFactory;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -504,6 +505,13 @@ public class ParsePipelineTest {
     public ImmutableList<String> getIncludedFiles(Path buildFile)
         throws BuildFileParseException, InterruptedException, IOException {
       return delegate.getIncludedFiles(buildFile);
+    }
+
+    @Override
+    public boolean globResultsMatchCurrentState(
+        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+        throws IOException, InterruptedException {
+      return delegate.globResultsMatchCurrentState(buildFile, existingGlobsWithResults);
     }
 
     @Override

@@ -220,6 +220,143 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void globResultsMatchCurrentStateIfStateIsUnchanged() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Path buildFile = directory.resolve("BUCK");
+    Files.createDirectories(directory);
+    Files.write(
+        buildFile,
+        Collections.singletonList(
+            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
+    Files.createFile(directory.resolve("file1"));
+    Files.createFile(directory.resolve("file2"));
+    Files.createFile(directory.resolve("bad_file"));
+
+    boolean result =
+        parser.globResultsMatchCurrentState(
+            buildFile,
+            ImmutableList.of(
+                GlobSpecWithResult.of(
+                    GlobSpec.builder()
+                        .setInclude(Collections.singletonList("f*"))
+                        .setExclude(Collections.EMPTY_LIST)
+                        .setExcludeDirectories(false)
+                        .build(),
+                    ImmutableSet.of("file2", "file1"))));
+
+    assertTrue(result);
+  }
+
+  @Test
+  public void globResultsDontMatchCurrentStateIfStateIsChanged() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Path buildFile = directory.resolve("BUCK");
+    Files.createDirectories(directory);
+    Files.write(
+        buildFile,
+        Collections.singletonList(
+            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
+    Files.createFile(directory.resolve("file1"));
+    Files.createFile(directory.resolve("file2"));
+    Files.createFile(directory.resolve("bad_file"));
+
+    boolean result =
+        parser.globResultsMatchCurrentState(
+            buildFile,
+            ImmutableList.of(
+                GlobSpecWithResult.of(
+                    GlobSpec.builder()
+                        .setInclude(Collections.singletonList("f*"))
+                        .setExclude(Collections.EMPTY_LIST)
+                        .setExcludeDirectories(false)
+                        .build(),
+                    ImmutableSet.of("file3", "file1"))));
+
+    assertFalse(result);
+  }
+
+  @Test
+  public void globResultsDontMatchCurrentStateIfCurrentStateHasMoreEntries() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Path buildFile = directory.resolve("BUCK");
+    Files.createDirectories(directory);
+    Files.write(
+        buildFile,
+        Collections.singletonList(
+            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
+    Files.createFile(directory.resolve("file1"));
+    Files.createFile(directory.resolve("file2"));
+    Files.createFile(directory.resolve("bad_file"));
+
+    boolean result =
+        parser.globResultsMatchCurrentState(
+            buildFile,
+            ImmutableList.of(
+                GlobSpecWithResult.of(
+                    GlobSpec.builder()
+                        .setInclude(Collections.singletonList("f*"))
+                        .setExclude(Collections.EMPTY_LIST)
+                        .setExcludeDirectories(false)
+                        .build(),
+                    ImmutableSet.of("file1"))));
+
+    assertFalse(result);
+  }
+
+  @Test
+  public void globResultsDontMatchCurrentStateIfCurrentStateHasLessEntries() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Path buildFile = directory.resolve("BUCK");
+    Files.createDirectories(directory);
+    Files.write(
+        buildFile,
+        Collections.singletonList(
+            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
+    Files.createFile(directory.resolve("file1"));
+    Files.createFile(directory.resolve("bad_file"));
+
+    boolean result =
+        parser.globResultsMatchCurrentState(
+            buildFile,
+            ImmutableList.of(
+                GlobSpecWithResult.of(
+                    GlobSpec.builder()
+                        .setInclude(Collections.singletonList("f*"))
+                        .setExclude(Collections.EMPTY_LIST)
+                        .setExcludeDirectories(false)
+                        .build(),
+                    ImmutableSet.of("file1", "file2"))));
+
+    assertFalse(result);
+  }
+
+  @Test
+  public void globResultsMatchCurrentStateIfCurrentStateAndResultsAreEmpty() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Path buildFile = directory.resolve("BUCK");
+    Files.createDirectories(directory);
+    Files.write(
+        buildFile,
+        Collections.singletonList(
+            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
+    Files.createFile(directory.resolve("bad_file"));
+
+    boolean result =
+        parser.globResultsMatchCurrentState(
+            buildFile,
+            ImmutableList.of(
+                GlobSpecWithResult.of(
+                    GlobSpec.builder()
+                        .setInclude(Collections.singletonList("f*"))
+                        .setExclude(Collections.EMPTY_LIST)
+                        .setExcludeDirectories(false)
+                        .build(),
+                    ImmutableSet.of())));
+
+    assertTrue(result);
+  }
+
+  @Test
   public void globFunction() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Path buildFile = directory.resolve("BUCK");

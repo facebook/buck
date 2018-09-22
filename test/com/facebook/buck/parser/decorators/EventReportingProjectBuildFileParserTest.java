@@ -24,6 +24,7 @@ import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -93,6 +94,13 @@ public class EventReportingProjectBuildFileParserTest {
     public ImmutableList<String> getIncludedFiles(Path buildFile)
         throws BuildFileParseException, InterruptedException, IOException {
       return ImmutableList.of();
+    }
+
+    @Override
+    public boolean globResultsMatchCurrentState(
+        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+        throws IOException, InterruptedException {
+      return false;
     }
 
     @Override

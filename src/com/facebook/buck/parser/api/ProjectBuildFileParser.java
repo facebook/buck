@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.api;
 
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -43,6 +44,20 @@ public interface ProjectBuildFileParser extends AutoCloseable {
    */
   ImmutableList<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException;
+
+  /**
+   * Checks if existing {@code GlobSpec}s with results are the same as current state in the file
+   * system.
+   *
+   * @param existingGlobsWithResults the existing (deserialized) {@code GlobSpecWithResult} to check
+   *     the file system state against.
+   * @param buildFile the buildFile location to be used by the Globber.
+   * @return {@code true} if glob expansion produces results matching previously recorded ones,
+   *     {@code false} otherwise.
+   */
+  boolean globResultsMatchCurrentState(
+      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      throws IOException, InterruptedException;
 
   @Override
   void close() throws BuildFileParseException, InterruptedException, IOException;
