@@ -17,6 +17,8 @@
 package com.facebook.buck.rules.modern.builders.thrift.cas;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.remoteexecution.CasBlobUploadEvent;
 import com.facebook.buck.rules.modern.builders.CasBlobUploader;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadData;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadResult;
@@ -25,10 +27,12 @@ import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol.ThriftDigest;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftUtil;
 import com.facebook.buck.util.MoreThrowables;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.remoteexecution.cas.BatchUpdateBlobsRequest;
 import com.facebook.remoteexecution.cas.BatchUpdateBlobsResponse;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
+import com.facebook.remoteexecution.cas.ContentAddressableStorage.Iface;
 import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
 import com.facebook.remoteexecution.cas.Digest;
 import com.facebook.remoteexecution.cas.FindMissingBlobsRequest;
@@ -52,11 +56,13 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
   private static final Logger LOG = Logger.get(ThriftCasBlobUploader.class);
 
   private final ContentAddressableStorage.Iface client;
+  private final BuckEventBus eventBus;
 
-  public ThriftCasBlobUploader(ContentAddressableStorage.Iface client) {
+  public ThriftCasBlobUploader(Iface client, BuckEventBus eventBus) {
     // TODO(shivanker): The direct thrift client is not thread-safe, so we need to keep the requests
     // synchronized.
     this.client = client;
+    this.eventBus = eventBus;
   }
 
   @Override
@@ -102,11 +108,13 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
 
     List<UpdateBlobRequest> individualBlobRequests = new LinkedList<>();
 
+    long totalSizeBytes = 0;
     for (UploadData blob : blobs) {
       try (InputStream dataStream = blob.data.get()) {
         UpdateBlobRequest individualRequest =
             new UpdateBlobRequest(
                 ThriftProtocol.get(blob.digest), ByteStreams.toByteArray(dataStream));
+        totalSizeBytes += individualRequest.getData().length;
         individualBlobRequests.add(individualRequest);
       }
     }
@@ -114,7 +122,8 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
     BatchUpdateBlobsRequest request = new BatchUpdateBlobsRequest(individualBlobRequests);
     BatchUpdateBlobsResponse response;
 
-    try {
+    try (Scope ignore =
+        CasBlobUploadEvent.sendEvent(eventBus, request.requests.size(), totalSizeBytes)) {
       response = client.batchUpdateBlobs(request);
     } catch (TException | ContentAddressableStorageException e) {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);

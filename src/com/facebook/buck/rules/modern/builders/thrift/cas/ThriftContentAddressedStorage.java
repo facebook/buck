@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders.thrift.cas;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.modern.builders.ContentAddressedStorage;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader;
 import com.facebook.buck.rules.modern.builders.OutputsMaterializer;
@@ -39,15 +40,17 @@ public class ThriftContentAddressedStorage implements ContentAddressedStorage {
 
   public ThriftContentAddressedStorage(
       ContentAddressableStorage.Iface uploadClient,
-      ContentAddressableStorage.Iface downloadClient) {
+      ContentAddressableStorage.Iface downloadClient,
+      BuckEventBus eventBus) {
     uploader =
         new MultiThreadedBlobUploader(
             1000,
             10 * 1024 * 1024,
             MostExecutors.newMultiThreadExecutor("blob-uploader", 4),
-            new ThriftCasBlobUploader(uploadClient));
+            new ThriftCasBlobUploader(uploadClient, eventBus));
 
-    materializer = new OutputsMaterializer(new ThriftBlobFetcher(downloadClient), PROTOCOL);
+    materializer =
+        new OutputsMaterializer(new ThriftBlobFetcher(downloadClient, eventBus), PROTOCOL);
   }
 
   @Override

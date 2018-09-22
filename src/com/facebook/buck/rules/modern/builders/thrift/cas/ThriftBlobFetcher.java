@@ -16,9 +16,12 @@
 
 package com.facebook.buck.rules.modern.builders.thrift.cas;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.remoteexecution.CasBlobDownloadEvent;
 import com.facebook.buck.rules.modern.builders.AsyncBlobFetcher;
 import com.facebook.buck.rules.modern.builders.Protocol;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
+import com.facebook.buck.util.Scope;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
 import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
 import com.facebook.remoteexecution.cas.ReadBlobRequest;
@@ -34,15 +37,17 @@ import java.nio.ByteBuffer;
 public class ThriftBlobFetcher implements AsyncBlobFetcher {
 
   private final ContentAddressableStorage.Iface client;
+  private final BuckEventBus eventBus;
 
-  public ThriftBlobFetcher(ContentAddressableStorage.Iface client) {
+  public ThriftBlobFetcher(ContentAddressableStorage.Iface client, BuckEventBus eventBus) {
     this.client = client;
+    this.eventBus = eventBus;
   }
 
   @Override
   public ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest) {
     ReadBlobRequest request = new ReadBlobRequest(ThriftProtocol.get(digest));
-    try {
+    try (Scope ignore = CasBlobDownloadEvent.sendEvent(eventBus, 1, digest.getSize())) {
       ReadBlobResponse response;
       response = client.readBlob(request);
       return Futures.immediateFuture(ByteBuffer.wrap(response.getData()));

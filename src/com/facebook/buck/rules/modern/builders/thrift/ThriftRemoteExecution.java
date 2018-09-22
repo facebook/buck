@@ -39,7 +39,8 @@ public class ThriftRemoteExecution extends RemoteExecution {
       throws IOException, TTransportException {
     super(eventBus, PROTOCOL);
     this.storage =
-        new ThriftContentAddressedStorage(clients.createCasClient(), clients.createCasClient());
+        new ThriftContentAddressedStorage(
+            clients.createCasClient(), clients.createCasClient(), eventBus);
     this.remoteExecutionService =
         new ThriftExecutionEngine(
             clients.createExecutionEngineClient(), clients.createCasClient(), traceId);
