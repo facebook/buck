@@ -173,8 +173,8 @@
     <include name="immutables/builder-2.5.7-SNAPSHOT.jar" />
     <include name="immutables/value-2.5.7-SNAPSHOT.jar" />
     <include name="infer-annotations/infer-annotations-4.2.jar" />
-    <include name="jacoco/org.jacoco.core-0.8.0.jar" />
-    <include name="jacoco/org.jacoco.report-0.8.0.jar" />
+    <include name="jacoco/org.jacoco.core-0.8.2.jar" />
+    <include name="jacoco/org.jacoco.report-0.8.2.jar" />
     <include name="jdom/jdom-2.0.6.jar" />
     <include name="jetty/jetty-all-9.4.9.v20180320-uber.jar" />
     <include name="jimfs/jimfs-1.1.jar" />
@@ -809,8 +809,8 @@
 
   <target name="report-generator-jar" depends="compile">
     <jar destfile="${build.dir}/report-generator.jar">
-      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.8.0.jar"/>
-      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.8.0.jar"/>
+      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.8.2.jar"/>
+      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.8.2.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/plexus/plexus-utils-3.0.20.jar"/>
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-6.2.1.jar" />
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-analysis-6.2.1.jar" />
