@@ -1,0 +1,25 @@
+cxx_binary(
+    name = "untracked_header",
+    srcs = [
+        "untracked_header.cpp",
+    ],
+    link_style = "static",
+)
+
+cxx_binary(
+    name = "nested_untracked_header",
+    srcs = [
+        "nested_untracked_header.cpp",
+    ],
+    link_style = "static",
+    raw_headers = [
+        "parent_header.h",
+        "untracked_header_includer.h",
+    ],
+)
+
+genrule(
+    name = "log",
+    out = "log.txt",
+    cmd_exe = "\"$(exe :app#windows-x86_64)\" > %OUT%",
+)

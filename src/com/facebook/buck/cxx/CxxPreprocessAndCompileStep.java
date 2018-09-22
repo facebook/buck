@@ -272,7 +272,8 @@ class CxxPreprocessAndCompileStep implements Step {
   }
 
   private static String parseShowIncludeLine(String line) {
-    return line.substring(DEPENDENCY_OUTPUT_PREFIX.length()).trim();
+    // We keep the spaces at the beginning since we may use them to reconstruct the include tree
+    return line.substring(DEPENDENCY_OUTPUT_PREFIX.length());
   }
 
   private ConsoleEvent createConsoleEvent(
