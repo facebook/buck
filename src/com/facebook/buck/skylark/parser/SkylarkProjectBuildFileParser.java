@@ -185,7 +185,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     try (Mutability mutability = Mutability.create("parsing " + buildFile)) {
       EnvironmentData envData =
           createBuildFileEvaluationEnvironment(
-              createContainingLabel(basePath), buildFileAst, mutability, parseContext);
+              buildFilePath,
+              createContainingLabel(basePath),
+              buildFileAst,
+              mutability,
+              parseContext);
       boolean exec = buildFileAst.exec(envData.getEnvironment(), eventHandler);
       if (!exec) {
         throw BuildFileParseException.createForUnknownParseError(
@@ -219,6 +223,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    *     functions like {@code glob} and native rules like {@code java_library}.
    */
   private EnvironmentData createBuildFileEvaluationEnvironment(
+      com.google.devtools.build.lib.vfs.Path buildFilePath,
       Label containingLabel,
       BuildFileAST buildFileAst,
       Mutability mutability,
@@ -244,7 +249,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));
     }
 
-    return EnvironmentData.of(env, toLoadedPaths(dependencies));
+    return EnvironmentData.of(env, toLoadedPaths(buildFilePath, dependencies));
   }
 
   @Nonnull
@@ -266,19 +271,26 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         "BUCK");
   }
 
-  private ImmutableList<String> toLoadedPaths(ImmutableList<ExtensionData> dependencies) {
+  /**
+   * @param containingPath the path of the build or extension file that has provided dependencies.
+   * @param dependencies the list of extension dependencies that {@code containingPath} has.
+   * @return transitive closure of all paths loaded during parsing of {@code containingPath}
+   *     including {@code containingPath} itself as the first element.
+   */
+  private ImmutableList<String> toLoadedPaths(
+      com.google.devtools.build.lib.vfs.Path containingPath,
+      ImmutableList<ExtensionData> dependencies) {
     // expected size is used to reduce the number of unnecessary resize invocations
-    int expectedSize = 0;
+    int expectedSize = 1;
     for (int i = 0; i < dependencies.size(); ++i) {
-      expectedSize += dependencies.get(i).getLoadTransitiveClosureSize();
+      expectedSize += dependencies.get(i).getLoadTransitiveClosure().size();
     }
     ImmutableList.Builder<String> loadedPathsBuilder =
         ImmutableList.builderWithExpectedSize(expectedSize);
     // for loop is used instead of foreach to avoid iterator overhead, since it's a hot spot
+    loadedPathsBuilder.add(containingPath.toString());
     for (int i = 0; i < dependencies.size(); ++i) {
-      ExtensionData extensionData = dependencies.get(i);
-      loadedPathsBuilder.add(extensionData.getPath().toString());
-      loadedPathsBuilder.addAll(toLoadedPaths(extensionData.getDependencies()));
+      loadedPathsBuilder.addAll(dependencies.get(i).getLoadTransitiveClosure());
     }
     return loadedPathsBuilder.build();
   }
@@ -456,8 +468,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       }
       extension = new Extension(extensionEnv);
     }
+
     return ExtensionData.of(
-        extension, extensionPath, dependencies, loadImport.getImport().getImportString());
+        extension,
+        extensionPath,
+        dependencies,
+        loadImport.getImport().getImportString(),
+        toLoadedPaths(extensionPath, dependencies));
   }
 
   /**

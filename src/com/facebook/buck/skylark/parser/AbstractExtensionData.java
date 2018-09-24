@@ -45,14 +45,10 @@ abstract class AbstractExtensionData {
   @Value.Parameter
   public abstract String getImportString();
 
-  /** @return the number of files loaded in order to parse this extension. */
-  @Value.Lazy
-  public int getLoadTransitiveClosureSize() {
-    // Stream.mapToInt(...).sum() is not used because it's ~4X slower
-    int count = 1; // path of the extension itself
-    for (int i = 0; i < getDependencies().size(); ++i) {
-      count += getDependencies().get(i).getLoadTransitiveClosureSize();
-    }
-    return count;
-  }
+  /**
+   * @return the list of files loaded in order to parse this extension including the path of this
+   *     extension, which is the first element of the list.
+   */
+  @Value.Parameter
+  public abstract ImmutableList<String> getLoadTransitiveClosure();
 }
