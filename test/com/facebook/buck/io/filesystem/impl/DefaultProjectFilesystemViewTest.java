@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -79,6 +80,18 @@ public class DefaultProjectFilesystemViewTest {
     assertTrue(filesystemView.isSubdirOf(tmp.getRoot().resolve("foo").resolve("bar")));
     assertTrue(filesystemView.isSubdirOf(tmp.getRoot().resolve("foo")));
     assertFalse(filesystemView.isSubdirOf(tmp.getRoot()));
+  }
+
+  @Test
+  public void isDirectoryDelegatesToFilesystem() throws IOException {
+    filesystem = new FakeProjectFilesystem();
+    filesystem.mkdirs(Paths.get("foo"));
+    filesystemView =
+        new DefaultProjectFilesystemView(
+            filesystem, Paths.get(""), filesystem.getRootPath(), ImmutableMap.of());
+
+    assertTrue(filesystemView.isDirectory(Paths.get("foo")));
+    assertFalse(filesystemView.isDirectory(Paths.get("bar")));
   }
 
   @Test

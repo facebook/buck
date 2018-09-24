@@ -53,6 +53,12 @@ public interface ProjectFilesystemView {
   /** @see #resolve(Path) * */
   Path resolve(String path);
 
+  /**
+   * @param path relative path to the root
+   * @return true iff the given path maps to a directory
+   */
+  boolean isDirectory(Path path);
+
   /** @return the absolute path of the root of this view */
   Path getRootPath();
 

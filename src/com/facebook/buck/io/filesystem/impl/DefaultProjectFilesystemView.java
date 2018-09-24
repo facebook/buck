@@ -87,6 +87,11 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
   }
 
   @Override
+  public boolean isDirectory(Path path) {
+    return filesystemParent.isDirectory(projectRoot.resolve(path));
+  }
+
+  @Override
   public Path getRootPath() {
     return resolvedProjectRoot;
   }
