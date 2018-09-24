@@ -39,6 +39,18 @@ public interface ProjectFilesystemView {
   Path relativize(Path path);
 
   /**
+   * @param path the relative path to resolve
+   * @return an absolute path of the given path relative to the root of this view
+   */
+  Path resolve(Path path);
+
+  /** @see #resolve(Path) * */
+  Path resolve(String path);
+
+  /** @return the absolute path of the root of this view */
+  Path getRootPath();
+
+  /**
    * @param newRelativeRoot the new root relative to the current root
    * @param additionalIgnores new ignored paths in addition to the current ignores
    * @return a new View based on the current view

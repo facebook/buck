@@ -59,6 +59,18 @@ public class DefaultProjectFilesystemViewTest {
   }
 
   @Test
+  public void resolvedPathsAreResolvedRelativeToViewRoot() {
+    assertEquals(tmp.getRoot().resolve(Paths.get("foo")), filesystemView.resolve(Paths.get("foo")));
+    assertEquals(tmp.getRoot().resolve(Paths.get("foo")), filesystemView.resolve("foo"));
+
+    filesystemView = filesystemView.withView(Paths.get("foo"), ImmutableSet.of());
+
+    assertEquals(
+        tmp.getRoot().resolve(Paths.get("foo", "bar")), filesystemView.resolve(Paths.get("bar")));
+    assertEquals(tmp.getRoot().resolve(Paths.get("foo", "bar")), filesystemView.resolve("bar"));
+  }
+
+  @Test
   public void relativizeReturnsPathsRelativeToViewRoot() {
     assertEquals(filesystem.relativize(tmp.getRoot()), filesystemView.relativize(tmp.getRoot()));
     filesystemView = filesystemView.withView(Paths.get("foo"), ImmutableSet.of());

@@ -106,7 +106,7 @@ public class DefaultProjectFilesystemTest {
 
     // view should be relative to root
     assertEquals(Paths.get(""), view.projectRoot);
-    assertEquals(filesystem.getRootPath(), view.resolvedProjectRoot);
+    assertEquals(filesystem.getRootPath(), view.getRootPath());
     assertEquals(Paths.get(""), view.relativize(tmp.getRoot()));
 
     // view should have no ignores

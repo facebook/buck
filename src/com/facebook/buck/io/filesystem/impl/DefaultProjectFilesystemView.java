@@ -50,7 +50,7 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
   @VisibleForTesting final Path projectRoot;
 
   /** the relative project root resolved against the filesystem */
-  @VisibleForTesting final Path resolvedProjectRoot;
+  private final Path resolvedProjectRoot;
 
   @VisibleForTesting final ImmutableMap<PathMatcher, Predicate<Path>> ignoredPaths;
 
@@ -69,6 +69,21 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
   @Override
   public Path relativize(Path path) {
     return resolvedProjectRoot.relativize(path);
+  }
+
+  @Override
+  public Path resolve(Path path) {
+    return resolvedProjectRoot.resolve(path);
+  }
+
+  @Override
+  public Path resolve(String path) {
+    return resolvedProjectRoot.resolve(path);
+  }
+
+  @Override
+  public Path getRootPath() {
+    return resolvedProjectRoot;
   }
 
   @Override
