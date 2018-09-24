@@ -67,6 +67,11 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
   }
 
   @Override
+  public boolean isSubdirOf(Path path) {
+    return path.normalize().startsWith(resolvedProjectRoot.normalize());
+  }
+
+  @Override
   public Path relativize(Path path) {
     return resolvedProjectRoot.relativize(path);
   }

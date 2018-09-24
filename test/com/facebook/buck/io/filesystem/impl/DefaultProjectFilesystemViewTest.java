@@ -71,6 +71,17 @@ public class DefaultProjectFilesystemViewTest {
   }
 
   @Test
+  public void isSubdirOfShouldObeyViewRoot() {
+    assertTrue(filesystemView.isSubdirOf(tmp.getRoot().resolve("foo")));
+    assertFalse(filesystemView.isSubdirOf(tmp.getRoot().resolve("..")));
+
+    filesystemView = filesystemView.withView(Paths.get("foo"), ImmutableSet.of());
+    assertTrue(filesystemView.isSubdirOf(tmp.getRoot().resolve("foo").resolve("bar")));
+    assertTrue(filesystemView.isSubdirOf(tmp.getRoot().resolve("foo")));
+    assertFalse(filesystemView.isSubdirOf(tmp.getRoot()));
+  }
+
+  @Test
   public void relativizeReturnsPathsRelativeToViewRoot() {
     assertEquals(filesystem.relativize(tmp.getRoot()), filesystemView.relativize(tmp.getRoot()));
     filesystemView = filesystemView.withView(Paths.get("foo"), ImmutableSet.of());

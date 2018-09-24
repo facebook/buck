@@ -33,6 +33,12 @@ import java.util.Set;
 public interface ProjectFilesystemView {
 
   /**
+   * @param path an absolute path
+   * @return true if path is a subdirectory of the root
+   */
+  boolean isSubdirOf(Path path);
+
+  /**
    * @param path an absolute path to relativize
    * @return a relative path from the path root of this view to the given path
    */
