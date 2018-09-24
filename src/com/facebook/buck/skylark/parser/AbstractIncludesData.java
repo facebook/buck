@@ -36,14 +36,7 @@ abstract class AbstractIncludesData {
   @Value.Parameter
   public abstract ImmutableList<IncludesData> getDependencies();
 
-  /** @return the number of files loaded in order to parse this extension. */
-  @Value.Lazy
-  public int getLoadTransitiveClosureSize() {
-    // Stream.mapToInt(...).sum() is not used because it's ~4X slower
-    int count = 1; // path of the extension itself
-    for (int i = 0; i < getDependencies().size(); ++i) {
-      count += getDependencies().get(i).getLoadTransitiveClosureSize();
-    }
-    return count;
-  }
+  /** @return the list of files loaded in order to parse this extension. */
+  @Value.Parameter
+  public abstract ImmutableList<String> getLoadTransitiveClosure();
 }

@@ -335,7 +335,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             ? ImmutableList.of()
             : loadIncludes(label, fileAst.getImports());
 
-    return IncludesData.of(filePath, dependencies);
+    return IncludesData.of(
+        filePath, dependencies, toIncludedPaths(filePath.toString(), dependencies));
   }
 
   /** Collects all the included files identified by corresponding {@link SkylarkImport}s. */
@@ -360,21 +361,21 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     return includes.build();
   }
 
-  private ImmutableList<String> toIncludedPaths(ImmutableList<IncludesData> dependencies) {
+  private ImmutableList<String> toIncludedPaths(
+      String containingPath, ImmutableList<IncludesData> dependencies) {
     // expected size is used to reduce the number of unnecessary resize invocations
-    int expectedSize = 0;
+    int expectedSize = 1;
     for (int i = 0; i < dependencies.size(); ++i) {
-      expectedSize += dependencies.get(i).getLoadTransitiveClosureSize();
+      expectedSize += dependencies.get(i).getLoadTransitiveClosure().size();
     }
-    ImmutableList.Builder<String> loadedPathsBuilder =
+    ImmutableList.Builder<String> includedPathsBuilder =
         ImmutableList.builderWithExpectedSize(expectedSize);
+    includedPathsBuilder.add(containingPath);
     // for loop is used instead of foreach to avoid iterator overhead, since it's a hot spot
     for (int i = 0; i < dependencies.size(); ++i) {
-      IncludesData includesData = dependencies.get(i);
-      loadedPathsBuilder.add(includesData.getPath().toString());
-      loadedPathsBuilder.addAll(toIncludedPaths(includesData.getDependencies()));
+      includedPathsBuilder.addAll(dependencies.get(i).getLoadTransitiveClosure());
     }
-    return loadedPathsBuilder.build();
+    return includedPathsBuilder.build();
   }
 
   /** Loads all extensions identified by corresponding {@link SkylarkImport}s. */
@@ -563,9 +564,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, buildFileAst.getImports());
 
-    ImmutableList.Builder<String> builder =
-        ImmutableList.builderWithExpectedSize(dependencies.size() + 1);
-    return builder.add(buildFile.toString()).addAll(toIncludedPaths(dependencies)).build();
+    return toIncludedPaths(buildFile.toString(), dependencies);
   }
 
   @Override
