@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public abstract class FileBundler {
 
@@ -67,6 +68,16 @@ public abstract class FileBundler {
     relativePathMap.put(pathRelativeToBaseDir, absoluteFilePath);
   }
 
+  private boolean isExcluded(ImmutableList<Pattern> entriesToExclude, Path filePath) {
+    String entryPath = MorePaths.pathWithUnixSeparators(filePath.toString());
+    for (Pattern pattern : entriesToExclude) {
+      if (pattern.matcher(entryPath).matches()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private ImmutableMap<Path, Path> createRelativeMap(
       ProjectFilesystem filesystem,
       SourcePathResolver resolver,
@@ -82,7 +93,6 @@ public abstract class FileBundler {
 
           for (Path file : files) {
             Path absoluteFilePath = filesystem.resolve(file);
-
             findAndAddRelativePathToMap(
                 absoluteFilePath, file, absoluteBasePathParent, relativePathMap);
           }
@@ -109,6 +119,24 @@ public abstract class FileBundler {
       Path destinationDir,
       ImmutableSortedSet<SourcePath> toCopy,
       SourcePathResolver pathResolver) {
+    copy(
+        filesystem,
+        buildCellRelativePathFactory,
+        steps,
+        destinationDir,
+        toCopy,
+        pathResolver,
+        ImmutableList.of());
+  }
+
+  public void copy(
+      ProjectFilesystem filesystem,
+      BuildCellRelativePathFactory buildCellRelativePathFactory,
+      ImmutableList.Builder<Step> steps,
+      Path destinationDir,
+      ImmutableSortedSet<SourcePath> toCopy,
+      SourcePathResolver pathResolver,
+      ImmutableList<Pattern> entriesToExclude) {
 
     Map<Path, Path> relativeMap = createRelativeMap(filesystem, pathResolver, toCopy);
 
@@ -116,6 +144,10 @@ public abstract class FileBundler {
       Path relativePath = pathEntry.getKey();
       Path absolutePath = Preconditions.checkNotNull(pathEntry.getValue());
       Path destination = destinationDir.resolve(relativePath);
+
+      if (isExcluded(entriesToExclude, relativePath)) {
+        continue;
+      }
 
       addCopySteps(
           filesystem, buildCellRelativePathFactory, steps, relativePath, absolutePath, destination);

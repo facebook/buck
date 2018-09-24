@@ -45,3 +45,52 @@ zip_file(
     merge_source_zips = False,
     zip_srcs = [":source-jar"],
 )
+
+zip_file(
+    name = "excludeall",
+    srcs = [
+        "cake.txt",
+        "source-1.0-sources.jar",
+    ],
+    entries_to_exclude = [".*"],
+)
+
+zip_file(
+    name = "excludecake",
+    srcs = [
+        "cake.txt",
+        "source-1.0-sources.jar",
+    ],
+    entries_to_exclude = ["ca.e.*"],
+)
+
+zip_file(
+    name = "excludenothing",
+    srcs = [
+        "cake.txt",
+        "source-1.0-sources.jar",
+    ],
+    entries_to_exclude = [
+        "this.is.not.a.match",
+        "neither.is.this",
+    ],
+)
+
+zip_file(
+    name = "excludesnothinginsubfolder",
+    srcs = [
+        "beans",
+        "cake.txt",
+    ],
+)
+
+zip_file(
+    name = "excludesexactmatchinsubfolder",
+    srcs = [
+        "beans",
+        "cake.txt",
+    ],
+    entries_to_exclude = [
+        "beans/cheesy.txt",
+    ],
+)

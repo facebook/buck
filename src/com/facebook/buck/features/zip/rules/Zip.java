@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildable {
   @AddToRuleKey private final String name;
@@ -46,6 +47,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
   @AddToRuleKey private final OutputPath output;
   @AddToRuleKey private final boolean flatten;
   @AddToRuleKey private final Optional<Boolean> mergeSourceZips;
+  @AddToRuleKey private final ImmutableList<Pattern> entriesToExclude;
 
   public Zip(
       SourcePathRuleFinder ruleFinder,
@@ -55,7 +57,8 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       ImmutableSortedSet<SourcePath> sources,
       ImmutableSortedSet<SourcePath> zipSources,
       boolean flatten,
-      Optional<Boolean> mergeSourceZips) {
+      Optional<Boolean> mergeSourceZips,
+      ImmutableList<Pattern> entriesToExclude) {
     super(buildTarget, projectFilesystem, ruleFinder, Zip.class);
 
     this.name = outputName;
@@ -64,6 +67,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     this.output = new OutputPath(name);
     this.flatten = flatten;
     this.mergeSourceZips = mergeSourceZips;
+    this.entriesToExclude = entriesToExclude;
   }
 
   @Override
@@ -99,7 +103,8 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
         steps,
         scratchDir,
         sources,
-        buildContext.getSourcePathResolver());
+        buildContext.getSourcePathResolver(),
+        entriesToExclude);
 
     steps.add(
         new ZipStep(
