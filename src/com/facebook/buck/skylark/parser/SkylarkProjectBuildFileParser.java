@@ -88,9 +88,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final ProjectBuildFileParserOptions options;
   private final BuckEventBus buckEventBus;
   private final EventHandler eventHandler;
-  private final LoadingCache<LoadImport, ExtensionData> extensionDataCache;
   private final BuckGlobals buckGlobals;
   private final GlobberFactory globberFactory;
+  private final LoadingCache<LoadImport, ExtensionData> extensionDataCache;
+  private final LoadingCache<LoadImport, IncludesData> includesDataCache;
 
   private SkylarkProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
@@ -113,6 +114,16 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
                   @Override
                   public ExtensionData load(@Nonnull LoadImport loadImport) throws Exception {
                     return loadExtension(loadImport);
+                  }
+                });
+    this.includesDataCache =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<LoadImport, IncludesData>() {
+                  @Override
+                  public IncludesData load(LoadImport loadImport)
+                      throws IOException, InterruptedException {
+                    return loadInclude(loadImport);
                   }
                 });
   }
@@ -340,7 +351,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport)) continue;
       LoadImport loadImport = LoadImport.of(containingLabel, skylarkImport);
-      includes.add(loadInclude(loadImport));
+      try {
+        includes.add(includesDataCache.getUnchecked(loadImport));
+      } catch (UncheckedExecutionException e) {
+        propagateRootCause(e);
+      }
     }
     return includes.build();
   }
