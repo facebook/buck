@@ -189,6 +189,21 @@ public class TargetSpecResolverTest {
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
   }
 
+  @Test
+  public void resolveTargetSpecsIgnoresBuckout() throws Exception {
+    Path buckout = filesystem.getBuckPaths().getBuckOut();
+    Path buckFile = cellRoot.resolve(buckout.resolve("BUCK"));
+    Files.createDirectories(buckFile.getParent());
+    Files.write(buckFile, "genrule(name='foo', out='foo', cmd='foo')".getBytes(UTF_8));
+
+    ImmutableList<ImmutableSet<BuildTarget>> targets =
+        resolve(
+            ImmutableList.of(
+                TargetNodePredicateSpec.of(
+                    BuildFileSpec.fromRecursivePath(buckout, cell.getRoot()))));
+    assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of())));
+  }
+
   private ImmutableList<ImmutableSet<BuildTarget>> resolve(Iterable<? extends TargetNodeSpec> specs)
       throws IOException, InterruptedException {
     PerBuildState state =

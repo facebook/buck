@@ -17,10 +17,10 @@
 package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.Capability;
@@ -29,8 +29,6 @@ import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.util.config.Config;
-import com.facebook.buck.util.config.ConfigBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -68,7 +66,7 @@ public class BuildFileSpecTest {
     ImmutableSet<Path> actualBuildFiles =
         nonRecursiveSpec.findBuildFiles(
             ParserConfig.DEFAULT_BUILD_FILE_NAME,
-            filesystem,
+            filesystem.asView(),
             WatchmanFactory.NULL_WATCHMAN,
             ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
     assertEquals(expectedBuildFiles, actualBuildFiles);
@@ -81,7 +79,7 @@ public class BuildFileSpecTest {
     actualBuildFiles =
         recursiveSpec.findBuildFiles(
             ParserConfig.DEFAULT_BUILD_FILE_NAME,
-            filesystem,
+            filesystem.asView(),
             WatchmanFactory.NULL_WATCHMAN,
             ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
     assertEquals(expectedBuildFiles, actualBuildFiles);
@@ -90,9 +88,8 @@ public class BuildFileSpecTest {
   @Test
   public void recursiveIgnorePaths() throws IOException, InterruptedException {
     Path ignoredBuildFile = Paths.get("a", "b", "BUCK");
-    Config config = ConfigBuilder.createFromText("[project]", "ignore = a/b");
     ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath(), config);
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
     Path buildFile = Paths.get("a", "BUCK");
     filesystem.mkdirs(buildFile.getParent());
     filesystem.writeContentsToPath("", buildFile);
@@ -108,7 +105,10 @@ public class BuildFileSpecTest {
     ImmutableSet<Path> actualBuildFiles =
         recursiveSpec.findBuildFiles(
             ParserConfig.DEFAULT_BUILD_FILE_NAME,
-            filesystem,
+            filesystem
+                .asView()
+                .withView(
+                    Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(ignoredBuildFile))),
             WatchmanFactory.NULL_WATCHMAN,
             ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
     assertEquals(expectedBuildFiles, actualBuildFiles);
@@ -145,7 +145,7 @@ public class BuildFileSpecTest {
     ImmutableSet<Path> actualBuildFiles =
         recursiveSpec.findBuildFiles(
             ParserConfig.DEFAULT_BUILD_FILE_NAME,
-            filesystem,
+            filesystem.asView(),
             createWatchman(fakeWatchmanClient, filesystem, watchRoot),
             ParserConfig.BuildFileSearchMethod.WATCHMAN);
     assertEquals(expectedBuildFiles, actualBuildFiles);
@@ -184,7 +184,7 @@ public class BuildFileSpecTest {
     thrown.expectMessage("Whoopsie!");
     recursiveSpec.findBuildFiles(
         ParserConfig.DEFAULT_BUILD_FILE_NAME,
-        filesystem,
+        filesystem.asView(),
         createWatchman(fakeWatchmanClient, filesystem, watchRoot),
         ParserConfig.BuildFileSearchMethod.WATCHMAN);
   }
@@ -229,7 +229,7 @@ public class BuildFileSpecTest {
     ImmutableSet<Path> actualBuildFiles =
         recursiveSpec.findBuildFiles(
             ParserConfig.DEFAULT_BUILD_FILE_NAME,
-            filesystem,
+            filesystem.asView(),
             createWatchman(timingOutWatchmanClient, filesystem, watchRoot),
             ParserConfig.BuildFileSearchMethod.WATCHMAN);
     assertEquals(expectedBuildFiles, actualBuildFiles);
@@ -244,16 +244,9 @@ public class BuildFileSpecTest {
     thrown.expectMessage("could not be found");
     recursiveSpec.findBuildFiles(
         ParserConfig.DEFAULT_BUILD_FILE_NAME,
-        filesystem,
+        filesystem.asView(),
         WatchmanFactory.NULL_WATCHMAN,
         ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
-  }
-
-  @Test
-  public void testBuckOutIsIgnored() {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path buildFile = Paths.get("buck-out", "gen", "a", "BUCK");
-    assertTrue(BuildFileSpec.isIgnored(filesystem, buildFile));
   }
 
   private static Watchman createWatchman(
