@@ -42,6 +42,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/test/rule:rule",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules:testutil",
         "//test/com/facebook/buck/testutil:testutil",
