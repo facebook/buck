@@ -19,11 +19,10 @@ package com.facebook.buck.parser.decorators;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
@@ -36,9 +35,9 @@ import javax.annotation.concurrent.GuardedBy;
  * <p>This decouples status reporting functionality so that it can be used with different underlying
  * {@link ProjectBuildFileParser}s.
  */
-public class EventReportingProjectBuildFileParser implements ProjectBuildFileParser {
+public class EventReportingProjectBuildFileParser
+    extends ForwardingProjectBuildFileParserDecorator {
 
-  private final ProjectBuildFileParser delegate;
   private final BuckEventBus eventBus;
   private final Object eventLock;
 
@@ -48,7 +47,7 @@ public class EventReportingProjectBuildFileParser implements ProjectBuildFilePar
 
   private EventReportingProjectBuildFileParser(
       ProjectBuildFileParser delegate, BuckEventBus eventBus) {
-    this.delegate = delegate;
+    super(delegate);
     this.eventBus = eventBus;
     this.eventLock = new Object();
   }
@@ -68,24 +67,6 @@ public class EventReportingProjectBuildFileParser implements ProjectBuildFilePar
       throws BuildFileParseException, InterruptedException, IOException {
     maybePostStartEvent();
     return delegate.getBuildFileManifest(buildFile);
-  }
-
-  @Override
-  public void reportProfile() throws IOException {
-    delegate.reportProfile();
-  }
-
-  @Override
-  public ImmutableList<String> getIncludedFiles(Path buildFile)
-      throws BuildFileParseException, InterruptedException, IOException {
-    return delegate.getIncludedFiles(buildFile);
-  }
-
-  @Override
-  public boolean globResultsMatchCurrentState(
-      Path buildPath, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
-      throws IOException, InterruptedException {
-    return delegate.globResultsMatchCurrentState(buildPath, existingGlobsWithResults);
   }
 
   @Override

@@ -35,7 +35,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -44,7 +44,6 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.visibility.VisibilityPatternFactory;
-import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -55,7 +54,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -481,37 +479,12 @@ public class ParsePipelineTest {
    * closed.
    */
   private static class CloseRecordingProjectBuildFileParserDecorator
-      implements ProjectBuildFileParser {
-    private final ProjectBuildFileParser delegate;
+      extends ForwardingProjectBuildFileParserDecorator {
     private final AtomicBoolean isClosed;
 
     private CloseRecordingProjectBuildFileParserDecorator(ProjectBuildFileParser delegate) {
-      this.delegate = delegate;
+      super(delegate);
       this.isClosed = new AtomicBoolean(false);
-    }
-
-    @Override
-    public BuildFileManifest getBuildFileManifest(Path buildFile)
-        throws BuildFileParseException, InterruptedException, IOException {
-      return delegate.getBuildFileManifest(buildFile);
-    }
-
-    @Override
-    public void reportProfile() throws IOException {
-      delegate.reportProfile();
-    }
-
-    @Override
-    public ImmutableList<String> getIncludedFiles(Path buildFile)
-        throws BuildFileParseException, InterruptedException, IOException {
-      return delegate.getIncludedFiles(buildFile);
-    }
-
-    @Override
-    public boolean globResultsMatchCurrentState(
-        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
-        throws IOException, InterruptedException {
-      return delegate.globResultsMatchCurrentState(buildFile, existingGlobsWithResults);
     }
 
     @Override

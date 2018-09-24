@@ -19,11 +19,10 @@ package com.facebook.buck.json;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -31,8 +30,8 @@ import java.nio.file.Path;
  * Delegates to the aggregated parser to do the parsing, while warning the numbers of targets
  * exceeds a threshold.
  */
-public class TargetCountVerificationParserDelegate implements ProjectBuildFileParser {
-  private final ProjectBuildFileParser delegate;
+public class TargetCountVerificationParserDecorator
+    extends ForwardingProjectBuildFileParserDecorator {
   private final int targetWarnCount;
   private final BuckEventBus buckEventBus;
 
@@ -41,12 +40,10 @@ public class TargetCountVerificationParserDelegate implements ProjectBuildFilePa
    * @param targetWarnCount the count of target which, if exceeded will log a warning.
    * @param eventBus The event buss where to post warning events for handling.
    */
-  public TargetCountVerificationParserDelegate(
+  public TargetCountVerificationParserDecorator(
       ProjectBuildFileParser delegate, int targetWarnCount, BuckEventBus eventBus) {
-    Preconditions.checkNotNull(delegate);
+    super(delegate);
     Preconditions.checkNotNull(eventBus, "Must have a valid eventBus set.");
-
-    this.delegate = delegate;
     this.targetWarnCount = targetWarnCount;
     buckEventBus = eventBus;
   }
@@ -76,28 +73,5 @@ public class TargetCountVerificationParserDelegate implements ProjectBuildFilePa
     BuildFileManifest targetManifest = delegate.getBuildFileManifest(buildFile);
     maybePostWarningAboutTooManyTargets(buildFile, targetManifest.getTargets().size());
     return targetManifest;
-  }
-
-  @Override
-  public void reportProfile() throws IOException {
-    delegate.reportProfile();
-  }
-
-  @Override
-  public ImmutableList<String> getIncludedFiles(Path buildFile)
-      throws BuildFileParseException, InterruptedException, IOException {
-    return delegate.getIncludedFiles(buildFile);
-  }
-
-  @Override
-  public boolean globResultsMatchCurrentState(
-      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
-      throws IOException, InterruptedException {
-    return delegate.globResultsMatchCurrentState(buildFile, existingGlobsWithResults);
-  }
-
-  @Override
-  public void close() throws BuildFileParseException, InterruptedException, IOException {
-    delegate.close();
   }
 }

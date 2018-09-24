@@ -38,7 +38,7 @@ import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TargetCountVerificationParserDelegateTest {
+public class TargetCountVerificationParserDecoratorTest {
 
   private CapturingConsoleEventListener capturingConsoleEventListener;
   private Path path;
@@ -89,8 +89,8 @@ public class TargetCountVerificationParserDelegateTest {
     assertThat(capturingConsoleEventListener.getLogMessages().size(), equalTo(0));
   }
 
-  private TargetCountVerificationParserDelegate newParserDelegate(int threshold) {
-    return new TargetCountVerificationParserDelegate(parserMock, threshold, eventBus);
+  private TargetCountVerificationParserDecorator newParserDelegate(int threshold) {
+    return new TargetCountVerificationParserDecorator(parserMock, threshold, eventBus);
   }
 
   @Test
@@ -99,7 +99,7 @@ public class TargetCountVerificationParserDelegateTest {
     EasyMock.expect(parserMock.getBuildFileManifest(path))
         .andReturn(toBuildFileManifest(this.rawTargets));
 
-    TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(3);
+    TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(3);
     EasyMock.replay(parserMock);
     parserDelegate.getBuildFileManifest(path);
 
@@ -122,7 +122,7 @@ public class TargetCountVerificationParserDelegateTest {
     EasyMock.expect(parserMock.getBuildFileManifest(path))
         .andReturn(toBuildFileManifest(rawTargets));
 
-    TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(6);
+    TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(6);
     EasyMock.replay(parserMock);
     parserDelegate.getBuildFileManifest(path);
 
@@ -131,7 +131,7 @@ public class TargetCountVerificationParserDelegateTest {
 
   @Test
   public void parserReportProfileCalled() throws Exception {
-    TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(6);
+    TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(6);
     parserMock.reportProfile();
     EasyMock.expectLastCall();
     EasyMock.replay(parserMock);
@@ -141,7 +141,7 @@ public class TargetCountVerificationParserDelegateTest {
 
   @Test
   public void parserCloseCalled() throws Exception {
-    TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(6);
+    TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(6);
     parserMock.close();
     EasyMock.expectLastCall();
     EasyMock.replay(parserMock);
