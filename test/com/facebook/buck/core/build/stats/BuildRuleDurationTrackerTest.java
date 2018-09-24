@@ -19,7 +19,7 @@ package com.facebook.buck.core.build.stats;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.util.timing.ClockDuration;
 import org.junit.Test;
 

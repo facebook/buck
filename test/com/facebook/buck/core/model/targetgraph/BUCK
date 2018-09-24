@@ -10,6 +10,7 @@ java_test(
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/testutil:testutil",
@@ -42,7 +43,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/query:utils",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/rules:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
-        "//test/com/facebook/buck/rules:testutil",
     ],
 )

@@ -20,7 +20,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableSortedSet;

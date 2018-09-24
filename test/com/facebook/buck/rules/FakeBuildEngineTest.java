@@ -29,6 +29,7 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableMap;

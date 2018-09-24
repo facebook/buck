@@ -34,6 +34,7 @@ standard_java_test(
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/actiongraph/computation:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/cxx:testutil",
         "//test/com/facebook/buck/cxx/toolchain:testutil",
