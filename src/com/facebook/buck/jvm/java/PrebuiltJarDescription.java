@@ -88,7 +88,7 @@ public class PrebuiltJarDescription
             args.getProvided(),
             args.getRequiredForSourceOnlyAbi());
 
-    buildTarget.checkUnflavored();
+    buildTarget.assertUnflavored();
     BuildTarget gwtTarget = buildTarget.withAppendedFlavors(JavaLibrary.GWT_MODULE_FLAVOR);
     BuildRuleParams gwtParams =
         params.withDeclaredDeps(ImmutableSortedSet.of(prebuilt)).withoutExtraDeps();

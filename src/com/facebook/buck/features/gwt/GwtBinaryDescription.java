@@ -21,7 +21,6 @@ import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -111,9 +110,10 @@ public class GwtBinaryDescription
           gwtModule =
               Optional.of(
                   graphBuilder.computeIfAbsent(
-                      ImmutableBuildTarget.of(
-                          javaLibrary.getBuildTarget().checkUnflavored(),
-                          ImmutableSet.of(JavaLibrary.GWT_MODULE_FLAVOR)),
+                      javaLibrary
+                          .getBuildTarget()
+                          .assertUnflavored()
+                          .withFlavors(JavaLibrary.GWT_MODULE_FLAVOR),
                       gwtModuleTarget -> {
                         ImmutableSortedSet<SourcePath> filesForGwtModule =
                             ImmutableSortedSet.<SourcePath>naturalOrder()

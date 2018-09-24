@@ -81,9 +81,9 @@ public abstract class AbstractBuildTarget implements BuildTarget {
   }
 
   @Override
-  public UnflavoredBuildTarget checkUnflavored() {
+  public BuildTarget assertUnflavored() {
     Preconditions.checkState(!isFlavored(), "%s is flavored.", this);
-    return getUnflavoredBuildTarget();
+    return this;
   }
 
   @Override

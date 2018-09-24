@@ -41,7 +41,7 @@ public class FlavorsTest {
   public void testCheckUnflavoredRejectsFlavoredBuildTarget() {
     BuildTarget fooBarBaz =
         BuildTargetFactory.newInstance(ROOT, "//foo", "bar", InternalFlavor.of("baz"));
-    fooBarBaz.checkUnflavored();
+    fooBarBaz.assertUnflavored();
   }
 
   @Test

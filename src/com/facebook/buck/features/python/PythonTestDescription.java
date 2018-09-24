@@ -151,7 +151,7 @@ public class PythonTestDescription
       ImmutableSet<String> testModules) {
 
     // Modify the build rule params to change the target, type, and remove all deps.
-    buildTarget.checkUnflavored();
+    buildTarget.assertUnflavored();
     BuildTarget newBuildTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("test_module"));
 
     String contents = getTestModulesListContents(testModules);
@@ -351,7 +351,7 @@ public class PythonTestDescription
             args.getPreloadDeps());
 
     // Build the PEX using a python binary rule with the minimum dependencies.
-    buildTarget.checkUnflavored();
+    buildTarget.assertUnflavored();
     PythonBinary binary =
         binaryDescription.createPackageRule(
             buildTarget.withAppendedFlavors(BINARY_FLAVOR),

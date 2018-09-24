@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -186,8 +185,7 @@ public class AndroidPrebuiltAarDescription
 
     BuildRule prebuiltJarRule =
         graphBuilder.requireRule(
-            ImmutableBuildTarget.of(
-                buildTarget.checkUnflavored(), ImmutableSet.of(AAR_PREBUILT_JAR_FLAVOR)));
+            buildTarget.assertUnflavored().withFlavors(AAR_PREBUILT_JAR_FLAVOR));
     Preconditions.checkState(
         prebuiltJarRule instanceof PrebuiltJar,
         "%s flavor created rule of unexpected type %s for target %s",
