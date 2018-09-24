@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.NoSuchFileException;
@@ -50,6 +51,7 @@ import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Rule;
@@ -152,6 +154,31 @@ public class FakeProjectFilesystemTest {
 
     // Despite the awkward name, "contains" implies an exact match.
     assertThat(filesVisited, contains(Paths.get("A.txt")));
+  }
+
+  @Test
+  public void testWalkFileTreeWhenPathIsAFile() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.touch(Paths.get("dir/dir2/A.txt"));
+    filesystem.touch(Paths.get("dir/B.txt"));
+
+    List<Path> filesVisited = new ArrayList<>();
+
+    FileVisitor<Path> fileVisitor =
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
+            filesVisited.add(filesystem.relativize(path));
+            return FileVisitResult.CONTINUE;
+          }
+        };
+
+    filesystem.walkFileTree(
+        Paths.get("dir"), EnumSet.of(FileVisitOption.FOLLOW_LINKS), fileVisitor);
+
+    // Despite the awkward name, "contains" implies an exact match.
+    assertThat(
+        filesVisited, containsInAnyOrder(Paths.get("dir/dir2/A.txt"), Paths.get("dir/B.txt")));
   }
 
   @Test

@@ -50,6 +50,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.file.CopyOption;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -713,6 +714,39 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         if (result != FileVisitResult.SKIP_SUBTREE) {
           walkRelativeFileTree(ent, fileVisitor);
           fileVisitor.postVisitDirectory(ent, null);
+        }
+      }
+    }
+  }
+
+  @Override
+  void walkFileTree(
+      Path path,
+      Set<FileVisitOption> options,
+      FileVisitor<Path> fileVisitor,
+      DirectoryStream.Filter<? super Path> ignoreFilter)
+      throws IOException {
+    if (!isDirectory(path)) {
+      fileVisitor.visitFile(resolve(path), DEFAULT_FILE_ATTRIBUTES);
+      return;
+    }
+
+    ImmutableCollection<Path> ents = getDirectoryContents(path);
+    for (Path ent : ents) {
+      if (!isDirectory(ent)) {
+        FileVisitResult result = fileVisitor.visitFile(resolve(ent), DEFAULT_FILE_ATTRIBUTES);
+        if (result == FileVisitResult.SKIP_SIBLINGS) {
+          return;
+        }
+      } else {
+        FileVisitResult result =
+            fileVisitor.preVisitDirectory(resolve(ent), DEFAULT_DIR_ATTRIBUTES);
+        if (result == FileVisitResult.SKIP_SIBLINGS) {
+          return;
+        }
+        if (result != FileVisitResult.SKIP_SUBTREE) {
+          walkFileTree(ent, options, fileVisitor, ignoreFilter);
+          fileVisitor.postVisitDirectory(resolve(ent), null);
         }
       }
     }
