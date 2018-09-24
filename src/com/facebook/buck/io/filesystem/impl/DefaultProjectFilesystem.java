@@ -253,6 +253,11 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     return projectRoot.relativize(path);
   }
 
+  @Override
+  public ImmutableSet<PathOrGlobMatcher> getBlacklistedPaths() {
+    return blackListedPaths;
+  }
+
   /** @return A {@link ImmutableSet} of {@link PathOrGlobMatcher} objects to have buck ignore. */
   @Override
   public ImmutableSet<PathOrGlobMatcher> getIgnorePaths() {
