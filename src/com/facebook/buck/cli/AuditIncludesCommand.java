@@ -81,7 +81,7 @@ public class AuditIncludesCommand extends AbstractCommand {
           path = root.resolve(path);
         }
 
-        Iterable<String> includes = parser.getBuildFileManifest(path).getIncludes();
+        Iterable<String> includes = parser.getIncludedFiles(path);
         printIncludesToStdout(
             params, Preconditions.checkNotNull(includes, "__includes metadata entry is missing"));
       }

@@ -715,8 +715,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   @Override
   public ImmutableList<String> getIncludedFiles(Path buildFile)
-      throws BuildFileParseException, InterruptedException, IOException {
-    throw new UnsupportedOperationException("Not yet implemented!");
+      throws BuildFileParseException, InterruptedException {
+    return getBuildFileManifest(buildFile).getIncludes();
   }
 
   @Override
