@@ -126,7 +126,10 @@ public class TargetSpecResolver {
           SimplePerfEvent.scope(
               eventBus, PerfEventId.of("FindBuildFiles"), "targetNodeSpec", spec)) {
         // Iterate over the build files the given target node spec returns.
-        buildFiles = spec.getBuildFileSpec().findBuildFiles(cell, watchman, buildFileSearchMethod);
+        buildFiles =
+            spec.getBuildFileSpec()
+                .findBuildFiles(
+                    cell.getBuildFileName(), cell.getFilesystem(), watchman, buildFileSearchMethod);
       }
       for (Path buildFile : buildFiles) {
         perBuildFileSpecs.put(buildFile, index);

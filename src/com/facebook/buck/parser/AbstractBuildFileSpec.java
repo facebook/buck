@@ -16,7 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -263,16 +262,14 @@ abstract class AbstractBuildFileSpec {
 
   /** @return paths to build files that this spec match in the given {@link ProjectFilesystem}. */
   public ImmutableSet<Path> findBuildFiles(
-      Cell cell, Watchman watchman, ParserConfig.BuildFileSearchMethod buildFileSearchMethod)
+      String buildFileName,
+      ProjectFilesystem filesystem,
+      Watchman watchman,
+      ParserConfig.BuildFileSearchMethod buildFileSearchMethod)
       throws IOException, InterruptedException {
     ImmutableSet.Builder<Path> buildFiles = ImmutableSet.builder();
 
-    forEachBuildFile(
-        cell.getFilesystem(),
-        cell.getBuildFileName(),
-        buildFileSearchMethod,
-        watchman,
-        buildFiles::add);
+    forEachBuildFile(filesystem, buildFileName, buildFileSearchMethod, watchman, buildFiles::add);
 
     return buildFiles.build();
   }

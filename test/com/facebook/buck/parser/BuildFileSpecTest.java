@@ -19,8 +19,6 @@ package com.facebook.buck.parser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -67,10 +65,10 @@ public class BuildFileSpecTest {
     BuildFileSpec nonRecursiveSpec =
         BuildFileSpec.fromPath(buildFile.getParent(), filesystem.getRootPath());
     ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(filesystem.resolve(buildFile));
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ImmutableSet<Path> actualBuildFiles =
         nonRecursiveSpec.findBuildFiles(
-            cell,
+            ParserConfig.DEFAULT_BUILD_FILE_NAME,
+            filesystem,
             WatchmanFactory.NULL_WATCHMAN,
             ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
     assertEquals(expectedBuildFiles, actualBuildFiles);
@@ -82,7 +80,8 @@ public class BuildFileSpecTest {
         ImmutableSet.of(filesystem.resolve(buildFile), filesystem.resolve(nestedBuildFile));
     actualBuildFiles =
         recursiveSpec.findBuildFiles(
-            cell,
+            ParserConfig.DEFAULT_BUILD_FILE_NAME,
+            filesystem,
             WatchmanFactory.NULL_WATCHMAN,
             ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
     assertEquals(expectedBuildFiles, actualBuildFiles);
@@ -106,10 +105,10 @@ public class BuildFileSpecTest {
     BuildFileSpec recursiveSpec =
         BuildFileSpec.fromRecursivePath(buildFile.getParent(), filesystem.getRootPath());
     ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(filesystem.resolve(buildFile));
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ImmutableSet<Path> actualBuildFiles =
         recursiveSpec.findBuildFiles(
-            cell,
+            ParserConfig.DEFAULT_BUILD_FILE_NAME,
+            filesystem,
             WatchmanFactory.NULL_WATCHMAN,
             ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
     assertEquals(expectedBuildFiles, actualBuildFiles);
@@ -143,10 +142,10 @@ public class BuildFileSpecTest {
                                 ImmutableList.of("name", "BUCK"),
                                 ImmutableList.of("type", "f")))),
                 ImmutableMap.of("files", ImmutableList.of("a/BUCK"))));
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ImmutableSet<Path> actualBuildFiles =
         recursiveSpec.findBuildFiles(
-            cell,
+            ParserConfig.DEFAULT_BUILD_FILE_NAME,
+            filesystem,
             createWatchman(fakeWatchmanClient, filesystem, watchRoot),
             ParserConfig.BuildFileSearchMethod.WATCHMAN);
     assertEquals(expectedBuildFiles, actualBuildFiles);
@@ -180,12 +179,12 @@ public class BuildFileSpecTest {
                                 ImmutableList.of("type", "f")))),
                 ImmutableMap.of("files", ImmutableList.of("a/BUCK"))),
             new IOException("Whoopsie!"));
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
 
     thrown.expect(IOException.class);
     thrown.expectMessage("Whoopsie!");
     recursiveSpec.findBuildFiles(
-        cell,
+        ParserConfig.DEFAULT_BUILD_FILE_NAME,
+        filesystem,
         createWatchman(fakeWatchmanClient, filesystem, watchRoot),
         ParserConfig.BuildFileSearchMethod.WATCHMAN);
   }
@@ -225,12 +224,12 @@ public class BuildFileSpecTest {
                                 ImmutableList.of("name", "BUCK"),
                                 ImmutableList.of("type", "f")))),
                 ImmutableMap.of("files", ImmutableList.of("a/BUCK", "a/b/BUCK"))));
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ImmutableSet<Path> expectedBuildFiles =
         ImmutableSet.of(filesystem.resolve(buildFile), filesystem.resolve(nestedBuildFile));
     ImmutableSet<Path> actualBuildFiles =
         recursiveSpec.findBuildFiles(
-            cell,
+            ParserConfig.DEFAULT_BUILD_FILE_NAME,
+            filesystem,
             createWatchman(timingOutWatchmanClient, filesystem, watchRoot),
             ParserConfig.BuildFileSearchMethod.WATCHMAN);
     assertEquals(expectedBuildFiles, actualBuildFiles);
@@ -239,13 +238,15 @@ public class BuildFileSpecTest {
   @Test
   public void testWildcardFolderNotFound() throws IOException, InterruptedException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     BuildFileSpec recursiveSpec =
         BuildFileSpec.fromRecursivePath(filesystem.resolve("foo/bar"), filesystem.getRootPath());
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("could not be found");
     recursiveSpec.findBuildFiles(
-        cell, WatchmanFactory.NULL_WATCHMAN, ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
+        ParserConfig.DEFAULT_BUILD_FILE_NAME,
+        filesystem,
+        WatchmanFactory.NULL_WATCHMAN,
+        ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
   }
 
   @Test
