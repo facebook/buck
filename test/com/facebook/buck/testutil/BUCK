@@ -59,7 +59,7 @@ java_library(
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/worker:worker_process",
-        "//test/com/facebook/buck/io/file:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/util/timing:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",

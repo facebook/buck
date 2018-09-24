@@ -1,13 +1,45 @@
 load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
-standard_java_test(
-    name = "impl",
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//test/com/facebook/buck/util/timing:testutil",
+    ],
+    visibility = [
+        "//test/...",
+    ],
     deps = [
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/windowsfs:windowsfs",
+        "//src/com/facebook/buck/util/config:config",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/string:string",
+        "//test/com/facebook/buck/io/file:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jimfs:jimfs",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_test(
+    name = "impl",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        ":testutil",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/zip:zip",
         "//test/com/facebook/buck/io/filesystem:testutil",
@@ -15,6 +47,7 @@ standard_java_test(
         "//test/com/facebook/buck/testutil/integration:util",
         "//test/com/facebook/buck/util:testutil",
         "//test/com/facebook/buck/util/config:testutil",
+        "//test/com/facebook/buck/util/timing:testutil",
         "//third-party/java/commons-compress:commons-compress",
         "//third-party/java/guava:guava",
         "//third-party/java/jimfs:jimfs",

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.testutil;
+package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

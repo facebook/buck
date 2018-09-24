@@ -15,7 +15,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/support/cli/args:args",
         "//src/com/facebook/buck/util:util",
-        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//third-party/java/jsr:jsr305",
     ],
 )

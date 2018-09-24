@@ -19,7 +19,7 @@ package com.facebook.buck.io.filesystem.skylark;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.devtools.build.lib.vfs.Path;
 import org.junit.Before;
 import org.junit.Test;

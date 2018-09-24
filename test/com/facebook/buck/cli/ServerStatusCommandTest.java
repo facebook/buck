@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.httpserver.WebServer;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import java.io.IOException;
 import java.util.Optional;

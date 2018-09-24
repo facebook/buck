@@ -21,8 +21,8 @@ import static org.easymock.EasyMock.createMock;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 
 /**
  * Facilitates creating a fake {@link com.facebook.buck.core.build.context.BuildContext} for unit

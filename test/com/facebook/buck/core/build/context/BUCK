@@ -11,9 +11,9 @@ java_library(
     deps = [
         "//src/com/facebook/buck/jvm/core:core",
         "//test/com/facebook/buck/event:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/jvm/java:fakepackagefinder",
         "//test/com/facebook/buck/jvm/java:testutil",
-        "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
     ],

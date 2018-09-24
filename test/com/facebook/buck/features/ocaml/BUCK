@@ -122,6 +122,7 @@ standard_java_test(
         "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/io:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/testutil:testutil",

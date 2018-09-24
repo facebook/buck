@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.testutil;
+package com.facebook.buck.io.filesystem.impl;
 
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,6 +25,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.facebook.buck.util.zip.Zip;
 import com.google.common.base.Charsets;

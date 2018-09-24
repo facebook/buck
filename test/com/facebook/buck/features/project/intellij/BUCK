@@ -236,6 +236,7 @@ java_test(
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/cxx:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/jvm/groovy:testutil",
         "//test/com/facebook/buck/jvm/java:fakepackagefinder",
         "//test/com/facebook/buck/jvm/java:javac-env",

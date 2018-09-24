@@ -18,6 +18,7 @@ package com.facebook.buck.testutil;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.hash.HashCode;
 import java.io.IOException;

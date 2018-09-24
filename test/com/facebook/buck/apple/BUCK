@@ -113,6 +113,7 @@ java_library(
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/io:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/rules/macros:testutil",
         "//test/com/facebook/buck/testutil:testutil",

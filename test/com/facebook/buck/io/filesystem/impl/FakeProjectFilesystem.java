@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.testutil;
+package com.facebook.buck.io.filesystem.impl;
 
 import static com.facebook.buck.util.string.MoreStrings.withoutSuffix;
 
@@ -23,9 +23,6 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.timing.Clock;

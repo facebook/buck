@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.testutil;
+package com.facebook.buck.io.filesystem.impl;
 
 import java.nio.file.LinkOption;
 import java.nio.file.Path;

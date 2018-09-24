@@ -21,8 +21,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.query.Query;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.util.ArrayList;
 import java.util.List;
 import org.hamcrest.Matchers;

@@ -16,13 +16,13 @@
 
 package com.facebook.buck.unarchive;
 
-import static com.facebook.buck.testutil.FakeProjectFilesystem.createJavaOnlyFilesystem;
+import static com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem.createJavaOnlyFilesystem;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import java.nio.file.Path;
 import java.nio.file.Paths;

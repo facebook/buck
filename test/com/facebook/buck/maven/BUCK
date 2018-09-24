@@ -158,6 +158,7 @@ java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/file:file",
         "//src/com/facebook/buck/file/downloader/impl:impl",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",

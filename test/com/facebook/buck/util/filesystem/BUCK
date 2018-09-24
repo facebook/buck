@@ -6,7 +6,7 @@ java_test(
     deps = [
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/filesystem:filesystem",
-        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:hamcrest-junit",
         "//third-party/java/hamcrest:java-hamcrest",

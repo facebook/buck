@@ -41,10 +41,10 @@ import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInf
 import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInfo.Chain;
 import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInfoSelectedChain;
 import com.facebook.buck.event.listener.BuildTargetDurationListener.CriticalPathEntry;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
