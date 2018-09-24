@@ -18,6 +18,7 @@ package com.facebook.buck.testutil;
 
 import static com.facebook.buck.util.string.MoreStrings.withoutSuffix;
 
+import com.facebook.buck.io.file.FakeFileAttributes;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.CopySourceMode;
