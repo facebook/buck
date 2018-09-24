@@ -10,7 +10,7 @@ kotlin_library(
     annotation_processors = [
         "com.example.ap.kotlinap.KotlinAnnotationProcessorWithApoption",
     ],
-    kapt_apoptions = {
+    kapt_ap_options = {
       'someApoption' : 'someApoptionValue'
     },
     visibility = [
