@@ -22,7 +22,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.ListeningProcessExecutor;
-import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Preconditions;
@@ -32,6 +31,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -47,8 +47,8 @@ class BuildPrehook implements AutoCloseable {
   private ImmutableMap<String, String> environment;
   private final Iterable<String> arguments;
   @Nullable ListeningProcessExecutor.LaunchedProcess process;
-  @Nullable private NamedTemporaryFile tempFile;
-  @Nullable private NamedTemporaryFile argumentsFile;
+  @Nullable private Path tempFile;
+  @Nullable private Path argumentsFile;
 
   BuildPrehook(
       ListeningProcessExecutor processExecutor,
@@ -81,17 +81,17 @@ class BuildPrehook implements AutoCloseable {
     ImmutableMap.Builder<String, String> environmentBuilder =
         ImmutableMap.<String, String>builder().putAll(environment);
     writeJsonBuckconfigFile();
-    NamedTemporaryFile argumentsJsonFile = createArgumentsJsonFile(arguments);
+    Path argumentsJsonFile = createArgumentsJsonFile(arguments);
     argumentsFile = argumentsJsonFile;
     Preconditions.checkState(tempFile != null);
-    environmentBuilder.put("BUCKCONFIG_FILE", tempFile.get().toString());
+    environmentBuilder.put("BUCKCONFIG_FILE", tempFile.toString());
     environmentBuilder.put("BUCK_ROOT", cell.getRoot().toString());
     environmentBuilder.put(
         "BUCK_OUT",
         cell.getRoot()
             .resolve(cell.getFilesystem().getBuckPaths().getConfiguredBuckOut())
             .toString());
-    environmentBuilder.put("BUCK_BUILD_ARGUMENTS_FILE", argumentsJsonFile.get().toString());
+    environmentBuilder.put("BUCK_BUILD_ARGUMENTS_FILE", argumentsJsonFile.toString());
 
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
@@ -105,11 +105,10 @@ class BuildPrehook implements AutoCloseable {
     process = processExecutor.launchProcess(processExecutorParams, processListener);
   }
 
-  private static NamedTemporaryFile createArgumentsJsonFile(Iterable<String> arguments)
-      throws IOException {
-    NamedTemporaryFile argumentsFile = new NamedTemporaryFile("arguments_", ".json");
+  private Path createArgumentsJsonFile(Iterable<String> arguments) throws IOException {
+    Path argumentsFile = cell.getFilesystem().createTempFile("arguments_", ".json");
     Files.write(
-        argumentsFile.get(),
+        argumentsFile,
         ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsBytes(arguments));
     return argumentsFile;
   }
@@ -160,10 +159,9 @@ class BuildPrehook implements AutoCloseable {
     ImmutableMap<String, ImmutableMap<String, String>> values =
         buckConfig.getConfig().getRawConfig().getValues();
     try {
-      tempFile = new NamedTemporaryFile("buckconfig_", ".json");
+      tempFile = cell.getFilesystem().createTempFile("buckconfig_", ".json");
       Files.write(
-          tempFile.get(),
-          ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsBytes(values));
+          tempFile, ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsBytes(values));
     } catch (IOException e) {
       LOG.warn("Build pre-hook failed to write build info");
     }
@@ -178,10 +176,10 @@ class BuildPrehook implements AutoCloseable {
     processExecutor.destroyProcess(process, /* force */ true);
     // Removes the temporary file.
     if (tempFile != null) {
-      tempFile.close();
+      cell.getFilesystem().deleteFileAtPath(tempFile);
     }
     if (argumentsFile != null) {
-      argumentsFile.close();
+      cell.getFilesystem().deleteFileAtPath(argumentsFile);
     }
   }
 }
