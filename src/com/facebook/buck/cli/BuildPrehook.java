@@ -29,7 +29,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -108,10 +107,10 @@ class BuildPrehook implements AutoCloseable {
 
   private static NamedTemporaryFile createArgumentsJsonFile(Iterable<String> arguments)
       throws IOException {
-    StringWriter stringWriter = new StringWriter();
-    ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, arguments);
     NamedTemporaryFile argumentsFile = new NamedTemporaryFile("arguments_", ".json");
-    Files.write(argumentsFile.get(), stringWriter.toString().getBytes(StandardCharsets.UTF_8));
+    Files.write(
+        argumentsFile.get(),
+        ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsBytes(arguments));
     return argumentsFile;
   }
 
@@ -157,14 +156,14 @@ class BuildPrehook implements AutoCloseable {
   }
 
   /** Write a JSON file containing the buck config information. */
-  private void writeJsonBuckconfigFile() throws IOException {
+  private void writeJsonBuckconfigFile() {
     ImmutableMap<String, ImmutableMap<String, String>> values =
         buckConfig.getConfig().getRawConfig().getValues();
-    StringWriter stringWriter = new StringWriter();
-    ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, values);
     try {
       tempFile = new NamedTemporaryFile("buckconfig_", ".json");
-      Files.write(tempFile.get(), stringWriter.toString().getBytes(StandardCharsets.UTF_8));
+      Files.write(
+          tempFile.get(),
+          ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsBytes(values));
     } catch (IOException e) {
       LOG.warn("Build pre-hook failed to write build info");
     }
