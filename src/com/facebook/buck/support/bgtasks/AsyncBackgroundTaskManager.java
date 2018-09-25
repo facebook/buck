@@ -285,10 +285,10 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
         }
         submitTask(task);
       }
-      LOG.info("Scheduler thread interrupted; shutting down manager");
     } catch (InterruptedException e) {
-      LOG.info(e, "Scheduler thread interrupted; shutting down manager");
+      // do nothing. got interrupted.
     }
+    LOG.info("Scheduler thread interrupted; shutting down manager");
     if (schedulingOpen.get()) {
       schedulingOpen.set(false);
       taskPool.shutdownNow();
