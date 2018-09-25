@@ -24,6 +24,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -34,7 +35,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public abstract class FileBundler {
 
@@ -66,16 +66,6 @@ public abstract class FileBundler {
           "The file '%s' appears twice in the hierarchy", pathRelativeToBaseDir.getFileName());
     }
     relativePathMap.put(pathRelativeToBaseDir, absoluteFilePath);
-  }
-
-  private boolean isExcluded(ImmutableList<Pattern> entriesToExclude, Path filePath) {
-    String entryPath = MorePaths.pathWithUnixSeparators(filePath.toString());
-    for (Pattern pattern : entriesToExclude) {
-      if (pattern.matcher(entryPath).matches()) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private ImmutableMap<Path, Path> createRelativeMap(
@@ -126,7 +116,7 @@ public abstract class FileBundler {
         destinationDir,
         toCopy,
         pathResolver,
-        ImmutableList.of());
+        PatternsMatcher.EMPTY);
   }
 
   public void copy(
@@ -136,7 +126,7 @@ public abstract class FileBundler {
       Path destinationDir,
       ImmutableSortedSet<SourcePath> toCopy,
       SourcePathResolver pathResolver,
-      ImmutableList<Pattern> entriesToExclude) {
+      PatternsMatcher entriesToExclude) {
 
     Map<Path, Path> relativeMap = createRelativeMap(filesystem, pathResolver, toCopy);
 
@@ -145,8 +135,11 @@ public abstract class FileBundler {
       Path absolutePath = Preconditions.checkNotNull(pathEntry.getValue());
       Path destination = destinationDir.resolve(relativePath);
 
-      if (isExcluded(entriesToExclude, relativePath)) {
-        continue;
+      if (entriesToExclude.hasPatterns()) {
+        String entryPath = MorePaths.pathWithUnixSeparators(relativePath);
+        if (entriesToExclude.matchesAny(entryPath)) {
+          continue;
+        }
       }
 
       addCopySteps(

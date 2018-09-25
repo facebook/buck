@@ -32,9 +32,11 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -47,7 +49,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
   @AddToRuleKey private final OutputPath output;
   @AddToRuleKey private final boolean flatten;
   @AddToRuleKey private final Optional<Boolean> mergeSourceZips;
-  @AddToRuleKey private final ImmutableList<Pattern> entriesToExclude;
+  @AddToRuleKey private final ImmutableSet<Pattern> entriesToExclude;
 
   public Zip(
       SourcePathRuleFinder ruleFinder,
@@ -58,7 +60,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       ImmutableSortedSet<SourcePath> zipSources,
       boolean flatten,
       Optional<Boolean> mergeSourceZips,
-      ImmutableList<Pattern> entriesToExclude) {
+      ImmutableSet<Pattern> entriesToExclude) {
     super(buildTarget, projectFilesystem, ruleFinder, Zip.class);
 
     this.name = outputName;
@@ -104,7 +106,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
         scratchDir,
         sources,
         buildContext.getSourcePathResolver(),
-        entriesToExclude);
+        new PatternsMatcher(entriesToExclude));
 
     steps.add(
         new ZipStep(
