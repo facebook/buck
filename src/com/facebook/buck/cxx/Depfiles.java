@@ -35,12 +35,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 /** Specialized parser for .d Makefiles emitted by {@code gcc -MD}. */
 class Depfiles {
@@ -173,7 +171,7 @@ class Depfiles {
     }
   }
 
-  private static List<String> getRawUsedHeadersFromDepfile(
+  private static ImmutableList<String> getRawUsedHeadersFromDepfile(
       ProjectFilesystem filesystem,
       Path sourceDepFile,
       Path inputPath,
@@ -208,10 +206,9 @@ class Depfiles {
         List<String> srcAndIncludes = filesystem.readLines(sourceDepFile);
         List<String> includes = srcAndIncludes.subList(1, srcAndIncludes.size());
         // We don't require the tree structure here, we remove the spaces
-        includes = includes.stream().map(String::trim).collect(Collectors.toList());
-        return includes;
+        return includes.stream().map(String::trim).collect(ImmutableList.toImmutableList());
       case NONE:
-        return Collections.emptyList();
+        return ImmutableList.<String>of();
       default:
         // never happens
         throw new IllegalStateException();
