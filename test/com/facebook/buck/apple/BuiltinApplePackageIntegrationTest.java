@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -197,30 +196,6 @@ public class BuiltinApplePackageIntegrationTest {
           new String(Files.readAllBytes(stubInsideBundle)),
           new String(Files.readAllBytes(stubOutsideBundle)));
     }
-  }
-
-  @Test
-  public void packageHasProperStructureForLegacyWatch() throws IOException, InterruptedException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "legacy_watch_application_bundle", tmp);
-    workspace.setUp();
-    BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
-    workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
-
-    Path destination = workspace.getDestPath();
-
-    ArchiveFormat.ZIP
-        .getUnarchiver()
-        .extractArchive(
-            new DefaultProjectFilesystemFactory(),
-            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")),
-            destination,
-            ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
-
-    Path stub = destination.resolve("WatchKitSupport/WK");
-    assertTrue(Files.isExecutable(stub));
-    assertFalse(Files.isDirectory(destination.resolve("Symbols")));
   }
 
   @Test

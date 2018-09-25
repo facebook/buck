@@ -1072,44 +1072,6 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void legacyWatchApplicationBundle() throws IOException {
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
-
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "legacy_watch_application_bundle", tmp);
-    workspace.setUp();
-
-    BuildTarget target =
-        BuildTargetFactory.newInstance(
-            "//:DemoApp#no-debug,iphonesimulator-x86_64,iphonesimulator-i386");
-    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
-
-    workspace.verify(
-        Paths.get("DemoApp_output.expected"),
-        BuildTargetPaths.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-            "%s"));
-
-    Path appPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                    filesystem,
-                    target.withAppendedFlavors(
-                        AppleDebugFormat.NONE.getFlavor(),
-                        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-                    "%s")
-                .resolve(target.getShortName() + ".app"));
-
-    Path watchExtensionPath = appPath.resolve("Plugins/DemoWatchAppExtension.appex");
-    assertTrue(Files.exists(watchExtensionPath.resolve("DemoWatchAppExtension")));
-    assertTrue(Files.exists(watchExtensionPath.resolve("DemoWatchApp.app/DemoWatchApp")));
-    assertTrue(Files.exists(watchExtensionPath.resolve("DemoWatchApp.app/_WatchKitStub/WK")));
-    assertTrue(Files.exists(watchExtensionPath.resolve("DemoWatchApp.app/Interface.plist")));
-  }
-
-  @Test
   public void copiesFrameworkBundleIntoFrameworkDirectory() throws Exception {
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
