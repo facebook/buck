@@ -18,6 +18,7 @@ package com.facebook.buck.util.unarchive;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -42,11 +43,43 @@ public abstract class Unarchiver {
    * @return A list of paths to files that were created (not directories)
    * @throws IOException If the archive could not be extracted for any reason
    */
+  public ImmutableSet<Path> extractArchive(
+      Path archiveFile,
+      ProjectFilesystem filesystem,
+      Path relativePath,
+      Optional<Path> stripPrefix,
+      ExistingFileMode existingFileMode)
+      throws IOException {
+    return extractArchive(
+        archiveFile,
+        filesystem,
+        relativePath,
+        stripPrefix,
+        PatternsMatcher.EMPTY,
+        existingFileMode);
+  }
+
+  /**
+   * Extract a given archive to a destination
+   *
+   * @param archiveFile The path to the archive
+   * @param filesystem The filesystem that will be extracted into
+   * @param relativePath The path relative to the filesystem to extract files into
+   * @param stripPrefix If provided, only files under this prefix will be extracted. This prefix
+   *     prefix will also be removed from the destination path. e.g. foo.tar.gz/foo/bar/baz with a
+   *     prefix of foo will extract bar/baz into the destination directory. If not provided, no
+   *     stripping is done.
+   * @param entriesToExclude Entries that match this matcher will not be extracted
+   * @param existingFileMode How to handle existing files
+   * @return A list of paths to files that were created (not directories)
+   * @throws IOException If the archive could not be extracted for any reason
+   */
   public abstract ImmutableSet<Path> extractArchive(
       Path archiveFile,
       ProjectFilesystem filesystem,
       Path relativePath,
       Optional<Path> stripPrefix,
+      PatternsMatcher entriesToExclude,
       ExistingFileMode existingFileMode)
       throws IOException;
 

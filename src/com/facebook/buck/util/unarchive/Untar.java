@@ -19,6 +19,7 @@ package com.facebook.buck.util.unarchive;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
@@ -79,6 +80,7 @@ public class Untar extends Unarchiver {
       ProjectFilesystem filesystem,
       Path filesystemRelativePath,
       Optional<Path> stripPath,
+      PatternsMatcher entriesToExclude,
       ExistingFileMode existingFileMode)
       throws IOException {
     return extractArchive(
@@ -87,6 +89,7 @@ public class Untar extends Unarchiver {
         filesystemRelativePath,
         stripPath,
         existingFileMode,
+        entriesToExclude,
         Platform.detect() == Platform.WINDOWS);
   }
 
@@ -97,6 +100,7 @@ public class Untar extends Unarchiver {
       Path filesystemRelativePath,
       Optional<Path> stripPath,
       ExistingFileMode existingFileMode,
+      PatternsMatcher entriesToExclude,
       boolean writeSymlinksAfterCreatingFiles)
       throws IOException {
 
@@ -113,7 +117,11 @@ public class Untar extends Unarchiver {
     try (TarArchiveInputStream archiveStream = getArchiveInputStream(archiveFile)) {
       TarArchiveEntry entry;
       while ((entry = archiveStream.getNextTarEntry()) != null) {
-        Path destFile = Paths.get(entry.getName());
+        String entryName = entry.getName();
+        if (entriesToExclude.matchesAny(entryName)) {
+          continue;
+        }
+        Path destFile = Paths.get(entryName);
         Path destPath;
         if (stripPath.isPresent()) {
           if (!destFile.startsWith(stripPath.get())) {

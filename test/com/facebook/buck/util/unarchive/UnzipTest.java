@@ -29,6 +29,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.ZipArchive;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.base.Charsets;
@@ -369,5 +370,32 @@ public class UnzipTest {
     assertEquals(new String(bazDotSh), filesystem.readFileIfItExists(bazDotShPath).get());
     assertEquals(
         new String(DUMMY_FILE_CONTENTS), filesystem.readFileIfItExists(bazDotTxtPath).get());
+  }
+
+  @Test
+  public void testExcludedEntriesNotExtracted() throws IOException {
+    try (ZipArchive zipArchive = new ZipArchive(this.zipFile, true)) {
+      zipArchive.add("1.bin", DUMMY_FILE_CONTENTS);
+      zipArchive.add("subdir/2.bin", DUMMY_FILE_CONTENTS);
+      zipArchive.addDir("emptydir");
+    }
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
+
+    Path extractFolder = tmpFolder.newFolder();
+    ImmutableSet<Path> result =
+        ArchiveFormat.ZIP
+            .getUnarchiver()
+            .extractArchive(
+                zipFile.toAbsolutePath(),
+                filesystem,
+                extractFolder,
+                Optional.empty(),
+                new PatternsMatcher(ImmutableSet.of("subdir/2.bin")),
+                ExistingFileMode.OVERWRITE);
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("1.bin")));
+    assertTrue(Files.isDirectory(extractFolder.toAbsolutePath().resolve("emptydir")));
+    assertEquals(ImmutableSet.of(extractFolder.resolve("1.bin")), result);
   }
 }
