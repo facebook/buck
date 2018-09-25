@@ -16,8 +16,10 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /** Subclass of WindowsCompiler with overrides specific for clang-cl. */
 public class ClangClCompiler extends WindowsCompiler {
@@ -31,5 +33,11 @@ public class ClangClCompiler extends WindowsCompiler {
       String altCompilationDir, Path currentCellPath) {
     return ImmutableList.of(
         "/Brepro", "-Xclang", "-fdebug-compilation-dir", "-Xclang", altCompilationDir);
+  }
+
+  @Override
+  public Optional<String> getStderr(ProcessExecutor.Result result) {
+    // clang-cl is sensible
+    return result.getStderr();
   }
 }
