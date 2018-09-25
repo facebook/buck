@@ -31,6 +31,8 @@ import java.util.stream.Collectors;
  */
 public class PatternsMatcher {
 
+  public static final PatternsMatcher EMPTY = new PatternsMatcher(ImmutableSet.<Pattern>of());
+
   private final Collection<Pattern> patterns;
   private final boolean hasPatterns;
 
@@ -49,6 +51,18 @@ public class PatternsMatcher {
     if (!hasPatterns) {
       return true;
     }
+    return matchesSomePatterns(string);
+  }
+
+  /** @return true if the given string matches some of the patterns */
+  public boolean matchesAny(String string) {
+    if (!hasPatterns) {
+      return false;
+    }
+    return matchesSomePatterns(string);
+  }
+
+  private boolean matchesSomePatterns(String string) {
     for (Pattern pattern : patterns) {
       if (pattern.matcher(string).matches()) {
         return true;
