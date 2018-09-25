@@ -21,6 +21,7 @@ enum BuckCacheRequestType {
   MANIFEST_APPEND = 108,
   MANIFEST_FETCH = 109,
   MANIFEST_DELETE = 110,
+  MANIFEST_SET = 111,
 }
 
 struct RuleKey {
@@ -205,6 +206,13 @@ struct ManifestDeleteRequest {
 struct ManifestDeleteResponse {
 }
 
+struct ManifestSetRequest {
+  1: optional Manifest manifest;
+}
+
+struct ManifestSetResponse {
+}
+
 struct BuckCacheRequest {
   1: optional BuckCacheRequestType type = BuckCacheRequestType.UNKNOWN;
 
@@ -221,6 +229,7 @@ struct BuckCacheRequest {
   108: optional ManifestAppendRequest manifestAppendRequest;
   109: optional ManifestFetchRequest manifestFetchRequest;
   110: optional ManifestDeleteRequest manifestDeleteRequest;
+  111: optional ManifestSetRequest manifestSetRequest;
 }
 
 struct BuckCacheResponse {
@@ -244,4 +253,5 @@ struct BuckCacheResponse {
   108: optional ManifestAppendResponse manifestAppendResponse;
   109: optional ManifestFetchResponse manifestFetchResponse;
   110: optional ManifestDeleteResponse manifestDeleteResponse;
+  111: optional ManifestSetResponse manifestSetResponse;
 }
