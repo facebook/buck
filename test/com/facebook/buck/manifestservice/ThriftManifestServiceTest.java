@@ -105,6 +105,22 @@ public class ThriftManifestServiceTest {
         manifest.getKey(), request.get().getManifestDeleteRequest().getManifestKey());
   }
 
+  @Test
+  public void testSetManifest() throws InterruptedException, ExecutionException, TimeoutException {
+    final Manifest manifest = createManifest();
+    final AtomicReference<BuckCacheRequest> request = new AtomicReference<>();
+    innerServiceFake.setCallback(
+        (req, resp) -> {
+          request.set(req);
+          resp.setType(BuckCacheRequestType.MANIFEST_SET);
+          resp.setWasSuccessful(true);
+        });
+    service.setManifest(manifest).get(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+    Assert.assertNotNull(request.get());
+    Assert.assertEquals(BuckCacheRequestType.MANIFEST_SET, request.get().getType());
+    Assert.assertEquals(manifest, request.get().getManifestSetRequest().getManifest());
+  }
+
   private static Manifest createManifest() {
     Manifest manifest = new Manifest();
     manifest.setKey("topspin_manifest_key");

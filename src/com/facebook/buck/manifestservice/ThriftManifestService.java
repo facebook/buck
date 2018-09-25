@@ -23,6 +23,7 @@ import com.facebook.buck.artifact_cache.thrift.Manifest;
 import com.facebook.buck.artifact_cache.thrift.ManifestAppendRequest;
 import com.facebook.buck.artifact_cache.thrift.ManifestDeleteRequest;
 import com.facebook.buck.artifact_cache.thrift.ManifestFetchRequest;
+import com.facebook.buck.artifact_cache.thrift.ManifestSetRequest;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.slb.HybridThriftOverHttpService;
 import com.facebook.buck.slb.ThriftService;
@@ -73,6 +74,19 @@ public class ThriftManifestService implements ManifestService {
         new BuckCacheRequest()
             .setType(BuckCacheRequestType.MANIFEST_DELETE)
             .setManifestDeleteRequest(new ManifestDeleteRequest().setManifestKey(manifestKey));
+    return executor.submit(
+        () -> {
+          makeRequestSync(request);
+          return null;
+        });
+  }
+
+  @Override
+  public ListenableFuture<Void> setManifest(Manifest manifest) {
+    BuckCacheRequest request =
+        new BuckCacheRequest()
+            .setType(BuckCacheRequestType.MANIFEST_SET)
+            .setManifestSetRequest(new ManifestSetRequest().setManifest(manifest));
     return executor.submit(
         () -> {
           makeRequestSync(request);

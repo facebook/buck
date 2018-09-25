@@ -31,4 +31,7 @@ public interface ManifestService extends Closeable {
 
   /** Deletes an existing Manifest. */
   ListenableFuture<Void> deleteManifest(String manifestKey);
+
+  /** Sets the Manifest for key. Overwrites existing one if it already exists. */
+  ListenableFuture<Void> setManifest(Manifest manifest);
 }
