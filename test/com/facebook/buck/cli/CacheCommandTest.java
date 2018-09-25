@@ -208,7 +208,8 @@ public class CacheCommandTest {
             false,
             new BuildId("1234-5678"),
             false,
-            Optional.empty());
+            Optional.empty(),
+            ImmutableList.of());
     eventBus.register(listener);
     return listener;
   }

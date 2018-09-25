@@ -1,34 +1,9 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-CACHE_STATS_SRCS = [
-    "CacheRateStatsKeeper.java",
-    "RemoteCacheUploadStats.java",
-]
-
-java_library(
-    name = "CacheStats",
-    srcs = CACHE_STATS_SRCS,
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//src-gen:thrift",
-        "//src/com/facebook/buck/artifact_cache:artifact_cache",
-        "//src/com/facebook/buck/core/build/event:event",
-        "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/event/external:external_lib",
-        "//third-party/java/guava:guava",
-    ],
-)
-
 java_immutables_library(
     name = "listener",
-    srcs = glob(
-        ["*.java"],
-        exclude = CACHE_STATS_SRCS,
-    ),
+    srcs = glob(["*.java"]),
     tests = [
-        "//test/com/facebook/buck/event/listener:listener",
         "//test/com/facebook/buck/event/listener/integration:integration",
     ],
     visibility = [
@@ -39,7 +14,6 @@ java_immutables_library(
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/util/json:json",
-        ":CacheStats",
         "//src/com/facebook/buck/core/build/event:event",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
         "//src/com/facebook/buck/core/model/actiongraph:actiongraph",
@@ -57,6 +31,8 @@ java_immutables_library(
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/chrome_trace:chrome_trace",
+        "//src/com/facebook/buck/event/listener/cachestats:cachestats",
+        "//src/com/facebook/buck/event/listener/interfaces:interfaces",
         "//src/com/facebook/buck/support/bgtasks:bgtasks",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/core/util/graph:graph",

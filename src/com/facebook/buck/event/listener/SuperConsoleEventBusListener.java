@@ -42,6 +42,8 @@ import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
+import com.facebook.buck.event.listener.cachestats.CacheRateStatsKeeper;
+import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -166,6 +168,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final Optional<String> buildIdLine;
   private final Optional<String> buildDetailsLine;
+  private final ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders;
 
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
@@ -178,7 +181,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       TimeZone timeZone,
       BuildId buildId,
       boolean printBuildId,
-      Optional<String> buildDetailsTemplate) {
+      Optional<String> buildDetailsTemplate,
+      ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders) {
     this(
         config,
         console,
@@ -194,7 +198,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         true,
         buildId,
         printBuildId,
-        buildDetailsTemplate);
+        buildDetailsTemplate,
+        additionalConsoleLineProviders);
   }
 
   @VisibleForTesting
@@ -213,7 +218,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       boolean hideEmptyDownload,
       BuildId buildId,
       boolean printBuildId,
-      Optional<String> buildDetailsTemplate) {
+      Optional<String> buildDetailsTemplate,
+      ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders) {
     super(
         console,
         clock,
@@ -222,6 +228,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         false,
         config.getNumberOfSlowRulesToShow(),
         config.shouldShowSlowRulesInConsole());
+    this.additionalConsoleLineProviders = additionalConsoleLineProviders;
     this.locale = locale;
     this.formatTimeFunction = this::formatElapsedTime;
     this.threadsToRunningTestSummaryEvent =
@@ -491,6 +498,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
         renderLines(renderer, lines, maxThreadLines, true);
       }
+    }
+
+    for (AdditionalConsoleLineProvider provider : additionalConsoleLineProviders) {
+      lines.addAll(provider.createConsoleLinesAtTime(currentTimeMillis));
     }
 
     if (networkStatsKeeper.getRemoteDownloadedArtifactsCount() > 0 || !this.hideEmptyDownload) {

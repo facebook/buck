@@ -82,6 +82,7 @@ import com.facebook.buck.event.listener.RuleKeyLoggerListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
+import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
 import com.facebook.buck.io.ExecutableFinder;
@@ -111,6 +112,9 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.TargetSpecResolver;
+import com.facebook.buck.remoteexecution.RemoteExecutionConfig;
+import com.facebook.buck.remoteexecution.RemoteExecutionConsoleLineProvider;
+import com.facebook.buck.remoteexecution.RemoteExecutionEventListener;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -875,6 +879,12 @@ public final class Main {
               unexpandedCommandLineArgs,
               filesystem.getBuckPaths().getLogDir());
 
+      RemoteExecutionConfig remoteExecutionConfig = new RemoteExecutionConfig(buckConfig);
+      Optional<RemoteExecutionEventListener> remoteExecutionListener =
+          remoteExecutionConfig.isSuperConsoleEnabled()
+              ? Optional.of(new RemoteExecutionEventListener())
+              : Optional.empty();
+
       try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
               GlobalStateManager.singleton()
                   .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
@@ -961,7 +971,9 @@ public final class Main {
                     filesystem.getBuckPaths().getLogDir().resolve("test.log"),
                     buildId,
                     buckConfig.isLogBuildIdToConsoleEnabled(),
-                    buckConfig.getBuildDetailsTemplate());
+                    buckConfig.getBuildDetailsTemplate(),
+                    createAdditionalConsoleLinesProviders(
+                        remoteExecutionListener, remoteExecutionConfig));
             // This makes calls to LOG.error(...) post to the EventBus, instead of writing to
             // stderr.
             Closeable logErrorToEventBus =
@@ -1069,7 +1081,8 @@ public final class Main {
                   consoleListener,
                   counterRegistry,
                   commandEventListeners,
-                  managerScope);
+                  managerScope,
+                  remoteExecutionListener);
 
           if (buckConfig.isBuckConfigLocalWarningEnabled() && !console.getVerbosity().isSilent()) {
             ImmutableList<Path> localConfigFiles =
@@ -1281,6 +1294,20 @@ public final class Main {
       }
     }
     return exitCode;
+  }
+
+  private ImmutableList<AdditionalConsoleLineProvider> createAdditionalConsoleLinesProviders(
+      Optional<RemoteExecutionEventListener> remoteExecutionListener,
+      RemoteExecutionConfig remoteExecutionConfig) {
+    if (!remoteExecutionListener.isPresent() || !remoteExecutionConfig.isSuperConsoleEnabled()) {
+      ImmutableList.of();
+    }
+
+    return ImmutableList.of(
+        new RemoteExecutionConsoleLineProvider(
+            remoteExecutionConfig.isSuperConsoleEnabledForCasStats(),
+            remoteExecutionConfig.isSuperConsoleEnabledForCasStats(),
+            remoteExecutionListener.get()));
   }
 
   /** Struct for the multiple values returned by {@link #getParserAndCaches}. */
@@ -1738,7 +1765,8 @@ public final class Main {
       AbstractConsoleEventBusListener consoleEventBusListener,
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners,
-      TaskManagerScope managerScope) {
+      TaskManagerScope managerScope,
+      Optional<RemoteExecutionEventListener> remoteExecutionListener) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(consoleEventBusListener)
@@ -1826,6 +1854,10 @@ public final class Main {
     }
     eventListenersBuilder.addAll(commandSpecificEventListeners);
 
+    if (remoteExecutionListener.isPresent()) {
+      eventListenersBuilder.add(remoteExecutionListener.get());
+    }
+
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
     eventListeners.forEach(buckEventBus::register);
 
@@ -1853,7 +1885,8 @@ public final class Main {
       Path testLogPath,
       BuildId buildId,
       boolean printBuildId,
-      Optional<String> buildDetailsTemplate) {
+      Optional<String> buildDetailsTemplate,
+      ImmutableList<AdditionalConsoleLineProvider> remoteExecutionConsoleLineProvider) {
     if (config.isEnabled(console, Platform.detect())) {
       SuperConsoleEventBusListener superConsole =
           new SuperConsoleEventBusListener(
@@ -1867,7 +1900,8 @@ public final class Main {
               TimeZone.getDefault(),
               buildId,
               printBuildId,
-              buildDetailsTemplate);
+              buildDetailsTemplate,
+              remoteExecutionConsoleLineProvider);
       superConsole.startRenderScheduler(
           SUPER_CONSOLE_REFRESH_RATE.toMillis(), TimeUnit.MILLISECONDS);
       return superConsole;

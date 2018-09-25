@@ -2128,7 +2128,8 @@ public class SuperConsoleEventBusListenerTest {
             false,
             buildId,
             false,
-            Optional.empty());
+            Optional.empty(),
+            ImmutableList.of());
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -3037,7 +3038,8 @@ public class SuperConsoleEventBusListenerTest {
             false,
             buildId,
             printBuildId,
-            buildDetailsTemplate);
+            buildDetailsTemplate,
+            ImmutableList.of());
     eventBus.register(listener);
     return listener;
   }

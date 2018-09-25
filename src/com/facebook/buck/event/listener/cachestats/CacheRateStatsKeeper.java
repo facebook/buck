@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.event.listener;
+package com.facebook.buck.event.listener.cachestats;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
@@ -49,7 +49,7 @@ public class CacheRateStatsKeeper {
   private final AtomicInteger cacheLocalKeyUnchangedHits = new AtomicInteger(0);
   private final AtomicInteger unexpectedCacheMissesInStampedeBuildSlave = new AtomicInteger(0);
 
-  protected final AtomicInteger ruleCount = new AtomicInteger(0);
+  private final AtomicInteger ruleCount = new AtomicInteger(0);
 
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     if (finished.getStatus() == BuildRuleStatus.CANCELED) {
@@ -219,5 +219,9 @@ public class CacheRateStatsKeeper {
     public String getEventName() {
       return CacheRateStatsUpdateExternalEventInterface.EVENT_NAME;
     }
+  }
+
+  public AtomicInteger getRuleCount() {
+    return ruleCount;
   }
 }

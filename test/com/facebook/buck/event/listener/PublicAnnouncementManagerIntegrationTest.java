@@ -143,7 +143,8 @@ public class PublicAnnouncementManagerIntegrationTest {
               TimeZone.getTimeZone("UTC"),
               new BuildId("1234-5679"),
               false,
-              Optional.empty());
+              Optional.empty(),
+              ImmutableList.of());
       eventBus.register(listener);
 
       PublicAnnouncementManager manager =

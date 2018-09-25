@@ -17,6 +17,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.event.listener.cachestats.CacheRateStatsKeeper;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;

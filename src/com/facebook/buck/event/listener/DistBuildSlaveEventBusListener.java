@@ -42,6 +42,8 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.listener.cachestats.CacheRateStatsKeeper;
+import com.facebook.buck.event.listener.cachestats.RemoteCacheUploadStats;
 import com.facebook.buck.log.TimedLogger;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.facebook.buck.util.timing.Clock;
@@ -374,7 +376,7 @@ public class DistBuildSlaveEventBusListener
     // For calculating the cache rate, total rule count = rules that were processed. So we increment
     // for started and resumed events, and decrement for suspended event. We do not decrement for a
     // finished event.
-    cacheRateStatsKeeper.ruleCount.incrementAndGet();
+    cacheRateStatsKeeper.getRuleCount().incrementAndGet();
   }
 
   @Subscribe
@@ -397,14 +399,14 @@ public class DistBuildSlaveEventBusListener
   @Subscribe
   public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
     buildRulesBuildingCount.incrementAndGet();
-    cacheRateStatsKeeper.ruleCount.incrementAndGet();
+    cacheRateStatsKeeper.getRuleCount().incrementAndGet();
   }
 
   @SuppressWarnings("unused")
   @Subscribe
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
     buildRulesBuildingCount.decrementAndGet();
-    cacheRateStatsKeeper.ruleCount.decrementAndGet();
+    cacheRateStatsKeeper.getRuleCount().decrementAndGet();
   }
 
   @Subscribe

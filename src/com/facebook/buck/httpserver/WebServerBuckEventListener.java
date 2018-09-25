@@ -26,7 +26,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
-import com.facebook.buck.event.listener.CacheRateStatsKeeper;
+import com.facebook.buck.event.listener.cachestats.CacheRateStatsKeeper;
 import com.facebook.buck.parser.ParseEvent;
 import com.google.common.eventbus.Subscribe;
 

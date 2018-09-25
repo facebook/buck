@@ -1,0 +1,20 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_library(
+    name = "cachestats",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/event/listener/cachestats:cachestats",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/artifact_cache:artifact_cache",
+        "//src/com/facebook/buck/core/build/event:event",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//third-party/java/guava:guava",
+    ],
+)
