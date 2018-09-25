@@ -61,6 +61,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
@@ -89,6 +90,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   private final PerBuildState parserState;
   private final Cell rootCell;
   private final OwnersReport.Builder ownersReportBuilder;
+  private final ListeningExecutorService executor;
   private final TargetPatternEvaluator targetPatternEvaluator;
   private final BuckEventBus eventBus;
   private final QueryEnvironment.TargetEvaluator queryTargetEvaluator;
@@ -108,6 +110,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       Builder ownersReportBuilder,
       Parser parser,
       PerBuildState parserState,
+      ListeningExecutorService executor,
       TargetPatternEvaluator targetPatternEvaluator,
       BuckEventBus eventBus,
       TypeCoercerFactory typeCoercerFactory) {
@@ -126,8 +129,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
                     cell ->
                         new FilesystemBackedBuildFileTree(
                             cell.getFilesystem(), cell.getBuildFileName())));
+    this.executor = executor;
     this.targetPatternEvaluator = targetPatternEvaluator;
-    this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator);
+    this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator, executor);
     this.typeCoercerFactory = typeCoercerFactory;
   }
 
@@ -136,6 +140,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       OwnersReport.Builder ownersReportBuilder,
       Parser parser,
       PerBuildState parserState,
+      ListeningExecutorService executor,
       TargetPatternEvaluator targetPatternEvaluator,
       BuckEventBus eventBus,
       TypeCoercerFactory typeCoercerFactory) {
@@ -144,19 +149,25 @@ public class BuckQueryEnvironment implements QueryEnvironment {
         ownersReportBuilder,
         parser,
         parserState,
+        executor,
         targetPatternEvaluator,
         eventBus,
         typeCoercerFactory);
   }
 
-  public static BuckQueryEnvironment from(CommandRunnerParams params, PerBuildState parserState) {
+  public static BuckQueryEnvironment from(
+      CommandRunnerParams params,
+      PerBuildState parserState,
+      ListeningExecutorService executor,
+      boolean enableProfiling) {
     return from(
         params.getCell(),
         OwnersReport.builder(params.getCell(), params.getParser(), parserState),
         params.getParser(),
         parserState,
+        executor,
         new TargetPatternEvaluator(
-            params.getCell(), params.getBuckConfig(), params.getParser(), parserState),
+            params.getCell(), params.getBuckConfig(), params.getParser(), enableProfiling),
         params.getBuckEventBus(),
         params.getTypeCoercerFactory());
   }
@@ -172,7 +183,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   public void preloadTargetPatterns(Iterable<String> patterns)
       throws QueryException, InterruptedException {
     try {
-      targetPatternEvaluator.preloadTargetPatterns(patterns);
+      targetPatternEvaluator.preloadTargetPatterns(patterns, executor);
     } catch (IOException e) {
       throw new QueryException(
           e, "Error in preloading targets. %s: %s", e.getClass(), e.getMessage());
@@ -523,16 +534,19 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator {
     private final TargetPatternEvaluator evaluator;
+    private final ListeningExecutorService executor;
 
-    private TargetEvaluator(TargetPatternEvaluator evaluator) {
+    private TargetEvaluator(TargetPatternEvaluator evaluator, ListeningExecutorService executor) {
       this.evaluator = evaluator;
+      this.executor = executor;
     }
 
     @Override
     public ImmutableSet<QueryTarget> evaluateTarget(String target) throws QueryException {
       try {
         return ImmutableSet.copyOf(
-            Iterables.concat(evaluator.resolveTargetPatterns(ImmutableList.of(target)).values()));
+            Iterables.concat(
+                evaluator.resolveTargetPatterns(ImmutableList.of(target), executor).values()));
       } catch (BuildFileParseException | InterruptedException | IOException e) {
         throw new QueryException(e, "Error in resolving targets matching %s", target);
       }

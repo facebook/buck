@@ -111,7 +111,6 @@ public class BuckQueryEnvironmentTest {
             WatchmanFactory.NULL_WATCHMAN,
             eventBus);
     Parser parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory, eventBus);
-    executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     parserState =
         perBuildStateFactory.create(
             parser.getPermState(),
@@ -122,14 +121,17 @@ public class BuckQueryEnvironmentTest {
             SpeculativeParsing.ENABLED);
 
     TargetPatternEvaluator targetPatternEvaluator =
-        new TargetPatternEvaluator(cell, FakeBuckConfig.builder().build(), parser, parserState);
+        new TargetPatternEvaluator(
+            cell, FakeBuckConfig.builder().build(), parser, /* enableProfiling */ false);
     OwnersReport.Builder ownersReportBuilder = OwnersReport.builder(cell, parser, parserState);
+    executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
             cell,
             ownersReportBuilder,
             parser,
             parserState,
+            executor,
             targetPatternEvaluator,
             eventBus,
             TYPE_COERCER_FACTORY);
