@@ -52,7 +52,10 @@ zip_file(
         "cake.txt",
         "source-1.0-sources.jar",
     ],
-    entries_to_exclude = [".*"],
+    entries_to_exclude = [
+        "cake.txt",
+        "menu.txt",
+    ],
 )
 
 zip_file(
@@ -92,5 +95,15 @@ zip_file(
     ],
     entries_to_exclude = [
         "beans/cheesy.txt",
+    ],
+)
+
+zip_file(
+    name = "exclude_from_zip",
+    entries_to_exclude = [
+        "cake.txt",
+    ],
+    zip_srcs = [
+        ":ziptastic",
     ],
 )

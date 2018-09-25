@@ -260,4 +260,18 @@ public class ZipRuleIntegrationTest {
       inspector.assertFileDoesNotExist("taco.txt");
     }
   }
+
+  @Test
+  public void shouldExcludeFromRegularZip() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    Path zip = workspace.buildAndReturnOutput("//example:exclude_from_zip");
+
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      ZipInspector inspector = new ZipInspector(zip);
+      inspector.assertFileDoesNotExist("cake.txt");
+    }
+  }
 }

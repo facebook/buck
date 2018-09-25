@@ -21,6 +21,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import java.io.IOException;
@@ -34,6 +35,7 @@ public abstract class UnarchiveStep implements Step {
   protected final ProjectFilesystem filesystem;
   protected final Path archiveFile;
   protected final Path destinationDirectory;
+  protected final PatternsMatcher entriesToExclude;
   private final Optional<Path> stripPrefix;
 
   /**
@@ -50,12 +52,14 @@ public abstract class UnarchiveStep implements Step {
       ProjectFilesystem filesystem,
       Path archiveFile,
       Path destinationDirectory,
-      Optional<Path> stripPrefix) {
+      Optional<Path> stripPrefix,
+      PatternsMatcher entriesToExclude) {
     this.format = format;
     this.filesystem = filesystem;
     this.archiveFile = archiveFile;
     this.destinationDirectory = destinationDirectory;
     this.stripPrefix = stripPrefix;
+    this.entriesToExclude = entriesToExclude;
   }
 
   @Override
@@ -74,6 +78,7 @@ public abstract class UnarchiveStep implements Step {
             archive,
             out,
             stripPrefix,
+            entriesToExclude,
             ExistingFileMode.OVERWRITE);
     return StepExecutionResults.SUCCESS;
   }

@@ -19,6 +19,7 @@ package com.facebook.buck.unarchive;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -39,7 +40,37 @@ public class UnzipStep extends UnarchiveStep {
       Path zipFile,
       Path destinationDirectory,
       Optional<Path> stripPrefix) {
-    super(ArchiveFormat.ZIP, filesystem, zipFile, destinationDirectory, stripPrefix);
+    super(
+        ArchiveFormat.ZIP,
+        filesystem,
+        zipFile,
+        destinationDirectory,
+        stripPrefix,
+        PatternsMatcher.EMPTY);
+  }
+
+  /**
+   * Create an instance of UnzipStep
+   *
+   * @param filesystem The filesystem that the archive will be extracted into
+   * @param zipFile The path to the file to extract
+   * @param destinationDirectory The directory to extract files into
+   * @param stripPrefix If present, strip this prefix from paths inside of the archive
+   * @param entriesToExclude entries that match this matcher will not be extracted
+   */
+  public UnzipStep(
+      ProjectFilesystem filesystem,
+      Path zipFile,
+      Path destinationDirectory,
+      Optional<Path> stripPrefix,
+      PatternsMatcher entriesToExclude) {
+    super(
+        ArchiveFormat.ZIP,
+        filesystem,
+        zipFile,
+        destinationDirectory,
+        stripPrefix,
+        entriesToExclude);
   }
 
   @Override

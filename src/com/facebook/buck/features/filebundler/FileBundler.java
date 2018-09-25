@@ -48,7 +48,8 @@ public abstract class FileBundler {
     this.basePath = Preconditions.checkNotNull(basePath);
   }
 
-  private void findAndAddRelativePathToMap(
+  private static void findAndAddRelativePathToMap(
+      Path basePath,
       Path absoluteFilePath,
       Path relativeFilePath,
       Path assumedAbsoluteBasePath,
@@ -68,7 +69,8 @@ public abstract class FileBundler {
     relativePathMap.put(pathRelativeToBaseDir, absoluteFilePath);
   }
 
-  private ImmutableMap<Path, Path> createRelativeMap(
+  static ImmutableMap<Path, Path> createRelativeMap(
+      Path basePath,
       ProjectFilesystem filesystem,
       SourcePathResolver resolver,
       ImmutableSortedSet<SourcePath> toCopy) {
@@ -84,10 +86,11 @@ public abstract class FileBundler {
           for (Path file : files) {
             Path absoluteFilePath = filesystem.resolve(file);
             findAndAddRelativePathToMap(
-                absoluteFilePath, file, absoluteBasePathParent, relativePathMap);
+                basePath, absoluteFilePath, file, absoluteBasePathParent, relativePathMap);
           }
         } else {
           findAndAddRelativePathToMap(
+              basePath,
               absoluteBasePath,
               resolver.getRelativePath(sourcePath),
               absoluteBasePath.getParent(),
@@ -128,7 +131,7 @@ public abstract class FileBundler {
       SourcePathResolver pathResolver,
       PatternsMatcher entriesToExclude) {
 
-    Map<Path, Path> relativeMap = createRelativeMap(filesystem, pathResolver, toCopy);
+    Map<Path, Path> relativeMap = createRelativeMap(basePath, filesystem, pathResolver, toCopy);
 
     for (Map.Entry<Path, Path> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();

@@ -117,7 +117,12 @@ public abstract class Unarchiver {
       ExistingFileMode existingFileMode)
       throws InterruptedException, IOException {
     return extractArchive(
-        projectFilesystemFactory, archiveFile, destination, Optional.empty(), existingFileMode);
+        projectFilesystemFactory,
+        archiveFile,
+        destination,
+        Optional.empty(),
+        PatternsMatcher.EMPTY,
+        existingFileMode);
   }
 
   /**
@@ -140,6 +145,7 @@ public abstract class Unarchiver {
       Path archiveFile,
       Path destination,
       Optional<Path> stripPrefix,
+      PatternsMatcher entriesToExclude,
       ExistingFileMode existingFileMode)
       throws InterruptedException, IOException {
     // Create output directory if it does not exist
@@ -149,6 +155,7 @@ public abstract class Unarchiver {
             projectFilesystemFactory.createProjectFilesystem(destination),
             destination.getFileSystem().getPath(""),
             stripPrefix,
+            entriesToExclude,
             existingFileMode)
         .stream()
         .map(input -> destination.resolve(input).toAbsolutePath())

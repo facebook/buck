@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.filebundler.CopyingFileBundler;
 import com.facebook.buck.features.filebundler.FileBundler;
 import com.facebook.buck.features.filebundler.SrcZipAwareFileBundler;
+import com.facebook.buck.features.filebundler.ZipFileExtractor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -82,21 +83,23 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
+    PatternsMatcher excludedEntriesMatcher = new PatternsMatcher(entriesToExclude);
     Path scratchDir = outputPathResolver.getTempPath();
     FileBundler bundler;
     if (!zipSources.isEmpty()) {
-      bundler = new SrcZipAwareFileBundler(getBuildTarget());
-      bundler.copy(
-          filesystem,
-          buildCellPathFactory,
-          steps,
-          scratchDir,
-          zipSources,
-          buildContext.getSourcePathResolver());
+      steps.addAll(
+          ZipFileExtractor.extractZipFiles(
+              getBuildTarget(),
+              filesystem,
+              scratchDir,
+              zipSources,
+              buildContext.getSourcePathResolver(),
+              excludedEntriesMatcher));
+      bundler = new CopyingFileBundler(getBuildTarget());
     } else if (!mergeSourceZips.orElse(true)) {
       bundler = new CopyingFileBundler(getBuildTarget());
     } else {
-      bundler = new SrcZipAwareFileBundler(getBuildTarget());
+      bundler = new SrcZipAwareFileBundler(getBuildTarget(), excludedEntriesMatcher);
     }
 
     bundler.copy(
@@ -106,7 +109,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
         scratchDir,
         sources,
         buildContext.getSourcePathResolver(),
-        new PatternsMatcher(entriesToExclude));
+        excludedEntriesMatcher);
 
     steps.add(
         new ZipStep(

@@ -19,6 +19,7 @@ package com.facebook.buck.unarchive;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -42,7 +43,8 @@ public class UntarStep extends UnarchiveStep {
       Path destinationDirectory,
       Optional<Path> stripPrefix,
       ArchiveFormat format) {
-    super(format, filesystem, archiveFile, destinationDirectory, stripPrefix);
+    super(
+        format, filesystem, archiveFile, destinationDirectory, stripPrefix, PatternsMatcher.EMPTY);
 
     switch (format) {
       case TAR:

@@ -24,18 +24,23 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.unarchive.UnzipStep;
+import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class SrcZipAwareFileBundler extends FileBundler {
 
-  public SrcZipAwareFileBundler(BuildTarget target) {
+  private final PatternsMatcher entriesToExclude;
+
+  public SrcZipAwareFileBundler(BuildTarget target, PatternsMatcher entriesToExclude) {
     super(target);
+    this.entriesToExclude = entriesToExclude;
   }
 
-  public SrcZipAwareFileBundler(Path basePath) {
+  public SrcZipAwareFileBundler(Path basePath, PatternsMatcher entriesToExclude) {
     super(basePath);
+    this.entriesToExclude = entriesToExclude;
   }
 
   @Override
@@ -48,7 +53,13 @@ public class SrcZipAwareFileBundler extends FileBundler {
       Path destination) {
     if (relativePath.toString().endsWith(Javac.SRC_ZIP)
         || relativePath.toString().endsWith(Javac.SRC_JAR)) {
-      steps.add(new UnzipStep(filesystem, absolutePath, destination.getParent(), Optional.empty()));
+      steps.add(
+          new UnzipStep(
+              filesystem,
+              absolutePath,
+              destination.getParent(),
+              Optional.empty(),
+              entriesToExclude));
       return;
     }
 

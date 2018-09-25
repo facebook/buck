@@ -9,6 +9,7 @@ standard_java_test(
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
