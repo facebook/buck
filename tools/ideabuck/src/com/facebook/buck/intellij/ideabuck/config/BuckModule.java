@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.ideabuck.config;
 
-import com.facebook.buck.intellij.ideabuck.autodeps.BuckAutoDepsContributor;
 import com.facebook.buck.intellij.ideabuck.debugger.AndroidDebugger;
 import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.facebook.buck.intellij.ideabuck.ui.BuckEventsConsumer;
@@ -30,7 +29,6 @@ import com.intellij.ide.ui.UISettings;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiDocumentManager;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class BuckModule implements ProjectComponent {
@@ -72,9 +70,6 @@ public final class BuckModule implements ProjectComponent {
     }
 
     mBuckEventsConsumer = new BuckEventsConsumer(mProject);
-
-    PsiDocumentManager manager = PsiDocumentManager.getInstance(mProject);
-    manager.addListener(new BuckAutoDepsContributor(mProject));
   }
 
   @Override

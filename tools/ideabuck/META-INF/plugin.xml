@@ -205,6 +205,8 @@
     <lang.foldingBuilder
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.folding.BuckFoldingBuilder"/>
+    <codeInsight.unresolvedReferenceQuickFixProvider
+      implementation="com.facebook.buck.intellij.ideabuck.autodeps.BuckAutoDepsQuickFixProvider"/>
     <completion.contributor
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.completion.BuckCompletionContributor"/>

@@ -31,11 +31,11 @@ public class MaybeAddVisibilityToTargetTest {
             "rule(",
             "\tname = \"foo\",",
             "\tvisibility = [",
-            "\t\t\"/this\",",
+            "\t\t\"//this:this\",",
             "\t]",
             ")");
     String expected = buckInput;
-    String actual = BuckDeps.maybeAddVisibilityToTarget(buckInput, "/this", "foo");
+    String actual = BuckDeps.maybeAddVisibilityToTarget(buckInput, "//this:this", "//src:foo");
     assertEquals(expected, actual);
   }
 
@@ -51,7 +51,7 @@ public class MaybeAddVisibilityToTargetTest {
             "\t]",
             ")");
     String expected = buckInput;
-    String actual = BuckDeps.maybeAddVisibilityToTarget(buckInput, "/this", "foo");
+    String actual = BuckDeps.maybeAddVisibilityToTarget(buckInput, "//this:this", "//src:foo");
     assertEquals(expected, actual);
   }
 
@@ -63,7 +63,7 @@ public class MaybeAddVisibilityToTargetTest {
             "rule(",
             "\tname = \"foo\",",
             "\tvisibility = [",
-            "\t\t\"/this\",",
+            "\t\t\"//this:this\",",
             "\t]",
             ")");
     String expected =
@@ -72,11 +72,11 @@ public class MaybeAddVisibilityToTargetTest {
             "rule(",
             "\tname = \"foo\",",
             "\tvisibility = [",
-            "\t\t\"/other:thing\",",
-            "\t\t\"/this\",",
+            "\t\t\"//other:thing\",",
+            "\t\t\"//this:this\",",
             "\t]",
             ")");
-    String actual = BuckDeps.maybeAddVisibilityToTarget(buckInput, "/other:thing", "foo");
+    String actual = BuckDeps.maybeAddVisibilityToTarget(buckInput, "//other:thing", "//src:foo");
     assertEquals(expected, actual);
   }
 }

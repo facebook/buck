@@ -18,13 +18,10 @@ package com.facebook.buck.intellij.ideabuck.autodeps;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter; // NOPMD not in core Buck
-import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,42 +38,12 @@ public class BuckDeps {
 
   private BuckDeps() {}
 
-  public static void addDeps(
-      Project project,
-      String importBuckPath,
-      String currentBuckPath,
-      String importTarget,
-      String currentTarget) {
-    String buckPath = project.getBaseDir().getPath() + "/" + currentBuckPath + "/BUCK";
-    String contents = readBuckFile(buckPath);
-    String dependency = "//" + importBuckPath + ":" + importTarget;
-    String newContents = maybeAddDepToTarget(contents, dependency, currentTarget);
-    if (!contents.equals(newContents)) {
-      writeBuckFile(buckPath, newContents);
-    }
-  }
-
-  public static void addVisibility(
-      Project project,
-      String importBuckPath,
-      String currentBuckPath,
-      String importTarget,
-      String currentTarget) {
-    String buckPath = project.getBaseDir().getPath() + "/" + importBuckPath + "/BUCK";
-    String contents = readBuckFile(buckPath);
-    String visibility = "//" + currentBuckPath + ":" + currentTarget;
-    String newContents = maybeAddVisibilityToTarget(contents, visibility, importTarget);
-    if (!contents.equals(newContents)) {
-      writeBuckFile(buckPath, newContents);
-    }
-  }
-
   /**
    * Given the contents of a buckfile and a target name, returns an array of indices into the
    * content [start, end] of a guess where that target def in the given BUCK file.
    */
   @VisibleForTesting
-  static int[] findTargetInBuckFileContents(String contents, String target) {
+  static int[] findRuleInBuckFileContents(String contents, String target) {
     int nameOffset = contents.indexOf("\"" + target + "\"");
     if (nameOffset == -1) {
       nameOffset = contents.indexOf("'" + target + "'");
@@ -122,8 +89,11 @@ public class BuckDeps {
    * the given target.
    */
   @VisibleForTesting
-  static String maybeAddDepToTarget(String buckContents, String dependency, String target) {
-    int[] targetOffset = findTargetInBuckFileContents(buckContents, target);
+  static String maybeAddDepToTarget(
+      String buckContents, String dependencyString, String targetString) {
+    BuckTarget target = BuckTarget.parse(targetString);
+
+    int[] targetOffset = findRuleInBuckFileContents(buckContents, target.getRuleName());
     if (targetOffset == null) {
       LOG.warn("Couldn't find target definition for " + target);
       // TODO(ideabuck):  make this a better parser
@@ -137,10 +107,11 @@ public class BuckDeps {
       return buckContents;
     }
 
+    BuckTarget dependency = target.parseRelative(dependencyString);
     Matcher exportedDepsMatcher = exportedDepsPattern.matcher(targetDef);
     if (exportedDepsMatcher.find()) {
       String exportedDeps = exportedDepsMatcher.group(1);
-      if (exportedDeps.contains(dependency)) {
+      if (exportedDeps.contains(dependency.relativeTo(target))) {
         // If it already appears in the exported_deps section, nothing to do
         return buckContents;
       }
@@ -155,7 +126,7 @@ public class BuckDeps {
               + target);
       return buckContents;
     }
-    if (depsMatcher.group(1).contains(dependency)) {
+    if (depsMatcher.group(1).contains(dependency.relativeTo(target))) {
       // already have dep in the deps section
       return buckContents;
     }
@@ -168,9 +139,18 @@ public class BuckDeps {
   }
 
   @VisibleForTesting
-  static String maybeAddVisibilityToTarget(String buckContents, String visibility, String target) {
+  static String maybeAddVisibilityToTarget(
+      String buckContents, String visibilityString, String targetString) {
+    BuckTarget target = BuckTarget.parse(targetString);
+    BuckTarget visibility = target.parseRelative(visibilityString);
 
-    int[] targetOffset = findTargetInBuckFileContents(buckContents, target);
+    if (target.getCellName().equals(visibility.getCellName())
+        && target.getRelativePath().equals(visibility.getRelativePath())) {
+      // No need to add visibility for target within same file.
+      return buckContents;
+    }
+
+    int[] targetOffset = findRuleInBuckFileContents(buckContents, target.getRuleName());
     if (targetOffset == null) {
       LOG.warn("Couldn't find target definition for " + target);
       // TODO(ideabuck):  make this a better parser
@@ -190,7 +170,7 @@ public class BuckDeps {
       return buckContents;
     }
 
-    if (visibilityMatcher.group(1).contains(visibility)) {
+    if (visibilityMatcher.group(1).contains(visibility.relativeTo(target))) {
       return buckContents; // already visibile to this caller
     }
     if (visibilityMatcher.group(1).contains("PUBLIC")) {
@@ -206,33 +186,63 @@ public class BuckDeps {
     return buckContents;
   }
 
-  private static String readBuckFile(String buckFilePath) {
-    String str = "";
-    File file = new File(buckFilePath);
-    try (FileInputStream fis = new FileInputStream(file)) {
-
-      byte[] data = new byte[(int) file.length()];
-      fis.read(data);
-      fis.close();
-      str = new String(data, "UTF-8");
-    } catch (FileNotFoundException e) {
-      LOG.error(e.toString());
-    } catch (UnsupportedEncodingException e) {
-      LOG.error(e.toString());
+  /**
+   * In the given {@code buckFile}, modify the given {@code target} to include {@code dependency} in
+   * its deps.
+   *
+   * @param buckFile Home for the given {@code target}.
+   * @param target The fully qualified target to be modified.
+   * @param dependency The fully qualified dependency required by the target.
+   */
+  static void modifyTargetToAddDependency(VirtualFile buckFile, String target, String dependency) {
+    try {
+      File file = new File(buckFile.getPath());
+      String oldContents = FileUtil.loadFile(file);
+      String newContents = maybeAddDepToTarget(oldContents, dependency, target);
+      if (!oldContents.equals(newContents)) {
+        LOG.info("Updating " + file.getPath());
+        FileUtil.writeToFile(file, newContents);
+        buckFile.refresh(true, false);
+      }
     } catch (IOException e) {
-      LOG.error(e.toString());
+      LOG.error(
+          "Failed to update "
+              + buckFile.getPath()
+              + " target "
+              + target
+              + " to include "
+              + dependency,
+          e);
     }
-    return str;
   }
 
-  private static void writeBuckFile(String buckFilePath, String text) {
-
-    try (PrintWriter out = new PrintWriter(buckFilePath)) { // NOPMD not in core Buck
-      out.write(text);
-    } catch (FileNotFoundException e) {
-      LOG.error(e.toString());
+  /**
+   * In the given {@code buckFile}, modify the given {@code target} to make it visible to the given
+   * {@code dependency}.
+   *
+   * @param buckFile Home for the given {@code target}.
+   * @param target The fully qualified target to be modified.
+   * @param dependent The fully qualified dependent that needs visibility to the target.
+   */
+  static void addVisibilityToTargetForUsage(VirtualFile buckFile, String target, String dependent) {
+    try {
+      File file = new File(buckFile.getPath());
+      String oldContents = FileUtil.loadFile(file);
+      String newContents = maybeAddVisibilityToTarget(oldContents, target, dependent);
+      if (!oldContents.equals(newContents)) {
+        LOG.info("Updating " + file.getPath());
+        FileUtil.writeToFile(file, newContents);
+        buckFile.refresh(true, false);
+      }
     } catch (IOException e) {
-      LOG.error(e.toString());
+      LOG.error(
+          "Failed to update "
+              + buckFile.getPath()
+              + " target "
+              + target
+              + " to be visible to "
+              + dependent,
+          e);
     }
   }
 }

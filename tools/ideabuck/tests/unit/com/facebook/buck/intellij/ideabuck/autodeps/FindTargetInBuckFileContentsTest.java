@@ -28,7 +28,7 @@ public class FindTargetInBuckFileContentsTest {
     String buckInput =
         buckFile("# Comment", "rule(", "\tname = 'foo',", "\tdeps = [", "\t\t'/this',", "\t]", ")");
     int expected[] = {14, 56};
-    int actual[] = BuckDeps.findTargetInBuckFileContents(buckInput, "foo");
+    int actual[] = BuckDeps.findRuleInBuckFileContents(buckInput, "foo");
     assertArrayEquals(expected, actual);
   }
 
@@ -56,10 +56,10 @@ public class FindTargetInBuckFileContentsTest {
             "\t]",
             ")");
     int expected[] = {61, 103};
-    int actual[] = BuckDeps.findTargetInBuckFileContents(buckInputSingleQuotes, "bar");
+    int actual[] = BuckDeps.findRuleInBuckFileContents(buckInputSingleQuotes, "bar");
     assertArrayEquals(expected, actual);
     String buckInputDoubleQuotes = buckInputSingleQuotes.replace('\'', '\"');
-    actual = BuckDeps.findTargetInBuckFileContents(buckInputDoubleQuotes, "bar");
+    actual = BuckDeps.findRuleInBuckFileContents(buckInputDoubleQuotes, "bar");
     assertArrayEquals(expected, actual);
   }
 
@@ -86,6 +86,6 @@ public class FindTargetInBuckFileContentsTest {
             "\t\t'/other',",
             "\t]",
             ")");
-    assertNull(BuckDeps.findTargetInBuckFileContents(buckInput, "qux"));
+    assertNull(BuckDeps.findRuleInBuckFileContents(buckInput, "qux"));
   }
 }
