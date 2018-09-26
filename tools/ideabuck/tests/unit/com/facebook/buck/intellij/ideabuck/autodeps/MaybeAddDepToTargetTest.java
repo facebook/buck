@@ -22,8 +22,46 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class MaybeAddDepToTargetTest {
+
   @Test
-  public void addsWhenDepIsAbsent() {
+  public void addsRefToDepsWhenAbsent() {
+    String buckInput =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = \"foo\",",
+            "\tprovided_deps = [",
+            "\t\t\"//not:here\",",
+            "\t]",
+            "\tdeps = [",
+            "\t\t\"//this:this\",",
+            "\t]",
+            "\texported_deps = [",
+            "\t\t\"//or:here\",",
+            "\t]",
+            ")");
+    String expected =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = \"foo\",",
+            "\tprovided_deps = [",
+            "\t\t\"//not:here\",",
+            "\t]",
+            "\tdeps = [",
+            "\t\t\"from//that:that\",",
+            "\t\t\"//this:this\",",
+            "\t]",
+            "\texported_deps = [",
+            "\t\t\"//or:here\",",
+            "\t]",
+            ")");
+    String actual = BuckDeps.maybeAddDepToTarget(buckInput, "from//that:that", "to//src:foo");
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void addsSameCellRefWhenDepIsAbsent() {
     String buckInput =
         buckFile(
             "# Comment",
@@ -43,7 +81,32 @@ public class MaybeAddDepToTargetTest {
             "\t\t\"//this:this\",",
             "\t]",
             ")");
-    String actual = BuckDeps.maybeAddDepToTarget(buckInput, "//that:that", "//src:foo");
+    String actual = BuckDeps.maybeAddDepToTarget(buckInput, "cell//that:that", "cell//src:foo");
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void addsCrossCellRefWhenDepIsAbsent() {
+    String buckInput =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = \"foo\",",
+            "\tdeps = [",
+            "\t\t\"//this:this\",",
+            "\t]",
+            ")");
+    String expected =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = \"foo\",",
+            "\tdeps = [",
+            "\t\t\"from//that:that\",",
+            "\t\t\"//this:this\",",
+            "\t]",
+            ")");
+    String actual = BuckDeps.maybeAddDepToTarget(buckInput, "from//that:that", "to//src:foo");
     assertEquals(expected, actual);
   }
 

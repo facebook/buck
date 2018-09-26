@@ -29,12 +29,12 @@ public class BuckDeps {
   private static final Logger LOG = Logger.getInstance(BuckDeps.class);
 
   // Patterns to search within a BUCK file for known rule
-  private static final Pattern autodepsPattern = Pattern.compile("autodeps\\s*=\\s*True");
-  private static final Pattern depsPattern = Pattern.compile("deps\\s*=\\s*\\[([^\\]]+)\\]");
+  private static final Pattern autodepsPattern = Pattern.compile("\\bautodeps\\b\\s*=\\s*True");
+  private static final Pattern depsPattern = Pattern.compile("\\bdeps\\b\\s*=\\s*\\[([^\\]]+)\\]");
   private static final Pattern exportedDepsPattern =
-      Pattern.compile("exported_deps\\s*=\\s*\\[([^\\]]+)\\]");
+      Pattern.compile("\\bexported_deps\\b\\s*=\\s*\\[([^\\]]+)\\]");
   private static final Pattern visibilityPattern =
-      Pattern.compile("visibility\\s*=\\s*\\[([^\\]]+)\\]");
+      Pattern.compile("\\bvisibility\\b\\s*=\\s*\\[([^\\]]+)\\]");
 
   private BuckDeps() {}
 
@@ -133,7 +133,7 @@ public class BuckDeps {
     int offset = targetOffset[0] + depsMatcher.start(1);
     return buckContents.substring(0, offset)
         + "\n\t\t\""
-        + dependency
+        + dependency.relativeTo(target)
         + "\","
         + buckContents.substring(offset);
   }
@@ -180,7 +180,7 @@ public class BuckDeps {
     buckContents =
         buckContents.substring(0, offset)
             + "\n\t\t\""
-            + visibility
+            + visibility.relativeTo(target)
             + "\","
             + buckContents.substring(offset);
     return buckContents;
@@ -202,7 +202,7 @@ public class BuckDeps {
       if (!oldContents.equals(newContents)) {
         LOG.info("Updating " + file.getPath());
         FileUtil.writeToFile(file, newContents);
-        buckFile.refresh(true, false);
+        buckFile.refresh(false, false);
       }
     } catch (IOException e) {
       LOG.error(
@@ -228,11 +228,11 @@ public class BuckDeps {
     try {
       File file = new File(buckFile.getPath());
       String oldContents = FileUtil.loadFile(file);
-      String newContents = maybeAddVisibilityToTarget(oldContents, target, dependent);
+      String newContents = maybeAddVisibilityToTarget(oldContents, dependent, target);
       if (!oldContents.equals(newContents)) {
         LOG.info("Updating " + file.getPath());
         FileUtil.writeToFile(file, newContents);
-        buckFile.refresh(true, false);
+        buckFile.refresh(false, false);
       }
     } catch (IOException e) {
       LOG.error(

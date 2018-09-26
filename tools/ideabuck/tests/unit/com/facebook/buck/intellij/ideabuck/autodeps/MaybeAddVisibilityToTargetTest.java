@@ -56,7 +56,7 @@ public class MaybeAddVisibilityToTargetTest {
   }
 
   @Test
-  public void addsVisibilityWhenTargetIsAbsent() {
+  public void addsSameCellVisibilityWhenTargetIsAbsent() {
     String buckInput =
         buckFile(
             "# Comment",
@@ -76,7 +76,34 @@ public class MaybeAddVisibilityToTargetTest {
             "\t\t\"//this:this\",",
             "\t]",
             ")");
-    String actual = BuckDeps.maybeAddVisibilityToTarget(buckInput, "//other:thing", "//src:foo");
+    String actual =
+        BuckDeps.maybeAddVisibilityToTarget(buckInput, "cell//other:thing", "cell//src:foo");
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void addsVisibilityWhenTargetIsAbsent() {
+    String buckInput =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = \"foo\",",
+            "\tvisibility = [",
+            "\t\t\"//this:this\",",
+            "\t]",
+            ")");
+    String expected =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = \"foo\",",
+            "\tvisibility = [",
+            "\t\t\"to//other:thing\",",
+            "\t\t\"//this:this\",",
+            "\t]",
+            ")");
+    String actual =
+        BuckDeps.maybeAddVisibilityToTarget(buckInput, "to//other:thing", "from//src:foo");
     assertEquals(expected, actual);
   }
 }
