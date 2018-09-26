@@ -25,7 +25,6 @@ import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ListeningProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import java.io.ByteArrayOutputStream;
@@ -36,7 +35,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /** This class implements starting the build prehook script. */
 class BuildPrehook implements AutoCloseable {
@@ -49,8 +47,6 @@ class BuildPrehook implements AutoCloseable {
   private final ImmutableMap<String, String> environment;
   private final Iterable<String> arguments;
   private final Closer closer;
-  // TODO(buck-team): fix the test to not rely on this field and remove it
-  @VisibleForTesting @Nullable LaunchedProcess process;
 
   BuildPrehook(
       ListeningProcessExecutor processExecutor,
@@ -105,7 +101,7 @@ class BuildPrehook implements AutoCloseable {
     ByteArrayOutputStream prehookStderr = new ByteArrayOutputStream();
     ListeningProcessExecutor.ProcessListener processListener = createProcessListener(prehookStderr);
     LOG.debug("Starting build pre-hook script %s", pathToScript);
-    process = processExecutor.launchProcess(processExecutorParams, processListener);
+    LaunchedProcess process = processExecutor.launchProcess(processExecutorParams, processListener);
     closer.register(() -> processExecutor.destroyProcess(process, /* force */ true));
   }
 
