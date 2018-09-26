@@ -67,7 +67,9 @@ public class ModernBuildRuleBuilderFactory {
                   rootCell,
                   hashLoader::get,
                   remoteExecutionConfig.getRemoteHost(),
-                  remoteExecutionConfig.getRemotePort()));
+                  remoteExecutionConfig.getRemotePort(),
+                  remoteExecutionConfig.getCasHost(),
+                  remoteExecutionConfig.getCasPort()));
         case THRIFT_REMOTE:
           return Optional.of(
               createThriftRemote(
@@ -197,11 +199,14 @@ public class ModernBuildRuleBuilderFactory {
       CellPathResolver cellResolver,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher,
-      String host,
-      int port)
+      String executionEngineHost,
+      int executionEnginePort,
+      String casHost,
+      int casPort)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
-        GrpcExecutionFactory.createRemote(host, port, eventBus),
+        GrpcExecutionFactory.createRemote(
+            executionEngineHost, executionEnginePort, casHost, casPort, eventBus),
         ruleFinder,
         cellResolver,
         rootCell,

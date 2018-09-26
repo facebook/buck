@@ -49,7 +49,7 @@ public class GrpcExecutionFactory {
 
     return new RemoteExecution(
         eventBus,
-        new GrpcRemoteExecutionClients("in-process", channel) {
+        new GrpcRemoteExecutionClients("in-process", channel, channel) {
           @Override
           public void close() throws IOException {
             try (Closer closer = Closer.create()) {
@@ -67,14 +67,26 @@ public class GrpcExecutionFactory {
   }
 
   /** The remote strategy connects to a remote grpc remote execution service. */
-  public static IsolatedExecution createRemote(String host, int port, BuckEventBus eventBus)
+  public static IsolatedExecution createRemote(
+      String executionEngineHost,
+      int executionEnginePort,
+      String casHost,
+      int casPort,
+      BuckEventBus eventBus)
       throws IOException {
-    ManagedChannel channel =
-        ManagedChannelBuilder.forAddress(host, port)
+    ManagedChannel executionEngineChannel =
+        ManagedChannelBuilder.forAddress(executionEngineHost, executionEnginePort)
             .usePlaintext(true)
             .maxInboundMessageSize(500 * 1024 * 1024)
             .build();
 
-    return new RemoteExecution(eventBus, new GrpcRemoteExecutionClients("buck", channel));
+    ManagedChannel casChannel =
+        ManagedChannelBuilder.forAddress(casHost, casPort)
+            .usePlaintext(true)
+            .maxInboundMessageSize(500 * 1024 * 1024)
+            .build();
+
+    return new RemoteExecution(
+        eventBus, new GrpcRemoteExecutionClients("buck", executionEngineChannel, casChannel));
   }
 }

@@ -81,7 +81,8 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   public static final Protocol PROTOCOL = new GrpcProtocol();
   private final ContentAddressedStorage storage;
   private final GrpcRemoteExecutionService executionService;
-  private final ManagedChannel channel;
+  private final ManagedChannel executionEngineChannel;
+  private final ManagedChannel casChannel;
 
   private static String getReadResourceName(String instanceName, Protocol.Digest digest) {
     return String.format("%s/blobs/%s/%d", instanceName, digest.getHash(), digest.getSize());
@@ -96,18 +97,21 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
     Digest getDigest();
   }
 
-  public GrpcRemoteExecutionClients(String instanceName, ManagedChannel channel) {
-    this.channel = channel;
-    ByteStreamStub byteStreamStub = ByteStreamGrpc.newStub(channel);
+  public GrpcRemoteExecutionClients(
+      String instanceName, ManagedChannel executionEngineChannel, ManagedChannel casChannel) {
+    this.executionEngineChannel = executionEngineChannel;
+    this.casChannel = casChannel;
+
+    ByteStreamStub byteStreamStub = ByteStreamGrpc.newStub(casChannel);
     this.storage =
         createStorage(
-            ContentAddressableStorageGrpc.newFutureStub(channel),
+            ContentAddressableStorageGrpc.newFutureStub(casChannel),
             byteStreamStub,
             instanceName,
             PROTOCOL);
     this.executionService =
         new GrpcRemoteExecutionService(
-            ExecutionGrpc.newStub(channel), byteStreamStub, instanceName);
+            ExecutionGrpc.newStub(executionEngineChannel), byteStreamStub, instanceName);
   }
 
   @Override
@@ -127,6 +131,11 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
 
   @Override
   public void close() throws IOException {
+    closeChannel(casChannel);
+    closeChannel(executionEngineChannel);
+  }
+
+  private static void closeChannel(ManagedChannel channel) throws IOException {
     channel.shutdown();
     try {
       channel.awaitTermination(3, TimeUnit.SECONDS);
