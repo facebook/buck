@@ -24,7 +24,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -80,10 +79,8 @@ class BuildPrehook implements AutoCloseable {
 
     ImmutableMap.Builder<String, String> environmentBuilder =
         ImmutableMap.<String, String>builder().putAll(environment);
-    writeJsonBuckconfigFile();
-    Path argumentsJsonFile = createArgumentsJsonFile(arguments);
-    argumentsFile = argumentsJsonFile;
-    Preconditions.checkState(tempFile != null);
+    tempFile = writeJsonBuckconfigFile();
+    argumentsFile = createArgumentsJsonFile(arguments);
     environmentBuilder.put("BUCKCONFIG_FILE", tempFile.toString());
     environmentBuilder.put("BUCK_ROOT", cell.getRoot().toString());
     environmentBuilder.put(
@@ -91,7 +88,7 @@ class BuildPrehook implements AutoCloseable {
         cell.getRoot()
             .resolve(cell.getFilesystem().getBuckPaths().getConfiguredBuckOut())
             .toString());
-    environmentBuilder.put("BUCK_BUILD_ARGUMENTS_FILE", argumentsJsonFile.toString());
+    environmentBuilder.put("BUCK_BUILD_ARGUMENTS_FILE", argumentsFile.toString());
 
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
@@ -155,16 +152,13 @@ class BuildPrehook implements AutoCloseable {
   }
 
   /** Write a JSON file containing the buck config information. */
-  private void writeJsonBuckconfigFile() {
+  private Path writeJsonBuckconfigFile() throws IOException {
     ImmutableMap<String, ImmutableMap<String, String>> values =
         buckConfig.getConfig().getRawConfig().getValues();
-    try {
-      tempFile = cell.getFilesystem().createTempFile("buckconfig_", ".json");
-      Files.write(
-          tempFile, ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsBytes(values));
-    } catch (IOException e) {
-      LOG.warn("Build pre-hook failed to write build info");
-    }
+    Path tempFile = cell.getFilesystem().createTempFile("buckconfig_", ".json");
+    Files.write(
+        tempFile, ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsBytes(values));
+    return tempFile;
   }
 
   /** Kill the build prehook script. */
