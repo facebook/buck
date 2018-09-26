@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,47 +43,51 @@ public class ZipScrubber {
   public static void scrubZip(Path zipPath) throws IOException {
     try (FileChannel channel =
         FileChannel.open(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-      MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
-      map.order(ByteOrder.LITTLE_ENDIAN);
+      ByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
+      scrubZipBuffer(channel.size(), map);
+    }
+  }
 
-      // Search backwards from the end of the ZIP file, searching for the EOCD signature, which
-      // designates the start of the EOCD.
-      int eocdOffset = (int) channel.size() - ZipEntry.ENDHDR;
-      while (map.getInt(eocdOffset) != ZipEntry.ENDSIG) {
-        eocdOffset--;
+  private static void scrubZipBuffer(long zipSize, ByteBuffer map) throws IOException {
+    map.order(ByteOrder.LITTLE_ENDIAN);
+
+    // Search backwards from the end of the ZIP file, searching for the EOCD signature, which
+    // designates the start of the EOCD.
+    int eocdOffset = (int) zipSize - ZipEntry.ENDHDR;
+    while (map.getInt(eocdOffset) != ZipEntry.ENDSIG) {
+      eocdOffset--;
+    }
+
+    long cdEntries = Short.toUnsignedLong(map.getShort(eocdOffset + ZipEntry.ENDTOT));
+    if ((cdEntries & 0xffff) == 0xffff) {
+      // It's ZIP64 format and number of entries is stored in a different
+      // field: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
+      int zip64eocdOffset = eocdOffset;
+      while (map.getInt(zip64eocdOffset) != ZIP64_ENDSIG) {
+        zip64eocdOffset--;
       }
+      // 32 = 4 + 8 + 2 + 2 + 4 + 4 + 8
+      cdEntries = map.getLong(zip64eocdOffset + 32);
+    }
 
-      long cdEntries = Short.toUnsignedLong(map.getShort(eocdOffset + ZipEntry.ENDTOT));
-      if ((cdEntries & 0xffff) == 0xffff) {
-        // It's ZIP64 format and number of entries is stored in a different
-        // field: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
-        int zip64eocdOffset = eocdOffset;
-        while (map.getInt(zip64eocdOffset) != ZIP64_ENDSIG) {
-          zip64eocdOffset--;
-        }
-        // 32 = 4 + 8 + 2 + 2 + 4 + 4 + 8
-        cdEntries = map.getLong(zip64eocdOffset + 32);
-      }
+    int cdOffset = map.getInt(eocdOffset + ZipEntry.ENDOFF);
+    for (long idx = 0; idx < cdEntries; idx++) {
+      // Wrap the central directory header and zero out it's timestamp.
+      ByteBuffer entry = slice(map, cdOffset);
+      check(entry.getInt(0) == ZipEntry.CENSIG, "expected central directory header signature");
 
-      int cdOffset = map.getInt(eocdOffset + ZipEntry.ENDOFF);
-      for (long idx = 0; idx < cdEntries; idx++) {
-        // Wrap the central directory header and zero out it's timestamp.
-        ByteBuffer entry = slice(map, cdOffset);
-        check(entry.getInt(0) == ZipEntry.CENSIG, "expected central directory header signature");
+      entry.putInt(ZipEntry.CENTIM, ZipConstants.DOS_FAKE_TIME);
+      ByteBuffer localEntry = slice(map, entry.getInt(ZipEntry.CENOFF));
+      scrubLocalEntry(localEntry);
+      scrubExtraFields(
+          slice(entry, ZipEntry.CENHDR + entry.getShort(ZipEntry.CENNAM)),
+          entry.getShort(ZipEntry.CENEXT));
 
-        entry.putInt(ZipEntry.CENTIM, ZipConstants.DOS_FAKE_TIME);
-        ByteBuffer localEntry = slice(map, entry.getInt(ZipEntry.CENOFF));
-        scrubLocalEntry(localEntry);
-        scrubExtraFields(
-            slice(entry, ZipEntry.CENHDR + entry.getShort(ZipEntry.CENNAM)),
-            entry.getShort(ZipEntry.CENEXT));
-
-        cdOffset +=
-            ZipEntry.CENHDR
-                + entry.getShort(ZipEntry.CENNAM)
-                + entry.getShort(ZipEntry.CENEXT)
-                + entry.getShort(ZipEntry.CENCOM);
-      }
+      cdOffset +=
+          ZipEntry.CENHDR
+              + entry.getShort(ZipEntry.CENNAM)
+              + entry.getShort(ZipEntry.CENEXT)
+              + entry.getShort(ZipEntry.CENCOM);
     }
   }
 
