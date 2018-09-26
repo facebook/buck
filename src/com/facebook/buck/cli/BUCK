@@ -347,7 +347,9 @@ genrule(
         "$(exe //py/buck/zip:munger)",
         "--input=$(location :main)",
         "--output=$OUT",
-        "--exclude=META-INF/MANIFEST.MF",
+        "--exclude=META-INF",
+        "--include=META-INF/services",
+        "--include=META-INF/native",
     ]),
     visibility = [
         "PUBLIC",

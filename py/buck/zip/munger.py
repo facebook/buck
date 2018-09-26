@@ -37,13 +37,14 @@ def process_jar(infile, outfile, include_paths, exclude_paths):
         with contextlib.closing(zipfile.ZipFile(open(outfile, "wb"), "w")) as output:
             input = zipfile.ZipFile(inputFile, "r")
             for info in input.infolist():
-                include = len(include_paths) == 0
+                include = False
                 for path in include_paths:
                     include = include or info.filename.startswith(path)
                 exclude = False
                 for path in exclude_paths:
                     exclude = exclude or info.filename.startswith(path)
-                if include and not exclude:
+
+                if include or not exclude:
                     content = input.read(info)
                     output.writestr(info, content)
 
