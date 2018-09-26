@@ -126,7 +126,8 @@ public class ArtifactUploaderTest {
         ImmutableMap.of("metadata", "metadata", "build-metadata", "build-metadata"),
         ImmutableSortedSet.of(dir, file, dirFile, metadataFile),
         BUILD_TARGET,
-        filesystem);
+        filesystem,
+        1000);
 
     assertTrue(stored.get());
   }

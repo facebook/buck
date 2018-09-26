@@ -1006,7 +1006,8 @@ public final class Main {
                     httpWriteExecutorService.get(),
                     httpFetchExecutorService.get(),
                     stampedeSyncBuildHttpFetchExecutorService.get(),
-                    managerScope);
+                    managerScope,
+                    getArtifactProducerId(executionEnvironment));
 
             // Once command completes it should be safe to not wait for executors and other stateful
             // objects to terminate and release semaphore right away. It will help to retry
@@ -1943,6 +1944,11 @@ public final class Main {
       specifiedBuildId = UUID.randomUUID().toString();
     }
     return new BuildId(specifiedBuildId);
+  }
+
+  private static String getArtifactProducerId(ExecutionEnvironment executionEnvironment) {
+    String artifactProducerId = "user://" + executionEnvironment.getUsername();
+    return artifactProducerId;
   }
 
   /**

@@ -80,6 +80,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   private final BuildId buildId;
   private final int multiFetchLimit;
   private final int concurrencyLevel;
+  private final String producerId;
 
   public ThriftArtifactCache(
       NetworkCacheArgs args,
@@ -87,13 +88,15 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       boolean distributedBuildModeEnabled,
       BuildId buildId,
       int multiFetchLimit,
-      int concurrencyLevel) {
+      int concurrencyLevel,
+      String producerId) {
     super(args);
     this.buildId = buildId;
     this.multiFetchLimit = multiFetchLimit;
     this.concurrencyLevel = concurrencyLevel;
     this.hybridThriftEndpoint = hybridThriftEndpoint;
     this.distributedBuildModeEnabled = distributedBuildModeEnabled;
+    this.producerId = producerId;
   }
 
   @Override
@@ -649,7 +652,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
     BuckCacheStoreRequest storeRequest = new BuckCacheStoreRequest();
     ArtifactMetadata artifactMetadata =
-        infoToMetadata(info, artifact, getRepository(), scheduleType, distributedBuildModeEnabled);
+        infoToMetadata(
+            info, artifact, getRepository(), scheduleType, distributedBuildModeEnabled, producerId);
     storeRequest.setMetadata(artifactMetadata);
     PayloadInfo payloadInfo = new PayloadInfo();
     long artifactSizeBytes = artifact.size();
@@ -721,7 +725,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       ByteSource file,
       String repository,
       String scheduleType,
-      boolean distributedBuildModeEnabled)
+      boolean distributedBuildModeEnabled,
+      String producerId)
       throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     if (info.getBuildTarget().isPresent()) {
@@ -744,6 +749,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     metadata.setRepository(repository);
     metadata.setScheduleType(scheduleType);
     metadata.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
+    metadata.setProducerId(producerId);
+    metadata.setBuildTimeMs(info.getBuildTimeMs());
 
     return metadata;
   }

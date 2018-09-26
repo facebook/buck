@@ -540,7 +540,8 @@ public class ServedCacheIntegrationTest {
             DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,
-            managerScope)
+            managerScope,
+            "test://")
         .newInstance();
   }
 }

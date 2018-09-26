@@ -19,6 +19,8 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
   private static final org.apache.thrift.protocol.TField SCHEDULE_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("scheduleType", org.apache.thrift.protocol.TType.STRING, (short)6);
   private static final org.apache.thrift.protocol.TField ARTIFACT_PAYLOAD_MD5_FIELD_DESC = new org.apache.thrift.protocol.TField("artifactPayloadMd5", org.apache.thrift.protocol.TType.STRING, (short)7);
   private static final org.apache.thrift.protocol.TField DISTRIBUTED_BUILD_MODE_ENABLED_FIELD_DESC = new org.apache.thrift.protocol.TField("distributedBuildModeEnabled", org.apache.thrift.protocol.TType.BOOL, (short)8);
+  private static final org.apache.thrift.protocol.TField PRODUCER_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("producerId", org.apache.thrift.protocol.TType.STRING, (short)9);
+  private static final org.apache.thrift.protocol.TField BUILD_TIME_MS_FIELD_DESC = new org.apache.thrift.protocol.TField("buildTimeMs", org.apache.thrift.protocol.TType.I64, (short)10);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new ArtifactMetadataStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new ArtifactMetadataTupleSchemeFactory();
@@ -31,6 +33,8 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
   public java.lang.String scheduleType; // optional
   public java.lang.String artifactPayloadMd5; // optional
   public boolean distributedBuildModeEnabled; // optional
+  public java.lang.String producerId; // optional
+  public long buildTimeMs; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -41,7 +45,9 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     ARTIFACT_PAYLOAD_CRC32((short)5, "artifactPayloadCrc32"),
     SCHEDULE_TYPE((short)6, "scheduleType"),
     ARTIFACT_PAYLOAD_MD5((short)7, "artifactPayloadMd5"),
-    DISTRIBUTED_BUILD_MODE_ENABLED((short)8, "distributedBuildModeEnabled");
+    DISTRIBUTED_BUILD_MODE_ENABLED((short)8, "distributedBuildModeEnabled"),
+    PRODUCER_ID((short)9, "producerId"),
+    BUILD_TIME_MS((short)10, "buildTimeMs");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -72,6 +78,10 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
           return ARTIFACT_PAYLOAD_MD5;
         case 8: // DISTRIBUTED_BUILD_MODE_ENABLED
           return DISTRIBUTED_BUILD_MODE_ENABLED;
+        case 9: // PRODUCER_ID
+          return PRODUCER_ID;
+        case 10: // BUILD_TIME_MS
+          return BUILD_TIME_MS;
         default:
           return null;
       }
@@ -113,8 +123,9 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
 
   // isset id assignments
   private static final int __DISTRIBUTEDBUILDMODEENABLED_ISSET_ID = 0;
+  private static final int __BUILDTIMEMS_ISSET_ID = 1;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.RULE_KEYS,_Fields.METADATA,_Fields.BUILD_TARGET,_Fields.REPOSITORY,_Fields.ARTIFACT_PAYLOAD_CRC32,_Fields.SCHEDULE_TYPE,_Fields.ARTIFACT_PAYLOAD_MD5,_Fields.DISTRIBUTED_BUILD_MODE_ENABLED};
+  private static final _Fields optionals[] = {_Fields.RULE_KEYS,_Fields.METADATA,_Fields.BUILD_TARGET,_Fields.REPOSITORY,_Fields.ARTIFACT_PAYLOAD_CRC32,_Fields.SCHEDULE_TYPE,_Fields.ARTIFACT_PAYLOAD_MD5,_Fields.DISTRIBUTED_BUILD_MODE_ENABLED,_Fields.PRODUCER_ID,_Fields.BUILD_TIME_MS};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -137,6 +148,10 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.DISTRIBUTED_BUILD_MODE_ENABLED, new org.apache.thrift.meta_data.FieldMetaData("distributedBuildModeEnabled", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+    tmpMap.put(_Fields.PRODUCER_ID, new org.apache.thrift.meta_data.FieldMetaData("producerId", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.BUILD_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("buildTimeMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ArtifactMetadata.class, metaDataMap);
   }
@@ -176,6 +191,10 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       this.artifactPayloadMd5 = other.artifactPayloadMd5;
     }
     this.distributedBuildModeEnabled = other.distributedBuildModeEnabled;
+    if (other.isSetProducerId()) {
+      this.producerId = other.producerId;
+    }
+    this.buildTimeMs = other.buildTimeMs;
   }
 
   public ArtifactMetadata deepCopy() {
@@ -193,6 +212,9 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     this.artifactPayloadMd5 = null;
     setDistributedBuildModeEnabledIsSet(false);
     this.distributedBuildModeEnabled = false;
+    this.producerId = null;
+    setBuildTimeMsIsSet(false);
+    this.buildTimeMs = 0;
   }
 
   public int getRuleKeysSize() {
@@ -412,6 +434,53 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __DISTRIBUTEDBUILDMODEENABLED_ISSET_ID, value);
   }
 
+  public java.lang.String getProducerId() {
+    return this.producerId;
+  }
+
+  public ArtifactMetadata setProducerId(java.lang.String producerId) {
+    this.producerId = producerId;
+    return this;
+  }
+
+  public void unsetProducerId() {
+    this.producerId = null;
+  }
+
+  /** Returns true if field producerId is set (has been assigned a value) and false otherwise */
+  public boolean isSetProducerId() {
+    return this.producerId != null;
+  }
+
+  public void setProducerIdIsSet(boolean value) {
+    if (!value) {
+      this.producerId = null;
+    }
+  }
+
+  public long getBuildTimeMs() {
+    return this.buildTimeMs;
+  }
+
+  public ArtifactMetadata setBuildTimeMs(long buildTimeMs) {
+    this.buildTimeMs = buildTimeMs;
+    setBuildTimeMsIsSet(true);
+    return this;
+  }
+
+  public void unsetBuildTimeMs() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __BUILDTIMEMS_ISSET_ID);
+  }
+
+  /** Returns true if field buildTimeMs is set (has been assigned a value) and false otherwise */
+  public boolean isSetBuildTimeMs() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __BUILDTIMEMS_ISSET_ID);
+  }
+
+  public void setBuildTimeMsIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __BUILDTIMEMS_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case RULE_KEYS:
@@ -478,6 +547,22 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       }
       break;
 
+    case PRODUCER_ID:
+      if (value == null) {
+        unsetProducerId();
+      } else {
+        setProducerId((java.lang.String)value);
+      }
+      break;
+
+    case BUILD_TIME_MS:
+      if (value == null) {
+        unsetBuildTimeMs();
+      } else {
+        setBuildTimeMs((java.lang.Long)value);
+      }
+      break;
+
     }
   }
 
@@ -507,6 +592,12 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     case DISTRIBUTED_BUILD_MODE_ENABLED:
       return isDistributedBuildModeEnabled();
 
+    case PRODUCER_ID:
+      return getProducerId();
+
+    case BUILD_TIME_MS:
+      return getBuildTimeMs();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -534,6 +625,10 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       return isSetArtifactPayloadMd5();
     case DISTRIBUTED_BUILD_MODE_ENABLED:
       return isSetDistributedBuildModeEnabled();
+    case PRODUCER_ID:
+      return isSetProducerId();
+    case BUILD_TIME_MS:
+      return isSetBuildTimeMs();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -625,6 +720,24 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
         return false;
     }
 
+    boolean this_present_producerId = true && this.isSetProducerId();
+    boolean that_present_producerId = true && that.isSetProducerId();
+    if (this_present_producerId || that_present_producerId) {
+      if (!(this_present_producerId && that_present_producerId))
+        return false;
+      if (!this.producerId.equals(that.producerId))
+        return false;
+    }
+
+    boolean this_present_buildTimeMs = true && this.isSetBuildTimeMs();
+    boolean that_present_buildTimeMs = true && that.isSetBuildTimeMs();
+    if (this_present_buildTimeMs || that_present_buildTimeMs) {
+      if (!(this_present_buildTimeMs && that_present_buildTimeMs))
+        return false;
+      if (this.buildTimeMs != that.buildTimeMs)
+        return false;
+    }
+
     return true;
   }
 
@@ -663,6 +776,14 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     hashCode = hashCode * 8191 + ((isSetDistributedBuildModeEnabled()) ? 131071 : 524287);
     if (isSetDistributedBuildModeEnabled())
       hashCode = hashCode * 8191 + ((distributedBuildModeEnabled) ? 131071 : 524287);
+
+    hashCode = hashCode * 8191 + ((isSetProducerId()) ? 131071 : 524287);
+    if (isSetProducerId())
+      hashCode = hashCode * 8191 + producerId.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetBuildTimeMs()) ? 131071 : 524287);
+    if (isSetBuildTimeMs())
+      hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(buildTimeMs);
 
     return hashCode;
   }
@@ -751,6 +872,26 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     }
     if (isSetDistributedBuildModeEnabled()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.distributedBuildModeEnabled, other.distributedBuildModeEnabled);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetProducerId()).compareTo(other.isSetProducerId());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetProducerId()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.producerId, other.producerId);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetBuildTimeMs()).compareTo(other.isSetBuildTimeMs());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetBuildTimeMs()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.buildTimeMs, other.buildTimeMs);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -848,6 +989,22 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (!first) sb.append(", ");
       sb.append("distributedBuildModeEnabled:");
       sb.append(this.distributedBuildModeEnabled);
+      first = false;
+    }
+    if (isSetProducerId()) {
+      if (!first) sb.append(", ");
+      sb.append("producerId:");
+      if (this.producerId == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.producerId);
+      }
+      first = false;
+    }
+    if (isSetBuildTimeMs()) {
+      if (!first) sb.append(", ");
+      sb.append("buildTimeMs:");
+      sb.append(this.buildTimeMs);
       first = false;
     }
     sb.append(")");
@@ -982,6 +1139,22 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 9: // PRODUCER_ID
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.producerId = iprot.readString();
+              struct.setProducerIdIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 10: // BUILD_TIME_MS
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.buildTimeMs = iprot.readI64();
+              struct.setBuildTimeMsIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1066,6 +1239,18 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
         oprot.writeBool(struct.distributedBuildModeEnabled);
         oprot.writeFieldEnd();
       }
+      if (struct.producerId != null) {
+        if (struct.isSetProducerId()) {
+          oprot.writeFieldBegin(PRODUCER_ID_FIELD_DESC);
+          oprot.writeString(struct.producerId);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.isSetBuildTimeMs()) {
+        oprot.writeFieldBegin(BUILD_TIME_MS_FIELD_DESC);
+        oprot.writeI64(struct.buildTimeMs);
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -1108,7 +1293,13 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (struct.isSetDistributedBuildModeEnabled()) {
         optionals.set(7);
       }
-      oprot.writeBitSet(optionals, 8);
+      if (struct.isSetProducerId()) {
+        optionals.set(8);
+      }
+      if (struct.isSetBuildTimeMs()) {
+        optionals.set(9);
+      }
+      oprot.writeBitSet(optionals, 10);
       if (struct.isSetRuleKeys()) {
         {
           oprot.writeI32(struct.ruleKeys.size());
@@ -1146,12 +1337,18 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (struct.isSetDistributedBuildModeEnabled()) {
         oprot.writeBool(struct.distributedBuildModeEnabled);
       }
+      if (struct.isSetProducerId()) {
+        oprot.writeString(struct.producerId);
+      }
+      if (struct.isSetBuildTimeMs()) {
+        oprot.writeI64(struct.buildTimeMs);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, ArtifactMetadata struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(8);
+      java.util.BitSet incoming = iprot.readBitSet(10);
       if (incoming.get(0)) {
         {
           org.apache.thrift.protocol.TList _list11 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
@@ -1204,6 +1401,14 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (incoming.get(7)) {
         struct.distributedBuildModeEnabled = iprot.readBool();
         struct.setDistributedBuildModeEnabledIsSet(true);
+      }
+      if (incoming.get(8)) {
+        struct.producerId = iprot.readString();
+        struct.setProducerIdIsSet(true);
+      }
+      if (incoming.get(9)) {
+        struct.buildTimeMs = iprot.readI64();
+        struct.setBuildTimeMsIsSet(true);
       }
     }
   }

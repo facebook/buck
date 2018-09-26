@@ -36,6 +36,11 @@ abstract class AbstractArtifactInfo {
   abstract Optional<String> getRepository();
 
   @Value.Default
+  long getBuildTimeMs() {
+    return -1;
+  }
+
+  @Value.Default
   boolean isManifest() {
     return false;
   }

@@ -53,7 +53,8 @@ public class ArtifactUploaderIntegrationTest {
         ImmutableMap.of(),
         ImmutableSortedSet.of(),
         BUILD_TARGET,
-        new FakeProjectFilesystem());
+        new FakeProjectFilesystem(),
+        1000);
 
     assertTrue(
         cacheDir

@@ -732,7 +732,11 @@ class CachingBuildRuleBuilder {
   private void uploadToCache(BuildRuleSuccessType success) {
     try {
       // Push to cache.
-      uploadCompleteFuture = buildCacheArtifactUploader.uploadToCache(success);
+      long buildTimeMs =
+          buildTimestampsMillis == null
+              ? -1
+              : buildTimestampsMillis.getSecond() - buildTimestampsMillis.getFirst();
+      uploadCompleteFuture = buildCacheArtifactUploader.uploadToCache(success, buildTimeMs);
     } catch (Throwable t) {
       eventBus.post(ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
     }

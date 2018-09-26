@@ -64,7 +64,14 @@ public class BuildCacheArtifactUploader {
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
   }
 
-  public ListenableFuture<Void> uploadToCache(BuildRuleSuccessType success) throws IOException {
+  /**
+   * Perform an actual write to a cache
+   *
+   * @param success outcome of a build rule
+   * @param buildTimeMs time it took to actually build a rule
+   */
+  public ListenableFuture<Void> uploadToCache(BuildRuleSuccessType success, long buildTimeMs)
+      throws IOException {
     // Collect up all the rule keys we have index the artifact in the cache with.
     Set<RuleKey> ruleKeys = new HashSet<>();
 
@@ -111,7 +118,8 @@ public class BuildCacheArtifactUploader {
         onDiskBuildInfo.getMetadataForArtifact(),
         onDiskBuildInfo.getPathsForArtifact(),
         rule.getBuildTarget(),
-        rule.getProjectFilesystem());
+        rule.getProjectFilesystem(),
+        buildTimeMs);
   }
 
   /** @return whether we should upload the given rules artifacts to cache. */

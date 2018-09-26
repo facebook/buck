@@ -65,7 +65,8 @@ public class ArtifactUploader {
       ImmutableMap<String, String> buildMetadata,
       SortedSet<Path> pathsToIncludeInArchive,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      long buildTimeMs) {
     NamedTemporaryFile archive =
         getTemporaryArtifactArchive(
             buildTarget, projectFilesystem, ruleKeys, eventBus, pathsToIncludeInArchive);
@@ -73,7 +74,11 @@ public class ArtifactUploader {
     // Store the artifact, including any additional metadata.
     ListenableFuture<Void> storeFuture =
         artifactCache.store(
-            ArtifactInfo.builder().setRuleKeys(ruleKeys).setMetadata(buildMetadata).build(),
+            ArtifactInfo.builder()
+                .setRuleKeys(ruleKeys)
+                .setMetadata(buildMetadata)
+                .setBuildTimeMs(buildTimeMs)
+                .build(),
             BorrowablePath.borrowablePath(archive.get()));
     Futures.addCallback(
         storeFuture,

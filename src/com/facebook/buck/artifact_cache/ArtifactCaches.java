@@ -89,6 +89,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private final ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService;
   private List<ArtifactCache> artifactCaches = new ArrayList<>();
   private final TaskManagerScope managerScope;
+  private final String producerId;
 
   /** {@link TaskAction} implementation for {@link ArtifactCaches}. */
   static class ArtifactCachesCloseAction implements TaskAction<List<ArtifactCache>> {
@@ -132,6 +133,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
    * @param buckEventBus event bus
    * @param projectFilesystem filesystem to store files on
    * @param wifiSsid current WiFi ssid to decide if we want the http cache or not
+   * @param producerId free-form identifier of a user or machine uploading artifacts, can be used on
+   *     cache server side for monitoring
    */
   public ArtifactCaches(
       ArtifactCacheBuckConfig buckConfig,
@@ -141,7 +144,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
       ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService,
-      TaskManagerScope managerScope) {
+      TaskManagerScope managerScope,
+      String producerId) {
     this.buckConfig = buckConfig;
     this.buckEventBus = buckEventBus;
     this.projectFilesystem = projectFilesystem;
@@ -150,6 +154,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     this.httpFetchExecutorService = httpFetchExecutorService;
     this.downloadHeavyBuildHttpFetchExecutorService = downloadHeavyBuildHttpFetchExecutorService;
     this.managerScope = managerScope;
+    this.producerId = producerId;
   }
 
   private static Request.Builder addHeadersToBuilder(
@@ -212,7 +217,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                 ? downloadHeavyBuildHttpFetchExecutorService
                 : httpFetchExecutorService,
             cacheTypeBlacklist,
-            distributedBuildModeEnabled);
+            distributedBuildModeEnabled,
+            producerId);
 
     artifactCaches.add(artifactCache);
 
@@ -230,7 +236,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         httpWriteExecutorService,
         httpFetchExecutorService,
         downloadHeavyBuildHttpFetchExecutorService,
-        managerScope);
+        managerScope,
+        producerId);
   }
 
   /**
@@ -255,7 +262,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
       ImmutableSet<CacheType> cacheTypeBlacklist,
-      boolean distributedBuildModeEnabled) {
+      boolean distributedBuildModeEnabled,
+      String producerId) {
     ImmutableSet<ArtifactCacheMode> modes = buckConfig.getArtifactCacheModes();
     if (modes.isEmpty()) {
       return new NoopArtifactCache();
@@ -309,7 +317,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                       distributedBuildModeEnabled,
                       buckEventBus.getBuildId(),
                       getMultiFetchLimit(buckConfig, buckEventBus),
-                      buckConfig.getHttpFetchConcurrency()),
+                      buckConfig.getHttpFetchConcurrency(),
+                      producerId),
               mode);
           break;
       }
