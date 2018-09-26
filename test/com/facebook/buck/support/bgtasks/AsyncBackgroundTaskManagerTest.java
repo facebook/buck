@@ -18,6 +18,7 @@ package com.facebook.buck.support.bgtasks;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildId;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
 
@@ -203,44 +205,49 @@ public class AsyncBackgroundTaskManagerTest {
   public void testNonblockingNewCommandsOverlapping() throws InterruptedException {
     manager = new AsyncBackgroundTaskManager(false, NTHREADS);
 
-    CountDownLatch firstTaskBlocker = new CountDownLatch(1);
+    CountDownLatch firstBlockingTaskBlocker = new CountDownLatch(1);
+
     CountDownLatch firstTaskWaiter = new CountDownLatch(FIRST_COMMAND_TASKS);
-    CountDownLatch laterTasksBlocker = new CountDownLatch(1);
     CountDownLatch laterTasksWaiter = new CountDownLatch(SECOND_COMMAND_TASKS);
 
+    ImmutableList<BackgroundTask<TestArgs>> firstBlockingCommandTasks =
+        generateWaitingTaskList(NTHREADS, true, firstBlockingTaskBlocker, null, "blockedTestTask");
     ImmutableList<BackgroundTask<TestArgs>> firstCommandTasks =
-        generateWaitingTaskList(
-            FIRST_COMMAND_TASKS, true, firstTaskBlocker, firstTaskWaiter, "testTask");
+        generateWaitingTaskList(FIRST_COMMAND_TASKS, true, null, firstTaskWaiter, "testTask");
     ImmutableList<BackgroundTask<TestArgs>> secondCommandTasks =
         generateWaitingTaskList(
-            SECOND_COMMAND_TASKS / 2,
-            true,
-            laterTasksBlocker,
-            laterTasksWaiter,
-            "secondCommandTask");
+            SECOND_COMMAND_TASKS / 2, true, null, laterTasksWaiter, "secondCommandTask");
     ImmutableList<BackgroundTask<TestArgs>> thirdCommandTasks =
         generateWaitingTaskList(
             SECOND_COMMAND_TASKS - (SECOND_COMMAND_TASKS / 2),
             true,
-            laterTasksBlocker,
+            null,
             laterTasksWaiter,
             "thirdCommandTask");
 
     manager.notify(Notification.COMMAND_START);
+    schedule(firstBlockingCommandTasks);
     schedule(firstCommandTasks);
-    manager.notify(Notification.COMMAND_END);
-    firstTaskBlocker.countDown();
+
+    manager.notify(Notification.COMMAND_END); // the first set of tasks will be allowed to ran
 
     manager.notify(Notification.COMMAND_START);
+
+    // allow the first set of tasks to complete to verify that new commands block more tasks from
+    // completing.
+    firstBlockingTaskBlocker.countDown();
+
     schedule(secondCommandTasks);
     manager.notify(Notification.COMMAND_START);
     schedule(thirdCommandTasks);
     // signal once -- this should not permit tasks to be run as one command is still waiting
     manager.notify(Notification.COMMAND_END);
-    laterTasksBlocker.countDown();
-    assertTrue(
-        manager.getScheduledTasks().size() >= FIRST_COMMAND_TASKS + SECOND_COMMAND_TASKS - 1);
-    assertTrue(manager.getScheduledTasks().size() <= FIRST_COMMAND_TASKS + SECOND_COMMAND_TASKS);
+    assertThat(
+        manager.getScheduledTasks().size(),
+        Matchers.greaterThanOrEqualTo(FIRST_COMMAND_TASKS + SECOND_COMMAND_TASKS));
+    assertThat(
+        manager.getScheduledTasks().size(),
+        Matchers.lessThanOrEqualTo(FIRST_COMMAND_TASKS + SECOND_COMMAND_TASKS + NTHREADS));
     manager.notify(Notification.COMMAND_END); // actually permit to run
     firstTaskWaiter.await();
     laterTasksWaiter.await();
