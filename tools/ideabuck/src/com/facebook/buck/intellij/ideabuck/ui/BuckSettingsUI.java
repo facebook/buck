@@ -86,7 +86,6 @@ public class BuckSettingsUI extends JPanel {
   private TextFieldWithBrowseButton adbPathField;
   private JBTextField customizedInstallSettingField;
   private JCheckBox showDebug;
-  private JCheckBox enableAutoDeps;
   private JCheckBox runAfterInstall;
   private JCheckBox multiInstallMode;
   private JCheckBox uninstallBeforeInstall;
@@ -259,7 +258,6 @@ public class BuckSettingsUI extends JPanel {
 
   private JPanel initUISettingsSection() {
     showDebug = new JCheckBox("Show debug in tool window");
-    enableAutoDeps = new JCheckBox("Enable auto dependencies");
 
     JPanel panel = new JPanel(new GridBagLayout());
     panel.setBorder(IdeBorderFactory.createTitledBorder("UI Settings", true));
@@ -271,9 +269,6 @@ public class BuckSettingsUI extends JPanel {
 
     constraints.gridy = 0;
     panel.add(showDebug, constraints);
-
-    constraints.gridy = 1;
-    panel.add(enableAutoDeps, constraints);
     return panel;
   }
 
@@ -575,7 +570,6 @@ public class BuckSettingsUI extends JPanel {
             adbPathField.getText().trim(), optionsProvider.getAdbExecutableOverride().orElse(""))
         || optionsProvider.isRunAfterInstall() != runAfterInstall.isSelected()
         || optionsProvider.isShowDebugWindow() != showDebug.isSelected()
-        || optionsProvider.isAutoDepsEnabled() != enableAutoDeps.isSelected()
         || optionsProvider.isMultiInstallMode() != multiInstallMode.isSelected()
         || optionsProvider.isUninstallBeforeInstalling() != uninstallBeforeInstall.isSelected()
         || optionsProvider.isUseCustomizedInstallSetting() != customizedInstallSetting.isSelected()
@@ -589,7 +583,6 @@ public class BuckSettingsUI extends JPanel {
     optionsProvider.setBuckExecutableOverride(textToOptional(buckPathField.getText()));
     optionsProvider.setAdbExecutableOverride(textToOptional(adbPathField.getText()));
     optionsProvider.setShowDebugWindow(showDebug.isSelected());
-    optionsProvider.setAutoDepsEnabled(enableAutoDeps.isSelected());
     optionsProvider.setRunAfterInstall(runAfterInstall.isSelected());
     optionsProvider.setMultiInstallMode(multiInstallMode.isSelected());
     optionsProvider.setUninstallBeforeInstalling(uninstallBeforeInstall.isSelected());
@@ -603,7 +596,6 @@ public class BuckSettingsUI extends JPanel {
     buckPathField.setText(optionsProvider.getBuckExecutableOverride().orElse(""));
     adbPathField.setText(optionsProvider.getAdbExecutableOverride().orElse(""));
     showDebug.setSelected(optionsProvider.isShowDebugWindow());
-    enableAutoDeps.setSelected(optionsProvider.isAutoDepsEnabled());
     runAfterInstall.setSelected(optionsProvider.isRunAfterInstall());
     multiInstallMode.setSelected(optionsProvider.isMultiInstallMode());
     uninstallBeforeInstall.setSelected(optionsProvider.isUninstallBeforeInstalling());

@@ -154,14 +154,6 @@ public class BuckProjectSettingsProvider extends AbstractProjectComponent
     state.showDebug = showDebug;
   }
 
-  public boolean isAutoDepsEnabled() {
-    return state.enableAutoDeps;
-  }
-
-  public void setAutoDepsEnabled(boolean enableAutoDeps) {
-    state.enableAutoDeps = enableAutoDeps;
-  }
-
   public boolean isRunAfterInstall() {
     return state.runAfterInstall;
   }
