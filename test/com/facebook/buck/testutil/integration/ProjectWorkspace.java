@@ -557,6 +557,9 @@ public class ProjectWorkspace extends AbstractWorkspace {
    * Runs an event-driven parser on {@code buck-out/log/build.trace}, which is a symlink to the
    * trace of the most recent invocation of Buck (which may not have been a {@code buck build}).
    *
+   * <p>Warning: If running buckd, make sure `daemon.flush_events_before_exit=true` so that the
+   * trace is materialized before this is ran.
+   *
    * @see ChromeTraceParser#parse(Path, Set)
    */
   public Map<ChromeTraceEventMatcher<?>, Object> parseTraceFromMostRecentBuckInvocation(
