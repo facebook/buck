@@ -39,11 +39,11 @@ import javax.annotation.Nullable;
 class BuildPrehook implements AutoCloseable {
   private static final Logger LOG = Logger.get(BuildPrehook.class);
 
-  private ListeningProcessExecutor processExecutor;
-  private BuckEventBus eventBus;
-  private Cell cell;
-  private BuckConfig buckConfig;
-  private ImmutableMap<String, String> environment;
+  private final ListeningProcessExecutor processExecutor;
+  private final BuckEventBus eventBus;
+  private final Cell cell;
+  private final BuckConfig buckConfig;
+  private final ImmutableMap<String, String> environment;
   private final Iterable<String> arguments;
   @Nullable ListeningProcessExecutor.LaunchedProcess process;
   @Nullable private Path tempFile;
