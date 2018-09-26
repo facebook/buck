@@ -42,6 +42,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -205,13 +206,18 @@ public class AppleLibraryIntegrationTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#watchos-armv7k,static");
-    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
-    result.assertSuccess();
+    ImmutableList<String> platforms =
+        ImmutableList.of("watchos-armv7k", "watchos-arm64_32", "watchos-armv7k,watchos-arm64_32");
+    for (String platform : platforms) {
+      BuildTarget target =
+          BuildTargetFactory.newInstance(
+              "//Libraries/TestLibrary:TestLibrary#" + platform + ",static");
+      ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+      result.assertSuccess();
 
-    assertTrue(
-        Files.exists(workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))));
+      assertTrue(
+          Files.exists(workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))));
+    }
   }
 
   @Test
@@ -226,14 +232,21 @@ public class AppleLibraryIntegrationTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance(
-            "//Libraries/TestLibrary:TestLibrary#watchsimulator-i386,static");
-    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
-    result.assertSuccess();
+    ImmutableList<String> platforms =
+        ImmutableList.of(
+            "watchsimulator-i386",
+            "watchsimulator-x86_64",
+            "watchsimulator-i386,watchsimulator-x86_64");
+    for (String platform : platforms) {
+      BuildTarget target =
+          BuildTargetFactory.newInstance(
+              "//Libraries/TestLibrary:TestLibrary#" + platform + ",static");
+      ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+      result.assertSuccess();
 
-    assertTrue(
-        Files.exists(workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))));
+      assertTrue(
+          Files.exists(workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))));
+    }
   }
 
   @Test

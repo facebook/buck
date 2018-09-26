@@ -374,7 +374,7 @@ public class AppleSdkDiscoveryTest {
             .setName("watchos2.0")
             .setVersion("2.0")
             .setApplePlatform(ApplePlatform.WATCHOS)
-            .addArchitectures("armv7k")
+            .addArchitectures("armv7k", "arm64_32")
             .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths watchos20Paths =
@@ -390,7 +390,7 @@ public class AppleSdkDiscoveryTest {
             .setName("watchsimulator2.0")
             .setVersion("2.0")
             .setApplePlatform(ApplePlatform.WATCHSIMULATOR)
-            .addArchitectures("i386")
+            .addArchitectures("i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths watchsimulator20Paths =

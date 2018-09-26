@@ -51,14 +51,14 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
       ApplePlatform.builder()
           .setName("watchos")
           .setProvisioningProfileName("iOS") // watchOS uses iOS provisioning profiles.
-          .setArchitectures(ImmutableList.of("armv7k"))
+          .setArchitectures(ImmutableList.of("armv7k", "arm64_32"))
           .setMinVersionFlagPrefix("-mwatchos-version-min=")
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform WATCHSIMULATOR =
       ApplePlatform.builder()
           .setName("watchsimulator")
-          .setArchitectures(ImmutableList.of("i386"))
+          .setArchitectures(ImmutableList.of("i386", "x86_64"))
           .setMinVersionFlagPrefix("-mwatchos-simulator-version-min=")
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
