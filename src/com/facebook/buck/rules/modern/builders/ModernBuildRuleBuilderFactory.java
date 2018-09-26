@@ -161,7 +161,8 @@ public class ModernBuildRuleBuilderFactory {
       Protocol protocol)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
-        OutOfProcessIsolatedExecution.create(protocol, eventBus),
+        new RemoteExecution(
+            eventBus, OutOfProcessIsolatedExecutionClients.create(protocol, eventBus)),
         ruleFinder,
         cellResolver,
         rootCell,

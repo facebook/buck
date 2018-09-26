@@ -54,7 +54,7 @@ import java.util.function.Supplier;
 import javax.annotation.concurrent.GuardedBy;
 
 /** Thrift clients for the Thrift-based remote execution services. */
-public class ThriftRemoteExecutionClients implements Closeable {
+public class ThriftRemoteExecutionClientsFactory implements Closeable {
   private static final int SOCKET_TIMEOUT_MILLIS = 1000 * 30; // 30 seconds
   private static final int CONNECTION_TIMEOUT_MILLIS = 1000 * 10; // 10 seconds
 
@@ -70,11 +70,11 @@ public class ThriftRemoteExecutionClients implements Closeable {
   @GuardedBy("internalStateLock")
   private final List<TTransport> transportsToClose;
 
-  public ThriftRemoteExecutionClients(RemoteExecutionConfig config) {
+  public ThriftRemoteExecutionClientsFactory(RemoteExecutionConfig config) {
     this(config.getRemoteHost(), config.getRemotePort(), config.getCasHost(), config.getCasPort());
   }
 
-  ThriftRemoteExecutionClients(
+  ThriftRemoteExecutionClientsFactory(
       String remoteExecutionHost, int remoteExecutionPort, String casHost, int casPort) {
     this.remoteExecutionHost = remoteExecutionHost;
     this.remoteExecutionPort = remoteExecutionPort;

@@ -14,31 +14,30 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.modern.builders;
+package com.facebook.buck.remoteexecution.thrift;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorage;
 import com.facebook.buck.remoteexecution.Protocol;
+import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionService;
-import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
-import com.facebook.buck.remoteexecution.thrift.ThriftRemoteExecutionClients;
 import com.facebook.buck.remoteexecution.thrift.cas.ThriftContentAddressedStorage;
 import com.facebook.buck.remoteexecution.thrift.executionengine.ThriftExecutionEngine;
-import com.facebook.thrift.transport.TTransportException;
 import java.io.IOException;
 import java.util.Optional;
 
 /** A RemoteExecution that sends jobs to a thrift-based remote execution service. */
-public class ThriftRemoteExecution extends RemoteExecution {
-
+public class ThriftRemoteExecution implements RemoteExecutionClients {
   private static final Protocol PROTOCOL = new ThriftProtocol();
   private final ThriftContentAddressedStorage storage;
   private final ThriftExecutionEngine remoteExecutionService;
+  private final ThriftRemoteExecutionClientsFactory clients;
 
-  ThriftRemoteExecution(
-      BuckEventBus eventBus, ThriftRemoteExecutionClients clients, Optional<String> traceId)
-      throws IOException, TTransportException {
-    super(eventBus, PROTOCOL);
+  public ThriftRemoteExecution(
+      BuckEventBus eventBus,
+      ThriftRemoteExecutionClientsFactory clients,
+      Optional<String> traceId) {
+    this.clients = clients;
     this.storage =
         new ThriftContentAddressedStorage(
             clients.createCasClient(), clients.createCasClient(), eventBus);
@@ -48,12 +47,22 @@ public class ThriftRemoteExecution extends RemoteExecution {
   }
 
   @Override
-  protected ContentAddressedStorage getStorage() {
+  public RemoteExecutionService getRemoteExecutionService() {
+    return remoteExecutionService;
+  }
+
+  @Override
+  public ContentAddressedStorage getContentAddressedStorage() {
     return storage;
   }
 
   @Override
-  protected RemoteExecutionService getExecutionService() {
-    return remoteExecutionService;
+  public Protocol getProtocol() {
+    return PROTOCOL;
+  }
+
+  @Override
+  public void close() throws IOException {
+    this.clients.close();
   }
 }

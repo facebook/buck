@@ -34,7 +34,7 @@ import org.junit.Test;
 
 @Ignore(
     "This should only run manually as it works against a specific server and may require port forwarding.")
-public class ThriftRemoteExecutionClientsIntegrationTest {
+public class ThriftRemoteExecutionClientsFactoryIntegrationTest {
 
   // If you want to run this from IntelliJ running locally, you may need to run ssh port
   // forwarding to your server:
@@ -52,16 +52,16 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
   private static final Digest digest = new Digest("missing-hash", 123);
   private static final List<Digest> digests = Collections.singletonList(digest);
 
-  private ThriftRemoteExecutionClients clients;
+  private ThriftRemoteExecutionClientsFactory clientsFactory;
 
   @Before
   public void setUp() throws IOException, TTransportException {
-    clients = new ThriftRemoteExecutionClients(host, port, casHost, casPort);
+    clientsFactory = new ThriftRemoteExecutionClientsFactory(host, port, casHost, casPort);
   }
 
   @Test
   public void testSyncCasClient() throws TException, ContentAddressableStorageException {
-    ContentAddressableStorage.Iface client = clients.createCasClient();
+    ContentAddressableStorage.Iface client = clientsFactory.createCasClient();
     FindMissingBlobsRequest request = new FindMissingBlobsRequest(digests);
     FindMissingBlobsResponse response = client.findMissingBlobs(request);
 

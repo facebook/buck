@@ -25,6 +25,7 @@ import com.facebook.buck.remoteexecution.Protocol.Action;
 import com.facebook.buck.remoteexecution.Protocol.Command;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.Protocol.OutputFile;
+import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionService;
 import com.facebook.buck.remoteexecution.RemoteExecutionService.ExecutionResult;
 import com.facebook.buck.util.NamedTemporaryDirectory;
@@ -38,8 +39,8 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 /** IsolatedExecution implementation that will run buildrules in a subprocess. */
-public class OutOfProcessIsolatedExecution extends RemoteExecution {
-
+public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClients {
+  private final Protocol protocol;
   private final NamedTemporaryDirectory workDir;
   private final LocalContentAddressedStorage storage;
   private final RemoteExecutionService executionService;
@@ -48,22 +49,17 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
    * Returns a RemoteExecution implementation that uses a local CAS and a separate local temporary
    * directory for execution.
    */
-  public static OutOfProcessIsolatedExecution create(Protocol protocol, BuckEventBus eventBus)
-      throws IOException {
-    NamedTemporaryDirectory workDir = new NamedTemporaryDirectory("__work__");
-    LocalContentAddressedStorage storage =
-        new LocalContentAddressedStorage(workDir.getPath().resolve("__cache__"), protocol);
-    return new OutOfProcessIsolatedExecution(workDir, storage, protocol, eventBus);
+  public static OutOfProcessIsolatedExecutionClients create(
+      Protocol protocol, BuckEventBus eventBus) throws IOException {
+    return new OutOfProcessIsolatedExecutionClients(protocol, eventBus);
   }
 
-  private OutOfProcessIsolatedExecution(
-      NamedTemporaryDirectory workDir,
-      LocalContentAddressedStorage storage,
-      final Protocol protocol,
-      BuckEventBus eventBus)
+  private OutOfProcessIsolatedExecutionClients(final Protocol protocol, BuckEventBus eventBus)
       throws IOException {
-    super(eventBus, protocol);
-    this.storage = storage;
+    this.workDir = new NamedTemporaryDirectory("__work__");
+    this.storage =
+        new LocalContentAddressedStorage(workDir.getPath().resolve("__cache__"), protocol);
+    this.protocol = protocol;
     this.executionService =
         (actionDigest) -> {
           Action action = storage.materializeAction(actionDigest);
@@ -71,7 +67,7 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
           Path buildDir = workDir.getPath().resolve(action.getInputRootDigest().getHash());
           try (Closeable ignored = () -> MostFiles.deleteRecursively(buildDir)) {
             Command command;
-            try (Scope ignored2 = LeafEvents.scope(getEventBus(), "materializing_inputs")) {
+            try (Scope ignored2 = LeafEvents.scope(eventBus, "materializing_inputs")) {
               command =
                   storage
                       .materializeInputs(
@@ -92,7 +88,7 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
                             .map(Paths::get)
                             .collect(ImmutableSet.toImmutableSet()),
                         buildDir);
-            try (Scope ignored2 = LeafEvents.scope(getEventBus(), "uploading_results")) {
+            try (Scope ignored2 = LeafEvents.scope(eventBus, "uploading_results")) {
               storage.addMissing(actionResult.requiredData);
             }
             return new ExecutionResult() {
@@ -118,17 +114,21 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
             };
           }
         };
-    this.workDir = workDir;
   }
 
   @Override
-  protected ContentAddressedStorage getStorage() {
+  public RemoteExecutionService getRemoteExecutionService() {
+    return executionService;
+  }
+
+  @Override
+  public ContentAddressedStorage getContentAddressedStorage() {
     return storage;
   }
 
   @Override
-  protected RemoteExecutionService getExecutionService() {
-    return executionService;
+  public Protocol getProtocol() {
+    return protocol;
   }
 
   @Override

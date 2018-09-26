@@ -18,8 +18,8 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
-import com.facebook.buck.remoteexecution.thrift.ThriftRemoteExecutionClients;
-import com.facebook.thrift.transport.TTransportException;
+import com.facebook.buck.remoteexecution.thrift.ThriftRemoteExecution;
+import com.facebook.buck.remoteexecution.thrift.ThriftRemoteExecutionClientsFactory;
 import java.io.IOException;
 
 /** Factory for creating thrift-based strategies. */
@@ -28,16 +28,8 @@ public class ThriftRemoteExecutionFactory {
   /** The remote strategy connects to a remote thrift remote execution service. */
   public static IsolatedExecution createRemote(RemoteExecutionConfig config, BuckEventBus eventBus)
       throws IOException {
-    ThriftRemoteExecutionClients clients = new ThriftRemoteExecutionClients(config);
-    try {
-      return new ThriftRemoteExecution(eventBus, clients, config.getTraceID()) {
-        @Override
-        public void close() throws IOException {
-          clients.close();
-        }
-      };
-    } catch (TTransportException e) {
-      throw new IOException("Could not create ThriftRemoteExecutionClients.", e);
-    }
+    ThriftRemoteExecutionClientsFactory clients = new ThriftRemoteExecutionClientsFactory(config);
+    return new RemoteExecution(
+        eventBus, new ThriftRemoteExecution(eventBus, clients, config.getTraceID()));
   }
 }

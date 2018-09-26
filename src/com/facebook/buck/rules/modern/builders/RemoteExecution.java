@@ -25,6 +25,7 @@ import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionService;
 import com.facebook.buck.remoteexecution.RemoteExecutionService.ExecutionResult;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
@@ -65,7 +66,7 @@ import java.util.stream.Stream;
  * <p>See https://docs.google.com/document/d/1AaGk7fOPByEvpAbqeXIyE8HX_A3_axxNnvroblTZ_6s/preview
  * for a high-level description of the approach to remote execution.
  */
-public abstract class RemoteExecution implements IsolatedExecution {
+public final class RemoteExecution implements IsolatedExecution {
   private static final Logger LOG = Logger.get(RemoteExecution.class);
   private static final Path TRAMPOLINE =
       Paths.get(
@@ -78,16 +79,16 @@ public abstract class RemoteExecution implements IsolatedExecution {
 
   private final byte[] trampoline;
   private final BuckEventBus eventBus;
-  private final Protocol protocol;
 
   private final ImmutableMap<Path, Supplier<InputFile>> classPath;
   private final ImmutableMap<Path, Supplier<InputFile>> bootstrapClassPath;
   private final ImmutableMap<Path, Supplier<InputFile>> pluginFiles;
 
-  protected RemoteExecution(BuckEventBus eventBus, Protocol protocol) throws IOException {
+  private final RemoteExecutionClients clients;
+
+  public RemoteExecution(BuckEventBus eventBus, RemoteExecutionClients clients) throws IOException {
     this.eventBus = eventBus;
     this.trampoline = Files.readAllBytes(TRAMPOLINE);
-    this.protocol = protocol;
 
     this.classPath = prepareClassPath(BuckClasspath.getClasspath());
     this.bootstrapClassPath = prepareClassPath(BuckClasspath.getBootstrapClasspath());
@@ -97,11 +98,17 @@ public abstract class RemoteExecution implements IsolatedExecution {
     } else {
       pluginFiles = prepareClassPath(findPlugins());
     }
+
+    this.clients = clients;
   }
 
-  protected abstract ContentAddressedStorage getStorage();
+  protected ContentAddressedStorage getStorage() {
+    return clients.getContentAddressedStorage();
+  }
 
-  protected abstract RemoteExecutionService getExecutionService();
+  protected RemoteExecutionService getExecutionService() {
+    return clients.getRemoteExecutionService();
+  }
 
   public BuckEventBus getEventBus() {
     return eventBus;
@@ -109,7 +116,7 @@ public abstract class RemoteExecution implements IsolatedExecution {
 
   @Override
   public Protocol getProtocol() {
-    return protocol;
+    return clients.getProtocol();
   }
 
   private static ImmutableList<Path> findPlugins() throws IOException {
@@ -132,7 +139,9 @@ public abstract class RemoteExecution implements IsolatedExecution {
   }
 
   @Override
-  public void close() throws IOException {}
+  public void close() throws IOException {
+    clients.close();
+  }
 
   @Override
   public void build(

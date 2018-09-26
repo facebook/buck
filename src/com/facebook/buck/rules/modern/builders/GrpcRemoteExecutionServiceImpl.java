@@ -39,6 +39,7 @@ import com.facebook.buck.remoteexecution.Protocol.Action;
 import com.facebook.buck.remoteexecution.Protocol.Command;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
+import com.facebook.buck.remoteexecution.grpc.ParsedReadResource;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamImplBase;
 import com.google.bytestream.ByteStreamProto.QueryWriteStatusRequest;

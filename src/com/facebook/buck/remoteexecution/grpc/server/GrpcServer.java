@@ -16,7 +16,7 @@
 
 package com.facebook.buck.remoteexecution.grpc.server;
 
-import com.facebook.buck.rules.modern.builders.GrpcRemoteExecution;
+import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionClients;
 import com.facebook.buck.rules.modern.builders.GrpcRemoteExecutionServiceImpl;
 import com.facebook.buck.rules.modern.builders.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
@@ -38,7 +38,7 @@ public class GrpcServer implements Closeable {
     GrpcRemoteExecutionServiceImpl remoteExecution =
         new GrpcRemoteExecutionServiceImpl(
             new LocalContentAddressedStorage(
-                workDir.getPath().resolve("__cache__"), GrpcRemoteExecution.PROTOCOL),
+                workDir.getPath().resolve("__cache__"), GrpcRemoteExecutionClients.PROTOCOL),
             workDir.getPath().resolve("__work__"));
     NettyServerBuilder builder = NettyServerBuilder.forPort(port);
 

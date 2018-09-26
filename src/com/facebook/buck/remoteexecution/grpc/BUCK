@@ -15,9 +15,11 @@ java_immutables_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//src/com/facebook/buck/remoteexecution/config:config",
-        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/function:function",
         "//third-party/java/remote-apis:remote-apis",
         # Nothing in here explicitly uses netty, but grpc picks it up dynamically when trying to

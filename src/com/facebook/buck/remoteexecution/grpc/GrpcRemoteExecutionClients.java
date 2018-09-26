@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.modern.builders;
+package com.facebook.buck.remoteexecution.grpc;
 
 import build.bazel.remote.execution.v2.ActionResult;
 import build.bazel.remote.execution.v2.BatchUpdateBlobsRequest;
@@ -29,7 +29,6 @@ import build.bazel.remote.execution.v2.ExecutionGrpc;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import build.bazel.remote.execution.v2.FindMissingBlobsRequest;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
 import com.facebook.buck.remoteexecution.ContentAddressedStorage;
@@ -40,8 +39,8 @@ import com.facebook.buck.remoteexecution.OutputsMaterializer;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.Protocol.OutputFile;
+import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionService;
-import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputDirectory;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputFile;
@@ -72,15 +71,17 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** A RemoteExecution that sends jobs to a grpc-based remote execution service. */
-public class GrpcRemoteExecution extends RemoteExecution {
+public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   public static final Protocol PROTOCOL = new GrpcProtocol();
   private final ContentAddressedStorage storage;
   private final GrpcRemoteExecutionService executionService;
+  private final ManagedChannel channel;
 
   private static String getReadResourceName(String instanceName, Protocol.Digest digest) {
     return String.format("%s/blobs/%s/%d", instanceName, digest.getHash(), digest.getSize());
@@ -95,9 +96,8 @@ public class GrpcRemoteExecution extends RemoteExecution {
     Digest getDigest();
   }
 
-  public GrpcRemoteExecution(String instanceName, ManagedChannel channel, BuckEventBus eventBus)
-      throws IOException {
-    super(eventBus, PROTOCOL);
+  public GrpcRemoteExecutionClients(String instanceName, ManagedChannel channel) {
+    this.channel = channel;
     ByteStreamStub byteStreamStub = ByteStreamGrpc.newStub(channel);
     this.storage =
         createStorage(
@@ -111,13 +111,28 @@ public class GrpcRemoteExecution extends RemoteExecution {
   }
 
   @Override
-  protected RemoteExecutionService getExecutionService() {
+  public RemoteExecutionService getRemoteExecutionService() {
     return executionService;
   }
 
   @Override
-  public ContentAddressedStorage getStorage() {
+  public ContentAddressedStorage getContentAddressedStorage() {
     return storage;
+  }
+
+  @Override
+  public Protocol getProtocol() {
+    return PROTOCOL;
+  }
+
+  @Override
+  public void close() throws IOException {
+    channel.shutdown();
+    try {
+      channel.awaitTermination(3, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private ContentAddressedStorage createStorage(
