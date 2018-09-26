@@ -15,7 +15,7 @@ prebuilt_jar(
         "//src/com/facebook/buck/remoteexecution/...",
         "//src/com/facebook/buck/rules/modern/builders/...",
         "//test/com/facebook/buck/eden/...",
-        "//test/com/facebook/buck/rules/modern/builders/...",
+        "//test/com/facebook/buck/remoteexecution/...",
         "//third-party/java/eden/...",
     ],
     deps = [

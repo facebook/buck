@@ -1,0 +1,18 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "thrift",
+    srcs = glob([
+        "*.java",
+    ]),
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/remoteexecution/thrift:thrift",
+        "//src/com/facebook/buck/rules/modern/builders:builders",
+        "//src/com/facebook/buck/util/function:function",
+        "//third-party/java/easymock:easymock",
+        "//third-party/java/fbthrift:fbthrift",
+        "//third-party/java/junit:junit",
+        "//third-party/java/thrift:libthrift",
+    ],
+)

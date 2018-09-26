@@ -1,8 +1,13 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
 
 java_immutables_library(
     name = "remoteexecution",
-    srcs = glob(["*.java"]),
+    srcs = glob(
+        ["*.java"],
+    ),
     tests = [
         "//test/com/facebook/buck/remoteexecution:remoteexecution",
     ],
@@ -19,9 +24,9 @@ java_immutables_library(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/listener/interfaces:interfaces",
         "//src/com/facebook/buck/log:config",
-        "//src/com/facebook/buck/rules/modern/builders:interfaces",
         "//src/com/facebook/buck/rules/modern/config:config",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/unit:unit",
         "//third-party/java/fbthrift:fbthrift",
     ],
