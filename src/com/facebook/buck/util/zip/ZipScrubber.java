@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.zip;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -48,7 +49,8 @@ public class ZipScrubber {
     }
   }
 
-  private static void scrubZipBuffer(long zipSize, ByteBuffer map) throws IOException {
+  @VisibleForTesting
+  static void scrubZipBuffer(long zipSize, ByteBuffer map) throws IOException {
     map.order(ByteOrder.LITTLE_ENDIAN);
 
     // Search backwards from the end of the ZIP file, searching for the EOCD signature, which
