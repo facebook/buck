@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
@@ -49,8 +50,8 @@ public class AsyncBackgroundTaskManagerTest {
   private ImmutableList<BackgroundTask<TestArgs>> generateWaitingTaskList(
       int nTasks,
       boolean success,
-      CountDownLatch taskBlocker,
-      CountDownLatch taskWaiter,
+      @Nullable CountDownLatch taskBlocker,
+      @Nullable CountDownLatch taskWaiter,
       String name) {
     ImmutableList.Builder<BackgroundTask<TestArgs>> taskList = ImmutableList.builder();
     for (int i = 0; i < nTasks; i++) {
@@ -430,24 +431,19 @@ public class AsyncBackgroundTaskManagerTest {
 
     @Override
     public void run(TestArgs args) throws Exception {
-      if (args.getTaskStarted() != null) {
-        args.getTaskStarted().countDown();
-      }
-      if (args.getTaskBlocker() != null) {
-        args.getTaskBlocker().await();
+      args.getTaskStarted().ifPresent(CountDownLatch::countDown);
+
+      if (args.getTaskBlocker().isPresent()) {
+        args.getTaskBlocker().get().await();
       }
       if (args.getInterrupt()) {
         throw new InterruptedException("TestAction task interrupted");
       }
       if (args.getSuccess()) {
         args.setOutput("succeeded");
-        if (args.getTaskWaiter() != null) {
-          args.getTaskWaiter().countDown();
-        }
+        args.getTaskWaiter().ifPresent(CountDownLatch::countDown);
       } else {
-        if (args.getTaskWaiter() != null) {
-          args.getTaskWaiter().countDown();
-        }
+        args.getTaskWaiter().ifPresent(CountDownLatch::countDown);
         throw new Exception("failed");
       }
     }
@@ -456,17 +452,17 @@ public class AsyncBackgroundTaskManagerTest {
   static class TestArgs {
     private boolean success;
     private String output;
-    private final CountDownLatch taskBlocker;
-    private final CountDownLatch taskWaiter;
-    private final CountDownLatch taskStarted;
+    private final @Nullable CountDownLatch taskBlocker;
+    private final @Nullable CountDownLatch taskWaiter;
+    private final @Nullable CountDownLatch taskStarted;
     private final boolean interrupt;
 
     public TestArgs(
         boolean success,
         boolean interrupt,
-        CountDownLatch taskBlocker,
-        CountDownLatch taskWaiter,
-        CountDownLatch taskStarted) {
+        @Nullable CountDownLatch taskBlocker,
+        @Nullable CountDownLatch taskWaiter,
+        @Nullable CountDownLatch taskStarted) {
       this.success = success;
       this.output = "init";
       this.taskBlocker = taskBlocker;
@@ -495,16 +491,16 @@ public class AsyncBackgroundTaskManagerTest {
       output = newOutput;
     }
 
-    public CountDownLatch getTaskBlocker() {
-      return taskBlocker;
+    public Optional<CountDownLatch> getTaskBlocker() {
+      return Optional.ofNullable(taskBlocker);
     }
 
-    public CountDownLatch getTaskWaiter() {
-      return taskWaiter;
+    public Optional<CountDownLatch> getTaskWaiter() {
+      return Optional.ofNullable(taskWaiter);
     }
 
-    public CountDownLatch getTaskStarted() {
-      return taskStarted;
+    public Optional<CountDownLatch> getTaskStarted() {
+      return Optional.ofNullable(taskStarted);
     }
   }
 }
