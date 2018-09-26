@@ -42,6 +42,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -213,6 +214,7 @@ public class LocalBuildExecutor implements BuildExecutor {
         cachingBuildEngineDelegate,
         ModernBuildRuleBuilderFactory.getBuildStrategy(
             args.getBuckConfig().getView(ModernBuildRuleConfig.class),
+            args.getBuckConfig().getView(RemoteExecutionConfig.class),
             actionGraphAndBuilder.getActionGraphBuilder(),
             args.getRootCell(),
             args.getRootCell().getCellPathResolver(),

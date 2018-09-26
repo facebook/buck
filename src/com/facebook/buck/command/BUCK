@@ -40,6 +40,7 @@ java_immutables_library(
         "//src/com/facebook/buck/jvm/java:packagefinder",
         "//src/com/facebook/buck/log/thrift:thrift",
         "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/remoteexecution/config:config",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/keys/config:config",
         "//src/com/facebook/buck/rules/modern/builders:builders",

@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.modern.builders.thrift;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.remoteexecution.cas.BatchReadBlobsRequest;
 import com.facebook.remoteexecution.cas.BatchReadBlobsResponse;
@@ -70,7 +70,7 @@ class ThriftRemoteExecutionClients implements Closeable {
   @GuardedBy("internalStateLock")
   private final List<TTransport> transportsToClose;
 
-  ThriftRemoteExecutionClients(ModernBuildRuleConfig config) {
+  ThriftRemoteExecutionClients(RemoteExecutionConfig config) {
     this(config.getRemoteHost(), config.getRemotePort(), config.getCasHost(), config.getCasPort());
   }
 

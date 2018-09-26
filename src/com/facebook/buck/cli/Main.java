@@ -112,9 +112,9 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.TargetSpecResolver;
-import com.facebook.buck.remoteexecution.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.RemoteExecutionConsoleLineProvider;
 import com.facebook.buck.remoteexecution.RemoteExecutionEventListener;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -879,7 +879,7 @@ public final class Main {
               unexpandedCommandLineArgs,
               filesystem.getBuckPaths().getLogDir());
 
-      RemoteExecutionConfig remoteExecutionConfig = new RemoteExecutionConfig(buckConfig);
+      RemoteExecutionConfig remoteExecutionConfig = buckConfig.getView(RemoteExecutionConfig.class);
       Optional<RemoteExecutionEventListener> remoteExecutionListener =
           remoteExecutionConfig.isSuperConsoleEnabled()
               ? Optional.of(new RemoteExecutionEventListener())

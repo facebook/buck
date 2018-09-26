@@ -38,6 +38,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.modern.builders.grpc.server.GrpcServer;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -72,7 +73,7 @@ import org.junit.runners.Parameterized;
 public class ModernBuildRuleStrategyIntegrationTest {
   // By default, the tests will start up a remote execution service and connect to that. This value
   // can be changed to connect to a different service.
-  private static final int REMOTE_PORT = ModernBuildRuleConfig.DEFAULT_REMOTE_PORT;
+  private static final int REMOTE_PORT = RemoteExecutionConfig.DEFAULT_REMOTE_PORT;
 
   private String simpleTarget = "//:simple";
   private String failingTarget = "//:failing";
@@ -309,12 +310,12 @@ public class ModernBuildRuleStrategyIntegrationTest {
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
     workspace.addBuckConfigLocalOption(
-        "modern_build_rule", "remote_port", Integer.toString(REMOTE_PORT));
+        "remoteexecution", "remote_port", Integer.toString(REMOTE_PORT));
 
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     if (strategy == ModernBuildRuleConfig.Strategy.GRPC_REMOTE) {
-      server = Optional.of(new GrpcServer(ModernBuildRuleConfig.DEFAULT_REMOTE_PORT));
+      server = Optional.of(new GrpcServer(REMOTE_PORT));
     }
   }
 

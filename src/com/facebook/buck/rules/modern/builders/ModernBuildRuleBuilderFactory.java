@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.modern.builders.grpc.GrpcExecutionFactory;
 import com.facebook.buck.rules.modern.builders.grpc.GrpcProtocol;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
@@ -47,6 +48,7 @@ public class ModernBuildRuleBuilderFactory {
   /** Creates a BuildRuleStrategy for ModernBuildRules based on the buck configuration. */
   public static Optional<BuildRuleStrategy> getBuildStrategy(
       ModernBuildRuleConfig config,
+      RemoteExecutionConfig remoteExecutionConfig,
       BuildRuleResolver resolver,
       Cell rootCell,
       CellPathResolver cellResolver,
@@ -65,8 +67,8 @@ public class ModernBuildRuleBuilderFactory {
                   cellResolver,
                   rootCell,
                   hashLoader::get,
-                  config.getRemoteHost(),
-                  config.getRemotePort()));
+                  remoteExecutionConfig.getRemoteHost(),
+                  remoteExecutionConfig.getRemotePort()));
         case THRIFT_REMOTE:
           return Optional.of(
               createThriftRemote(
@@ -75,7 +77,7 @@ public class ModernBuildRuleBuilderFactory {
                   cellResolver,
                   rootCell,
                   hashLoader::get,
-                  config));
+                  remoteExecutionConfig));
         case DEBUG_RECONSTRUCT:
           return Optional.of(
               createReconstructing(new SourcePathRuleFinder(resolver), cellResolver, rootCell));
@@ -212,10 +214,10 @@ public class ModernBuildRuleBuilderFactory {
       CellPathResolver cellResolver,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher,
-      ModernBuildRuleConfig config)
+      RemoteExecutionConfig remoteExecutionConfig)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
-        ThriftRemoteExecutionFactory.createRemote(config, eventBus),
+        ThriftRemoteExecutionFactory.createRemote(remoteExecutionConfig, eventBus),
         ruleFinder,
         cellResolver,
         rootCell,
