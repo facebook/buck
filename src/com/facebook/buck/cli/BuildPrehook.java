@@ -79,8 +79,10 @@ class BuildPrehook implements AutoCloseable {
 
     ImmutableMap.Builder<String, String> environmentBuilder =
         ImmutableMap.<String, String>builder().putAll(environment);
-    tempFile = writeJsonBuckconfigFile();
-    argumentsFile = createArgumentsJsonFile(arguments);
+    ImmutableMap<String, ImmutableMap<String, String>> values =
+        buckConfig.getConfig().getRawConfig().getValues();
+    tempFile = serializeIntoJsonFile("buckconfig_", values);
+    argumentsFile = serializeIntoJsonFile("arguments_", arguments);
     environmentBuilder.put("BUCKCONFIG_FILE", tempFile.toString());
     environmentBuilder.put("BUCK_ROOT", cell.getRoot().toString());
     environmentBuilder.put(
@@ -102,12 +104,10 @@ class BuildPrehook implements AutoCloseable {
     process = processExecutor.launchProcess(processExecutorParams, processListener);
   }
 
-  private Path createArgumentsJsonFile(Iterable<String> arguments) throws IOException {
-    Path argumentsFile = cell.getFilesystem().createTempFile("arguments_", ".json");
-    Files.write(
-        argumentsFile,
-        ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsBytes(arguments));
-    return argumentsFile;
+  private <T> Path serializeIntoJsonFile(String fileNameSuffix, T value) throws IOException {
+    Path path = cell.getFilesystem().createTempFile(fileNameSuffix, ".json");
+    Files.write(path, ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsBytes(value));
+    return path;
   }
 
   private ListeningProcessExecutor.ProcessListener createProcessListener(
@@ -149,16 +149,6 @@ class BuildPrehook implements AutoCloseable {
         // TODO(t23755518): Interrupt build when the script returns an exit code != 0.
       }
     };
-  }
-
-  /** Write a JSON file containing the buck config information. */
-  private Path writeJsonBuckconfigFile() throws IOException {
-    ImmutableMap<String, ImmutableMap<String, String>> values =
-        buckConfig.getConfig().getRawConfig().getValues();
-    Path tempFile = cell.getFilesystem().createTempFile("buckconfig_", ".json");
-    Files.write(
-        tempFile, ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsBytes(values));
-    return tempFile;
   }
 
   /** Kill the build prehook script. */
