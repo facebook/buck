@@ -406,6 +406,18 @@ docsearch({
 {/if}
 {/template}
 
+/**
+ * @param? rendered_text  Optionally, specify the rendered text for the
+ *                        link. If not specified, the rendered text is 
+ *                        "Key Concepts".
+ */
+{template .key_concepts_link}
+  {if $rendered_text}
+    <a href="{ROOT}about/overview.html">{$rendered_text}</a>
+  {else}
+    <a href="{ROOT}about/overview.html">Key Concepts</a>
+  {/if}
+{/template}
 
 /**
  * @param name
