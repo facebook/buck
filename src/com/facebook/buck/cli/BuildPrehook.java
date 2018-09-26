@@ -22,9 +22,12 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.ListeningProcessExecutor;
+import com.facebook.buck.util.ListeningProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Closer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -45,9 +48,9 @@ class BuildPrehook implements AutoCloseable {
   private final BuckConfig buckConfig;
   private final ImmutableMap<String, String> environment;
   private final Iterable<String> arguments;
-  @Nullable ListeningProcessExecutor.LaunchedProcess process;
-  @Nullable private Path tempFile;
-  @Nullable private Path argumentsFile;
+  private final Closer closer;
+  // TODO(buck-team): fix the test to not rely on this field and remove it
+  @VisibleForTesting @Nullable LaunchedProcess process;
 
   BuildPrehook(
       ListeningProcessExecutor processExecutor,
@@ -62,6 +65,7 @@ class BuildPrehook implements AutoCloseable {
     this.buckConfig = buckConfig;
     this.environment = environment;
     this.arguments = arguments;
+    this.closer = Closer.create();
   }
 
   /** Start the build prehook script. */
@@ -81,8 +85,8 @@ class BuildPrehook implements AutoCloseable {
         ImmutableMap.<String, String>builder().putAll(environment);
     ImmutableMap<String, ImmutableMap<String, String>> values =
         buckConfig.getConfig().getRawConfig().getValues();
-    tempFile = serializeIntoJsonFile("buckconfig_", values);
-    argumentsFile = serializeIntoJsonFile("arguments_", arguments);
+    Path tempFile = serializeIntoJsonFile("buckconfig_", values);
+    Path argumentsFile = serializeIntoJsonFile("arguments_", arguments);
     environmentBuilder.put("BUCKCONFIG_FILE", tempFile.toString());
     environmentBuilder.put("BUCK_ROOT", cell.getRoot().toString());
     environmentBuilder.put(
@@ -102,11 +106,13 @@ class BuildPrehook implements AutoCloseable {
     ListeningProcessExecutor.ProcessListener processListener = createProcessListener(prehookStderr);
     LOG.debug("Starting build pre-hook script %s", pathToScript);
     process = processExecutor.launchProcess(processExecutorParams, processListener);
+    closer.register(() -> processExecutor.destroyProcess(process, /* force */ true));
   }
 
   private <T> Path serializeIntoJsonFile(String fileNameSuffix, T value) throws IOException {
     Path path = cell.getFilesystem().createTempFile(fileNameSuffix, ".json");
     Files.write(path, ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsBytes(value));
+    closer.register(() -> cell.getFilesystem().deleteFileAtPath(path));
     return path;
   }
 
@@ -154,16 +160,6 @@ class BuildPrehook implements AutoCloseable {
   /** Kill the build prehook script. */
   @Override
   public synchronized void close() throws IOException {
-    if (process == null) {
-      return;
-    }
-    processExecutor.destroyProcess(process, /* force */ true);
-    // Removes the temporary file.
-    if (tempFile != null) {
-      cell.getFilesystem().deleteFileAtPath(tempFile);
-    }
-    if (argumentsFile != null) {
-      cell.getFilesystem().deleteFileAtPath(argumentsFile);
-    }
+    closer.close();
   }
 }
