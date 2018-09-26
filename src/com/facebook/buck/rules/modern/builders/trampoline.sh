@@ -27,6 +27,7 @@ export BUCK_PLUGIN_ROOT=$(resolve $BUCK_PLUGIN_ROOT)
 cd $1
 
 java -cp $CLASSPATH \
+  -Xverify:none -XX:+TieredCompilation -XX:TieredStopAtLevel=1 \
   -Dpf4j.pluginsDir=$BUCK_PLUGIN_ROOT \
   -Dbuck.module.resources=$BUCK_PLUGIN_RESOURCES \
   com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper \
