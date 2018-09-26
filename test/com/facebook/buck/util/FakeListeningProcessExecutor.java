@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -34,6 +36,7 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
   private final Function<ProcessExecutorParams, Collection<FakeListeningProcessState>>
       processStatesFunction;
   private final SettableFakeClock clock;
+  private final List<LaunchedProcess> launchedProcesses;
 
   public FakeListeningProcessExecutor(
       Multimap<ProcessExecutorParams, FakeListeningProcessState> processStates) {
@@ -51,6 +54,7 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
       SettableFakeClock clock) {
     this.processStatesFunction = processStatesFunction;
     this.clock = clock;
+    this.launchedProcesses = new ArrayList<>();
   }
 
   private static class FakeLaunchedProcessImpl implements LaunchedProcess {
@@ -218,6 +222,7 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
         new FakeLaunchedProcessImpl(
             listener, processStatesFunction.apply(params).iterator(), clock, processExecTimeNanos);
     listener.onStart(process);
+    launchedProcesses.add(process);
     return process;
   }
 
@@ -240,5 +245,11 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
       processImpl.states.next();
     }
     processImpl.currentState = null;
+  }
+
+  public void waitForAllLaunchedProcesses() throws IOException, InterruptedException {
+    for (LaunchedProcess launchedProcess : launchedProcesses) {
+      waitForProcess(launchedProcess);
+    }
   }
 }

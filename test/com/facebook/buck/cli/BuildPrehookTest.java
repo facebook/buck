@@ -93,7 +93,7 @@ public class BuildPrehookTest {
 
     try (BuildPrehook buildPrehook = newBuildHook()) {
       buildPrehook.startPrehookScript();
-      processExecutor.waitForProcess(buildPrehook.process);
+      processExecutor.waitForAllLaunchedProcesses();
     }
     ConsoleEvent warning = (ConsoleEvent) Iterables.getOnlyElement(eventListener.getEvents());
     assertThat(warning.getLevel(), CoreMatchers.equalTo(Level.WARNING));
@@ -106,7 +106,7 @@ public class BuildPrehookTest {
 
     try (BuildPrehook buildPrehook = newBuildHook()) {
       buildPrehook.startPrehookScript();
-      processExecutor.waitForProcess(buildPrehook.process);
+      processExecutor.waitForAllLaunchedProcesses();
     }
     assertThat(eventListener.getEvents(), Matchers.empty());
   }
@@ -117,7 +117,7 @@ public class BuildPrehookTest {
 
     try (BuildPrehook buildPrehook = newBuildHook(ImmutableList.of("target"))) {
       buildPrehook.startPrehookScript();
-      processExecutor.waitForProcess(buildPrehook.process);
+      processExecutor.waitForAllLaunchedProcesses();
       String argumentsFile = params.getEnvironment().get().get("BUCK_BUILD_ARGUMENTS_FILE");
       String argumentsJson = Iterables.getOnlyElement(Files.readAllLines(Paths.get(argumentsFile)));
       assertThat(argumentsJson, Matchers.equalTo("[ \"target\" ]"));
