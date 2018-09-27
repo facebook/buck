@@ -72,7 +72,6 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import org.immutables.value.Value;
 
 public class Build implements Closeable {
@@ -229,8 +228,7 @@ public class Build implements Closeable {
     // It is important to use this logic to determine the set of rules to build rather than
     // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
     // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
-    ImmutableSet<BuildTarget> targetsToBuild =
-        StreamSupport.stream(targetish.spliterator(), false).collect(ImmutableSet.toImmutableSet());
+    ImmutableSet<BuildTarget> targetsToBuild = ImmutableSet.copyOf(targetish);
 
     ImmutableList<BuildRule> rulesToBuild =
         ImmutableList.copyOf(
