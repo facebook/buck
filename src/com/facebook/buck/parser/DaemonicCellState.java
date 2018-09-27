@@ -89,7 +89,7 @@ class DaemonicCellState {
 
   private final Path cellRoot;
   private final Optional<String> cellCanonicalName;
-  private AtomicReference<Cell> cell;
+  private final AtomicReference<Cell> cell;
 
   @GuardedBy("rawAndComputedNodesLock")
   private final SetMultimap<Path, Path> buildFileDependents;
