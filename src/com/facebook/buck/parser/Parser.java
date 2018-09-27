@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 /**
  * High-level build file parsing machinery. Primarily responsible for producing a {@link
  * TargetGraph} based on a set of targets. Caches build rules to minimise the number of calls to
- * python and processes filesystem WatchEvents to invalidate the cache as files change.
+ * build file interpreter and processes filesystem events to invalidate the cache as files change.
  */
 public interface Parser {
 

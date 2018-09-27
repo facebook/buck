@@ -57,9 +57,11 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
- * High-level build file parsing machinery. Primarily responsible for producing a {@link
- * TargetGraph} based on a set of targets. Caches build rules to minimise the number of calls to
- * python and processes filesystem WatchEvents to invalidate the cache as files change.
+ * Evaluates build files using one of the supported interpreters and provides information about
+ * build targets defined in them.
+ *
+ * <p>Computed targets are cached but are automatically invalidated if Watchman reports any
+ * filesystem changes that may affect computed results.
  */
 public class DefaultParser implements Parser {
 
