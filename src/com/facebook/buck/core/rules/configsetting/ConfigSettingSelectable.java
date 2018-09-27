@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * {@code Selectable} created by {@link ConfigSettingRule} for integration with {@link
@@ -66,19 +65,11 @@ public class ConfigSettingSelectable implements Selectable {
   @Override
   public boolean refines(Selectable other) {
     Preconditions.checkState(other instanceof ConfigSettingSelectable);
-    Set<Entry<String, String>> settings = ImmutableSet.copyOf(values.entrySet());
-    Set<Entry<String, String>> otherSettings =
-        ImmutableSet.copyOf(((ConfigSettingSelectable) other).values.entrySet());
+    ImmutableSet<Entry<String, String>> settings = values.entrySet();
+    ImmutableSet<Entry<String, String>> otherSettings =
+        ((ConfigSettingSelectable) other).values.entrySet();
 
-    if (!settings.containsAll(otherSettings)) {
-      return false;
-    }
-
-    if (!(settings.size() > otherSettings.size())) {
-      return false;
-    }
-
-    return true;
+    return settings.containsAll(otherSettings) && settings.size() > otherSettings.size();
   }
 
   @Override
