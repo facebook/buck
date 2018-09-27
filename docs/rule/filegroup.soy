@@ -7,14 +7,23 @@
     {param navid: 'rule_filegroup' /}
     {param prettify: true /}
     {param description}
-      A rule that is used to create a zip file as its output.
+      A rule that provides access to a set of files.
     {/param}
     {param content}
 
 {call buck.rule}
 {param status: 'FROZEN' /}
 {param overview}
+  <p>
   This rule provides access to a set of files.
+  </p>
+  <p>
+  Files are accessible to {call buck.genrule /}s by using their relative path
+  after a <code>$(location)</code> string parameter macro.
+
+  Other rules may handle <code>filegroup()</code> rules natively for attributes
+  such as resources.
+  </p>
 {/param}
 
 {param args}
@@ -45,6 +54,12 @@
 filegroup(
   name = 'example',
   srcs = glob(['resources/**/*.xml']),
+)
+
+genrule(
+  name = 'process_xml',
+  out = 'processed.xml',
+  cmd = '$(exe //example:tool) -in $(location :example)/resources/file.xml > $OUT',
 )
 </pre>{/literal}
 
