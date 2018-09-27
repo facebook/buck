@@ -58,6 +58,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
   @AddToRuleKey private final SourcePath unstrippedBinary;
   @AddToRuleKey private final StripStyle stripStyle;
   @AddToRuleKey private final Tool strip;
+  private final boolean cacheable;
 
   @AddToRuleKey(stringify = true)
   private final Path output;
@@ -71,13 +72,15 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
       SourcePathRuleFinder ruleFinder,
       StripStyle stripStyle,
       Tool strip,
-      Path output) {
+      Path output,
+      boolean cacheable) {
     super(buildTarget, projectFilesystem);
     this.unstrippedBinary = unstrippedBinary;
     this.ruleFinder = ruleFinder;
     this.stripStyle = stripStyle;
     this.strip = strip;
     this.output = output;
+    this.cacheable = cacheable;
 
     Preconditions.checkArgument(
         buildTarget.getFlavors().contains(RULE_FLAVOR),
@@ -156,5 +159,10 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver sourcePathResolver) {
     this.ruleFinder = ruleFinder;
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return cacheable;
   }
 }

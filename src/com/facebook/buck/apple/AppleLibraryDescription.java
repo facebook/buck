@@ -67,6 +67,7 @@ import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
@@ -195,6 +196,7 @@ public class AppleLibraryDescription
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final CxxBuckConfig cxxBuckConfig;
   private final CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors;
   private final CxxLibraryFlavored cxxLibraryFlavored;
   private final CxxLibraryFactory cxxLibraryFactory;
@@ -206,6 +208,7 @@ public class AppleLibraryDescription
       SwiftLibraryDescription swiftDelegate,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
       CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors,
       CxxLibraryFlavored cxxLibraryFlavored,
       CxxLibraryFactory cxxLibraryFactory,
@@ -220,6 +223,7 @@ public class AppleLibraryDescription
         appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
+    this.cxxBuckConfig = cxxBuckConfig;
   }
 
   @Override
@@ -505,6 +509,7 @@ public class AppleLibraryDescription
             flavoredStripStyle.orElse(StripStyle.NON_GLOBAL_SYMBOLS),
             unstrippedBinaryRule,
             representativePlatform,
+            cxxBuckConfig,
             Optional.empty());
 
     return AppleDescriptions.createAppleDebuggableBinary(

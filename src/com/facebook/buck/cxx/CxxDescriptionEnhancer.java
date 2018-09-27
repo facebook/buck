@@ -1057,6 +1057,7 @@ public class CxxDescriptionEnhancer {
               stripStyle.get(),
               cxxLink,
               cxxPlatform,
+              cxxBuckConfig,
               outputRootName);
       cxxStrip = Optional.of(stripRule);
       binaryRuleForExecutable = stripRule;
@@ -1113,6 +1114,7 @@ public class CxxDescriptionEnhancer {
       StripStyle stripStyle,
       BuildRule unstrippedBinaryRule,
       CxxPlatform cxxPlatform,
+      CxxBuckConfig cxxBuckConfig,
       Optional<String> outputRootName) {
     return (CxxStrip)
         graphBuilder.computeIfAbsent(
@@ -1132,7 +1134,9 @@ public class CxxDescriptionEnhancer {
                         stripBuildTarget,
                         projectFilesystem,
                         cxxPlatform.getBinaryExtension(),
-                        outputRootName)));
+                        outputRootName),
+                    cxxBuckConfig.shouldCacheLinks()
+                    ));
   }
 
   public static BuildRule createUberCompilationDatabase(
