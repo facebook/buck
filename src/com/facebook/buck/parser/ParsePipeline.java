@@ -16,7 +16,7 @@
 package com.facebook.buck.parser;
 
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
-import static com.google.common.base.Throwables.propagateIfInstanceOf;
+import static com.google.common.base.Throwables.throwIfInstanceOf;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -61,7 +61,7 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
     try {
       return getAllNodesJob(cell, buildFile).get();
     } catch (Exception e) {
-      propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
+      propagateCauseIfInstanceOf(e, BuildFileParseException.class);
       propagateCauseIfInstanceOf(e, ExecutionException.class);
       propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
       throw new RuntimeException(e);
@@ -85,11 +85,11 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
       return getNodeJob(cell, buildTarget).get();
     } catch (Exception e) {
       if (e.getCause() != null) {
-        propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
-        propagateIfInstanceOf(e.getCause(), BuildTargetException.class);
+        throwIfInstanceOf(e.getCause(), BuildFileParseException.class);
+        throwIfInstanceOf(e.getCause(), BuildTargetException.class);
       }
-      propagateIfInstanceOf(e, BuildFileParseException.class);
-      propagateIfInstanceOf(e, BuildTargetException.class);
+      throwIfInstanceOf(e, BuildFileParseException.class);
+      throwIfInstanceOf(e, BuildTargetException.class);
       propagateCauseIfInstanceOf(e, ExecutionException.class);
       propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
       throw new RuntimeException(e);
