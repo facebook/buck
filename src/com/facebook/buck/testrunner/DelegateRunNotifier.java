@@ -16,12 +16,15 @@
 
 package com.facebook.buck.testrunner;
 
+import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.Runner;
@@ -30,7 +33,6 @@ import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runner.notification.StoppedByUserException;
 import org.junit.runners.ParentRunner;
-import org.junit.runners.model.TestClass;
 
 /**
  * {@link RunNotifier} that sets a timer when a test starts. The default timeout specified in {@code
@@ -165,17 +167,22 @@ class DelegateRunNotifier extends RunNotifier {
     }
 
     // Do not do apply the default timeout if the test has its own @Rule Timeout.
-    TestClass testClass = getTestClass(description);
-    return BuckBlockJUnit4ClassRunner.hasTimeoutRule(testClass);
-  }
-
-  private TestClass getTestClass(Description description) {
     if (runner instanceof ParentRunner) {
-      return ((ParentRunner<?>) runner).getTestClass();
-    } else {
-      Class<?> testClass = description.getTestClass();
-      return new TestClass(testClass);
+      return BuckBlockJUnit4ClassRunner.hasTimeoutRule(((ParentRunner) runner).getTestClass());
     }
+
+    Class<?> clazz = description.getTestClass();
+    while (clazz != null) {
+      for (Field field : clazz.getFields()) {
+        if (field.getAnnotationsByType(Rule.class).length > 0
+            && field.getType().equals(Timeout.class)) {
+          return true;
+        }
+      }
+
+      clazz = clazz.getSuperclass();
+    }
+    return false;
   }
 
   @Override
