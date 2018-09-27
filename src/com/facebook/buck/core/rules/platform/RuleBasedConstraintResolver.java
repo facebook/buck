@@ -30,9 +30,9 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 /**
- * {@link ConstraintResolver} that uses configuration rules (obtained from {@link
- * ConfigurationRuleResolver}) to create instances {@link ConstraintSetting} and {@link
- * ConstraintValue}.
+ * {@link ConstraintResolver} that uses configuration rules obtained from {@link
+ * ConfigurationRuleResolver} to create {@link ConstraintSetting} and {@link ConstraintValue}
+ * instances.
  *
  * <p>All instances are cached.
  */
