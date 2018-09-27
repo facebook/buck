@@ -78,7 +78,11 @@ public abstract class BaseRunner {
       Element test = doc.createElement("test");
 
       // suite attribute
-      test.setAttribute("suite", result.testClassName);
+      test.setAttribute(
+          "suite",
+          (result.testMethodName == null && result.testClassName.equals("null"))
+              ? testClassName
+              : result.testClassName);
 
       // name attribute
       test.setAttribute("name", result.testMethodName);
