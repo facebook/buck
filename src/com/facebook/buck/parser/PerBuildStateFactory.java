@@ -187,9 +187,7 @@ public class PerBuildStateFactory {
 
       ConfigurationRuleResolver configurationRuleResolver =
           new SameThreadConfigurationRuleResolver(
-              cellManager::getCell,
-              (cell, buildTarget) ->
-                  nonResolvingTargetNodeParsePipeline.getNode(cell, buildTarget));
+              cellManager::getCell, nonResolvingTargetNodeParsePipeline::getNode);
 
       SelectableResolver selectableResolver =
           new ConfigurationRuleSelectableResolver(configurationRuleResolver);

@@ -26,6 +26,7 @@ import com.google.common.base.Preconditions;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /**
  * Provides a mechanism for mapping between a {@link BuildTarget} and the {@link ConfigurationRule}
@@ -49,7 +50,7 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
 
   private ConfigurationRule computeIfAbsent(
       BuildTarget target, Function<BuildTarget, ConfigurationRule> mappingFunction) {
-    ConfigurationRule configurationRule = configurationRuleIndex.get(target);
+    @Nullable ConfigurationRule configurationRule = configurationRuleIndex.get(target);
     if (configurationRule != null) {
       return configurationRule;
     }
@@ -60,7 +61,7 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
 
   @Override
   public synchronized ConfigurationRule getRule(BuildTarget buildTarget) {
-    return computeIfAbsent(buildTarget, ignored -> createConfigurationRule(buildTarget));
+    return computeIfAbsent(buildTarget, this::createConfigurationRule);
   }
 
   private <T> ConfigurationRule createConfigurationRule(BuildTarget buildTarget) {

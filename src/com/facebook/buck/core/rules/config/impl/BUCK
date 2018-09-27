@@ -9,5 +9,6 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//third-party/java/jsr:jsr305",
     ],
 )
