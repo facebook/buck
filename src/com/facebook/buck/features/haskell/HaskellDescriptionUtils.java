@@ -85,8 +85,12 @@ public class HaskellDescriptionUtils {
   static final Flavor GHCI_FLAV = UserFlavor.of("ghci", "Open a ghci session on this target");
 
   static final Flavor PROF = InternalFlavor.of("prof");
+  // We always build profiling object with PIC so it can be loaded by
+  // ghc-iserv-prof anywhere in the address space without the limitation of
+  // lower 2G address space.
   static final ImmutableList<String> PROF_FLAGS =
-      ImmutableList.of("-prof", "-osuf", "p_o", "-hisuf", "p_hi");
+      ImmutableList.of(
+          "-prof", "-fPIC", "-fexternal-dynamic-refs", "-osuf", "p_o", "-hisuf", "p_hi");
   static final ImmutableList<String> PIC_FLAGS =
       ImmutableList.of("-dynamic", "-fPIC", "-hisuf", "dyn_hi");
 

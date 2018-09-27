@@ -18,7 +18,7 @@ cp $DIR/start.ghci /tmp/foo-$$
 # We remove all paths from here since buck replaces them with the
 # temporary file path location and we cannot write a static '.expected' to
 # match against them
--optP-undef -optP-traditional-cpp -I. -no-global-package-db -no-user-package-db -hide-all-packages   -prof -osuf p_o -hisuf p_hi --interactive Foo.hs ${DIR}/libghci_dependencies.so -ghci-script /tmp/foo-$$/start.ghci "$@"
+-optP-undef -optP-traditional-cpp -I. -no-global-package-db -no-user-package-db -hide-all-packages   -prof -fPIC -fexternal-dynamic-refs -osuf p_o -hisuf p_hi --interactive Foo.hs ${DIR}/libghci_dependencies.so -ghci-script /tmp/foo-$$/start.ghci "$@"
 rm -rf /tmp/foo-$$
 # StringTemplateStep adds a newline at the end of the generated script.
 # Using nuclide to edit .expected file might cause test failure.
