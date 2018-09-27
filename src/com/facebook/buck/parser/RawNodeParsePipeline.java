@@ -34,6 +34,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
@@ -64,8 +65,8 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
    */
   public static UnflavoredBuildTarget parseBuildTargetFromRawRule(
       Path cellRoot, Optional<String> cellName, Map<String, Object> map, Path rulePathForDebug) {
-    String basePath = (String) map.get("buck.base_path");
-    String name = (String) map.get("name");
+    @Nullable String basePath = (String) map.get("buck.base_path");
+    @Nullable String name = (String) map.get("name");
     if (basePath == null || name == null) {
       throw new IllegalStateException(
           String.format(
