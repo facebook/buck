@@ -236,7 +236,7 @@ public class MergeAndroidResourcesStep implements Step {
       Optional<SetMultimap<String, RDotTxtEntry>> overrideSymbols =
           loadOverrideSymbols(overrideSymbolsPath);
 
-      ImmutableSet<String> duplciateResourceWhitelist =
+      ImmutableSet<String> duplicateResourceWhitelist =
           (duplicateResourceWhitelistPath.isPresent())
               ? ImmutableSet.copyOf(filesystem.readLines(duplicateResourceWhitelistPath.get()))
               : ImmutableSet.of();
@@ -248,7 +248,7 @@ public class MergeAndroidResourcesStep implements Step {
               symbolsFileToResourceDeps.build(),
               overrideSymbols,
               bannedDuplicateResourceTypes,
-              duplciateResourceWhitelist,
+              duplicateResourceWhitelist,
               filesystem,
               useOldStyleableFormat);
 
