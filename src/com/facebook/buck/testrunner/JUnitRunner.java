@@ -370,6 +370,17 @@ public final class JUnitRunner extends BaseRunner {
               stdErr.length() == 0 ? null : stdErr.toString()));
     }
 
+    @Override
+    public void testRunFinished(Result runResult) {
+      if (resultListener != null) {
+        // testStarted was called for latest test, but not the testFinished
+        // report all failures as unbounded
+        for (Failure failure : result.getFailures()) {
+          recordUnpairedResult(failure, ResultType.FAILURE);
+        }
+      }
+    }
+
     /**
      * The regular listener we created from the singular result, in this class, will not by default
      * treat assumption failures as regular failures, and will not store them. As a consequence, we
