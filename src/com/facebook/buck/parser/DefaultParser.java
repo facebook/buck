@@ -365,10 +365,7 @@ public class DefaultParser implements Parser {
                       (spec, nodes) -> spec.filter(nodes))));
       TargetGraph graph = buildTargetGraph(state, buildTargets, processedBytes);
 
-      return TargetGraphAndBuildTargets.builder()
-          .setBuildTargets(buildTargets)
-          .setTargetGraph(graph)
-          .build();
+      return TargetGraphAndBuildTargets.of(graph, buildTargets);
     }
   }
 

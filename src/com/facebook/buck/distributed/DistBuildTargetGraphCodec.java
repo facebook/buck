@@ -193,10 +193,7 @@ public class DistBuildTargetGraphCodec {
 
     TargetGraph targetGraph = new TargetGraph(mutableTargetGraph, targetNodeIndex);
 
-    return TargetGraphAndBuildTargets.builder()
-        .setTargetGraph(targetGraph)
-        .addAllBuildTargets(buildTargets.keySet())
-        .build();
+    return TargetGraphAndBuildTargets.of(targetGraph, buildTargets.keySet());
   }
 
   private ListenableFuture<Void> asyncProcessRemoteBuildTarget(

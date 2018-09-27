@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
 /** Holds a TargetGraph and a set of BuildTargetPaths. */
-@Value.Immutable(copy = true)
+@Value.Immutable(copy = true, builder = false)
 @BuckStyleImmutable
 interface AbstractTargetGraphAndBuildTargets {
   @Value.Parameter

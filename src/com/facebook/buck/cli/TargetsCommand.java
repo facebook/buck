@@ -527,10 +527,8 @@ public class TargetsCommand extends AbstractCommand {
       Iterable<BuildTarget> buildTargets =
           FluentIterable.from(matchingNodes.values()).transform(TargetNode::getBuildTarget);
 
-      return TargetGraphAndBuildTargets.builder()
-          .setTargetGraph(completeTargetGraphAndBuildTargets.getTargetGraph())
-          .setBuildTargets(buildTargets)
-          .build();
+      return TargetGraphAndBuildTargets.of(
+          completeTargetGraphAndBuildTargets.getTargetGraph(), buildTargets);
     } else {
       return filterTargetGraphAndBuildTargetsByType(
           params
@@ -635,22 +633,20 @@ public class TargetsCommand extends AbstractCommand {
     TargetGraphAndBuildTargets targetGraphAndBuildTargets;
     if (getArguments().isEmpty() || isDetectTestChanges) {
       targetGraphAndBuildTargets =
-          TargetGraphAndBuildTargets.builder()
-              .setBuildTargets(ImmutableSet.of())
-              .setTargetGraph(
-                  params
-                      .getParser()
-                      .buildTargetGraphForTargetNodeSpecs(
-                          params.getCell(),
-                          getEnableParserProfiling(),
-                          executor,
-                          ImmutableList.of(
-                              TargetNodePredicateSpec.of(
-                                  BuildFileSpec.fromRecursivePath(
-                                      Paths.get(""), params.getCell().getRoot()))),
-                          parserConfig.getDefaultFlavorsMode())
-                      .getTargetGraph())
-              .build();
+          TargetGraphAndBuildTargets.of(
+              params
+                  .getParser()
+                  .buildTargetGraphForTargetNodeSpecs(
+                      params.getCell(),
+                      getEnableParserProfiling(),
+                      executor,
+                      ImmutableList.of(
+                          TargetNodePredicateSpec.of(
+                              BuildFileSpec.fromRecursivePath(
+                                  Paths.get(""), params.getCell().getRoot()))),
+                      parserConfig.getDefaultFlavorsMode())
+                  .getTargetGraph(),
+              ImmutableSet.of());
     } else {
       targetGraphAndBuildTargets =
           params
