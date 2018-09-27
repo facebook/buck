@@ -77,8 +77,7 @@ final class OwnersReport {
     return nonFileInputs;
   }
 
-  @VisibleForTesting
-  static OwnersReport emptyReport() {
+  private static OwnersReport emptyReport() {
     return new OwnersReport(
         ImmutableSetMultimap.of(), ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of());
   }
