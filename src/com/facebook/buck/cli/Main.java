@@ -1312,7 +1312,10 @@ public final class Main {
   @Nonnull
   private ExecutorService createRemoteWorkerThreadPool(BuckConfig buckConfig) {
     int maxNumberOfRemoteWorkers =
-        buckConfig.getView(ModernBuildRuleConfig.class).getMaxNumberOfRemoteWorkers();
+        buckConfig.getView(ModernBuildRuleConfig.class).getBuildStrategy()
+                == ModernBuildRuleConfig.Strategy.NONE
+            ? 0
+            : buckConfig.getView(RemoteExecutionConfig.class).getMaxNumberOfRemoteWorkers();
     if (maxNumberOfRemoteWorkers == 0) {
       // Fully local build, no workers
       return newDirectExecutorService();

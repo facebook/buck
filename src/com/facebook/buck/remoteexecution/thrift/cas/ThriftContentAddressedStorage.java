@@ -21,6 +21,7 @@ import com.facebook.buck.remoteexecution.ContentAddressedStorage;
 import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader;
 import com.facebook.buck.remoteexecution.OutputsMaterializer;
 import com.facebook.buck.remoteexecution.Protocol;
+import com.facebook.buck.remoteexecution.thrift.ClientPool;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.function.ThrowingSupplier;
@@ -39,8 +40,8 @@ public class ThriftContentAddressedStorage implements ContentAddressedStorage {
   private final OutputsMaterializer materializer;
 
   public ThriftContentAddressedStorage(
-      ContentAddressableStorage.Iface uploadClient,
-      ContentAddressableStorage.Iface downloadClient,
+      ClientPool<ContentAddressableStorage.Iface> uploadClient,
+      ClientPool<ContentAddressableStorage.Iface> downloadClient,
       BuckEventBus eventBus) {
     uploader =
         new MultiThreadedBlobUploader(

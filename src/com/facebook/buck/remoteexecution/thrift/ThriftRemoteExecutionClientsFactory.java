@@ -107,8 +107,25 @@ public class ThriftRemoteExecutionClientsFactory implements Closeable {
         kRetryBackoffMillis);
   }
 
-  public ExecutionEngine.Iface createExecutionEngineClient() {
-    return new RetryingSynchronizedEngineClient(
+  /**
+   * Create a ClientPool containing retrying CAS clients
+   *
+   * @param maxPoolSize
+   * @return
+   */
+  public ClientPool<ContentAddressableStorage.Iface> createCasClientPool(int maxPoolSize) {
+    Supplier<ContentAddressableStorage.Iface> retryClientSupplier = () -> createCasClient();
+    return new DefaultClientPool<>(retryClientSupplier, maxPoolSize);
+  }
+
+  /**
+   * Create a ClientPool containing retrying execution engine clients
+   *
+   * @param maxPoolSize
+   * @return
+   */
+  public ClientPool<ExecutionEngine.Iface> createExecutionEngineClientPool(int maxPoolSize) {
+    Supplier<ExecutionEngine.Iface> directClientSupplier =
         () -> {
           THeaderTransport transport = null;
           try {
@@ -118,8 +135,14 @@ public class ThriftRemoteExecutionClientsFactory implements Closeable {
                 e, "Unable to create a connection to the RemoteExecutionEngine.");
           }
           return new ExecutionEngine.Client(new THeaderProtocol(transport));
-        },
-        kRetryBackoffMillis);
+        };
+
+    Supplier<ExecutionEngine.Iface> retryClientSupplier =
+        () -> {
+          return new RetryingSynchronizedEngineClient(directClientSupplier, kRetryBackoffMillis);
+        };
+
+    return new DefaultClientPool<>(retryClientSupplier, maxPoolSize);
   }
 
   private THeaderTransport createBlockingTransport(String host, int port)
@@ -243,14 +266,14 @@ public class ThriftRemoteExecutionClientsFactory implements Closeable {
     }
 
     @Override
-    public synchronized ExecuteOperation execute(ExecuteRequest request)
+    public ExecuteOperation execute(ExecuteRequest request)
         throws ExecutionEngineException, TException {
       return handleExceptions(
           () -> networkHelper.retryOnNetworkException(client -> client.execute(request)));
     }
 
     @Override
-    public synchronized ExecuteOperation getExecuteOperation(GetExecuteOperationRequest request)
+    public ExecuteOperation getExecuteOperation(GetExecuteOperationRequest request)
         throws ExecutionEngineException, TException {
       return handleExceptions(
           () ->

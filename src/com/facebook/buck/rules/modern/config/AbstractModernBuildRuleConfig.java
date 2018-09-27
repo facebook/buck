@@ -19,7 +19,6 @@ package com.facebook.buck.rules.modern.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Various configuration for ModernBuildRule behavior. */
@@ -28,39 +27,8 @@ import org.immutables.value.Value;
 abstract class AbstractModernBuildRuleConfig implements ConfigView<BuckConfig> {
   public static final String SECTION = "modern_build_rule";
 
-  public int getMaxNumberOfRemoteWorkers() {
-    if (!useWorkerThreadPool() || getBuildStrategy() == Strategy.NONE) {
-      return 0; // This is not a MBR build, so don't assign any threads for remote workers
-    }
-    return getDelegate().getInteger(SECTION, "max_number_of_remote_workers").orElse(100);
-  }
-
-  public boolean useWorkerThreadPool() {
-    return getDelegate().getBooleanValue(SECTION, "enable_worker_thread_pool", false);
-  }
-
   public Strategy getBuildStrategy() {
     return getDelegate().getEnum(SECTION, "strategy", Strategy.class).orElse(Strategy.DEFAULT);
-  }
-
-  public String getRemoteHost() {
-    return getDelegate().getValue(SECTION, "remote_host").orElse("localhost");
-  }
-
-  public int getRemotePort() {
-    return getDelegate().getInteger(SECTION, "remote_port").orElse(19030);
-  }
-
-  public String getCasHost() {
-    return getDelegate().getValue(SECTION, "cas_host").orElse("localhost");
-  }
-
-  public int getCasPort() {
-    return getDelegate().getInteger(SECTION, "cas_port").orElse(19031);
-  }
-
-  public Optional<String> getTraceID() {
-    return getDelegate().getValue(SECTION, "trace_id");
   }
 
   /**

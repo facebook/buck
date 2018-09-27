@@ -23,6 +23,8 @@ import com.facebook.buck.remoteexecution.CasBlobUploader;
 import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader.UploadData;
 import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.Protocol;
+import com.facebook.buck.remoteexecution.thrift.ClientPool;
+import com.facebook.buck.remoteexecution.thrift.PooledClient;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol.ThriftDigest;
 import com.facebook.buck.remoteexecution.thrift.ThriftUtil;
@@ -55,13 +57,14 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
 
   private static final Logger LOG = Logger.get(ThriftCasBlobUploader.class);
 
-  private final ContentAddressableStorage.Iface client;
+  private final ClientPool<ContentAddressableStorage.Iface> clientPool;
   private final BuckEventBus eventBus;
 
-  public ThriftCasBlobUploader(Iface client, BuckEventBus eventBus) {
+  public ThriftCasBlobUploader(
+      ClientPool<ContentAddressableStorage.Iface> clientPool, BuckEventBus eventBus) {
     // TODO(shivanker): The direct thrift client is not thread-safe, so we need to keep the requests
     // synchronized.
-    this.client = client;
+    this.clientPool = clientPool;
     this.eventBus = eventBus;
   }
 
@@ -74,8 +77,8 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
     FindMissingBlobsRequest request = new FindMissingBlobsRequest(digests);
     FindMissingBlobsResponse response;
 
-    try {
-      response = client.findMissingBlobs(request);
+    try (PooledClient<Iface> pooledClient = clientPool.getPooledClient()) {
+      response = pooledClient.getRawClient().findMissingBlobs(request);
     } catch (TException | ContentAddressableStorageException e) {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);
 
@@ -123,8 +126,9 @@ public class ThriftCasBlobUploader implements CasBlobUploader {
     BatchUpdateBlobsResponse response;
 
     try (Scope ignore =
-        CasBlobUploadEvent.sendEvent(eventBus, request.requests.size(), totalSizeBytes)) {
-      response = client.batchUpdateBlobs(request);
+            CasBlobUploadEvent.sendEvent(eventBus, request.requests.size(), totalSizeBytes);
+        PooledClient<ContentAddressableStorage.Iface> pooledClient = clientPool.getPooledClient()) {
+      response = pooledClient.getRawClient().batchUpdateBlobs(request);
     } catch (TException | ContentAddressableStorageException e) {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);
       String digests =

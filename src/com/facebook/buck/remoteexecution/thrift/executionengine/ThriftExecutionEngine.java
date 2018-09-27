@@ -23,6 +23,8 @@ import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.RemoteExecutionService;
+import com.facebook.buck.remoteexecution.thrift.ClientPool;
+import com.facebook.buck.remoteexecution.thrift.PooledClient;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol.ThriftOutputDirectory;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol.ThriftOutputFile;
@@ -38,6 +40,7 @@ import com.facebook.remoteexecution.executionengine.ExecuteRequest;
 import com.facebook.remoteexecution.executionengine.ExecuteRequestMetadata;
 import com.facebook.remoteexecution.executionengine.ExecuteResponse;
 import com.facebook.remoteexecution.executionengine.ExecutionEngine;
+import com.facebook.remoteexecution.executionengine.ExecutionEngine.Iface;
 import com.facebook.remoteexecution.executionengine.ExecutionEngineException;
 import com.facebook.remoteexecution.executionengine.GetExecuteOperationRequest;
 import com.facebook.thrift.TException;
@@ -62,18 +65,18 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
   private static Charset CHARSET = Charset.forName("UTF-8");
 
   private BuckEventBus eventBus;
-  private final ExecutionEngine.Iface reeClient;
-  private final ContentAddressableStorage.Iface casClient;
+  private final ClientPool<ExecutionEngine.Iface> reeClientPool;
+  private final ClientPool<ContentAddressableStorage.Iface> casClientPool;
   private final Optional<String> traceId;
 
   public ThriftExecutionEngine(
       BuckEventBus eventBus,
-      ExecutionEngine.Iface reeClient,
-      ContentAddressableStorage.Iface casClient,
+      ClientPool<Iface> reeClientPool,
+      ClientPool<ContentAddressableStorage.Iface> casClientPool,
       Optional<String> traceId) {
     this.eventBus = eventBus;
-    this.reeClient = reeClient;
-    this.casClient = casClient;
+    this.reeClientPool = reeClientPool;
+    this.casClientPool = casClientPool;
     this.traceId = traceId;
   }
 
@@ -90,8 +93,9 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
     ExecuteResponse response;
     try {
       ExecuteOperation operation;
-      try (Scope scope = LeafEvents.scope(eventBus, "schedule_remote")) {
-        operation = reeClient.execute(request);
+      try (Scope scope = LeafEvents.scope(eventBus, "schedule_remote");
+          PooledClient<ExecutionEngine.Iface> pooledClient = reeClientPool.getPooledClient()) {
+        operation = pooledClient.getRawClient().execute(request);
       }
 
       try (Scope scope = LeafEvents.scope(eventBus, "wait_for_response")) {
@@ -151,6 +155,7 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
     }
   }
 
+  // TODO(alisdair): unblock this thread
   private ExecuteResponse waitForResponse(ExecuteOperation operation)
       throws TException, ExecutionEngineException {
     // TODO(orr): This is currently blocking and infinite, like the Grpc implementation. This is
@@ -169,8 +174,8 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
 
       GetExecuteOperationRequest request = new GetExecuteOperationRequest(operation.execution_id);
 
-      try {
-        operation = reeClient.getExecuteOperation(request);
+      try (PooledClient<ExecutionEngine.Iface> pooledClient = reeClientPool.getPooledClient()) {
+        operation = pooledClient.getRawClient().getExecuteOperation(request);
         Preconditions.checkState(operation.isSetDone(), "Invalid ExecuteOperation received.");
       } catch (ExecutionEngineException e) {
         throw new RuntimeException(e);
@@ -218,10 +223,11 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
         if (stderrRaw == null
             || (stderrRaw.length == 0 && actionResult.stderr_digest.size_bytes > 0)) {
           LOG.warn("Got stderr digest.");
-          try {
+          try (PooledClient<ContentAddressableStorage.Iface> pooledClient =
+              casClientPool.getPooledClient()) {
             ReadBlobRequest request = new ReadBlobRequest(actionResult.stderr_digest);
             ReadBlobResponse response;
-            response = casClient.readBlob(request);
+            response = pooledClient.getRawClient().readBlob(request);
             return Optional.of(new String(response.data, CHARSET));
           } catch (TException | ContentAddressableStorageException e) {
             throw new RuntimeException(e);

@@ -25,7 +25,6 @@ import com.facebook.remoteexecution.executionengine.ExecuteRequest;
 import com.facebook.remoteexecution.executionengine.ExecutionEngine;
 import com.facebook.remoteexecution.executionengine.ExecutionEngineException;
 import com.facebook.thrift.TException;
-import java.io.IOException;
 import java.util.Optional;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
@@ -40,14 +39,20 @@ public class ThriftExecutionEngineTest {
   private final String traceId = "cool-id";
 
   @Test
-  public void testTraceIdIsSentAsMetadata()
-      throws IOException, InterruptedException, TException, ExecutionEngineException {
+  public void testTraceIdIsSentAsMetadata() throws TException, ExecutionEngineException {
+    ClientPool<ExecutionEngine.Iface> reeClientPool = EasyMock.createMock(ClientPool.class);
     ExecutionEngine.Iface reeClient = EasyMock.createMock(ExecutionEngine.Iface.class);
-    ContentAddressableStorage.Iface casClient =
-        EasyMock.createMock(ContentAddressableStorage.Iface.class);
+    ClientPool<ContentAddressableStorage.Iface> casClientPool =
+        EasyMock.createMock(ClientPool.class);
     BuckEventBus eventBusMock = EasyMock.createMock(BuckEventBus.class);
     ThriftExecutionEngine engine =
-        new ThriftExecutionEngine(eventBusMock, reeClient, casClient, Optional.of(traceId));
+        new ThriftExecutionEngine(eventBusMock, reeClientPool, casClientPool, Optional.of(traceId));
+
+    EasyMock.expect(reeClientPool.getPooledClient())
+        .andReturn(new PooledClient<>(reeClient, () -> {}))
+        .once();
+
+    EasyMock.replay(reeClientPool);
 
     Capture<ExecuteRequest> requestCapture = EasyMock.newCapture();
     EasyMock.expect(reeClient.execute(EasyMock.capture(requestCapture)))

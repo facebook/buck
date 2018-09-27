@@ -30,6 +30,8 @@ public class ThriftRemoteExecutionFactory {
       throws IOException {
     ThriftRemoteExecutionClientsFactory clients = new ThriftRemoteExecutionClientsFactory(config);
     return new RemoteExecution(
-        eventBus, new ThriftRemoteExecution(eventBus, clients, config.getTraceID()));
+        eventBus,
+        new ThriftRemoteExecution(
+            eventBus, clients, config.getTraceID(), config.getMaxNumberOfRemoteWorkers()));
   }
 }

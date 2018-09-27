@@ -72,7 +72,7 @@ public class ModernBuildRuleBuilderFactory {
                   remoteExecutionConfig.getRemotePort(),
                   remoteExecutionConfig.getCasHost(),
                   remoteExecutionConfig.getCasPort(),
-                  config.useWorkerThreadPool()
+                  remoteExecutionConfig.useWorkerThreadPool()
                       ? Optional.of(remoteExecutorService)
                       : Optional.empty()));
         case THRIFT_REMOTE:
@@ -84,7 +84,7 @@ public class ModernBuildRuleBuilderFactory {
                   rootCell,
                   hashLoader::get,
                   remoteExecutionConfig,
-                  config.useWorkerThreadPool()
+                  remoteExecutionConfig.useWorkerThreadPool()
                       ? Optional.of(remoteExecutorService)
                       : Optional.empty()));
         case DEBUG_RECONSTRUCT:

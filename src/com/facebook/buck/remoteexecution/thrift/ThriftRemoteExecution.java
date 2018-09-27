@@ -23,11 +23,13 @@ import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionService;
 import com.facebook.buck.remoteexecution.thrift.cas.ThriftContentAddressedStorage;
 import com.facebook.buck.remoteexecution.thrift.executionengine.ThriftExecutionEngine;
+import com.facebook.remoteexecution.cas.ContentAddressableStorage.Iface;
 import java.io.IOException;
 import java.util.Optional;
 
 /** A RemoteExecution that sends jobs to a thrift-based remote execution service. */
 public class ThriftRemoteExecution implements RemoteExecutionClients {
+
   private static final Protocol PROTOCOL = new ThriftProtocol();
   private final ThriftContentAddressedStorage storage;
   private final ThriftExecutionEngine remoteExecutionService;
@@ -36,14 +38,17 @@ public class ThriftRemoteExecution implements RemoteExecutionClients {
   public ThriftRemoteExecution(
       BuckEventBus eventBus,
       ThriftRemoteExecutionClientsFactory clients,
-      Optional<String> traceId) {
+      Optional<String> traceId,
+      int maxRemoteWorkers) {
     this.clients = clients;
-    this.storage =
-        new ThriftContentAddressedStorage(
-            clients.createCasClient(), clients.createCasClient(), eventBus);
+    ClientPool<Iface> casClientPool = clients.createCasClientPool(maxRemoteWorkers);
+    this.storage = new ThriftContentAddressedStorage(casClientPool, casClientPool, eventBus);
     this.remoteExecutionService =
         new ThriftExecutionEngine(
-            eventBus, clients.createExecutionEngineClient(), clients.createCasClient(), traceId);
+            eventBus,
+            clients.createExecutionEngineClientPool(maxRemoteWorkers),
+            casClientPool,
+            traceId);
   }
 
   @Override

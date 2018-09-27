@@ -20,9 +20,12 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.CasBlobDownloadEvent;
 import com.facebook.buck.remoteexecution.Protocol;
+import com.facebook.buck.remoteexecution.thrift.ClientPool;
+import com.facebook.buck.remoteexecution.thrift.PooledClient;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
 import com.facebook.buck.util.Scope;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
+import com.facebook.remoteexecution.cas.ContentAddressableStorage.Iface;
 import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
 import com.facebook.remoteexecution.cas.ReadBlobRequest;
 import com.facebook.remoteexecution.cas.ReadBlobResponse;
@@ -36,20 +39,22 @@ import java.nio.ByteBuffer;
 // TODO(shivanker): Make this implementation actually async.
 public class ThriftBlobFetcher implements AsyncBlobFetcher {
 
-  private final ContentAddressableStorage.Iface client;
+  private final ClientPool<ContentAddressableStorage.Iface> clientPool;
   private final BuckEventBus eventBus;
 
-  public ThriftBlobFetcher(ContentAddressableStorage.Iface client, BuckEventBus eventBus) {
-    this.client = client;
+  public ThriftBlobFetcher(
+      ClientPool<ContentAddressableStorage.Iface> clientPool, BuckEventBus eventBus) {
+    this.clientPool = clientPool;
     this.eventBus = eventBus;
   }
 
   @Override
   public ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest) {
     ReadBlobRequest request = new ReadBlobRequest(ThriftProtocol.get(digest));
-    try (Scope ignore = CasBlobDownloadEvent.sendEvent(eventBus, 1, digest.getSize())) {
+    try (Scope ignore = CasBlobDownloadEvent.sendEvent(eventBus, 1, digest.getSize());
+        PooledClient<Iface> pooledClient = clientPool.getPooledClient()) {
       ReadBlobResponse response;
-      response = client.readBlob(request);
+      response = pooledClient.getRawClient().readBlob(request);
       return Futures.immediateFuture(ByteBuffer.wrap(response.getData()));
     } catch (TException | ContentAddressableStorageException e) {
       return Futures.immediateFailedFuture(e);
