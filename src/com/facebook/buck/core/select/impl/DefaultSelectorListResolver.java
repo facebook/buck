@@ -119,7 +119,7 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
     }
   }
 
-  private static <T> void updateConditions(
+  private static void updateConditions(
       Map<Selectable, Object> matchingConditions, Selectable newCondition, Object value) {
     // Skip the new condition if some existing condition refines it
     if (matchingConditions
