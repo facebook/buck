@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution.thrift;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.thrift.executionengine.ThriftExecutionEngine;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
@@ -44,8 +45,9 @@ public class ThriftExecutionEngineTest {
     ExecutionEngine.Iface reeClient = EasyMock.createMock(ExecutionEngine.Iface.class);
     ContentAddressableStorage.Iface casClient =
         EasyMock.createMock(ContentAddressableStorage.Iface.class);
+    BuckEventBus eventBusMock = EasyMock.createMock(BuckEventBus.class);
     ThriftExecutionEngine engine =
-        new ThriftExecutionEngine(reeClient, casClient, Optional.of(traceId));
+        new ThriftExecutionEngine(eventBusMock, reeClient, casClient, Optional.of(traceId));
 
     Capture<ExecuteRequest> requestCapture = EasyMock.newCapture();
     EasyMock.expect(reeClient.execute(EasyMock.capture(requestCapture)))

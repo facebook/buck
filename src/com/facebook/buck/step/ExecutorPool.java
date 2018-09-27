@@ -20,4 +20,5 @@ public enum ExecutorPool {
   CPU,
   NETWORK,
   PROJECT,
+  REMOTE,
 }

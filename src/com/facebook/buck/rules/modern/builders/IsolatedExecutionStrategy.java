@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -77,17 +78,20 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final Set<Optional<String>> cellNames;
   private final Map<HashCode, Node> nodeMap;
   private final HashFunction hasher;
+  private final Optional<ExecutorService> executorService;
 
   IsolatedExecutionStrategy(
       IsolatedExecution executionStrategy,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher) {
+      ThrowingFunction<Path, HashCode, IOException> fileHasher,
+      Optional<ExecutorService> executorService) {
     this.executionStrategy = executionStrategy;
     this.cellResolver = cellResolver;
     this.rootCell = rootCell;
     this.fileHasher = fileHasher;
+    this.executorService = executorService;
     this.nodeMap = new ConcurrentHashMap<>();
     this.hasher = executionStrategy.getProtocol().getHashFunction();
 
@@ -159,14 +163,18 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
 
   @Override
   public void build(
-      ListeningExecutorService service, BuildRule rule, BuildExecutorRunner executorRunner) {
+      ListeningExecutorService buildExecutorService,
+      BuildRule rule,
+      BuildExecutorRunner executorRunner) {
     Preconditions.checkState(rule instanceof ModernBuildRule);
-    service.execute(
-        () ->
-            executorRunner.runWithExecutor(
-                (executionContext, buildRuleBuildContext, buildableContext, stepRunner) -> {
-                  executeRule(rule, executionContext, buildRuleBuildContext, buildableContext);
-                }));
+    executorService
+        .orElse(buildExecutorService)
+        .execute(
+            () ->
+                executorRunner.runWithExecutor(
+                    (executionContext, buildRuleBuildContext, buildableContext, stepRunner) -> {
+                      executeRule(rule, executionContext, buildRuleBuildContext, buildableContext);
+                    }));
   }
 
   private void executeRule(

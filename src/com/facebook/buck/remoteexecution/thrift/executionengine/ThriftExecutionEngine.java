@@ -17,6 +17,8 @@
 package com.facebook.buck.remoteexecution.thrift.executionengine;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.Protocol.OutputFile;
@@ -24,6 +26,7 @@ import com.facebook.buck.remoteexecution.RemoteExecutionService;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol.ThriftOutputDirectory;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol.ThriftOutputFile;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;
 import com.facebook.remoteexecution.cas.ContentAddressableStorageException;
@@ -58,14 +61,17 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
   private static final boolean SKIP_CACHE_LOOKUP = false;
   private static Charset CHARSET = Charset.forName("UTF-8");
 
+  private BuckEventBus eventBus;
   private final ExecutionEngine.Iface reeClient;
   private final ContentAddressableStorage.Iface casClient;
   private final Optional<String> traceId;
 
   public ThriftExecutionEngine(
+      BuckEventBus eventBus,
       ExecutionEngine.Iface reeClient,
       ContentAddressableStorage.Iface casClient,
       Optional<String> traceId) {
+    this.eventBus = eventBus;
     this.reeClient = reeClient;
     this.casClient = casClient;
     this.traceId = traceId;
@@ -84,8 +90,14 @@ public class ThriftExecutionEngine implements RemoteExecutionService {
     ExecuteResponse response;
     try {
       ExecuteOperation operation;
-      operation = reeClient.execute(request);
-      response = waitForResponse(operation);
+      try (Scope scope = LeafEvents.scope(eventBus, "schedule_remote")) {
+        operation = reeClient.execute(request);
+      }
+
+      try (Scope scope = LeafEvents.scope(eventBus, "wait_for_response")) {
+        response = waitForResponse(operation);
+      }
+
     } catch (TException | ExecutionEngineException e) {
       // ExecutionEngineException thrown here means an Infra Failure.
       throw new RuntimeException(e);

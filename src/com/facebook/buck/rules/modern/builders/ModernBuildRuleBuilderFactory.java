@@ -38,6 +38,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Constructs various BuildRuleStrategies for ModernBuildRules based on the
@@ -53,7 +54,8 @@ public class ModernBuildRuleBuilderFactory {
       CellPathResolver cellResolver,
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
-      Console console) {
+      Console console,
+      ExecutorService remoteExecutorService) {
     try {
       switch (config.getBuildStrategy()) {
         case NONE:
@@ -69,7 +71,10 @@ public class ModernBuildRuleBuilderFactory {
                   remoteExecutionConfig.getRemoteHost(),
                   remoteExecutionConfig.getRemotePort(),
                   remoteExecutionConfig.getCasHost(),
-                  remoteExecutionConfig.getCasPort()));
+                  remoteExecutionConfig.getCasPort(),
+                  config.useWorkerThreadPool()
+                      ? Optional.of(remoteExecutorService)
+                      : Optional.empty()));
         case THRIFT_REMOTE:
           return Optional.of(
               createThriftRemote(
@@ -78,7 +83,10 @@ public class ModernBuildRuleBuilderFactory {
                   cellResolver,
                   rootCell,
                   hashLoader::get,
-                  remoteExecutionConfig));
+                  remoteExecutionConfig,
+                  config.useWorkerThreadPool()
+                      ? Optional.of(remoteExecutorService)
+                      : Optional.empty()));
         case DEBUG_RECONSTRUCT:
           return Optional.of(
               createReconstructing(new SourcePathRuleFinder(resolver), cellResolver, rootCell));
@@ -168,7 +176,8 @@ public class ModernBuildRuleBuilderFactory {
         ruleFinder,
         cellResolver,
         rootCell,
-        fileHasher);
+        fileHasher,
+        Optional.empty());
   }
 
   /**
@@ -190,7 +199,8 @@ public class ModernBuildRuleBuilderFactory {
         ruleFinder,
         cellResolver,
         rootCell,
-        fileHasher);
+        fileHasher,
+        Optional.empty());
   }
 
   private static BuildRuleStrategy createGrpcRemote(
@@ -202,7 +212,8 @@ public class ModernBuildRuleBuilderFactory {
       String executionEngineHost,
       int executionEnginePort,
       String casHost,
-      int casPort)
+      int casPort,
+      Optional<ExecutorService> remoteExecutorService)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
         GrpcExecutionFactory.createRemote(
@@ -210,7 +221,8 @@ public class ModernBuildRuleBuilderFactory {
         ruleFinder,
         cellResolver,
         rootCell,
-        fileHasher);
+        fileHasher,
+        remoteExecutorService);
   }
 
   private static BuildRuleStrategy createThriftRemote(
@@ -219,14 +231,16 @@ public class ModernBuildRuleBuilderFactory {
       CellPathResolver cellResolver,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher,
-      RemoteExecutionConfig remoteExecutionConfig)
+      RemoteExecutionConfig remoteExecutionConfig,
+      Optional<ExecutorService> remoteExecutorService)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
         ThriftRemoteExecutionFactory.createRemote(remoteExecutionConfig, eventBus),
         ruleFinder,
         cellResolver,
         rootCell,
-        fileHasher);
+        fileHasher,
+        remoteExecutorService);
   }
 
   public static BuildRuleStrategy createGrpcInProcess(
@@ -241,6 +255,7 @@ public class ModernBuildRuleBuilderFactory {
         ruleFinder,
         cellResolver,
         rootCell,
-        fileHasher);
+        fileHasher,
+        Optional.empty());
   }
 }

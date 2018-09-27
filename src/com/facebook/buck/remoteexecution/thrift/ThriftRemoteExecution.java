@@ -43,7 +43,7 @@ public class ThriftRemoteExecution implements RemoteExecutionClients {
             clients.createCasClient(), clients.createCasClient(), eventBus);
     this.remoteExecutionService =
         new ThriftExecutionEngine(
-            clients.createExecutionEngineClient(), clients.createCasClient(), traceId);
+            eventBus, clients.createExecutionEngineClient(), clients.createCasClient(), traceId);
   }
 
   @Override

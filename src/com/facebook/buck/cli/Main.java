@@ -121,6 +121,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.step.ExecutorPool;
@@ -239,6 +240,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.CmdLineException;
@@ -937,6 +939,14 @@ public final class Main {
                                 commonThreadFactoryState)),
                         "ScheduledExecutorService",
                         EXECUTOR_SERVICES_TIMEOUT_SECONDS);
+            // Creates a thread pool with modern_build_rule.max_number_of_remote_workers threads
+            // If this is not a MBR based build, creates a direct executor instead.
+            ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
+                remoteExecutorService =
+                    getExecutorWrapper(
+                        listeningDecorator(createRemoteWorkerThreadPool(buckConfig)),
+                        ExecutorPool.REMOTE.toString(),
+                        EXECUTOR_SERVICES_TIMEOUT_SECONDS);
             // Create a cached thread pool for cpu intensive tasks
             ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
                 cpuExecutorService =
@@ -1039,7 +1049,9 @@ public final class Main {
                   ExecutorPool.NETWORK,
                   networkExecutorService.get(),
                   ExecutorPool.PROJECT,
-                  projectExecutorService.get());
+                  projectExecutorService.get(),
+                  ExecutorPool.REMOTE,
+                  remoteExecutorService.get());
 
           // No need to kick off ProgressEstimator for commands that
           // don't build anything -- it has overhead and doesn't seem
@@ -1295,6 +1307,18 @@ public final class Main {
       }
     }
     return exitCode;
+  }
+
+  @Nonnull
+  private ExecutorService createRemoteWorkerThreadPool(BuckConfig buckConfig) {
+    int maxNumberOfRemoteWorkers =
+        buckConfig.getView(ModernBuildRuleConfig.class).getMaxNumberOfRemoteWorkers();
+    if (maxNumberOfRemoteWorkers == 0) {
+      // Fully local build, no workers
+      return newDirectExecutorService();
+    } else {
+      return MostExecutors.newMultiThreadExecutor("Remote Worker", maxNumberOfRemoteWorkers);
+    }
   }
 
   private ImmutableList<AdditionalConsoleLineProvider> createAdditionalConsoleLinesProviders(

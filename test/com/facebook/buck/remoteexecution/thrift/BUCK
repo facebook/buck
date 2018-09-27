@@ -7,6 +7,7 @@ java_test(
     ]),
     deps = [
         "//src-gen:thrift",
+        "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/remoteexecution/thrift:thrift",
         "//src/com/facebook/buck/rules/modern/builders:builders",
         "//src/com/facebook/buck/util/function:function",

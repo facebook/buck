@@ -29,7 +29,9 @@ import com.google.common.hash.HashCode;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Interface used to implement various isolated execution strategies. In these strategies,
@@ -55,8 +57,9 @@ public interface IsolatedExecution extends Closeable {
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher) {
+      ThrowingFunction<Path, HashCode, IOException> fileHasher,
+      Optional<ExecutorService> executorService) {
     return new IsolatedExecutionStrategy(
-        executionStrategy, ruleFinder, cellResolver, rootCell, fileHasher);
+        executionStrategy, ruleFinder, cellResolver, rootCell, fileHasher, executorService);
   }
 }
