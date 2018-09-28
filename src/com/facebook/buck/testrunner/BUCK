@@ -103,6 +103,7 @@ genrule(
         "$(exe //py/buck/zip:munger)",
         "--input=$(location :testrunner-bin)",
         "--output=$OUT",
+        "--exclude=",
         "--include=com/facebook/buck/",
     ]),
     visibility = [
