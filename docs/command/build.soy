@@ -149,15 +149,7 @@ Example:
 
 {call command_common.show_output_param /}
 
-
-{call buck.param}
-  {param name: 'verbose' /}
-  {param alias: 'v'/}
-  {param desc}
-  How verbose logging to the console should be, with 1 as the minimum
-  and 10 as the most verbose.
-  {/param}
-{/call}
+{call command_common.common_param_xref /}
 
 {/param}
 
