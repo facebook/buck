@@ -55,7 +55,7 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
       Cell cell,
       BuildTarget buildTarget,
       PlatformArg arg) {
-    return new PlatformRule(buildTarget, arg.getName(), arg.getConstraintValues());
+    return PlatformRule.of(buildTarget, arg.getName(), arg.getConstraintValues());
   }
 
   @BuckStyleImmutable
@@ -64,5 +64,20 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
     String getName();
 
     ImmutableList<BuildTarget> getConstraintValues();
+  }
+
+  /** {@code platform} rule. */
+  @BuckStyleImmutable
+  @Value.Immutable(builder = false, copy = false)
+  interface AbstractPlatformRule extends ConfigurationRule {
+    @Value.Parameter
+    @Override
+    BuildTarget getBuildTarget();
+
+    @Value.Parameter
+    String getName();
+
+    @Value.Parameter
+    ImmutableList<BuildTarget> getConstrainValues();
   }
 }
