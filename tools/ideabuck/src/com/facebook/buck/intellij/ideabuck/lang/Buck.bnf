@@ -34,24 +34,48 @@
 
     COMMA = ','
     EQUAL = '='
+    DOUBLE_EQUAL = '=='
+    NOT_EQUAL = '!='
+    GREATER_THAN = '>'
+    LESS_THAN = '<'
+    GREATER_EQUAL = '>='
+    LESS_EQUAL = '<='
+    UPDATE_OPS = 'regexp:\+=|-=|\*=|/=|//=|%=|&=|\|=|\^=|<<=|>>='
+    BIT_OR = '|'
+    BIT_AND = '&'
+    BIT_XOR = '^'
+
     SLASH = '\'
-    COLUMN = ':'
+    COLON = ':'
     PLUS = '+'
+    MINUS = '-'
+    DIVISION = '/'
+    DIVISION_INT = '//'
+    DOT = '.'
+    SEMI_COLON = ';'
+    STAR = '*'
+    DOUBLE_STAR = '**'
 
     LINE_COMMENT = 'regexp:#.*'
-
-    GLOB_KEYWORD = 'regexp:(glob|subdir_glob)'
-    GLOB_INCLUDES_KEYWORD = 'includes'
-    GLOB_INCLUDE_DOTFILES_KEYWORD = 'include_dotfiles'
-    GLOB_EXCLUDES_KEYWORD = 'excludes'
-    GLOB_EXCLUDE_KEYWORD = 'exclude'
-
-    LOAD_KEYWORD = 'load'
-
-    MACROS = "regexp:[A-Z_]([A-Z0-9_])+"
-
     DOUBLE_QUOTED_STRING="regexp:\"([^\\\"\r\n]|\\[^\r\n])*\"?"
     SINGLE_QUOTED_STRING="regexp:'([^\\\'\r\n]|\\[^\r\n])*'?"
+
+    LOAD_KEYWORD = 'load'
+    DEF = 'def'
+    FOR = 'for'
+    IN = 'in'
+    AND = 'and'
+    OR = 'or'
+    NOT = 'not'
+    IF = 'if'
+    ELSE = 'else'
+    ELIF = 'elif'
+    BREAK = 'break'
+    CONTINUE = 'continue'
+    PASS = 'pass'
+    RETURN = 'return'
+    LAMBDA = 'lambda'
+    GLOB = 'glob'
 
     L_PARENTHESES = '('
     L_BRACKET = '['
@@ -62,49 +86,78 @@
     PERCENT = '%'
 
     NUMBER = 'regexp:-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d*)?'
-    IDENTIFIER = 'regexp:[:jletter:] [:jletterdigit:]*'
+    IDENTIFIER = 'regexp:[a-zA-Z_]([a-zA-Z0-9_])*'
+
+    space = 'regexp:\s+'
   ]
 }
 
 buckFile ::= item_*
 
-private item_ ::= (rule_call | rule_block | property | LINE_COMMENT | DOC_STRING | load_call)
+private item_ ::= (statement | load_call | function_definition)
+private string ::= (DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING) (PERCENT primary) ?
 
-property_lvalue ::= IDENTIFIER | MACROS
-property ::= property_lvalue '=' expression
-
-// Only support "+" as operator right now.
-private operator ::= PLUS
-expression ::= (value operator)* [value | IDENTIFIER ]
-
-private string ::= (DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING) (PERCENT value) ?
-
-value ::= NONE | BOOLEAN | NUMBER | IDENTIFIER | MACROS | string | value_array | list | object | glob_block | function_call
-
-list ::= '(' list_elements ')'
-list_elements ::= (value ',')* [value [',']]
-
-object ::= '{' object_elements '}'
-object_elements ::= (pair ',')* [pair [',']]
-pair ::= string ':' value
-
-value_array ::= '[' array_elements ']'
-array_elements ::= (value ',')* [value [',']]
-
-rule_name ::= IDENTIFIER
-rule_block ::= rule_name '(' rule_body ')'
-rule_body ::= (property ',')* [property [',']]
-
-glob_block ::= GLOB_KEYWORD '(' glob_elements ')'
-glob_elements ::= (glob_arguments ',')* [glob_arguments [',']]
-glob_arguments ::= value | glob_keyword_argument
-glob_keyword_argument ::= (GLOB_INCLUDES_KEYWORD | GLOB_EXCLUDES_KEYWORD | GLOB_EXCLUDE_KEYWORD | GLOB_INCLUDE_DOTFILES_KEYWORD) '=' expression
-
-rule_call ::= rule_name '(' list_elements ')'
-
+load_call ::= 'load' '(' load_target_argument (',' load_argument) (',' load_argument)* [','] ')'
 load_target_argument ::= string
-load_argument ::= string | property
-load_call ::= LOAD_KEYWORD '(' load_target_argument (',' load_argument) (',' load_argument)* [','] ')'
+load_argument ::= [IDENTIFIER '='] string
 
-function_call ::= IDENTIFIER '(' ((string [',']) | (dictionary [',']))* ')'
-dictionary ::= L_CURLY value COLUMN value [','] R_CURLY
+function_definition ::= 'def' IDENTIFIER '(' parameter_list? ')' ':' suite
+
+parameter_list ::= parameter (',' parameter)* ','?
+
+parameter ::= IDENTIFIER ['=' single_expression] | '*' IDENTIFIER | '**' IDENTIFIER
+
+suite ::= simple_statement | INDENT statement+ DEDENT
+
+statement ::= simple_statement | if_statement | for_statement | LINE_COMMENT | DOC_STRING
+
+simple_statement ::= small_statement (';' small_statement)* ';'?
+
+small_statement ::= expression ('=' | UPDATE_OPS) expression | control_flow_statement | expression
+
+control_flow_statement ::= 'return' [expression] | 'break' | 'continue' | 'pass'
+
+expression ::= single_expression (',' single_expression)*
+
+single_expression ::= (primary_with_suffix (binary_op primary_with_suffix)*
+                      | 'lambda' [parameter_list] ':' single_expression
+                      | 'not' single_expression)
+                      ['if' single_expression 'else' single_expression]
+
+primary_with_suffix ::= primary (dot_suffix | slice_suffix)*
+
+primary ::= NONE | BOOLEAN | NUMBER | function_call | IDENTIFIER | string | list | dict | '(' expression ','? ')' | ('+' | '-') primary_with_suffix
+
+function_call ::=  function_name function_call_suffix
+
+function_name ::= ('glob' | IDENTIFIER)
+
+dot_suffix ::= '.' IDENTIFIER [function_call_suffix]
+
+function_call_suffix ::= '(' argument_list? ')'
+
+argument_list ::= argument (',' argument)* ','?
+
+argument ::= [property_lvalue '='] single_expression | '*' single_expression | '**' single_expression
+
+property_lvalue ::= IDENTIFIER
+
+slice_suffix ::= '[' single_expression? ':' single_expression? (':' single_expression?)? ']'
+
+list ::= '[' (list_elements ']' | single_expression comprehension_suffix ']' | ']')
+
+list_elements ::= single_expression (',' single_expression)* ','?
+
+comprehension_suffix ::= 'for' loop_variable 'in' single_expression ['if' single_expression] comprehension_suffix*
+loop_variable ::= primary_with_suffix (',' primary_with_suffix)*
+
+dict ::= '{' (dict_entry ((',' dict_entry)* ','? '}' | comprehension_suffix '}') | '}')
+
+dict_entry ::= single_expression ':' single_expression
+
+binary_op ::=  'or' | 'and' | '==' | '!=' | '<' | '>' | '<=' | '>=' | 'in' | 'not' 'in'
+                    | '|' | '^' | '&' | '-' | '+' | '*' | '%' | '/' | '//'
+
+if_statement ::= 'if' single_expression ':' suite ('elif' single_expression ':' suite)* ['else' ':' suite]
+
+for_statement ::= 'for' loop_variable 'in' expression ':' suite

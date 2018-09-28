@@ -87,8 +87,8 @@ public final class BuckPsiUtils {
    * Return the text content if the given BuckExpression has only one string value. Return null if
    * this expression has multiple values, for example: "a" + "b"
    */
-  public static String getStringValueFromExpression(BuckExpression expression) {
-    List<BuckValue> values = expression.getValueList();
+  public static String getStringValueFromExpression(BuckSingleExpression expression) {
+    List<BuckPrimaryWithSuffix> values = expression.getPrimaryWithSuffixList();
     if (values.size() != 1) {
       return null;
     }

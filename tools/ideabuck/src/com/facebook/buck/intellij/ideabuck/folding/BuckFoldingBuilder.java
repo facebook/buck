@@ -18,12 +18,11 @@ package com.facebook.buck.intellij.ideabuck.folding;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCall;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckList;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSingleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
-import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckExpressionImpl;
-import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckPropertyLvalueImpl;
-import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckRuleBlockImpl;
-import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckRuleNameImpl;
-import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckValueArrayImpl;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilderEx;
 import com.intellij.lang.folding.FoldingDescriptor;
@@ -43,8 +42,8 @@ import org.jetbrains.annotations.Nullable;
 /** Folds rules and arrays */
 public class BuckFoldingBuilder extends FoldingBuilderEx {
 
-  private final TokenSet arrayElements = TokenSet.create(BuckTypes.ARRAY_ELEMENTS);
-  private final TokenSet values = TokenSet.create(BuckTypes.VALUE);
+  private final TokenSet arrayElements = TokenSet.create(BuckTypes.SINGLE_EXPRESSION);
+  private final TokenSet values = TokenSet.create(BuckTypes.PRIMARY);
 
   @NotNull
   @Override
@@ -52,11 +51,10 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
       @NotNull PsiElement root, @NotNull Document document, boolean quick) {
     List<FoldingDescriptor> descriptors = new ArrayList<>();
 
-    PsiTreeUtil.findChildrenOfAnyType(root, BuckRuleBlockImpl.class, BuckValueArrayImpl.class)
-        .stream()
+    PsiTreeUtil.findChildrenOfAnyType(root, BuckFunctionCall.class, BuckList.class)
         .forEach(
             element -> {
-              int offset = element instanceof BuckRuleBlockImpl ? 0 : 1;
+              int offset = element instanceof BuckFunctionCall ? 0 : 1;
               TextRange elementTextRange = element.getTextRange();
               TextRange foldingRange =
                   new TextRange(
@@ -67,7 +65,7 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
               }
             });
 
-    return descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
+    return descriptors.toArray(new FoldingDescriptor[0]);
   }
 
   @Nullable
@@ -80,9 +78,9 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
     CompositeElement compositeElement = (CompositeElement) astNode;
     IElementType type = compositeElement.getElementType();
 
-    if (type.equals(BuckTypes.VALUE_ARRAY)) {
+    if (type.equals(BuckTypes.LIST)) {
       return getArrayPlaceholderText(compositeElement);
-    } else if (type.equals(BuckTypes.RULE_BLOCK)) {
+    } else if (type.equals(BuckTypes.FUNCTION_CALL)) {
       return getRulePlaceholderText(compositeElement);
     } else {
       return null;
@@ -90,46 +88,35 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
   }
 
   private String getArrayPlaceholderText(CompositeElement compositeElement) {
-    int size = countValues(compositeElement);
+    int size = compositeElement.countChildren(arrayElements);
     // Return null (the default value) if countValues() returns an error code
     return size < 0 ? null : Integer.toString(size);
   }
 
   private String getRulePlaceholderText(CompositeElement compositeElement) {
     PsiElement psiElement = compositeElement.getPsi();
-    BuckRuleNameImpl buckRuleName = PsiTreeUtil.findChildOfType(psiElement, BuckRuleNameImpl.class);
-    if (buckRuleName == null) {
-      return null;
-    }
-
     String name = null;
-    Collection<BuckPropertyLvalueImpl> lvalues =
-        PsiTreeUtil.findChildrenOfType(psiElement, BuckPropertyLvalueImpl.class);
-    for (BuckPropertyLvalueImpl lvalue : lvalues) {
+    Collection<BuckPropertyLvalue> lvalues =
+        PsiTreeUtil.findChildrenOfType(psiElement, BuckPropertyLvalue.class);
+    for (BuckPropertyLvalue lvalue : lvalues) {
       if (lvalue.getText().equals("name")) {
         PsiElement element = lvalue;
         do {
           element = element.getNextSibling();
-        } while (!(element instanceof BuckExpressionImpl));
+        } while (!(element instanceof BuckSingleExpression));
         name = element.getText();
         break;
       }
     }
 
-    return String.format(isNullOrEmpty(name) ? "%s" : "%s(%s)", buckRuleName.getText(), name);
+    return String.format(
+        isNullOrEmpty(name) ? "%s" : "%s(%s)",
+        compositeElement.getPsi().getFirstChild().getText(),
+        name);
   }
 
   @Override
   public boolean isCollapsedByDefault(@NotNull ASTNode astNode) {
     return false;
-  }
-
-  private int countValues(CompositeElement compositeElement) {
-    ASTNode[] children = compositeElement.getChildren(arrayElements);
-    if (children == null || children.length != 1) {
-      return -1;
-    }
-    CompositeElement element = (CompositeElement) children[0];
-    return element.countChildren(values);
   }
 }

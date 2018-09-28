@@ -105,7 +105,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
         }
       }
 
-      PsiElement property = BuckPsiUtils.findAncestorWithType(element, BuckTypes.PROPERTY);
+      PsiElement property = BuckPsiUtils.findAncestorWithType(element, BuckTypes.ARGUMENT);
       if (checkPropertyName(property)) {
         return formatPasteText(text, element, project, inQuotedString);
       }
@@ -125,10 +125,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
     if (leftValue == null || leftValue.getNode().getElementType() != BuckTypes.IDENTIFIER) {
       return false;
     }
-    if (leftValue.getText().equals("deps") || leftValue.getText().equals("visibility")) {
-      return true;
-    }
-    return false;
+    return leftValue.getText().equals("deps") || leftValue.getText().equals("visibility");
   }
 
   /**

@@ -18,9 +18,8 @@ package com.facebook.buck.intellij.ideabuck.format;
 
 import static com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils.hasElementType;
 
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArrayElements;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgumentList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListElements;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckRuleBody;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.intellij.formatting.ASTBlock;
 import com.intellij.formatting.Alignment;
@@ -49,7 +48,7 @@ import org.jetbrains.annotations.Nullable;
 public class BuckBlock implements ASTBlock {
 
   private static final TokenSet BUCK_CONTAINERS =
-      TokenSet.create(BuckTypes.ARRAY_ELEMENTS, BuckTypes.RULE_BODY, BuckTypes.LIST_ELEMENTS);
+      TokenSet.create(BuckTypes.LIST_ELEMENTS, BuckTypes.ARGUMENT_LIST);
   private static final TokenSet BUCK_OPEN_BRACES =
       TokenSet.create(BuckTypes.L_BRACKET, BuckTypes.L_PARENTHESES);
   private static final TokenSet BUCK_CLOSE_BRACES =
@@ -83,9 +82,7 @@ public class BuckBlock implements ASTBlock {
 
     mySpacingBuilder = BuckFormattingModelBuilder.createSpacingBuilder(settings);
 
-    if (myPsiElement instanceof BuckArrayElements
-        || myPsiElement instanceof BuckRuleBody
-        || myPsiElement instanceof BuckListElements) {
+    if (myPsiElement instanceof BuckListElements || myPsiElement instanceof BuckArgumentList) {
       myChildWrap = Wrap.createWrap(CommonCodeStyleSettings.WRAP_ALWAYS, true);
     } else {
       myChildWrap = null;
@@ -122,8 +119,9 @@ public class BuckBlock implements ASTBlock {
       if (childType == TokenType.WHITE_SPACE) {
         continue;
       }
-      // In most cases, glob block doesn't need reformatting. So just ignore it for now.
-      if (childType == BuckTypes.GLOB_BLOCK) {
+      if (childType == BuckTypes.FUNCTION_CALL
+          && child.getFirstChildNode().getElementType() == BuckTypes.FUNCTION_NAME
+          && child.getFirstChildNode().getFirstChildNode().getElementType() == BuckTypes.GLOB) {
         continue;
       }
       blocks.add(buildSubBlock(child));
@@ -189,11 +187,11 @@ public class BuckBlock implements ASTBlock {
     final ASTNode lastChildNode = myNode.getLastChildNode();
 
     boolean ret = false;
-    if (hasElementType(myNode, TokenSet.create(BuckTypes.ARRAY_ELEMENTS))) {
+    if (hasElementType(myNode, TokenSet.create(BuckTypes.LIST_ELEMENTS))) {
       ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_BRACKET;
-    } else if (hasElementType(myNode, TokenSet.create(BuckTypes.RULE_BODY))) {
+    } else if (hasElementType(myNode, TokenSet.create(BuckTypes.FUNCTION_CALL_SUFFIX))) {
       ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_PARENTHESES;
-    } else if (hasElementType(myNode, TokenSet.create(BuckTypes.LIST_ELEMENTS))) {
+    } else if (hasElementType(myNode, TokenSet.create(BuckTypes.ARGUMENT_LIST))) {
       ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_PARENTHESES;
     }
     return ret;

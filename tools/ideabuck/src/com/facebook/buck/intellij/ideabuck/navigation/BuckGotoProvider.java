@@ -18,12 +18,11 @@ package com.facebook.buck.intellij.ideabuck.navigation;
 
 import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCall;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCallSuffix;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckProperty;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckRuleBlock;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckRuleBody;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckValue;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimary;
 import com.facebook.buck.intellij.ideabuck.util.BuckCellFinder;
 import com.google.common.collect.Iterables;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandlerBase;
@@ -63,7 +62,7 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
           buckCellFinder
               .findExtensionFile(sourcePsiFile.getVirtualFile(), target)
               .map(psiManager::findFile);
-    } else if (PsiTreeUtil.getParentOfType(source, BuckValue.class) != null) {
+    } else if (PsiTreeUtil.getParentOfType(source, BuckPrimary.class) != null) {
       if (target.startsWith(":")) {
         // ':' prefix means this is a target in the same BUCK file
         psiTarget = findTargetInPsiTree(sourcePsiFile, target.substring(1));
@@ -105,20 +104,20 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
   }
 
   private static Optional<PsiElement> findTargetInPsiTree(PsiElement root, String target) {
-    for (BuckRuleBlock buckRuleBlock : PsiTreeUtil.findChildrenOfType(root, BuckRuleBlock.class)) {
-      BuckRuleBody buckRuleBody = buckRuleBlock.getRuleBody();
-      for (BuckProperty buckProperty :
-          PsiTreeUtil.findChildrenOfType(buckRuleBody, BuckProperty.class)) {
-        if (!Optional.ofNullable(buckProperty.getPropertyLvalue().getIdentifier())
-            .map(PsiElement::getText)
+    for (BuckFunctionCall buckRuleBlock :
+        PsiTreeUtil.findChildrenOfType(root, BuckFunctionCall.class)) {
+      BuckFunctionCallSuffix buckRuleBody = buckRuleBlock.getFunctionCallSuffix();
+      for (BuckArgument buckProperty :
+          PsiTreeUtil.findChildrenOfType(buckRuleBody, BuckArgument.class)) {
+        if (!Optional.ofNullable(buckProperty.getPropertyLvalue())
+            .map(lvalue -> lvalue.getIdentifier().getText())
             .filter("name"::equals)
             .isPresent()) {
           continue;
         }
-        if (Optional.of(buckProperty.getExpression())
-            .map(BuckExpression::getValueList)
+        if (Optional.of(buckProperty.getSingleExpression().getPrimaryWithSuffixList())
             .map(list -> Iterables.getFirst(list, null))
-            .map(BuckValue::getText)
+            .map(buckPrimaryWithSuffix -> buckPrimaryWithSuffix.getPrimary().getText())
             .map(BuckGotoProvider::unwrapString)
             .filter(target::equals)
             .isPresent()) {
@@ -129,8 +128,7 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
     return Optional.empty();
   }
 
-  private static @Nullable Optional<VirtualFile> findLocalFile(
-      PsiElement sourceElement, String target) {
+  private static Optional<VirtualFile> findLocalFile(PsiElement sourceElement, String target) {
     return Optional.of(sourceElement)
         .map(PsiElement::getContainingFile)
         .map(PsiFile::getVirtualFile)

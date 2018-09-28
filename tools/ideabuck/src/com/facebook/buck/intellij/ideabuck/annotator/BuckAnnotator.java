@@ -20,9 +20,9 @@ import com.facebook.buck.intellij.ideabuck.build.BuckBuildUtil;
 import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
 import com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighter;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimary;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckValue;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
@@ -30,7 +30,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /** Annotator for Buck, it helps highlight and annotate any issue in Buck files. */
 public class BuckAnnotator implements Annotator {
@@ -51,12 +51,8 @@ public class BuckAnnotator implements Annotator {
       annotateLoadTargetErrors((BuckLoadTargetArgument) psiElement, annotationHolder);
       return;
     }
-    BuckValue value = PsiTreeUtil.getParentOfType(psiElement, BuckValue.class);
+    BuckPrimary value = PsiTreeUtil.getParentOfType(psiElement, BuckPrimary.class);
     if (value == null) {
-      return;
-    }
-    final Project project = psiElement.getProject();
-    if (project == null) {
       return;
     }
 
@@ -69,6 +65,7 @@ public class BuckAnnotator implements Annotator {
     if (!BuckBuildUtil.isValidAbsoluteTarget(target)) {
       return;
     }
+    final Project project = psiElement.getProject();
     @Nullable
     VirtualFile targetBuckFile = BuckBuildUtil.getBuckFileFromAbsoluteTarget(project, target);
 
@@ -84,13 +81,13 @@ public class BuckAnnotator implements Annotator {
 
   private void annotateLoadTargetErrors(
       BuckLoadTargetArgument loadTargetArgument, AnnotationHolder annotationHolder) {
-    Project project = loadTargetArgument.getProject();
     String target = loadTargetArgument.getText();
     target = target.substring(1, target.length() - 1); // strip quotes
     if (!BuckBuildUtil.isValidAbsoluteTarget(target)) {
       // TODO(ttsugrii): warn about usage of invalid pattern
       return;
     }
+    Project project = loadTargetArgument.getProject();
     String packagePath = BuckBuildUtil.extractAbsoluteTarget(target);
     String fileName = BuckBuildUtil.extractTargetName(target);
     @Nullable
@@ -113,15 +110,16 @@ public class BuckAnnotator implements Annotator {
       return false;
     }
 
+    final Annotation annotation = annotationHolder.createInfoAnnotation(psiElement, null);
     PsiElement parent = psiElement.getParent();
     assert parent != null;
 
-    final Annotation annotation = annotationHolder.createInfoAnnotation(psiElement, null);
-    if (BuckPsiUtils.testType(parent, BuckTypes.RULE_NAME)) {
-      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_RULE_NAME);
+    if (BuckPsiUtils.testType(parent, BuckTypes.FUNCTION_NAME)) {
+      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_FUNCTION_NAME);
       return true;
-    } else if (BuckPsiUtils.testType(parent, BuckTypes.PROPERTY_LVALUE)) {
-      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_KEYWORD);
+    }
+    if (BuckPsiUtils.testType(parent, BuckTypes.PROPERTY_LVALUE)) {
+      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_PROPERTY_LVALUE);
       return true;
     }
     return false;

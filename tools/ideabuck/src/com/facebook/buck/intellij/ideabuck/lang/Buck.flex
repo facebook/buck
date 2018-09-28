@@ -15,16 +15,24 @@
  */
 
 package com.facebook.buck.intellij.ideabuck.lang;
-import com.intellij.lexer.*;
+
+import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
+import java.util.ArrayDeque;
+
+import static com.intellij.psi.TokenType.BAD_CHARACTER;
+import static com.intellij.psi.TokenType.WHITE_SPACE;
 import static com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes.*;
 
 %%
 
 %{
-  public _BuckLexer() {
-    this((java.io.Reader)null);
-  }
+    ArrayDeque<Integer> stack = new ArrayDeque<>();
+    int unmatchedPair = 0;
+    int currentIndent = 0;
+    public _BuckLexer() {
+      this((java.io.Reader)null);
+    }
 %}
 
 %public
@@ -36,13 +44,9 @@ import static com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes.*;
 
 EOL="\r"|"\n"|"\r\n"
 LINE_WS=[\ \t\f]
-WHITE_SPACE=({LINE_WS}|{EOL})+
 
 BOOLEAN=(True|False)
 LINE_COMMENT=#.*
-GLOB_KEYWORD=(glob|subdir_glob)
-LOAD_KEYWORD=load
-MACROS=[A-Z_]([A-Z0-9_])+
 
 ANY_ESCAPE_SEQUENCE = \\[^]
 ONE_OR_TWO_QUOTES = (\"[^\\\"]) | (\"\\[^]) | (\"\"[^\\\"]) | (\"\"\\[^])
@@ -50,43 +54,130 @@ THREE_QUOTES = (\"\"\")
 QUOTED_STRING_CHARS = [^\\\"] | {ANY_ESCAPE_SEQUENCE} | {ONE_OR_TWO_QUOTES}
 DOC_STRING = {THREE_QUOTES} {QUOTED_STRING_CHARS}* {THREE_QUOTES}?
 
+UPDATE_OPS=\+=|-=|\*=|"/"=|"//"=|%=|&=|\|=|\^=|<<=|>>=
 DOUBLE_QUOTED_STRING=\"([^\\\"\r\n]|\\[^\r\n])*\"?
 SINGLE_QUOTED_STRING='([^\\'\r\n]|\\[^\r\n])*'?
 NUMBER=-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]*)?
-IDENTIFIER=[:jletter:] [:jletterdigit:]*
+IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
+
+%x INDENTED
 
 %%
 <YYINITIAL> {
-  {WHITE_SPACE}               { return com.intellij.psi.TokenType.WHITE_SPACE; }
+  ({EOL})+                    {
+                                if (unmatchedPair == 0) {
+                                  yybegin(INDENTED);
+                                  currentIndent = 0;
+                                }
+                                return WHITE_SPACE;
+                              }
+  ({LINE_WS})+                { return WHITE_SPACE; }
 
   "None"                      { return NONE; }
   ","                         { return COMMA; }
   "="                         { return EQUAL; }
+  "=="                        { return DOUBLE_EQUAL; }
+  "!="                        { return NOT_EQUAL; }
+  ">"                         { return GREATER_THAN; }
+  "<"                         { return LESS_THAN; }
+  ">="                        { return GREATER_EQUAL; }
+  "<="                        { return LESS_EQUAL; }
+  "|"                         { return BIT_OR; }
+  "&"                         { return BIT_AND; }
+  "^"                         { return BIT_XOR; }
   "\\"                        { return SLASH; }
+  ":"                         { return COLON; }
   "+"                         { return PLUS; }
-  "includes"                  { return GLOB_INCLUDES_KEYWORD; }
-  "include_dotfiles"          { return GLOB_INCLUDE_DOTFILES_KEYWORD; }
-  "excludes"                  { return GLOB_EXCLUDES_KEYWORD; }
-  "exclude"                   { return GLOB_EXCLUDE_KEYWORD; }
-  "("                         { return L_PARENTHESES; }
-  "["                         { return L_BRACKET; }
-  ")"                         { return R_PARENTHESES; }
-  "]"                         { return R_BRACKET; }
-  "}"                         { return R_CURLY; }
-  "{"                         { return L_CURLY; }
-  ":"                         { return COLUMN; }
+  "-"                         { return MINUS; }
+  "/"                         { return DIVISION; }
+  "//"                        { return DIVISION_INT; }
+  "."                         { return DOT; }
+  ";"                         { return SEMI_COLON; }
+  "*"                         { return STAR; }
+  "**"                        { return DOUBLE_STAR; }
+  "load"                      { return LOAD_KEYWORD; }
+  "def"                       { return DEF; }
+  "for"                       { return FOR; }
+  "in"                        { return IN; }
+  "and"                       { return AND; }
+  "or"                        { return OR; }
+  "not"                       { return NOT; }
+  "if"                        { return IF; }
+  "else"                      { return ELSE; }
+  "elif"                      { return ELIF; }
+  "break"                     { return BREAK; }
+  "continue"                  { return CONTINUE; }
+  "pass"                      { return PASS; }
+  "return"                    { return RETURN; }
+  "lambda"                    { return LAMBDA; }
+  "glob"                      { return GLOB; }
+  "("                         {
+                                unmatchedPair++;
+                                return L_PARENTHESES;
+                              }
+  "["                         {
+                                unmatchedPair++;
+                                return L_BRACKET;
+                              }
+  "{"                         {
+                                unmatchedPair++;
+                                return L_CURLY;
+                              }
+  ")"                         {
+                                unmatchedPair--;
+                                return R_PARENTHESES;
+                              }
+  "]"                         {
+                                unmatchedPair--;
+                                return R_BRACKET;
+                              }
+  "}"                         {
+                                unmatchedPair--;
+                                return R_CURLY;
+                              }
   "%"                         { return PERCENT; }
 
   {BOOLEAN}                   { return BOOLEAN; }
-  {LINE_COMMENT}              { return LINE_COMMENT; }
-  {GLOB_KEYWORD}              { return GLOB_KEYWORD; }
-  {LOAD_KEYWORD}              { return LOAD_KEYWORD; }
-  {MACROS}                    { return MACROS; }
+  {UPDATE_OPS}                { return UPDATE_OPS; }
   {DOC_STRING}                { return DOC_STRING; }
+  {LINE_COMMENT}              { return LINE_COMMENT; }
   {DOUBLE_QUOTED_STRING}      { return DOUBLE_QUOTED_STRING; }
   {SINGLE_QUOTED_STRING}      { return SINGLE_QUOTED_STRING; }
   {NUMBER}                    { return NUMBER; }
   {IDENTIFIER}                { return IDENTIFIER; }
 
-  [^] { return com.intellij.psi.TokenType.BAD_CHARACTER; }
+  [^]                         { return BAD_CHARACTER; }
 }
+
+<INDENTED> {
+  [ ]                         { currentIndent++; }
+  [\t]                        { currentIndent += 8 - currentIndent % 8; }
+  {EOL}                       { currentIndent = 0; }
+  {LINE_COMMENT}              {
+                                yybegin(YYINITIAL);
+                                return LINE_COMMENT;
+                              }
+  [^]                         {
+                                yypushback(1);
+                                int top = stack.isEmpty() ? 0 : stack.peek();
+                                if (currentIndent > top) {
+                                  stack.push(currentIndent);
+                                  yybegin(YYINITIAL);
+                                  return INDENT;
+                                } else if (currentIndent < top) {
+                                  stack.pop();
+                                  return DEDENT;
+                                } else {
+                                  yybegin(YYINITIAL);
+                                }
+                              }
+  <<EOF>>                     {
+                                if (!stack.isEmpty()) {
+                                  stack.pop();
+                                  return DEDENT;
+                                } else {
+                                  yybegin(YYINITIAL);
+                                }
+                              }
+}
+
