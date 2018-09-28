@@ -91,38 +91,6 @@ public class AuditRulesCommandIntegrationTest {
   }
 
   @Test
-  public void testSkylarkAuditRulesWithJsonOutput() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_skylark_rules", tmp);
-    workspace.setUp();
-    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled", "true");
-    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
-
-    // Print all of the rules in a file.
-    ProcessResult result = workspace.runBuckCommand("audit", "rules", "--json", "example/BUCK");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        MoreStringsForTests.equalToIgnoringPlatformNewlines(
-            workspace.getFileContents("stdout.all.json")));
-  }
-
-  @Test
-  public void testBuckAuditRulesJsonOutput() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_rules", tmp);
-    workspace.setUp();
-
-    // Print all of the rules in a file.
-    ProcessResult result1 = workspace.runBuckCommand("audit", "rules", "--json", "example/BUCK");
-    result1.assertSuccess();
-    assertThat(
-        result1.getStdout(),
-        MoreStringsForTests.equalToIgnoringPlatformNewlines(
-            workspace.getFileContents("stdout.all.json")));
-  }
-
-  @Test
   public void auditRulesRespectConfigs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_rules_respect_configs", tmp);
