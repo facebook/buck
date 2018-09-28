@@ -549,12 +549,9 @@ public class QueryCommand extends AbstractCommand {
             .getConsole()
             .printErrorText(
                 "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
-        continue;
       }
     }
-    return ImmutableSortedMap.<String, SortedMap<String, Object>>naturalOrder()
-        .putAll(attributesMap)
-        .build();
+    return ImmutableSortedMap.copyOf(attributesMap);
   }
 
   private static Optional<SortedMap<String, Object>> getAttributes(
