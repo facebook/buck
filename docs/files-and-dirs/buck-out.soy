@@ -1,0 +1,74 @@
+{namespace buck.buck_out}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck-out' /}
+    {param navid: 'buck-out' /}
+    {param description}
+      Output directory for build artifacts.
+    {/param}
+    {param prettify: true /}
+    {param content}
+
+    <p>
+    Buck stores build artifacts in a directory named <code>buck-out</code> in 
+    the root of your {call buck.key_concepts_link}{param rendered_text: 'project' /}{/call}.
+    </p>
+
+    <p>
+    You should not make assumptions about where Buck places your build
+    artifacts within the directory structure beneath <code>buck-out</code> as 
+    these locations depend on Buck's implementation and could potentially
+    change over time. Instead, to obtain the location of the build
+    artifact for a particular target, use the <code>--show-output</code> option 
+    with the {call buck.cmd_build /} or the {call buck.cmd_targets /} command.
+    </p>                                                     
+
+<p>
+<pre>
+{literal}
+buck targets --show-output &#x3C;target>
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+buck build --show-output &#x3C;target>
+{/literal}
+</pre>
+</p>
+
+    <p>
+    You can also obtain the locations of your build artifacts by specifying
+    either the <code>--build-report</code> or
+    <code>--keep-going</code> options with <code>buck build</code>.
+    </p>
+
+<p>
+<pre>
+{literal}
+buck build --build-report &#x3C;target>
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+buck build --keep-going &#x3C;target>
+{/literal}
+</pre>
+</p>
+
+    <p>
+    For more information about these options, see the topics for 
+    the {call buck.cmd_build /} and {call buck.cmd_targets /} commands.
+    </p>
+
+    {/param}
+  {/call}
+{/template}
+

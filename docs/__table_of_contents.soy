@@ -438,6 +438,12 @@
         {param text: $file_dir_text /}
       {/call}
     {/foreach}
+    {call navigation.link}
+      {param currentnavid: $navid /}
+      {param folder: 'files-and-dirs' /}
+      {param page: 'buck-out' /}
+      {param text: 'buck-out' /}
+    {/call}
   </ul>
 {/template}
 
