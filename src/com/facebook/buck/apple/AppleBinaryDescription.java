@@ -413,7 +413,7 @@ public class AppleBinaryDescription
     Optional<MultiarchFileInfo> fatBinaryInfo =
         MultiarchFileInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
     if (fatBinaryInfo.isPresent()) {
-      if (shouldUseStubBinary(buildTarget)) {
+      if (shouldUseStubBinary(buildTarget, args)) {
         BuildTarget thinTarget = Iterables.getFirst(fatBinaryInfo.get().getThinTargets(), null);
         return requireThinBinary(
             context,
@@ -494,7 +494,7 @@ public class AppleBinaryDescription
 
           Optional<Path> stubBinaryPath =
               getStubBinaryPath(buildTarget, appleCxxPlatformsFlavorDomain, args);
-          if (shouldUseStubBinary(buildTarget) && stubBinaryPath.isPresent()) {
+          if (shouldUseStubBinary(buildTarget, args) && stubBinaryPath.isPresent()) {
             try {
               return new WriteFile(
                   buildTarget,
@@ -545,9 +545,15 @@ public class AppleBinaryDescription
         });
   }
 
-  private boolean shouldUseStubBinary(BuildTarget buildTarget) {
+  private boolean shouldUseStubBinary(BuildTarget buildTarget, AppleBinaryDescriptionArg args) {
+    // If the target has sources, it's not a watch app, it might be a watch extension instead.
+    // In this case, we don't need to add a watch kit stub.
+    if (!args.getSrcs().isEmpty()) {
+      return false;
+    }
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
     return (flavors.contains(AppleBundleDescription.WATCH_OS_FLAVOR)
+        || flavors.contains(AppleBundleDescription.WATCH_OS_64_32_FLAVOR)
         || flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_FLAVOR)
         || flavors.contains(LEGACY_WATCH_FLAVOR));
   }

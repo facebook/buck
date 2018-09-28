@@ -66,7 +66,7 @@ public class AppleBundleDescriptionTest {
 
     BuildTarget watchDep = BuildTargetFactory.newInstance("//bar:watch#watch");
     BuildTarget watchDepAfterPropagation =
-        BuildTargetFactory.newInstance("//bar:watch#watchos-armv7k");
+        BuildTargetFactory.newInstance("//bar:watch#watchos-arm64_32,watchos-armv7k");
 
     BuildTarget binary = BuildTargetFactory.newInstance("//bar:binary");
 

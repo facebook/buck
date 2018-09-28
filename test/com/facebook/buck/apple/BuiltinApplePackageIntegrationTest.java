@@ -37,6 +37,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.collect.ImmutableList;
@@ -52,7 +53,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class BuiltinApplePackageIntegrationTest {
-  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
 
   private ProjectFilesystem filesystem;
 
@@ -195,6 +196,56 @@ public class BuiltinApplePackageIntegrationTest {
       assertEquals(
           new String(Files.readAllBytes(stubInsideBundle)),
           new String(Files.readAllBytes(stubOutsideBundle)));
+    }
+  }
+
+  @Test
+  public void watchAppHasProperArch() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "watchsimulator_target_sdk_version", "2.0");
+
+    ImmutableList<Pair<String, ImmutableList<String>>> platforms =
+        ImmutableList.of(
+            new Pair<>("watchos-armv7k", ImmutableList.of("armv7k")),
+            new Pair<>("watchos-arm64_32", ImmutableList.of("arm64_32")),
+            new Pair<>("watchos-arm64_32,watchos-armv7k", ImmutableList.of("arm64_32", "armv7k")));
+    for (Pair<String, ImmutableList<String>> platformInfo : platforms) {
+      BuildTarget target =
+          BuildTargetFactory.newInstance("//:DemoWatchApp#" + platformInfo.getFirst());
+      workspace
+          .runBuckCommand(
+              "build", "-c", "apple.dry_run_code_signing=true", target.getFullyQualifiedName())
+          .assertSuccess();
+      Path outputPath =
+          workspace.getPath(
+              BuildTargetPaths.getGenPath(
+                  filesystem,
+                  target,
+                  "DemoWatchApp#dwarf-and-dsym,no-include-frameworks," + platformInfo.getFirst()));
+
+      Path binaryPath = outputPath.resolve("DemoWatchApp.app/DemoWatchApp");
+      ImmutableList<String> command =
+          ImmutableList.of("lipo", binaryPath.toString(), "-verify_arch");
+      ImmutableList.Builder<String> fullCommandBuilder = ImmutableList.builder();
+      ImmutableList<String> fullCommand =
+          fullCommandBuilder.addAll(command).addAll(platformInfo.getSecond()).build();
+      System.err.println(String.format("%s", fullCommand.toString()));
+      ProcessExecutor.Result result = workspace.runCommand(fullCommand);
+      assertEquals(0, result.getExitCode());
+
+      Path extensionPath =
+          outputPath.resolve(
+              "DemoWatchApp.app/PlugIns/DemoWatchAppExtension.appex/DemoWatchAppExtension");
+      command = ImmutableList.of("lipo", extensionPath.toString(), "-verify_arch");
+      fullCommandBuilder = ImmutableList.builder();
+      fullCommand = fullCommandBuilder.addAll(command).addAll(platformInfo.getSecond()).build();
+      result = workspace.runCommand(fullCommand);
+      assertEquals(0, result.getExitCode());
+
+      Path stubInsideBundle = outputPath.resolve("DemoWatchApp.app/_WatchKitStub/WK");
+      assertTrue(Files.exists(stubInsideBundle));
     }
   }
 

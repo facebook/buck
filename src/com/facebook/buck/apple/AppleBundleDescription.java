@@ -67,6 +67,7 @@ public class AppleBundleDescription
       ImmutableSet.of(CxxDescriptionEnhancer.STATIC_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
 
   public static final Flavor WATCH_OS_FLAVOR = InternalFlavor.of("watchos-armv7k");
+  public static final Flavor WATCH_OS_64_32_FLAVOR = InternalFlavor.of("watchos-arm64_32");
   public static final Flavor WATCH_SIMULATOR_FLAVOR = InternalFlavor.of("watchsimulator-i386");
 
   private static final Flavor WATCH = InternalFlavor.of("watch");
@@ -217,14 +218,14 @@ public class AppleBundleDescription
     }
 
     String platformName = cxxPlatform.getFlavor().getName();
-    Flavor actualWatchFlavor;
+    Flavor[] actualWatchFlavors;
     if (ApplePlatform.isSimulator(platformName)) {
-      actualWatchFlavor = WATCH_SIMULATOR_FLAVOR;
+      actualWatchFlavors = new Flavor[] {WATCH_SIMULATOR_FLAVOR};
     } else if (platformName.startsWith(ApplePlatform.IPHONEOS.getName())
         || platformName.startsWith(ApplePlatform.WATCHOS.getName())) {
-      actualWatchFlavor = WATCH_OS_FLAVOR;
+      actualWatchFlavors = new Flavor[] {WATCH_OS_FLAVOR, WATCH_OS_64_32_FLAVOR};
     } else {
-      actualWatchFlavor = InternalFlavor.of(platformName);
+      actualWatchFlavors = new Flavor[] {InternalFlavor.of(platformName)};
     }
 
     ImmutableSortedSet<BuildTarget> binaryTargets = constructorArg.getBinaryTargets();
@@ -247,7 +248,7 @@ public class AppleBundleDescription
           targetsWithoutPlatformFlavors
               .filter(Flavors.containsFlavor(WATCH)::test)
               .transform(
-                  input -> input.withoutFlavors(WATCH).withAppendedFlavors(actualWatchFlavor));
+                  input -> input.withoutFlavors(WATCH).withAppendedFlavors(actualWatchFlavors));
 
       targetsWithoutPlatformFlavors =
           targetsWithoutPlatformFlavors.filter(Flavors.containsFlavor(WATCH).negate()::test);
