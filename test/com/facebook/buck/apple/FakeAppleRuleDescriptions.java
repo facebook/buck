@@ -328,6 +328,7 @@ public class FakeAppleRuleDescriptions {
         SWIFT_LIBRARY_DESCRIPTION,
         DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
         DEFAULT_BUCK_CONFIG.getView(SwiftBuckConfig.class),
+        CxxPlatformUtils.DEFAULT_CONFIG,
         cxxBinaryImplicitFlavors,
         cxxBinaryFactory,
         cxxBinaryMetadataFactory,

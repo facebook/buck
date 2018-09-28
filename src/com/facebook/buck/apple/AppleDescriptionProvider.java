@@ -92,6 +92,7 @@ public class AppleDescriptionProvider implements DescriptionProvider {
             swiftLibraryDescription,
             appleConfig,
             swiftBuckConfig,
+            cxxBuckConfig,
             cxxBinaryImplicitFlavors,
             cxxBinaryFactory,
             cxxBinaryMetadataFactory,

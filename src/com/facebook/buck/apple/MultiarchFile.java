@@ -58,6 +58,8 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey(stringify = true)
   private final Path output;
 
+  private final boolean cacheable;
+
   public MultiarchFile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -65,12 +67,14 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePathRuleFinder ruleFinder,
       Tool lipo,
       ImmutableSortedSet<SourcePath> thinBinaries,
-      Path output) {
+      Path output,
+      boolean cacheable) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.ruleFinder = ruleFinder;
     this.lipo = lipo;
     this.thinBinaries = ImmutableSortedSet.copyOf(thinBinaries);
     this.output = output;
+    this.cacheable = cacheable;
   }
 
   @Override
@@ -151,5 +155,10 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
         // These rules may generate supplemental object files that are linked into the binary, and
         // must be materialized in order for dsymutil to find them.
         .concat(getBuildDeps().stream());
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return cacheable;
   }
 }

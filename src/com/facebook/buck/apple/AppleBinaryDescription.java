@@ -54,6 +54,7 @@ import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -111,6 +112,7 @@ public class AppleBinaryDescription
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final CxxBuckConfig cxxBuckConfig;
   private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
   private final CxxBinaryFactory cxxBinaryFactory;
   private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
@@ -122,6 +124,7 @@ public class AppleBinaryDescription
       SwiftLibraryDescription swiftDelegate,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
       CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
       CxxBinaryFactory cxxBinaryFactory,
       CxxBinaryMetadataFactory cxxBinaryMetadataFactory,
@@ -132,6 +135,7 @@ public class AppleBinaryDescription
     this.swiftDelegate = Optional.of(swiftDelegate);
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
     this.cxxBinaryFactory = cxxBinaryFactory;
     this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
@@ -445,7 +449,8 @@ public class AppleBinaryDescription
           params,
           graphBuilder,
           fatBinaryInfo.get(),
-          thinRules.build());
+          thinRules.build(),
+          cxxBuckConfig);
     } else {
       return requireThinBinary(
           context,

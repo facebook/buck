@@ -566,7 +566,8 @@ public class AppleLibraryDescription
           params,
           graphBuilder,
           multiarchFileInfo.get(),
-          thinRules.build());
+          thinRules.build(),
+          cxxBuckConfig);
     } else {
       return requireSingleArchUnstrippedBuildRule(
           context,
