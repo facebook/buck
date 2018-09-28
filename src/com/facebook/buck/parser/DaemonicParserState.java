@@ -226,8 +226,7 @@ public class DaemonicParserState {
           }
         } else if (rawNode.containsKey(CONFIGS_META_RULE)) {
         } else if (rawNode.containsKey(ENV_META_RULE)) {
-          env =
-              ((Optional<ImmutableMap<String, Optional<String>>>) rawNode.get(ENV_META_RULE)).get();
+          env = ((ImmutableMap<String, Optional<String>>) rawNode.get(ENV_META_RULE));
         } else {
           withoutMetaIncludesBuilder.add(rawNode);
         }

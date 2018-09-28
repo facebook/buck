@@ -65,7 +65,7 @@ abstract class AbstractBuildFileManifest {
             .add(ImmutableMap.of("__includes", getIncludes()))
             .add(ImmutableMap.of("__configs", getConfigs()));
     if (getEnv().isPresent()) {
-      builder.add(ImmutableMap.of("__env", getEnv()));
+      builder.add(ImmutableMap.of("__env", getEnv().get()));
     }
     return builder.build();
   }
