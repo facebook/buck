@@ -67,6 +67,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -250,9 +251,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return builder.build();
   }
 
-  public ImmutableSet<TargetNode<?>> getNodesFromQueryTargets(Iterable<QueryTarget> input)
+  public ImmutableSet<TargetNode<?>> getNodesFromQueryTargets(Collection<QueryTarget> input)
       throws QueryException {
-    ImmutableSet.Builder<TargetNode<?>> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<?>> builder =
+        ImmutableSet.builderWithExpectedSize(input.size());
     for (QueryTarget target : input) {
       builder.add(getNode(target));
     }
