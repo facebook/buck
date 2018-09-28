@@ -227,12 +227,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   private QueryTarget getOrCreateQueryBuildTarget(BuildTarget buildTarget) {
-    if (buildTargetToQueryTarget.containsKey(buildTarget)) {
-      return buildTargetToQueryTarget.get(buildTarget);
-    }
-    QueryBuildTarget queryBuildTarget = QueryBuildTarget.of(buildTarget);
-    buildTargetToQueryTarget.put(buildTarget, queryBuildTarget);
-    return queryBuildTarget;
+    return buildTargetToQueryTarget.computeIfAbsent(buildTarget, QueryBuildTarget::of);
   }
 
   public ImmutableSet<QueryTarget> getTargetsFromTargetNodes(Iterable<TargetNode<?>> targetNodes) {
