@@ -41,7 +41,7 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * <p>The high-level flow looks like this: (in) BuildTarget -> [getRawNodes] -*> [createTargetNode]
  * -> (out) TargetNode (steps in [] have their output cached, -*> means that this step has parallel
- * fanout).
+ * fan-out).
  *
  * <p>The work is simply dumped onto the executor, the {@link ProjectBuildFileParserPool} is used to
  * constrain the number of concurrent active parsers. Within a single pipeline instance work is not
