@@ -1,0 +1,17 @@
+{namespace command_common}
+
+/***/
+{template .show_output_param}
+{call buck.param}
+  {param name: 'show-output' /}
+  {param desc}
+  <p>
+    Prints the relative paths to the output for each target after the 
+    target name. Some rules&mdash;such as {call buck.genrule /}&mdash;generate 
+    sources instead of build artifacts. In these cases, paths to output 
+    artifacts are printed first, followed by paths to generated sources.
+  </p>
+  {/param}
+{/call}
+{/template}
+

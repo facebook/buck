@@ -128,15 +128,7 @@ buck targets --print0 | xargs -0 buck build
   {/param}
 {/call}
 
-{call buck.param}
-  {param name: 'show-output' /}
-  {param desc}
-  Prints the relative path(s) to the output for each rule after the rule name. If the rule generates
-  generated sources as well as producing an output artifact, the output artifact will be printed
-  first, followed by the generated source path (if any).
-  {/param}
-{/call}
-
+{call command_common.show_output_param /}
 
 {call buck.param}
   {param name: 'show-rulekey' /}
