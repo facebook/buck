@@ -20,6 +20,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import org.jetbrains.annotations.Nullable;
 
+@org.junit.Ignore
 public class BuckFormatterTest extends BuckTestCase {
 
   public void testSimple1() {

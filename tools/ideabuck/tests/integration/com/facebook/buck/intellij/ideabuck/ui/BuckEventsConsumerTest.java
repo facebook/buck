@@ -41,6 +41,7 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 public class BuckEventsConsumerTest {
+  @org.junit.Ignore
   @Test
   public void hasBuckModuleAttachReceivedNullTargetThenWeShowNone()
       throws NoSuchFieldException, IllegalAccessException {

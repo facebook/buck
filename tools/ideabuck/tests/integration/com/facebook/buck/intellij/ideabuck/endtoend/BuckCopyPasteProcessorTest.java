@@ -23,6 +23,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import java.io.IOException;
 
+@org.junit.Ignore
 public class BuckCopyPasteProcessorTest extends BuckTestCase {
 
   private static final String FIXTURE = ".fixture";
