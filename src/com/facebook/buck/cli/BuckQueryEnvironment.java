@@ -442,16 +442,13 @@ public class BuckQueryEnvironment implements QueryEnvironment {
         depWork,
         Exception.class,
         exceptionInput -> {
-          if (exceptionInput instanceof BuildTargetException
-              || exceptionInput instanceof BuildFileParseException) {
+          if (exceptionInput instanceof BuildFileParseException) {
             if (exceptionInput instanceof BuildTargetException) {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(
                   buildTarget, parseDep, (BuildTargetException) exceptionInput);
-            } else if (exceptionInput instanceof BuildFileParseException) {
+            } else {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(
                   buildTarget, parseDep, (BuildFileParseException) exceptionInput);
-            } else {
-              Preconditions.checkState(false, "Unknown exception type");
             }
           }
           throw exceptionInput;
