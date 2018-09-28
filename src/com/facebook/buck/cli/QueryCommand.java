@@ -40,14 +40,12 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -595,12 +593,13 @@ public class QueryCommand extends AbstractCommand {
   }
 
   public static String getEscapedArgumentsListAsString(List<String> arguments) {
-    return Joiner.on(" ").join(Lists.transform(arguments, arg -> "'" + arg + "'"));
+    return arguments.stream().map(arg -> "'" + arg + "'").collect(Collectors.joining(" "));
   }
 
   private static String getSetRepresentation(List<String> args) {
-    String argsList = Joiner.on(' ').join(Iterables.transform(args, input -> "'" + input + "'"));
-    return "set(" + argsList + ")";
+    return args.stream()
+        .map(input -> "'" + input + "'")
+        .collect(Collectors.joining(" ", "set(", ")"));
   }
 
   static String getAuditDependenciesQueryFormat(boolean isTransitive, boolean includeTests) {
