@@ -283,7 +283,7 @@ public class DummyRDotJava extends AbstractBuildRule
         JarParameters.builder()
             .setJarPath(outputJar)
             .setEntriesToJar(ImmutableSortedSet.of(rDotJavaClassesFolder))
-            .setMergeManifests(true)
+            .setMergeManifests(false)
             .setHashEntries(true)
             .build();
     steps.add(new JarDirectoryStep(getProjectFilesystem(), jarParameters));

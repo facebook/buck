@@ -34,6 +34,7 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.SortedSet;
 
@@ -125,9 +126,11 @@ public class AndroidLibraryGraphEnhancer {
             dummyRDotJavaBuildTarget,
             ignored -> {
               SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+              JavacOptions filteredOptions =
+                  javacOptions.withExtraArguments(Collections.emptyList());
 
               JavacToJarStepFactory compileToJarStepFactory =
-                  new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathProvider.EMPTY);
+                  new JavacToJarStepFactory(javac, filteredOptions, ExtraClasspathProvider.EMPTY);
 
               return new DummyRDotJava(
                   dummyRDotJavaBuildTarget,
