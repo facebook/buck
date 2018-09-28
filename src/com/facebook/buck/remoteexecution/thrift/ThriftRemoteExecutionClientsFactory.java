@@ -55,6 +55,8 @@ import javax.annotation.concurrent.GuardedBy;
 
 /** Thrift clients for the Thrift-based remote execution services. */
 public class ThriftRemoteExecutionClientsFactory implements Closeable {
+  private static final Logger LOG = Logger.get(ThriftRemoteExecutionClientsFactory.class);
+
   private static final int SOCKET_TIMEOUT_MILLIS = 1000 * 30; // 30 seconds
   private static final int CONNECTION_TIMEOUT_MILLIS = 1000 * 10; // 10 seconds
 
@@ -111,20 +113,31 @@ public class ThriftRemoteExecutionClientsFactory implements Closeable {
    * Create a ClientPool containing retrying CAS clients
    *
    * @param maxPoolSize
+   * @param useClientPool
    * @return
    */
-  public ClientPool<ContentAddressableStorage.Iface> createCasClientPool(int maxPoolSize) {
+  public ClientPool<ContentAddressableStorage.Iface> createCasClientPool(
+      int maxPoolSize, boolean useClientPool) {
     Supplier<ContentAddressableStorage.Iface> retryClientSupplier = () -> createCasClient();
-    return new DefaultClientPool<>(retryClientSupplier, maxPoolSize);
+
+    if (useClientPool) {
+      LOG.info("Creating client pool for CAS with %s workers", maxPoolSize);
+      return new DefaultClientPool<>(retryClientSupplier, maxPoolSize);
+    } else {
+      LOG.info("Creating singleton client pool for CAS");
+      return new SingletonClientPool<>(retryClientSupplier.get());
+    }
   }
 
   /**
    * Create a ClientPool containing retrying execution engine clients
    *
    * @param maxPoolSize
+   * @param useClientPool
    * @return
    */
-  public ClientPool<ExecutionEngine.Iface> createExecutionEngineClientPool(int maxPoolSize) {
+  public ClientPool<ExecutionEngine.Iface> createExecutionEngineClientPool(
+      int maxPoolSize, boolean useClientPool) {
     Supplier<ExecutionEngine.Iface> directClientSupplier =
         () -> {
           THeaderTransport transport = null;
@@ -142,7 +155,13 @@ public class ThriftRemoteExecutionClientsFactory implements Closeable {
           return new RetryingSynchronizedEngineClient(directClientSupplier, kRetryBackoffMillis);
         };
 
-    return new DefaultClientPool<>(retryClientSupplier, maxPoolSize);
+    if (useClientPool) {
+      LOG.info("Creating client pool for REE with %s workers", maxPoolSize);
+      return new DefaultClientPool<>(retryClientSupplier, maxPoolSize);
+    } else {
+      LOG.info("Creating singleton client pool for REE");
+      return new SingletonClientPool<>(retryClientSupplier.get());
+    }
   }
 
   private THeaderTransport createBlockingTransport(String host, int port)
@@ -168,7 +187,7 @@ public class ThriftRemoteExecutionClientsFactory implements Closeable {
    */
   public static final class RetryingSynchronizedCASClient
       implements ContentAddressableStorage.Iface {
-    private static final Logger LOG = Logger.get(RetryingSynchronizedCASClient.class);
+    private static final Logger CAS_LOGGER = Logger.get(RetryingSynchronizedCASClient.class);
 
     RetryingSynchronizedThriftHelper<Iface> networkHelper;
 
@@ -182,10 +201,10 @@ public class ThriftRemoteExecutionClientsFactory implements Closeable {
       try {
         return foo.call();
       } catch (TException | ContentAddressableStorageException e) {
-        LOG.error(e);
+        CAS_LOGGER.error(e);
         throw e;
       } catch (Exception e) {
-        LOG.error(e);
+        CAS_LOGGER.error(e);
         if (e.getCause() != null && e.getCause() instanceof ContentAddressableStorageException) {
           throw (ContentAddressableStorageException) e.getCause();
         }
@@ -238,7 +257,7 @@ public class ThriftRemoteExecutionClientsFactory implements Closeable {
   }
 
   private static final class RetryingSynchronizedEngineClient implements ExecutionEngine.Iface {
-    private static final Logger LOG = Logger.get(RetryingSynchronizedEngineClient.class);
+    private static final Logger REE_LOGGER = Logger.get(RetryingSynchronizedEngineClient.class);
 
     RetryingSynchronizedThriftHelper<ExecutionEngine.Iface> networkHelper;
 
@@ -253,10 +272,10 @@ public class ThriftRemoteExecutionClientsFactory implements Closeable {
       try {
         return foo.call();
       } catch (ExecutionEngineException | TException e) {
-        LOG.error(e);
+        REE_LOGGER.error(e);
         throw e;
       } catch (Exception e) {
-        LOG.error(e);
+        REE_LOGGER.error(e);
         if (e.getCause() != null && e.getCause() instanceof ExecutionEngineException) {
           throw (ExecutionEngineException) e.getCause();
         }

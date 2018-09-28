@@ -32,6 +32,10 @@ public class ThriftRemoteExecutionFactory {
     return new RemoteExecution(
         eventBus,
         new ThriftRemoteExecution(
-            eventBus, clients, config.getTraceID(), config.getMaxNumberOfRemoteWorkers()));
+            eventBus,
+            clients,
+            config.getTraceID(),
+            config.getMaxNumberOfRemoteWorkers(),
+            config.useClientPool()));
   }
 }

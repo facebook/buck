@@ -39,14 +39,15 @@ public class ThriftRemoteExecution implements RemoteExecutionClients {
       BuckEventBus eventBus,
       ThriftRemoteExecutionClientsFactory clients,
       Optional<String> traceId,
-      int maxRemoteWorkers) {
+      int maxRemoteWorkers,
+      boolean useClientPool) {
     this.clients = clients;
-    ClientPool<Iface> casClientPool = clients.createCasClientPool(maxRemoteWorkers);
+    ClientPool<Iface> casClientPool = clients.createCasClientPool(maxRemoteWorkers, useClientPool);
     this.storage = new ThriftContentAddressedStorage(casClientPool, casClientPool, eventBus);
     this.remoteExecutionService =
         new ThriftExecutionEngine(
             eventBus,
-            clients.createExecutionEngineClientPool(maxRemoteWorkers),
+            clients.createExecutionEngineClientPool(maxRemoteWorkers, useClientPool),
             casClientPool,
             traceId);
   }

@@ -39,11 +39,15 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final int DEFAULT_CAS_PORT = 19031;
 
   public int getMaxNumberOfRemoteWorkers() {
-    return getDelegate().getInteger(SECTION, "max_number_of_remote_workers").orElse(100);
+    return getDelegate().getInteger(SECTION, "max_number_of_remote_workers").orElse(80);
+  }
+
+  public boolean useClientPool() {
+    return getDelegate().getBooleanValue(SECTION, "enable_client_pool", true);
   }
 
   public boolean useWorkerThreadPool() {
-    return getDelegate().getBooleanValue(SECTION, "enable_worker_thread_pool", false);
+    return getDelegate().getBooleanValue(SECTION, "enable_worker_thread_pool", true);
   }
 
   public String getRemoteHost() {
