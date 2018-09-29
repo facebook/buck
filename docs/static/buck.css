@@ -165,7 +165,11 @@ ul, ol {
 
 a {
   text-decoration: none;
-  color: #3b5998;
+  color: #3A5CA9;
+}
+
+a:hover {
+  font-weight: bold;
 }
 
 .width {
@@ -229,8 +233,8 @@ header.topbar nav ul li a {
   line-height: 60px;
 }
 
-header.topbar nav ul li a.active {
-  color: #3b5998;
+header.topbar nav ul li a:active {
+  color: #3A5CA9;
 }
 
 header.hero {
