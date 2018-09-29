@@ -315,8 +315,18 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
           });
 
       try {
+        Operation operation = future.get();
+        if (operation.hasError()) {
+          throw new RuntimeException("Execution failed: " + operation.getError().getMessage());
+        }
+
+        if (!operation.hasResponse()) {
+          throw new RuntimeException(
+              "Invalid operation response: missing ExecutionResponse object");
+        }
+
         ActionResult actionResult =
-            future.get().getResponse().unpack(ExecuteResponse.class).getResult();
+            operation.getResponse().unpack(ExecuteResponse.class).getResult();
         return new ExecutionResult() {
           @Override
           public List<OutputDirectory> getOutputDirectories() {
