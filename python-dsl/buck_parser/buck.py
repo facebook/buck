@@ -1251,6 +1251,8 @@ class BuildFileProcessor(object):
         This method is meant to be installed into the globals of any files or
         includes that we process.
         """
+        assert symbols or symbol_kwargs, "expected at least one symbol to load"
+
         # Grab the current build context from the top of the stack.
         build_env = self._current_build_env
 

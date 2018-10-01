@@ -767,6 +767,21 @@ class BuckTest(unittest.TestCase):
                     build_file.root, build_file.prefix, build_file.path, diagnostics
                 )
 
+    def test_cannot_have_load_without_symbols(self):
+        build_file = ProjectFile(
+            self.project_root, path="BUCK", contents='load("//:foo/ext.bzl")'
+        )
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            with self.assertRaisesRegexp(
+                AssertionError, "expected at least one symbol to load"
+            ):
+                build_file_processor.process(
+                    build_file.root, build_file.prefix, build_file.path, diagnostics
+                )
+
     def test_provider_is_available(self):
         extension_file = ProjectFile(
             self.project_root,
@@ -1871,11 +1886,13 @@ foo_rule(
 
         # Setup the includes defs.  The second just includes the first one via
         # the `load()` function.
-        include_def1 = ProjectFile(self.project_root, path="inc_def1", contents=())
+        include_def1 = ProjectFile(
+            self.project_root, path="inc_def1", contents=("foo = 42")
+        )
         include_def2 = ProjectFile(
             self.project_root,
             path="inc_def2",
-            contents=("load({0!r})".format(include_def1.load_name),),
+            contents=("load({0!r}, 'foo')".format(include_def1.load_name),),
         )
         self.write_files(include_def1, include_def2)
 
