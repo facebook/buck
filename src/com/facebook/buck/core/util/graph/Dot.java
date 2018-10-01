@@ -199,7 +199,7 @@ public class Dot<T> {
     return Escaper.Quoter.DOUBLE.quote(str);
   }
 
-  public static String colorFromType(String type) {
+  private static String colorFromType(String type) {
     if (Dot.typeColors.containsKey(type)) {
       return Dot.typeColors.get(type);
     }
