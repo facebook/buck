@@ -42,7 +42,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
   }
 
   @Override
-  public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
+  public <T> BuildRule transform(
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
       ActionGraphBuilder graphBuilder,

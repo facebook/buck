@@ -29,7 +29,6 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -236,7 +235,7 @@ public class ActionGraphBuilderTest {
             targetGraph,
             new TargetNodeToBuildRuleTransformer() {
               @Override
-              public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
+              public <T> BuildRule transform(
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
                   ActionGraphBuilder graphBuilder,
@@ -269,7 +268,7 @@ public class ActionGraphBuilderTest {
             targetGraph,
             new TargetNodeToBuildRuleTransformer() {
               @Override
-              public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
+              public <T> BuildRule transform(
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
                   ActionGraphBuilder graphBuilder,
@@ -358,7 +357,7 @@ public class ActionGraphBuilderTest {
               targetGraph,
               new TargetNodeToBuildRuleTransformer() {
                 @Override
-                public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
+                public <T> BuildRule transform(
                     ToolchainProvider toolchainProvider,
                     TargetGraph targetGraph,
                     ActionGraphBuilder graphBuilder,

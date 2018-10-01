@@ -38,7 +38,7 @@ public class ShallowTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
   public ShallowTargetNodeToBuildRuleTransformer() {}
 
   @Override
-  public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
+  public <T> BuildRule transform(
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
       ActionGraphBuilder graphBuilder,
