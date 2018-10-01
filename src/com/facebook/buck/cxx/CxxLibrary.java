@@ -93,6 +93,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSortedSet<BuildTarget> tests;
   private final boolean canBeAsset;
   private final boolean reexportAllHeaderDependencies;
+  private final boolean supportsOmnibusLinking;
+
   private final Optional<CxxLibraryDescriptionDelegate> delegate;
 
   /**
@@ -136,6 +138,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       boolean canBeAsset,
       boolean propagateLinkables,
       boolean reexportAllHeaderDependencies,
+      boolean supportsOmnibusLinking,
       Optional<CxxLibraryDescriptionDelegate> delegate) {
     super(buildTarget, projectFilesystem, params);
     this.deps = deps;
@@ -154,6 +157,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.canBeAsset = canBeAsset;
     this.propagateLinkables = propagateLinkables;
     this.reexportAllHeaderDependencies = reexportAllHeaderDependencies;
+    this.supportsOmnibusLinking = supportsOmnibusLinking;
     this.delegate = delegate;
     this.transitiveCxxPreprocessorInputCache =
         new TransitiveCxxPreprocessorInputCache(this, preprocessorInputCacheParallelizer);
@@ -479,6 +483,11 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
     return Optional.empty();
+  }
+
+  @Override
+  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return supportsOmnibusLinking;
   }
 
   @Override

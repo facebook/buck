@@ -499,6 +499,8 @@ public class CxxLibraryDescription
     default CxxDeps getCxxDeps() {
       return CxxDeps.concat(getPrivateCxxDeps(), getExportedCxxDeps());
     }
+
+    Optional<Boolean> getSupportsMergedLinking();
   }
 
   @BuckStyleImmutable
