@@ -1,0 +1,42 @@
+[cxx]
+  untracked_headers=error
+  cc=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/cl.exe
+  cc_type=windows
+  cpp=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/cl.exe
+  cppflags = \
+    /IC:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/include \
+    /IC:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/atlmfc/include \
+    /IC:/tools/toolchains/vs2017_15.5/VC/Auxiliary/VS/include \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/km \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/shared \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/ucrt \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/um \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/winrt
+  cpp_type=windows
+  cxx=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/cl.exe
+  cxx_type=windows
+  cxxpp=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/cl.exe
+  cxxppflags = \
+    /IC:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/include \
+    /IC:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/atlmfc/include \
+    /IC:/tools/toolchains/vs2017_15.5/VC/Auxiliary/VS/include \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/km \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/shared \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/ucrt \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/um \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/winrt
+  cxxpp_type=windows
+  ld=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/link.exe
+  ldflags = \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/lib/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/atlmfc/lib/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Lib/10.0.16299.0/km/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Lib/10.0.16299.0/ucrt/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Lib/10.0.16299.0/um/x64
+  linker_platform=windows
+  ar=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/lib.exe
+  archiver_platform=windows
+  asm=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/ml64.exe
+  asm_type=windows_ml64
+  asmpp=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/ml64.exe
+  asmpp_type=windows

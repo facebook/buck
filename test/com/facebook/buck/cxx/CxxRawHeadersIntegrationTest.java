@@ -68,31 +68,8 @@ public class CxxRawHeadersIntegrationTest {
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "raw_headers", tmp);
     workspace.setUp();
-    String posix_config =
-        "[cxx]\n"
-            + "  untracked_headers=error\n"
-            + "  untracked_headers_whitelist=/usr/include/.*\n"
-            + "  cppflags = -Wall -Werror\n"
-            + "  cxxppflags = -Wall -Werror\n"
-            + "  cflags = -Wall -Werror\n"
-            + "  cxxflags = -Wall -Werror\n";
-    String windows_config =
-        "[cxx]\n"
-            + "  untracked_headers=error\n"
-            + "  untracked_headers_whitelist=\"C:/Program Files (x86)/.*\", \"c:/program files (x86)/.*\"\n"
-            + "  cc=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cc_type=windows\n"
-            + "  cpp=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cpp_type=windows\n"
-            + "  cxx=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cxx_type=windows\n"
-            + "  cxxpp=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cxxpp_type=windows\n"
-            + "  ld=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/link.exe\"\n"
-            + "  linker_platform=windows\n"
-            + "  ar=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/lib.exe\"\n"
-            + "  archiver_platform=windows\n"
-            + "  ranlib=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/lib.exe\"\n";
+    String posix_config = "<file:./posix.buckconfig>\n";
+    String windows_config = "<file:./windows.buckconfig>\n";
     String config = Platform.detect() == Platform.WINDOWS ? windows_config : posix_config;
     workspace.writeContentsToPath(config, ".buckconfig");
 
