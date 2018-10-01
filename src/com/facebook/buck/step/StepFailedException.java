@@ -55,13 +55,11 @@ public class StepFailedException extends Exception implements WrapsException, Ex
             stderr ->
                 messageBuilder.append(System.lineSeparator()).append("stderr: ").append(stderr));
     return createForFailingStepWithException(
-        step, context, new HumanReadableException(messageBuilder.toString()), Optional.empty());
+        step, context, new HumanReadableException(messageBuilder.toString()));
   }
 
   static StepFailedException createForFailingStepWithException(
-      Step step, ExecutionContext context, Throwable throwable, Optional<BuildTarget> buildTarget) {
-    // TODO(cjhopman): remove the buildTarget parameter.
-    buildTarget.getClass();
+      Step step, ExecutionContext context, Throwable throwable) {
     return new StepFailedException(throwable, step, descriptionForStep(step, context));
   }
 

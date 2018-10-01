@@ -95,10 +95,9 @@ public class StepFailedExceptionTest {
   public void testCreateForFailingStepWithBuildTarget() {
     int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     StepFailedException exception =
         StepFailedException.createForFailingStepWithException(
-            step, silentContext, new IOException("Copy failed!"), Optional.of(buildTarget));
+            step, silentContext, new IOException("Copy failed!"));
 
     assertEquals(step, exception.getStep());
     assertTrue(
@@ -114,7 +113,7 @@ public class StepFailedExceptionTest {
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
     StepFailedException exception =
         StepFailedException.createForFailingStepWithException(
-            step, silentContext, new IOException("Copy failed!"), Optional.empty());
+            step, silentContext, new IOException("Copy failed!"));
 
     assertEquals(step, exception.getStep());
     assertTrue(
