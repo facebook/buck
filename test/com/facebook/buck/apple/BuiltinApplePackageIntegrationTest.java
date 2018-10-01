@@ -199,7 +199,7 @@ public class BuiltinApplePackageIntegrationTest {
     }
   }
 
-  @Test
+  @Test(timeout = 150000)
   public void watchAppHasProperArch() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
