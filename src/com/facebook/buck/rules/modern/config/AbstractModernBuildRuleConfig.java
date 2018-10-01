@@ -27,35 +27,9 @@ import org.immutables.value.Value;
 abstract class AbstractModernBuildRuleConfig implements ConfigView<BuckConfig> {
   public static final String SECTION = "modern_build_rule";
 
-  public Strategy getBuildStrategy() {
-    return getDelegate().getEnum(SECTION, "strategy", Strategy.class).orElse(Strategy.DEFAULT);
-  }
-
-  /**
-   * These are the supported strategies.
-   *
-   * <p>Strategies starting with DEBUG_ aren't particularly useful in production and are just meant
-   * for development.
-   */
-  public enum Strategy {
-    NONE,
-
-    GRPC_REMOTE,
-
-    THRIFT_REMOTE,
-
-    DEBUG_GRPC_SERVICE_IN_PROCESS,
-
-    DEBUG_ISOLATED_OUT_OF_PROCESS,
-    DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC,
-
-    DEBUG_ISOLATED_IN_PROCESS,
-    // Creates a strategy that serializes and deserializes ModernBuildRules in memory and then
-    // builds the deserialized version.
-    DEBUG_RECONSTRUCT,
-    // Creates a strategy that just forwards to the default behavior.
-    DEBUG_PASSTHROUGH;
-
-    private static final Strategy DEFAULT = NONE;
+  public ModernBuildRuleBuildStrategy getBuildStrategy() {
+    return getDelegate()
+        .getEnum(SECTION, "strategy", ModernBuildRuleBuildStrategy.class)
+        .orElse(ModernBuildRuleBuildStrategy.DEFAULT);
   }
 }

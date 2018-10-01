@@ -18,7 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.testutil.InMemoryRemoteExecutionHttpService;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
-import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader.UploadData;
+import com.facebook.buck.remoteexecution.CasBlobUploader.UploadData;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
 import com.facebook.buck.slb.ThriftException;

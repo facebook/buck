@@ -18,8 +18,9 @@ package com.facebook.buck.rules.modern.builders;
 
 import static org.junit.Assert.*;
 
-import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
-import com.facebook.buck.rules.modern.builders.FileTreeBuilder.TreeBuilder;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder.InputFile;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder.TreeBuilder;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Charsets;

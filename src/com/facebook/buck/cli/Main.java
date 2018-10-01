@@ -121,6 +121,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
@@ -1313,7 +1314,7 @@ public final class Main {
   private ExecutorService createRemoteWorkerThreadPool(BuckConfig buckConfig) {
     int maxNumberOfRemoteWorkers =
         buckConfig.getView(ModernBuildRuleConfig.class).getBuildStrategy()
-                == ModernBuildRuleConfig.Strategy.NONE
+                == ModernBuildRuleBuildStrategy.NONE
             ? 0
             : buckConfig.getView(RemoteExecutionConfig.class).getMaxNumberOfRemoteWorkers();
     if (maxNumberOfRemoteWorkers == 0) {

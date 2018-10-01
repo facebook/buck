@@ -16,17 +16,49 @@
 
 package com.facebook.buck.remoteexecution;
 
-import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader.UploadData;
-import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /** Interface used to upload inputs/outputs to the CAS. */
 public interface CasBlobUploader {
   ImmutableSet<String> getMissingHashes(List<Digest> requiredDigests) throws IOException;
 
   ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadData> build) throws IOException;
+
+  /** Result (status/error message) of an upload. */
+  class UploadResult {
+    public final Digest digest;
+    public final int status;
+    @Nullable public final String message;
+
+    public UploadResult(Digest digest, int status, @Nullable String message) {
+      this.digest = digest;
+      this.status = status;
+      this.message = message;
+    }
+  }
+
+  /**
+   * Data required to upload a file. The underlying data will only be read if the CAS is missing
+   * this digest.
+   */
+  class UploadData {
+    public final Digest digest;
+    public final ThrowingSupplier<InputStream, IOException> data;
+
+    public UploadData(Digest digest, ThrowingSupplier<InputStream, IOException> data) {
+      this.digest = digest;
+      this.data = data;
+    }
+
+    public String getHash() {
+      return digest.getHash();
+    }
+  }
 }

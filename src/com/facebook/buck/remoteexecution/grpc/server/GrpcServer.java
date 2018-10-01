@@ -17,8 +17,8 @@
 package com.facebook.buck.remoteexecution.grpc.server;
 
 import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionClients;
-import com.facebook.buck.rules.modern.builders.GrpcRemoteExecutionServiceImpl;
-import com.facebook.buck.rules.modern.builders.LocalContentAddressedStorage;
+import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionServiceImpl;
+import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
 import com.google.common.io.Closer;
 import io.grpc.Server;

@@ -16,7 +16,11 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MostFiles;
@@ -28,8 +32,9 @@ import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionService;
 import com.facebook.buck.remoteexecution.RemoteExecutionService.ExecutionResult;
-import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
-import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder.InputFile;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
@@ -37,6 +42,7 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -54,7 +60,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -84,6 +92,25 @@ public final class RemoteExecution implements IsolatedExecution {
   private final ImmutableMap<Path, Supplier<InputFile>> pluginFiles;
 
   private final RemoteExecutionClients clients;
+
+  /** Creates a BuildRuleStrategy for a particular */
+  static BuildRuleStrategy createRemoteExecutionStrategy(
+      BuckEventBus eventBus,
+      Optional<ExecutorService> remoteExecutorService,
+      RemoteExecutionClients clients,
+      SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellResolver,
+      Cell rootCell,
+      ThrowingFunction<Path, HashCode, IOException> fileHasher)
+      throws IOException {
+    return new IsolatedExecutionStrategy(
+        new RemoteExecution(eventBus, clients),
+        ruleFinder,
+        cellResolver,
+        rootCell,
+        fileHasher,
+        remoteExecutorService);
+  }
 
   public RemoteExecution(BuckEventBus eventBus, RemoteExecutionClients clients) throws IOException {
     this.eventBus = eventBus;

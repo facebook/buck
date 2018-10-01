@@ -20,8 +20,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.CasBlobUploadEvent;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
-import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader.UploadData;
-import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.thrift.ClientPool;
 import com.facebook.buck.remoteexecution.thrift.PooledClient;

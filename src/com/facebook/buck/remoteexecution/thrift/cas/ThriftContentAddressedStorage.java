@@ -18,11 +18,11 @@ package com.facebook.buck.remoteexecution.thrift.cas;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorage;
-import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader;
-import com.facebook.buck.remoteexecution.OutputsMaterializer;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.thrift.ClientPool;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
+import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
+import com.facebook.buck.remoteexecution.util.OutputsMaterializer;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.remoteexecution.cas.ContentAddressableStorage;

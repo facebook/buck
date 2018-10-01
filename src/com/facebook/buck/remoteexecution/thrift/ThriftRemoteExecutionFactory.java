@@ -14,28 +14,23 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.modern.builders;
+package com.facebook.buck.remoteexecution.thrift;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
-import com.facebook.buck.remoteexecution.thrift.ThriftRemoteExecution;
-import com.facebook.buck.remoteexecution.thrift.ThriftRemoteExecutionClientsFactory;
-import java.io.IOException;
 
 /** Factory for creating thrift-based strategies. */
 public class ThriftRemoteExecutionFactory {
 
   /** The remote strategy connects to a remote thrift remote execution service. */
-  public static IsolatedExecution createRemote(RemoteExecutionConfig config, BuckEventBus eventBus)
-      throws IOException {
-    ThriftRemoteExecutionClientsFactory clients = new ThriftRemoteExecutionClientsFactory(config);
-    return new RemoteExecution(
+  public static RemoteExecutionClients createRemote(
+      RemoteExecutionConfig config, BuckEventBus eventBus) {
+    return new ThriftRemoteExecution(
         eventBus,
-        new ThriftRemoteExecution(
-            eventBus,
-            clients,
-            config.getTraceID(),
-            config.getMaxNumberOfRemoteWorkers(),
-            config.useClientPool()));
+        new ThriftRemoteExecutionClientsFactory(config),
+        config.getTraceID(),
+        config.getMaxNumberOfRemoteWorkers(),
+        config.useClientPool());
   }
 }

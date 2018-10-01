@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.modern.builders;
+package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
@@ -24,8 +24,8 @@ import com.facebook.buck.remoteexecution.Protocol.Directory;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.Protocol.Tree;
-import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
-import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder.InputFile;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;

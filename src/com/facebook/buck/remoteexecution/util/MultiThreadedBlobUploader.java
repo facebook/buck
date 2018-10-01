@@ -14,8 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.remoteexecution;
+package com.facebook.buck.remoteexecution.util;
 
+import com.facebook.buck.remoteexecution.CasBlobUploader;
+import com.facebook.buck.remoteexecution.CasBlobUploader.UploadData;
+import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.function.ThrowingSupplier;
@@ -38,7 +41,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 /**
  * A simple multi-threaded blob uploader for uploading inputs/outputs to the CAS.
@@ -76,24 +78,6 @@ public class MultiThreadedBlobUploader {
   private final ExecutorService uploadService;
   private final CasBlobUploader asyncBlobUploader;
 
-  /**
-   * Data required to upload a file. The underlying data will only be read if the CAS is missing
-   * this digest.
-   */
-  public static class UploadData {
-    public final Protocol.Digest digest;
-    public final ThrowingSupplier<InputStream, IOException> data;
-
-    public UploadData(Protocol.Digest digest, ThrowingSupplier<InputStream, IOException> data) {
-      this.digest = digest;
-      this.data = data;
-    }
-
-    public String getHash() {
-      return digest.getHash();
-    }
-  }
-
   private static class PendingUpload {
     private final UploadData uploadData;
     private final SettableFuture<Void> future;
@@ -109,8 +93,7 @@ public class MultiThreadedBlobUploader {
   }
 
   /** Uploads missing items to the CAS. */
-  public void addMissing(
-      ImmutableMap<Protocol.Digest, ThrowingSupplier<InputStream, IOException>> data)
+  public void addMissing(ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data)
       throws IOException {
     try {
       data =
@@ -125,11 +108,10 @@ public class MultiThreadedBlobUploader {
   }
 
   private ListenableFuture<Void> enqueue(
-      ImmutableMap<Protocol.Digest, ThrowingSupplier<InputStream, IOException>> data) {
+      ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data) {
     ImmutableList.Builder<ListenableFuture<Void>> futures = ImmutableList.builder();
-    for (Entry<Protocol.Digest, ThrowingSupplier<InputStream, IOException>> entry :
-        data.entrySet()) {
-      Protocol.Digest digest = entry.getKey();
+    for (Entry<Digest, ThrowingSupplier<InputStream, IOException>> entry : data.entrySet()) {
+      Digest digest = entry.getKey();
       ListenableFuture<Void> resultFuture =
           pendingUploads.computeIfAbsent(
               digest.getHash(),
@@ -174,7 +156,7 @@ public class MultiThreadedBlobUploader {
     ImmutableList<PendingUpload> data = dataBuilder.build();
 
     try {
-      List<Protocol.Digest> requiredDigests =
+      List<Digest> requiredDigests =
           data.stream().map(entry -> entry.uploadData.digest).collect(Collectors.toList());
 
       Set<String> missing = asyncBlobUploader.getMissingHashes(requiredDigests);
@@ -236,19 +218,6 @@ public class MultiThreadedBlobUploader {
     }
     if (!waitingMissingCheck.isEmpty() || !waitingUploads.isEmpty()) {
       uploadService.submit(this::processUploads);
-    }
-  }
-
-  /** Result (status/error message) of an upload. */
-  public static class UploadResult {
-    public final Digest digest;
-    public final int status;
-    @Nullable public final String message;
-
-    public UploadResult(Digest digest, int status, @Nullable String message) {
-      this.digest = digest;
-      this.status = status;
-      this.message = message;
     }
   }
 }

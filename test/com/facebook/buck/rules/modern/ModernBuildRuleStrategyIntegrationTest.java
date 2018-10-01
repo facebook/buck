@@ -40,7 +40,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.grpc.server.GrpcServer;
-import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
+import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -87,8 +87,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
     ImmutableList.Builder<Object[]> dataBuilder = ImmutableList.builder();
-    for (ModernBuildRuleConfig.Strategy strategy : ModernBuildRuleConfig.Strategy.values()) {
-      if (strategy.equals(ModernBuildRuleConfig.Strategy.THRIFT_REMOTE)) {
+    for (ModernBuildRuleBuildStrategy strategy : ModernBuildRuleBuildStrategy.values()) {
+      if (strategy.equals(ModernBuildRuleBuildStrategy.THRIFT_REMOTE)) {
         // TODO(shivanker): We don't have a dummy implementation for Thrift in this repository.
         // Probably add this in the future to be able to have unit tests.
         continue;
@@ -100,7 +100,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
-  private final ModernBuildRuleConfig.Strategy strategy;
+  private final ModernBuildRuleBuildStrategy strategy;
   private Optional<GrpcServer> server = Optional.empty();
   private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
@@ -316,7 +316,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    if (strategy == ModernBuildRuleConfig.Strategy.GRPC_REMOTE) {
+    if (strategy == ModernBuildRuleBuildStrategy.GRPC_REMOTE) {
       server = Optional.of(new GrpcServer(REMOTE_PORT));
     }
   }
@@ -328,7 +328,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
     }
   }
 
-  public ModernBuildRuleStrategyIntegrationTest(ModernBuildRuleConfig.Strategy strategy) {
+  public ModernBuildRuleStrategyIntegrationTest(ModernBuildRuleBuildStrategy strategy) {
     this.strategy = strategy;
   }
 

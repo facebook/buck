@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.modern.builders;
+package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;

@@ -14,17 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.modern.builders;
+package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
+import com.facebook.buck.remoteexecution.CasBlobUploader.UploadData;
+import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.ContentAddressedStorage;
-import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader;
-import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader.UploadData;
-import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader.UploadResult;
-import com.facebook.buck.remoteexecution.OutputsMaterializer;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.Protocol.DirectoryNode;

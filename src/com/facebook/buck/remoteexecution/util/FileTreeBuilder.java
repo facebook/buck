@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.modern.builders;
+package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.util.filesystem.PathFragments;
@@ -47,13 +47,13 @@ public class FileTreeBuilder {
    * Represents a single input file. FileTreeBuilder will construct merkle trees containing all the
    * specified InputFiles.
    */
-  static class InputFile {
+  public static class InputFile {
     final String hash;
     final int size;
     final boolean isExecutable;
     final ThrowingSupplier<InputStream, IOException> dataSupplier;
 
-    InputFile(
+    public InputFile(
         String hash,
         int size,
         boolean isExecutable,
@@ -114,7 +114,7 @@ public class FileTreeBuilder {
 
   private final DirectoryBuilder root;
 
-  FileTreeBuilder() {
+  public FileTreeBuilder() {
     this.root = new DirectoryBuilder();
   }
 
@@ -157,7 +157,7 @@ public class FileTreeBuilder {
    * Can be used to compute data from the FileTreeBuilder. This will basically do a bottom-up walk
    * of the added input files (and their directories).
    */
-  interface TreeBuilder<T> {
+  public interface TreeBuilder<T> {
     TreeBuilder<T> addDirectory(String name);
 
     void addFile(

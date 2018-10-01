@@ -16,7 +16,8 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder.InputFile;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;

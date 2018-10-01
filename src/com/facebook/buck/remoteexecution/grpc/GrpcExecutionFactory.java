@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.modern.builders;
+package com.facebook.buck.remoteexecution.grpc;
 
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionClients;
+import com.facebook.buck.remoteexecution.RemoteExecutionClients;
+import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
 import com.google.common.io.Closer;
 import io.grpc.ManagedChannel;
@@ -29,12 +29,11 @@ import java.io.IOException;
 
 /** Factory for creating grpc-based strategies. */
 public class GrpcExecutionFactory {
-
   /**
    * The in-process strategy starts up a grpc remote execution service in process and connects to it
    * directly.
    */
-  public static IsolatedExecution createInProcess(BuckEventBus eventBus) throws IOException {
+  public static RemoteExecutionClients createInProcess() throws IOException {
     NamedTemporaryDirectory workDir = new NamedTemporaryDirectory("__remote__");
     GrpcRemoteExecutionServiceImpl remoteExecution =
         new GrpcRemoteExecutionServiceImpl(
@@ -47,32 +46,26 @@ public class GrpcExecutionFactory {
     Server server = builder.build().start();
     ManagedChannel channel = InProcessChannelBuilder.forName("unique").build();
 
-    return new RemoteExecution(
-        eventBus,
-        new GrpcRemoteExecutionClients("in-process", channel, channel) {
-          @Override
-          public void close() throws IOException {
-            try (Closer closer = Closer.create()) {
-              closer.register(server::shutdown);
-              closer.register(workDir);
-              closer.register(super::close);
-            }
-            try {
-              server.awaitTermination();
-            } catch (InterruptedException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        });
+    return new GrpcRemoteExecutionClients("in-process", channel, channel) {
+      @Override
+      public void close() throws IOException {
+        try (Closer closer = Closer.create()) {
+          closer.register(server::shutdown);
+          closer.register(workDir);
+          closer.register(super::close);
+        }
+        try {
+          server.awaitTermination();
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
   }
 
   /** The remote strategy connects to a remote grpc remote execution service. */
-  public static IsolatedExecution createRemote(
-      String executionEngineHost,
-      int executionEnginePort,
-      String casHost,
-      int casPort,
-      BuckEventBus eventBus)
+  public static RemoteExecutionClients createRemote(
+      String executionEngineHost, int executionEnginePort, String casHost, int casPort)
       throws IOException {
     ManagedChannel executionEngineChannel =
         ManagedChannelBuilder.forAddress(executionEngineHost, executionEnginePort)
@@ -86,7 +79,6 @@ public class GrpcExecutionFactory {
             .maxInboundMessageSize(500 * 1024 * 1024)
             .build();
 
-    return new RemoteExecution(
-        eventBus, new GrpcRemoteExecutionClients("buck", executionEngineChannel, casChannel));
+    return new GrpcRemoteExecutionClients("buck", executionEngineChannel, casChannel);
   }
 }

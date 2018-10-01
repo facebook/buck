@@ -15,6 +15,7 @@ java_test(
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//src/com/facebook/buck/remoteexecution/thrift:thrift",
+        "//src/com/facebook/buck/remoteexecution/util:util",
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/rules/modern/builders:builders",
         "//src/com/facebook/buck/rules/modern/config:config",

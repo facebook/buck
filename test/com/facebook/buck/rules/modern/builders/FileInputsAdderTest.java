@@ -18,7 +18,8 @@ package com.facebook.buck.rules.modern.builders;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.modern.builders.FileTreeBuilder.TreeBuilder;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder.TreeBuilder;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.CreateSymlinksForTests;

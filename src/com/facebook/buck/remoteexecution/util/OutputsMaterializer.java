@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.remoteexecution;
+package com.facebook.buck.remoteexecution.util;
 
+import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
+import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Directory;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.google.common.base.Preconditions;
