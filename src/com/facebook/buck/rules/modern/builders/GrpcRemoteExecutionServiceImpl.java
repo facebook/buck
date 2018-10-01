@@ -83,6 +83,7 @@ import java.util.stream.Stream;
 
 /** A really simple implementation of remote execution (and CAS). Used for testing/debugging. */
 public class GrpcRemoteExecutionServiceImpl {
+  private static final int BYTESTREAM_READ_CHUNK_SIZE = 1 * 1024 * 1024;
   private final LocalContentAddressedStorage storage;
   private final Path workDir;
 
@@ -206,9 +207,16 @@ public class GrpcRemoteExecutionServiceImpl {
     public void read(ReadRequest request, StreamObserver<ReadResponse> responseObserver) {
       try {
         ParsedReadResource parsedResource = parseResourceName(request.getResourceName());
+        byte[] buffer = new byte[BYTESTREAM_READ_CHUNK_SIZE];
         try (InputStream data = storage.getData(new GrpcDigest(parsedResource.getDigest()))) {
-          responseObserver.onNext(
-              ReadResponse.newBuilder().setData(ByteString.readFrom(data)).build());
+          while (true) {
+            int read = data.read(buffer);
+            if (read == -1) {
+              break;
+            }
+            responseObserver.onNext(
+                ReadResponse.newBuilder().setData(ByteString.copyFrom(buffer, 0, read)).build());
+          }
         }
         responseObserver.onCompleted();
       } catch (Exception e) {

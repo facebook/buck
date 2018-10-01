@@ -47,6 +47,7 @@ import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputFile;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.util.function.ThrowingConsumer;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.bytestream.ByteStreamGrpc;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
@@ -67,7 +68,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -218,24 +218,29 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
             new AsyncBlobFetcher() {
               @Override
               public ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest) {
+                class Data {
+                  ByteString data = ByteString.EMPTY;
+
+                  public ByteBuffer get() {
+                    return data.asReadOnlyByteBuffer();
+                  }
+
+                  public void concat(ByteString bytes) {
+                    data = data.concat(bytes);
+                  }
+                }
+
+                Data data = new Data();
                 return Futures.transform(
-                    readByteStream(instanceName, digest, byteStreamStub),
-                    string -> string.asReadOnlyByteBuffer());
+                    readByteStream(instanceName, digest, byteStreamStub, data::concat),
+                    ignored -> data.get());
               }
 
               @Override
               public ListenableFuture<Void> fetchToStream(
                   Protocol.Digest digest, OutputStream outputStream) {
-                return Futures.transformAsync(
-                    fetch(digest),
-                    data -> {
-                      try {
-                        Channels.newChannel(outputStream).write(data);
-                        return Futures.immediateFuture(null);
-                      } catch (IOException e) {
-                        return Futures.immediateFailedFuture(e);
-                      }
-                    });
+                return readByteStream(
+                    instanceName, digest, byteStreamStub, data -> data.writeTo(outputStream));
               }
             },
             protocol);
@@ -256,18 +261,23 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
     };
   }
 
-  private static ListenableFuture<ByteString> readByteStream(
-      String instanceName, Protocol.Digest digest, ByteStreamStub byteStreamStub) {
+  private static ListenableFuture<Void> readByteStream(
+      String instanceName,
+      Protocol.Digest digest,
+      ByteStreamStub byteStreamStub,
+      ThrowingConsumer<ByteString, IOException> dataConsumer) {
     String name = getReadResourceName(instanceName, digest);
-    SettableFuture<ByteString> future = SettableFuture.create();
+    SettableFuture<Void> future = SettableFuture.create();
     byteStreamStub.read(
         ReadRequest.newBuilder().setResourceName(name).setReadLimit(0).setReadOffset(0).build(),
         new StreamObserver<ReadResponse>() {
-          ByteString data = ByteString.EMPTY;
-
           @Override
           public void onNext(ReadResponse value) {
-            data = data.concat(value.getData());
+            try {
+              dataConsumer.accept(value.getData());
+            } catch (IOException e) {
+              onError(e);
+            }
           }
 
           @Override
@@ -277,7 +287,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
 
           @Override
           public void onCompleted() {
-            future.set(data);
+            future.set(null);
           }
         });
     return future;
@@ -369,13 +379,14 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
                 || (stderrRaw.isEmpty() && actionResult.getStderrDigest().getSizeBytes() > 0)) {
               System.err.println("Got stderr digest.");
               try {
-                return Optional.of(
-                    readByteStream(
-                            instanceName,
-                            new GrpcDigest(actionResult.getStderrDigest()),
-                            byteStreamStub)
-                        .get()
-                        .toStringUtf8());
+                ByteString data = ByteString.EMPTY;
+                readByteStream(
+                        instanceName,
+                        new GrpcDigest(actionResult.getStderrDigest()),
+                        byteStreamStub,
+                        data::concat)
+                    .get();
+                return Optional.of(data.toStringUtf8());
               } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
               }
