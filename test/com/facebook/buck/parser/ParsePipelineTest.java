@@ -54,6 +54,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -137,7 +138,7 @@ public class ParsePipelineTest {
   public void speculativeDepsTraversalWhenGettingAllNodes() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCell();
-    ImmutableSet<TargetNode<?>> libTargetNodes =
+    ImmutableList<TargetNode<?>> libTargetNodes =
         fixture
             .getTargetNodeParsePipeline()
             .getAllNodes(cell, fixture.getCell().getFilesystem().resolve("BUCK"));
@@ -211,7 +212,7 @@ public class ParsePipelineTest {
       fixture
           .getRawNodeParsePipelineCache()
           .putComputedNodeIfNotPresent(
-              cell, rootBuildFilePath, ImmutableSet.of(ImmutableMap.of("name", "bar")), eventBus);
+              cell, rootBuildFilePath, ImmutableList.of(ImmutableMap.of("name", "bar")), eventBus);
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage("malformed raw data");
       fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
@@ -225,7 +226,7 @@ public class ParsePipelineTest {
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
       fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
-      Optional<ImmutableSet<Map<String, Object>>> rootRawNodes =
+      Optional<ImmutableList<Map<String, Object>>> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()
               .lookupComputedNode(cell, rootBuildFilePath, eventBus);
@@ -249,7 +250,7 @@ public class ParsePipelineTest {
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
       fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
-      Optional<ImmutableSet<Map<String, Object>>> rootRawNodes =
+      Optional<ImmutableList<Map<String, Object>>> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()
               .lookupComputedNode(cell, rootBuildFilePath, eventBus);
@@ -310,17 +311,17 @@ public class ParsePipelineTest {
   }
 
   private static class RawNodeParsePipelineCache
-      extends TypedParsePipelineCache<Path, ImmutableSet<Map<String, Object>>> {
+      extends TypedParsePipelineCache<Path, ImmutableList<Map<String, Object>>> {
 
     @Override
-    public synchronized ImmutableSet<Map<String, Object>> putComputedNodeIfNotPresent(
+    public synchronized ImmutableList<Map<String, Object>> putComputedNodeIfNotPresent(
         Cell cell,
         Path buildFile,
-        ImmutableSet<Map<String, Object>> rawNodes,
+        ImmutableList<Map<String, Object>> rawNodes,
         BuckEventBus eventBus) {
       // Strip meta entries.
       rawNodes =
-          ImmutableSet.copyOf(Iterables.filter(rawNodes, input -> input.containsKey("name")));
+          ImmutableList.copyOf(Iterables.filter(rawNodes, input -> input.containsKey("name")));
       return super.putComputedNodeIfNotPresent(cell, buildFile, rawNodes, eventBus);
     }
   }

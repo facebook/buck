@@ -26,6 +26,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -163,12 +164,12 @@ final class OwnersReport {
     }
 
     private OwnersReport getReportForBasePath(
-        Map<Path, ImmutableSet<TargetNode<?>>> map,
+        Map<Path, ImmutableList<TargetNode<?>>> map,
         Cell cell,
         Path basePath,
         Path cellRelativePath) {
       Path buckFile = cell.getFilesystem().resolve(basePath).resolve(cell.getBuildFileName());
-      ImmutableSet<TargetNode<?>> targetNodes =
+      ImmutableList<TargetNode<?>> targetNodes =
           map.computeIfAbsent(
               buckFile,
               basePath1 -> {
@@ -265,7 +266,7 @@ final class OwnersReport {
 
         // Path from buck file to target nodes. We keep our own cache here since the manner that we
         // are calling the parser does not make use of its internal caches.
-        Map<Path, ImmutableSet<TargetNode<?>>> map = new HashMap<>();
+        Map<Path, ImmutableList<TargetNode<?>>> map = new HashMap<>();
         for (Path absolutePath : entry.getValue()) {
           Path cellRelativePath = cell.getFilesystem().relativize(absolutePath);
           ImmutableSet<Path> basePaths = getAllBasePathsForPath(buildFileTree, cellRelativePath);

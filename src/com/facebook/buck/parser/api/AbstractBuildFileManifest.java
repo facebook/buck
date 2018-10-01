@@ -20,8 +20,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -58,9 +56,9 @@ abstract class AbstractBuildFileManifest {
    *
    * <p>This is for a temporary solution until all clients switch to using build file manifest.
    */
-  public ImmutableSet<Map<String, Object>> toRawNodes() {
-    Builder<Map<String, Object>> builder =
-        ImmutableSet.<Map<String, Object>>builder()
+  public ImmutableList<Map<String, Object>> toRawNodes() {
+    ImmutableList.Builder<Map<String, Object>> builder =
+        ImmutableList.<Map<String, Object>>builder()
             .addAll(getTargets())
             .add(ImmutableMap.of("__includes", getIncludes()))
             .add(ImmutableMap.of("__configs", getConfigs()));

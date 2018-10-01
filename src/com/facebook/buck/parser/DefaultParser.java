@@ -100,7 +100,7 @@ public class DefaultParser implements Parser {
   }
 
   @VisibleForTesting
-  static ImmutableSet<Map<String, Object>> getTargetNodeRawAttributes(
+  static ImmutableList<Map<String, Object>> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
     Preconditions.checkState(buildFile.isAbsolute());
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
@@ -108,7 +108,7 @@ public class DefaultParser implements Parser {
   }
 
   @Override
-  public ImmutableSet<TargetNode<?>> getAllTargetNodes(
+  public ImmutableList<TargetNode<?>> getAllTargetNodes(
       PerBuildState perBuildState, Cell cell, Path buildFile) throws BuildFileParseException {
     return perBuildState.getAllTargetNodes(cell, buildFile);
   }
@@ -146,7 +146,7 @@ public class DefaultParser implements Parser {
   public SortedMap<String, Object> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
     Cell owningCell = cell.getCell(targetNode.getBuildTarget());
-    ImmutableSet<Map<String, Object>> allRawNodes =
+    ImmutableList<Map<String, Object>> allRawNodes =
         getTargetNodeRawAttributes(
             state, owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
 
@@ -379,7 +379,7 @@ public class DefaultParser implements Parser {
       }
 
       @Override
-      public ListenableFuture<ImmutableSet<TargetNode<?>>> getAllTargetNodesJob(
+      public ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(
           Cell cell, Path buildFile) throws BuildTargetException {
         return state.getAllTargetNodesJob(cell, buildFile);
       }

@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
@@ -54,7 +54,7 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @return all targets from the file
    * @throws BuildFileParseException for syntax errors.
    */
-  public final ImmutableSet<T> getAllNodes(Cell cell, Path buildFile)
+  public final ImmutableList<T> getAllNodes(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(!shuttingDown.get());
 
@@ -108,7 +108,7 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @param buildFile absolute path to the file to process.
    * @return future.
    */
-  public abstract ListenableFuture<ImmutableSet<T>> getAllNodesJob(Cell cell, Path buildFile)
+  public abstract ListenableFuture<ImmutableList<T>> getAllNodesJob(Cell cell, Path buildFile)
       throws BuildTargetException;
 
   /**

@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.file.Path;
 import java.util.Map;
@@ -54,21 +54,21 @@ public class PerBuildState implements AutoCloseable {
     return targetNodeParsePipeline.getNodeJob(owningCell, target);
   }
 
-  ImmutableSet<TargetNode<?>> getAllTargetNodes(Cell cell, Path buildFile)
+  ImmutableList<TargetNode<?>> getAllTargetNodes(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     return targetNodeParsePipeline.getAllNodes(cell, buildFile);
   }
 
-  ListenableFuture<ImmutableSet<TargetNode<?>>> getAllTargetNodesJob(Cell cell, Path buildFile)
+  ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(Cell cell, Path buildFile)
       throws BuildTargetException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     return targetNodeParsePipeline.getAllNodesJob(cell, buildFile);
   }
 
-  ImmutableSet<Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)
+  ImmutableList<Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 

@@ -167,7 +167,7 @@ public class TargetSpecResolver {
               targetNodeProvider.getTargetNodeJob(buildTargetSpec.getBuildTarget()),
               node -> {
                 ImmutableSet<BuildTarget> buildTargets =
-                    applySpecFilter(spec, ImmutableSet.of(node), flavorEnhancer, targetNodeFilter);
+                    applySpecFilter(spec, ImmutableList.of(node), flavorEnhancer, targetNodeFilter);
                 Preconditions.checkState(
                     buildTargets.size() == 1,
                     "BuildTargetSpec %s filter discarded target %s, but was not supposed to.",
@@ -220,7 +220,7 @@ public class TargetSpecResolver {
 
   private <T extends HasBuildTarget> ImmutableSet<BuildTarget> applySpecFilter(
       TargetNodeSpec spec,
-      ImmutableSet<T> targetNodes,
+      ImmutableList<T> targetNodes,
       FlavorEnhancer<T> flavorEnhancer,
       TargetNodeFilterForSpecResolver<T> targetNodeFilter) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
@@ -245,7 +245,7 @@ public class TargetSpecResolver {
   public interface TargetNodeProviderForSpecResolver<T extends HasBuildTarget> {
     ListenableFuture<T> getTargetNodeJob(BuildTarget target) throws BuildTargetException;
 
-    ListenableFuture<ImmutableSet<T>> getAllTargetNodesJob(Cell cell, Path buildFile)
+    ListenableFuture<ImmutableList<T>> getAllTargetNodesJob(Cell cell, Path buildFile)
         throws BuildTargetException;
   }
 

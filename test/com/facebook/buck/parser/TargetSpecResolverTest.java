@@ -228,7 +228,7 @@ public class TargetSpecResolverTest {
           }
 
           @Override
-          public ListenableFuture<ImmutableSet<TargetNode<?>>> getAllTargetNodesJob(
+          public ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(
               Cell cell, Path buildFile) throws BuildTargetException {
             return state.getAllTargetNodesJob(cell, buildFile);
           }

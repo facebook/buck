@@ -27,7 +27,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
@@ -110,7 +110,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
   }
 
   @Override
-  protected ListenableFuture<ImmutableSet<RawTargetNode>> getItemsToConvert(
+  protected ListenableFuture<ImmutableList<RawTargetNode>> getItemsToConvert(
       Cell cell, Path buildFile) throws BuildTargetException {
     return rawTargetNodePipeline.getAllNodesJob(cell, buildFile);
   }

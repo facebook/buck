@@ -25,7 +25,6 @@ import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -73,7 +72,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   }
 
   @Override
-  public ListenableFuture<ImmutableSet<T>> getAllNodesJob(Cell cell, Path buildFile)
+  public ListenableFuture<ImmutableList<T>> getAllNodesJob(Cell cell, Path buildFile)
       throws BuildTargetException {
     // TODO(csarbora): this hits the chained pipeline before hitting the cache
     ListenableFuture<List<T>> allNodesListJob =
@@ -97,7 +96,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
               return Futures.allAsList(allNodeJobs.build());
             },
             executorService);
-    return Futures.transform(allNodesListJob, ImmutableSet::copyOf, executorService);
+    return Futures.transform(allNodesListJob, ImmutableList::copyOf, executorService);
   }
 
   @Override
@@ -124,7 +123,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
       Function<PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException;
 
-  protected abstract ListenableFuture<ImmutableSet<F>> getItemsToConvert(Cell cell, Path buildFile)
+  protected abstract ListenableFuture<ImmutableList<F>> getItemsToConvert(Cell cell, Path buildFile)
       throws BuildTargetException;
 
   protected abstract ListenableFuture<F> getItemToConvert(Cell cell, BuildTarget buildTarget)

@@ -23,7 +23,7 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -33,13 +33,13 @@ import java.util.Map;
 public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
   private final BuckEventBus eventBus;
-  private final PipelineNodeCache<Path, ImmutableSet<Map<String, Object>>> cache;
+  private final PipelineNodeCache<Path, ImmutableList<Map<String, Object>>> cache;
   private final ListeningExecutorService executorService;
   private final ProjectBuildFileParserPool projectBuildFileParserPool;
   private final Watchman watchman;
 
   public RawNodeParsePipeline(
-      Cache<Path, ImmutableSet<Map<String, Object>>> cache,
+      Cache<Path, ImmutableList<Map<String, Object>>> cache,
       ProjectBuildFileParserPool projectBuildFileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
@@ -52,7 +52,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
   }
 
   @Override
-  public ListenableFuture<ImmutableSet<Map<String, Object>>> getAllNodesJob(
+  public ListenableFuture<ImmutableList<Map<String, Object>>> getAllNodesJob(
       Cell cell, Path buildFile) throws BuildTargetException {
 
     if (shuttingDown()) {

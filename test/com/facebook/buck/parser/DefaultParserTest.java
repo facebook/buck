@@ -177,7 +177,7 @@ public class DefaultParserTest {
 
   /** Helper to construct a PerBuildState and use it to get nodes. */
   @VisibleForTesting
-  private static ImmutableSet<Map<String, Object>> getRawTargetNodes(
+  private static ImmutableList<Map<String, Object>> getRawTargetNodes(
       Parser parser,
       TypeCoercerFactory typeCoercerFactory,
       BuckEventBus eventBus,

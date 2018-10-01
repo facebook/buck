@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -80,8 +81,8 @@ public class ResolveAliasHelper {
     }
 
     // Get all valid targets in our target directory by reading the build file.
-    ImmutableSet<TargetNode<?>> targetNodes;
-    targetNodes = params.getParser().getAllTargetNodes(parserState, owningCell, buildFile);
+    ImmutableList<TargetNode<?>> targetNodes =
+        params.getParser().getAllTargetNodes(parserState, owningCell, buildFile);
 
     // Check that the given target is a valid target.
     for (TargetNode<?> candidate : targetNodes) {

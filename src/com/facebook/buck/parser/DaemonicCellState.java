@@ -101,7 +101,7 @@ class DaemonicCellState {
   private final Map<Path, ImmutableMap<String, Optional<String>>> buildFileEnv;
 
   @GuardedBy("rawAndComputedNodesLock")
-  private final ConcurrentMapCache<Path, ImmutableSet<Map<String, Object>>> allRawNodes;
+  private final ConcurrentMapCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
   // Tracks all targets in `allRawNodes`.  Used to verify that every target in `allComputedNodes`
   // is also in `allRawNodes`, as we use the latter for bookkeeping invalidations.
   @GuardedBy("rawAndComputedNodesLock")
@@ -157,19 +157,19 @@ class DaemonicCellState {
     }
   }
 
-  Optional<ImmutableSet<Map<String, Object>>> lookupRawNodes(Path buildFile) {
+  Optional<ImmutableList<Map<String, Object>>> lookupRawNodes(Path buildFile) {
     try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
       return Optional.ofNullable(allRawNodes.getIfPresent(buildFile));
     }
   }
 
-  ImmutableSet<Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
+  ImmutableList<Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
       Path buildFile,
-      ImmutableSet<Map<String, Object>> withoutMetaIncludes,
+      ImmutableList<Map<String, Object>> withoutMetaIncludes,
       ImmutableSet<Path> dependentsOfEveryNode,
       ImmutableMap<String, Optional<String>> env) {
     try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
-      ImmutableSet<Map<String, Object>> updated =
+      ImmutableList<Map<String, Object>> updated =
           allRawNodes.putIfAbsentAndGet(buildFile, withoutMetaIncludes);
       for (Map<String, Object> node : updated) {
         allRawNodeTargets.add(
@@ -191,7 +191,7 @@ class DaemonicCellState {
   int invalidatePath(Path path) {
     try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
       int invalidatedRawNodes = 0;
-      ImmutableSet<Map<String, Object>> rawNodes = allRawNodes.getIfPresent(path);
+      ImmutableList<Map<String, Object>> rawNodes = allRawNodes.getIfPresent(path);
       if (rawNodes != null) {
         // Increment the counter
         invalidatedRawNodes = rawNodes.size();
@@ -258,7 +258,7 @@ class DaemonicCellState {
     Path root = getCellRoot();
     ObjectMapper objectMapper = new ObjectMapper();
     for (Path path : allRawNodes.keySet()) {
-      ImmutableSet<Map<String, Object>> v = allRawNodes.getIfPresent(path);
+      ImmutableList<Map<String, Object>> v = allRawNodes.getIfPresent(path);
       if (v != null) {
         result.put(root.relativize(path).toString(), objectMapper.writeValueAsString(v));
       }
@@ -348,8 +348,8 @@ class DaemonicCellState {
 
     for (String pathString : remote.allRawNodesJsons.keySet()) {
       String json = remote.allRawNodesJsons.get(pathString);
-      ImmutableSet<Map<String, Object>> deserializedRawNodes =
-          ObjectMappers.readValue(json, new TypeReference<ImmutableSet<Map<String, Object>>>() {});
+      ImmutableList<Map<String, Object>> deserializedRawNodes =
+          ObjectMappers.readValue(json, new TypeReference<ImmutableList<Map<String, Object>>>() {});
       Path key = root.resolve(pathString);
       daemonicCellState.allRawNodes.putIfAbsentAndGet(key, deserializedRawNodes);
       deserializedRawNodes.forEach(

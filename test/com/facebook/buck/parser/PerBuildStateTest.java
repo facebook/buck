@@ -37,7 +37,6 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -135,7 +134,7 @@ public class PerBuildStateTest {
     assertThat(targetNode.getBuildTarget(), equalTo(fooLib1Target));
 
     // Now, try to load the entire build file and get all TargetNodes.
-    ImmutableSet<TargetNode<?>> targetNodes =
+    ImmutableList<TargetNode<?>> targetNodes =
         perBuildState.getAllTargetNodes(cell, testFooBuckFile);
     assertThat(targetNodes.size(), equalTo(2));
     assertThat(
