@@ -51,8 +51,7 @@ public final class DefaultStepRunner implements StepRunner {
       context.getBuckEventBus().post(finished);
     }
     if (!executionResult.isSuccess()) {
-      throw StepFailedException.createForFailingStepWithExitCode(
-          step, context, executionResult, buildTarget);
+      throw StepFailedException.createForFailingStepWithExitCode(step, context, executionResult);
     }
   }
 }
