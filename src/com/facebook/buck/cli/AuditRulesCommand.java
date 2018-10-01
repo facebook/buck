@@ -28,7 +28,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
@@ -126,8 +126,8 @@ public class AuditRulesCommand extends AbstractCommand {
           }
 
           // Parse the rules from the build file.
-          List<Map<String, Object>> rawRules;
-          rawRules = parser.getBuildFileManifest(path).getTargets();
+          ImmutableCollection<Map<String, Object>> rawRules =
+              parser.getBuildFileManifest(path).getTargets();
 
           // Format and print the rules from the raw data, filtered by type.
           ImmutableSet<String> types = getTypes();
@@ -153,25 +153,21 @@ public class AuditRulesCommand extends AbstractCommand {
   }
 
   private void printRulesToStdout(
-      PrintStream stdOut, List<Map<String, Object>> rawRules, Predicate<String> includeType)
-      throws IOException {
-    ImmutableList<Map<String, Object>> filteredRules =
-        rawRules
-            .stream()
-            .filter(
-                rawRule -> {
-                  String type = (String) rawRule.get(BuckPyFunction.TYPE_PROPERTY_NAME);
-                  return includeType.test(type);
-                })
-            .sorted(Comparator.comparing(rule -> ((String) rule.getOrDefault("name", ""))))
-            .collect(ImmutableList.toImmutableList());
-
-    for (Map<String, Object> rawRule : filteredRules) {
-      printRuleAsPythonToStdout(stdOut, rawRule);
-    }
+      PrintStream stdOut,
+      ImmutableCollection<Map<String, Object>> rawRules,
+      Predicate<String> includeType) {
+    rawRules
+        .stream()
+        .filter(
+            rawRule -> {
+              String type = (String) rawRule.get(BuckPyFunction.TYPE_PROPERTY_NAME);
+              return includeType.test(type);
+            })
+        .sorted(Comparator.comparing(rule -> ((String) rule.getOrDefault("name", ""))))
+        .forEach(rawRule -> printRuleAsPythonToStdout(stdOut, rawRule));
   }
 
-  private void printRuleAsPythonToStdout(PrintStream out, Map<String, Object> rawRule) {
+  private static void printRuleAsPythonToStdout(PrintStream out, Map<String, Object> rawRule) {
     String type = (String) rawRule.get(BuckPyFunction.TYPE_PROPERTY_NAME);
     out.printf("%s(\n", type);
 
@@ -209,11 +205,11 @@ public class AuditRulesCommand extends AbstractCommand {
     out.print(")\n\n");
   }
 
-  private String formatAttribute(String property) {
+  private static String formatAttribute(String property) {
     return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, property);
   }
 
-  private boolean shouldInclude(@Nullable Object rawValue) {
+  private static boolean shouldInclude(@Nullable Object rawValue) {
     return rawValue != null
         && rawValue != Optional.empty()
         && !(rawValue instanceof Collection && ((Collection<?>) rawValue).isEmpty());
