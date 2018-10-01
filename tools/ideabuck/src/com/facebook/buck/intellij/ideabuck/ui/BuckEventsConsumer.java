@@ -515,8 +515,6 @@ public class BuckEventsConsumer
    * @param textType The type of the text
    */
   public void sendAsConsoleEvent(final String message, final TextType textType) {
-    mBuckUIManager.getBuckToolWindow().showMainToolWindowIfNecessary();
-
     if (mCurrentBuildRootElement == null) {
       return;
     }
