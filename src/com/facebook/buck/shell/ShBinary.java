@@ -63,7 +63,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final SourcePath main;
   @AddToRuleKey private final ImmutableSet<SourcePath> resources;
-  private CellPathResolver cellRoots;
+  private final CellPathResolver cellRoots;
 
   /** The path where the output will be written. */
   private final Path output;
