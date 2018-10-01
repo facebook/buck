@@ -173,7 +173,7 @@ class DaemonicCellState {
           allRawNodes.putIfAbsentAndGet(buildFile, withoutMetaIncludes);
       for (Map<String, Object> node : updated) {
         allRawNodeTargets.add(
-            RawNodeParsePipeline.parseBuildTargetFromRawRule(
+            UnflavoredBuildTargetFactory.createFromRawNode(
                 cellRoot, cellCanonicalName, node, buildFile));
       }
       buildFileEnv.put(buildFile, env);
@@ -197,7 +197,7 @@ class DaemonicCellState {
         invalidatedRawNodes = rawNodes.size();
         for (Map<String, Object> rawNode : rawNodes) {
           UnflavoredBuildTarget target =
-              RawNodeParsePipeline.parseBuildTargetFromRawRule(
+              UnflavoredBuildTargetFactory.createFromRawNode(
                   cellRoot, cellCanonicalName, rawNode, path);
           LOG.debug("Invalidating target for path %s: %s", path, target);
           for (Cache<?> cache : typedNodeCaches.values()) {

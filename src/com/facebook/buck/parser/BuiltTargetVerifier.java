@@ -70,7 +70,7 @@ class BuiltTargetVerifier {
     }
 
     UnflavoredBuildTarget unflavoredBuildTargetFromRawData =
-        RawNodeParsePipeline.parseBuildTargetFromRawRule(
+        UnflavoredBuildTargetFactory.createFromRawNode(
             cell.getRoot(), cell.getCanonicalName(), rawNode, buildFile);
     if (!unflavoredBuildTarget.equals(unflavoredBuildTargetFromRawData)) {
       throw new IllegalStateException(

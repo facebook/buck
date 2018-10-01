@@ -90,7 +90,7 @@ public class TargetNodeParsePipeline
   protected BuildTarget getBuildTarget(
       Path root, Optional<String> cellName, Path buildFile, Map<String, Object> from) {
     return ImmutableBuildTarget.of(
-        RawNodeParsePipeline.parseBuildTargetFromRawRule(root, cellName, from, buildFile));
+        UnflavoredBuildTargetFactory.createFromRawNode(root, cellName, from, buildFile));
   }
 
   @Override
