@@ -38,6 +38,3 @@
   linker_platform=windows
   ar=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/lib.exe
   archiver_platform=windows
-
-[project]
-  windows_symlinks=yes

@@ -40,8 +40,5 @@
   asmpp=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/ml64.exe
   asmpp_type=windows
 
-[project]
-  windows_symlinks=yes
-
 [repositories]
   x = xplat
