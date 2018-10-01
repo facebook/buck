@@ -80,18 +80,19 @@ public class RemoteExecutionStorageService implements AsyncBlobFetcher, CasBlobU
   }
 
   @Override
-  public void fetchToStream(Digest digest, OutputStream outputStream) {
+  public ListenableFuture<Void> fetchToStream(Digest digest, OutputStream outputStream) {
     try {
       fetchToStreamInternal(digest, outputStream).get();
+      return Futures.immediateFuture(null);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      logAndThrowException(digest, e);
+      throw logAndThrowException(digest, e);
     } catch (ExecutionException e) {
-      logAndThrowException(digest, e);
+      throw logAndThrowException(digest, e);
     }
   }
 
-  private static void logAndThrowException(Digest digest, Exception e) {
+  private static BuckUncheckedExecutionException logAndThrowException(Digest digest, Exception e) {
     LOG.error(e, "Could not fetch stream for digest [%s:%d].", digest.getHash(), digest.getSize());
     throw new BuckUncheckedExecutionException(
         e, "When fetching to stream for digest [%s:%d].", digest.getHash(), digest.getSize());

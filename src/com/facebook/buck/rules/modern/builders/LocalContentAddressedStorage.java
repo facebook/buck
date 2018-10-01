@@ -26,6 +26,7 @@ import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader.UploadData;
 import com.facebook.buck.remoteexecution.MultiThreadedBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.OutputsMaterializer;
 import com.facebook.buck.remoteexecution.Protocol;
+import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.Protocol.DirectoryNode;
 import com.facebook.buck.remoteexecution.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
@@ -45,6 +46,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.devtools.build.lib.concurrent.KeyedLocker.AutoUnlocker;
 import com.google.devtools.build.lib.concurrent.StripedKeyedLocker;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -108,8 +111,13 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
           }
 
           @Override
-          public void fetchToStream(Protocol.Digest digest, OutputStream outputStream) {
-            throw new UnsupportedOperationException();
+          public ListenableFuture<Void> fetchToStream(Digest digest, OutputStream outputStream) {
+            try (InputStream stream = getData(digest)) {
+              ByteStreams.copy(stream, outputStream);
+              return Futures.immediateFuture(null);
+            } catch (IOException e) {
+              return Futures.immediateFailedFuture(e);
+            }
           }
         };
     this.outputsMaterializer = new OutputsMaterializer(fetcher, protocol);
@@ -162,7 +170,8 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
             continue;
           }
           Path tempPath = path.getParent().resolve(path.getFileName() + ".tmp");
-          try (FileOutputStream outputStream = new FileOutputStream(tempPath.toFile());
+          try (OutputStream outputStream =
+                  new BufferedOutputStream(new FileOutputStream(tempPath.toFile()));
               InputStream dataStream = data.data.get()) {
             ByteStreams.copy(dataStream, outputStream);
           }
@@ -283,7 +292,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
   public InputStream getData(Protocol.Digest digest) throws IOException {
     Path path = getPath(digest.getHash());
     Preconditions.checkState(Files.exists(path), "Couldn't find %s.", path);
-    return new FileInputStream(path.toFile());
+    return new BufferedInputStream(new FileInputStream(path.toFile()));
   }
 
   private static Path ensureParent(Path path) throws IOException {

@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.CasBlobDownloadEvent;
 import com.facebook.buck.remoteexecution.Protocol;
+import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.thrift.ClientPool;
 import com.facebook.buck.remoteexecution.thrift.PooledClient;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
@@ -32,8 +33,10 @@ import com.facebook.remoteexecution.cas.ReadBlobResponse;
 import com.facebook.thrift.TException;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 
 /** A Thrift-based implementation of fetching outputs from the CAS. */
 // TODO(shivanker): Make this implementation actually async.
@@ -62,9 +65,16 @@ public class ThriftBlobFetcher implements AsyncBlobFetcher {
   }
 
   @Override
-  public void fetchToStream(Protocol.Digest digest, OutputStream outputStream) {
-    // TODO(orr): Not implementing since GrpcRemoteExecution doesn't implement this as well. If so,
-    // should we remote this option from the API? Otherwise we should implement.
-    throw new UnsupportedOperationException("Not implemented");
+  public ListenableFuture<Void> fetchToStream(Digest digest, OutputStream outputStream) {
+    return Futures.transformAsync(
+        fetch(digest),
+        data -> {
+          try {
+            Channels.newChannel(outputStream).write(data);
+            return Futures.immediateFuture(null);
+          } catch (IOException e) {
+            return Futures.immediateFailedFuture(e);
+          }
+        });
   }
 }

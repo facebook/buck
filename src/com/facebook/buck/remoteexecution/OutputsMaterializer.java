@@ -24,8 +24,10 @@ import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -116,14 +118,13 @@ public class OutputsMaterializer {
   }
 
   private ListenableFuture<Void> fetchAndMaterialize(
-      Protocol.Digest digest, boolean isExecutable, Path path) {
+      Protocol.Digest digest, boolean isExecutable, Path path) throws IOException {
+    OutputStream fileStream = new BufferedOutputStream(new FileOutputStream(path.toFile()));
     return Futures.transform(
-        fetcher.fetch(digest),
-        data -> {
+        fetcher.fetchToStream(digest, fileStream),
+        ignored -> {
           try {
-            try (FileOutputStream fileStream = new FileOutputStream(path.toFile())) {
-              fileStream.getChannel().write(data);
-            }
+            fileStream.close();
             if (isExecutable) {
               setExecutable(true, path);
             }

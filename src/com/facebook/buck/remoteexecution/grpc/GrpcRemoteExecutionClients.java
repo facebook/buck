@@ -67,6 +67,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -223,8 +224,18 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
               }
 
               @Override
-              public void fetchToStream(Protocol.Digest digest, OutputStream outputStream) {
-                throw new UnsupportedOperationException();
+              public ListenableFuture<Void> fetchToStream(
+                  Protocol.Digest digest, OutputStream outputStream) {
+                return Futures.transformAsync(
+                    fetch(digest),
+                    data -> {
+                      try {
+                        Channels.newChannel(outputStream).write(data);
+                        return Futures.immediateFuture(null);
+                      } catch (IOException e) {
+                        return Futures.immediateFailedFuture(e);
+                      }
+                    });
               }
             },
             protocol);
