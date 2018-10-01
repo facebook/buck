@@ -77,12 +77,12 @@ public class BuckAutoDepsQuickFixProvider
     if (className != null) {
       GlobalSearchScope scope = GlobalSearchScope.everythingScope(project);
       for (PsiClass psiClass : JavaPsiFacade.getInstance(project).findClasses(className, scope)) {
-        Optional.of(BuckAddDependencyIntention.create(referenceElement, psiClass))
+        Optional.ofNullable(BuckAddDependencyIntention.create(referenceElement, psiClass))
             .ifPresent(results::add);
       }
       for (PsiClass psiClass :
           PsiShortNamesCache.getInstance(project).getClassesByName(className, scope)) {
-        Optional.of(BuckAddDependencyIntention.create(referenceElement, psiClass))
+        Optional.ofNullable(BuckAddDependencyIntention.create(referenceElement, psiClass))
             .ifPresent(results::add);
       }
     }
