@@ -95,6 +95,8 @@ public class BuckConfig {
 
   private final Function<String, BuildTarget> buildTargetParser;
 
+  private final int hashCode;
+
   static {
     ImmutableMap.Builder<String, ImmutableSet<String>> ignoreFieldsForDaemonRestartBuilder =
         ImmutableMap.builder();
@@ -141,6 +143,8 @@ public class BuckConfig {
     this.aliasToBuildTargetMap =
         Suppliers.memoize(
             () -> createAliasToBuildTargetMap(getEntriesForSection(ALIAS_SECTION_HEADER)));
+
+    this.hashCode = Objects.hashCode(config);
   }
 
   /** Returns a clone of the current config with a the argument CellPathResolver. */
@@ -641,7 +645,7 @@ public class BuckConfig {
       return false;
     }
     BuckConfig that = (BuckConfig) obj;
-    return Objects.equal(this.config, that.config);
+    return this.hashCode == that.hashCode;
   }
 
   @Override
@@ -651,7 +655,7 @@ public class BuckConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(config);
+    return hashCode;
   }
 
   public ImmutableMap<String, String> getEnvironment() {
