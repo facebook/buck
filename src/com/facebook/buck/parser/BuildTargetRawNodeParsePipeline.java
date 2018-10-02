@@ -16,14 +16,12 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.nio.file.Path;
 import java.util.Map;
 
 /** A pipeline that provides access to a raw node by its {@link BuildTarget}. */
@@ -47,13 +45,6 @@ public class BuildTargetRawNodeParsePipeline
         buildFileRawNodeParsePipeline.getAllNodesJob(
             cell, cell.getAbsolutePathToBuildFile(buildTarget)),
         input -> {
-          Path pathToCheck = buildTarget.getBasePath();
-          if (cell.getFilesystem().isIgnored(pathToCheck)) {
-            throw new HumanReadableException(
-                "Content of '%s' cannot be built because it is defined in an ignored directory.",
-                pathToCheck);
-          }
-
           for (Map<String, Object> rawNode : input) {
             Object shortName = rawNode.get("name");
             if (buildTarget.getShortName().equals(shortName)) {

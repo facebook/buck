@@ -16,6 +16,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -65,6 +66,13 @@ public class BuildFileRawNodeParsePipeline implements BuildFileParsePipeline<Map
         () -> {
           if (shuttingDown.get()) {
             return Futures.immediateCancelledFuture();
+          }
+
+          Path pathToCheck = cell.getRoot().relativize(buildFile.getParent());
+          if (cell.getFilesystem().isIgnored(pathToCheck)) {
+            throw new HumanReadableException(
+                "Content of '%s' cannot be built because it is defined in an ignored directory.",
+                pathToCheck);
           }
 
           return Futures.transform(
