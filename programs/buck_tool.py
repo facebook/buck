@@ -22,7 +22,7 @@ from subprocutils import which
 from timing import monotonic_time_nanos
 from tracing import Tracing
 
-BUCKD_CLIENT_TIMEOUT_MILLIS = 120000
+BUCKD_CLIENT_TIMEOUT_MILLIS = 180000
 BUCKD_STARTUP_TIMEOUT_MILLIS = 10000
 GC_MAX_PAUSE_TARGET = 15000
 
