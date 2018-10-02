@@ -56,6 +56,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxTestBuilder;
 import com.facebook.buck.cxx.CxxTestUtils;
+import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.cxx.SharedLibraryInterfacePlatforms;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -1159,6 +1160,40 @@ public class IncrementalActionGraphScenarioTest {
         createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)));
 
     assertCommonBuildRulesNotSame(firstResult, lastResult, target.getUnflavoredBuildTarget());
+  }
+
+  @Test
+  public void testPrebuiltCxxLibrary() {
+    CxxPlatform plat1 = CxxPlatformUtils.DEFAULT_PLATFORM;
+    CxxPlatform plat2 = CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("other"));
+    FlavorDomain<CxxPlatform> platforms = FlavorDomain.of("C/C++ Platform", plat1, plat2);
+
+    // Create an action graph with two different binaries using two different platforms, both
+    // consuming the same location macro exported by a library dependency.
+    GenruleBuilder genBuilder =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
+            .setOut("out")
+            .setCmd("command");
+    PrebuiltCxxLibraryBuilder libBuilder =
+        new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"), platforms)
+            .setHeaderOnly(true)
+            .setExportedPreprocessorFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format("%s", LocationMacro.of(genBuilder.getTarget()))));
+    CxxTestBuilder test1Builder =
+        new CxxTestBuilder(
+                BuildTargetFactory.newInstance("//:test1"), cxxBuckConfig, plat1, platforms)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.cpp"))))
+            .setDeps(ImmutableSortedSet.of(libBuilder.getTarget()));
+    CxxTestBuilder test2Builder =
+        new CxxTestBuilder(
+                BuildTargetFactory.newInstance("//:test2"), cxxBuckConfig, plat2, platforms)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.cpp"))))
+            .setDeps(ImmutableSortedSet.of(libBuilder.getTarget()));
+
+    // Build a graph from the first binary followed by the second to verify caches work correctly.
+    createActionGraph(genBuilder, libBuilder, test1Builder);
+    createActionGraph(genBuilder, libBuilder, test2Builder);
   }
 
   private void assertBuildRulesSame(

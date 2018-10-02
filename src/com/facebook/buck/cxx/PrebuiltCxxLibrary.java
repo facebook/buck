@@ -36,7 +36,8 @@ public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExt
     super(buildTarget, projectFilesystem, params);
   }
 
-  public abstract ImmutableList<Arg> getExportedLinkerArgs(CxxPlatform cxxPlatform);
+  public abstract ImmutableList<Arg> getExportedLinkerArgs(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   public abstract ImmutableList<String> getExportedPostLinkerFlags(CxxPlatform cxxPlatform);
 

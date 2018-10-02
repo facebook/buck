@@ -511,8 +511,7 @@ public class PrebuiltCxxLibraryDescription
       }
 
       private ImmutableListMultimap<CxxSource.Type, Arg> getExportedPreprocessorFlags(
-          CxxPlatform cxxPlatform) {
-
+          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         return ImmutableListMultimap.copyOf(
             Multimaps.transformValues(
                 CxxFlags.getLanguageFlagsWithMacros(
@@ -527,7 +526,8 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public ImmutableList<Arg> getExportedLinkerArgs(CxxPlatform cxxPlatform) {
+      public ImmutableList<Arg> getExportedLinkerArgs(
+          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         return PrebuiltCxxLibraryDescription.this.getExportedLinkerArgs(
             cxxPlatform, args, buildTarget, cellRoots, graphBuilder);
       }
@@ -630,7 +630,7 @@ public class PrebuiltCxxLibraryDescription
               HeaderVisibility.PUBLIC,
               CxxPreprocessables.IncludeType.SYSTEM);
         }
-        builder.putAllPreprocessorFlags(getExportedPreprocessorFlags(cxxPlatform));
+        builder.putAllPreprocessorFlags(getExportedPreprocessorFlags(cxxPlatform, graphBuilder));
         builder.addAllFrameworks(args.getFrameworks());
         for (SourcePath includePath :
             paths.getIncludeDirs(
@@ -698,7 +698,7 @@ public class PrebuiltCxxLibraryDescription
         // Build the library path and linker arguments that we pass through the
         // {@link NativeLinkable} interface for linking.
         ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
-        linkerArgsBuilder.addAll(getExportedLinkerArgs(cxxPlatform));
+        linkerArgsBuilder.addAll(getExportedLinkerArgs(cxxPlatform, graphBuilder));
 
         if (!args.isHeaderOnly()) {
           if (type == Linker.LinkableDepType.SHARED) {
@@ -857,7 +857,7 @@ public class PrebuiltCxxLibraryDescription
                   SourcePathResolver pathResolver,
                   SourcePathRuleFinder ruleFinder) {
                 return NativeLinkableInput.builder()
-                    .addAllArgs(getExportedLinkerArgs(cxxPlatform))
+                    .addAllArgs(getExportedLinkerArgs(cxxPlatform, graphBuilder))
                     .addAllArgs(
                         cxxPlatform
                             .getLd()

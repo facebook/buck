@@ -834,7 +834,8 @@ class NativeLibraryMergeEnhancer {
           argsBuilder.addAll(
               ((CxxLibrary) linkable).getExportedLinkerFlags(cxxPlatform, graphBuilder));
         } else if (linkable instanceof PrebuiltCxxLibrary) {
-          argsBuilder.addAll(((PrebuiltCxxLibrary) linkable).getExportedLinkerArgs(cxxPlatform));
+          argsBuilder.addAll(
+              ((PrebuiltCxxLibrary) linkable).getExportedLinkerArgs(cxxPlatform, graphBuilder));
         }
       }
 
