@@ -126,26 +126,46 @@ public interface ProjectFilesystem {
   /**
    * Similar to {@link #walkFileTree(Path, FileVisitor)} except this takes in a path relative to the
    * project root.
+   *
+   * <p>This is deprecated. Please use {@link ProjectFilesystemView#walkRelativeFileTree(Path,
+   * EnumSet, FileVisitor)} instead.
    */
+  @Deprecated
   void walkRelativeFileTree(Path pathRelativeToProjectRoot, FileVisitor<Path> fileVisitor)
       throws IOException;
 
   /**
    * Similar to {@link #walkFileTree(Path, FileVisitor)} except this takes in a path relative to the
    * project root.
+   *
+   * <p>This is deprecated. Please use {@link ProjectFilesystemView#walkRelativeFileTree(Path,
+   * EnumSet, FileVisitor)} instead.
    */
+  @Deprecated
   void walkRelativeFileTree(
       Path pathRelativeToProjectRoot, FileVisitor<Path> fileVisitor, boolean skipIgnored)
       throws IOException;
 
-  /** Walks a project-root relative file tree with a visitor and visit options. */
+  /**
+   * Walks a project-root relative file tree with a visitor and visit options.
+   *
+   * <p>This is deprecated. Please use {@link ProjectFilesystemView#walkRelativeFileTree(Path,
+   * EnumSet, FileVisitor)} instead.
+   */
+  @Deprecated
   void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor)
       throws IOException;
 
-  /** Walks a project-root relative file tree with a visitor and visit options. */
+  /**
+   * Walks a project-root relative file tree with a visitor and visit options.
+   *
+   * <p>This is deprecated. Please use {@link ProjectFilesystemView#walkRelativeFileTree(Path,
+   * EnumSet, FileVisitor)} instead.
+   */
+  @Deprecated
   void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
@@ -153,21 +173,42 @@ public interface ProjectFilesystem {
       boolean skipIgnored)
       throws IOException;
 
-  /** Allows {@link Files#walkFileTree} to be faked in tests. */
+  /**
+   * Allows {@link Files#walkFileTree} to be faked in tests.
+   *
+   * <p>Use {@link ProjectFilesystemView#walkFileTree(Path, Set, FileVisitor)} instead.
+   */
+  @Deprecated
   void walkFileTree(Path root, FileVisitor<Path> fileVisitor) throws IOException;
 
+  /** Use {@link ProjectFilesystemView#walkFileTree(Path, Set, FileVisitor)} instead */
+  @Deprecated
   void walkFileTree(Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor)
       throws IOException;
 
+  /** Use {@link ProjectFilesystemView#walkFileTree(Path, Set, FileVisitor)} instead */
+  @Deprecated
   void walkFileTree(
       Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor, boolean skipIgnored)
       throws IOException;
 
+  /** Use {@link ProjectFilesystemView#getFilesUnderPath(Path, EnumSet)} instead */
+  @Deprecated
   ImmutableSet<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException;
 
+  /**
+   * Use {@link ProjectFilesystemView#getFilesUnderPath(Path, com.google.common.base.Predicate,
+   * EnumSet)} instead
+   */
+  @Deprecated
   ImmutableSet<Path> getFilesUnderPath(Path pathRelativeToProjectRoot, Predicate<Path> predicate)
       throws IOException;
 
+  /**
+   * Use {@link ProjectFilesystemView#getFilesUnderPath(Path, com.google.common.base.Predicate,
+   * EnumSet)} instead
+   */
+  @Deprecated
   ImmutableSet<Path> getFilesUnderPath(
       Path pathRelativeToProjectRoot,
       Predicate<Path> predicate,
@@ -180,6 +221,8 @@ public interface ProjectFilesystem {
   /** Allows {@link Files#isExecutable} to be faked in tests. */
   boolean isExecutable(Path child);
 
+  /** Use {@link ProjectFilesystemView#getDirectoryContents(Path)} instead */
+  @Deprecated
   ImmutableCollection<Path> getDirectoryContents(Path pathToUse) throws IOException;
 
   /**
@@ -340,9 +383,12 @@ public interface ProjectFilesystem {
   BuckPaths getBuckPaths();
 
   /**
+   * Use {@link ProjectFilesystemView#isIgnored(Path)} instead
+   *
    * @param path the path to check.
    * @return whether ignoredPaths contains path or any of its ancestors.
    */
+  @Deprecated
   boolean isIgnored(Path path);
 
   /**
