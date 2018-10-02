@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -55,6 +56,7 @@ public class ManifestEntriesTest {
     AtomicBoolean versionNameSet = new AtomicBoolean(false);
     AtomicBoolean debugModeSet = new AtomicBoolean(false);
     AtomicBoolean placeholdersSet = new AtomicBoolean(false);
+    AtomicBoolean classSet = new AtomicBoolean(false);
 
     RuleKeyObjectSink ruleKeyBuilder =
         new RuleKeyObjectSink() {
@@ -84,6 +86,10 @@ public class ManifestEntriesTest {
               assertEquals(Optional.empty(), val);
               placeholdersSet.set(true);
               return this;
+            } else if (".class".equals(key)) {
+              assertEquals(ManifestEntries.class.getCanonicalName(), val);
+              classSet.set(true);
+              return this;
             }
             throw new IllegalArgumentException(key);
           }
@@ -103,7 +109,7 @@ public class ManifestEntriesTest {
             .build();
 
     // The appendToRuleKey should set both present and absent properties
-    entries.appendToRuleKey(ruleKeyBuilder);
+    AlterRuleKeys.amendKey(ruleKeyBuilder, entries);
 
     assertTrue(
         minSdkVersionSet.get()
@@ -111,6 +117,7 @@ public class ManifestEntriesTest {
             && versionCodeSet.get()
             && versionNameSet.get()
             && debugModeSet.get()
-            && placeholdersSet.get());
+            && placeholdersSet.get()
+            && classSet.get());
   }
 }

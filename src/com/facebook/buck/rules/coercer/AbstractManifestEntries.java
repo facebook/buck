@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
@@ -30,34 +30,30 @@ import org.immutables.value.Value;
 @JsonDeserialize(as = ManifestEntries.class)
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractManifestEntries implements RuleKeyAppendable {
+abstract class AbstractManifestEntries implements AddsToRuleKey {
   @Value.Parameter
+  @AddToRuleKey
   protected abstract OptionalInt getMinSdkVersion();
 
   @Value.Parameter
+  @AddToRuleKey
   protected abstract OptionalInt getTargetSdkVersion();
 
   @Value.Parameter
+  @AddToRuleKey
   protected abstract OptionalInt getVersionCode();
 
   @Value.Parameter
+  @AddToRuleKey
   protected abstract Optional<String> getVersionName();
 
   @Value.Parameter
+  @AddToRuleKey
   protected abstract Optional<Boolean> getDebugMode();
 
   @Value.Parameter
+  @AddToRuleKey
   protected abstract Optional<ImmutableMap<String, String>> getPlaceholders();
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("minSdkVersion", getMinSdkVersion())
-        .setReflectively("targetSdkVersion", getTargetSdkVersion())
-        .setReflectively("versionCode", getVersionCode())
-        .setReflectively("versionName", getVersionName())
-        .setReflectively("debugMode", getDebugMode())
-        .setReflectively("placeholders", getPlaceholders());
-  }
 
   /** @return true if and only if at least one of the parameters is non-absent. */
   public boolean hasAny() {
