@@ -24,14 +24,14 @@ public class MoreExceptions {
   private MoreExceptions() {}
 
   /**
-   * @param throwable the Throwable to get error message from
+   * @param e the Exception to get error message from
    * @return a human readable error message in the case of HumanReadableException, otherwise the
    *     localized error message of the innermost root cause
    */
-  public static String getHumanReadableOrLocalizedMessage(Throwable throwable) {
-    if (throwable instanceof HumanReadableException) {
-      return ((HumanReadableException) throwable).getHumanReadableErrorMessage();
+  public static String getHumanReadableOrLocalizedMessage(Exception e) {
+    if (e instanceof HumanReadableException) {
+      return ((HumanReadableException) e).getHumanReadableErrorMessage();
     }
-    return Throwables.getRootCause(throwable).getLocalizedMessage();
+    return Throwables.getRootCause(e).getLocalizedMessage();
   }
 }
