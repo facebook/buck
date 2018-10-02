@@ -37,14 +37,16 @@ import java.util.function.Function;
 /** Converts nodes in a raw form (taken from build file parsers) into {@link RawTargetNode}. */
 public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object>, RawTargetNode> {
 
-  private final RawNodeParsePipeline rawNodeParsePipeline;
+  private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
+  private final BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline;
   private final RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory;
 
   public RawTargetNodePipeline(
       ListeningExecutorService executorService,
       Cache<BuildTarget, RawTargetNode> cache,
-      RawNodeParsePipeline rawNodeParsePipeline,
       BuckEventBus eventBus,
+      BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
+      BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline,
       RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory) {
     super(
         executorService,
@@ -52,7 +54,8 @@ public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object
         eventBus,
         SimplePerfEvent.scope(eventBus, PerfEventId.of("raw_target_node_parse_pipeline")),
         PerfEventId.of("GetRawTargetNode"));
-    this.rawNodeParsePipeline = rawNodeParsePipeline;
+    this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
+    this.buildTargetRawNodeParsePipeline = buildTargetRawNodeParsePipeline;
     this.rawTargetNodeFactory = rawTargetNodeFactory;
   }
 
@@ -81,12 +84,12 @@ public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object
   @Override
   protected ListenableFuture<ImmutableList<Map<String, Object>>> getItemsToConvert(
       Cell cell, Path buildFile) throws BuildTargetException {
-    return rawNodeParsePipeline.getAllNodesJob(cell, buildFile);
+    return buildFileRawNodeParsePipeline.getAllNodesJob(cell, buildFile);
   }
 
   @Override
   protected ListenableFuture<Map<String, Object>> getItemToConvert(
       Cell cell, BuildTarget buildTarget) throws BuildTargetException {
-    return rawNodeParsePipeline.getNodeJob(cell, buildTarget);
+    return buildTargetRawNodeParsePipeline.getNodeJob(cell, buildTarget);
   }
 }

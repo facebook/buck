@@ -134,15 +134,18 @@ public class PerBuildStateFactory {
             projectBuildFileParserFactory,
             enableProfiling);
 
-    RawNodeParsePipeline rawNodeParsePipeline =
-        new RawNodeParsePipeline(
-            daemonicParserState.getRawNodeCache(),
+    TargetNodeFactory targetNodeFactory = new TargetNodeFactory(typeCoercerFactory);
+
+    BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline =
+        new BuildFileRawNodeParsePipeline(
+            new PipelineNodeCache<>(daemonicParserState.getRawNodeCache()),
             projectBuildFileParserPool,
             executorService,
             eventBus,
             watchman);
 
-    TargetNodeFactory targetNodeFactory = new TargetNodeFactory(typeCoercerFactory);
+    BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline =
+        new BuildTargetRawNodeParsePipeline(executorService, buildFileRawNodeParsePipeline);
 
     ParsePipeline<TargetNode<?>> targetNodeParsePipeline;
 
@@ -158,8 +161,9 @@ public class PerBuildStateFactory {
           new RawTargetNodePipeline(
               pipelineExecutorService,
               daemonicParserState.getOrCreateNodeCache(RawTargetNode.class),
-              rawNodeParsePipeline,
               eventBus,
+              buildFileRawNodeParsePipeline,
+              buildTargetRawNodeParsePipeline,
               new DefaultRawTargetNodeFactory(
                   knownRuleTypesProvider,
                   marshaller,
@@ -244,12 +248,13 @@ public class PerBuildStateFactory {
               eventBus,
               parserConfig.getEnableParallelParsing()
                   && speculativeParsing == SpeculativeParsing.ENABLED,
-              rawNodeParsePipeline);
+              buildFileRawNodeParsePipeline,
+              buildTargetRawNodeParsePipeline);
     }
 
     cellManager.register(rootCell);
 
-    return new PerBuildState(cellManager, rawNodeParsePipeline, targetNodeParsePipeline);
+    return new PerBuildState(cellManager, buildFileRawNodeParsePipeline, targetNodeParsePipeline);
   }
 
   private Platform getTargetPlatform(

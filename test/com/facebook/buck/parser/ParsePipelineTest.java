@@ -188,7 +188,7 @@ public class ParsePipelineTest {
       expectedException.expectMessage(
           stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
       fixture
-          .getRawNodeParsePipeline()
+          .getBuildFileRawNodeParsePipeline()
           .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"));
     }
   }
@@ -347,7 +347,7 @@ public class ParsePipelineTest {
     private final BuckEventBus eventBus;
     private final TestConsole console;
     private final TargetNodeParsePipeline targetNodeParsePipeline;
-    private final RawNodeParsePipeline rawNodeParsePipeline;
+    private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
     private final ProjectBuildFileParserPool projectBuildFileParserPool;
     private final Cell cell;
     private final TypedParsePipelineCache<BuildTarget, TargetNode<?>> targetNodeParsePipelineCache;
@@ -405,13 +405,17 @@ public class ParsePipelineTest {
                           cell.getFilesystem(), cell.getBuildFileName());
                     }
                   });
-      this.rawNodeParsePipeline =
-          new RawNodeParsePipeline(
-              this.rawNodeParsePipelineCache,
-              this.projectBuildFileParserPool,
+      buildFileRawNodeParsePipeline =
+          new BuildFileRawNodeParsePipeline(
+              new PipelineNodeCache<>(rawNodeParsePipelineCache),
+              projectBuildFileParserPool,
               executorService,
               eventBus,
               WatchmanFactory.NULL_WATCHMAN);
+
+      BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline =
+          new BuildTargetRawNodeParsePipeline(executorService, buildFileRawNodeParsePipeline);
+
       KnownRuleTypesProvider knownRuleTypesProvider =
           TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
       this.targetNodeParsePipeline =
@@ -428,15 +432,16 @@ public class ParsePipelineTest {
               this.executorService,
               this.eventBus,
               speculativeParsing == SpeculativeParsing.ENABLED,
-              this.rawNodeParsePipeline);
+              buildFileRawNodeParsePipeline,
+              buildTargetRawNodeParsePipeline);
     }
 
     public TargetNodeParsePipeline getTargetNodeParsePipeline() {
       return targetNodeParsePipeline;
     }
 
-    public RawNodeParsePipeline getRawNodeParsePipeline() {
-      return rawNodeParsePipeline;
+    public BuildFileRawNodeParsePipeline getBuildFileRawNodeParsePipeline() {
+      return buildFileRawNodeParsePipeline;
     }
 
     public Cell getCell() {

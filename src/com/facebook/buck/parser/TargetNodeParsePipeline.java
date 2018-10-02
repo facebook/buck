@@ -56,7 +56,8 @@ public class TargetNodeParsePipeline
 
   private final ParserTargetNodeFactory<Map<String, Object>> delegate;
   private final boolean speculativeDepsTraversal;
-  private final RawNodeParsePipeline rawNodeParsePipeline;
+  private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
+  private final BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline;
 
   /**
    * Create new pipeline for parsing Buck files.
@@ -73,7 +74,8 @@ public class TargetNodeParsePipeline
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
       boolean speculativeDepsTraversal,
-      RawNodeParsePipeline rawNodeParsePipeline) {
+      BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
+      BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline) {
     super(
         executorService,
         cache,
@@ -83,7 +85,8 @@ public class TargetNodeParsePipeline
 
     this.delegate = targetNodeDelegate;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
-    this.rawNodeParsePipeline = rawNodeParsePipeline;
+    this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
+    this.buildTargetRawNodeParsePipeline = buildTargetRawNodeParsePipeline;
   }
 
   @Override
@@ -133,12 +136,12 @@ public class TargetNodeParsePipeline
   @Override
   protected ListenableFuture<ImmutableList<Map<String, Object>>> getItemsToConvert(
       Cell cell, Path buildFile) throws BuildTargetException {
-    return rawNodeParsePipeline.getAllNodesJob(cell, buildFile);
+    return buildFileRawNodeParsePipeline.getAllNodesJob(cell, buildFile);
   }
 
   @Override
   protected ListenableFuture<Map<String, Object>> getItemToConvert(
       Cell cell, BuildTarget buildTarget) throws BuildTargetException {
-    return rawNodeParsePipeline.getNodeJob(cell, buildTarget);
+    return buildTargetRawNodeParsePipeline.getNodeJob(cell, buildTarget);
   }
 }

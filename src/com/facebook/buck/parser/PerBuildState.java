@@ -30,15 +30,15 @@ import java.util.Map;
 public class PerBuildState implements AutoCloseable {
 
   private final CellManager cellManager;
-  private final RawNodeParsePipeline rawNodeParsePipeline;
+  private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
   private final ParsePipeline<TargetNode<?>> targetNodeParsePipeline;
 
   PerBuildState(
       CellManager cellManager,
-      RawNodeParsePipeline rawNodeParsePipeline,
+      BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
       ParsePipeline<TargetNode<?>> targetNodeParsePipeline) {
     this.cellManager = cellManager;
-    this.rawNodeParsePipeline = rawNodeParsePipeline;
+    this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
     this.targetNodeParsePipeline = targetNodeParsePipeline;
   }
 
@@ -73,13 +73,13 @@ public class PerBuildState implements AutoCloseable {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
-    return rawNodeParsePipeline.getAllNodes(cell, buildFile);
+    return buildFileRawNodeParsePipeline.getAllNodes(cell, buildFile);
   }
 
   @Override
   public void close() {
     targetNodeParsePipeline.close();
-    rawNodeParsePipeline.close();
+    buildFileRawNodeParsePipeline.close();
     cellManager.close();
   }
 }

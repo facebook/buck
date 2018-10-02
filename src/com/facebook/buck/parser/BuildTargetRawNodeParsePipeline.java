@@ -18,69 +18,34 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.watchman.Watchman;
-import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
+/** A pipeline that provides access to a raw node by its {@link BuildTarget}. */
+public class BuildTargetRawNodeParsePipeline
+    implements BuildTargetParsePipeline<Map<String, Object>> {
 
-  private final BuckEventBus eventBus;
-  private final PipelineNodeCache<Path, ImmutableList<Map<String, Object>>> cache;
   private final ListeningExecutorService executorService;
-  private final ProjectBuildFileParserPool projectBuildFileParserPool;
-  private final Watchman watchman;
+  private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
 
-  public RawNodeParsePipeline(
-      Cache<Path, ImmutableList<Map<String, Object>>> cache,
-      ProjectBuildFileParserPool projectBuildFileParserPool,
+  public BuildTargetRawNodeParsePipeline(
       ListeningExecutorService executorService,
-      BuckEventBus eventBus,
-      Watchman watchman) {
-    this.eventBus = eventBus;
+      BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline) {
     this.executorService = executorService;
-    this.cache = new PipelineNodeCache<>(cache);
-    this.projectBuildFileParserPool = projectBuildFileParserPool;
-    this.watchman = watchman;
-  }
-
-  @Override
-  public ListenableFuture<ImmutableList<Map<String, Object>>> getAllNodesJob(
-      Cell cell, Path buildFile) throws BuildTargetException {
-
-    if (shuttingDown()) {
-      return Futures.immediateCancelledFuture();
-    }
-
-    return cache.getJobWithCacheLookup(
-        cell,
-        buildFile,
-        () -> {
-          if (shuttingDown()) {
-            return Futures.immediateCancelledFuture();
-          }
-
-          return Futures.transform(
-              projectBuildFileParserPool.getBuildFileManifest(
-                  eventBus, cell, watchman, buildFile, executorService),
-              buildFileManifest -> buildFileManifest.toRawNodes(),
-              executorService);
-        },
-        eventBus);
+    this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
   }
 
   @Override
   public ListenableFuture<Map<String, Object>> getNodeJob(Cell cell, BuildTarget buildTarget)
       throws BuildTargetException {
     return Futures.transformAsync(
-        getAllNodesJob(cell, cell.getAbsolutePathToBuildFile(buildTarget)),
+        buildFileRawNodeParsePipeline.getAllNodesJob(
+            cell, cell.getAbsolutePathToBuildFile(buildTarget)),
         input -> {
           Path pathToCheck = buildTarget.getBasePath();
           if (cell.getFilesystem().isIgnored(pathToCheck)) {
@@ -103,7 +68,6 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
   @Override
   public void close() {
-    super.close();
-    projectBuildFileParserPool.close();
+    buildFileRawNodeParsePipeline.close();
   }
 }
