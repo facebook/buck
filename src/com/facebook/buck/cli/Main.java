@@ -1329,7 +1329,7 @@ public final class Main {
       Optional<RemoteExecutionEventListener> remoteExecutionListener,
       RemoteExecutionConfig remoteExecutionConfig) {
     if (!remoteExecutionListener.isPresent() || !remoteExecutionConfig.isSuperConsoleEnabled()) {
-      ImmutableList.of();
+      return ImmutableList.of();
     }
 
     return ImmutableList.of(
