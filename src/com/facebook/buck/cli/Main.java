@@ -1018,7 +1018,8 @@ public final class Main {
                     httpFetchExecutorService.get(),
                     stampedeSyncBuildHttpFetchExecutorService.get(),
                     managerScope,
-                    getArtifactProducerId(executionEnvironment));
+                    getArtifactProducerId(executionEnvironment),
+                    executionEnvironment.getHostname());
 
             // Once command completes it should be safe to not wait for executors and other stateful
             // objects to terminate and release semaphore right away. It will help to retry

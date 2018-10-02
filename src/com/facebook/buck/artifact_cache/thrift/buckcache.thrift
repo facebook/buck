@@ -43,6 +43,8 @@ struct ArtifactMetadata {
   9: optional string producerId;
   // How long it took to build this artifact, in milliseconds
   10: optional i64 buildTimeMs;
+  // Hostname of a machine that produced the artifact
+  11: optional string producerHostname;
 }
 
 enum ContainsResultType {

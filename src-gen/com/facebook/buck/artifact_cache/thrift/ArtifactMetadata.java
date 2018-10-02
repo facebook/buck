@@ -21,6 +21,7 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
   private static final org.apache.thrift.protocol.TField DISTRIBUTED_BUILD_MODE_ENABLED_FIELD_DESC = new org.apache.thrift.protocol.TField("distributedBuildModeEnabled", org.apache.thrift.protocol.TType.BOOL, (short)8);
   private static final org.apache.thrift.protocol.TField PRODUCER_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("producerId", org.apache.thrift.protocol.TType.STRING, (short)9);
   private static final org.apache.thrift.protocol.TField BUILD_TIME_MS_FIELD_DESC = new org.apache.thrift.protocol.TField("buildTimeMs", org.apache.thrift.protocol.TType.I64, (short)10);
+  private static final org.apache.thrift.protocol.TField PRODUCER_HOSTNAME_FIELD_DESC = new org.apache.thrift.protocol.TField("producerHostname", org.apache.thrift.protocol.TType.STRING, (short)11);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new ArtifactMetadataStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new ArtifactMetadataTupleSchemeFactory();
@@ -35,6 +36,7 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
   public boolean distributedBuildModeEnabled; // optional
   public java.lang.String producerId; // optional
   public long buildTimeMs; // optional
+  public java.lang.String producerHostname; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -47,7 +49,8 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     ARTIFACT_PAYLOAD_MD5((short)7, "artifactPayloadMd5"),
     DISTRIBUTED_BUILD_MODE_ENABLED((short)8, "distributedBuildModeEnabled"),
     PRODUCER_ID((short)9, "producerId"),
-    BUILD_TIME_MS((short)10, "buildTimeMs");
+    BUILD_TIME_MS((short)10, "buildTimeMs"),
+    PRODUCER_HOSTNAME((short)11, "producerHostname");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -82,6 +85,8 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
           return PRODUCER_ID;
         case 10: // BUILD_TIME_MS
           return BUILD_TIME_MS;
+        case 11: // PRODUCER_HOSTNAME
+          return PRODUCER_HOSTNAME;
         default:
           return null;
       }
@@ -125,7 +130,7 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
   private static final int __DISTRIBUTEDBUILDMODEENABLED_ISSET_ID = 0;
   private static final int __BUILDTIMEMS_ISSET_ID = 1;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.RULE_KEYS,_Fields.METADATA,_Fields.BUILD_TARGET,_Fields.REPOSITORY,_Fields.ARTIFACT_PAYLOAD_CRC32,_Fields.SCHEDULE_TYPE,_Fields.ARTIFACT_PAYLOAD_MD5,_Fields.DISTRIBUTED_BUILD_MODE_ENABLED,_Fields.PRODUCER_ID,_Fields.BUILD_TIME_MS};
+  private static final _Fields optionals[] = {_Fields.RULE_KEYS,_Fields.METADATA,_Fields.BUILD_TARGET,_Fields.REPOSITORY,_Fields.ARTIFACT_PAYLOAD_CRC32,_Fields.SCHEDULE_TYPE,_Fields.ARTIFACT_PAYLOAD_MD5,_Fields.DISTRIBUTED_BUILD_MODE_ENABLED,_Fields.PRODUCER_ID,_Fields.BUILD_TIME_MS,_Fields.PRODUCER_HOSTNAME};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -152,6 +157,8 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.BUILD_TIME_MS, new org.apache.thrift.meta_data.FieldMetaData("buildTimeMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.PRODUCER_HOSTNAME, new org.apache.thrift.meta_data.FieldMetaData("producerHostname", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ArtifactMetadata.class, metaDataMap);
   }
@@ -195,6 +202,9 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       this.producerId = other.producerId;
     }
     this.buildTimeMs = other.buildTimeMs;
+    if (other.isSetProducerHostname()) {
+      this.producerHostname = other.producerHostname;
+    }
   }
 
   public ArtifactMetadata deepCopy() {
@@ -215,6 +225,7 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     this.producerId = null;
     setBuildTimeMsIsSet(false);
     this.buildTimeMs = 0;
+    this.producerHostname = null;
   }
 
   public int getRuleKeysSize() {
@@ -481,6 +492,30 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __BUILDTIMEMS_ISSET_ID, value);
   }
 
+  public java.lang.String getProducerHostname() {
+    return this.producerHostname;
+  }
+
+  public ArtifactMetadata setProducerHostname(java.lang.String producerHostname) {
+    this.producerHostname = producerHostname;
+    return this;
+  }
+
+  public void unsetProducerHostname() {
+    this.producerHostname = null;
+  }
+
+  /** Returns true if field producerHostname is set (has been assigned a value) and false otherwise */
+  public boolean isSetProducerHostname() {
+    return this.producerHostname != null;
+  }
+
+  public void setProducerHostnameIsSet(boolean value) {
+    if (!value) {
+      this.producerHostname = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case RULE_KEYS:
@@ -563,6 +598,14 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       }
       break;
 
+    case PRODUCER_HOSTNAME:
+      if (value == null) {
+        unsetProducerHostname();
+      } else {
+        setProducerHostname((java.lang.String)value);
+      }
+      break;
+
     }
   }
 
@@ -598,6 +641,9 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     case BUILD_TIME_MS:
       return getBuildTimeMs();
 
+    case PRODUCER_HOSTNAME:
+      return getProducerHostname();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -629,6 +675,8 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       return isSetProducerId();
     case BUILD_TIME_MS:
       return isSetBuildTimeMs();
+    case PRODUCER_HOSTNAME:
+      return isSetProducerHostname();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -738,6 +786,15 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
         return false;
     }
 
+    boolean this_present_producerHostname = true && this.isSetProducerHostname();
+    boolean that_present_producerHostname = true && that.isSetProducerHostname();
+    if (this_present_producerHostname || that_present_producerHostname) {
+      if (!(this_present_producerHostname && that_present_producerHostname))
+        return false;
+      if (!this.producerHostname.equals(that.producerHostname))
+        return false;
+    }
+
     return true;
   }
 
@@ -784,6 +841,10 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     hashCode = hashCode * 8191 + ((isSetBuildTimeMs()) ? 131071 : 524287);
     if (isSetBuildTimeMs())
       hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(buildTimeMs);
+
+    hashCode = hashCode * 8191 + ((isSetProducerHostname()) ? 131071 : 524287);
+    if (isSetProducerHostname())
+      hashCode = hashCode * 8191 + producerHostname.hashCode();
 
     return hashCode;
   }
@@ -892,6 +953,16 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     }
     if (isSetBuildTimeMs()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.buildTimeMs, other.buildTimeMs);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetProducerHostname()).compareTo(other.isSetProducerHostname());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetProducerHostname()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.producerHostname, other.producerHostname);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1005,6 +1076,16 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (!first) sb.append(", ");
       sb.append("buildTimeMs:");
       sb.append(this.buildTimeMs);
+      first = false;
+    }
+    if (isSetProducerHostname()) {
+      if (!first) sb.append(", ");
+      sb.append("producerHostname:");
+      if (this.producerHostname == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.producerHostname);
+      }
       first = false;
     }
     sb.append(")");
@@ -1155,6 +1236,14 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 11: // PRODUCER_HOSTNAME
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.producerHostname = iprot.readString();
+              struct.setProducerHostnameIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1251,6 +1340,13 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
         oprot.writeI64(struct.buildTimeMs);
         oprot.writeFieldEnd();
       }
+      if (struct.producerHostname != null) {
+        if (struct.isSetProducerHostname()) {
+          oprot.writeFieldBegin(PRODUCER_HOSTNAME_FIELD_DESC);
+          oprot.writeString(struct.producerHostname);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -1299,7 +1395,10 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (struct.isSetBuildTimeMs()) {
         optionals.set(9);
       }
-      oprot.writeBitSet(optionals, 10);
+      if (struct.isSetProducerHostname()) {
+        optionals.set(10);
+      }
+      oprot.writeBitSet(optionals, 11);
       if (struct.isSetRuleKeys()) {
         {
           oprot.writeI32(struct.ruleKeys.size());
@@ -1343,12 +1442,15 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (struct.isSetBuildTimeMs()) {
         oprot.writeI64(struct.buildTimeMs);
       }
+      if (struct.isSetProducerHostname()) {
+        oprot.writeString(struct.producerHostname);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, ArtifactMetadata struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(10);
+      java.util.BitSet incoming = iprot.readBitSet(11);
       if (incoming.get(0)) {
         {
           org.apache.thrift.protocol.TList _list11 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
@@ -1409,6 +1511,10 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (incoming.get(9)) {
         struct.buildTimeMs = iprot.readI64();
         struct.setBuildTimeMsIsSet(true);
+      }
+      if (incoming.get(10)) {
+        struct.producerHostname = iprot.readString();
+        struct.setProducerHostnameIsSet(true);
       }
     }
   }

@@ -81,6 +81,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   private final int multiFetchLimit;
   private final int concurrencyLevel;
   private final String producerId;
+  private final String producerHostname;
 
   public ThriftArtifactCache(
       NetworkCacheArgs args,
@@ -89,7 +90,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       BuildId buildId,
       int multiFetchLimit,
       int concurrencyLevel,
-      String producerId) {
+      String producerId,
+      String producerHostname) {
     super(args);
     this.buildId = buildId;
     this.multiFetchLimit = multiFetchLimit;
@@ -97,6 +99,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     this.hybridThriftEndpoint = hybridThriftEndpoint;
     this.distributedBuildModeEnabled = distributedBuildModeEnabled;
     this.producerId = producerId;
+    this.producerHostname = producerHostname;
   }
 
   @Override
@@ -653,7 +656,13 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     BuckCacheStoreRequest storeRequest = new BuckCacheStoreRequest();
     ArtifactMetadata artifactMetadata =
         infoToMetadata(
-            info, artifact, getRepository(), scheduleType, distributedBuildModeEnabled, producerId);
+            info,
+            artifact,
+            getRepository(),
+            scheduleType,
+            distributedBuildModeEnabled,
+            producerId,
+            producerHostname);
     storeRequest.setMetadata(artifactMetadata);
     PayloadInfo payloadInfo = new PayloadInfo();
     long artifactSizeBytes = artifact.size();
@@ -726,7 +735,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       String repository,
       String scheduleType,
       boolean distributedBuildModeEnabled,
-      String producerId)
+      String producerId,
+      String producerHostname)
       throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     if (info.getBuildTarget().isPresent()) {
@@ -750,6 +760,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     metadata.setScheduleType(scheduleType);
     metadata.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
     metadata.setProducerId(producerId);
+    metadata.setProducerHostname(producerHostname);
     metadata.setBuildTimeMs(info.getBuildTimeMs());
 
     return metadata;
