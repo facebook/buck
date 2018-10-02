@@ -142,6 +142,8 @@ public class PerBuildStateFactory {
             eventBus,
             watchman);
 
+    TargetNodeFactory targetNodeFactory = new TargetNodeFactory(typeCoercerFactory);
+
     ParsePipeline<TargetNode<?>> targetNodeParsePipeline;
 
     if (parserConfig.getEnableConfigurableAttributes()) {
@@ -152,7 +154,6 @@ public class PerBuildStateFactory {
       boolean enableSpeculativeParsing =
           parserConfig.getEnableParallelParsing()
               && speculativeParsing == SpeculativeParsing.ENABLED;
-      TargetNodeFactory targetNodeFactory = new TargetNodeFactory(typeCoercerFactory);
       RawTargetNodePipeline rawTargetNodePipeline =
           new RawTargetNodePipeline(
               pipelineExecutorService,
@@ -168,7 +169,7 @@ public class PerBuildStateFactory {
       PackageBoundaryChecker packageBoundaryChecker =
           new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
 
-      ParserTargetNodeFactory<RawTargetNode> nonResolvingrawTargetNodeToTargetNodeFactory =
+      ParserTargetNodeFactory<RawTargetNode> nonResolvingRawTargetNodeToTargetNodeFactory =
           new NonResolvingRawTargetNodeToTargetNodeFactory(
               knownRuleTypesProvider,
               marshaller,
@@ -183,7 +184,7 @@ public class PerBuildStateFactory {
               rawTargetNodePipeline,
               eventBus,
               enableSpeculativeParsing,
-              nonResolvingrawTargetNodeToTargetNodeFactory);
+              nonResolvingRawTargetNodeToTargetNodeFactory);
 
       ConfigurationRuleResolver configurationRuleResolver =
           new SameThreadConfigurationRuleResolver(
@@ -234,7 +235,7 @@ public class PerBuildStateFactory {
                   marshaller,
                   daemonicParserState.getBuildFileTrees(),
                   symlinkCheckers,
-                  new TargetNodeFactory(typeCoercerFactory),
+                  targetNodeFactory,
                   new VisibilityPatternFactory(),
                   rootCell.getRuleKeyConfiguration()),
               parserConfig.getEnableParallelParsing()
