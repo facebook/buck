@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
@@ -94,7 +95,8 @@ public class CommandLineTargetNodeSpecParser {
   }
 
   public ImmutableSet<TargetNodeSpec> parse(CellPathResolver cellNames, String arg) {
-    ImmutableSet<String> resolvedArgs = config.getBuildTargetForAliasAsString(arg);
+    ImmutableSet<String> resolvedArgs =
+        AliasConfig.from(config).getBuildTargetForAliasAsString(arg);
     if (resolvedArgs.isEmpty()) {
       resolvedArgs = ImmutableSet.of(arg);
     }

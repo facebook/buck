@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -90,7 +91,8 @@ public class TargetPatternEvaluator {
       }
 
       // Check if this is an alias.
-      ImmutableSet<BuildTarget> aliasTargets = buckConfig.getBuildTargetsForAlias(pattern);
+      ImmutableSet<BuildTarget> aliasTargets =
+          AliasConfig.from(buckConfig).getBuildTargetsForAlias(pattern);
       if (!aliasTargets.isEmpty()) {
         for (BuildTarget alias : aliasTargets) {
           unresolved.put(alias.getFullyQualifiedName(), pattern);

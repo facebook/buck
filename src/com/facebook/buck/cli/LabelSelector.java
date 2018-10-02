@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.AliasConfig;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
@@ -41,7 +41,7 @@ public class LabelSelector {
     ImmutableSet.Builder<String> labelBuilder = new ImmutableSet.Builder<>();
     Iterable<String> labelStrings = splitter.split(raw);
     for (String labelString : labelStrings) {
-      BuckConfig.validateLabelName(labelString);
+      AliasConfig.validateLabelName(labelString);
       labelBuilder.add(labelString);
     }
 

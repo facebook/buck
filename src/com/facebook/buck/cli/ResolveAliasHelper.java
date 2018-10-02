@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -95,7 +96,7 @@ public class ResolveAliasHelper {
 
   /** @return the name of the build target identified by the specified alias or an empty set. */
   private static ImmutableSet<String> getBuildTargetForAlias(BuckConfig buckConfig, String alias) {
-    return buckConfig.getBuildTargetForAliasAsString(alias);
+    return AliasConfig.from(buckConfig).getBuildTargetForAliasAsString(alias);
   }
 
   /** @return the build target identified by the specified full path or {@code null}. */

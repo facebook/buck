@@ -22,7 +22,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.file.MorePathsForTests;
@@ -40,7 +39,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -56,65 +54,6 @@ public class BuckConfigTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  /**
-   * Ensure that whichever alias is listed first in the file is the one used in the reverse map if
-   * the value appears multiple times.
-   */
-  @Test
-  public void testGetBasePathToAliasMap()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
-    Reader reader1 =
-        new StringReader(
-            Joiner.on('\n')
-                .join(
-                    "[alias]",
-                    "fb4a   =   //java/com/example:fbandroid",
-                    "katana =   //java/com/example:fbandroid"));
-    BuckConfig config1 = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader1);
-    assertEquals(
-        ImmutableMap.of(Paths.get("java/com/example"), "fb4a"), config1.getBasePathToAliasMap());
-    assertEquals(
-        ImmutableMap.of(
-            "fb4a", "//java/com/example:fbandroid",
-            "katana", "//java/com/example:fbandroid"),
-        config1.getEntriesForSection("alias"));
-
-    Reader reader2 =
-        new StringReader(
-            Joiner.on('\n')
-                .join(
-                    "[alias]",
-                    "katana =   //java/com/example:fbandroid",
-                    "fb4a   =   //java/com/example:fbandroid"));
-    BuckConfig config2 = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader2);
-    assertEquals(
-        ImmutableMap.of(Paths.get("java/com/example"), "katana"), config2.getBasePathToAliasMap());
-    assertEquals(
-        ImmutableMap.of(
-            "fb4a", "//java/com/example:fbandroid",
-            "katana", "//java/com/example:fbandroid"),
-        config2.getEntriesForSection("alias"));
-
-    Reader noAliasesReader = new StringReader("");
-    BuckConfig noAliasesConfig =
-        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, noAliasesReader);
-    assertEquals(ImmutableMap.of(), noAliasesConfig.getBasePathToAliasMap());
-    assertEquals(ImmutableMap.of(), noAliasesConfig.getEntriesForSection("alias"));
-  }
-
-  @Test
-  public void testGetAliasesThrowsForMalformedBuildTarget() throws IOException {
-    Reader reader = new StringReader(Joiner.on('\n').join("[alias]", "fb4a   = :fb4a"));
-    BuckConfig buckConfig =
-        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-    try {
-      buckConfig.getAliases();
-      fail("Should have thrown HumanReadableException.");
-    } catch (HumanReadableException e) {
-      assertEquals("Path in :fb4a must start with //", e.getHumanReadableErrorMessage());
-    }
-  }
-
   @Test
   public void testConstructorWithNonExistentBasePath() throws InterruptedException, IOException {
     Reader reader =
@@ -122,56 +61,6 @@ public class BuckConfigTest {
 
     // BuckConfig should allow nonexistent targets without throwing.
     BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-  }
-
-  @Test
-  public void testGetBuildTargetForAlias()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
-    Reader reader =
-        new StringReader(
-            Joiner.on('\n')
-                .join(
-                    "[alias]",
-                    "foo = //java/com/example:foo",
-                    "bar = //java/com/example:bar",
-                    "baz = //java/com/example:foo //java/com/example:bar",
-                    "bash = "));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-
-    assertEquals(
-        ImmutableSet.of("//java/com/example:foo"), config.getBuildTargetForAliasAsString("foo"));
-    assertEquals(
-        ImmutableSet.of("//java/com/example:bar"), config.getBuildTargetForAliasAsString("bar"));
-    assertEquals(
-        ImmutableSet.of("//java/com/example:foo", "//java/com/example:bar"),
-        config.getBuildTargetForAliasAsString("baz"));
-    assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("bash"));
-
-    // Flavors on alias.
-    assertEquals(
-        ImmutableSet.of("//java/com/example:foo#src_jar"),
-        config.getBuildTargetForAliasAsString("foo#src_jar"));
-    assertEquals(
-        ImmutableSet.of("//java/com/example:bar#fl1,fl2"),
-        config.getBuildTargetForAliasAsString("bar#fl1,fl2"));
-    assertEquals(
-        ImmutableSet.of("//java/com/example:foo#fl1,fl2", "//java/com/example:bar#fl1,fl2"),
-        config.getBuildTargetForAliasAsString("baz#fl1,fl2"));
-    assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("bash#fl1,fl2"));
-
-    assertEquals(
-        "Invalid alias names, such as build targets, should be tolerated by this method.",
-        ImmutableSet.of(),
-        config.getBuildTargetForAliasAsString("//java/com/example:foo"));
-    assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("notathing"));
-    assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("notathing#src_jar"));
-
-    Reader noAliasesReader = new StringReader("");
-    BuckConfig noAliasesConfig =
-        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, noAliasesReader);
-    assertEquals(ImmutableSet.of(), noAliasesConfig.getBuildTargetForAliasAsString("foo"));
-    assertEquals(ImmutableSet.of(), noAliasesConfig.getBuildTargetForAliasAsString("bar"));
-    assertEquals(ImmutableSet.of(), noAliasesConfig.getBuildTargetForAliasAsString("baz"));
   }
 
   @Test
@@ -196,99 +85,6 @@ public class BuckConfigTest {
             FluentIterable.from(config.getBuildTargetList("section", "some_list"))
                 .transform(Object::toString));
     assertThat(result, Matchers.equalTo(expected));
-  }
-
-  /** Ensures that all public methods of BuckConfig return reasonable values for an empty config. */
-  @Test
-  public void testEmptyConfig() {
-    BuckConfig emptyConfig = FakeBuckConfig.builder().build();
-    assertEquals(ImmutableMap.<String, String>of(), emptyConfig.getEntriesForSection("alias"));
-    assertEquals(ImmutableSet.of(), emptyConfig.getBuildTargetForAliasAsString("fb4a"));
-    assertEquals(ImmutableMap.<Path, String>of(), emptyConfig.getBasePathToAliasMap());
-  }
-
-  @Test
-  public void testValidateAliasName() {
-    BuckConfig.validateAliasName("f");
-    BuckConfig.validateAliasName("_");
-    BuckConfig.validateAliasName("F");
-    BuckConfig.validateAliasName("fb4a");
-    BuckConfig.validateAliasName("FB4A");
-    BuckConfig.validateAliasName("FB4_");
-
-    try {
-      BuckConfig.validateAliasName("");
-      fail("Should have thrown HumanReadableException");
-    } catch (HumanReadableException e) {
-      assertEquals("Alias cannot be the empty string.", e.getHumanReadableErrorMessage());
-    }
-
-    try {
-      BuckConfig.validateAliasName("42meaningOfLife");
-      fail("Should have thrown HumanReadableException");
-    } catch (HumanReadableException e) {
-      assertEquals("Not a valid alias: 42meaningOfLife.", e.getHumanReadableErrorMessage());
-    }
-  }
-
-  @Test
-  public void testReferentialAliases()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
-    Reader reader =
-        new StringReader(
-            Joiner.on('\n')
-                .join(
-                    "[alias]",
-                    "foo            = //java/com/example:foo",
-                    "bar            = //java/com/example:bar",
-                    "foo_codename   = foo",
-                    "",
-                    "# Do not delete these: automation builds require these aliases to exist!",
-                    "automation_foo = foo_codename",
-                    "automation_bar = bar"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-    assertEquals(
-        ImmutableSet.of("//java/com/example:foo"), config.getBuildTargetForAliasAsString("foo"));
-    assertEquals(
-        ImmutableSet.of("//java/com/example:bar"), config.getBuildTargetForAliasAsString("bar"));
-    assertEquals(
-        ImmutableSet.of("//java/com/example:foo"),
-        config.getBuildTargetForAliasAsString("foo_codename"));
-    assertEquals(
-        ImmutableSet.of("//java/com/example:foo"),
-        config.getBuildTargetForAliasAsString("automation_foo"));
-    assertEquals(
-        ImmutableSet.of("//java/com/example:bar"),
-        config.getBuildTargetForAliasAsString("automation_bar"));
-    assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("baz"));
-  }
-
-  @Test
-  public void testUnresolvedAliasThrows()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
-    Reader reader =
-        new StringReader(
-            Joiner.on('\n').join("[alias]", "foo = //java/com/example:foo", "bar = food"));
-    BuckConfig buckConfig =
-        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-    try {
-      buckConfig.getAliases();
-      fail("Should have thrown HumanReadableException.");
-    } catch (HumanReadableException e) {
-      assertEquals("No alias for: food.", e.getHumanReadableErrorMessage());
-    }
-  }
-
-  @Test
-  public void testDuplicateDefinitionsDefinitionOverride()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
-    Reader reader =
-        new StringReader(
-            Joiner.on('\n')
-                .join("[alias]", "foo = //java/com/example:foo", "foo = //java/com/example:bar"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-    assertEquals(
-        ImmutableSet.of("//java/com/example:bar"), config.getBuildTargetForAliasAsString("foo"));
   }
 
   @Test

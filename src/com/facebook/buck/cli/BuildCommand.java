@@ -36,6 +36,7 @@ import com.facebook.buck.core.build.distributed.synchronization.impl.RemoteBuild
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -432,7 +433,7 @@ public class BuildCommand extends AbstractCommand {
     }
     String message =
         "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html";
-    ImmutableSet<String> aliases = params.getBuckConfig().getAliases().keySet();
+    ImmutableSet<String> aliases = AliasConfig.from(params.getBuckConfig()).getAliases().keySet();
     if (!aliases.isEmpty()) {
       // If there are aliases defined in .buckconfig, suggest that the user
       // build one of them. We show the user only the first 10 aliases.

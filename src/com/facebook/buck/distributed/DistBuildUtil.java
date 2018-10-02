@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import static com.facebook.buck.util.BuckConstant.DIST_BUILD_SLAVE_BUCK_OUT_LOG_DIR_NAME;
 
+import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildMode;
@@ -176,7 +177,7 @@ public class DistBuildUtil {
     ImmutableSet.Builder<String> buildTargets = new ImmutableSet.Builder<>();
     for (String commandArg : commandArgs) {
       ImmutableSet<String> buildTargetForAliasAsString =
-          buckConfig.getBuildTargetForAliasAsString(commandArg);
+          AliasConfig.from(buckConfig).getBuildTargetForAliasAsString(commandArg);
       if (buildTargetForAliasAsString.size() > 0) {
         buildTargets.addAll(buildTargetForAliasAsString);
       } else {

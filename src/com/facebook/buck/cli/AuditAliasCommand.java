@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.ExitCode;
@@ -36,8 +37,9 @@ public class AuditAliasCommand extends AbstractCommand {
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
+    AliasConfig aliasConfig = AliasConfig.from(params.getBuckConfig());
     if (listAliasesMap) {
-      for (Map.Entry<String, BuildTarget> entry : params.getBuckConfig().getAliases().entries()) {
+      for (Map.Entry<String, BuildTarget> entry : aliasConfig.getAliases().entries()) {
         params
             .getConsole()
             .getStdOut()
@@ -46,7 +48,7 @@ public class AuditAliasCommand extends AbstractCommand {
       return ExitCode.SUCCESS;
     }
     if (listAliases) {
-      for (Map.Entry<String, BuildTarget> entry : params.getBuckConfig().getAliases().entries()) {
+      for (Map.Entry<String, BuildTarget> entry : aliasConfig.getAliases().entries()) {
         params.getConsole().getStdOut().println(entry.getKey());
       }
       return ExitCode.SUCCESS;

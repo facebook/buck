@@ -41,6 +41,11 @@ public class BuckConfigTestUtils {
         ImmutableMap.copyOf(System.getenv()));
   }
 
+  public static <T extends ConfigView<BuckConfig>> T createWithDefaultFilesystem(
+      TemporaryPaths temporaryFolder, Reader reader, Class<T> viewClass) throws IOException {
+    return createWithDefaultFilesystem(temporaryFolder, reader).getView(viewClass);
+  }
+
   public static BuckConfig createFromReader(
       Reader reader,
       ProjectFilesystem projectFilesystem,

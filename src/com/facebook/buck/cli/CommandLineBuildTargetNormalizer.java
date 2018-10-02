@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.google.common.annotations.VisibleForTesting;
@@ -75,7 +76,8 @@ class CommandLineBuildTargetNormalizer {
   CommandLineBuildTargetNormalizer(BuckConfig buckConfig) {
     this.normalizer =
         arg -> {
-          ImmutableSet<String> aliasValues = buckConfig.getBuildTargetForAliasAsString(arg);
+          ImmutableSet<String> aliasValues =
+              AliasConfig.from(buckConfig).getBuildTargetForAliasAsString(arg);
           if (!aliasValues.isEmpty()) {
             return aliasValues;
           } else {
