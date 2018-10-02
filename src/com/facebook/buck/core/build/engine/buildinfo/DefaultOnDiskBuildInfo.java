@@ -187,7 +187,8 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
               paths.add(file);
               return super.visitFile(file, attrs);
             }
-          });
+          },
+          false);
     }
     return paths.build();
   }
