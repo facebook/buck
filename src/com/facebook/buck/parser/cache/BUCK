@@ -1,0 +1,20 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_library(
+    name = "cache",
+    srcs = [
+        "Fingerprinter.java",
+    ],
+    tests = [
+        "//test/com/facebook/buck/parser/cache:cache",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/util/config:config",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/guava:guava",
+    ],
+)
