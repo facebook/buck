@@ -67,7 +67,9 @@ public abstract class AbstractCxxSource { // NOPMD
     // Assembly files built with nasm/yasm.
     ASM_WITH_CPP("asm-with-cpp", "asm", "asmpp"),
     ASM("asm", "asm", "asm"),
-    ;
+
+    // Precompiled modules (https://clang.llvm.org/docs/Modules.html).
+    PCM("pcm", "pcm", "pcm");
 
     private final String language;
     private final String preprocessedLanguage;

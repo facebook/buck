@@ -49,7 +49,8 @@ public class CxxSourceTypes {
         || sourceType == CxxSource.Type.OBJC_CPP_OUTPUT
         || sourceType == CxxSource.Type.OBJCXX_CPP_OUTPUT
         || sourceType == CxxSource.Type.CUDA_CPP_OUTPUT
-        || sourceType == CxxSource.Type.ASM;
+        || sourceType == CxxSource.Type.ASM
+        || sourceType == CxxSource.Type.PCM;
   }
 
   /** @return the appropriate {@link Tool} representing the preprocessor. */
@@ -174,6 +175,7 @@ public class CxxSourceTypes {
         compiler = cxxPlatform.getCc();
         break;
       case CXX_CPP_OUTPUT:
+      case PCM:
         compiler = cxxPlatform.getCxx();
         break;
       case OBJC_CPP_OUTPUT:
@@ -216,6 +218,7 @@ public class CxxSourceTypes {
         flags.addAll(cxxPlatform.getCflags());
         break;
       case CXX_CPP_OUTPUT:
+      case PCM:
         flags.addAll(cxxPlatform.getCxxflags());
         break;
       case OBJC_CPP_OUTPUT:

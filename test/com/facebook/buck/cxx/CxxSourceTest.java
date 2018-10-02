@@ -61,5 +61,8 @@ public class CxxSourceTest {
 
     // Preprocessable assembly
     assertEquals(Optional.of(CxxSource.Type.ASSEMBLER_WITH_CPP), CxxSource.Type.fromExtension("S"));
+
+    // PCM
+    assertEquals(Optional.of(CxxSource.Type.PCM), CxxSource.Type.fromExtension("pcm"));
   }
 }
