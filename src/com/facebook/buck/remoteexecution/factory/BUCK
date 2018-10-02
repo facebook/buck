@@ -1,8 +1,11 @@
 java_library(
     name = "factory",
     srcs = glob(["*.java"]),
-    visibility = ["PUBLIC"],
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/remoteexecution/config:config",
         "//src/com/facebook/buck/remoteexecution/grpc:grpc",

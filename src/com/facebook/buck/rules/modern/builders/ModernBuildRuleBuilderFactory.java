@@ -56,7 +56,7 @@ public class ModernBuildRuleBuilderFactory {
       ExecutorService remoteExecutorService) {
     try {
       RemoteExecutionClientsFactory remoteExecutionFactory =
-          new RemoteExecutionClientsFactory(remoteExecutionConfig, config.getBuildStrategy());
+          new RemoteExecutionClientsFactory(remoteExecutionConfig);
       switch (config.getBuildStrategy()) {
         case NONE:
           return Optional.empty();
@@ -76,6 +76,7 @@ public class ModernBuildRuleBuilderFactory {
                   eventBus,
                   console));
 
+        case REMOTE:
         case THRIFT_REMOTE:
         case GRPC_REMOTE:
         case DEBUG_GRPC_SERVICE_IN_PROCESS:

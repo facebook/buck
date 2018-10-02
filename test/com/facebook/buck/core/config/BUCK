@@ -37,6 +37,7 @@ java_library(
         ],
     ),
     exported_deps = [
+        ":FakeBuckConfig",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/util/config:config",
     ],
@@ -44,7 +45,6 @@ java_library(
         "//test/...",
     ],
     deps = [
-        ":FakeBuckConfig",
         "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/filesystem:testutil",

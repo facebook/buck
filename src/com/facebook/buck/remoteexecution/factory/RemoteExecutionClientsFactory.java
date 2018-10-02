@@ -16,15 +16,16 @@
 
 package com.facebook.buck.remoteexecution.factory;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionType;
 import com.facebook.buck.remoteexecution.grpc.GrpcExecutionFactory;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
 import com.facebook.buck.remoteexecution.thrift.ThriftRemoteExecutionFactory;
 import com.facebook.buck.remoteexecution.util.OutOfProcessIsolatedExecutionClients;
-import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import java.io.IOException;
 
 /**
@@ -32,41 +33,37 @@ import java.io.IOException;
  * etc).
  */
 public class RemoteExecutionClientsFactory {
-
-  private final ModernBuildRuleBuildStrategy fallbackStrategy;
   private final RemoteExecutionConfig remoteExecutionConfig;
 
-  public RemoteExecutionClientsFactory(
-      RemoteExecutionConfig remoteExecutionConfig, ModernBuildRuleBuildStrategy buildStrategy) {
+  public RemoteExecutionClientsFactory(RemoteExecutionConfig remoteExecutionConfig) {
     this.remoteExecutionConfig = remoteExecutionConfig;
-    this.fallbackStrategy = buildStrategy;
   }
 
   /** Creates the RemoteExecutionClients based on the held configs. */
   public RemoteExecutionClients create(BuckEventBus eventBus) throws IOException {
-    switch (fallbackStrategy) {
-      case DEBUG_RECONSTRUCT:
-      case DEBUG_PASSTHROUGH:
-      case DEBUG_ISOLATED_IN_PROCESS:
-      case NONE:
-        break;
+    RemoteExecutionType type = remoteExecutionConfig.getType();
 
-      case GRPC_REMOTE:
+    switch (type) {
+      case NONE:
+        throw new HumanReadableException(
+            "Remote execution implementation required but not configured. Please set an appropriate %s.type.",
+            RemoteExecutionConfig.SECTION);
+      case GRPC:
         return GrpcExecutionFactory.createRemote(
             remoteExecutionConfig.getRemoteHost(),
             remoteExecutionConfig.getRemotePort(),
             remoteExecutionConfig.getCasHost(),
             remoteExecutionConfig.getCasPort());
-      case THRIFT_REMOTE:
+
+      case THRIFT:
         return ThriftRemoteExecutionFactory.createRemote(remoteExecutionConfig, eventBus);
-      case DEBUG_ISOLATED_OUT_OF_PROCESS:
-        return OutOfProcessIsolatedExecutionClients.create(new ThriftProtocol(), eventBus);
-      case DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC:
+      case DEBUG_GRPC_IN_PROCESS:
         return OutOfProcessIsolatedExecutionClients.create(new GrpcProtocol(), eventBus);
-      case DEBUG_GRPC_SERVICE_IN_PROCESS:
+      case DEBUG_THRIFT_IN_PROCESS:
+        return OutOfProcessIsolatedExecutionClients.create(new ThriftProtocol(), eventBus);
+      case DEBUG_GRPC_LOCAL:
         return GrpcExecutionFactory.createInProcess();
     }
-    throw new UnsupportedOperationException(
-        String.format("Can't create remote execution clients for %s.", fallbackStrategy));
+    throw new IllegalStateException(String.format("Something went wrong (%s).", type));
   }
 }

@@ -16,10 +16,13 @@
 
 package com.facebook.buck.remoteexecution.config;
 
+import static com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy.REMOTE;
+
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -64,6 +67,55 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public int getCasPort() {
     return getValueWithFallback("cas_port").map(Integer::parseInt).orElse(DEFAULT_CAS_PORT);
+  }
+
+  public RemoteExecutionType getType() {
+    Optional<RemoteExecutionType> specifiedType =
+        getDelegate().getEnum(SECTION, "type", RemoteExecutionType.class);
+    if (specifiedType.isPresent()) {
+      return specifiedType.get();
+    }
+
+    ModernBuildRuleBuildStrategy fallbackStrategy =
+        getDelegate().getView(ModernBuildRuleConfig.class).getBuildStrategy();
+    // Try the old modern_build_rule way.
+    switch (fallbackStrategy) {
+      case DEBUG_RECONSTRUCT:
+      case DEBUG_PASSTHROUGH:
+      case DEBUG_ISOLATED_IN_PROCESS:
+      case REMOTE:
+      case NONE:
+        break;
+
+      case GRPC_REMOTE:
+        specifiedType = Optional.of(RemoteExecutionType.GRPC);
+        break;
+      case THRIFT_REMOTE:
+        specifiedType = Optional.of(RemoteExecutionType.THRIFT);
+        break;
+      case DEBUG_ISOLATED_OUT_OF_PROCESS:
+        specifiedType = Optional.of(RemoteExecutionType.DEBUG_THRIFT_IN_PROCESS);
+        break;
+      case DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC:
+        specifiedType = Optional.of(RemoteExecutionType.DEBUG_GRPC_IN_PROCESS);
+        break;
+      case DEBUG_GRPC_SERVICE_IN_PROCESS:
+        specifiedType = Optional.of(RemoteExecutionType.DEBUG_GRPC_LOCAL);
+        break;
+    }
+
+    if (!specifiedType.isPresent()) {
+      return RemoteExecutionType.DEFAULT;
+    }
+
+    String currentConfig = String.format("%s.strategy=%s", OLD_SECTION, fallbackStrategy);
+    String newStrategy = String.format("%s.strategy=%s", OLD_SECTION, REMOTE);
+    String newRemoteType = String.format("%s.type=%s", SECTION, specifiedType.get());
+
+    LOG.error(
+        "Configuration %s is deprecated. This should be configured by setting both %s and %s.",
+        currentConfig, newStrategy, newRemoteType);
+    return specifiedType.get();
   }
 
   public Optional<String> getTraceID() {

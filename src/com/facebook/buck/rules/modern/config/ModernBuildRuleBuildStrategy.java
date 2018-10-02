@@ -25,12 +25,21 @@ package com.facebook.buck.rules.modern.config;
 public enum ModernBuildRuleBuildStrategy {
   NONE,
 
+  // This is used for all remote execution-based strategies.
+  REMOTE,
+
+  DEBUG_ISOLATED_IN_PROCESS,
+  // Creates a strategy that serializes and deserializes ModernBuildRules in memory and then
+  // builds the deserialized version.
+  DEBUG_RECONSTRUCT,
+  // Creates a strategy that just forwards to the default behavior.
+  DEBUG_PASSTHROUGH,
+
+  // The following are all deprecated. They should be configured with a combination of
+  // modern_build_rule.strategy=remote and an appropriate value for remoteexecution.type.
   GRPC_REMOTE,
-
   THRIFT_REMOTE,
-
   DEBUG_GRPC_SERVICE_IN_PROCESS,
-
   /**
    * This strategy will construct a separate isolated build directory for each rule. The rule will
    * be serialized to data files in that directory, and all inputs required (including buck configs)
@@ -40,13 +49,7 @@ public enum ModernBuildRuleBuildStrategy {
    */
   DEBUG_ISOLATED_OUT_OF_PROCESS,
   DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC,
-
-  DEBUG_ISOLATED_IN_PROCESS,
-  // Creates a strategy that serializes and deserializes ModernBuildRules in memory and then
-  // builds the deserialized version.
-  DEBUG_RECONSTRUCT,
-  // Creates a strategy that just forwards to the default behavior.
-  DEBUG_PASSTHROUGH;
+  ;
 
   static final ModernBuildRuleBuildStrategy DEFAULT = NONE;
 }

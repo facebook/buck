@@ -39,6 +39,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionType;
 import com.facebook.buck.remoteexecution.grpc.server.GrpcServer;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -84,23 +85,42 @@ public class ModernBuildRuleStrategyIntegrationTest {
   private String duplicateOutputDirsTarget = "//:duplicate_output_dirs";
   private String checkSerializationTarget = "//:check_serialization";
 
-  @Parameterized.Parameters(name = "{0}")
+  @Parameterized.Parameters(name = "{0}.{1}")
   public static Collection<Object[]> data() {
-    ImmutableList.Builder<Object[]> dataBuilder = ImmutableList.builder();
-    for (ModernBuildRuleBuildStrategy strategy : ModernBuildRuleBuildStrategy.values()) {
-      if (strategy.equals(ModernBuildRuleBuildStrategy.THRIFT_REMOTE)) {
+    return ImmutableList.<Object[]>builder()
+        .add(new Object[] {ModernBuildRuleBuildStrategy.NONE, RemoteExecutionType.NONE})
+        .add(
+            new Object[] {
+              ModernBuildRuleBuildStrategy.DEBUG_ISOLATED_IN_PROCESS, RemoteExecutionType.NONE
+            })
+        .add(
+            new Object[] {ModernBuildRuleBuildStrategy.DEBUG_RECONSTRUCT, RemoteExecutionType.NONE})
+        .add(
+            new Object[] {ModernBuildRuleBuildStrategy.DEBUG_PASSTHROUGH, RemoteExecutionType.NONE})
+        // Remote execution strategies.
+        .add(new Object[] {ModernBuildRuleBuildStrategy.REMOTE, RemoteExecutionType.GRPC})
         // TODO(shivanker): We don't have a dummy implementation for Thrift in this repository.
         // Probably add this in the future to be able to have unit tests.
-        continue;
-      }
-      dataBuilder.add(new Object[] {strategy});
-    }
-    return dataBuilder.build();
+        // .add(new Object[] {ModernBuildRuleBuildStrategy.REMOTE, RemoteExecutionType.THRIFT})
+        .add(
+            new Object[] {
+              ModernBuildRuleBuildStrategy.REMOTE, RemoteExecutionType.DEBUG_GRPC_IN_PROCESS
+            })
+        .add(
+            new Object[] {
+              ModernBuildRuleBuildStrategy.REMOTE, RemoteExecutionType.DEBUG_THRIFT_IN_PROCESS
+            })
+        .add(
+            new Object[] {
+              ModernBuildRuleBuildStrategy.REMOTE, RemoteExecutionType.DEBUG_GRPC_LOCAL
+            })
+        .build();
   }
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private final ModernBuildRuleBuildStrategy strategy;
+  private final RemoteExecutionType executionType;
   private Optional<GrpcServer> server = Optional.empty();
   private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
@@ -309,6 +329,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
                     knownConfigurationDescriptions));
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
+    workspace.addBuckConfigLocalOption("remoteexecution", "type", executionType.toString());
     workspace.addBuckConfigLocalOption(
         "remoteexecution", "remote_port", Integer.toString(REMOTE_PORT));
     workspace.addBuckConfigLocalOption(
@@ -316,7 +337,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    if (strategy == ModernBuildRuleBuildStrategy.GRPC_REMOTE) {
+    if (executionType == RemoteExecutionType.GRPC) {
       server = Optional.of(new GrpcServer(REMOTE_PORT));
     }
   }
@@ -328,8 +349,10 @@ public class ModernBuildRuleStrategyIntegrationTest {
     }
   }
 
-  public ModernBuildRuleStrategyIntegrationTest(ModernBuildRuleBuildStrategy strategy) {
+  public ModernBuildRuleStrategyIntegrationTest(
+      ModernBuildRuleBuildStrategy strategy, RemoteExecutionType executionType) {
     this.strategy = strategy;
+    this.executionType = executionType;
   }
 
   @Test
