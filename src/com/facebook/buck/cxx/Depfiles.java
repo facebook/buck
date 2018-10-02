@@ -35,10 +35,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /** Specialized parser for .d Makefiles emitted by {@code gcc -MD}. */
 class Depfiles {
@@ -60,6 +62,10 @@ class Depfiles {
   private static final String WHITESPACE_CHARS = " \n\r\t";
   private static final String ESCAPED_TARGET_CHARS = ": #";
   private static final String ESCAPED_PREREQ_CHARS = " #";
+  private static final String UNTRACKED_HEADER_ERROR_TIPS =
+      "Untracked headers detected. Please reference these headers \n"
+          + "from \"headers\", \"exported_headers\" or \"raw_headers\" \n"
+          + "in the appropriate build rule.";
 
   /**
    * Parses the input as a .d Makefile as emitted by {@code gcc -MD} and returns the (target, [dep,
@@ -288,6 +294,7 @@ class Depfiles {
     UntrackedHeaderReporterWithFallback untrackedHeaderReporter =
         new UntrackedHeaderReporterWithFallback(
             dependencyTrackingMode, filesystem, headerPathNormalizer, sourceDepFile, inputPath);
+    List<String> errors = new ArrayList<String>();
     for (String rawHeader : headers) {
       Path header = filesystem.resolve(rawHeader).normalize();
       Optional<Path> absolutePath = headerPathNormalizer.getAbsolutePathForUnnormalizedPath(header);
@@ -304,16 +311,24 @@ class Depfiles {
         header = header.toRealPath();
         if (!(headerVerification.isWhitelisted(header.toString()))) {
           String errorMessage = untrackedHeaderReporter.getErrorReport(header);
-          eventBus.post(
-              ConsoleEvent.create(
-                  headerVerification.getMode() == HeaderVerification.Mode.ERROR
-                      ? Level.SEVERE
-                      : Level.WARNING,
-                  errorMessage));
-          if (headerVerification.getMode() == HeaderVerification.Mode.ERROR) {
-            throw new HeaderVerificationException(errorMessage);
-          }
+          errors.add(errorMessage);
         }
+      }
+    }
+    // Check if any errors occurred and report them
+    if (!errors.isEmpty()) {
+      String errorMessage =
+          String.format(
+              "%s\n\n%s",
+              errors.stream().collect(Collectors.joining("\n")), UNTRACKED_HEADER_ERROR_TIPS);
+      eventBus.post(
+          ConsoleEvent.create(
+              headerVerification.getMode() == HeaderVerification.Mode.ERROR
+                  ? Level.SEVERE
+                  : Level.WARNING,
+              errorMessage));
+      if (headerVerification.getMode() == HeaderVerification.Mode.ERROR) {
+        throw new HeaderVerificationException(errorMessage);
       }
     }
     return resultBuilder.build();

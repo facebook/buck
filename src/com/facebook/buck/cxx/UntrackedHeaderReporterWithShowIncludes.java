@@ -40,9 +40,6 @@ import javax.annotation.Nullable;
  */
 class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter {
   private static String CHAIN_SEPARATOR = ", which is included by:\n\t";
-  private static String ERROR_TIPS =
-      "Please reference this header file from \"headers\", \"exported_headers\" or \"raw_headers\" \n"
-          + "in the appropriate build rule.";
   private final Path inputPath;
   private final ProjectFilesystem filesystem;
   private final HeaderPathNormalizer headerPathNormalizer;
@@ -107,8 +104,8 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
     List<Path> chain = computeIncludeChain(absolutePath);
     String errorMessage =
         String.format(
-            "%s: included an untracked header %s\n\n%s",
-            prettyPrintFileName(inputPath, false), prettyPrintChain(chain), ERROR_TIPS);
+            "%s: included an untracked header %s",
+            prettyPrintFileName(inputPath, false), prettyPrintChain(chain));
     return errorMessage;
   }
 

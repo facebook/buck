@@ -27,9 +27,6 @@ import java.util.Optional;
  * enough dependency information to know where the header is being used.
  */
 class UntrackedHeaderReporterBasic implements UntrackedHeaderReporter {
-  private static String ERROR_TIPS =
-      "Please reference this header file from \"headers\", \"exported_headers\" or \"raw_headers\" \n"
-          + "in the appropriate build rule.";
   private final Path inputPath;
   private final ProjectFilesystem filesystem;
 
@@ -42,8 +39,8 @@ class UntrackedHeaderReporterBasic implements UntrackedHeaderReporter {
   public String getErrorReport(Path header) {
     String errorMessage =
         String.format(
-            "%s: included an untracked header %s\n\n%s",
-            prettyPrintFileName(inputPath, false), prettyPrintFileName(header, true), ERROR_TIPS);
+            "%s: included an untracked header %s",
+            prettyPrintFileName(inputPath, false), prettyPrintFileName(header, true));
     return errorMessage;
   }
 

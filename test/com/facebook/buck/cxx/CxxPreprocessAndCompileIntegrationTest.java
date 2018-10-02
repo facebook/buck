@@ -580,6 +580,27 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
+  public void errorVerifyTwoHeaders() throws IOException {
+    ProcessResult result;
+    result =
+        workspace.runBuckBuild(
+            "-c",
+            "cxx.untracked_headers=error",
+            "-c",
+            "cxx.untracked_headers_whitelist=/usr/include/stdc-predef\\.h",
+            "//:two_untracked_headers");
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "two_untracked_headers.cpp: included an untracked header \"untracked_header.h\""));
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "two_untracked_headers.cpp: included an untracked header \"untracked_header_2.h\""));
+  }
+
+  @Test
   public void whitelistVerifyHeaders() throws IOException {
     ProcessResult result =
         workspace.runBuckBuild(

@@ -159,6 +159,13 @@ cxx_binary(
 )
 
 cxx_binary(
+    name = "two_untracked_headers",
+    srcs = [
+        "two_untracked_headers.cpp",
+    ],
+)
+
+cxx_binary(
     name = "untracked_header_with_prefix_header",
     srcs = [
         "untracked_header.cpp",
