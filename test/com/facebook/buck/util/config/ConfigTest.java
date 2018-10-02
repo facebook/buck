@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -338,5 +339,68 @@ public class ConfigTest {
                 new Config(RawConfig.builder().put("section_b", "field_b", "value").build()),
                 ImmutableMap.of("section", ImmutableSet.of("field"))),
         is(true));
+  }
+
+  @Test
+  public void comperTwoDifferentlyOrderedConfigsThatHaveSameHashes() {
+    // Create an unsorted raw config
+    RawConfig.Builder rawConfig1 = new RawConfig.Builder();
+    rawConfig1.putAll(
+        ImmutableMap.of(
+            "Z",
+            ImmutableMap.of("9", "9", "8", "8", "7", "7"),
+            "X",
+            ImmutableMap.of("9", "9", "8", "8", "7", "7"),
+            "Y",
+            ImmutableMap.of("9", "9", "8", "8", "7", "7")));
+
+    // Create a second unsorted raw config
+    RawConfig.Builder rawConfig2 = new RawConfig.Builder();
+    rawConfig2.putAll(
+        ImmutableMap.of(
+            "Z",
+            ImmutableMap.of("9", "9", "7", "7", "8", "8"),
+            "X",
+            ImmutableMap.of("9", "9", "7", "7", "8", "8"),
+            "Y",
+            ImmutableMap.of("9", "9", "7", "7", "8", "8")));
+
+    // Create the raw configs with unsorted values.
+    Config config1 = new Config(rawConfig1.build());
+    Config config2 = new Config(rawConfig2.build());
+
+    assertEquals(config1.getOrderIndependentHashCode(), config2.getOrderIndependentHashCode());
+  }
+
+  @Test
+  public void comperTwoDifferentlyOrderedConfigsThatHaveDifferentHashes() {
+    // Create an unsorted raw config
+    RawConfig.Builder rawConfig1 = new RawConfig.Builder();
+    rawConfig1.putAll(
+        ImmutableMap.of(
+            "Z",
+            ImmutableMap.of("9", "9", "8", "8", "7", "7"),
+            "X",
+            ImmutableMap.of("7", "7", "8", "8", "9", "9"),
+            "Y",
+            ImmutableMap.of("8", "8", "9", "9", "6", "6")));
+
+    // Create a second unsorted raw config
+    RawConfig.Builder rawConfig2 = new RawConfig.Builder();
+
+    rawConfig2.putAll(
+        ImmutableMap.of(
+            "Z",
+            ImmutableMap.of("9", "9", "7", "7", "8", "8"),
+            "X",
+            ImmutableMap.of("9", "9", "7", "7", "8", "8"),
+            "Y",
+            ImmutableMap.of("9", "9", "7", "7", "8", "8")));
+
+    // Create the raw configs with unsorted values.
+    Config config1 = new Config(rawConfig1.build());
+    Config config2 = new Config(rawConfig2.build());
+
+    assertNotEquals(config1.getOrderIndependentHashCode(), config2.getOrderIndependentHashCode());
   }
 }

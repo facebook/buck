@@ -30,15 +30,21 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Sets;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Stack;
@@ -59,6 +65,11 @@ public class Config {
 
   // rawConfig is the flattened configuration relevant to the current cell
   private final RawConfig rawConfig;
+
+  // The order-independent {@link HashCode} of the flattened configuration relevant to the current
+  // cell.
+  private final Supplier<HashCode> orderIndependentHashCode =
+      MoreSuppliers.memoize(this::computeOrderIndependentHashCode);
 
   private final Supplier<Integer> hashCodeSupplier =
       MoreSuppliers.memoize(
@@ -161,6 +172,34 @@ public class Config {
       expanded.put(ent.getKey(), get(sectionName, ent.getKey()).get());
     }
     return expanded.build();
+  }
+
+  private HashCode computeOrderIndependentHashCode() {
+    ImmutableMap<String, ImmutableMap<String, String>> rawValues = rawConfig.getValues();
+    ImmutableSortedMap.Builder<String, ImmutableSortedMap<String, String>> expanded =
+        ImmutableSortedMap.naturalOrder();
+    for (String section : rawValues.keySet()) {
+      expanded.put(section, ImmutableSortedMap.copyOf(get(section)));
+    }
+
+    ImmutableSortedMap<String, ImmutableSortedMap<String, String>> sortedConfigMap =
+        expanded.build();
+
+    Hasher hasher = Hashing.sha256().newHasher();
+    for (Entry<String, ImmutableSortedMap<String, String>> entry : sortedConfigMap.entrySet()) {
+      hasher.putString(entry.getKey(), StandardCharsets.UTF_8);
+      for (Entry<String, String> nestedEntry : entry.getValue().entrySet()) {
+        hasher.putString(nestedEntry.getKey(), StandardCharsets.UTF_8);
+        hasher.putString(nestedEntry.getValue(), StandardCharsets.UTF_8);
+      }
+    }
+
+    return hasher.hash();
+  }
+
+  /** gets an order-independent {@link HashCode} of this {@link Config}'s raw data. */
+  public HashCode getOrderIndependentHashCode() {
+    return orderIndependentHashCode.get();
   }
 
   public ImmutableMap<String, ImmutableMap<String, String>> getSectionToEntries() {
