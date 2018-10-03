@@ -90,6 +90,26 @@ public class BuckCellFinderTest extends PlatformTestCase {
     return LocalFileSystem.getInstance().findFileByPath(path.toAbsolutePath().toString());
   }
 
+  public void testFindBuckCellByName() throws IOException {
+    BuckCell thisCell = makeBuckCell("this", makeTmpDir("foo"));
+    BuckCell thatCell = makeBuckCell("that", makeTmpDir("bar"));
+    Project project = EasyMock.createMock(Project.class);
+    BuckProjectSettingsProvider projectSettingsProvider =
+        EasyMock.createMock(BuckProjectSettingsProvider.class);
+    EasyMock.expect(projectSettingsProvider.getCells())
+        .andReturn(ImmutableList.of(thisCell, thatCell))
+        .anyTimes();
+    EasyMock.replay(project, projectSettingsProvider);
+    BuckCellFinder finder = new BuckCellFinder(project, projectSettingsProvider, s -> s);
+    Assert.assertEquals(Optional.of(thisCell), finder.findBuckCellByName("this"));
+    Assert.assertEquals(Optional.of(thatCell), finder.findBuckCellByName("that"));
+    Assert.assertEquals(Optional.empty(), finder.findBuckCellByName("other"));
+    Assert.assertEquals(
+        "The empty cell name refers to the default cell",
+        Optional.of(thisCell),
+        finder.findBuckCellByName(""));
+  }
+
   private void assertFindBuckCell(@Nullable BuckCell expected, BuckCellFinder finder, Path path) {
     Assert.assertEquals(
         "Should find buck cell correctly for Path",

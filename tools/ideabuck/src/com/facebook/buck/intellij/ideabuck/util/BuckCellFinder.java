@@ -66,6 +66,18 @@ public class BuckCellFinder extends AbstractProjectComponent {
     this.pathMacroExpander = pathMacroExpander;
   }
 
+  /**
+   * Returns the {@link BuckCell} with the given name. Supplying the empty string returns the
+   * default cell, regardless of what it is called.
+   */
+  public Optional<BuckCell> findBuckCellByName(String name) {
+    return projectSettingsProvider
+        .getCells()
+        .stream()
+        .filter(c -> "".equals(name) || c.getName().equals(name))
+        .findFirst();
+  }
+
   /** Returns the {@link BuckCell} containing the given {@link VirtualFile}. */
   public Optional<BuckCell> findBuckCell(VirtualFile file) {
     return findBuckCellFromCanonicalPath(file.getCanonicalPath());
@@ -156,12 +168,7 @@ public class BuckCellFinder extends AbstractProjectComponent {
     if ("".equals(cellName)) {
       targetCell = findBuckCell(sourceFile);
     } else {
-      targetCell =
-          projectSettingsProvider
-              .getCells()
-              .stream()
-              .filter(c -> c.getName().equals(cellName))
-              .findFirst();
+      targetCell = findBuckCellByName(cellName);
     }
     return targetCell.flatMap(
         cell -> {
@@ -195,11 +202,7 @@ public class BuckCellFinder extends AbstractProjectComponent {
               if ("".equals(cellName)) {
                 return Optional.of(cell);
               } else {
-                return projectSettingsProvider
-                    .getCells()
-                    .stream()
-                    .filter(c -> c.getName().equals(cellName))
-                    .findFirst();
+                return findBuckCellByName(cellName);
               }
             })
         .flatMap(
