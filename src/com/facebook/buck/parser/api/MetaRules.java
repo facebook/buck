@@ -28,8 +28,31 @@ public class MetaRules {
    */
   public static final String INCLUDES = "__includes";
 
+  /**
+   * The name of the raw node with includes when stored in a map with other rules that can be meta
+   * or non-meta rules.
+   */
+  public static final String INCLUDES_NAME = "buck.__includes";
+
   public static final String CONFIGS = "__configs";
+
+  /**
+   * The name of the raw node with configs when stored in a map with other rules that can be meta or
+   * non-meta rules.
+   */
+  public static final String CONFIGS_NAME = "buck.__configs";
+
   public static final String ENV = "__env";
 
+  /**
+   * The name of the raw node with environment variables when stored in a map with other rules that
+   * can be meta or non-meta rules.
+   */
+  public static final String ENV_NAME = "buck.__env";
+
   private MetaRules() {}
+
+  public static boolean isMetaRuleName(String name) {
+    return INCLUDES_NAME.equals(name) || CONFIGS_NAME.equals(name) || ENV_NAME.equals(name);
+  }
 }

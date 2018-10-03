@@ -163,10 +163,10 @@ public class DaemonicParserState {
 
   /** Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}. */
   private class DaemonicRawCacheView
-      implements PipelineNodeCache.Cache<Path, ImmutableList<Map<String, Object>>> {
+      implements PipelineNodeCache.Cache<Path, ImmutableMap<String, Map<String, Object>>> {
 
     @Override
-    public Optional<ImmutableList<Map<String, Object>>> lookupComputedNode(
+    public Optional<ImmutableMap<String, Map<String, Object>>> lookupComputedNode(
         Cell cell, Path buildFile, BuckEventBus eventBus) throws BuildTargetException {
       Preconditions.checkState(buildFile.isAbsolute());
       invalidateIfProjectBuildFileParserStateChanged(cell);
@@ -191,10 +191,10 @@ public class DaemonicParserState {
      */
     @SuppressWarnings({"unchecked", "PMD.EmptyIfStmt"})
     @Override
-    public ImmutableList<Map<String, Object>> putComputedNodeIfNotPresent(
+    public ImmutableMap<String, Map<String, Object>> putComputedNodeIfNotPresent(
         Cell cell,
         Path buildFile,
-        ImmutableList<Map<String, Object>> rawNodes,
+        ImmutableMap<String, Map<String, Object>> rawNodes,
         BuckEventBus eventBus)
         throws BuildTargetException {
       Preconditions.checkState(buildFile.isAbsolute());
@@ -205,24 +205,26 @@ public class DaemonicParserState {
       // invalidated mid-way through the parse).
       invalidateIfProjectBuildFileParserStateChanged(cell);
 
-      ImmutableList.Builder<Map<String, Object>> withoutMetaIncludesBuilder =
-          ImmutableList.builderWithExpectedSize(rawNodes.size());
+      ImmutableMap.Builder<String, Map<String, Object>> withoutMetaIncludesBuilder =
+          ImmutableMap.builderWithExpectedSize(rawNodes.size());
       ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
       ImmutableMap<String, Optional<String>> env = ImmutableMap.of();
-      for (Map<String, Object> rawNode : rawNodes) {
-        if (rawNode.containsKey(MetaRules.INCLUDES)) {
+      for (Map.Entry<String, Map<String, Object>> rawNodeEntry : rawNodes.entrySet()) {
+        Map<String, Object> rawNode = rawNodeEntry.getValue();
+        if (MetaRules.INCLUDES_NAME.equals(rawNodeEntry.getKey())) {
           for (String path :
               Preconditions.checkNotNull((Iterable<String>) rawNode.get(MetaRules.INCLUDES))) {
             dependentsOfEveryNode.add(cell.getFilesystem().resolve(path));
           }
-        } else if (rawNode.containsKey(MetaRules.CONFIGS)) {
-        } else if (rawNode.containsKey(MetaRules.ENV)) {
+        } else if (MetaRules.CONFIGS_NAME.equals(rawNodeEntry.getKey())) {
+        } else if (MetaRules.ENV_NAME.equals(rawNodeEntry.getKey())) {
           env = ((ImmutableMap<String, Optional<String>>) rawNode.get(MetaRules.ENV));
         } else {
-          withoutMetaIncludesBuilder.add(rawNode);
+          withoutMetaIncludesBuilder.put(rawNodeEntry.getKey(), rawNode);
         }
       }
-      ImmutableList<Map<String, Object>> withoutMetaIncludes = withoutMetaIncludesBuilder.build();
+      ImmutableMap<String, Map<String, Object>> withoutMetaIncludes =
+          withoutMetaIncludesBuilder.build();
 
       // We also know that the rules all depend on the default includes for the
       // cell.
@@ -365,7 +367,8 @@ public class DaemonicParserState {
     }
   }
 
-  public PipelineNodeCache.Cache<Path, ImmutableList<Map<String, Object>>> getRawNodeCache() {
+  public PipelineNodeCache.Cache<Path, ImmutableMap<String, Map<String, Object>>>
+      getRawNodeCache() {
     return rawNodeCache;
   }
 

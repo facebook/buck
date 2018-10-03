@@ -28,6 +28,7 @@ import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
@@ -136,7 +137,9 @@ public class TargetNodeParsePipeline
   @Override
   protected ListenableFuture<ImmutableList<Map<String, Object>>> getItemsToConvert(
       Cell cell, Path buildFile) throws BuildTargetException {
-    return buildFileRawNodeParsePipeline.getAllNodesJob(cell, buildFile);
+    return Futures.transform(
+        buildFileRawNodeParsePipeline.getAllNodesJob(cell, buildFile),
+        map -> ImmutableList.copyOf(map.values()));
   }
 
   @Override

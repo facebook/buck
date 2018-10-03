@@ -100,7 +100,7 @@ public class DefaultParser implements Parser {
   }
 
   @VisibleForTesting
-  static ImmutableList<Map<String, Object>> getTargetNodeRawAttributes(
+  static ImmutableMap<String, Map<String, Object>> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
     Preconditions.checkState(buildFile.isAbsolute());
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
@@ -146,14 +146,14 @@ public class DefaultParser implements Parser {
   public SortedMap<String, Object> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
     Cell owningCell = cell.getCell(targetNode.getBuildTarget());
-    ImmutableList<Map<String, Object>> allRawNodes =
+    ImmutableMap<String, Map<String, Object>> allRawNodes =
         getTargetNodeRawAttributes(
             state, owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
 
     String shortName = targetNode.getBuildTarget().getShortName();
-    for (Map<String, Object> rawNode : allRawNodes) {
-      if (shortName.equals(rawNode.get("name"))) {
-        SortedMap<String, Object> toReturn = new TreeMap<>(rawNode);
+    for (Map.Entry<String, Map<String, Object>> rawNodeEntry : allRawNodes.entrySet()) {
+      if (shortName.equals(rawNodeEntry.getKey())) {
+        SortedMap<String, Object> toReturn = new TreeMap<>(rawNodeEntry.getValue());
         toReturn.put(
             "buck.direct_dependencies",
             targetNode

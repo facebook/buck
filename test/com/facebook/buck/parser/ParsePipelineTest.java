@@ -36,6 +36,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
+import com.facebook.buck.parser.api.MetaRules;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -57,7 +58,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -212,7 +212,10 @@ public class ParsePipelineTest {
       fixture
           .getRawNodeParsePipelineCache()
           .putComputedNodeIfNotPresent(
-              cell, rootBuildFilePath, ImmutableList.of(ImmutableMap.of("name", "bar")), eventBus);
+              cell,
+              rootBuildFilePath,
+              ImmutableMap.of("bar", ImmutableMap.of("name", "bar")),
+              eventBus);
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage("malformed raw data");
       fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
@@ -226,7 +229,7 @@ public class ParsePipelineTest {
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
       fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
-      Optional<ImmutableList<Map<String, Object>>> rootRawNodes =
+      Optional<ImmutableMap<String, Map<String, Object>>> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()
               .lookupComputedNode(cell, rootBuildFilePath, eventBus);
@@ -250,7 +253,7 @@ public class ParsePipelineTest {
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
       fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
-      Optional<ImmutableList<Map<String, Object>>> rootRawNodes =
+      Optional<ImmutableMap<String, Map<String, Object>>> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()
               .lookupComputedNode(cell, rootBuildFilePath, eventBus);
@@ -311,18 +314,23 @@ public class ParsePipelineTest {
   }
 
   private static class RawNodeParsePipelineCache
-      extends TypedParsePipelineCache<Path, ImmutableList<Map<String, Object>>> {
+      extends TypedParsePipelineCache<Path, ImmutableMap<String, Map<String, Object>>> {
 
     @Override
-    public synchronized ImmutableList<Map<String, Object>> putComputedNodeIfNotPresent(
+    public synchronized ImmutableMap<String, Map<String, Object>> putComputedNodeIfNotPresent(
         Cell cell,
         Path buildFile,
-        ImmutableList<Map<String, Object>> rawNodes,
+        ImmutableMap<String, Map<String, Object>> rawNodes,
         BuckEventBus eventBus) {
-      // Strip meta entries.
-      rawNodes =
-          ImmutableList.copyOf(Iterables.filter(rawNodes, input -> input.containsKey("name")));
-      return super.putComputedNodeIfNotPresent(cell, buildFile, rawNodes, eventBus);
+      return super.putComputedNodeIfNotPresent(
+          cell,
+          buildFile,
+          rawNodes
+              .entrySet()
+              .stream()
+              .filter(node -> !MetaRules.isMetaRuleName(node.getKey()))
+              .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)),
+          eventBus);
     }
   }
 

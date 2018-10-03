@@ -101,7 +101,7 @@ class DaemonicCellState {
   private final Map<Path, ImmutableMap<String, Optional<String>>> buildFileEnv;
 
   @GuardedBy("rawAndComputedNodesLock")
-  private final ConcurrentMapCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
+  private final ConcurrentMapCache<Path, ImmutableMap<String, Map<String, Object>>> allRawNodes;
   // Tracks all targets in `allRawNodes`.  Used to verify that every target in `allComputedNodes`
   // is also in `allRawNodes`, as we use the latter for bookkeeping invalidations.
   @GuardedBy("rawAndComputedNodesLock")
@@ -157,21 +157,21 @@ class DaemonicCellState {
     }
   }
 
-  Optional<ImmutableList<Map<String, Object>>> lookupRawNodes(Path buildFile) {
+  Optional<ImmutableMap<String, Map<String, Object>>> lookupRawNodes(Path buildFile) {
     try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
       return Optional.ofNullable(allRawNodes.getIfPresent(buildFile));
     }
   }
 
-  ImmutableList<Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
+  ImmutableMap<String, Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
       Path buildFile,
-      ImmutableList<Map<String, Object>> withoutMetaIncludes,
+      ImmutableMap<String, Map<String, Object>> withoutMetaIncludes,
       ImmutableSet<Path> dependentsOfEveryNode,
       ImmutableMap<String, Optional<String>> env) {
     try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
-      ImmutableList<Map<String, Object>> updated =
+      ImmutableMap<String, Map<String, Object>> updated =
           allRawNodes.putIfAbsentAndGet(buildFile, withoutMetaIncludes);
-      for (Map<String, Object> node : updated) {
+      for (Map<String, Object> node : updated.values()) {
         allRawNodeTargets.add(
             UnflavoredBuildTargetFactory.createFromRawNode(
                 cellRoot, cellCanonicalName, node, buildFile));
@@ -191,11 +191,11 @@ class DaemonicCellState {
   int invalidatePath(Path path) {
     try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
       int invalidatedRawNodes = 0;
-      ImmutableList<Map<String, Object>> rawNodes = allRawNodes.getIfPresent(path);
+      ImmutableMap<String, Map<String, Object>> rawNodes = allRawNodes.getIfPresent(path);
       if (rawNodes != null) {
         // Increment the counter
         invalidatedRawNodes = rawNodes.size();
-        for (Map<String, Object> rawNode : rawNodes) {
+        for (Map<String, Object> rawNode : rawNodes.values()) {
           UnflavoredBuildTarget target =
               UnflavoredBuildTargetFactory.createFromRawNode(
                   cellRoot, cellCanonicalName, rawNode, path);
@@ -258,7 +258,7 @@ class DaemonicCellState {
     Path root = getCellRoot();
     ObjectMapper objectMapper = new ObjectMapper();
     for (Path path : allRawNodes.keySet()) {
-      ImmutableList<Map<String, Object>> v = allRawNodes.getIfPresent(path);
+      ImmutableMap<String, Map<String, Object>> v = allRawNodes.getIfPresent(path);
       if (v != null) {
         result.put(root.relativize(path).toString(), objectMapper.writeValueAsString(v));
       }
@@ -348,18 +348,19 @@ class DaemonicCellState {
 
     for (String pathString : remote.allRawNodesJsons.keySet()) {
       String json = remote.allRawNodesJsons.get(pathString);
-      ImmutableList<Map<String, Object>> deserializedRawNodes =
-          ObjectMappers.readValue(json, new TypeReference<ImmutableList<Map<String, Object>>>() {});
+      ImmutableMap<String, Map<String, Object>> deserializedRawNodes =
+          ObjectMappers.readValue(
+              json, new TypeReference<ImmutableMap<String, Map<String, Object>>>() {});
       Path key = root.resolve(pathString);
       daemonicCellState.allRawNodes.putIfAbsentAndGet(key, deserializedRawNodes);
       deserializedRawNodes.forEach(
-          rawNode -> {
+          (rawNodeName, rawNode) -> {
             daemonicCellState.allRawNodeTargets.add(
                 ImmutableUnflavoredBuildTarget.of(
                     root,
                     cell.getCanonicalName(),
                     "//" + rawNode.get("buck.base_path"),
-                    (String) rawNode.get("name")));
+                    rawNodeName));
           });
     }
 

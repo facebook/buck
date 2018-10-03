@@ -20,7 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -29,17 +29,18 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** A pipeline that provides raw nodes for a given build file. */
-public class BuildFileRawNodeParsePipeline implements BuildFileParsePipeline<Map<String, Object>> {
+public class BuildFileRawNodeParsePipeline
+    implements BuildFileParsePipeline<String, Map<String, Object>> {
 
   private final BuckEventBus eventBus;
-  private final PipelineNodeCache<Path, ImmutableList<Map<String, Object>>> cache;
+  private final PipelineNodeCache<Path, ImmutableMap<String, Map<String, Object>>> cache;
   private final ListeningExecutorService executorService;
   private final ProjectBuildFileParserPool projectBuildFileParserPool;
   private final Watchman watchman;
   private final AtomicBoolean shuttingDown;
 
   public BuildFileRawNodeParsePipeline(
-      PipelineNodeCache<Path, ImmutableList<Map<String, Object>>> cache,
+      PipelineNodeCache<Path, ImmutableMap<String, Map<String, Object>>> cache,
       ProjectBuildFileParserPool projectBuildFileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
@@ -53,7 +54,7 @@ public class BuildFileRawNodeParsePipeline implements BuildFileParsePipeline<Map
   }
 
   @Override
-  public ListenableFuture<ImmutableList<Map<String, Object>>> getAllNodesJob(
+  public ListenableFuture<ImmutableMap<String, Map<String, Object>>> getAllNodesJob(
       Cell cell, Path buildFile) throws BuildTargetException {
 
     if (shuttingDown.get()) {

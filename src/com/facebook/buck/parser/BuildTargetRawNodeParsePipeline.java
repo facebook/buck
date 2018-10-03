@@ -45,14 +45,11 @@ public class BuildTargetRawNodeParsePipeline
         buildFileRawNodeParsePipeline.getAllNodesJob(
             cell, cell.getAbsolutePathToBuildFile(buildTarget)),
         input -> {
-          for (Map<String, Object> rawNode : input) {
-            Object shortName = rawNode.get("name");
-            if (buildTarget.getShortName().equals(shortName)) {
-              return Futures.immediateFuture(rawNode);
-            }
+          if (!input.containsKey(buildTarget.getShortName())) {
+            throw NoSuchBuildTargetException.createForMissingBuildRule(
+                buildTarget, cell.getAbsolutePathToBuildFile(buildTarget));
           }
-          throw NoSuchBuildTargetException.createForMissingBuildRule(
-              buildTarget, cell.getAbsolutePathToBuildFile(buildTarget));
+          return Futures.immediateFuture(input.get(buildTarget.getShortName()));
         },
         executorService);
   }

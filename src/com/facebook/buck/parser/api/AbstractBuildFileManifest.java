@@ -56,14 +56,15 @@ abstract class AbstractBuildFileManifest {
    *
    * <p>This is for a temporary solution until all clients switch to using build file manifest.
    */
-  public ImmutableList<Map<String, Object>> toRawNodes() {
-    ImmutableList.Builder<Map<String, Object>> builder =
-        ImmutableList.<Map<String, Object>>builder()
-            .addAll(getTargets())
-            .add(ImmutableMap.of(MetaRules.INCLUDES, getIncludes()))
-            .add(ImmutableMap.of(MetaRules.CONFIGS, getConfigs()));
+  public ImmutableMap<String, Map<String, Object>> toRawNodes() {
+    ImmutableMap.Builder<String, Map<String, Object>> builder = ImmutableMap.builder();
+    getTargets().forEach(target -> builder.put((String) target.get("name"), target));
+
+    builder.put(MetaRules.INCLUDES_NAME, ImmutableMap.of(MetaRules.INCLUDES, getIncludes()));
+    builder.put(MetaRules.CONFIGS_NAME, ImmutableMap.of(MetaRules.CONFIGS, getConfigs()));
+
     if (getEnv().isPresent()) {
-      builder.add(ImmutableMap.of(MetaRules.ENV, getEnv().get()));
+      builder.put(MetaRules.ENV_NAME, ImmutableMap.of(MetaRules.ENV, getEnv().get()));
     }
     return builder.build();
   }
