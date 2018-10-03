@@ -61,6 +61,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.longrunning.Operation;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
+import io.grpc.Metadata;
+import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.io.InputStream;
@@ -97,7 +99,10 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   }
 
   public GrpcRemoteExecutionClients(
-      String instanceName, ManagedChannel executionEngineChannel, ManagedChannel casChannel) {
+      String instanceName,
+      ManagedChannel executionEngineChannel,
+      ManagedChannel casChannel,
+      Optional<String> traceID) {
     this.executionEngineChannel = executionEngineChannel;
     this.casChannel = casChannel;
 
@@ -108,9 +113,14 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
             byteStreamStub,
             instanceName,
             PROTOCOL);
+    ExecutionStub executionStub = ExecutionGrpc.newStub(executionEngineChannel);
+    if (traceID.isPresent()) {
+      Metadata headers = new Metadata();
+      headers.put(Metadata.Key.of("trace-id", Metadata.ASCII_STRING_MARSHALLER), traceID.get());
+      executionStub = MetadataUtils.attachHeaders(executionStub, headers);
+    }
     this.executionService =
-        new GrpcRemoteExecutionService(
-            ExecutionGrpc.newStub(executionEngineChannel), byteStreamStub, instanceName);
+        new GrpcRemoteExecutionService(executionStub, byteStreamStub, instanceName);
   }
 
   @Override

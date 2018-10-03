@@ -53,8 +53,8 @@ public class RemoteExecutionClientsFactory {
             remoteExecutionConfig.getRemoteHost(),
             remoteExecutionConfig.getRemotePort(),
             remoteExecutionConfig.getCasHost(),
-            remoteExecutionConfig.getCasPort());
-
+            remoteExecutionConfig.getCasPort(),
+            remoteExecutionConfig.getTraceID());
       case THRIFT:
         return ThriftRemoteExecutionFactory.createRemote(remoteExecutionConfig, eventBus);
       case DEBUG_GRPC_IN_PROCESS:

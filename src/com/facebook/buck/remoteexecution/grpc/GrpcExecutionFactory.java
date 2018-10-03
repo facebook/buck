@@ -26,6 +26,7 @@ import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import java.io.IOException;
+import java.util.Optional;
 
 /** Factory for creating grpc-based strategies. */
 public class GrpcExecutionFactory {
@@ -46,7 +47,7 @@ public class GrpcExecutionFactory {
     Server server = builder.build().start();
     ManagedChannel channel = InProcessChannelBuilder.forName("unique").build();
 
-    return new GrpcRemoteExecutionClients("in-process", channel, channel) {
+    return new GrpcRemoteExecutionClients("in-process", channel, channel, Optional.empty()) {
       @Override
       public void close() throws IOException {
         try (Closer closer = Closer.create()) {
@@ -65,7 +66,11 @@ public class GrpcExecutionFactory {
 
   /** The remote strategy connects to a remote grpc remote execution service. */
   public static RemoteExecutionClients createRemote(
-      String executionEngineHost, int executionEnginePort, String casHost, int casPort)
+      String executionEngineHost,
+      int executionEnginePort,
+      String casHost,
+      int casPort,
+      Optional<String> traceID)
       throws IOException {
     ManagedChannel executionEngineChannel =
         ManagedChannelBuilder.forAddress(executionEngineHost, executionEnginePort)
@@ -79,6 +84,6 @@ public class GrpcExecutionFactory {
             .maxInboundMessageSize(500 * 1024 * 1024)
             .build();
 
-    return new GrpcRemoteExecutionClients("buck", executionEngineChannel, casChannel);
+    return new GrpcRemoteExecutionClients("buck", executionEngineChannel, casChannel, traceID);
   }
 }
