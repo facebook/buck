@@ -65,6 +65,7 @@ public final class Ansi {
   private final boolean isAnsiTerminal;
 
   private final String clearLineString;
+  private final String clearToTheEndOfLineString;
 
   private static final Ansi noTtyAnsi = new Ansi(false /* isAnsiTerminal */);
   private static final Ansi forceTtyAnsi = new Ansi(true /* isAnsiTerminal */);
@@ -73,6 +74,7 @@ public final class Ansi {
   public Ansi(boolean isAnsiTerminal) {
     this.isAnsiTerminal = isAnsiTerminal;
     clearLineString = isAnsiTerminal ? ANSI_ERASE_LINE : "";
+    clearToTheEndOfLineString = isAnsiTerminal ? ANSI_ERASE_TO_THE_END_OF_LINE : "";
   }
 
   public static Ansi withoutTty() {
@@ -193,7 +195,7 @@ public final class Ansi {
 
   /** Clears from the cursor to the end of line. */
   public String clearToTheEndOfLine() {
-    return ANSI_ERASE_TO_THE_END_OF_LINE;
+    return clearToTheEndOfLineString;
   }
 
   public enum SeverityLevel {
