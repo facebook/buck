@@ -102,7 +102,10 @@ public class ThriftRemoteExecutionClientsFactory implements Closeable {
             transport = createBlockingTransport(casHost, casPort);
           } catch (TTransportException e) {
             throw new BuckUncheckedExecutionException(
-                e, "Unable to create a connection to the CAS.");
+                e,
+                "Unable to create a connection to the CAS. host=[%s] port=[%s]",
+                casHost,
+                casPort);
           }
           return new ContentAddressableStorage.Client(new THeaderProtocol(transport));
         },
@@ -145,7 +148,10 @@ public class ThriftRemoteExecutionClientsFactory implements Closeable {
             transport = createBlockingTransport(remoteExecutionHost, remoteExecutionPort);
           } catch (TTransportException e) {
             throw new BuckUncheckedExecutionException(
-                e, "Unable to create a connection to the RemoteExecutionEngine.");
+                e,
+                "Unable to create a connection to the RemoteExecutionEngine. host=[%s] port=[%s]",
+                remoteExecutionHost,
+                remoteExecutionPort);
           }
           return new ExecutionEngine.Client(new THeaderProtocol(transport));
         };
