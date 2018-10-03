@@ -257,6 +257,8 @@
       implementation="com.facebook.buck.intellij.ideabuck.configurations.TestProgramRunner"/>
     <runLineMarkerContributor language="JAVA"
       implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor"/>
+    <additionalTextAttributes scheme="Default" file="colorSchemes/BuckDefault.xml"/>
+    <additionalTextAttributes scheme="Darcula" file="colorSchemes/BuckDarcula.xml"/>
   </extensions>
 
   <extensions defaultExtensionNs="com.android.project">

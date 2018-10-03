@@ -1,0 +1,27 @@
+<?xml version='1.0'?>
+<list>
+  <option name="BUCK.FUNCTION_NAME">
+    <value>
+      <option name="FOREGROUND" value="0"/>
+    </value>
+  </option>
+  <option name="BUCK.PROPERTY_LVALUE">
+    <value>
+      <option name="FOREGROUND" value="3333ff" deuteranopia="55ff" protanopia="55ff"/>
+      <option name="FONT_TYPE" value="1"/>
+    </value>
+  </option>
+  <option name="BUCK.TARGET">
+    <value>
+      <option name="FOREGROUND" value="660e7a" deuteranopia="1948a6" protanopia="1948a6"/>
+      <option name="FONT_TYPE" value="3"/>
+    </value>
+  </option>
+  <option name="BUCK.INVALID_TARGET">
+    <value>
+      <option name="FOREGROUND" value="008000" deuteranopia="1948a6" protanopia="1948a6"/>
+      <option name="BACKGROUND" value="ffcccc" deuteranopia="ffdcbf" protanopia="ffdcbf"/>
+      <option name="FONT_TYPE" deuteranopia="bold" protanopia="bold"/>
+    </value>
+  </option>
+</list>

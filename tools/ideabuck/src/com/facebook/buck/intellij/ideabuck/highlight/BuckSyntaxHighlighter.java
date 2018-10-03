@@ -35,24 +35,30 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
   private static final Map<IElementType, TextAttributesKey> sKeys = new HashMap<>();
 
   public static final TextAttributesKey BUCK_KEYWORD =
-      createTextAttributesKey("BUCK_KEY", DefaultLanguageHighlighterColors.KEYWORD);
+      createTextAttributesKey("BUCK.KEYWORD", DefaultLanguageHighlighterColors.KEYWORD);
   public static final TextAttributesKey BUCK_NUMBER =
-      createTextAttributesKey("BUCK_NUMBER", DefaultLanguageHighlighterColors.NUMBER);
+      createTextAttributesKey("BUCK.NUMBER", DefaultLanguageHighlighterColors.NUMBER);
   public static final TextAttributesKey BUCK_COMMENT =
-      createTextAttributesKey("BUCK_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
+      createTextAttributesKey("BUCK.COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
   public static final TextAttributesKey BUCK_RULE_NAME =
       createTextAttributesKey(
-          "BUCK_RULE_NAME", DefaultLanguageHighlighterColors.FUNCTION_DECLARATION);
+          "BUCK.RULE_NAME", DefaultLanguageHighlighterColors.FUNCTION_DECLARATION);
   public static final TextAttributesKey BUCK_GLOB =
-      createTextAttributesKey("BUCK_GLOB", DefaultLanguageHighlighterColors.FUNCTION_CALL);
+      createTextAttributesKey("BUCK.GLOB", DefaultLanguageHighlighterColors.FUNCTION_CALL);
   public static final TextAttributesKey BUCK_FUNCTION_NAME =
-      createTextAttributesKey("BUCK_FUNCTION_NAME", DefaultLanguageHighlighterColors.FUNCTION_CALL);
+      createTextAttributesKey("BUCK.FUNCTION_NAME", DefaultLanguageHighlighterColors.FUNCTION_CALL);
   public static final TextAttributesKey BUCK_STRING =
-      createTextAttributesKey("BUCK_STRING", DefaultLanguageHighlighterColors.STRING);
+      createTextAttributesKey("BUCK.STRING", DefaultLanguageHighlighterColors.STRING);
   public static final TextAttributesKey BUCK_DOC_STRING =
-      createTextAttributesKey("BUCK_DOC_STRING", DefaultLanguageHighlighterColors.DOC_COMMENT);
+      createTextAttributesKey("BUCK.DOC_STRING", DefaultLanguageHighlighterColors.DOC_COMMENT);
   public static final TextAttributesKey BUCK_PROPERTY_LVALUE =
-      createTextAttributesKey("BUCK_PROPERTY_LVALUE", DefaultLanguageHighlighterColors.PARAMETER);
+      createTextAttributesKey("BUCK.PROPERTY_LVALUE", DefaultLanguageHighlighterColors.PARAMETER);
+  public static final TextAttributesKey BUCK_TARGET =
+      createTextAttributesKey("BUCK.TARGET", DefaultLanguageHighlighterColors.STRING);
+  public static final TextAttributesKey BUCK_INVALID_TARGET =
+      createTextAttributesKey("BUCK.INVALID_TARGET", DefaultLanguageHighlighterColors.STRING);
+  public static final TextAttributesKey BUCK_IDENTIFIER =
+      createTextAttributesKey("BUCK.IDENTIFIER", DefaultLanguageHighlighterColors.IDENTIFIER);
 
   static {
     for (IElementType type :
@@ -82,6 +88,10 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
     sKeys.put(BuckTypes.SINGLE_QUOTED_STRING, BUCK_STRING);
     sKeys.put(BuckTypes.NUMBER, BUCK_NUMBER);
     sKeys.put(BuckTypes.LINE_COMMENT, BUCK_COMMENT);
+    sKeys.put(BuckTypes.FUNCTION_NAME, BUCK_FUNCTION_NAME);
+    sKeys.put(BuckTypes.PROPERTY_LVALUE, BUCK_PROPERTY_LVALUE);
+    sKeys.put(BuckTypes.IDENTIFIER, BUCK_IDENTIFIER);
+
     sKeys.put(TokenType.BAD_CHARACTER, HighlighterColors.BAD_CHARACTER);
   }
 
