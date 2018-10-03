@@ -54,7 +54,8 @@ public class RemoteExecutionClientsFactory {
             remoteExecutionConfig.getRemotePort(),
             remoteExecutionConfig.getCasHost(),
             remoteExecutionConfig.getCasPort(),
-            remoteExecutionConfig.getTraceID());
+            remoteExecutionConfig.getTraceID(),
+            eventBus);
       case THRIFT:
         return ThriftRemoteExecutionFactory.createRemote(remoteExecutionConfig, eventBus);
       case DEBUG_GRPC_IN_PROCESS:
@@ -62,7 +63,7 @@ public class RemoteExecutionClientsFactory {
       case DEBUG_THRIFT_IN_PROCESS:
         return OutOfProcessIsolatedExecutionClients.create(new ThriftProtocol(), eventBus);
       case DEBUG_GRPC_LOCAL:
-        return GrpcExecutionFactory.createInProcess();
+        return GrpcExecutionFactory.createInProcess(eventBus);
     }
     throw new IllegalStateException(String.format("Something went wrong (%s).", type));
   }

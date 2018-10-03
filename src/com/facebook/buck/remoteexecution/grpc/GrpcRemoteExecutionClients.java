@@ -25,6 +25,7 @@ import build.bazel.remote.execution.v2.ExecuteResponse;
 import build.bazel.remote.execution.v2.ExecutionGrpc;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorage;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
@@ -79,7 +80,8 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       String instanceName,
       ManagedChannel executionEngineChannel,
       ManagedChannel casChannel,
-      Optional<String> traceID) {
+      Optional<String> traceID,
+      BuckEventBus buckEventBus) {
     this.executionEngineChannel = executionEngineChannel;
     this.casChannel = casChannel;
 
@@ -89,7 +91,8 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
             ContentAddressableStorageGrpc.newFutureStub(casChannel),
             byteStreamStub,
             instanceName,
-            PROTOCOL);
+            PROTOCOL,
+            buckEventBus);
     ExecutionStub executionStub = ExecutionGrpc.newStub(executionEngineChannel);
     if (traceID.isPresent()) {
       Metadata headers = new Metadata();
@@ -171,8 +174,10 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
       String instanceName,
-      Protocol protocol) {
-    return new GrpcContentAddressableStorage(storageStub, byteStreamStub, instanceName, protocol);
+      Protocol protocol,
+      BuckEventBus buckEventBus) {
+    return new GrpcContentAddressableStorage(
+        storageStub, byteStreamStub, instanceName, protocol, buckEventBus);
   }
 
   private static class GrpcRemoteExecutionService implements RemoteExecutionService {

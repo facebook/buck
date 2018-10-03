@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution.grpc;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
@@ -34,7 +35,8 @@ public class GrpcExecutionFactory {
    * The in-process strategy starts up a grpc remote execution service in process and connects to it
    * directly.
    */
-  public static RemoteExecutionClients createInProcess() throws IOException {
+  public static RemoteExecutionClients createInProcess(BuckEventBus buckEventBus)
+      throws IOException {
     NamedTemporaryDirectory workDir = new NamedTemporaryDirectory("__remote__");
     GrpcRemoteExecutionServiceImpl remoteExecution =
         new GrpcRemoteExecutionServiceImpl(
@@ -47,7 +49,8 @@ public class GrpcExecutionFactory {
     Server server = builder.build().start();
     ManagedChannel channel = InProcessChannelBuilder.forName("unique").build();
 
-    return new GrpcRemoteExecutionClients("in-process", channel, channel, Optional.empty()) {
+    return new GrpcRemoteExecutionClients(
+        "in-process", channel, channel, Optional.empty(), buckEventBus) {
       @Override
       public void close() throws IOException {
         try (Closer closer = Closer.create()) {
@@ -70,7 +73,8 @@ public class GrpcExecutionFactory {
       int executionEnginePort,
       String casHost,
       int casPort,
-      Optional<String> traceID)
+      Optional<String> traceID,
+      BuckEventBus buckEventBus)
       throws IOException {
     ManagedChannel executionEngineChannel =
         ManagedChannelBuilder.forAddress(executionEngineHost, executionEnginePort)
@@ -84,6 +88,7 @@ public class GrpcExecutionFactory {
             .maxInboundMessageSize(500 * 1024 * 1024)
             .build();
 
-    return new GrpcRemoteExecutionClients("buck", executionEngineChannel, casChannel, traceID);
+    return new GrpcRemoteExecutionClients(
+        "buck", executionEngineChannel, casChannel, traceID, buckEventBus);
   }
 }

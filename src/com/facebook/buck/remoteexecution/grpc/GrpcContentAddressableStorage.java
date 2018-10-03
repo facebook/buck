@@ -17,6 +17,7 @@
 package com.facebook.buck.remoteexecution.grpc;
 
 import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc.ContentAddressableStorageFutureStub;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorage;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
@@ -41,16 +42,18 @@ public class GrpcContentAddressableStorage implements ContentAddressedStorage {
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
       String instanceName,
-      Protocol protocol) {
+      Protocol protocol,
+      BuckEventBus buckEventBus) {
     this.uploader =
         new MultiThreadedBlobUploader(
             1000,
             10 * 1024 * 1024,
             MostExecutors.newMultiThreadExecutor("blob-uploader", 4),
-            new GrpcCasBlobUploader(storageStub));
+            new GrpcCasBlobUploader(storageStub, buckEventBus));
 
     this.outputsMaterializer =
-        new OutputsMaterializer(new GrpcAsyncBlobFetcher(instanceName, byteStreamStub), protocol);
+        new OutputsMaterializer(
+            new GrpcAsyncBlobFetcher(instanceName, byteStreamStub, buckEventBus), protocol);
   }
 
   @Override

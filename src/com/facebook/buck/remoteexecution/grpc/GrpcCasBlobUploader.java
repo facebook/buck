@@ -21,10 +21,13 @@ import build.bazel.remote.execution.v2.BatchUpdateBlobsResponse;
 import build.bazel.remote.execution.v2.BatchUpdateBlobsResponse.Response;
 import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc.ContentAddressableStorageFutureStub;
 import build.bazel.remote.execution.v2.FindMissingBlobsRequest;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.remoteexecution.CasBlobUploadEvent;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
 import com.facebook.buck.util.MoreThrowables;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -39,9 +42,12 @@ import java.util.concurrent.ExecutionException;
 public class GrpcCasBlobUploader implements CasBlobUploader {
 
   private final ContentAddressableStorageFutureStub storageStub;
+  private final BuckEventBus buckEventBus;
 
-  public GrpcCasBlobUploader(ContentAddressableStorageFutureStub storageStub) {
+  public GrpcCasBlobUploader(
+      ContentAddressableStorageFutureStub storageStub, BuckEventBus buckEventBus) {
     this.storageStub = storageStub;
+    this.buckEventBus = buckEventBus;
   }
 
   @Override
@@ -68,7 +74,9 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
   @Override
   public ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadData> blobs)
       throws IOException {
-    try {
+    long totalBlobSizeBytes = blobs.stream().mapToLong(blob -> blob.digest.getSize()).sum();
+    try (Scope unused =
+        CasBlobUploadEvent.sendEvent(buckEventBus, blobs.size(), totalBlobSizeBytes)) {
       BatchUpdateBlobsRequest.Builder requestBuilder = BatchUpdateBlobsRequest.newBuilder();
       for (UploadData blob : blobs) {
         try (InputStream dataStream = blob.data.get()) {

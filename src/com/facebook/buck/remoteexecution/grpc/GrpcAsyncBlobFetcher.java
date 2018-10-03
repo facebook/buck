@@ -16,8 +16,11 @@
 
 package com.facebook.buck.remoteexecution.grpc;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
+import com.facebook.buck.remoteexecution.CasBlobDownloadEvent;
 import com.facebook.buck.remoteexecution.Protocol;
+import com.facebook.buck.util.Scope;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -31,33 +34,38 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
 
   private final String instanceName;
   private final ByteStreamStub byteStreamStub;
+  private final BuckEventBus buckEventBus;
 
-  public GrpcAsyncBlobFetcher(String instanceName, ByteStreamStub byteStreamStub) {
+  public GrpcAsyncBlobFetcher(
+      String instanceName, ByteStreamStub byteStreamStub, BuckEventBus buckEventBus) {
     this.instanceName = instanceName;
     this.byteStreamStub = byteStreamStub;
+    this.buckEventBus = buckEventBus;
   }
 
   @Override
   public ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest) {
-    /** Payload received on a fetch request. */
-    class Data {
-      ByteString data = ByteString.EMPTY;
+    try (Scope unused = CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize())) {
+      /** Payload received on a fetch request. */
+      class Data {
+        ByteString data = ByteString.EMPTY;
 
-      public ByteBuffer get() {
-        return data.asReadOnlyByteBuffer();
+        public ByteBuffer get() {
+          return data.asReadOnlyByteBuffer();
+        }
+
+        public void concat(ByteString bytes) {
+          data = data.concat(bytes);
+        }
       }
 
-      public void concat(ByteString bytes) {
-        data = data.concat(bytes);
-      }
+      Data data = new Data();
+      return Futures.transform(
+          GrpcRemoteExecutionClients.readByteStream(
+              instanceName, digest, byteStreamStub, data::concat),
+          ignored -> data.get(),
+          MoreExecutors.directExecutor());
     }
-
-    Data data = new Data();
-    return Futures.transform(
-        GrpcRemoteExecutionClients.readByteStream(
-            instanceName, digest, byteStreamStub, data::concat),
-        ignored -> data.get(),
-        MoreExecutors.directExecutor());
   }
 
   @Override
