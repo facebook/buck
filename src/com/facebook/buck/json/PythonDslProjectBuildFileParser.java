@@ -27,6 +27,7 @@ import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.WatchmanDiagnostic;
 import com.facebook.buck.io.watchman.WatchmanDiagnosticEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.MetaRules;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
@@ -445,14 +446,14 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         values.subList(0, values.size() - 3).asList(),
         ImmutableList.copyOf(
             Preconditions.checkNotNull(
-                (List<String>) values.get(values.size() - 3).get("__includes"))),
+                (List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))),
         Preconditions.checkNotNull(
-            (Map<String, Object>) values.get(values.size() - 2).get("__configs")),
+            (Map<String, Object>) values.get(values.size() - 2).get(MetaRules.CONFIGS)),
         Optional.of(
             ImmutableMap.copyOf(
                 Maps.transformValues(
                     Preconditions.checkNotNull(
-                        (Map<String, String>) values.get(values.size() - 1).get("__env")),
+                        (Map<String, String>) values.get(values.size() - 1).get(MetaRules.ENV)),
                     Optional::ofNullable))),
         ImmutableList.of());
   }

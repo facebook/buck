@@ -32,6 +32,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.watchman.WatchmanDiagnosticEvent;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
+import com.facebook.buck.parser.api.MetaRules;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -480,7 +481,7 @@ public class PythonDslProjectBuildFileParserTest {
               params ->
                   fakeProcessWithJsonOutput(
                       0,
-                      ImmutableList.of("__includes", "__configs", "__env"),
+                      ImmutableList.of(MetaRules.INCLUDES, MetaRules.CONFIGS, MetaRules.ENV),
                       Optional.empty(),
                       Optional.empty()),
               new TestConsole()),

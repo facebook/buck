@@ -60,10 +60,10 @@ abstract class AbstractBuildFileManifest {
     ImmutableList.Builder<Map<String, Object>> builder =
         ImmutableList.<Map<String, Object>>builder()
             .addAll(getTargets())
-            .add(ImmutableMap.of("__includes", getIncludes()))
-            .add(ImmutableMap.of("__configs", getConfigs()));
+            .add(ImmutableMap.of(MetaRules.INCLUDES, getIncludes()))
+            .add(ImmutableMap.of(MetaRules.CONFIGS, getConfigs()));
     if (getEnv().isPresent()) {
-      builder.add(ImmutableMap.of("__env", getEnv().get()));
+      builder.add(ImmutableMap.of(MetaRules.ENV, getEnv().get()));
     }
     return builder.build();
   }

@@ -30,6 +30,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
+import com.facebook.buck.parser.api.MetaRules;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
@@ -79,16 +80,6 @@ import javax.annotation.concurrent.ThreadSafe;
 public class DaemonicParserState {
 
   private static final Logger LOG = Logger.get(DaemonicParserState.class);
-
-  /**
-   * Key of the meta-rule that lists the build files executed while reading rules. The value is a
-   * list of strings with the root build file as the head and included build files as the tail, for
-   * example: {"__includes":["/foo/BUCK", "/foo/buck_includes"]}
-   */
-  private static final String INCLUDES_META_RULE = "__includes";
-
-  private static final String CONFIGS_META_RULE = "__configs";
-  private static final String ENV_META_RULE = "__env";
 
   private static final String COUNTER_CATEGORY = "buck_parser_state";
   private static final String INVALIDATED_BY_ENV_VARS_COUNTER_NAME = "invalidated_by_env_vars";
@@ -219,14 +210,14 @@ public class DaemonicParserState {
       ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
       ImmutableMap<String, Optional<String>> env = ImmutableMap.of();
       for (Map<String, Object> rawNode : rawNodes) {
-        if (rawNode.containsKey(INCLUDES_META_RULE)) {
+        if (rawNode.containsKey(MetaRules.INCLUDES)) {
           for (String path :
-              Preconditions.checkNotNull((Iterable<String>) rawNode.get(INCLUDES_META_RULE))) {
+              Preconditions.checkNotNull((Iterable<String>) rawNode.get(MetaRules.INCLUDES))) {
             dependentsOfEveryNode.add(cell.getFilesystem().resolve(path));
           }
-        } else if (rawNode.containsKey(CONFIGS_META_RULE)) {
-        } else if (rawNode.containsKey(ENV_META_RULE)) {
-          env = ((ImmutableMap<String, Optional<String>>) rawNode.get(ENV_META_RULE));
+        } else if (rawNode.containsKey(MetaRules.CONFIGS)) {
+        } else if (rawNode.containsKey(MetaRules.ENV)) {
+          env = ((ImmutableMap<String, Optional<String>>) rawNode.get(MetaRules.ENV));
         } else {
           withoutMetaIncludesBuilder.add(rawNode);
         }
