@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -69,6 +70,8 @@ import java.util.stream.Stream;
  */
 public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable, NativeLinkTarget {
+
+  private static final Logger LOG = Logger.get(CxxLibrary.class);
 
   private final CxxDeps deps;
   private final CxxDeps exportedDeps;
@@ -298,6 +301,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     CxxPlatform cxxPlatform = key.getCxxPlatform();
 
     if (!isPlatformSupported(cxxPlatform)) {
+      LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return NativeLinkableInput.of();
     }
 
@@ -437,6 +441,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       return ImmutableMap.of();
     }
     if (!isPlatformSupported(cxxPlatform)) {
+      LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return ImmutableMap.of();
     }
     ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
@@ -475,6 +480,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
     if (!isPlatformSupported(cxxPlatform)) {
+      LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return NativeLinkableInput.of();
     }
     return linkTargetInput.apply(cxxPlatform, graphBuilder, pathResolver, ruleFinder);
