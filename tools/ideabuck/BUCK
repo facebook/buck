@@ -84,9 +84,13 @@ java_library(
 java_library(
     name = "resources",
     srcs = [],
-    resources = glob([
-        "**/*.png",
-    ]),
+    resources = glob(
+        [
+            "**/*.png",
+            "**/*.xml",
+        ],
+        exclude = ["resources/META-INF/**"],
+    ),
     resources_root = "resources/",
     visibility = [
         "PUBLIC",
@@ -95,7 +99,7 @@ java_library(
 
 java_binary(
     name = "ideabuck",
-    meta_inf_directory = "META-INF",
+    meta_inf_directory = "resources/META-INF",
     deps = [
         ":ideabuck-lib",
         ":resources",
