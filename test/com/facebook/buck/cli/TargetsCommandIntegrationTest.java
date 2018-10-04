@@ -831,6 +831,32 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
+  public void testShowAllTargetsWithJsonRespectsConfig() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets",
+            "--json",
+            "-c",
+            "ui.json_attribute_format=snake_case",
+            "--show-output",
+            "...");
+    result.assertSuccess();
+
+    assertJsonMatches(workspace, result.getStdout(), "output_path_json_all_snake_case.js");
+
+    result =
+        workspace.runBuckCommand(
+            "targets", "--json", "-c", "ui.json_attribute_format=legacy", "--show-output", "...");
+    result.assertSuccess();
+
+    assertJsonMatches(workspace, result.getStdout(), "output_path_json_all.js");
+  }
+
+  @Test
   public void testSpecificAttributesWithJson() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);

@@ -58,4 +58,12 @@ public abstract class AbstractCliConfig implements ConfigView<BuckConfig> {
                 getDelegate().getPlatform(), getDelegate().getEnvironment()));
     }
   }
+
+  /** When printing out json representation of targets, what formatting should be applied */
+  @Value.Derived
+  public JsonAttributeFormat getJsonAttributeFormat() {
+    return getDelegate()
+        .getEnum("ui", "json_attribute_format", JsonAttributeFormat.class)
+        .orElse(JsonAttributeFormat.DEFAULT);
+  }
 }

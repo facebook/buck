@@ -97,6 +97,7 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -848,6 +849,9 @@ public class TargetsCommand extends AbstractCommand {
                 getEnableParserProfiling(),
                 SpeculativeParsing.DISABLED)) {
 
+      JsonAttributeFormat jsonAttributeFormat =
+          params.getBuckConfig().getView(CliConfig.class).getJsonAttributeFormat();
+
       while (targetNodeIterator.hasNext()) {
         TargetNode<?> targetNode = targetNodeIterator.next();
         @Nullable
@@ -866,16 +870,28 @@ public class TargetsCommand extends AbstractCommand {
         @Nullable TargetResult targetResult = targetResults.get(targetNode.getBuildTarget());
         if (targetResult != null) {
           for (TargetResultFieldName field : TargetResultFieldName.values()) {
-            field
-                .getter
-                .apply(targetResult)
-                .ifPresent(value -> targetNodeAttributes.put(field.name, value));
+            Optional<String> fieldResult = field.getter.apply(targetResult);
+            if (fieldResult.isPresent()) {
+              targetNodeAttributes.put(field.name, fieldResult.get());
+            }
           }
         }
         targetNodeAttributes.put(
             "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
         if (isShowCellPath) {
           targetNodeAttributes.put("buck.cell_path", targetNode.getBuildTarget().getCellPath());
+        }
+
+        if (jsonAttributeFormat != JsonAttributeFormat.LEGACY) {
+          targetNodeAttributes =
+              targetNodeAttributes
+                  .entrySet()
+                  .stream()
+                  .collect(
+                      ImmutableSortedMap.toImmutableSortedMap(
+                          Comparator.naturalOrder(),
+                          e -> jsonAttributeFormat.format(e.getKey()),
+                          Entry::getValue));
         }
 
         // Print the build rule information as JSON.
