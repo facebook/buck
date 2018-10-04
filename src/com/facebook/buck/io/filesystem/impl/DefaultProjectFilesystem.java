@@ -967,6 +967,18 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       mode |= MorePosixFilePermissions.toMode(EnumSet.of(PosixFilePermission.OWNER_EXECUTE));
     }
 
+    if (Files.isReadable(path)) {
+      mode |= MorePosixFilePermissions.toMode(EnumSet.of(PosixFilePermission.OWNER_READ));
+      mode |= MorePosixFilePermissions.toMode(EnumSet.of(PosixFilePermission.GROUP_READ));
+      mode |= MorePosixFilePermissions.toMode(EnumSet.of(PosixFilePermission.OTHERS_READ));
+    }
+
+    if (Files.isWritable(path)) {
+      mode |= MorePosixFilePermissions.toMode(EnumSet.of(PosixFilePermission.OWNER_WRITE));
+      mode |= MorePosixFilePermissions.toMode(EnumSet.of(PosixFilePermission.GROUP_WRITE));
+      mode |= MorePosixFilePermissions.toMode(EnumSet.of(PosixFilePermission.OTHERS_WRITE));
+    }
+
     if (isDirectory(path)) {
       mode |= MostFiles.S_IFDIR;
     } else if (isFile(path)) {
