@@ -1877,14 +1877,18 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
+    boolean isPriorNdk17 = AssumeAndroidPlatform.isArmAvailable();
+    String armAbiString = isPriorNdk17 ? "arm, " : "";
     workspace.writeContentsToPath(
         "[ndk]\n"
             + "  gcc_version = 4.9\n"
-            + "  cpu_abis = arm, armv7, arm64, x86\n"
+            + ("  cpu_abis = " + armAbiString + "armv7, arm64, x86\n")
             + "  app_platform = android-21\n",
         ".buckconfig");
 
-    workspace.runBuckCommand("build", "//foo:simple#android-arm").assertSuccess();
+    if (isPriorNdk17) {
+      workspace.runBuckCommand("build", "//foo:simple#android-arm").assertSuccess();
+    }
     workspace.runBuckCommand("build", "//foo:simple#android-armv7").assertSuccess();
     workspace.runBuckCommand("build", "//foo:simple#android-arm64").assertSuccess();
     workspace.runBuckCommand("build", "//foo:simple#android-x86").assertSuccess();

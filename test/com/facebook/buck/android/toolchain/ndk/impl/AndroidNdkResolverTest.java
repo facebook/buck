@@ -441,10 +441,10 @@ public class AndroidNdkResolverTest {
             NDK_POST_R11_VERSION_FILENAME,
             "ndk-dir-r11",
             "Pkg.Desc = Android NDK\nPkg.Revision = 11.2",
-            "ndk-dir-r16",
-            "Pkg.Desc = Android NDK\nPkg.Revision = 16.1.4479499",
-            "ndk-dir-r17",
-            "Pkg.Desc = Android NDK\nPkg.Revision = 17.1.4828580")[1];
+            "ndk-dir-r17c",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734",
+            "ndk-dir-r18",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 18.1.4828580")[1];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
