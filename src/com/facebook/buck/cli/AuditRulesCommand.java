@@ -31,6 +31,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.devtools.build.lib.syntax.SelectorList;
 import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -260,6 +261,8 @@ public class AuditRulesCommand extends AbstractCommand {
 
       out.append(indent).append("}");
       return out.toString();
+    } else if (value instanceof SelectorList) {
+      return value.toString();
     } else {
       throw new IllegalStateException();
     }

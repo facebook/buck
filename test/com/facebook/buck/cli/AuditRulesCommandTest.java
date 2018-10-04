@@ -20,6 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.syntax.SelectorList;
+import com.google.devtools.build.lib.syntax.SelectorValue;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import org.junit.Test;
 
 public class AuditRulesCommandTest {
@@ -42,6 +45,16 @@ public class AuditRulesCommandTest {
     assertEquals(
         "{\n  \"foo\": [\n    1,\n  ],\n}",
         AuditRulesCommand.createDisplayString(ImmutableMap.of("foo", ImmutableList.of(1))));
+    SkylarkDict<String, String> testDict = SkylarkDict.of(null, "one", "two");
+    assertEquals(
+        "select({\"one\": \"two\"})",
+        AuditRulesCommand.createDisplayString(SelectorList.of(new SelectorValue(testDict, ""))));
+    SkylarkDict<String, String> testDict2 = SkylarkDict.of(null, "three", "four");
+    SkylarkDict<String, String> twoEntryDict = SkylarkDict.plus(testDict, testDict2, null);
+    assertEquals(
+        "select({\"one\": \"two\", \"three\": \"four\"})",
+        AuditRulesCommand.createDisplayString(
+            SelectorList.of(new SelectorValue(twoEntryDict, ""))));
   }
 
   @Test(expected = IllegalStateException.class)
