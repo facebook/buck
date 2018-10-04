@@ -341,7 +341,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
             Objects.requireNonNull(res),
             Objects.requireNonNull(pathToTextSymbolsFile),
             pathsToSymbolsOfDeps,
-            resourceUnion,
             isGrayscaleImageProcessingEnabled,
             ResourceCollectionType.R_DOT_TXT));
     return steps.build();

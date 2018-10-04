@@ -112,7 +112,6 @@ public class MiniAapt implements Step {
   private final Path pathToOutputFile;
   private final ImmutableSet<Path> pathsToSymbolsOfDeps;
   private final ResourceCollector resourceCollector;
-  private final boolean resourceUnion;
   private final boolean isGrayscaleImageProcessingEnabled;
   private final ResourceCollectionType resourceCollectionType;
 
@@ -128,7 +127,6 @@ public class MiniAapt implements Step {
         resDirectory,
         pathToTextSymbolsFile,
         pathsToSymbolsOfDeps,
-        /* resourceUnion */ false,
         /* isGrayscaleImageProcessingEnabled */ false,
         ResourceCollectionType.R_DOT_TXT);
   }
@@ -139,7 +137,6 @@ public class MiniAapt implements Step {
       SourcePath resDirectory,
       Path pathToOutputFile,
       ImmutableSet<Path> pathsToSymbolsOfDeps,
-      boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled,
       ResourceCollectionType resourceCollectionType) {
     this.resolver = resolver;
@@ -147,7 +144,6 @@ public class MiniAapt implements Step {
     this.resDirectory = resDirectory;
     this.pathToOutputFile = pathToOutputFile;
     this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
-    this.resourceUnion = resourceUnion;
     this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
     this.resourceCollectionType = resourceCollectionType;
 
@@ -211,10 +207,6 @@ public class MiniAapt implements Step {
       return StepExecutionResults.ERROR;
     }
 
-    if (resourceUnion) {
-      resourceUnion();
-    }
-
     if (resourceCollectionType == ResourceCollectionType.R_DOT_TXT) {
       RDotTxtResourceCollector rDotTxtResourceCollector =
           (RDotTxtResourceCollector) resourceCollector;
@@ -237,27 +229,6 @@ public class MiniAapt implements Step {
     }
 
     return StepExecutionResults.SUCCESS;
-  }
-
-  /**
-   * Collect resource information from R.txt for each dep and perform a resource union.
-   *
-   * @throws IOException
-   */
-  public void resourceUnion() throws IOException {
-    for (Path depRTxt : pathsToSymbolsOfDeps) {
-      Iterable<String> lines =
-          filesystem
-              .readLines(depRTxt)
-              .stream()
-              .filter(input -> !Strings.isNullOrEmpty(input))
-              .collect(Collectors.toList());
-      for (String line : lines) {
-        Optional<RDotTxtEntry> entry = RDotTxtEntry.parse(line);
-        Preconditions.checkState(entry.isPresent());
-        resourceCollector.addResourceIfNotPresent(entry.get());
-      }
-    }
   }
 
   /**

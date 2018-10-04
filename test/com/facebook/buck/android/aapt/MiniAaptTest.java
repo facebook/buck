@@ -394,7 +394,6 @@ public class MiniAaptTest {
             FakeSourcePath.of(filesystem, "res"),
             Paths.get("R.txt"),
             ImmutableSet.of(),
-            /* resourceUnion */ false,
             /* isGrayscaleImageProcessingEnabled */ true,
             MiniAapt.ResourceCollectionType.R_DOT_TXT);
     aapt.processDrawables(filesystem, Paths.get("fbui_tomato.g.png"));
@@ -724,11 +723,9 @@ public class MiniAaptTest {
             FakeSourcePath.of(filesystem, "res"),
             Paths.get("R.txt"),
             ImmutableSet.of(depRTxt),
-            /* resourceUnion */ true,
             /* isGrayscaleImageProcessingEnabled */ false,
             MiniAapt.ResourceCollectionType.R_DOT_TXT);
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
-    aapt.resourceUnion();
 
     Set<RDotTxtEntry> resources =
         ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
