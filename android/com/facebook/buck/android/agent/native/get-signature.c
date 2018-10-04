@@ -73,11 +73,23 @@ int print_digest_manifest(const char* zip_file_name) {
     // null terminator that we added.
     position++;
 
-    const char* prefix = "SHA1-Digest-Manifest: ";
-    int prefix_len = strlen(prefix);
-    if (strncmp(position, prefix, prefix_len) != 0) {
+    const char* prefix_sha1 = "SHA1-Digest-Manifest: ";
+    const char* prefix_sha256 = "SHA-256-Digest-Manifest: ";
+    int prefix_sha1_len = strlen(prefix_sha1);
+    int prefix_sha256_len = strlen(prefix_sha256);
+    int prefix_len = -1;
+    if (strncmp(position, prefix_sha1, prefix_sha1_len) == 0) {
+      prefix_len = prefix_sha1_len;
+    }
+
+    if (strncmp(position, prefix_sha256, prefix_sha256_len) == 0) {
+      prefix_len = prefix_sha256_len;
+    }
+
+    if(prefix_len == -1) {
       continue;
     }
+
     const char* endpoint = strchr(position, '\n');
     if (endpoint == NULL) {
       continue;
