@@ -19,7 +19,6 @@ package com.facebook.buck.intellij.ideabuck.navigation;
 import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimary;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.util.BuckCellFinder;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandlerBase;
@@ -41,6 +40,10 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
     if (source == null || !(source.getLanguage() instanceof BuckLanguage)) {
       return null;
     }
+    String target = BuckPsiUtils.getStringValueFromBuckString(source);
+    if (target == null) {
+      return null;
+    }
 
     final Project project = editor.getProject();
     if (project == null) {
@@ -51,9 +54,7 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
     BuckCellFinder buckCellFinder = BuckCellFinder.getInstance(project);
     PsiManager psiManager = PsiManager.getInstance(project);
 
-    String target = unwrapString(source.getText());
     PsiElement psiTarget = null;
-
     if (PsiTreeUtil.getParentOfType(source, BuckLoadTargetArgument.class) != null) {
       psiTarget =
           buckCellFinder
@@ -61,7 +62,7 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
               .filter(VirtualFile::exists)
               .map(psiManager::findFile)
               .orElse(null);
-    } else if (PsiTreeUtil.getParentOfType(source, BuckPrimary.class) != null) {
+    } else {
       if (target.startsWith(":")) {
         // ':' prefix means this is a target in the same BUCK file
         psiTarget = BuckPsiUtils.findTargetInPsiTree(sourcePsiFile, target.substring(1));

@@ -115,17 +115,27 @@ public final class BuckPsiUtils {
   }
 
   /**
-   * Returns the text content if the given BuckString (without quotes).
+   * Returns the text content of the given string (without the appropriate quoting).
+   *
+   * <p>This method accepts elements that are either {@link BuckString} elements or any of the
+   * various {@link #STRING_LITERALS}.
    *
    * <p>Note that this method is currently underdeveloped and hacky. It does not apply percent-style
    * formatting (if such formatting is used, this method returns null), nor does it process escape
    * sequences (these sequences currently appear in their raw form in the string).
    */
   @Nullable
-  public static String getStringValueFromBuckString(@Nullable BuckString buckString) {
-    if (buckString == null) {
+  public static String getStringValueFromBuckString(@Nullable PsiElement stringElement) {
+    if (stringElement == null) {
       return null;
     }
+    if (hasElementType(stringElement, STRING_LITERALS)) {
+      stringElement = stringElement.getParent();
+    }
+    if (!hasElementType(stringElement, BuckTypes.STRING)) {
+      return null;
+    }
+    BuckString buckString = (BuckString) stringElement;
     if (buckString.getPrimary() != null) {
       return null; // "%s %s" % ("percent", "formatting")
     }

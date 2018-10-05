@@ -168,21 +168,31 @@ public class BuckCellFinder extends AbstractProjectComponent {
     }
   }
 
+  /**
+   * Matches buck's cell notation: an optional @ in front of a cell name, a cell path, and an
+   * (optional) target.
+   */
+  private static final Pattern BUCK_CELL_PATH_PATTERN =
+      Pattern.compile("@?(?<cell>[-A-Za-z_.]*)//(?<path>[^:]*)(:(?<target>[^:]*))?");
+
   /** Finds the Buck file for the given target, starting from the given sourceFile. */
   public Optional<VirtualFile> findBuckTargetFile(VirtualFile sourceFile, String target) {
-    Pattern pattern = Pattern.compile("^([^/]*)//([^:]*):[\\s\\S]*$");
-    Matcher matcher = pattern.matcher(target);
+    Matcher matcher = BUCK_CELL_PATH_PATTERN.matcher(target);
     if (!matcher.matches()) {
       return Optional.empty();
     }
-    String cellName = matcher.group(1);
-    String pathFromCellRoot = matcher.group(2);
+    String targetName = matcher.group("target");
+    if (targetName == null) {
+      return Optional.empty();
+    }
+    String cellName = matcher.group("cell");
+    String cellPath = matcher.group("path");
     return findBuckCell(sourceFile, cellName)
         .flatMap(
             cell -> {
               return Optional.ofNullable(pathMacroExpander.apply(cell.getRoot()))
                   .map(s -> sourceFile.getFileSystem().findFileByPath(s))
-                  .map(root -> VfsUtil.findRelativeFile(pathFromCellRoot, root))
+                  .map(root -> VfsUtil.findRelativeFile(cellPath, root))
                   .map(sub -> VfsUtil.findRelativeFile(cell.getBuildFileName(), sub))
                   .filter(VirtualFile::exists);
             });
@@ -195,47 +205,47 @@ public class BuckCellFinder extends AbstractProjectComponent {
           .map(f -> f.findFileByRelativePath(target.substring(1)))
           .filter(VirtualFile::exists);
     }
-    Pattern pattern = Pattern.compile("^@?(?<cell>[^/]*)//(?<path>[^:]*):(?<target>[^:]+)$");
-    Matcher matcher = pattern.matcher(target);
+    Matcher matcher = BUCK_CELL_PATH_PATTERN.matcher(target);
     if (!matcher.matches()) {
       return Optional.empty();
     }
+    String targetName = matcher.group("target");
+    if (targetName == null) {
+      return Optional.empty();
+    }
     String cellName = matcher.group("cell");
-    String pathFromCellRoot = matcher.group("path");
-    String extensionFilename = matcher.group("target");
-
+    String cellPath = matcher.group("path");
     return findBuckCell(sourceFile, cellName)
         .flatMap(
             cell -> {
               return Optional.ofNullable(pathMacroExpander.apply(cell.getRoot()))
                   .map(s -> sourceFile.getFileSystem().findFileByPath(s))
-                  .map(cellRoot -> cellRoot.findFileByRelativePath(pathFromCellRoot))
-                  .map(subDir -> subDir.findFileByRelativePath(extensionFilename))
+                  .map(cellRoot -> cellRoot.findFileByRelativePath(cellPath))
+                  .map(subDir -> subDir.findFileByRelativePath(targetName))
                   .filter(VirtualFile::exists);
             });
   }
 
   /**
-   * Resolves the given {@code cellPath} in the form {@code <cell>//<path>} (no target).
+   * Resolves the given {@code path} in the expected form {@code <cell>//<path>} (any target is
+   * optional/ignored).
    *
    * <p>Note that there is no guarantee about the type of {@code VirtualFile} returned, so users who
    * require it to be either a directory or a file should
    */
-  public Optional<VirtualFile> resolveCellPath(VirtualFile sourceFile, String cellPath) {
-    Pattern pattern = Pattern.compile("^@?([^/]*)//([^:]*)$");
-    Matcher matcher = pattern.matcher(cellPath);
+  public Optional<VirtualFile> resolveCellPath(VirtualFile sourceFile, String path) {
+    Matcher matcher = BUCK_CELL_PATH_PATTERN.matcher(path);
     if (!matcher.matches()) {
       return Optional.empty();
     }
-    String cellName = matcher.group(1);
-    String pathFromCellRoot = matcher.group(2);
-
+    String cellName = matcher.group("cell");
+    String cellPath = matcher.group("path");
     return findBuckCell(sourceFile, cellName)
         .flatMap(
             cell -> {
               return Optional.ofNullable(pathMacroExpander.apply(cell.getRoot()))
                   .map(s -> sourceFile.getFileSystem().findFileByPath(s))
-                  .map(cellRoot -> cellRoot.findFileByRelativePath(pathFromCellRoot));
+                  .map(cellRoot -> cellRoot.findFileByRelativePath(cellPath));
             });
   }
 }
