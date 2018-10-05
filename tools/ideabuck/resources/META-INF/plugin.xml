@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.5.3-SNAPSHOT</version>
+  <version>3.5.3</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -23,6 +23,7 @@
 <h3>3.5.3</h3>
 <ul>
   <li>Convert "autodeps" feature to quick fix.</li>
+  <li>Improved syntax parsing, highlighting, autocompletion, and click-through navigation.</li>
 </ul>
 <h3>3.5.2</h3>
 <ul>
