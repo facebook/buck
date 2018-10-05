@@ -49,14 +49,21 @@ BOOLEAN=(True|False)
 LINE_COMMENT=#.*
 
 ANY_ESCAPE_SEQUENCE = \\[^]
-ONE_OR_TWO_QUOTES = (\"[^\\\"]) | (\"\\[^]) | (\"\"[^\\\"]) | (\"\"\\[^])
-THREE_QUOTES = (\"\"\")
-QUOTED_STRING_CHARS = [^\\\"] | {ANY_ESCAPE_SEQUENCE} | {ONE_OR_TWO_QUOTES}
-DOC_STRING = {THREE_QUOTES} {QUOTED_STRING_CHARS}* {THREE_QUOTES}?
 
-UPDATE_OPS=\+=|-=|\*=|"/"=|"//"=|%=|&=|\|=|\^=|<<=|>>=
+ONE_OR_TWO_DOUBLE_QUOTES = (\"[^\\\"]) | (\"\\[^]) | (\"\"[^\\\"]) | (\"\"\\[^])
+THREE_DOUBLE_QUOTES = (\"\"\")
+DOUBLE_QUOTED_DOC_STRING_CHARS = [^\\\"] | {ANY_ESCAPE_SEQUENCE} | {ONE_OR_TWO_DOUBLE_QUOTES}
+
+ONE_OR_TWO_SINGLE_QUOTES = (\'[^\\\']) | (\'\\[^]) | (\'\'[^\\\']) | (\'\'\\[^])
+THREE_SINGLE_QUOTES = (\'\'\')
+SINGLE_QUOTED_DOC_STRING_CHARS = [^\\\'] | {ANY_ESCAPE_SEQUENCE} | {ONE_OR_TWO_SINGLE_QUOTES}
+
+DOUBLE_QUOTED_DOC_STRING = {THREE_DOUBLE_QUOTES} {DOUBLE_QUOTED_DOC_STRING_CHARS}* {THREE_DOUBLE_QUOTES}?
+SINGLE_QUOTED_DOC_STRING = {THREE_SINGLE_QUOTES} {SINGLE_QUOTED_DOC_STRING_CHARS}* {THREE_SINGLE_QUOTES}?
 DOUBLE_QUOTED_STRING=\"([^\\\"\r\n]|\\[^\r\n])*\"?
 SINGLE_QUOTED_STRING='([^\\'\r\n]|\\[^\r\n])*'?
+
+UPDATE_OPS=\+=|-=|\*=|"/"=|"//"=|%=|&=|\|=|\^=|<<=|>>=
 NUMBER=-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]*)?
 IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
 
@@ -139,7 +146,8 @@ IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
 
   {BOOLEAN}                   { return BOOLEAN; }
   {UPDATE_OPS}                { return UPDATE_OPS; }
-  {DOC_STRING}                { return DOC_STRING; }
+  {DOUBLE_QUOTED_DOC_STRING}  { return DOUBLE_QUOTED_DOC_STRING; }
+  {SINGLE_QUOTED_DOC_STRING}  { return SINGLE_QUOTED_DOC_STRING; }
   {LINE_COMMENT}              { return LINE_COMMENT; }
   {DOUBLE_QUOTED_STRING}      { return DOUBLE_QUOTED_STRING; }
   {SINGLE_QUOTED_STRING}      { return SINGLE_QUOTED_STRING; }

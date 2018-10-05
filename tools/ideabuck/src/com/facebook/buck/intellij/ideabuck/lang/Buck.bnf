@@ -59,6 +59,8 @@
     LINE_COMMENT = 'regexp:#.*'
     DOUBLE_QUOTED_STRING="regexp:\"([^\\\"\r\n]|\\[^\r\n])*\"?"
     SINGLE_QUOTED_STRING="regexp:'([^\\\'\r\n]|\\[^\r\n])*'?"
+    DOUBLE_QUOTED_DOC_STRING="regexp:\"\"\".*(\"\"\")?"
+    SINGLE_QUOTED_DOC_STRING="regexp:'''.*(''')?"
 
     LOAD_KEYWORD = 'load'
     DEF = 'def'
@@ -95,7 +97,7 @@
 buckFile ::= item_*
 
 private item_ ::= (statement | load_call | function_definition)
-private string ::= (DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING) (PERCENT primary) ?
+string ::= (DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_DOC_STRING | SINGLE_QUOTED_DOC_STRING) (PERCENT primary) ?
 
 load_call ::= 'load' '(' load_target_argument (',' load_argument) (',' load_argument)* [','] ')'
 load_target_argument ::= string
@@ -109,7 +111,7 @@ parameter ::= IDENTIFIER ['=' single_expression] | '*' IDENTIFIER | '**' IDENTIF
 
 suite ::= simple_statement | INDENT statement+ DEDENT
 
-statement ::= simple_statement | if_statement | for_statement | LINE_COMMENT | DOC_STRING
+statement ::= simple_statement | if_statement | for_statement | LINE_COMMENT
 
 simple_statement ::= small_statement (';' small_statement)* ';'?
 

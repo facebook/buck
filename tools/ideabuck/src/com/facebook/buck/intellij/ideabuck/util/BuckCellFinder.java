@@ -150,6 +150,12 @@ public class BuckCellFinder extends AbstractProjectComponent {
                   return Optional.of(buckFile);
                 }
                 parent = parent.getParent();
+                if (parent == null) {
+                  break;
+                }
+                if (parent.getCanonicalPath() == null) {
+                  break;
+                }
               }
               return Optional.empty();
             });

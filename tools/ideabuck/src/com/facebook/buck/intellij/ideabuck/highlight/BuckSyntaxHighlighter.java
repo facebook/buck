@@ -59,6 +59,8 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
       createTextAttributesKey("BUCK.INVALID_TARGET", DefaultLanguageHighlighterColors.STRING);
   public static final TextAttributesKey BUCK_IDENTIFIER =
       createTextAttributesKey("BUCK.IDENTIFIER", DefaultLanguageHighlighterColors.IDENTIFIER);
+  public static final TextAttributesKey BUCK_FILE_NAME =
+      createTextAttributesKey("BUCK.FILE_NAME", DefaultLanguageHighlighterColors.IDENTIFIER);
 
   static {
     for (IElementType type :
@@ -82,7 +84,8 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
         }) {
       sKeys.put(type, BUCK_KEYWORD);
     }
-    sKeys.put(BuckTypes.DOC_STRING, BUCK_DOC_STRING);
+    sKeys.put(BuckTypes.SINGLE_QUOTED_DOC_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.DOUBLE_QUOTED_DOC_STRING, BUCK_STRING);
     sKeys.put(BuckTypes.GLOB, BUCK_GLOB);
     sKeys.put(BuckTypes.DOUBLE_QUOTED_STRING, BUCK_STRING);
     sKeys.put(BuckTypes.SINGLE_QUOTED_STRING, BUCK_STRING);
