@@ -418,7 +418,8 @@ public class ProjectIntegrationTest {
     for (File file : recursePath(projPath)) {
       if (!(file.isDirectory()
           || file.getPath().contains("log")
-          || file.getName().equals(".progressestimations.json"))) {
+          || file.getName().equals(".progressestimations.json")
+          || file.getName().equals(".currentversion"))) {
         assertTrue(file.lastModified() <= lastModifiedProject);
       }
     }
