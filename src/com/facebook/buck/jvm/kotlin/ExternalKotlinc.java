@@ -19,8 +19,8 @@ import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -42,7 +42,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /** kotlinc implemented as a separate binary. */
-public class ExternalKotlinc implements Kotlinc, RuleKeyAppendable {
+public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
 
   private static final KotlincVersion DEFAULT_VERSION = KotlincVersion.of("unknown version");
 
@@ -75,13 +75,14 @@ public class ExternalKotlinc implements Kotlinc, RuleKeyAppendable {
             });
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
+  /** Returns the Kotlin version, or the path if version is unknown */
+  @AddToRuleKey
+  public String getKotlinCompilerVersion() {
     if (DEFAULT_VERSION.equals(getVersion())) {
       // What we really want to do here is use a VersionedTool, however, this will suffice for now.
-      sink.setReflectively("kotlinc", getShortName());
+      return getShortName();
     } else {
-      sink.setReflectively("kotlinc.version", getVersion().toString());
+      return getVersion().toString();
     }
   }
 
