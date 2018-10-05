@@ -214,6 +214,9 @@
     <completion.contributor
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.completion.BuckCompletionContributor"/>
+    <completion.contributor
+      language="Buck"
+      implementationClass="com.facebook.buck.intellij.ideabuck.completion.BuckTargetCompletionContributor"/>
     <codeStyleSettingsProvider
       implementation="com.facebook.buck.intellij.ideabuck.config.BuckCodeStyleSettingsProvider"/>
     <langCodeStyleSettingsProvider

@@ -18,10 +18,13 @@ package com.facebook.buck.intellij.ideabuck.lang.psi;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 
@@ -111,6 +114,13 @@ public final class BuckPsiUtils {
     return getStringValueFromBuckString(buckPrimary.getString());
   }
 
+  /**
+   * Returns the text content if the given BuckString (without quotes).
+   *
+   * <p>Note that this method is currently underdeveloped and hacky. It does not apply percent-style
+   * formatting (if such formatting is used, this method returns null), nor does it process escape
+   * sequences (these sequences currently appear in their raw form in the string).
+   */
   @Nullable
   public static String getStringValueFromBuckString(@Nullable BuckString buckString) {
     if (buckString == null) {
@@ -162,5 +172,31 @@ public final class BuckPsiUtils {
       }
     }
     return null;
+  }
+
+  /**
+   * Returns a mapping from rule names that start with the given prefix to their target elements.
+   */
+  public static Map<String, PsiElement> findTargetsInPsiTree(PsiFile psiFile, String namePrefix) {
+    Map<String, PsiElement> targetsByName = new HashMap<>();
+    for (BuckFunctionCall buckRuleBlock :
+        PsiTreeUtil.findChildrenOfType(psiFile, BuckFunctionCall.class)) {
+      BuckFunctionCallSuffix buckRuleBody = buckRuleBlock.getFunctionCallSuffix();
+      for (BuckArgument buckArgument :
+          PsiTreeUtil.findChildrenOfType(buckRuleBody, BuckArgument.class)) {
+        BuckPropertyLvalue propertyLvalue = buckArgument.getPropertyLvalue();
+        if (propertyLvalue == null || !"name".equals(propertyLvalue.getText())) {
+          continue;
+        }
+        String name = BuckPsiUtils.getStringValueFromExpression(buckArgument.getSingleExpression());
+        if (name != null) {
+          if (name.startsWith(namePrefix)) {
+            targetsByName.put(name, buckRuleBlock);
+          }
+          break;
+        }
+      }
+    }
+    return targetsByName;
   }
 }

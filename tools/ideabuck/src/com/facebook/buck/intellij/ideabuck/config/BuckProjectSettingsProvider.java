@@ -26,9 +26,10 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.jetbrains.annotations.Nullable;
 
 /** Project-level preferences. */
@@ -194,13 +195,14 @@ public class BuckProjectSettingsProvider extends AbstractProjectComponent
     state.customizedInstallSettingCommand = customizedInstallSettingCommand;
   }
 
-  /** Returns a list of buck cells in this project. */
-  public List<BuckCell> getCells() {
-    List<BuckCell> result = new ArrayList<>(state.cells.size());
-    for (BuckCell cell : state.cells) {
-      result.add(cell.copy());
-    }
-    return result;
+  /** Returns a stream of buck cells in this project. */
+  public Stream<BuckCell> getCells() {
+    return state.cells.stream().map(BuckCell::copy);
+  }
+
+  /** Returns a list of buck cell names in this project. */
+  public List<String> getCellNames() {
+    return state.cells.stream().map(BuckCell::getName).collect(Collectors.toList());
   }
 
   /** Sets a list of buck cells in this project. */

@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -377,7 +378,7 @@ public class BuckSettingsUI extends JPanel {
     JPanel panel = new JPanel(new BorderLayout());
     panel.setBorder(IdeBorderFactory.createTitledBorder("Cells", true));
     cellTableModel = new ListTableModel<>(CELL_NAME_COLUMN, ROOT_COLUMN, BUILD_FILENAME_COLUMN);
-    cellTableModel.setItems(optionsProvider.getCells());
+    cellTableModel.setItems(optionsProvider.getCells().collect(Collectors.toList()));
     TableView<BuckCell> cellTable = new TableView<>(cellTableModel);
     cellTable.setPreferredScrollableViewportSize(
         new Dimension(
@@ -601,6 +602,6 @@ public class BuckSettingsUI extends JPanel {
     uninstallBeforeInstall.setSelected(optionsProvider.isUninstallBeforeInstalling());
     customizedInstallSetting.setSelected(optionsProvider.isUseCustomizedInstallSetting());
     customizedInstallSettingField.setText(optionsProvider.getCustomizedInstallSettingCommand());
-    cellTableModel.setItems(optionsProvider.getCells());
+    cellTableModel.setItems(optionsProvider.getCells().collect(Collectors.toList()));
   }
 }
