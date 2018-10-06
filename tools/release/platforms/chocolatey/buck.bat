@@ -1,3 +1,4 @@
+@setlocal
 @echo off
 REM Invoke buck.pex in the same directory as this script with python
 REM We try to find a python2 installation first because python3 can
