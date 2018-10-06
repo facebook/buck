@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.toolchain.ndk;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 
 /** Name of the target CPU architecture. */
 public enum NdkTargetArch {
@@ -29,7 +29,7 @@ public enum NdkTargetArch {
   private final String value;
 
   NdkTargetArch(String value) {
-    this.value = Preconditions.checkNotNull(value);
+    this.value = Objects.requireNonNull(value);
   }
 
   @Override

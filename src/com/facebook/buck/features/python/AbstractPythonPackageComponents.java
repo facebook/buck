@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -38,6 +37,7 @@ import com.google.common.collect.SetMultimap;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -150,10 +150,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
       SourcePath existing = builder.put(destination, source);
       if (existing != null && !existing.equals(source)) {
         throw createDuplicateError(
-            type,
-            destination,
-            sourceDesc,
-            Preconditions.checkNotNull(sourceDescs.get(destination)));
+            type, destination, sourceDesc, Objects.requireNonNull(sourceDescs.get(destination)));
       }
       sourceDescs.put(destination, sourceDesc);
       return this;

@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -37,7 +38,7 @@ public class Elf {
   private final List<ElfSection> sections;
 
   public Elf(ByteBuffer buffer) {
-    this.buffer = Preconditions.checkNotNull(buffer);
+    this.buffer = Objects.requireNonNull(buffer);
 
     // Eagerly parse the header, since we'll need this info for most/all operations.
     this.header = ElfHeader.parse(this.buffer);

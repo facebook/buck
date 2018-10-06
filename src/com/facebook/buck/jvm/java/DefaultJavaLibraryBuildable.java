@@ -43,11 +43,11 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
@@ -85,7 +85,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             .map(
                 rule ->
                     new NonHashableSourcePathContainer(
-                        Preconditions.checkNotNull(rule.getSourcePathToOutput())));
+                        Objects.requireNonNull(rule.getSourcePathToOutput())));
 
     CompilerOutputPaths outputPaths = CompilerOutputPaths.of(buildTarget, filesystem);
 

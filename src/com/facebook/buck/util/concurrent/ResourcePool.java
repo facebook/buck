@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -236,7 +237,7 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
     if (!allowedToCreateResource()) {
       return Optional.empty();
     }
-    R resource = Preconditions.checkNotNull(resourceSupplier.get());
+    R resource = Objects.requireNonNull(resourceSupplier.get());
     createdResources.add(resource);
     return Optional.of(resource);
   }
@@ -245,7 +246,7 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
   public synchronized ListenableFuture<Void> getShutdownFullyCompleteFuture() {
     Preconditions.checkState(
         closing.get(), "This method should not be called before the .close() method is called.");
-    return Preconditions.checkNotNull(shutdownFuture);
+    return Objects.requireNonNull(shutdownFuture);
   }
 
   @Override

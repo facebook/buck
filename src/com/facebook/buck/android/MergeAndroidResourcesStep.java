@@ -60,6 +60,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -477,7 +478,7 @@ public class MergeAndroidResourcesStep implements Step {
         RDotTxtEntry resource = linesInSymbolsFile.get(index);
 
         if (uberRDotTxtIds.isPresent()) {
-          Preconditions.checkNotNull(finalIds);
+          Objects.requireNonNull(finalIds);
           if (!finalIds.containsKey(resource)) {
             LOG.debug("Cannot find resource '%s' in the uber R.txt.", resource);
             continue;
@@ -486,12 +487,12 @@ public class MergeAndroidResourcesStep implements Step {
 
         } else if (useOldStyleableFormat) {
           if (resource.idValue.startsWith("0x7f")) {
-            Preconditions.checkNotNull(enumerator);
+            Objects.requireNonNull(enumerator);
             resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
           }
         } else {
           if (resourceToIdValuesMap.containsKey(resource)) {
-            resource = Preconditions.checkNotNull(resourceToIdValuesMap.get(resource));
+            resource = Objects.requireNonNull(resourceToIdValuesMap.get(resource));
 
           } else if (resource.idType == IdType.INT_ARRAY && resource.type == RType.STYLEABLE) {
             Map<RDotTxtEntry, String> styleableResourcesMap =
@@ -514,7 +515,7 @@ public class MergeAndroidResourcesStep implements Step {
             // Framework resources starts with 0x01 and are constants
             // which should not be assigned a custom R value.
             if (!resource.idValue.startsWith("0x01")) {
-              Preconditions.checkNotNull(enumerator);
+              Objects.requireNonNull(enumerator);
               resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
             }
 
@@ -542,7 +543,7 @@ public class MergeAndroidResourcesStep implements Step {
         ovr ->
             ovr.forEach(
                 (pkg, resource) -> {
-                  Preconditions.checkNotNull(finalFinalIds);
+                  Objects.requireNonNull(finalFinalIds);
                   if (!rDotJavaPackageToSymbolsFiles.containsEntry(pkg, resource)) {
                     String realId = finalFinalIds.get(resource);
                     Preconditions.checkState(

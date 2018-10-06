@@ -27,7 +27,8 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.CoreArg;
+import java.util.Objects;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -58,8 +59,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
       ToolchainProvider toolchainProvider) {
-    KotlinLibraryDescription.CoreArg kotlinArgs =
-        Preconditions.checkNotNull((KotlinLibraryDescription.CoreArg) args);
+    CoreArg kotlinArgs = Objects.requireNonNull((CoreArg) args);
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinc(),
         kotlinBuckConfig.getKotlinHomeLibraries(),

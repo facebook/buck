@@ -200,7 +200,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
 
     this.winFSInstance = winFSInstance;
     if (Platform.detect() == Platform.WINDOWS) {
-      Preconditions.checkNotNull(this.winFSInstance);
+      Objects.requireNonNull(this.winFSInstance);
     }
   }
 

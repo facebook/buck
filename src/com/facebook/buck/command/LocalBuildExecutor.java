@@ -67,6 +67,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -221,7 +222,7 @@ public class LocalBuildExecutor implements BuildExecutor {
             cachingBuildEngineDelegate.getFileHashCache(),
             args.getBuckEventBus(),
             args.getConsole(),
-            Preconditions.checkNotNull(args.getExecutors().get(ExecutorPool.REMOTE))),
+            Objects.requireNonNull(args.getExecutors().get(ExecutorPool.REMOTE))),
         executorService,
         new DefaultStepRunner(),
         buildEngineMode.orElse(engineConfig.getBuildEngineMode()),

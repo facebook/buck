@@ -37,11 +37,11 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 
 public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -93,7 +93,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
     Path bundleOutputPath =
         context
             .getSourcePathResolver()
-            .getRelativePath(Preconditions.checkNotNull(bundle.getSourcePathToOutput()));
+            .getRelativePath(Objects.requireNonNull(bundle.getSourcePathToOutput()));
 
     appendAdditionalAppleWatchSteps(context, commands);
 

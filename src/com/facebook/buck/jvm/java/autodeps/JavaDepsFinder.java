@@ -34,11 +34,11 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.util.Objects;
 import java.util.Set;
 
 public class JavaDepsFinder {
@@ -140,7 +140,7 @@ public class JavaDepsFinder {
       features = buildRule.getFeatures();
     } else {
       Throwable failure = result.getFailure();
-      Preconditions.checkNotNull(failure);
+      Objects.requireNonNull(failure);
       throw new RuntimeException("Failed to extract Java symbols for " + buildTarget, failure);
     }
     return features;

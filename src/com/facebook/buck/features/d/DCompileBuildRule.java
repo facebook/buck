@@ -30,10 +30,10 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /** A build rule for invoking the D compiler. */
 public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -71,7 +71,7 @@ public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path output =
         context
             .getSourcePathResolver()
-            .getRelativePath(Preconditions.checkNotNull(getSourcePathToOutput()));
+            .getRelativePath(Objects.requireNonNull(getSourcePathToOutput()));
     buildableContext.recordArtifact(output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();

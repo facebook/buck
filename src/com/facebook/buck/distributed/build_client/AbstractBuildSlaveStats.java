@@ -20,8 +20,8 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Parameter;
@@ -38,6 +38,6 @@ abstract class AbstractBuildSlaveStats {
       getBuildSlaveStats();
 
   public Optional<BuildSlaveFinishedStats> getStatsForBuildSlave(BuildSlaveRunId runId) {
-    return Preconditions.checkNotNull(getBuildSlaveStats().get(runId));
+    return Objects.requireNonNull(getBuildSlaveStats().get(runId));
   }
 }

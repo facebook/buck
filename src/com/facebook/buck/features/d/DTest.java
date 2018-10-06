@@ -41,7 +41,6 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,6 +48,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
@@ -231,7 +231,7 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public SourcePath getSourcePathToOutput() {
     return ForwardingBuildTargetSourcePath.of(
-        getBuildTarget(), Preconditions.checkNotNull(testBinaryBuildRule.getSourcePathToOutput()));
+        getBuildTarget(), Objects.requireNonNull(testBinaryBuildRule.getSourcePathToOutput()));
   }
 
   @Override

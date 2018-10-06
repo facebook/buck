@@ -36,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
@@ -156,7 +157,7 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
     for (BuildJobStateFileHashEntry fileEntry :
         fileMaterializationFuturesByFileHashEntry.keySet()) {
       ListenableFuture<?> materializationFuture =
-          Preconditions.checkNotNull(fileMaterializationFuturesByFileHashEntry.get(fileEntry));
+          Objects.requireNonNull(fileMaterializationFuturesByFileHashEntry.get(fileEntry));
       if (!materializationFuture.isDone()) {
         LOG.warn(
             String.format(

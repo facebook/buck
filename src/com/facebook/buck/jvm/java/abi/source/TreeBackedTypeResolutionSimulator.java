@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Scope;
 import com.sun.source.tree.Tree.Kind;
@@ -25,6 +24,7 @@ import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
@@ -50,8 +50,7 @@ class TreeBackedTypeResolutionSimulator {
     this.elements = elements;
     this.trees = trees;
     enclosingPackage =
-        (PackageElement)
-            Preconditions.checkNotNull(trees.getElement(new TreePath(compilationUnit)));
+        (PackageElement) Objects.requireNonNull(trees.getElement(new TreePath(compilationUnit)));
   }
 
   public void setImports(ImportsTracker imports) {
@@ -90,9 +89,9 @@ class TreeBackedTypeResolutionSimulator {
       this.location = referencingPath;
       this.canonicalElement = canonicalElement;
       this.referencedElement =
-          (QualifiedNameable) Preconditions.checkNotNull(trees.getElement(referencingPath));
+          (QualifiedNameable) Objects.requireNonNull(trees.getElement(referencingPath));
       this.enclosingElement = enclosingElement;
-      scope = Preconditions.checkNotNull(trees.getScope(location));
+      scope = Objects.requireNonNull(trees.getScope(location));
       try {
         remediations = new ArrayList<>();
         if (!isCanonicalReference()) {
@@ -272,7 +271,7 @@ class TreeBackedTypeResolutionSimulator {
       @Override
       public boolean canBeApplied() {
         return trees.isAccessible(scope, toImport)
-            && !Preconditions.checkNotNull(imports).nameIsStaticImported(toImport.getSimpleName());
+            && !Objects.requireNonNull(imports).nameIsStaticImported(toImport.getSimpleName());
       }
 
       @Override
@@ -365,7 +364,7 @@ class TreeBackedTypeResolutionSimulator {
       if (lastDot > 0) {
         String enclosingPackageQualifiedName = qualifiedName.substring(0, lastDot);
         PackageElement enclosingPackage =
-            Preconditions.checkNotNull(elements.getPackageElement(enclosingPackageQualifiedName));
+            Objects.requireNonNull(elements.getPackageElement(enclosingPackageQualifiedName));
         enclosingElement = resolveEnclosingElement(enclosingPackage);
       }
 

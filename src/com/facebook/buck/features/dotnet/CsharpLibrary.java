@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 
 public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -116,7 +117,7 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         Preconditions.checkArgument(
             rule instanceof CsharpLibrary || rule instanceof PrebuiltDotnetLibrary);
 
-        SourcePath outputPath = Preconditions.checkNotNull(rule.getSourcePathToOutput());
+        SourcePath outputPath = Objects.requireNonNull(rule.getSourcePathToOutput());
         resolved.add(Either.ofLeft(pathResolver.getAbsolutePath(outputPath)));
       } else {
         resolved.add(Either.ofRight(ref.getRight()));

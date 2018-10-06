@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.infer.annotation.PropagatesNullable;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -73,7 +73,7 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
 
   @Override
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
-    Preconditions.checkNotNull(this.name);
+    Objects.requireNonNull(this.name);
     if (!compatibilityMode.usesDependencies()
         && !this.name.equals(name)
         && !this.name.equals(outerName)) {

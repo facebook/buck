@@ -21,9 +21,9 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.MoreSuppliers;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Objects;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -36,7 +36,7 @@ public class HashedFileTool implements Tool {
   }
 
   public HashedFileTool(@Nullable SourcePath path) {
-    this(() -> Preconditions.checkNotNull(path));
+    this(() -> Objects.requireNonNull(path));
   }
 
   @Override

@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -33,6 +32,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeSet;
 import java.util.stream.StreamSupport;
@@ -93,7 +93,7 @@ public class InMemoryBuildFileTree implements BuildFileTree {
 
       Node child = new Node(basePath);
       Node parent = findParent(child, basePathToNodeIndex);
-      Preconditions.checkNotNull(parent).addChild(child);
+      Objects.requireNonNull(parent).addChild(child);
       basePathToNodeIndex.put(basePath, child);
     }
   }
@@ -120,7 +120,7 @@ public class InMemoryBuildFileTree implements BuildFileTree {
 
   @VisibleForTesting
   Collection<Path> getChildPaths(Path path) {
-    Node node = Preconditions.checkNotNull(basePathToNodeIndex.get(path));
+    Node node = Objects.requireNonNull(basePathToNodeIndex.get(path));
     if (node.children == null) {
       return ImmutableList.of();
     } else {

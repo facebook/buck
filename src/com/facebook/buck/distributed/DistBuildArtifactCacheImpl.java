@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -131,7 +132,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
             cache -> {
               try {
                 RuleKey key = ruleKeyCalculator.calculate(eventBus, rule).get();
-                return Preconditions.checkNotNull(
+                return Objects.requireNonNull(
                         cache.multiContainsAsync(ImmutableSet.of(key)).get().get(key))
                     .getType()
                     .isSuccess();
@@ -259,7 +260,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
                 Futures.transform(
                     keysToCacheResultFuture,
                     keysToCacheResult ->
-                        Preconditions.checkNotNull(
+                        Objects.requireNonNull(
                                 keysToCacheResult.get(Futures.getUnchecked(rulesToKeys.get(rule))))
                             .getType()
                             .isSuccess(),

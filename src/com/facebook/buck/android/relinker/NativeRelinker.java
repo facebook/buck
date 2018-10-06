@@ -49,6 +49,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -258,7 +259,7 @@ public class NativeRelinker {
         ruleFinder,
         ImmutableSortedSet.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded::apply)),
         cpuType,
-        Preconditions.checkNotNull(nativePlatforms.get(cpuType)).getObjdump(),
+        Objects.requireNonNull(nativePlatforms.get(cpuType)).getObjdump(),
         cxxBuckConfig,
         source,
         linker,

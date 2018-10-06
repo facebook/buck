@@ -59,6 +59,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
@@ -130,7 +131,7 @@ public class RobolectricTestDescription
           ruleFinder,
           projectFilesystem,
           params,
-          Preconditions.checkNotNull(testRule.getSourcePathToOutput()));
+          Objects.requireNonNull(testRule.getSourcePathToOutput()));
     }
 
     JavacOptions javacOptions =

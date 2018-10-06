@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -185,7 +186,7 @@ public class ThriftCoordinatorServer implements Closeable {
       TThreadedSelectorServer.Args serverArgs = new TThreadedSelectorServer.Args(transport);
       serverArgs.processor(processor);
       server = new TThreadedSelectorServer(serverArgs);
-      serverThread = new Thread(() -> Preconditions.checkNotNull(server).serve());
+      serverThread = new Thread(() -> Objects.requireNonNull(server).serve());
       serverThread.start();
     }
 
@@ -264,10 +265,10 @@ public class ThriftCoordinatorServer implements Closeable {
                 "Forced unexpected Coordinator shutdown."));
     eventListener.onThriftServerClosing(exitState);
     synchronized (lock) {
-      Preconditions.checkNotNull(server, "Server has already been stopped.").stop();
+      Objects.requireNonNull(server, "Server has already been stopped.").stop();
       server = null;
       try {
-        Preconditions.checkNotNull(serverThread).join(MAX_TEAR_DOWN_MILLIS);
+        Objects.requireNonNull(serverThread).join(MAX_TEAR_DOWN_MILLIS);
       } catch (InterruptedException e) {
         throw new IOException("Coordinator thrift server took too long to tear down.", e);
       } finally {

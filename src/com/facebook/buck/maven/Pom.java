@@ -22,7 +22,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -134,7 +133,7 @@ public class Pom {
       ModelBuildingRequest req = new DefaultModelBuildingRequest().setPomFile(file);
       ModelBuildingResult modelBuildingResult = modelBuilder.build(req);
 
-      Model constructed = Preconditions.checkNotNull(modelBuildingResult.getRawModel());
+      Model constructed = Objects.requireNonNull(modelBuildingResult.getRawModel());
 
       return merge(model, constructed);
     } catch (ModelBuildingException e) {
@@ -403,8 +402,8 @@ public class Pom {
     }
 
     private void validate() {
-      Preconditions.checkNotNull(groupId);
-      Preconditions.checkNotNull(artifactId);
+      Objects.requireNonNull(groupId);
+      Objects.requireNonNull(artifactId);
     }
 
     public Dependency createDependency() {

@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /** Keeps track of BuildSlave timing statistics. */
@@ -40,7 +41,7 @@ public class BuildSlaveTimingStatsTracker {
   private final Map<SlaveEvents, Stopwatch> watches = new HashMap<>();
 
   public synchronized long getElapsedTimeMs(SlaveEvents event) {
-    Stopwatch watch = Preconditions.checkNotNull(watches.get(event));
+    Stopwatch watch = Objects.requireNonNull(watches.get(event));
     Preconditions.checkState(!watch.isRunning(), "Stopwatch for %s is still running.", event);
     return watch.elapsed(TimeUnit.MILLISECONDS);
   }
@@ -52,7 +53,7 @@ public class BuildSlaveTimingStatsTracker {
   }
 
   public synchronized void stopTimer(SlaveEvents event) {
-    Stopwatch watch = Preconditions.checkNotNull(watches.get(event));
+    Stopwatch watch = Objects.requireNonNull(watches.get(event));
     Preconditions.checkState(
         watch.isRunning(), "Stopwatch for %s has already been stopped.", event);
     watch.stop();

@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /** Provides methods for launching a java binary bundled within the buck binary. */
@@ -64,7 +65,7 @@ public class BundledExternalProcessLauncher {
 
   private ImmutableList<String> getCommandForPexBuild(EntryPoints entryPoint) {
     String jarPath = System.getProperty("buck.external_executor_jar");
-    Preconditions.checkNotNull(
+    Objects.requireNonNull(
         jarPath,
         "The buck.external_executor_jar property is not set despite this being a PEX build.");
     return ImmutableList.of("java", "-cp", jarPath, entryPoint.getEntryPointName());

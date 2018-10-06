@@ -17,12 +17,12 @@
 package com.facebook.buck.util.zip;
 
 import com.facebook.buck.util.timing.Clock;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -57,7 +57,7 @@ class AppendingZipOutputStreamImpl implements CustomZipOutputStream.Impl {
 
   @Override
   public void actuallyWrite(byte[] b, int off, int len) throws IOException {
-    Preconditions.checkNotNull(currentEntry);
+    Objects.requireNonNull(currentEntry);
     currentEntry.write(delegate, b, off, len);
   }
 

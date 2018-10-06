@@ -377,7 +377,7 @@ public class MorePaths {
   public static void createSymLink(@Nullable WindowsFS winFS, Path symLink, Path target)
       throws IOException {
     if (Platform.detect() == Platform.WINDOWS) {
-      Preconditions.checkNotNull(winFS);
+      Objects.requireNonNull(winFS);
       target = MorePaths.normalize(symLink.getParent().resolve(target));
       winFS.createSymbolicLink(symLink, target, isDirectory(target));
     } else {

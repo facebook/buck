@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
 import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.CompilationUnitTree;
@@ -36,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -78,7 +78,7 @@ class PostEnterCanonicalizer {
   }
 
   public ExecutableElement getCanonicalElement(ExecutableElement element) {
-    return Preconditions.checkNotNull(elements.getCanonicalElement(element));
+    return Objects.requireNonNull(elements.getCanonicalElement(element));
   }
 
   public List<TypeMirror> getCanonicalTypes(
@@ -240,7 +240,7 @@ class PostEnterCanonicalizer {
   }
 
   private TypeMirror getUnderlyingType(TreePath treePath) {
-    return Preconditions.checkNotNull(javacTrees.getTypeMirror(treePath));
+    return Objects.requireNonNull(javacTrees.getTypeMirror(treePath));
   }
 
   private TypeMirror getInferredType(TreePath treePath) throws CompilerErrorException {
@@ -343,7 +343,7 @@ class PostEnterCanonicalizer {
           ArtificialPackageElement packageElement =
               (ArtificialPackageElement)
                   elements.getCanonicalElement(
-                      Preconditions.checkNotNull(
+                      Objects.requireNonNull(
                           javacTrees.getElement(new TreePath(treePath.getCompilationUnit()))));
           return types.getDeclaredType(elements.getOrCreateTypeElement(packageElement, identifier));
         }
@@ -382,7 +382,7 @@ class PostEnterCanonicalizer {
 
           @Override
           public Object visitEnumConstant(VariableElement c, Void aVoid) {
-            return Preconditions.checkNotNull(elements.getCanonicalElement(c));
+            return Objects.requireNonNull(elements.getCanonicalElement(c));
           }
 
           @Override

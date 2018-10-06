@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.toolchain.ndk;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 
 /** The build toolchain, named (including compiler version) after the target platform/arch. */
 public enum NdkToolchain {
@@ -29,7 +29,7 @@ public enum NdkToolchain {
   private final String value;
 
   NdkToolchain(String value) {
-    this.value = Preconditions.checkNotNull(value);
+    this.value = Objects.requireNonNull(value);
   }
 
   @Override

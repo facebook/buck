@@ -36,10 +36,10 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -116,7 +116,7 @@ public class DistBuildController {
     Pair<StampedeId, ListenableFuture<Void>> stampedeIdAndPendingPrepFuture = null;
     try {
       stampedeIdAndPendingPrepFuture =
-          Preconditions.checkNotNull(
+          Objects.requireNonNull(
               preBuildPhase.runPreDistBuildLocalStepsAsync(
                   executorService,
                   projectFilesystem,
@@ -164,7 +164,7 @@ public class DistBuildController {
       buildResult =
           buildPhase.runDistBuildAndUpdateConsoleStatus(
               executorService,
-              Preconditions.checkNotNull(stampedeIdReference.get()),
+              Objects.requireNonNull(stampedeIdReference.get()),
               buildMode,
               distLocalBuildMode,
               invocationInfo,

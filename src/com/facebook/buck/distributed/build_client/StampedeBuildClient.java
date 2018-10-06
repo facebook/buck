@@ -29,9 +29,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -221,7 +221,7 @@ public class StampedeBuildClient {
   }
 
   public StampedeId getStampedeId() {
-    return Preconditions.checkNotNull(stampedeIdReference.get());
+    return Objects.requireNonNull(stampedeIdReference.get());
   }
 
   /**
@@ -233,7 +233,7 @@ public class StampedeBuildClient {
       String localBuildType,
       boolean isDownloadHeavyBuild,
       Optional<CountDownLatch> waitForBuildCalledLatch) {
-    Preconditions.checkNotNull(remoteBuildRuleSynchronizer);
+    Objects.requireNonNull(remoteBuildRuleSynchronizer);
     return new LocalBuildRunner(
         executorForLocalBuild,
         localBuildExecutorInvoker,
@@ -250,11 +250,11 @@ public class StampedeBuildClient {
       BuildEvent.DistBuildStarted distBuildStartedEvent,
       boolean waitGracefullyForDistributedBuildThreadToFinish,
       long distributedBuildThreadKillTimeoutSeconds) {
-    Preconditions.checkNotNull(eventBus);
-    Preconditions.checkNotNull(racerBuildRunner);
-    Preconditions.checkNotNull(synchronizedBuildRunner);
-    Preconditions.checkNotNull(remoteBuildRuleSynchronizer);
-    Preconditions.checkNotNull(stampedeIdReference);
+    Objects.requireNonNull(eventBus);
+    Objects.requireNonNull(racerBuildRunner);
+    Objects.requireNonNull(synchronizedBuildRunner);
+    Objects.requireNonNull(remoteBuildRuleSynchronizer);
+    Objects.requireNonNull(stampedeIdReference);
 
     ImmutableSet<CountDownLatch> buildPhaseLatches =
         ImmutableSet.of(

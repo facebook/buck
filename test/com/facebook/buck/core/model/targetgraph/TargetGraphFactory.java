@@ -18,11 +18,11 @@ package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class TargetGraphFactory {
 
@@ -43,7 +43,7 @@ public class TargetGraphFactory {
     for (TargetNode<?> node : map.values()) {
       graph.addNode(node);
       for (BuildTarget dep : node.getBuildDeps()) {
-        graph.addEdge(node, Preconditions.checkNotNull(map.get(dep), dep));
+        graph.addEdge(node, Objects.requireNonNull(map.get(dep), dep::toString));
       }
     }
     return new TargetGraph(graph, map);
@@ -64,7 +64,7 @@ public class TargetGraphFactory {
     for (TargetNode<?> node : map.values()) {
       graph.addNode(node);
       for (BuildTarget dep : node.getBuildDeps()) {
-        graph.addEdge(node, Preconditions.checkNotNull(map.get(dep), dep));
+        graph.addEdge(node, Objects.requireNonNull(map.get(dep), dep::toString));
       }
     }
     return new TargetGraph(graph, map);

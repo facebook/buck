@@ -192,6 +192,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -727,8 +728,7 @@ public class ProjectGenerator {
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
       throws IOException {
     Path infoPlistPath =
-        Preconditions.checkNotNull(
-            resolveSourcePath(targetNode.getConstructorArg().getInfoPlist()));
+        Objects.requireNonNull(resolveSourcePath(targetNode.getConstructorArg().getInfoPlist()));
 
     // -- copy any binary and bundle targets into this bundle
     Iterable<TargetNode<?>> copiedRules =
@@ -2452,7 +2452,7 @@ public class ProjectGenerator {
       ImmutableSortedMap<String, String> mergedSettings =
           MoreMaps.mergeSorted(targetLevelInlineSettings, combinedOverrideConfigs);
       Path xcconfigPath = getConfigurationXcconfigPath(buildTarget, configurationEntry.getKey());
-      projectFilesystem.mkdirs(Preconditions.checkNotNull(xcconfigPath).getParent());
+      projectFilesystem.mkdirs(Objects.requireNonNull(xcconfigPath).getParent());
 
       StringBuilder stringBuilder = new StringBuilder();
       for (Map.Entry<String, String> entry : mergedSettings.entrySet()) {

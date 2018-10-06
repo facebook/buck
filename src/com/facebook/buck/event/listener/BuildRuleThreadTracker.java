@@ -21,6 +21,7 @@ import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -95,7 +96,7 @@ public class BuildRuleThreadTracker {
 
   private void handleEndingEvent(BuildRuleEvent.EndingBuildRuleEvent ending) {
     Optional<? extends BuildRuleEvent> beginning =
-        Preconditions.checkNotNull(
+        Objects.requireNonNull(
             threadsToRunningBuildRuleEvent.put(ending.getThreadId(), Optional.empty()));
     Preconditions.checkState(beginning.isPresent());
     Preconditions.checkState(ending.getBuildRule().equals(beginning.get().getBuildRule()));

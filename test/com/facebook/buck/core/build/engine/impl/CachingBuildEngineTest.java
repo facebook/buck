@@ -198,6 +198,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.SortedSet;
@@ -1400,19 +1401,19 @@ public class CachingBuildEngineTest {
         assertTrue(service.shutdownNow().isEmpty());
         assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
         assertThat(
-            Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(dep1.getBuildTarget()))
+            Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep1.getBuildTarget()))
                 .getStatus(),
             equalTo(BuildRuleStatus.FAIL));
         assertThat(
-            Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(dep2.getBuildTarget()))
+            Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep2.getBuildTarget()))
                 .getStatus(),
             equalTo(BuildRuleStatus.CANCELED));
         assertThat(
-            Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(dep3.getBuildTarget()))
+            Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep3.getBuildTarget()))
                 .getStatus(),
             Matchers.oneOf(BuildRuleStatus.SUCCESS, BuildRuleStatus.CANCELED));
         assertThat(
-            Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(dep4.getBuildTarget()))
+            Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep4.getBuildTarget()))
                 .getStatus(),
             Matchers.oneOf(BuildRuleStatus.SUCCESS, BuildRuleStatus.CANCELED));
       }
@@ -1482,19 +1483,19 @@ public class CachingBuildEngineTest {
                 .get();
         assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
         assertThat(
-            Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(dep1.getBuildTarget()))
+            Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep1.getBuildTarget()))
                 .getStatus(),
             equalTo(BuildRuleStatus.FAIL));
         assertThat(
-            Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(dep2.getBuildTarget()))
+            Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep2.getBuildTarget()))
                 .getStatus(),
             equalTo(BuildRuleStatus.CANCELED));
         assertThat(
-            Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(dep3.getBuildTarget()))
+            Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep3.getBuildTarget()))
                 .getStatus(),
             equalTo(BuildRuleStatus.SUCCESS));
         assertThat(
-            Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(dep4.getBuildTarget()))
+            Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep4.getBuildTarget()))
                 .getStatus(),
             equalTo(BuildRuleStatus.SUCCESS));
       }
@@ -2202,7 +2203,7 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       Path input =
-          pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
+          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
@@ -2375,7 +2376,7 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       Path input =
-          pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
+          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
 
       // Create a simple rule which just writes a file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -2542,7 +2543,7 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       Path input =
-          pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
+          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
 
       // Create a simple rule which just writes a file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -2629,7 +2630,7 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       Path input =
-          pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
+          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
 
       // Create a simple rule which just writes a file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -2754,7 +2755,7 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       Path input =
-          pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
+          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
@@ -2867,7 +2868,7 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       Path input =
-          pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
+          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
@@ -2990,7 +2991,7 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       Path input =
-          pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
+          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
@@ -4404,7 +4405,7 @@ public class CachingBuildEngineTest {
   private static BuildRuleSuccessType getSuccess(BuildResult result) {
     switch (result.getStatus()) {
       case FAIL:
-        Throwables.throwIfUnchecked(Preconditions.checkNotNull(result.getFailure()));
+        Throwables.throwIfUnchecked(Objects.requireNonNull(result.getFailure()));
         throw new RuntimeException(result.getFailure());
       case CANCELED:
         throw new RuntimeException("result is canceled");

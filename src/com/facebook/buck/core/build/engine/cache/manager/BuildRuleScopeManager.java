@@ -44,6 +44,7 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -164,7 +165,7 @@ public class BuildRuleScopeManager {
   }
 
   private void postFinished(BuildRuleEvent.Resumed resumed) {
-    Preconditions.checkNotNull(finishedData);
+    Objects.requireNonNull(finishedData);
     post(finishedData.getEvent(resumed));
   }
 

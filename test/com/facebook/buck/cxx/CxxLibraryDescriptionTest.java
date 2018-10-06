@@ -84,7 +84,6 @@ import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -95,6 +94,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -761,7 +761,7 @@ public class CxxLibraryDescriptionTest {
         hasItem(
             containsString(
                 pathResolver
-                    .getRelativePath(Preconditions.checkNotNull(loc.getSourcePathToOutput()))
+                    .getRelativePath(Objects.requireNonNull(loc.getSourcePathToOutput()))
                     .toString())));
   }
 
@@ -802,7 +802,7 @@ public class CxxLibraryDescriptionTest {
             String.format(
                 "-Wl,--version-script=%s",
                 pathResolver.getAbsolutePath(
-                    Preconditions.checkNotNull(loc.getSourcePathToOutput())))));
+                    Objects.requireNonNull(loc.getSourcePathToOutput())))));
     assertThat(
         Arg.stringify(lib.getArgs(), pathResolver),
         not(hasItem(pathResolver.getAbsolutePath(loc.getSourcePathToOutput()).toString())));
@@ -845,7 +845,7 @@ public class CxxLibraryDescriptionTest {
             hasItem(
                 containsString(
                     pathResolver
-                        .getRelativePath(Preconditions.checkNotNull(loc.getSourcePathToOutput()))
+                        .getRelativePath(Objects.requireNonNull(loc.getSourcePathToOutput()))
                         .toString()))));
   }
 
@@ -883,7 +883,7 @@ public class CxxLibraryDescriptionTest {
         hasItem(
             containsString(
                 pathResolver
-                    .getRelativePath(Preconditions.checkNotNull(loc.getSourcePathToOutput()))
+                    .getRelativePath(Objects.requireNonNull(loc.getSourcePathToOutput()))
                     .toString())));
   }
 
@@ -926,7 +926,7 @@ public class CxxLibraryDescriptionTest {
         hasItem(
             containsString(
                 pathResolver
-                    .getRelativePath(Preconditions.checkNotNull(loc.getSourcePathToOutput()))
+                    .getRelativePath(Objects.requireNonNull(loc.getSourcePathToOutput()))
                     .toString())));
   }
 
@@ -972,7 +972,7 @@ public class CxxLibraryDescriptionTest {
             hasItem(
                 containsString(
                     pathResolver
-                        .getRelativePath(Preconditions.checkNotNull(loc.getSourcePathToOutput()))
+                        .getRelativePath(Objects.requireNonNull(loc.getSourcePathToOutput()))
                         .toString()))));
   }
 

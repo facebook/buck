@@ -41,6 +41,7 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -77,7 +78,7 @@ public class AndroidBuildConfigDescription
           ruleFinder,
           context.getProjectFilesystem(),
           params,
-          Preconditions.checkNotNull(configRule.getSourcePathToOutput()));
+          Objects.requireNonNull(configRule.getSourcePathToOutput()));
     }
 
     return createBuildRule(

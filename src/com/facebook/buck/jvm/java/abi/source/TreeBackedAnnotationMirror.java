@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.ExpressionTree;
@@ -29,6 +28,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -98,7 +98,7 @@ class TreeBackedAnnotationMirror implements ArtificialAnnotationMirror {
         ExecutableElement underlyingKeyElement = entry.getKey();
 
         Tree valueTree =
-            Preconditions.checkNotNull(trees.get(entry.getKey().getSimpleName().toString()));
+            Objects.requireNonNull(trees.get(entry.getKey().getSimpleName().toString()));
 
         result.put(
             canonicalizer.getCanonicalElement(underlyingKeyElement),

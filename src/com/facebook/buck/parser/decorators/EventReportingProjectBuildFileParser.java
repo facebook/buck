@@ -22,9 +22,9 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -81,7 +81,7 @@ public class EventReportingProjectBuildFileParser
       if (projectBuildFileParseEventStarted != null) {
         eventBus.post(
             new ProjectBuildFileParseEvents.Finished(
-                Preconditions.checkNotNull(projectBuildFileParseEventStarted)));
+                Objects.requireNonNull(projectBuildFileParseEventStarted)));
       }
     }
   }

@@ -19,7 +19,6 @@ package com.facebook.buck.support.cli.args;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -34,6 +33,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -173,7 +173,7 @@ public class BuckArgsMethods {
     } else {
       projectRoot = cellMapping.get(CellName.ROOT_CELL_NAME);
     }
-    Preconditions.checkNotNull(projectRoot, "Project root not resolved");
+    Objects.requireNonNull(projectRoot, "Project root not resolved");
     Path argsPath = projectRoot.resolve(Paths.get(unresolvedArgsPath));
 
     if (!Files.exists(argsPath)) {

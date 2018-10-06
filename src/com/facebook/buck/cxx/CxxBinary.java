@@ -41,6 +41,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Objects;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -121,7 +122,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public SourcePath getSourcePathToOutput() {
     return ForwardingBuildTargetSourcePath.of(
-        getBuildTarget(), Preconditions.checkNotNull(linkRule.getSourcePathToOutput()));
+        getBuildTarget(), Objects.requireNonNull(linkRule.getSourcePathToOutput()));
   }
 
   public BuildRule getLinkRule() {

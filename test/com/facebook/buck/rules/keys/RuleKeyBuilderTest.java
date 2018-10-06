@@ -45,7 +45,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.types.Either;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -56,6 +55,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.regex.Pattern;
@@ -276,7 +276,7 @@ public class RuleKeyBuilderTest {
 
     @Override
     public BuildRule getRule(BuildTarget target) {
-      return Preconditions.checkNotNull(ruleMap.get(target), "No rule for target: " + target);
+      return Objects.requireNonNull(ruleMap.get(target), "No rule for target: " + target);
     }
   }
 

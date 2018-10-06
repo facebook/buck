@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -75,8 +76,8 @@ class TestCaseSummariesBuildingXctestEventHandler
   @Override
   public void handleBeginTestCaseEvent(XctestOutputParsing.BeginTestCaseEvent event) {
     testReportingCallback.testDidBegin(
-        Optional.ofNullable(event.className).orElse(Preconditions.checkNotNull(event.test)),
-        Optional.ofNullable(event.methodName).orElse(Preconditions.checkNotNull(event.test)));
+        Optional.ofNullable(event.className).orElse(Objects.requireNonNull(event.test)),
+        Optional.ofNullable(event.methodName).orElse(Objects.requireNonNull(event.test)));
   }
 
   @Override
@@ -84,7 +85,7 @@ class TestCaseSummariesBuildingXctestEventHandler
     TestResultSummary testResultSummary =
         XctestOutputParsing.testResultSummaryForEndTestCaseEvent(event);
     testResultSummariesBuilder.put(
-        Optional.ofNullable(event.className).orElse(Preconditions.checkNotNull(event.test)),
+        Optional.ofNullable(event.className).orElse(Objects.requireNonNull(event.test)),
         testResultSummary);
     testReportingCallback.testDidEnd(testResultSummary);
   }

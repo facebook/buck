@@ -20,11 +20,11 @@ import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
 import com.facebook.buck.jvm.java.lang.model.BridgeMethod;
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.jvm.java.lang.model.MoreElements;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.processing.Messager;
 import javax.lang.model.SourceVersion;
@@ -153,8 +153,7 @@ class ClassVisitorDriverFromElement {
 
       TypeMirror superclass = e.getSuperclass();
       if (superclass.getKind() == TypeKind.NONE) {
-        superclass =
-            Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
+        superclass = Objects.requireNonNull(elements.getTypeElement("java.lang.Object")).asType();
       }
 
       int classFileVersion = sourceVersionToClassFileVersion(targetVersion);

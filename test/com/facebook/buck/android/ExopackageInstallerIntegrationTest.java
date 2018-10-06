@@ -41,7 +41,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
@@ -55,6 +54,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
@@ -696,7 +696,7 @@ public class ExopackageInstallerIntegrationTest {
                     entry -> {
                       try {
                         return Files.toString(
-                            Preconditions.checkNotNull(entry.getValue()).toFile(), Charsets.UTF_8);
+                            Objects.requireNonNull(entry.getValue()).toFile(), Charsets.UTF_8);
                       } catch (IOException e) {
                         throw new RuntimeException(e);
                       }

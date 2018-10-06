@@ -48,7 +48,6 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.buck.versions.VersionedTargetGraphAndTargets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -60,6 +59,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -236,7 +236,7 @@ public class GoProjectCommandHelper {
       vendorPath = Paths.get("vendor");
     }
     ActionGraphAndBuilder result =
-        Preconditions.checkNotNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
+        Objects.requireNonNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
     DefaultSourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(result.getActionGraphBuilder()));
 

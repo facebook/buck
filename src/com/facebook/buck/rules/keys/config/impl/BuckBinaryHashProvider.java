@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.keys.config.impl;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 
 /** Provides the Buck binary hash key. */
 public final class BuckBinaryHashProvider {
@@ -32,7 +32,7 @@ public final class BuckBinaryHashProvider {
    */
   public static String getBuckBinaryHash() {
     if (buckBinaryHash == null) {
-      buckBinaryHash = Preconditions.checkNotNull(System.getProperty("buck.binary_hash"));
+      buckBinaryHash = Objects.requireNonNull(System.getProperty("buck.binary_hash"));
     }
     return buckBinaryHash;
   }

@@ -40,6 +40,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -260,7 +261,7 @@ final class OwnersReport {
 
         Cell cell = entry.getKey().get();
         BuildFileTree buildFileTree =
-            Preconditions.checkNotNull(
+            Objects.requireNonNull(
                 buildFileTrees.get(cell),
                 "cell is be derived from buildFileTree keys, so should be present");
 

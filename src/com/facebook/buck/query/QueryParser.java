@@ -37,7 +37,6 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
@@ -45,6 +44,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -245,8 +245,7 @@ final class QueryParser {
                     break;
 
                   case WORD:
-                    argsBuilder.add(
-                        Argument.of(Preconditions.checkNotNull(consume(TokenKind.WORD))));
+                    argsBuilder.add(Argument.of(Objects.requireNonNull(consume(TokenKind.WORD))));
                     break;
 
                   case INTEGER:
@@ -272,7 +271,7 @@ final class QueryParser {
             consume(TokenKind.RPAREN);
             return FunctionExpression.of(function, argsBuilder.build());
           } else {
-            Preconditions.checkNotNull(word);
+            Objects.requireNonNull(word);
             if (targetEvaluator.getType() == QueryEnvironment.TargetEvaluator.Type.LAZY) {
               return TargetLiteral.of(word);
             } else {
@@ -293,7 +292,7 @@ final class QueryParser {
           consume(TokenKind.LPAREN);
           ImmutableList.Builder<String> wordsBuilder = ImmutableList.builder();
           while (token.kind == TokenKind.WORD) {
-            wordsBuilder.add(Preconditions.checkNotNull(consume(TokenKind.WORD)));
+            wordsBuilder.add(Objects.requireNonNull(consume(TokenKind.WORD)));
           }
           consume(TokenKind.RPAREN);
 

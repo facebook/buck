@@ -17,10 +17,10 @@
 package com.facebook.buck.features.project.intellij.lang.java;
 
 import com.facebook.buck.io.file.MorePaths;
-import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 public class JavaPackagePathCache {
@@ -34,7 +34,7 @@ public class JavaPackagePathCache {
     Path parentPath = pathRelativeToProjectRoot.getParent();
     cache.put(parentPath, packageFolder);
 
-    if (parentPath.endsWith(Preconditions.checkNotNull(packageFolder))) {
+    if (parentPath.endsWith(Objects.requireNonNull(packageFolder))) {
       Path packagePath = packageFolder;
       for (int i = 0; i <= packageFolder.getNameCount(); ++i) {
         cache.put(parentPath, packagePath);

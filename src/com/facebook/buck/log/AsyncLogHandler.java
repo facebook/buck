@@ -17,8 +17,8 @@ package com.facebook.buck.log;
 
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
@@ -167,7 +167,7 @@ public class AsyncLogHandler extends Handler {
 
       switch (logRequest.logRequestType) {
         case PUBLISH_LOG_RECORD:
-          performSynchronousPublish(Preconditions.checkNotNull(logRequest.logRecord.get()));
+          performSynchronousPublish(Objects.requireNonNull(logRequest.logRecord.get()));
           break;
         case FLUSH_LOGS:
           performSynchronousFlush();

@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
@@ -125,7 +126,7 @@ public class HttpdForTests implements AutoCloseable {
       baseUri = new URI("http://localhost/");
     }
 
-    Preconditions.checkNotNull(baseUri, "Unable to determine baseUri");
+    Objects.requireNonNull(baseUri, "Unable to determine baseUri");
 
     // It turns out that if we got baseUri from Jetty it may have just Made Stuff Up. To avoid this,
     // we only use the scheme and port that Jetty returned.
@@ -148,7 +149,7 @@ public class HttpdForTests implements AutoCloseable {
     Set<InetAddress> candidateLocal = new HashSet<>();
 
     Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-    Preconditions.checkNotNull(interfaces, "Apprently this machine has no network interfaces.");
+    Objects.requireNonNull(interfaces, "Apprently this machine has no network interfaces.");
 
     while (interfaces.hasMoreElements()) {
       NetworkInterface iface = interfaces.nextElement();

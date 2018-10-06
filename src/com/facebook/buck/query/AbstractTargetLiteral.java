@@ -31,8 +31,8 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import java.util.Objects;
 import org.immutables.value.Value;
 
 /**
@@ -47,7 +47,7 @@ abstract class AbstractTargetLiteral extends QueryExpression {
 
   @Value.Check
   protected void check() {
-    Preconditions.checkNotNull(getPattern());
+    Objects.requireNonNull(getPattern());
   }
 
   @Override

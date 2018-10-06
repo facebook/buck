@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -356,7 +357,7 @@ public class RemoteBuildRuleSynchronizer
       completionFuturesByBuildTarget.put(buildTarget, SettableFuture.create());
     }
 
-    return Preconditions.checkNotNull(completionFuturesByBuildTarget.get(buildTarget));
+    return Objects.requireNonNull(completionFuturesByBuildTarget.get(buildTarget));
   }
 
   public synchronized void switchToAlwaysWaitingMode() {

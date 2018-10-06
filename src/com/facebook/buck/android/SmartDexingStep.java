@@ -56,6 +56,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -394,7 +395,7 @@ public class SmartDexingStep implements Step {
       for (Path src : srcs) {
         Preconditions.checkState(
             dexInputHashes.containsKey(src), "no hash key exists for path %s", src.toString());
-        Sha1HashCode hash = Preconditions.checkNotNull(dexInputHashes.get(src));
+        Sha1HashCode hash = Objects.requireNonNull(dexInputHashes.get(src));
         hash.update(hasher);
       }
       return hasher.hash().toString();

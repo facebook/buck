@@ -22,9 +22,9 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * Delegates to the aggregated parser to do the parsing, while warning the numbers of targets
@@ -43,7 +43,7 @@ public class TargetCountVerificationParserDecorator
   public TargetCountVerificationParserDecorator(
       ProjectBuildFileParser delegate, int targetWarnCount, BuckEventBus eventBus) {
     super(delegate);
-    Preconditions.checkNotNull(eventBus, "Must have a valid eventBus set.");
+    Objects.requireNonNull(eventBus, "Must have a valid eventBus set.");
     this.targetWarnCount = targetWarnCount;
     buckEventBus = eventBus;
   }

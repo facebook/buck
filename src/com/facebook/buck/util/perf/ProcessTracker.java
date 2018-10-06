@@ -27,13 +27,13 @@ import com.facebook.buck.util.ProcessHelper;
 import com.facebook.buck.util.ProcessRegistry;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ServiceManager;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -193,9 +193,9 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
         ProcessExecutorParams params,
         ImmutableMap<String, String> context) {
       this.pid = pid;
-      this.process = Preconditions.checkNotNull(process);
-      this.params = Preconditions.checkNotNull(params);
-      this.context = Preconditions.checkNotNull(context);
+      this.process = Objects.requireNonNull(process);
+      this.params = Objects.requireNonNull(params);
+      this.context = Objects.requireNonNull(context);
       updateResourceConsumption();
     }
 
@@ -236,7 +236,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
 
     ThisProcessInfo(long pid, String name) {
       this.pid = pid;
-      this.name = Preconditions.checkNotNull(name);
+      this.name = Objects.requireNonNull(name);
       updateResourceConsumption();
     }
 
@@ -276,7 +276,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
         Optional<ImmutableMap<String, String>> context,
         Optional<ProcessResourceConsumption> resourceConsumption) {
       super(EventKey.unique());
-      this.executableName = Preconditions.checkNotNull(executableName);
+      this.executableName = Objects.requireNonNull(executableName);
       this.params = params;
       this.context = context;
       this.resourceConsumption = resourceConsumption;

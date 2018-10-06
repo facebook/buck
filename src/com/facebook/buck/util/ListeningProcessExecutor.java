@@ -24,6 +24,7 @@ import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessBuilder;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
@@ -193,7 +194,7 @@ public class ListeningProcessExecutor {
 
     @Override
     public void onStart(NuProcess process) {
-      Preconditions.checkNotNull(this.process);
+      Objects.requireNonNull(this.process);
       Preconditions.checkState(this.process.nuProcess == process);
       listener.onStart(this.process);
     }

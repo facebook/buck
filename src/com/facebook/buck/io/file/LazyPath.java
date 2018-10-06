@@ -16,10 +16,10 @@
 package com.facebook.buck.io.file;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /** Class is intended to provide Paths to be used by cache */
@@ -77,7 +77,7 @@ public abstract class LazyPath {
    * @return Memoized path.
    */
   public synchronized Path getUnchecked() {
-    return Preconditions.checkNotNull(
+    return Objects.requireNonNull(
         path,
         "get() method must be called first to set initial value before invoking getUnchecked()");
   }

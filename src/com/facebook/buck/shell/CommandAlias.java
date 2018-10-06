@@ -35,13 +35,13 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
@@ -147,7 +147,7 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
       tool = new CommandTool.Builder(((BinaryBuildRule) rule).getExecutableCommand());
     } else {
       SourcePath output =
-          Preconditions.checkNotNull(
+          Objects.requireNonNull(
               rule.getSourcePathToOutput(),
               String.format("Cannot run %s as command. It has no output.", rule.getBuildTarget()));
       tool = new CommandTool.Builder().addArg(SourcePathArg.of(output));

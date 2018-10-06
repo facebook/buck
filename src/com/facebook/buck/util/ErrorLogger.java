@@ -37,6 +37,7 @@ import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileSystemLoopException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
@@ -274,7 +275,7 @@ public class ErrorLogger {
     }
 
     return new DeconstructedException(
-        Preconditions.checkNotNull(e), parent, ImmutableList.copyOf(context));
+        Objects.requireNonNull(e), parent, ImmutableList.copyOf(context));
   }
 
   private void logUserVisible(DeconstructedException deconstructed) {

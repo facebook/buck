@@ -31,10 +31,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 public class AndroidResourceIndex extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -59,7 +59,7 @@ public class AndroidResourceIndex extends AbstractBuildRuleWithDeclaredAndExtraD
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
-                Preconditions.checkNotNull(getPathToOutputFile().getParent()))));
+                Objects.requireNonNull(getPathToOutputFile().getParent()))));
 
     steps.add(
         new WriteFileStep(

@@ -17,11 +17,11 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.util.TreePath;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.TypeParameterElement;
@@ -72,7 +72,7 @@ class TreeBackedTypeParameterElement extends TreeBackedElement
   @Override
   public Element getGenericElement() {
     // Our constructor does not allow null enclosing elements for this element type
-    return Preconditions.checkNotNull(getEnclosingElement());
+    return Objects.requireNonNull(getEnclosingElement());
   }
 
   @Override

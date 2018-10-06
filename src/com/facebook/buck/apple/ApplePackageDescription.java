@@ -56,7 +56,6 @@ import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacroExpander;
 import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -65,6 +64,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Sets;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -141,7 +141,7 @@ public class ApplePackageDescription
                               applePackageConfigAndPlatformInfo.get().getExpandedArg(), ruleFinder))
                       .build()),
           applePackageConfigAndPlatformInfo.get(),
-          Preconditions.checkNotNull(bundle.getSourcePathToOutput()),
+          Objects.requireNonNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable(),
           Optional.empty(),
           toolchainProvider.getByNameIfPresent(

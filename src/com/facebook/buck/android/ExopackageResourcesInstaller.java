@@ -36,13 +36,13 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -101,7 +101,7 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
                     "installing_exo_resource_files",
                     device -> {
                       ImmutableSortedSet<Path> presentFiles =
-                          Preconditions.checkNotNull(contents.get(device.getSerialNumber()));
+                          Objects.requireNonNull(contents.get(device.getSerialNumber()));
                       new ExopackageInstaller(
                               resolver, context, getProjectFilesystem(), packageName, device)
                           .installMissingFiles(

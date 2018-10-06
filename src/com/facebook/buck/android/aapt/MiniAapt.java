@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -335,7 +336,7 @@ public class MiniAapt implements Step {
       int dotIndex = filename.indexOf('.');
       String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
 
-      RType rType = Preconditions.checkNotNull(RESOURCE_TYPES.get(dirname));
+      RType rType = Objects.requireNonNull(RESOURCE_TYPES.get(dirname));
       if (rType == RType.DRAWABLE) {
         processDrawables(filesystem, resourceFile);
       } else {
@@ -472,7 +473,7 @@ public class MiniAapt implements Step {
               "Invalid resource type '<%s>' in '%s'.", resourceType, valuesFile);
         }
 
-        RType rType = Preconditions.checkNotNull(RESOURCE_TYPES.get(resourceType));
+        RType rType = Objects.requireNonNull(RESOURCE_TYPES.get(resourceType));
         addToResourceCollector(node, rType, valuesFile);
       }
     }
@@ -581,7 +582,7 @@ public class MiniAapt implements Step {
         if (!RESOURCE_TYPES.containsKey(rawRType)) {
           throw new ResourceParseException("Invalid reference '%s' in '%s'", resourceName, xmlFile);
         }
-        RType rType = Preconditions.checkNotNull(RESOURCE_TYPES.get(rawRType));
+        RType rType = Objects.requireNonNull(RESOURCE_TYPES.get(rawRType));
 
         references.add(new FakeRDotTxtEntry(IdType.INT, rType, sanitizeName(name)));
       }

@@ -18,7 +18,7 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.test.selectors.Nullable;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 
 /**
  * Data class for storing the amortized time and total time of a start/finished event pair.
@@ -41,7 +41,7 @@ public class TimeCostEntry<T extends BuckEvent> {
   }
 
   public T getFinishEvent() {
-    return Preconditions.checkNotNull(finishEvent);
+    return Objects.requireNonNull(finishEvent);
   }
 
   public void setFinishEvent(T finishEvent) {

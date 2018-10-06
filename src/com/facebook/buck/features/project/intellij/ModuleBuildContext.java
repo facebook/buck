@@ -38,6 +38,7 @@ import com.google.common.collect.Multimap;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /** Holds all of the mutable state required during {@link IjModule} creation. */
@@ -274,7 +275,7 @@ public class ModuleBuildContext {
     Map<BuildTarget, DependencyType> result = new HashMap<>(dependencyTypeMap);
     for (Path path : dependencyOriginMap.keySet()) {
       DependencyType dependencyType =
-          Preconditions.checkNotNull(sourceFoldersMergeMap.get(path)) instanceof TestFolder
+          Objects.requireNonNull(sourceFoldersMergeMap.get(path)) instanceof TestFolder
               ? DependencyType.TEST
               : DependencyType.PROD;
       for (BuildTarget buildTarget : dependencyOriginMap.get(path)) {

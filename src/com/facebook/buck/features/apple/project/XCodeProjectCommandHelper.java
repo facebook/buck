@@ -88,6 +88,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -477,7 +478,7 @@ public class XCodeProjectCommandHelper {
               cxxBuckConfig,
               appleConfig,
               swiftBuckConfig);
-      Preconditions.checkNotNull(
+      Objects.requireNonNull(
           executorService, "CommandRunnerParams does not have executor for PROJECT pool");
       Path outputPath =
           generator.generateWorkspaceAndDependentProjects(projectGenerators, executorService);

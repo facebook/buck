@@ -29,9 +29,9 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /** A build rule which preprocesses, compiles, and assembles an OCaml source. */
 public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -55,7 +55,7 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.cxxCompiler = cxxCompiler;
     this.bytecodeOnly = bytecodeOnly;
 
-    Preconditions.checkNotNull(ocamlContext.getInput());
+    Objects.requireNonNull(ocamlContext.getInput());
   }
 
   @Override

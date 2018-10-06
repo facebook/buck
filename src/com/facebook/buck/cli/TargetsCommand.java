@@ -103,6 +103,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.Function;
@@ -1024,7 +1025,7 @@ public class TargetsCommand extends AbstractCommand {
       for (TargetNode<?> targetNode : targetGraphAndTargetNodes.getSecond()) {
         TargetResult.Builder builder =
             targetResultBuilders.getOrCreate(targetNode.getBuildTarget());
-        Preconditions.checkNotNull(builder);
+        Objects.requireNonNull(builder);
         if (actionGraph.isPresent() && isShowRuleKey) {
           BuildRule rule = graphBuilder.get().requireRule(targetNode.getBuildTarget());
           builder.setRuleKey(
@@ -1275,7 +1276,7 @@ public class TargetsCommand extends AbstractCommand {
 
     if (isDetectTestChanges) {
       for (BuildTarget targetToHash :
-          Preconditions.checkNotNull(TargetNodes.getTestTargetsForNode(node))) {
+          Objects.requireNonNull(TargetNodes.getTestTargetsForNode(node))) {
         HashCode testNodeHashCode = getHashCodeOrThrow(buildTargetHashes, targetToHash);
         hasher.putBytes(testNodeHashCode.asBytes());
       }

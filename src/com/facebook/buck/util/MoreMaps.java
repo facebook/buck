@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -58,8 +59,7 @@ public class MoreMaps {
       Map<K1, V> map, Function<? super K1, K2> transformer) {
     ImmutableMap.Builder<K2, V> transformedMap = ImmutableMap.builder();
     for (Map.Entry<K1, V> ent : map.entrySet()) {
-      transformedMap.put(
-          Preconditions.checkNotNull(transformer.apply(ent.getKey())), ent.getValue());
+      transformedMap.put(Objects.requireNonNull(transformer.apply(ent.getKey())), ent.getValue());
     }
     return transformedMap.build();
   }
@@ -68,8 +68,7 @@ public class MoreMaps {
       Map<K1, V> map, Function<? super K1, K2> transformer) {
     ImmutableSortedMap.Builder<K2, V> transformedMap = ImmutableSortedMap.naturalOrder();
     for (Map.Entry<K1, V> ent : map.entrySet()) {
-      transformedMap.put(
-          Preconditions.checkNotNull(transformer.apply(ent.getKey())), ent.getValue());
+      transformedMap.put(Objects.requireNonNull(transformer.apply(ent.getKey())), ent.getValue());
     }
     return transformedMap.build();
   }

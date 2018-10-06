@@ -44,13 +44,13 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -103,9 +103,9 @@ public class HaskellLibraryDescriptionTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     ImmutableList<Path> outputs =
         ImmutableList.of(
-                Preconditions.checkNotNull(staticLib.getSourcePathToOutput()),
-                Preconditions.checkNotNull(staticPicLib.getSourcePathToOutput()),
-                Preconditions.checkNotNull(sharedLib.getSourcePathToOutput()))
+                Objects.requireNonNull(staticLib.getSourcePathToOutput()),
+                Objects.requireNonNull(staticPicLib.getSourcePathToOutput()),
+                Objects.requireNonNull(sharedLib.getSourcePathToOutput()))
             .stream()
             .map(pathResolver::getRelativePath)
             .collect(ImmutableList.toImmutableList());

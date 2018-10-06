@@ -29,7 +29,6 @@ import com.facebook.buck.jvm.java.autodeps.JavaDepsFinder;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.Console;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
@@ -39,6 +38,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -268,7 +268,7 @@ class FineGrainedJavaDependencySuggester {
       // Find deps within package.
       for (String requiredSymbol : symbolsDependencies.getOutgoingNodesFor(providedSymbol)) {
         NamedStronglyConnectedComponent componentDep =
-            Preconditions.checkNotNull(namedComponentsIndex.get(requiredSymbol));
+            Objects.requireNonNull(namedComponentsIndex.get(requiredSymbol));
         if (!componentDep.equals(namedComponent)) {
           deps.add(":" + componentDep.name);
         }

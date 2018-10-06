@@ -23,7 +23,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Path;
@@ -34,6 +33,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Use Google apksigner to v1/v2/v3 sign the final APK */
@@ -129,7 +129,7 @@ class ApkSignerStep implements Step {
     try {
       key = (PrivateKey) keystore.getKey(keyAlias, keyPassword);
       // key can be null if alias/password is incorrect.
-      Preconditions.checkNotNull(key);
+      Objects.requireNonNull(key);
     } catch (Exception e) {
       throw new KeyStoreException(
           "Failed to load private key \"" + keyAlias + "\" from " + keystore);

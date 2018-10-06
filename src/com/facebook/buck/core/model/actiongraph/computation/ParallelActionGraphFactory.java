@@ -29,9 +29,9 @@ import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer
 import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
@@ -70,7 +70,7 @@ public class ParallelActionGraphFactory implements ActionGraphFactoryDelegate {
             targetGraph
                 .getOutgoingNodesFor(node)
                 .stream()
-                .map(dep -> Preconditions.checkNotNull(futures.get(dep.getBuildTarget())))
+                .map(dep -> Objects.requireNonNull(futures.get(dep.getBuildTarget())))
                 .<CompletableFuture<BuildRule>>toArray(CompletableFuture[]::new);
         futures.put(
             node.getBuildTarget(),

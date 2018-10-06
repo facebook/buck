@@ -94,6 +94,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -259,7 +260,7 @@ class NativeLibraryMergeEnhancer {
                 + sb);
       }
     }
-    return Preconditions.checkNotNull(module);
+    return Objects.requireNonNull(module);
   }
 
   private static Map<NativeLinkable, MergedNativeLibraryConstituents> makeConstituentMap(
@@ -379,7 +380,7 @@ class NativeLibraryMergeEnhancer {
                 constituentLinkable.getNativeLinkableExportedDeps(ruleResolver))) {
           // If that dep is in a different merged lib, add a dependency.
           MergedNativeLibraryConstituents mergedDep =
-              Preconditions.checkNotNull(linkableMembership.get(dep));
+              Objects.requireNonNull(linkableMembership.get(dep));
           if (mergedDep != constituents) {
             graph.addEdge(constituents, mergedDep);
           }
@@ -789,7 +790,7 @@ class NativeLibraryMergeEnhancer {
         for (NativeLinkable dep : depType.apply(linkable)) {
           // Don't try to depend on ourselves.
           if (!constituents.getLinkables().contains(dep)) {
-            builder.add(Preconditions.checkNotNull(mergedDepMap.get(dep)));
+            builder.add(Objects.requireNonNull(mergedDepMap.get(dep)));
           }
         }
       }

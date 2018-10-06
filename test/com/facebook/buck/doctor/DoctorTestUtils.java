@@ -36,10 +36,10 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 
 final class DoctorTestUtils {
@@ -128,7 +128,7 @@ final class DoctorTestUtils {
     private DefectReport defectReport = null;
 
     DefectReport getDefectReport() {
-      return Preconditions.checkNotNull(defectReport);
+      return Objects.requireNonNull(defectReport);
     }
 
     @Override

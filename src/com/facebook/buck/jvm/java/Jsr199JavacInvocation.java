@@ -38,7 +38,6 @@ import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.util.concurrent.MostExecutors.NamedThreadFactory;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.zip.JarBuilder;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +56,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -240,7 +240,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           buildSourceOnlyAbi
               ? JavaAbis.getSourceOnlyAbiJar(libraryTarget)
               : JavaAbis.getSourceAbiJar(libraryTarget);
-      JarParameters jarParameters = Preconditions.checkNotNull(abiJarParameters);
+      JarParameters jarParameters = Objects.requireNonNull(abiJarParameters);
       BuckJavacTaskProxy javacTask = getJavacTask(buildSourceOnlyAbi);
       javacTask.addPostEnterCallback(
           topLevelTypes -> {
@@ -307,7 +307,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     }
 
     private void switchToFullJarIfRequested() throws InterruptedException, ExecutionException {
-      Preconditions.checkNotNull(targetEvent).close();
+      Objects.requireNonNull(targetEvent).close();
 
       // Make a new event to capture the time spent waiting for the next stage in the
       // pipeline (or for the pipeline to realize it's done)
@@ -320,8 +320,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       targetEvent.close();
 
       // Now start tracking the full jar
-      Preconditions.checkNotNull(tracingBridge).setBuildTarget(libraryTarget);
-      Preconditions.checkNotNull(phaseEventLogger).setBuildTarget(libraryTarget);
+      Objects.requireNonNull(tracingBridge).setBuildTarget(libraryTarget);
+      Objects.requireNonNull(phaseEventLogger).setBuildTarget(libraryTarget);
       targetEvent =
           new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), libraryTarget.toString());
     }
@@ -456,7 +456,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
                     return newJarBuilder(libraryJarParameters)
                         .createJarFile(
-                            Preconditions.checkNotNull(
+                            Objects.requireNonNull(
                                 context
                                     .getProjectFilesystem()
                                     .getPathForRelativePath(libraryJarParameters.getJarPath())));
@@ -619,7 +619,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
     private JarBuilder newJarBuilder(JarParameters jarParameters) {
       JarBuilder jarBuilder = new JarBuilder();
-      Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
+      Objects.requireNonNull(inMemoryFileManager).writeToJar(jarBuilder);
       return jarBuilder
           .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
           .setEntriesToJar(

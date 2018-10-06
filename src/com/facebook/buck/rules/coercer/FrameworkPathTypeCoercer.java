@@ -23,11 +23,11 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
 
 public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
@@ -78,7 +78,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
       Path path = Paths.get((String) object);
 
       String firstElement =
-          Preconditions.checkNotNull(Iterables.getFirst(path, Paths.get(""))).toString();
+          Objects.requireNonNull(Iterables.getFirst(path, Paths.get(""))).toString();
 
       if (firstElement.startsWith("$")) { // NOPMD - length() > 0 && charAt(0) == '$' is ridiculous
         Optional<PBXReference.SourceTree> sourceTree =

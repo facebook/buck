@@ -23,7 +23,6 @@ import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,6 +31,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -433,7 +433,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     String cacheDir = buckConfig.getLocalCacheDirectory(section);
     Path pathToCacheDir =
         buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(cacheDir));
-    Preconditions.checkNotNull(pathToCacheDir);
+    Objects.requireNonNull(pathToCacheDir);
 
     Optional<Long> maxSizeBytes =
         buckConfig.getValue(section, DIR_MAX_SIZE_FIELD).map(SizeUnit::parseBytes);

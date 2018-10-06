@@ -26,7 +26,6 @@ import com.facebook.buck.distributed.thrift.SlaveStream;
 import com.facebook.buck.distributed.thrift.StreamLogs;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
@@ -39,6 +38,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /** Tracks the state of logs. */
@@ -113,7 +113,7 @@ public class LogStateTracker {
     }
 
     SlaveStreamState seenStreamState =
-        Preconditions.checkNotNull(seenSlaveLogs.get(streamLogs.slaveStream));
+        Objects.requireNonNull(seenSlaveLogs.get(streamLogs.slaveStream));
 
     LogLineBatch lastReceivedBatch =
         streamLogs.logLineBatches.get(streamLogs.logLineBatches.size() - 1);

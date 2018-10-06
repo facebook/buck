@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -116,9 +117,9 @@ public class HeaderMap {
     for (Bucket bucket : buckets) {
       if (bucket != null) {
         visitor.apply(
-            Preconditions.checkNotNull(getString(bucket.key)),
-            Preconditions.checkNotNull(getString(bucket.prefix)),
-            Preconditions.checkNotNull(getString(bucket.suffix)));
+            Objects.requireNonNull(getString(bucket.key)),
+            Objects.requireNonNull(getString(bucket.prefix)),
+            Objects.requireNonNull(getString(bucket.suffix)));
       }
     }
   }

@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import org.pf4j.PluginManager;
 
@@ -208,7 +209,7 @@ public class DistBuildState {
 
     CellProvider cellProvider =
         DistributedCellProviderFactory.create(
-            Preconditions.checkNotNull(rootCellParams), cellParams.build(), rootCellPathResolver);
+            Objects.requireNonNull(rootCellParams), cellParams.build(), rootCellPathResolver);
 
     ImmutableBiMap<Integer, Cell> cells =
         ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
@@ -262,13 +263,13 @@ public class DistBuildState {
   }
 
   public Cell getRootCell() {
-    return Preconditions.checkNotNull(cells.get(DistBuildCellIndexer.ROOT_CELL_INDEX));
+    return Objects.requireNonNull(cells.get(DistBuildCellIndexer.ROOT_CELL_INDEX));
   }
 
   public TargetGraphAndBuildTargets createTargetGraph(DistBuildTargetGraphCodec codec)
       throws InterruptedException {
     return codec.createTargetGraph(
-        remoteState.getTargetGraph(), key -> Preconditions.checkNotNull(cells.get(key)));
+        remoteState.getTargetGraph(), key -> Objects.requireNonNull(cells.get(key)));
   }
 
   public ProjectFileHashCache createRemoteFileHashCache(ProjectFileHashCache decoratedCache) {

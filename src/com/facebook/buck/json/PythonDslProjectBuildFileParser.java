@@ -229,8 +229,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       LOG.debug("Started process %s successfully", buckPyProcess);
       buckPyProcessInput =
           createParserInputStream(
-              Preconditions.checkNotNull(buckPyProcess).getInputStream(),
-              processedBytes.isPresent());
+              Objects.requireNonNull(buckPyProcess).getInputStream(), processedBytes.isPresent());
       buckPyProcessJsonGenerator = ObjectMappers.createGenerator(buckPyProcess.getOutputStream());
       // We have to wait to create the JsonParser until after we write our
       // first request, because Jackson "helpfully" synchronously reads
@@ -383,8 +382,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     initIfNeeded();
 
     // Check isInitialized implications (to avoid Eradicate warnings).
-    Preconditions.checkNotNull(buckPyProcess);
-    Preconditions.checkNotNull(buckPyProcessInput);
+    Objects.requireNonNull(buckPyProcess);
+    Objects.requireNonNull(buckPyProcessInput);
     long alreadyReadBytes = buckPyProcessInput.getCount();
 
     ParseBuckFileEvent.Started parseBuckFileStarted = ParseBuckFileEvent.started(buildFile);
@@ -445,14 +444,13 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     return BuildFileManifest.of(
         values.subList(0, values.size() - 3).asList(),
         ImmutableList.copyOf(
-            Preconditions.checkNotNull(
-                (List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))),
-        Preconditions.checkNotNull(
+            Objects.requireNonNull((List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))),
+        Objects.requireNonNull(
             (Map<String, Object>) values.get(values.size() - 2).get(MetaRules.CONFIGS)),
         Optional.of(
             ImmutableMap.copyOf(
                 Maps.transformValues(
-                    Preconditions.checkNotNull(
+                    Objects.requireNonNull(
                         (Map<String, String>) values.get(values.size() - 1).get(MetaRules.ENV)),
                     Optional::ofNullable))),
         ImmutableList.of());
@@ -460,8 +458,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   private BuildFilePythonResult performJsonRequest(ImmutableMap<String, String> request)
       throws IOException {
-    Preconditions.checkNotNull(request);
-    Preconditions.checkNotNull(buckPyProcessJsonGenerator);
+    Objects.requireNonNull(request);
+    Objects.requireNonNull(buckPyProcessJsonGenerator);
     buckPyProcessJsonGenerator.writeObject(request);
     try {
       // We disable autoflush at the ObjectMapper level for
@@ -471,7 +469,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       // I tried using MinimalPrettyPrinter.setRootValueSeparator("\n") and
       // setting it on the JsonGenerator, but it doesn't seem to
       // actually write a newline after each element.
-      Preconditions.checkNotNull(buckPyProcess);
+      Objects.requireNonNull(buckPyProcess);
       buckPyProcess.getOutputStream().write('\n');
       // I tried enabling JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM,
       // but it doesn't actually flush.
@@ -494,8 +492,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       // a query, creating the JsonParser any earlier than this would
       // hang indefinitely.
       buckPyProcessJsonParser =
-          ObjectMappers.createParser(
-              Preconditions.checkNotNull(buckPyProcessInput).getInputStream());
+          ObjectMappers.createParser(Objects.requireNonNull(buckPyProcessInput).getInputStream());
     }
     LOG.verbose("Parsing output of process %s...", buckPyProcess);
     BuildFilePythonResult resultObject;
@@ -568,10 +565,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     if ("SyntaxError".equals(type)) {
       return Optional.of(
           BuildFileSyntaxError.of(
-              Paths.get((String) Preconditions.checkNotNull(exceptionMap.get("filename"))),
-              (Number) Preconditions.checkNotNull(exceptionMap.get("lineno")),
+              Paths.get((String) Objects.requireNonNull(exceptionMap.get("filename"))),
+              (Number) Objects.requireNonNull(exceptionMap.get("lineno")),
               Optional.ofNullable((Number) exceptionMap.get("offset")),
-              (String) Preconditions.checkNotNull(exceptionMap.get("text"))));
+              (String) Objects.requireNonNull(exceptionMap.get("text"))));
     } else {
       return Optional.empty();
     }
@@ -581,16 +578,16 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private static ImmutableList<BuildFileParseExceptionStackTraceEntry> parseStackTrace(
       Map<String, Object> exceptionMap) {
     List<Map<String, Object>> traceback =
-        (List<Map<String, Object>>) Preconditions.checkNotNull(exceptionMap.get("traceback"));
+        (List<Map<String, Object>>) Objects.requireNonNull(exceptionMap.get("traceback"));
     ImmutableList.Builder<BuildFileParseExceptionStackTraceEntry> stackTraceBuilder =
         ImmutableList.builder();
     for (Map<String, Object> tracebackItem : traceback) {
       stackTraceBuilder.add(
           BuildFileParseExceptionStackTraceEntry.of(
-              Paths.get((String) Preconditions.checkNotNull(tracebackItem.get("filename"))),
-              (Number) Preconditions.checkNotNull(tracebackItem.get("line_number")),
-              (String) Preconditions.checkNotNull(tracebackItem.get("function_name")),
-              (String) Preconditions.checkNotNull(tracebackItem.get("text"))));
+              Paths.get((String) Objects.requireNonNull(tracebackItem.get("filename"))),
+              (Number) Objects.requireNonNull(tracebackItem.get("line_number")),
+              (String) Objects.requireNonNull(tracebackItem.get("function_name")),
+              (String) Objects.requireNonNull(tracebackItem.get("text"))));
     }
     return stackTraceBuilder.build();
   }
@@ -598,8 +595,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @VisibleForTesting
   static BuildFileParseExceptionData parseExceptionData(Map<String, Object> exceptionMap) {
     return BuildFileParseExceptionData.of(
-        (String) Preconditions.checkNotNull(exceptionMap.get("type")),
-        (String) Preconditions.checkNotNull(exceptionMap.get("value")),
+        (String) Objects.requireNonNull(exceptionMap.get("type")),
+        (String) Objects.requireNonNull(exceptionMap.get("value")),
         parseSyntaxError(exceptionMap),
         parseStackTrace(exceptionMap));
   }
@@ -738,7 +735,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       if (isInitialized) {
 
         // Check isInitialized implications (to avoid Eradicate warnings).
-        Preconditions.checkNotNull(buckPyProcess);
+        Objects.requireNonNull(buckPyProcess);
 
         // Allow buck.py to terminate gracefully.
         if (buckPyProcessJsonGenerator != null) {
@@ -768,7 +765,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           stderrConsumerThread.join();
           stderrConsumerThread = null;
           try {
-            Preconditions.checkNotNull(stderrConsumerTerminationFuture).get();
+            Objects.requireNonNull(stderrConsumerTerminationFuture).get();
           } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (cause instanceof IOException) {

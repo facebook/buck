@@ -50,8 +50,8 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -59,6 +59,7 @@ import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -196,7 +197,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                     // take first source file in the list to infer the package
                     // name via go list
                     args.getSrcs().first().getSourcePath(),
-                    Preconditions.checkNotNull(cgoBin.getSourcePathToOutput())));
+                    Objects.requireNonNull(cgoBin.getSourcePathToOutput())));
 
     // generate final object file (equivalent of _all.o) which includes:
     //  * _cgo_export.o
@@ -257,22 +258,22 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                                 ruleFinder.filterBuildRuleInputs(cgoAllBin.getSourcePathToOutput()))
                             .addAll(
                                 ruleFinder.filterBuildRuleInputs(
-                                    new ImmutableList.Builder<SourcePath>()
+                                    new Builder<SourcePath>()
                                         .addAll(genSource.getGoFiles())
                                         .add(
-                                            Preconditions.checkNotNull(
+                                            Objects.requireNonNull(
                                                 cgoImport.getSourcePathToOutput()))
                                         .build()))
                             .build())
                     .withoutExtraDeps(),
                 target,
                 projectFilesystem,
-                new ImmutableList.Builder<SourcePath>()
+                new Builder<SourcePath>()
                     .addAll(genSource.getGoFiles())
-                    .add(Preconditions.checkNotNull(cgoImport.getSourcePathToOutput()))
+                    .add(Objects.requireNonNull(cgoImport.getSourcePathToOutput()))
                     .build(),
-                Preconditions.checkNotNull(cgoAllBin.getSourcePathToOutput()),
-                Preconditions.checkNotNull(allDeps.get(graphBuilder, platform.getCxxPlatform()))));
+                Objects.requireNonNull(cgoAllBin.getSourcePathToOutput()),
+                Objects.requireNonNull(allDeps.get(graphBuilder, platform.getCxxPlatform()))));
   }
 
   private static HeaderSymlinkTree getHeaderSymlinkTree(

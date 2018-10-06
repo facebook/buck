@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -63,7 +64,7 @@ public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
    *     the root, but can be overridden to use an alternate path.
    */
   public Optional<Path> getResolvedIncludeRoot(SourcePathResolver resolver) {
-    return Optional.of(resolver.getAbsolutePath(Preconditions.checkNotNull(getRoot())));
+    return Optional.of(resolver.getAbsolutePath(Objects.requireNonNull(getRoot())));
   }
 
   private static Path resolveSourcePathAndShorten(

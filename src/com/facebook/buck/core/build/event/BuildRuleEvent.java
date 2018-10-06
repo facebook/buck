@@ -45,6 +45,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -69,7 +70,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
   @JsonView(JsonViews.MachineReadableLog.class)
   public ClockDuration getDuration() {
     Preconditions.checkState(isConfigured(), "Event was not configured yet.");
-    return Preconditions.checkNotNull(duration);
+    return Objects.requireNonNull(duration);
   }
 
   @Override

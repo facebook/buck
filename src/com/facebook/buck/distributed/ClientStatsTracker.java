@@ -37,6 +37,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
@@ -116,7 +117,7 @@ public class ClientStatsTracker {
 
     if (performedLocalBuild) {
       Preconditions.checkArgument(localBuildExitCode.isPresent());
-      Preconditions.checkNotNull(
+      Objects.requireNonNull(
           durationsMsByType.get(PERFORM_LOCAL_BUILD),
           "No time was recorded for stat: " + PERFORM_LOCAL_BUILD);
     }
@@ -244,7 +245,7 @@ public class ClientStatsTracker {
   }
 
   public synchronized void stopTimer(DistBuildClientStat stat) {
-    Preconditions.checkNotNull(
+    Objects.requireNonNull(
         stopwatchesByType.get(stat),
         "Cannot stop timer for stat: [" + stat + "] as it was not started.");
 

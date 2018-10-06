@@ -19,6 +19,7 @@ package com.facebook.buck.android.dalvik.firstorder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.objectweb.asm.Handle;
@@ -57,8 +58,8 @@ class FirstOrderTypeInfo {
     private final Set<Type> mObservedDependencies = new HashSet<>();
 
     FirstOrderTypeInfo build() {
-      Preconditions.checkNotNull(mType);
-      Preconditions.checkNotNull(mSuperType);
+      Objects.requireNonNull(mType);
+      Objects.requireNonNull(mSuperType);
       return new FirstOrderTypeInfo(mType, mSuperType, mInterfaceTypes, mObservedDependencies);
     }
 

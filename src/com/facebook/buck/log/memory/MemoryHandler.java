@@ -23,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -69,7 +70,7 @@ public class MemoryHandler extends Handler {
   @VisibleForTesting
   MemoryHandler(Level logLevel, int bufferSize, Level pushLevel) {
     Preconditions.checkState(bufferSize >= 0);
-    Preconditions.checkNotNull(pushLevel);
+    Objects.requireNonNull(pushLevel);
 
     buffer = new LogRecord[bufferSize];
     this.pushLevel = pushLevel;

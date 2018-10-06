@@ -18,11 +18,11 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -121,7 +121,7 @@ public class InfoPlistSubstitution {
       String openParen = variableMatcher.group(OPEN_PAREN_GROUP_NAME);
       String closeParen = variableMatcher.group(CLOSE_PAREN_GROUP_NAME);
 
-      String expectedCloseParen = Preconditions.checkNotNull(MATCHING_PARENS.get(openParen));
+      String expectedCloseParen = Objects.requireNonNull(MATCHING_PARENS.get(openParen));
       if (!expectedCloseParen.equals(closeParen)) {
         // Mismatching parens; don't substitute.
         variableMatcher.appendReplacement(

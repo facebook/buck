@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -82,8 +83,7 @@ public class BuildCacheArtifactUploader {
     // If the input-based rule key has changed, we need to push the artifact to cache
     // using the new key.
     if (SupportsInputBasedRuleKey.isSupported(rule)) {
-      Preconditions.checkNotNull(
-          inputBasedKey, "input-based key should have been computed already.");
+      Objects.requireNonNull(inputBasedKey, "input-based key should have been computed already.");
       Optional<RuleKey> calculatedRuleKey = inputBasedKey.get();
       Optional<RuleKey> onDiskRuleKey =
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);

@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -111,7 +112,7 @@ public class InferBuckConfig implements AddsToRuleKey {
   }
 
   private Path getInferBin() {
-    return Preconditions.checkNotNull(
+    return Objects.requireNonNull(
         getPathFromConfig(this.delegate, "infer_bin").orElse(null),
         "path to infer bin/ folder not found on the current configuration");
   }

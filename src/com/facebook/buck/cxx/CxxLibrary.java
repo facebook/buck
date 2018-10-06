@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
@@ -312,7 +313,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     // whole archive, wrap the library argument in the necessary "ld" flags.
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(
-        Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform, graphBuilder)));
+        Objects.requireNonNull(exportedLinkerFlags.apply(cxxPlatform, graphBuilder)));
 
     boolean delegateWantsArtifact =
         delegate
@@ -375,18 +376,18 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
             rule instanceof CxxLink
                 ? ((CxxLink) rule).getSourcePathToOutputForLinking()
                 : rule.getSourcePathToOutput();
-        linkerArgsBuilder.add(SourcePathArg.of(Preconditions.checkNotNull(sourcePathForLinking)));
+        linkerArgsBuilder.add(SourcePathArg.of(Objects.requireNonNull(sourcePathForLinking)));
       }
     }
 
     // Add the postExportedLinkerFlags.
     linkerArgsBuilder.addAll(
-        Preconditions.checkNotNull(postExportedLinkerFlags.apply(cxxPlatform, graphBuilder)));
+        Objects.requireNonNull(postExportedLinkerFlags.apply(cxxPlatform, graphBuilder)));
 
     ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
     return NativeLinkableInput.of(
-        linkerArgs, Preconditions.checkNotNull(frameworks), Preconditions.checkNotNull(libraries));
+        linkerArgs, Objects.requireNonNull(frameworks), Objects.requireNonNull(libraries));
   }
 
   @Override

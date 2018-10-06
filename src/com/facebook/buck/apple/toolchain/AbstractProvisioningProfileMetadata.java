@@ -22,13 +22,13 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -92,7 +92,7 @@ abstract class AbstractProvisioningProfileMetadata implements AddsToRuleKey {
       ImmutableMap<String, NSObject> entitlements) {
     try {
       NSArray keychainAccessGroups = ((NSArray) entitlements.get("keychain-access-groups"));
-      Preconditions.checkNotNull(keychainAccessGroups);
+      Objects.requireNonNull(keychainAccessGroups);
       String appID = keychainAccessGroups.objectAtIndex(0).toString();
       return Optional.of(splitAppID(appID).getFirst());
     } catch (RuntimeException e) {

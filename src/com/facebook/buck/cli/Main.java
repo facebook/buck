@@ -184,7 +184,6 @@ import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -227,6 +226,7 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.TimeZone;
@@ -531,7 +531,7 @@ public final class Main {
   private Config setupDefaultConfig(ImmutableMap<CellName, Path> cellMapping, BuckCommand command)
       throws IOException {
     Path rootPath = cellMapping.get(CellName.ROOT_CELL_NAME);
-    Preconditions.checkNotNull(rootPath, "Root cell should be implicitly added");
+    Objects.requireNonNull(rootPath, "Root cell should be implicitly added");
     RawConfig rootCellConfigOverrides;
 
     try {
@@ -2148,7 +2148,7 @@ public final class Main {
     }
 
     static DaemonKillers getDaemonKillers() {
-      return Preconditions.checkNotNull(daemonKillers, "Daemon killers should be initialized.");
+      return Objects.requireNonNull(daemonKillers, "Daemon killers should be initialized.");
     }
 
     static void commandStarted() {

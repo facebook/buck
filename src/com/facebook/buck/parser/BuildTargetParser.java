@@ -24,13 +24,13 @@ import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class BuildTargetParser {
@@ -105,7 +105,7 @@ public class BuildTargetParser {
       shortName = shortName.substring(0, hashIndex);
     }
 
-    Preconditions.checkNotNull(baseName);
+    Objects.requireNonNull(baseName);
     // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
     baseName = baseName.replace('\\', '/');
     checkBaseName(baseName, buildTargetName);

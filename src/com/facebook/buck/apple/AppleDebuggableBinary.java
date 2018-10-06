@@ -34,6 +34,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.stream.Stream;
@@ -160,7 +161,7 @@ public class AppleDebuggableBinary extends AbstractBuildRule
   public SourcePath getSourcePathToOutput() {
     return ForwardingBuildTargetSourcePath.of(
         getBuildTarget(),
-        Preconditions.checkNotNull(
+        Objects.requireNonNull(
             binaryRule.getSourcePathToOutput(), "binary should always have an output path"));
   }
 

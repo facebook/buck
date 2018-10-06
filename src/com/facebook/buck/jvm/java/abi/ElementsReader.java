@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.util.MoreSuppliers;
-import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +27,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 import javax.annotation.processing.Messager;
 import javax.lang.model.SourceVersion;
@@ -80,7 +80,7 @@ class ElementsReader implements LibraryReader {
 
   @Override
   public void visitClass(Path relativePath, ClassVisitor cv) {
-    Element element = Preconditions.checkNotNull(allElements.get().get(relativePath));
+    Element element = Objects.requireNonNull(allElements.get().get(relativePath));
     new ClassVisitorDriverFromElement(
             targetVersion, elements, messager, types, includeParameterMetadata)
         .driveVisitor(element, cv);

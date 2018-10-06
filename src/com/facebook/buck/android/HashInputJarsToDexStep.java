@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -99,7 +100,7 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
 
                     if (classNamesToHashes.containsKey(className)) {
                       HashCode classHash =
-                          Preconditions.checkNotNull(classNamesToHashes.get(className));
+                          Objects.requireNonNull(classNamesToHashes.get(className));
                       hasher.putBytes(classHash.asBytes());
                     } else {
                       LOG.warn("%s hashes not found", className);

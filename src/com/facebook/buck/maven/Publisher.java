@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -219,8 +220,7 @@ public class Publisher {
    * @see Artifact#setFile
    */
   public DeployResult publish(List<Artifact> toPublish) throws DeploymentException {
-    RepositorySystem repoSys =
-        Preconditions.checkNotNull(locator.getService(RepositorySystem.class));
+    RepositorySystem repoSys = Objects.requireNonNull(locator.getService(RepositorySystem.class));
 
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
     session.setLocalRepositoryManager(repoSys.newLocalRepositoryManager(session, localRepo));
@@ -241,7 +241,7 @@ public class Publisher {
     DeployRequest deployRequest = new DeployRequest().setRepository(remoteRepo);
     for (Artifact artifact : toPublish) {
       File file = artifact.getFile();
-      Preconditions.checkNotNull(file);
+      Objects.requireNonNull(file);
       Preconditions.checkArgument(file.exists(), "No such file: %s", file.getAbsolutePath());
 
       deployRequest.addArtifact(artifact);

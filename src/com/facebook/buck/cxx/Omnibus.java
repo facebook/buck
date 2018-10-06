@@ -59,6 +59,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
@@ -103,10 +104,10 @@ public class Omnibus {
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder) {
     if (nativeLinkables.containsKey(target)) {
-      NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
+      NativeLinkable nativeLinkable = Objects.requireNonNull(nativeLinkables.get(target));
       return getDeps(nativeLinkable, cxxPlatform, graphBuilder);
     } else {
-      NativeLinkTarget nativeLinkTarget = Preconditions.checkNotNull(nativeLinkTargets.get(target));
+      NativeLinkTarget nativeLinkTarget = Objects.requireNonNull(nativeLinkTargets.get(target));
       return nativeLinkTarget.getNativeLinkTargetDeps(cxxPlatform, graphBuilder);
     }
   }
@@ -166,7 +167,7 @@ public class Omnibus {
     new AbstractBreadthFirstTraversal<BuildTarget>(rootDeps.keySet()) {
       @Override
       public Iterable<BuildTarget> visit(BuildTarget target) {
-        NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
+        NativeLinkable nativeLinkable = Objects.requireNonNull(nativeLinkables.get(target));
         ImmutableMap<BuildTarget, NativeLinkable> deps =
             Maps.uniqueIndex(
                 getDeps(nativeLinkable, cxxPlatform, actionGraphBuilder),
@@ -183,7 +184,7 @@ public class Omnibus {
     new AbstractBreadthFirstTraversal<BuildTarget>(excluded) {
       @Override
       public Iterable<BuildTarget> visit(BuildTarget target) {
-        NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
+        NativeLinkable nativeLinkable = Objects.requireNonNull(nativeLinkables.get(target));
         ImmutableMap<BuildTarget, NativeLinkable> deps =
             Maps.uniqueIndex(
                 getDeps(nativeLinkable, cxxPlatform, actionGraphBuilder),
@@ -538,7 +539,7 @@ public class Omnibus {
     List<SourcePath> undefinedSymbolsOnlyRoots = new ArrayList<>();
     for (BuildTarget target :
         Sets.difference(spec.getRoots().keySet(), spec.getGraph().getNodes())) {
-      NativeLinkTarget linkTarget = Preconditions.checkNotNull(spec.getRoots().get(target));
+      NativeLinkTarget linkTarget = Objects.requireNonNull(spec.getRoots().get(target));
       undefinedSymbolsOnlyRoots.add(
           graphBuilder
               .requireRule(
@@ -578,7 +579,7 @@ public class Omnibus {
 
       // Otherwise, this is a body node, and we need to add its static library to the link line,
       // so that the linker can discard unused object files from it.
-      NativeLinkable nativeLinkable = Preconditions.checkNotNull(spec.getBody().get(target));
+      NativeLinkable nativeLinkable = Objects.requireNonNull(spec.getBody().get(target));
       NativeLinkableInput input =
           NativeLinkables.getNativeLinkableInput(
               cxxPlatform, Linker.LinkableDepType.STATIC_PIC, nativeLinkable, graphBuilder);

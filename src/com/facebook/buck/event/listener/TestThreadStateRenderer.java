@@ -22,10 +22,10 @@ import com.facebook.buck.core.test.event.TestSummaryEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -110,7 +110,7 @@ public class TestThreadStateRenderer implements MultiStateRenderer {
   @Override
   public String renderStatusLine(long threadID, StringBuilder lineBuilder) {
     ThreadRenderingInformation threadInformation =
-        Preconditions.checkNotNull(threadInformationMap.get(threadID));
+        Objects.requireNonNull(threadInformationMap.get(threadID));
     Optional<String> stepCategory = Optional.empty();
     Optional<? extends LeafEvent> runningStep = Optional.empty();
     if (threadInformation.getTestStatusMessage().isPresent()
@@ -145,7 +145,7 @@ public class TestThreadStateRenderer implements MultiStateRenderer {
   @Override
   public String renderShortStatus(long threadId) {
     ThreadRenderingInformation threadInformation =
-        Preconditions.checkNotNull(threadInformationMap.get(threadId));
+        Objects.requireNonNull(threadInformationMap.get(threadId));
     return commonThreadStateRenderer.renderShortStatus(
         threadInformation.getBuildTarget().isPresent(),
         /* renderSubtle = */ false,

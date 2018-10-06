@@ -30,7 +30,6 @@
 
 package com.facebook.buck.query;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
@@ -93,11 +92,11 @@ public interface QueryEnvironment {
     }
 
     public QueryExpression getExpression() {
-      return Preconditions.checkNotNull(expression);
+      return Objects.requireNonNull(expression);
     }
 
     public String getWord() {
-      return Preconditions.checkNotNull(word);
+      return Objects.requireNonNull(word);
     }
 
     public int getInteger() {
@@ -110,7 +109,7 @@ public interface QueryEnvironment {
         case WORD:
           return "'" + word + "'";
         case EXPRESSION:
-          return Preconditions.checkNotNull(expression).toString();
+          return Objects.requireNonNull(expression).toString();
         case INTEGER:
           return Integer.toString(integer);
         default:

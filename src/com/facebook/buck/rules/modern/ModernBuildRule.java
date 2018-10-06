@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -140,11 +141,11 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       SourcePathRuleFinder ruleFinder) {
     super(buildTarget, filesystem);
     initialize(this, buildableSource, ruleFinder, filesystem, buildTarget);
-    Preconditions.checkNotNull(deps);
-    Preconditions.checkNotNull(inputRuleResolver);
-    Preconditions.checkNotNull(outputPathResolver);
-    Preconditions.checkNotNull(buildable);
-    Preconditions.checkNotNull(classInfo);
+    Objects.requireNonNull(deps);
+    Objects.requireNonNull(inputRuleResolver);
+    Objects.requireNonNull(outputPathResolver);
+    Objects.requireNonNull(buildable);
+    Objects.requireNonNull(classInfo);
   }
 
   private static <T extends Buildable> void initialize(

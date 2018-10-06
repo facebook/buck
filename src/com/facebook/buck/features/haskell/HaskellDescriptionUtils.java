@@ -62,7 +62,6 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -74,6 +73,7 @@ import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Stream;
@@ -568,8 +568,7 @@ public class HaskellDescriptionUtils {
         srcs,
         argCompilerFlags,
         argGhciBinDep.map(
-            target ->
-                Preconditions.checkNotNull(graphBuilder.getRule(target).getSourcePathToOutput())),
+            target -> Objects.requireNonNull(graphBuilder.getRule(target).getSourcePathToOutput())),
         argGhciInit,
         omnibusSharedObject,
         sharedLibs,

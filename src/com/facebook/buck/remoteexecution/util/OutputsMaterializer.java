@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
@@ -105,7 +106,7 @@ public class OutputsMaterializer {
 
       materializeDirectory(
           childMap,
-          Preconditions.checkNotNull(
+          Objects.requireNonNull(
               childMap.get(childNode.getDigest()),
               String.format("Data for dir [%s] not found in merkle-tree.", root)),
           root.resolve(childNode.getName()),

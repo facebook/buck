@@ -58,12 +58,12 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -155,7 +155,7 @@ public class CxxTestDescriptionTest {
                     "TEST",
                     "value "
                         + pathResolver.getAbsolutePath(
-                            Preconditions.checkNotNull(someRule.getSourcePathToOutput()))))));
+                            Objects.requireNonNull(someRule.getSourcePathToOutput()))))));
   }
 
   @Test
@@ -193,7 +193,7 @@ public class CxxTestDescriptionTest {
         hasItem(
             "value "
                 + pathResolver.getAbsolutePath(
-                    Preconditions.checkNotNull(someRule.getSourcePathToOutput()))));
+                    Objects.requireNonNull(someRule.getSourcePathToOutput()))));
   }
 
   @Test

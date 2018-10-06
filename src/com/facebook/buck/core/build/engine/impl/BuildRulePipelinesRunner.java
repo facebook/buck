@@ -31,6 +31,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -170,7 +171,7 @@ public class BuildRulePipelinesRunner {
     }
 
     public T getState() {
-      return Preconditions.checkNotNull(state);
+      return Objects.requireNonNull(state);
     }
 
     @Override
@@ -193,7 +194,7 @@ public class BuildRulePipelinesRunner {
           Preconditions.checkState(rule.getFuture().isDone() || rule.getFuture().isCancelled());
         }
       } finally {
-        Preconditions.checkNotNull(state).close();
+        Objects.requireNonNull(state).close();
         state = null;
         rules.clear();
       }
@@ -266,8 +267,8 @@ public class BuildRulePipelinesRunner {
 
     @Override
     public void run() {
-      Preconditions.checkNotNull(pipeline);
-      Preconditions.checkNotNull(ruleStepRunnerFactory);
+      Objects.requireNonNull(pipeline);
+      Objects.requireNonNull(ruleStepRunnerFactory);
 
       runner = ruleStepRunnerFactory.apply(pipeline.getState());
       future.setFuture(runner.getFuture());

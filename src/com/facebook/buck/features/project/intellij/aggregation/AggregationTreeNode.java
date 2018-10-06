@@ -82,7 +82,7 @@ class AggregationTreeNode {
   }
 
   public void addChild(Path newNodePathComponents, AggregationModule module) {
-    Preconditions.checkNotNull(module);
+    Objects.requireNonNull(module);
     addChild(newNodePathComponents, module, module.getModuleBasePath());
   }
 

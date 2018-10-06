@@ -37,12 +37,12 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -132,7 +132,7 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     if (rule instanceof Archive) {
       return ((Archive) rule).toArg();
     } else {
-      return SourcePathArg.of(Preconditions.checkNotNull(rule.getSourcePathToOutput()));
+      return SourcePathArg.of(Objects.requireNonNull(rule.getSourcePathToOutput()));
     }
   }
 

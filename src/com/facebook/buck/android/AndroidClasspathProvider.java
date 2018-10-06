@@ -20,8 +20,8 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
-import com.google.common.base.Preconditions;
 import java.nio.file.Path;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 public class AndroidClasspathProvider implements ExtraClasspathProvider {
@@ -35,6 +35,6 @@ public class AndroidClasspathProvider implements ExtraClasspathProvider {
 
   @Override
   public Iterable<Path> getExtraClasspath() {
-    return Preconditions.checkNotNull(androidPlatformTarget).getBootclasspathEntries();
+    return Objects.requireNonNull(androidPlatformTarget).getBootclasspathEntries();
   }
 }

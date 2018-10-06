@@ -26,10 +26,10 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.ExitCode;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -165,7 +165,7 @@ public class DistBuildRunner {
       // exceptions, send it again.
       eventBus.post(
           BuildEvent.distBuildFinished(
-              Preconditions.checkNotNull(started), result.getExitCode().getCode()));
+              Objects.requireNonNull(started), result.getExitCode().getCode()));
 
       // Whichever build phase is executing should now move to the final stage.
       buildPhaseLatches.forEach(latch -> latch.countDown());
@@ -182,8 +182,7 @@ public class DistBuildRunner {
   public synchronized void cancelAsLocalBuildFinished(
       boolean localBuildSucceeded, Optional<ExitCode> localBuildExitCode)
       throws InterruptedException {
-    Preconditions.checkNotNull(
-        runDistributedBuildFuture, "Cannot cancel build that hasn't started");
+    Objects.requireNonNull(runDistributedBuildFuture, "Cannot cancel build that hasn't started");
 
     String statusString =
         localBuildSucceeded
@@ -219,7 +218,7 @@ public class DistBuildRunner {
   private synchronized void waitUntilFinished() throws InterruptedException {
     try {
       LOG.info("Waiting for distributed build thread to finish.");
-      Preconditions.checkNotNull(runDistributedBuildFuture).get();
+      Objects.requireNonNull(runDistributedBuildFuture).get();
     } catch (ExecutionException e) {
       LOG.error(e, "Exception thrown whilst waiting for distributed build thread to finish");
     }
@@ -227,7 +226,7 @@ public class DistBuildRunner {
 
   private synchronized void waitUntilFinishedOrKillOnTimeout() throws InterruptedException {
     try {
-      Preconditions.checkNotNull(runDistributedBuildFuture)
+      Objects.requireNonNull(runDistributedBuildFuture)
           .get(distributedBuildThreadKillTimeoutSeconds, TimeUnit.SECONDS);
     } catch (ExecutionException | TimeoutException e) {
       LOG.warn(
@@ -243,7 +242,7 @@ public class DistBuildRunner {
     StampedeExecutionResult result;
     try {
       Future<StampedeExecutionResult> executionResultFuture =
-          Preconditions.checkNotNull(runDistributedBuildFuture);
+          Objects.requireNonNull(runDistributedBuildFuture);
       if (executionResultFuture.isCancelled()) {
         return;
       }
@@ -274,7 +273,7 @@ public class DistBuildRunner {
   }
 
   private void terminateDistributedBuildJob(BuildStatus finalStatus, String statusMessage) {
-    StampedeId stampedeId = Preconditions.checkNotNull(stampedeIdReference.get());
+    StampedeId stampedeId = Objects.requireNonNull(stampedeIdReference.get());
     if (stampedeId.getId().equals(StampedeBuildClient.PENDING_STAMPEDE_ID)) {
       LOG.warn("Can't terminate distributed build as no Stampede ID yet. Skipping..");
       return; // There is no ID yet, so we can't kill anything

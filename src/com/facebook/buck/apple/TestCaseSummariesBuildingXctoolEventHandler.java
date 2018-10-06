@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -99,14 +100,14 @@ class TestCaseSummariesBuildingXctoolEventHandler
   @Override
   public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
     testReportingCallback.testDidBegin(
-        Preconditions.checkNotNull(event.className), Preconditions.checkNotNull(event.test));
+        Objects.requireNonNull(event.className), Objects.requireNonNull(event.test));
   }
 
   @Override
   public void handleEndTestEvent(XctoolOutputParsing.EndTestEvent event) {
     TestResultSummary testResultSummary =
         XctoolOutputParsing.testResultSummaryForEndTestEvent(event);
-    testResultSummariesBuilder.put(Preconditions.checkNotNull(event.className), testResultSummary);
+    testResultSummariesBuilder.put(Objects.requireNonNull(event.className), testResultSummary);
     testReportingCallback.testDidEnd(testResultSummary);
   }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MiniAapt;
+import com.facebook.buck.android.aapt.MiniAapt.ResourceCollectionType;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
@@ -46,7 +47,6 @@ import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -54,6 +54,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -284,8 +285,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(Preconditions.checkNotNull(pathToTextSymbolsFile));
-    buildableContext.recordArtifact(Preconditions.checkNotNull(pathToRDotJavaPackageFile));
+    buildableContext.recordArtifact(Objects.requireNonNull(pathToTextSymbolsFile));
+    buildableContext.recordArtifact(Objects.requireNonNull(pathToRDotJavaPackageFile));
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.addAll(
@@ -293,7 +294,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
-                Preconditions.checkNotNull(pathToTextSymbolsDir))));
+                Objects.requireNonNull(pathToTextSymbolsDir))));
     if (getRes() == null) {
       return steps
           .add(new TouchStep(getProjectFilesystem(), pathToTextSymbolsFile))
@@ -309,7 +310,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // If the 'package' was not specified for this android_resource(), then attempt to parse it
     // from the AndroidManifest.xml.
     if (rDotJavaPackageArgument == null) {
-      Preconditions.checkNotNull(
+      Objects.requireNonNull(
           manifestFile,
           "manifestFile cannot be null when res is non-null and rDotJavaPackageArgument is "
               + "null. This should already be enforced by the constructor.");
@@ -317,7 +318,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
           new ExtractFromAndroidManifestStep(
               context.getSourcePathResolver().getAbsolutePath(manifestFile),
               getProjectFilesystem(),
-              Preconditions.checkNotNull(pathToRDotJavaPackageFile)));
+              Objects.requireNonNull(pathToRDotJavaPackageFile)));
     } else {
       steps.add(
           new WriteFileStep(
@@ -337,12 +338,12 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new MiniAapt(
             context.getSourcePathResolver(),
             getProjectFilesystem(),
-            Preconditions.checkNotNull(res),
-            Preconditions.checkNotNull(pathToTextSymbolsFile),
+            Objects.requireNonNull(res),
+            Objects.requireNonNull(pathToTextSymbolsFile),
             pathsToSymbolsOfDeps,
             resourceUnion,
             isGrayscaleImageProcessingEnabled,
-            MiniAapt.ResourceCollectionType.R_DOT_TXT));
+            ResourceCollectionType.R_DOT_TXT));
     return steps.build();
   }
 

@@ -51,9 +51,9 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 
 public class FetchCommand extends BuildCommand {
@@ -94,7 +94,7 @@ public class FetchCommand extends BuildCommand {
           result = toVersionedTargetGraph(params, result);
         }
         actionGraphAndBuilder =
-            Preconditions.checkNotNull(
+            Objects.requireNonNull(
                 new ActionGraphProvider(
                         params.getBuckEventBus(),
                         ActionGraphFactory.create(

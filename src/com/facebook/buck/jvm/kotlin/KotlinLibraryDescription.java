@@ -42,11 +42,11 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.MavenUberJar;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -115,7 +115,7 @@ public class KotlinLibraryDescription
         return MavenUberJar.SourceJar.create(
             buildTargetWithMavenFlavor,
             projectFilesystem,
-            Preconditions.checkNotNull(paramsWithMavenFlavor),
+            Objects.requireNonNull(paramsWithMavenFlavor),
             args.getSrcs(),
             mavenCoords,
             args.getMavenPomTemplate());
@@ -162,7 +162,7 @@ public class KotlinLibraryDescription
           defaultKotlinLibrary,
           buildTargetWithMavenFlavor,
           projectFilesystem,
-          Preconditions.checkNotNull(paramsWithMavenFlavor),
+          Objects.requireNonNull(paramsWithMavenFlavor),
           args.getMavenCoords(),
           args.getMavenPomTemplate());
     }

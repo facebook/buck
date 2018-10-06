@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android.aapt;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.util.xml.DocumentLocation;
@@ -28,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -129,7 +128,7 @@ public class RDotTxtResourceCollector implements ResourceCollector {
     if (!enumerators.containsKey(rType)) {
       enumerators.put(rType, new ResourceIdEnumerator(currentTypeId++));
     }
-    return checkNotNull(enumerators.get(rType));
+    return Objects.requireNonNull(enumerators.get(rType));
   }
 
   String getNextIdValue(RDotTxtEntry rDotTxtEntry) {

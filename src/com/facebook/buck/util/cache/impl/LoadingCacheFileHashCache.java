@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -105,7 +106,7 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
         Maps.filterEntries(
                 loadingCache.asMap(),
                 entry -> {
-                  Preconditions.checkNotNull(entry);
+                  Objects.requireNonNull(entry);
 
                   // If we get a invalidation for a file which is a prefix of our current one, this
                   // means the invalidation is of a symlink which points to a directory (since

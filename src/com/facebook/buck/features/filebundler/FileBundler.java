@@ -25,7 +25,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.PatternsMatcher;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -35,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public abstract class FileBundler {
 
@@ -45,7 +45,7 @@ public abstract class FileBundler {
   }
 
   public FileBundler(Path basePath) {
-    this.basePath = Preconditions.checkNotNull(basePath);
+    this.basePath = Objects.requireNonNull(basePath);
   }
 
   private static void findAndAddRelativePathToMap(
@@ -135,7 +135,7 @@ public abstract class FileBundler {
 
     for (Map.Entry<Path, Path> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();
-      Path absolutePath = Preconditions.checkNotNull(pathEntry.getValue());
+      Path absolutePath = Objects.requireNonNull(pathEntry.getValue());
       Path destination = destinationDir.resolve(relativePath);
 
       if (entriesToExclude.hasPatterns()) {

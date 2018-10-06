@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.jar.JarFile;
 import javax.annotation.Nullable;
 
@@ -42,7 +43,7 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
   @Nullable private volatile JarContents jarContents;
 
   public DefaultJavaAbiInfo(SourcePath jarPath) {
-    Preconditions.checkNotNull(jarPath);
+    Objects.requireNonNull(jarPath);
     Preconditions.checkState(jarPath instanceof BuildTargetSourcePath);
     buildTarget = ((BuildTargetSourcePath) jarPath).getTarget();
     jarSourcePath = jarPath;
@@ -55,12 +56,12 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
 
   @Override
   public ImmutableSortedSet<SourcePath> getJarContents() {
-    return Preconditions.checkNotNull(jarContents, "Must call load first.").contents;
+    return Objects.requireNonNull(jarContents, "Must call load first.").contents;
   }
 
   @Override
   public boolean jarContains(String path) {
-    return Preconditions.checkNotNull(jarContents, "Must call load first.")
+    return Objects.requireNonNull(jarContents, "Must call load first.")
         .contentPaths
         .contains(Paths.get(path));
   }

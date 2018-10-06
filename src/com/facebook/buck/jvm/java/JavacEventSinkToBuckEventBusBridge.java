@@ -23,16 +23,17 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.jvm.java.AnnotationProcessingEvent.Operation;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -152,10 +153,10 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
                 buildTarget, annotationProcessorName, operationAsString, round, isLastRound));
     AnnotationProcessingEvent.Finished finished =
         new AnnotationProcessingEvent.Finished(
-            Preconditions.checkNotNull(startedEventKey),
+            Objects.requireNonNull(startedEventKey),
             buildTarget,
             annotationProcessorName,
-            AnnotationProcessingEvent.Operation.valueOf(operationAsString),
+            Operation.valueOf(operationAsString),
             round,
             isLastRound);
     eventBus.post(finished);

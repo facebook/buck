@@ -50,7 +50,6 @@ import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.Weigher;
@@ -63,6 +62,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -260,7 +260,7 @@ public class JsLibraryDescription
     }
 
     private JsLibrary.Files build(ProjectFilesystem projectFileSystem, WorkerTool worker) {
-      Preconditions.checkNotNull(jsFileRules, "No source files set");
+      Objects.requireNonNull(jsFileRules, "No source files set");
 
       return new JsLibrary.Files(
           baseTarget.withAppendedFlavors(JsFlavors.LIBRARY_FILES),
@@ -305,7 +305,7 @@ public class JsLibraryDescription
     }
 
     private JsLibrary build(ProjectFilesystem projectFilesystem, WorkerTool worker) {
-      Preconditions.checkNotNull(libraryDependencies, "No library dependencies set");
+      Objects.requireNonNull(libraryDependencies, "No library dependencies set");
 
       BuildTarget filesTarget = baseTarget.withAppendedFlavors(JsFlavors.LIBRARY_FILES);
       BuildRule filesRule = graphBuilder.requireRule(filesTarget);

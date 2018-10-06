@@ -30,6 +30,7 @@ import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import org.immutables.value.Value;
@@ -72,7 +73,7 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
       case SOURCE_TREE_PATH:
         return getSourceTreePath().get().getPath().getFileName();
       case SOURCE_PATH:
-        return Preconditions.checkNotNull(resolver.apply(getSourcePath().get())).getFileName();
+        return Objects.requireNonNull(resolver.apply(getSourcePath().get())).getFileName();
       default:
         throw new RuntimeException("Unhandled type: " + getType());
     }
@@ -106,7 +107,7 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
         return Paths.get(input.getSourceTreePath().get().toString());
       case SOURCE_PATH:
         return relativizer.apply(
-            Preconditions.checkNotNull(resolver.apply(input.getSourcePath().get())));
+            Objects.requireNonNull(resolver.apply(input.getSourcePath().get())));
       default:
         throw new RuntimeException("Unhandled type: " + input.getType());
     }

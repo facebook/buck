@@ -34,7 +34,6 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +41,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.eclipse.aether.artifact.Artifact;
@@ -153,7 +153,7 @@ public class PublishCommand extends BuildCommand {
     boolean success = true;
     for (BuildTarget buildTarget : buildTargets) {
       BuildRule buildRule = getBuild().getGraphBuilder().requireRule(buildTarget);
-      Preconditions.checkNotNull(buildRule);
+      Objects.requireNonNull(buildRule);
 
       if (!(buildRule instanceof MavenPublishable)) {
         params
@@ -180,7 +180,7 @@ public class PublishCommand extends BuildCommand {
     }
 
     // Assume validation passed.
-    URL repoUrl = toMavenCentral ? Publisher.MAVEN_CENTRAL : Preconditions.checkNotNull(remoteRepo);
+    URL repoUrl = toMavenCentral ? Publisher.MAVEN_CENTRAL : Objects.requireNonNull(remoteRepo);
 
     Publisher publisher =
         new Publisher(
@@ -238,7 +238,7 @@ public class PublishCommand extends BuildCommand {
       }
 
       BuildTargetSpec targetSpec = (BuildTargetSpec) spec;
-      Preconditions.checkNotNull(targetSpec.getBuildTarget());
+      Objects.requireNonNull(targetSpec.getBuildTarget());
 
       BuildTarget mavenTarget = targetSpec.getBuildTarget().withFlavors(MAVEN_JAR);
       uniqueSpecs.put(mavenTarget, targetSpec.withBuildTarget(mavenTarget));

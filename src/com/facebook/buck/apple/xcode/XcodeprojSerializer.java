@@ -23,8 +23,8 @@ import com.dd.plist.NSString;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXObject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.core.util.log.Logger;
-import com.google.common.base.Preconditions;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -102,19 +102,19 @@ public class XcodeprojSerializer {
 
   public void addField(String name, PBXObject obj) {
     String gid = serializeObject(obj);
-    Preconditions.checkNotNull(currentObject).put(name, gid);
+    Objects.requireNonNull(currentObject).put(name, gid);
   }
 
   public void addField(String name, int val) {
-    Preconditions.checkNotNull(currentObject).put(name, val);
+    Objects.requireNonNull(currentObject).put(name, val);
   }
 
   public void addField(String name, String val) {
-    Preconditions.checkNotNull(currentObject).put(name, val);
+    Objects.requireNonNull(currentObject).put(name, val);
   }
 
   public void addField(String name, boolean val) {
-    Preconditions.checkNotNull(currentObject).put(name, val);
+    Objects.requireNonNull(currentObject).put(name, val);
   }
 
   public void addField(String name, List<? extends PBXObject> objectList) {
@@ -123,10 +123,10 @@ public class XcodeprojSerializer {
       String gid = serializeObject(objectList.get(i));
       array.setValue(i, new NSString(gid));
     }
-    Preconditions.checkNotNull(currentObject).put(name, array);
+    Objects.requireNonNull(currentObject).put(name, array);
   }
 
   public void addField(String name, NSObject v) {
-    Preconditions.checkNotNull(currentObject).put(name, v);
+    Objects.requireNonNull(currentObject).put(name, v);
   }
 }

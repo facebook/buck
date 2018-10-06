@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Objects;
 
 public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros> {
 
@@ -78,7 +79,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       CellPathResolver cellRoots, StringWithMacros stringWithMacros, Traversal traversal) {
     for (MacroContainer macroContainer : stringWithMacros.getMacros()) {
       MacroTypeCoercer<? extends Macro> coercer =
-          Preconditions.checkNotNull(coercers.get(macroContainer.getMacro().getClass()));
+          Objects.requireNonNull(coercers.get(macroContainer.getMacro().getClass()));
       traverse(cellRoots, coercer, macroContainer.getMacro(), traversal);
     }
   }
@@ -131,7 +132,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
                   "Macro '%s' not found when expanding '%s'",
                   matchResult.getMacroType(), macroString));
         }
-        MacroTypeCoercer<? extends Macro> coercer = Preconditions.checkNotNull(coercers.get(clazz));
+        MacroTypeCoercer<? extends Macro> coercer = Objects.requireNonNull(coercers.get(clazz));
         ImmutableList<String> args = matchResult.getMacroInput();
 
         // Delegate to the macro coercers to parse the macro..

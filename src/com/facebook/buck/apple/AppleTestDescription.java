@@ -78,7 +78,6 @@ import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -91,6 +90,7 @@ import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
@@ -416,7 +416,7 @@ public class AppleTestDescription
                             context
                                 .getSourcePathResolver()
                                 .getAbsolutePath(
-                                    Preconditions.checkNotNull(
+                                    Objects.requireNonNull(
                                         xctoolZipBuildRule.getSourcePathToOutput())),
                             outputDirectory,
                             Optional.empty()))

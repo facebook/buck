@@ -25,7 +25,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /** Helper class for unpacking fat JAR resources. */
 public class FatJar implements Serializable {
@@ -105,7 +105,7 @@ public class FatJar implements Serializable {
   }
 
   public void unpackNativeLibrariesInto(ClassLoader loader, Path destination) throws IOException {
-    for (Map.Entry<String, String> entry : Preconditions.checkNotNull(nativeLibraries).entrySet()) {
+    for (Map.Entry<String, String> entry : Objects.requireNonNull(nativeLibraries).entrySet()) {
       InputStream input = loader.getResourceAsStream(entry.getValue());
       try {
         BufferedInputStream bufferedInput = new BufferedInputStream(input);
@@ -121,7 +121,7 @@ public class FatJar implements Serializable {
   }
 
   public void unpackJarTo(ClassLoader loader, Path destination) throws IOException {
-    InputStream input = loader.getResourceAsStream(Preconditions.checkNotNull(innerJar));
+    InputStream input = loader.getResourceAsStream(Objects.requireNonNull(innerJar));
     try {
       BufferedInputStream bufferedInput = new BufferedInputStream(input);
       try {

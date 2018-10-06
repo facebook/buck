@@ -87,6 +87,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
@@ -568,7 +569,7 @@ public class PrebuiltCxxLibraryDescription
               buildTarget.withAppendedFlavors(
                   cxxPlatform.getFlavor(), Type.SHARED_INTERFACE.getFlavor());
           BuildRule rule = graphBuilder.requireRule(target);
-          return Preconditions.checkNotNull(rule.getSourcePathToOutput());
+          return Objects.requireNonNull(rule.getSourcePathToOutput());
         }
         return PrebuiltCxxLibraryDescription.this.requireSharedLibrary(
             buildTarget,

@@ -18,11 +18,12 @@ package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -39,10 +40,9 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
       ToolchainProvider toolchainProvider) {
-    GroovyLibraryDescription.CoreArg groovyArgs =
-        (GroovyLibraryDescription.CoreArg) Preconditions.checkNotNull(args);
+    GroovyLibraryDescription.CoreArg groovyArgs = (CoreArg) Objects.requireNonNull(args);
     return new GroovycToJarStepFactory(
-        Preconditions.checkNotNull(groovyBuckConfig).getGroovyCompiler().get(),
+        Objects.requireNonNull(groovyBuckConfig).getGroovyCompiler().get(),
         Optional.of(groovyArgs.getExtraGroovycArguments()),
         javacOptions);
   }

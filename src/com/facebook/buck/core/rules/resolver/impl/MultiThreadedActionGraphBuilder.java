@@ -28,6 +28,7 @@ import com.facebook.buck.util.concurrent.WorkThreadTrackingFuture;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
@@ -232,7 +233,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
         workThread = Thread.currentThread();
         // The work function should only be invoked while the task is not complete.
         // This condition should be guaranteed by the ForkJoin framework.
-        V result = Preconditions.checkNotNull(work).get();
+        V result = Objects.requireNonNull(work).get();
         Preconditions.checkState(
             getRawResult() == null || getRawResult() == result,
             "A value for this task has already been created: %s",

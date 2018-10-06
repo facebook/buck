@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.plugin.adapter.ElementsExtendedImpl;
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
 import com.sun.source.util.Trees;
 import java.io.Writer;
@@ -26,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
@@ -288,7 +288,7 @@ class TreeBackedElements extends ElementsExtendedImpl {
 
   @Override
   public PackageElement getPackageOf(Element type) {
-    return Preconditions.checkNotNull(
+    return Objects.requireNonNull(
         getCanonicalElement(javacElements.getPackageOf(getJavacElement(type))));
   }
 

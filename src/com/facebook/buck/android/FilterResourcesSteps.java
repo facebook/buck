@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -200,12 +201,12 @@ public class FilterResourcesSteps {
     List<Predicate<Path>> pathPredicates = new ArrayList<>();
 
     if (filterByDensity) {
-      Preconditions.checkNotNull(targetDensities);
+      Objects.requireNonNull(targetDensities);
       Set<Path> rootResourceDirs = inResDirToOutResDirMap.keySet();
 
       pathPredicates.add(ResourceFilters.createDensityFilter(filesystem, targetDensities));
 
-      Preconditions.checkNotNull(drawableFinder);
+      Objects.requireNonNull(drawableFinder);
       Set<Path> drawables = drawableFinder.findDrawables(rootResourceDirs, filesystem);
       pathPredicates.add(
           ResourceFilters.createImageDensityFilter(
@@ -260,7 +261,7 @@ public class FilterResourcesSteps {
     ResourceFilters.Density targetDensity = ResourceFilters.Density.ORDERING.max(targetDensities);
 
     // Go over all the images that remain after filtering.
-    Preconditions.checkNotNull(drawableFinder);
+    Objects.requireNonNull(drawableFinder);
     Collection<Path> drawables =
         drawableFinder.findDrawables(inResDirToOutResDirMap.values(), filesystem);
     for (Path drawable : drawables) {
@@ -281,7 +282,7 @@ public class FilterResourcesSteps {
       ResourceFilters.Density density = qualifiers.density;
 
       // If the image has a qualifier but it's not the right one.
-      Preconditions.checkNotNull(targetDensities);
+      Objects.requireNonNull(targetDensities);
       if (!targetDensities.contains(density)) {
 
         // Replace density qualifier with target density using regular expression to match
@@ -302,7 +303,7 @@ public class FilterResourcesSteps {
 
         // Make sure destination folder exists and perform downscaling.
         filesystem.createParentDirs(destination);
-        Preconditions.checkNotNull(imageScaler);
+        Objects.requireNonNull(imageScaler);
         imageScaler.scale(factor, drawable, destination, context);
 
         // Delete source file.
@@ -503,10 +504,10 @@ public class FilterResourcesSteps {
     }
 
     public FilterResourcesSteps build() {
-      Preconditions.checkNotNull(filesystem);
-      Preconditions.checkNotNull(resourceFilter);
+      Objects.requireNonNull(filesystem);
+      Objects.requireNonNull(resourceFilter);
       LOG.info("FilterResourcesSteps.Builder: resource filter: %s", resourceFilter);
-      Preconditions.checkNotNull(inResDirToOutResDirMap);
+      Objects.requireNonNull(inResDirToOutResDirMap);
       return new FilterResourcesSteps(
           filesystem,
           inResDirToOutResDirMap,

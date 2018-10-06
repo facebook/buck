@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -112,7 +113,7 @@ public class Serializer {
   public <T extends AddsToRuleKey> Either<HashCode, byte[]> serialize(
       T instance, ClassInfo<T> classInfo) throws IOException {
     if (cache.containsKey(instance)) {
-      return Preconditions.checkNotNull(cache.get(instance));
+      return Objects.requireNonNull(cache.get(instance));
     }
     Visitor visitor = new Visitor(instance.getClass());
 
@@ -127,7 +128,7 @@ public class Serializer {
       classInfo.visit(instance, visitor);
     }
 
-    return Preconditions.checkNotNull(
+    return Objects.requireNonNull(
         cache.computeIfAbsent(
             instance,
             ignored -> {
@@ -202,7 +203,7 @@ public class Serializer {
     public void visitSourcePath(SourcePath value) throws IOException {
       if (value instanceof DefaultBuildTargetSourcePath) {
         value = ruleFinder.getRule(value).get().getSourcePathToOutput();
-        Preconditions.checkNotNull(value);
+        Objects.requireNonNull(value);
       }
 
       if (value instanceof ExplicitBuildTargetSourcePath) {
@@ -376,6 +377,6 @@ public class Serializer {
   }
 
   private Optional<String> getCellName(ProjectFilesystem filesystem) {
-    return Preconditions.checkNotNull(cellMap.get(filesystem.getRootPath()));
+    return Objects.requireNonNull(cellMap.get(filesystem.getRootPath()));
   }
 }

@@ -35,11 +35,11 @@ import com.facebook.buck.features.gwt.GwtBinary.Style;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
@@ -139,8 +139,7 @@ public class GwtBinaryDescription
         // but a rule that exists only as a collection of deps.
         if (gwtModule.isPresent()) {
           extraDeps.add(gwtModule.get());
-          gwtModuleJarsBuilder.add(
-              Preconditions.checkNotNull(gwtModule.get().getSourcePathToOutput()));
+          gwtModuleJarsBuilder.add(Objects.requireNonNull(gwtModule.get().getSourcePathToOutput()));
         }
 
         // Traverse all of the deps of this rule.

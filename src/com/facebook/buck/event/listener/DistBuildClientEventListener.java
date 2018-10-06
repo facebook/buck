@@ -31,6 +31,7 @@ import com.google.common.eventbus.Subscribe;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -79,8 +80,7 @@ public class DistBuildClientEventListener implements BuckEventListener {
       List<RuleKeyLogEntry> ruleKeyLogs) {
     for (RuleKeyLogEntry ruleKeyLog : ruleKeyLogs) {
       String ruleKey = ruleKeyLog.getRuleKey();
-      DistBuildClientCacheResult.Builder cacheRequestBuilder =
-          Preconditions.checkNotNull(cacheResultsByKey.get(ruleKey));
+      Builder cacheRequestBuilder = Objects.requireNonNull(cacheResultsByKey.get(ruleKey));
 
       if (firstLevelRuleKeys.contains(ruleKey)) {
         cacheRequestBuilder.setRuleKeyServerLog(ruleKeyLog);

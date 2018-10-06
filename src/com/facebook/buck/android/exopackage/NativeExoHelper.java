@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
 
 public class NativeExoHelper {
   @VisibleForTesting public static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
@@ -52,8 +53,7 @@ public class NativeExoHelper {
     ImmutableMap.Builder<Path, Path> filesToInstallBuilder = ImmutableMap.builder();
     ImmutableMap<String, ImmutableMap<String, Path>> filesByHashForAbis = getFilesByHashForAbis();
     for (String abi : filesByHashForAbis.keySet()) {
-      ImmutableMap<String, Path> filesByHash =
-          Preconditions.checkNotNull(filesByHashForAbis.get(abi));
+      ImmutableMap<String, Path> filesByHash = Objects.requireNonNull(filesByHashForAbis.get(abi));
       Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
       filesToInstallBuilder.putAll(
           ExopackageUtil.applyFilenameFormat(filesByHash, abiDir, "native-%s.so"));
@@ -65,8 +65,7 @@ public class NativeExoHelper {
     ImmutableMap<String, ImmutableMap<String, Path>> filesByHashForAbis = getFilesByHashForAbis();
     ImmutableMap.Builder<Path, String> metadataBuilder = ImmutableMap.builder();
     for (String abi : filesByHashForAbis.keySet()) {
-      ImmutableMap<String, Path> filesByHash =
-          Preconditions.checkNotNull(filesByHashForAbis.get(abi));
+      ImmutableMap<String, Path> filesByHash = Objects.requireNonNull(filesByHashForAbis.get(abi));
       Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
       metadataBuilder.put(
           abiDir.resolve("metadata.txt"), getNativeLibraryMetadataContents(filesByHash));

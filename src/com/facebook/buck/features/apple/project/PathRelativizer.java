@@ -19,9 +19,9 @@ package com.facebook.buck.features.apple.project;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.MorePaths;
-import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -59,6 +59,6 @@ final class PathRelativizer {
 
   /** Map a SourcePath to one that's relative to the output directory. */
   public Path outputPathToSourcePath(SourcePath sourcePath) {
-    return outputDirToRootRelative(Preconditions.checkNotNull(resolver.apply(sourcePath)));
+    return outputDirToRootRelative(Objects.requireNonNull(resolver.apply(sourcePath)));
   }
 }

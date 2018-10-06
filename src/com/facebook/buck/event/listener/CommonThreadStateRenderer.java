@@ -21,13 +21,13 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.util.Ansi;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -86,11 +86,9 @@ public class CommonThreadStateRenderer {
             @Override
             public int compare(Long threadId1, Long threadId2) {
               long elapsedTime1 =
-                  Preconditions.checkNotNull(threadInformationMap.get(threadId1))
-                      .getElapsedTimeMs();
+                  Objects.requireNonNull(threadInformationMap.get(threadId1)).getElapsedTimeMs();
               long elapsedTime2 =
-                  Preconditions.checkNotNull(threadInformationMap.get(threadId2))
-                      .getElapsedTimeMs();
+                  Objects.requireNonNull(threadInformationMap.get(threadId2)).getElapsedTimeMs();
               return ComparisonChain.start()
                   .compare(elapsedTime1, elapsedTime2, reverseOrdering)
                   .compare(threadId1, threadId2)

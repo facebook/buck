@@ -17,11 +17,11 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.util.TreePath;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
@@ -52,7 +52,7 @@ class ImportsTracker {
 
   public ImportsTracker(Elements elements, Types types, PackageElement enclosingPackage) {
     this.types = types;
-    importMembers(Preconditions.checkNotNull(elements.getPackageElement("java.lang")), null);
+    importMembers(Objects.requireNonNull(elements.getPackageElement("java.lang")), null);
     importMembers(enclosingPackage, null);
   }
 

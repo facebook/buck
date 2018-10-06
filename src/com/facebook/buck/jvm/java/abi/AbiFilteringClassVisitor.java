@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
@@ -142,7 +142,7 @@ class AbiFilteringClassVisitor extends ClassVisitor {
       return true;
     }
 
-    String currentClassName = Preconditions.checkNotNull(this.name);
+    String currentClassName = Objects.requireNonNull(this.name);
     if (name.equals(currentClassName)) {
       // Must always include the entry for our own class, since that's what makes it an inner class.
       return true;

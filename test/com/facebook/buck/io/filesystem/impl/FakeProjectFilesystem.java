@@ -76,6 +76,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -302,7 +303,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         dir = dir.getParent();
       }
     }
-    this.clock = Preconditions.checkNotNull(clock);
+    this.clock = Objects.requireNonNull(clock);
 
     // Generally, tests don't care whether files exist.
     ignoreValidityOfPaths = true;
@@ -319,7 +320,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   }
 
   protected byte[] getFileBytes(Path path) {
-    return Preconditions.checkNotNull(fileContents.get(MorePaths.normalize(path)));
+    return Objects.requireNonNull(fileContents.get(MorePaths.normalize(path)));
   }
 
   private void rmFile(Path path) {
@@ -329,7 +330,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   }
 
   public ImmutableSet<FileAttribute<?>> getFileAttributesAtPath(Path path) {
-    return Preconditions.checkNotNull(fileAttributes.get(path));
+    return Objects.requireNonNull(fileAttributes.get(path));
   }
 
   public void clear() {
@@ -469,7 +470,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     if (!exists(normalizedPath)) {
       throw new NoSuchFileException(path.toString());
     }
-    return Preconditions.checkNotNull(fileLastModifiedTimes.get(normalizedPath));
+    return Objects.requireNonNull(fileLastModifiedTimes.get(normalizedPath));
   }
 
   @Override
@@ -539,7 +540,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   @Override
   public void writeBytesToPath(byte[] bytes, Path path, FileAttribute<?>... attrs) {
     Path normalizedPath = MorePaths.normalize(path);
-    fileContents.put(normalizedPath, Preconditions.checkNotNull(bytes));
+    fileContents.put(normalizedPath, Objects.requireNonNull(bytes));
     fileAttributes.put(normalizedPath, ImmutableSet.copyOf(attrs));
 
     Path directory = normalizedPath.getParent();

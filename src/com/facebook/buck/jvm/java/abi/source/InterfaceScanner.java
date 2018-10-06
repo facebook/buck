@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
@@ -28,6 +27,7 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
+import java.util.Objects;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -119,7 +119,7 @@ class InterfaceScanner {
               new TreePath(importedExpressionPath, importedExpression.getExpression());
         }
         QualifiedNameable leafmostElement =
-            (QualifiedNameable) Preconditions.checkNotNull(trees.getElement(leafmostElementPath));
+            (QualifiedNameable) Objects.requireNonNull(trees.getElement(leafmostElementPath));
 
         listener.onImport(isStatic, isStarImport, leafmostElementPath, leafmostElement, simpleName);
 
@@ -265,20 +265,19 @@ class InterfaceScanner {
           return;
         }
 
-        TypeMirror currentType = Preconditions.checkNotNull(getCurrentType());
+        TypeMirror currentType = Objects.requireNonNull(getCurrentType());
         if (currentType.getKind() != TypeKind.DECLARED) {
           return;
         }
 
         listener.onTypeReferenceFound(
-            (TypeElement) Preconditions.checkNotNull(getCurrentElement()),
+            (TypeElement) Objects.requireNonNull(getCurrentElement()),
             getCurrentPath(),
             getEnclosingElement());
       }
 
       private void reportConstant() {
-        VariableElement variable =
-            (VariableElement) Preconditions.checkNotNull(getCurrentElement());
+        VariableElement variable = (VariableElement) Objects.requireNonNull(getCurrentElement());
         listener.onConstantReferenceFound(variable, getCurrentPath(), getEnclosingElement());
       }
     }.scan(file, null);

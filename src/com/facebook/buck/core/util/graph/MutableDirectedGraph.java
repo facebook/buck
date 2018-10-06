@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.util.graph;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -30,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -254,21 +254,21 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
           doStrongConnect(sink);
           int lowlink =
               Math.min(
-                  Preconditions.checkNotNull(lowlinks.get(node)),
-                  Preconditions.checkNotNull(lowlinks.get(sink)));
+                  Objects.requireNonNull(lowlinks.get(node)),
+                  Objects.requireNonNull(lowlinks.get(sink)));
           lowlinks.put(node, lowlink);
         } else if (nodeStack.contains(sink)) {
           // TODO(mbolin): contains() is O(N), consider maintaining an index so it is O(1)?
           int lowlink =
               Math.min(
-                  Preconditions.checkNotNull(lowlinks.get(node)),
-                  Preconditions.checkNotNull(indexes.get(sink)));
+                  Objects.requireNonNull(lowlinks.get(node)),
+                  Objects.requireNonNull(indexes.get(sink)));
           lowlinks.put(node, lowlink);
         }
       }
 
       // If node is a root node, then pop the stack and generate a strongly connected component.
-      if (Preconditions.checkNotNull(lowlinks.get(node)).equals(indexes.get(node))) {
+      if (Objects.requireNonNull(lowlinks.get(node)).equals(indexes.get(node))) {
         Set<S> stronglyConnectedComponent = new HashSet<>();
         S componentElement;
         do {

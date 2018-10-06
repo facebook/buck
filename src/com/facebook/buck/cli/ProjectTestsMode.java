@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 
 public enum ProjectTestsMode {
 
@@ -31,7 +31,7 @@ public enum ProjectTestsMode {
   private final String value;
 
   ProjectTestsMode(String value) {
-    this.value = Preconditions.checkNotNull(value);
+    this.value = Objects.requireNonNull(value);
   }
 
   @Override

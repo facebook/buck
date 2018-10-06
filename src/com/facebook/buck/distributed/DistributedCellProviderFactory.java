@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /** Creates a {@link CellProvider} to be used in a distributed build. */
@@ -61,7 +62,7 @@ public class DistributedCellProviderFactory {
             CacheLoader.from(
                 cellPath -> {
                   DistBuildCellParams cellParam =
-                      Preconditions.checkNotNull(
+                      Objects.requireNonNull(
                           cellParams.get(cellPath),
                           "This should only be called for secondary cells.");
                   Path currentCellRoot = cellParam.getFilesystem().getRootPath();

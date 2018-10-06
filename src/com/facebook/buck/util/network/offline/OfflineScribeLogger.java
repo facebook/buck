@@ -48,6 +48,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -103,12 +104,12 @@ public class OfflineScribeLogger extends ScribeLogger {
       ProjectFilesystem projectFilesystem,
       BuckEventBus buckEventBus,
       BuildId buildId) {
-    Preconditions.checkNotNull(scribeLogger);
-    Preconditions.checkNotNull(blacklistCategories);
+    Objects.requireNonNull(scribeLogger);
+    Objects.requireNonNull(blacklistCategories);
     Preconditions.checkArgument(maxScribeOfflineLogsKB > 0);
-    Preconditions.checkNotNull(projectFilesystem);
-    Preconditions.checkNotNull(buckEventBus);
-    Preconditions.checkNotNull(buildId);
+    Objects.requireNonNull(projectFilesystem);
+    Objects.requireNonNull(buckEventBus);
+    Objects.requireNonNull(buildId);
 
     this.scribeLogger = scribeLogger;
     this.blacklistCategories = blacklistCategories;

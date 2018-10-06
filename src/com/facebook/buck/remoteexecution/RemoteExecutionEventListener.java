@@ -19,11 +19,11 @@ package com.facebook.buck.remoteexecution;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -108,7 +108,7 @@ public class RemoteExecutionEventListener
             .collect(
                 Collectors.toMap(
                     entry -> entry.getKey(),
-                    entry -> Preconditions.checkNotNull(entry.getValue().get()))));
+                    entry -> Objects.requireNonNull(entry.getValue().get()))));
   }
 
   @Override

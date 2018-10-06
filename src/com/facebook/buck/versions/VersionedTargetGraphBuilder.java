@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -198,7 +199,7 @@ public class VersionedTargetGraphBuilder {
     if (versionedNode.isPresent()) {
       node =
           getNode(
-              Preconditions.checkNotNull(
+              Objects.requireNonNull(
                   versionedNode
                       .get()
                       .getConstructorArg()

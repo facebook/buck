@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -37,7 +37,7 @@ public class Discardable<T> {
   }
 
   public T get() {
-    Preconditions.checkNotNull(value, "Discardabled accessed after discard().");
+    Objects.requireNonNull(value, "Discardabled accessed after discard().");
     return value;
   }
 }

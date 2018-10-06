@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import java.util.List;
+import java.util.Objects;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
@@ -51,7 +51,7 @@ class InferredTypeElement extends InferredElement implements ArtificialTypeEleme
 
   @Override
   public ArtificialElement getEnclosingElement() {
-    return Preconditions.checkNotNull(super.getEnclosingElement());
+    return Objects.requireNonNull(super.getEnclosingElement());
   }
 
   @Override

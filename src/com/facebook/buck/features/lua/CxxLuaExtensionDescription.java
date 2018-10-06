@@ -61,7 +61,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -72,6 +71,7 @@ import com.google.common.collect.Multimaps;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -306,7 +306,7 @@ public class CxxLuaExtensionDescription
       public SourcePath getExtension(CxxPlatform cxxPlatform) {
         BuildRule rule =
             graphBuilder.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
-        return Preconditions.checkNotNull(rule.getSourcePathToOutput());
+        return Objects.requireNonNull(rule.getSourcePathToOutput());
       }
 
       @Override

@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -259,7 +260,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
   public ConcurrentMap<Path, HashCodeAndFileType> asMap() {
     return new ConcurrentHashMap<>(
         Maps.transformValues(
-            fileSystemMap.asMap(), v -> Preconditions.checkNotNull(v).getHashCodeAndFileType()));
+            fileSystemMap.asMap(), v -> Objects.requireNonNull(v).getHashCodeAndFileType()));
   }
 
   @Override

@@ -88,6 +88,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
@@ -589,7 +590,7 @@ public class InstallCommand extends BuildCommand {
     if (helper.installBundleOnDevice(
         selectedUdid,
         pathResolver.getAbsolutePath(
-            Preconditions.checkNotNull(appleBundle.getSourcePathToOutput())))) {
+            Objects.requireNonNull(appleBundle.getSourcePathToOutput())))) {
       params
           .getConsole()
           .printSuccess(
@@ -804,7 +805,7 @@ public class InstallCommand extends BuildCommand {
     if (!appleSimulatorController.installBundleInSimulator(
         appleSimulator.get().getUdid(),
         pathResolver.getAbsolutePath(
-            Preconditions.checkNotNull(appleBundle.getSourcePathToOutput())))) {
+            Objects.requireNonNull(appleBundle.getSourcePathToOutput())))) {
       params
           .getConsole()
           .printBuildFailure(

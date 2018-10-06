@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.pf4j.PluginManager;
 
@@ -40,6 +40,6 @@ public abstract class CommandWithPluginManager implements Command {
 
   @Override
   public PluginManager getPluginManager() {
-    return Preconditions.checkNotNull(pluginManager);
+    return Objects.requireNonNull(pluginManager);
   }
 }

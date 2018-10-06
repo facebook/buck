@@ -97,6 +97,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
@@ -473,7 +474,7 @@ public class CxxDescriptionEnhancer {
                               graphBuilder,
                               ruleFinder,
                               cxxPlatform,
-                              Preconditions.checkNotNull(s.getSourcePath())));
+                              Objects.requireNonNull(s.getSourcePath())));
                     })
                 .collect(ImmutableList.toImmutableList()),
             x -> true,
@@ -765,7 +766,7 @@ public class CxxDescriptionEnhancer {
     // Add in deps found via deps query.
     ImmutableList<BuildRule> depQueryDeps =
         args.getDepsQuery()
-            .map(query -> Preconditions.checkNotNull(query.getResolvedQuery()))
+            .map(query -> Objects.requireNonNull(query.getResolvedQuery()))
             .orElse(ImmutableSortedSet.of())
             .stream()
             .map(graphBuilder::getRule)

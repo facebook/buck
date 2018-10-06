@@ -22,13 +22,13 @@ import com.facebook.buck.jvm.java.abi.source.TreeBackedTypeResolutionSimulator.T
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -134,7 +134,7 @@ class InterfaceValidator {
               elements,
               types,
               (PackageElement)
-                  Preconditions.checkNotNull(trees.getElement(new TreePath(compilationUnit))));
+                  Objects.requireNonNull(trees.getElement(new TreePath(compilationUnit))));
       treeBackedResolver = new TreeBackedTypeResolutionSimulator(elements, trees, compilationUnit);
     }
 
@@ -182,8 +182,7 @@ class InterfaceValidator {
 
       DeclaredType declaredType = (DeclaredType) typeMirror;
       TypeElement typeElement = (TypeElement) declaredType.asElement();
-      CompletedType completedType =
-          Preconditions.checkNotNull(completer.complete(typeElement, true));
+      CompletedType completedType = Objects.requireNonNull(completer.complete(typeElement, true));
 
       switch (completedType.kind) {
         case COMPLETED_TYPE:
@@ -273,7 +272,7 @@ class InterfaceValidator {
           imports.importMembers(leafmostElement, leafmostElementPath);
         }
       } else if (!isStarImport) {
-        imports.importStatic((TypeElement) leafmostElement, Preconditions.checkNotNull(memberName));
+        imports.importStatic((TypeElement) leafmostElement, Objects.requireNonNull(memberName));
       } else {
         imports.importStaticMembers((TypeElement) leafmostElement);
       }

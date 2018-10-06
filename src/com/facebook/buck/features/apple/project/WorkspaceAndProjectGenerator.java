@@ -644,7 +644,7 @@ public class WorkspaceAndProjectGenerator {
                   xcodeDescriptions,
                   projectGraph,
                   Optional.of(dependenciesCache),
-                  Preconditions.checkNotNull(projectGraph.get(extraTarget))),
+                  Objects.requireNonNull(projectGraph.get(extraTarget))),
               Optional::of));
     }
 

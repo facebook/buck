@@ -19,7 +19,6 @@ package com.facebook.buck.sandbox.darwin;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.sandbox.SandboxProperties;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.IOException;
@@ -28,6 +27,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /** Provides an interface to OS X native sandbox capabilities. */
@@ -69,7 +69,7 @@ public class DarwinSandbox {
   /** Creates a list CL arguments that should be used to run a process in this sandbox */
   public ImmutableList<String> createCommandLineArguments() {
     return createCommandLineArguments(
-        Preconditions.checkNotNull(sandboxProfilePath).toAbsolutePath().toString());
+        Objects.requireNonNull(sandboxProfilePath).toAbsolutePath().toString());
   }
 
   /** Creates a list CL arguments that should be used to run a process in this sandbox */
@@ -84,7 +84,7 @@ public class DarwinSandbox {
     sandboxProfilePath =
         projectFilesystem.resolve(projectFilesystem.createTempFile("sandbox-profile-", ".sb"));
     createProfileFileFromConfiguration(
-        Preconditions.checkNotNull(sandboxProfilePath),
+        Objects.requireNonNull(sandboxProfilePath),
         SandboxProperties.builder()
             .from(sandboxProperties)
             .from(additionalSandboxProperties)

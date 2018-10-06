@@ -43,7 +43,6 @@ import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.versions.VersionException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
@@ -53,6 +52,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 
 /** Initializes the build engine delegate, the target graph and the action graph. */
 public class DelegateAndGraphsInitializer {
@@ -113,10 +113,10 @@ public class DelegateAndGraphsInitializer {
       DistBuildTargetGraphCodec codec = createGraphCodec();
       ImmutableMap<Integer, Cell> cells = args.getState().getCells();
       TargetGraphAndBuildTargets targetGraphAndBuildTargets =
-          Preconditions.checkNotNull(
+          Objects.requireNonNull(
               codec.createTargetGraph(
                   args.getState().getRemoteState().getTargetGraph(),
-                  key -> Preconditions.checkNotNull(cells.get(key))));
+                  key -> Objects.requireNonNull(cells.get(key))));
 
       try {
         if (args.getState().getRemoteRootCellConfig().getBuildVersions()) {
@@ -146,7 +146,7 @@ public class DelegateAndGraphsInitializer {
   private ActionGraphAndBuilder createActionGraphAndResolver(TargetGraph targetGraph) {
     args.getTimingStatsTracker().startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     try {
-      return args.getActionGraphProvider().getActionGraph(Preconditions.checkNotNull(targetGraph));
+      return args.getActionGraphProvider().getActionGraph(Objects.requireNonNull(targetGraph));
     } finally {
       args.getTimingStatsTracker().stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     }
@@ -160,7 +160,7 @@ public class DelegateAndGraphsInitializer {
     if (remoteConfig.materializeSourceFilesOnDemand()) {
       SourcePathRuleFinder ruleFinder =
           new SourcePathRuleFinder(
-              Preconditions.checkNotNull(actionGraphAndBuilder).getActionGraphBuilder());
+              Objects.requireNonNull(actionGraphAndBuilder).getActionGraphBuilder());
       cachingBuildEngineDelegate =
           new DistBuildCachingEngineDelegate(
               DefaultSourcePathResolver.from(ruleFinder),
@@ -217,7 +217,7 @@ public class DelegateAndGraphsInitializer {
             args.getRuleKeyConfiguration());
 
     return new DistBuildTargetGraphCodec(
-        Preconditions.checkNotNull(args.getExecutorService()),
+        Objects.requireNonNull(args.getExecutorService()),
         parserTargetNodeFactory,
         input -> {
           try {
@@ -264,7 +264,7 @@ public class DelegateAndGraphsInitializer {
                       .createMaterializerAndPreload(
                           cache,
                           args.getProvider(),
-                          Preconditions.checkNotNull(args.getExecutors().get(ExecutorPool.CPU)));
+                          Objects.requireNonNull(args.getExecutors().get(ExecutorPool.CPU)));
                 } catch (IOException exception) {
                   throw new RuntimeException(
                       String.format(

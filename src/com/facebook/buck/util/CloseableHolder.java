@@ -16,9 +16,9 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Preconditions;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -46,11 +46,11 @@ public class CloseableHolder<T extends Closeable> implements Closeable {
   }
 
   public T get() {
-    return Preconditions.checkNotNull(instance);
+    return Objects.requireNonNull(instance);
   }
 
   public T release() {
-    T value = Preconditions.checkNotNull(instance);
+    T value = Objects.requireNonNull(instance);
     instance = null;
     return value;
   }

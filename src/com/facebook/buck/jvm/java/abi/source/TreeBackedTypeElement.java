@@ -17,11 +17,11 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.util.TreePath;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
@@ -65,7 +65,7 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
 
   @Override
   TreePath getTreePath() {
-    return Preconditions.checkNotNull(super.getTreePath());
+    return Objects.requireNonNull(super.getTreePath());
   }
 
   @Override
@@ -75,7 +75,7 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
 
   @Override
   public TreeBackedElement getEnclosingElement() {
-    return Preconditions.checkNotNull(super.getEnclosingElement());
+    return Objects.requireNonNull(super.getEnclosingElement());
   }
 
   @Override

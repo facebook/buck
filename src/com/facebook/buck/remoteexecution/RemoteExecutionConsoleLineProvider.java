@@ -20,12 +20,12 @@ import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider
 import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 /** Provides output lines to the console about the current state of Remote Execution. */
 public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLineProvider {
@@ -81,7 +81,7 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
   private int getLocallyBuiltRules(
       int totalBuildRules, ImmutableMap<State, Integer> actionsPerState) {
     int remotelyExecutedBuildRules =
-        Preconditions.checkNotNull(actionsPerState.get(State.ACTION_SUCCEEDED))
+        Objects.requireNonNull(actionsPerState.get(State.ACTION_SUCCEEDED))
             + actionsPerState.get(State.ACTION_FAILED);
     return Math.max(0, totalBuildRules - remotelyExecutedBuildRules);
   }

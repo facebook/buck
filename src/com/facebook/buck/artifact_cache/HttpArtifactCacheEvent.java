@@ -28,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -166,7 +167,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
           event.getEventKey(),
           CACHE_MODE,
           event.getOperation(),
-          Preconditions.checkNotNull(target),
+          Objects.requireNonNull(target),
           event.getRuleKeys(),
           event.getInvocationType(),
           data.getFetchResult(),
@@ -243,7 +244,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       public HttpArtifactCacheEvent.Finished build() {
         if (startedEvent.getOperation() == Operation.FETCH) {
           RuleKey requestsRuleKey =
-              Preconditions.checkNotNull(Iterables.getFirst(startedEvent.getRuleKeys(), null));
+              Objects.requireNonNull(Iterables.getFirst(startedEvent.getRuleKeys(), null));
           fetchDataBuilder.setRequestedRuleKey(requestsRuleKey);
           return new HttpArtifactCacheEvent.Finished(
               startedEvent, target, fetchDataBuilder.build());

@@ -20,10 +20,10 @@ import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.util.Ansi;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -107,7 +107,7 @@ public class BuildThreadStateRenderer implements MultiStateRenderer {
   @Override
   public String renderStatusLine(long threadId, StringBuilder lineBuilder) {
     ThreadRenderingInformation threadInformation =
-        Preconditions.checkNotNull(threadInformationMap.get(threadId));
+        Objects.requireNonNull(threadInformationMap.get(threadId));
     return commonThreadStateRenderer.renderLine(
         threadInformation.getBuildTarget(),
         threadInformation.getStartEvent(),
@@ -121,7 +121,7 @@ public class BuildThreadStateRenderer implements MultiStateRenderer {
   @Override
   public String renderShortStatus(long threadId) {
     ThreadRenderingInformation threadInformation =
-        Preconditions.checkNotNull(threadInformationMap.get(threadId));
+        Objects.requireNonNull(threadInformationMap.get(threadId));
     return commonThreadStateRenderer.renderShortStatus(
         threadInformation.getStartEvent().isPresent(),
         !threadInformation.getRunningStep().isPresent(),

@@ -41,9 +41,9 @@ import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
@@ -75,7 +75,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
     this.ruleFinder = ruleFinder;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
     this.sourcePathToOutput =
-        Preconditions.checkNotNull(
+        Objects.requireNonNull(
             jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget(), getProjectFilesystem()));
     this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
   }
@@ -102,7 +102,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return Preconditions.checkNotNull(sourcePathToOutput);
+    return Objects.requireNonNull(sourcePathToOutput);
   }
 
   @Override

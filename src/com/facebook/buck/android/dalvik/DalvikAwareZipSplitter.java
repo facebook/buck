@@ -25,7 +25,6 @@ import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.ClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.FileLike;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -40,6 +39,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
@@ -193,8 +193,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
             }
             String classPath = relativePath.replaceAll("\\.class$", "");
 
-            Preconditions.checkNotNull(primaryOut);
-            Preconditions.checkNotNull(classPathToDexStore);
+            Objects.requireNonNull(primaryOut);
+            Objects.requireNonNull(classPathToDexStore);
 
             if (requiredInPrimaryZip.test(relativePath)) {
               primaryOut.putEntry(entry);
@@ -216,7 +216,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
                 APKModule dexStore = containingModule.iterator().next();
                 if (!dexStore.equals(rootModule)) {
                   MySecondaryDexHelper dexHelper = additionalDexWriters.get(dexStore);
-                  Preconditions.checkNotNull(dexHelper);
+                  Objects.requireNonNull(dexHelper);
                   dexHelper.getOutputToWriteTo(entry).putEntry(entry);
                   additionalDexStoreEntries.add(relativePath);
                 }
@@ -251,7 +251,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         new ClasspathTraversal(inFiles, filesystem) {
           @Override
           public void visit(FileLike entry) throws IOException {
-            Preconditions.checkNotNull(primaryOut);
+            Objects.requireNonNull(primaryOut);
             String relativePath = entry.getRelativePath();
 
             // skip if it is the primary dex, is part of a modular dex store, or is not a class file

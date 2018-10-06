@@ -84,6 +84,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -745,7 +746,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path binaryOutputPath =
         context
             .getSourcePathResolver()
-            .getAbsolutePath(Preconditions.checkNotNull(binary.get().getSourcePathToOutput()));
+            .getAbsolutePath(Objects.requireNonNull(binary.get().getSourcePathToOutput()));
 
     ImmutableMap.Builder<Path, Path> binariesBuilder = ImmutableMap.builder();
     binariesBuilder.put(bundleBinaryPath, binaryOutputPath);

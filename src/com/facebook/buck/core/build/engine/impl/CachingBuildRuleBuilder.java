@@ -114,6 +114,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -360,7 +361,7 @@ class CachingBuildRuleBuilder {
             buildResult,
             Throwable.class,
             throwable -> {
-              Preconditions.checkNotNull(throwable);
+              Objects.requireNonNull(throwable);
               buildRuleBuilderDelegate.setFirstFailure(throwable);
               Throwables.throwIfInstanceOf(throwable, Exception.class);
               throw new RuntimeException(throwable);
@@ -920,8 +921,7 @@ class CachingBuildRuleBuilder {
             () -> {
               if (SupportsPipelining.isSupported(rule)) {
                 addToPipelinesRunner(
-                    (SupportsPipelining<?>) rule,
-                    Preconditions.checkNotNull(rulekeyCacheResult.get()));
+                    (SupportsPipelining<?>) rule, Objects.requireNonNull(rulekeyCacheResult.get()));
               }
 
               return Futures.transformAsync(
@@ -994,7 +994,7 @@ class CachingBuildRuleBuilder {
             buildResultFuture,
             () ->
                 buildLocally(
-                    Preconditions.checkNotNull(rulekeyCacheResult.get()),
+                    Objects.requireNonNull(rulekeyCacheResult.get()),
                     service
                         // This needs to adjust the default amounts even in the non-resource-aware
                         // scheduling case so that RuleScheduleInfo works correctly.
@@ -1104,7 +1104,7 @@ class CachingBuildRuleBuilder {
 
   private void recordFailureAndCleanUp(Throwable failure) {
     // Make this failure visible for other rules, so that they can stop early.
-    buildRuleBuilderDelegate.setFirstFailure(Preconditions.checkNotNull(failure));
+    buildRuleBuilderDelegate.setFirstFailure(Objects.requireNonNull(failure));
 
     // If we failed, cleanup the state of this rule.
     // TODO(mbolin): Delete all files produced by the rule, as they are not guaranteed
@@ -1226,7 +1226,7 @@ class CachingBuildRuleBuilder {
             executor.submit(
                 () -> {
                   if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
-                    Preconditions.checkNotNull(buildRuleBuilderDelegate.getFirstFailure());
+                    Objects.requireNonNull(buildRuleBuilderDelegate.getFirstFailure());
                     return Optional.of(canceled(buildRuleBuilderDelegate.getFirstFailure()));
                   }
                   try (Scope ignored = buildRuleScope()) {
@@ -1247,7 +1247,7 @@ class CachingBuildRuleBuilder {
             return Futures.immediateFuture(result);
           }
           if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
-            Preconditions.checkNotNull(buildRuleBuilderDelegate.getFirstFailure());
+            Objects.requireNonNull(buildRuleBuilderDelegate.getFirstFailure());
             return Futures.immediateFuture(
                 Optional.of(canceled(buildRuleBuilderDelegate.getFirstFailure())));
           }
@@ -1281,7 +1281,7 @@ class CachingBuildRuleBuilder {
     public void runWithExecutor(BuildExecutor buildExecutor) {
       try {
         if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
-          Preconditions.checkNotNull(buildRuleBuilderDelegate.getFirstFailure());
+          Objects.requireNonNull(buildRuleBuilderDelegate.getFirstFailure());
           future.set(Optional.of(canceled(buildRuleBuilderDelegate.getFirstFailure())));
           return;
         }

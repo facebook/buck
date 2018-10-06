@@ -140,8 +140,8 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   protected Iterable<BuildRule> getCompileTimeFirstOrderDeps() {
     return Iterables.concat(
         getDeps().getDeps(),
-        Preconditions.checkNotNull(getDeps()).getProvidedDeps(),
-        Preconditions.checkNotNull(getDeps()).getExportedProvidedDeps());
+        Objects.requireNonNull(getDeps()).getProvidedDeps(),
+        Objects.requireNonNull(getDeps()).getExportedProvidedDeps());
   }
 
   @Value.Lazy
@@ -222,7 +222,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
       SourcePath abiClasspath;
       if (isAbiDep) {
         abiClasspath =
-            Preconditions.checkNotNull(
+            Objects.requireNonNull(
                 abiDeps.get(compileTimeDepLibraryTarget).getSourcePathToOutput());
       } else {
         abiClasspath = compileTimeSourcePath;

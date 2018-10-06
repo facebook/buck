@@ -50,6 +50,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -119,7 +120,7 @@ class XctoolRunTestsStep implements Step {
 
     @Override
     public void handleEndOcunitEvent(XctoolOutputParsing.EndOcunitEvent event) {
-      Preconditions.checkNotNull(this.currentTestTarget);
+      Objects.requireNonNull(this.currentTestTarget);
       Preconditions.checkState(this.currentTestTarget.equals(event.targetName));
       // Signals the end of listing all tests belonging to a single target.
       this.currentTestTarget = null;
@@ -140,10 +141,9 @@ class XctoolRunTestsStep implements Step {
     @Override
     public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
       testTargetsToDescriptions.put(
-          Preconditions.checkNotNull(this.currentTestTarget),
+          Objects.requireNonNull(this.currentTestTarget),
           new TestDescription(
-              Preconditions.checkNotNull(event.className),
-              Preconditions.checkNotNull(event.methodName)));
+              Objects.requireNonNull(event.className), Objects.requireNonNull(event.methodName)));
     }
 
     @Override

@@ -140,6 +140,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -859,7 +860,7 @@ public class BuildCommand extends AbstractCommand {
       ClientStatsTracker distBuildClientStats,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
       throws IOException, InterruptedException {
-    Preconditions.checkNotNull(distBuildClientEventListener);
+    Objects.requireNonNull(distBuildClientEventListener);
 
     Preconditions.checkArgument(
         !distBuildConfig.getPerformRuleKeyConsistencyCheck()
@@ -906,7 +907,7 @@ public class BuildCommand extends AbstractCommand {
       // Read all files inline if we're dumping state to a file.
       for (BuildJobStateFileHashes cell : jobState.getFileHashes()) {
         ProjectFilesystem cellFilesystem =
-            Preconditions.checkNotNull(
+            Objects.requireNonNull(
                 distBuildCellIndexer.getLocalFilesystemsByCellIndex().get(cell.getCellIndex()));
         for (BuildJobStateFileHashEntry entry : cell.getEntries()) {
           cellFilesystem
@@ -1394,7 +1395,7 @@ public class BuildCommand extends AbstractCommand {
             BuildTargetPatternParser.fullyQualified(),
             params.getCell().getCellPathResolver());
     Iterable<BuildRule> actionGraphRules =
-        Preconditions.checkNotNull(actionGraphAndBuilder.getActionGraph().getNodes());
+        Objects.requireNonNull(actionGraphAndBuilder.getActionGraph().getNodes());
     ImmutableSet<BuildTarget> actionGraphTargets =
         ImmutableSet.copyOf(Iterables.transform(actionGraphRules, BuildRule::getBuildTarget));
     if (!actionGraphTargets.contains(explicitTarget)) {
@@ -1514,7 +1515,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   Build getBuild() {
-    return Preconditions.checkNotNull(lastBuild.get());
+    return Objects.requireNonNull(lastBuild.get());
   }
 
   @Override

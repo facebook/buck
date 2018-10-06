@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
@@ -36,6 +35,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -86,7 +86,7 @@ class TreeBackedEnter {
     }
 
     private TreePath getCurrentPath() {
-      return Preconditions.checkNotNull(currentPath);
+      return Objects.requireNonNull(currentPath);
     }
 
     public void enter(CompilationUnitTree compilationUnitTree) {
@@ -155,7 +155,7 @@ class TreeBackedEnter {
     private TreeBackedPackageElement enterPackageElement() {
       CompilationUnitTree compilationUnitTree = getCurrentPath().getCompilationUnit();
       PackageElement packageElement =
-          (PackageElement) Preconditions.checkNotNull(javacTrees.getElement(getCurrentPath()));
+          (PackageElement) Objects.requireNonNull(javacTrees.getElement(getCurrentPath()));
       TreeBackedPackageElement treeBackedPackageElement =
           elements.enterElement(packageElement, this::newTreeBackedPackage);
       if (compilationUnitTree
@@ -171,7 +171,7 @@ class TreeBackedEnter {
     public Void scan(Element e, @Nullable Void aVoid) {
       TreePath previousPath = currentPath;
       Tree previousTree = currentTree;
-      currentTree = Preconditions.checkNotNull(elementTreeFinder).getTree(e);
+      currentTree = Objects.requireNonNull(elementTreeFinder).getTree(e);
       currentPath = currentTree == null ? null : new TreePath(currentPath, currentTree);
       try {
         if (currentPath != null && javacTrees.getElement(currentPath) != e) {

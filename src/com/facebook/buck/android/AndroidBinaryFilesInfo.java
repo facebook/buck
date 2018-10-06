@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Optional;
 
 public class AndroidBinaryFilesInfo {
@@ -134,7 +135,7 @@ public class AndroidBinaryFilesInfo {
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes)
         && enhancementResult.getCopyNativeLibraries().isPresent()) {
       CopyNativeLibraries copyNativeLibraries =
-          Preconditions.checkNotNull(
+          Objects.requireNonNull(
               enhancementResult
                   .getCopyNativeLibraries()
                   .get()

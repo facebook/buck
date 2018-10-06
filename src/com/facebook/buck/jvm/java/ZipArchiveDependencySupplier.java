@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.rules.keys.ArchiveDependencySupplier;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
@@ -44,7 +45,7 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
             zipSourcePath -> {
               BuildRule rule = ruleFinder.getRule((BuildTargetSourcePath) zipSourcePath);
               HasJavaAbi hasJavaAbi = (HasJavaAbi) rule;
-              SourcePath ruleOutput = Preconditions.checkNotNull(rule.getSourcePathToOutput());
+              SourcePath ruleOutput = Objects.requireNonNull(rule.getSourcePathToOutput());
               Preconditions.checkState(ruleOutput.equals(zipSourcePath));
               return hasJavaAbi.getAbiInfo().getJarContents().stream();
             });

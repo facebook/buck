@@ -72,6 +72,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -449,7 +450,7 @@ public class NdkCxxPlatforms {
                     targetConfiguration.getCompiler().getGccVersion(),
                     cxxRuntime));
 
-    Host host = Preconditions.checkNotNull(BUILD_PLATFORMS.get(platform));
+    Host host = Objects.requireNonNull(BUILD_PLATFORMS.get(platform));
     String ndkVersion = readVersion(ndkRoot);
 
     NdkCxxToolchainPaths toolchainPaths =
@@ -928,7 +929,7 @@ public class NdkCxxPlatforms {
     private final String value;
 
     Host(String value) {
-      this.value = Preconditions.checkNotNull(value);
+      this.value = Objects.requireNonNull(value);
     }
 
     @Override
@@ -948,7 +949,7 @@ public class NdkCxxPlatforms {
     private final String value;
 
     ToolchainTarget(String value) {
-      this.value = Preconditions.checkNotNull(value);
+      this.value = Objects.requireNonNull(value);
     }
 
     @Override

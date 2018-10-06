@@ -49,7 +49,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -59,6 +58,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -218,10 +218,10 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(
-        StringArg.from(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform))));
+        StringArg.from(Objects.requireNonNull(exportedLinkerFlags.apply(cxxPlatform))));
 
     ImmutableSet.Builder<FrameworkPath> frameworkPaths = ImmutableSet.builder();
-    frameworkPaths.addAll(Preconditions.checkNotNull(frameworks));
+    frameworkPaths.addAll(Objects.requireNonNull(frameworks));
 
     frameworkPaths.add(FrameworkPath.ofSourcePath(getSourcePathToOutput()));
     if (type == Linker.LinkableDepType.SHARED) {

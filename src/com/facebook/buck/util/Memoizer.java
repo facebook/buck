@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -39,12 +39,12 @@ public class Memoizer<T> {
     if (!value.isPresent()) {
       synchronized (this) {
         if (!value.isPresent()) {
-          T t = Preconditions.checkNotNull(delegate.get());
+          T t = Objects.requireNonNull(delegate.get());
           value = Optional.of(t);
           return t;
         }
       }
     }
-    return Preconditions.checkNotNull(value.get());
+    return Objects.requireNonNull(value.get());
   }
 }

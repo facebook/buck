@@ -23,8 +23,8 @@ import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.google.common.base.Preconditions;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -38,7 +38,7 @@ public class ConsoleEventsDispatcher {
   }
 
   public void postDistBuildProgressEvent(CoordinatorBuildProgress buildProgress) {
-    buckEventBus.post(new DistBuildRemoteProgressEvent(Preconditions.checkNotNull(buildProgress)));
+    buckEventBus.post(new DistBuildRemoteProgressEvent(Objects.requireNonNull(buildProgress)));
   }
 
   public void postDistBuildStatusEvent(BuildJob job, List<BuildSlaveStatus> slaveStatuses) {

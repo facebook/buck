@@ -18,10 +18,10 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class VersionedTargetGraphFactory {
 
@@ -32,7 +32,7 @@ public class VersionedTargetGraphFactory {
     for (Map.Entry<BuildTarget, TargetNode<?>> ent : index.entrySet()) {
       builder.addNode(ent.getKey(), ent.getValue());
       for (BuildTarget dep : ent.getValue().getBuildDeps()) {
-        builder.addEdge(ent.getValue(), Preconditions.checkNotNull(index.get(dep), dep));
+        builder.addEdge(ent.getValue(), Objects.requireNonNull(index.get(dep), dep::toString));
       }
     }
     return builder.build();

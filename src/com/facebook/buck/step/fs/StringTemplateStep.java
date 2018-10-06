@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 import org.stringtemplate.v4.ST;
 
 /**
@@ -66,7 +67,7 @@ public class StringTemplateStep implements Step {
     }
 
     return new WriteFileStep(
-            filesystem, Preconditions.checkNotNull(st.render()), outputPath, /* executable */ false)
+            filesystem, Objects.requireNonNull(st.render()), outputPath, /* executable */ false)
         .execute(context);
   }
 

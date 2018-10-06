@@ -27,12 +27,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -245,8 +245,8 @@ class XctoolOutputParsing {
     long timeMillis = (long) (endTestEvent.totalDuration * TimeUnit.SECONDS.toMillis(1));
     TestResultSummary testResultSummary =
         new TestResultSummary(
-            Preconditions.checkNotNull(endTestEvent.className),
-            Preconditions.checkNotNull(endTestEvent.test),
+            Objects.requireNonNull(endTestEvent.className),
+            Objects.requireNonNull(endTestEvent.test),
             endTestEvent.succeeded ? ResultType.SUCCESS : ResultType.FAILURE,
             timeMillis,
             formatTestMessage(endTestEvent),

@@ -17,10 +17,10 @@
 package com.facebook.buck.jvm.java.abi.source.api;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.Set;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -74,7 +74,7 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
   }
 
   private void decrementNErrors() {
-    Field nErrorsField = Preconditions.checkNotNull(this.nErrorsField);
+    Field nErrorsField = Objects.requireNonNull(this.nErrorsField);
 
     try {
       int nerrors = (Integer) nErrorsField.get(getLog());
@@ -92,13 +92,13 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
     }
 
     try {
-      Set<?> recorded = (Set<?>) Preconditions.checkNotNull(recordedField).get(getLog());
+      Set<?> recorded = (Set<?>) Objects.requireNonNull(recordedField).get(getLog());
       if (recorded != null) {
         boolean removed = false;
         for (Object recordedPair : recorded) {
           JavaFileObject fst =
-              (JavaFileObject) Preconditions.checkNotNull(pairFirstField).get(recordedPair);
-          Integer snd = (Integer) Preconditions.checkNotNull(pairSecondField).get(recordedPair);
+              (JavaFileObject) Objects.requireNonNull(pairFirstField).get(recordedPair);
+          Integer snd = (Integer) Objects.requireNonNull(pairSecondField).get(recordedPair);
 
           if (snd == diagnostic.getPosition() && fst.getName().equals(file.getName())) {
             removed = recorded.remove(recordedPair);
@@ -122,8 +122,8 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
    */
   private Object getLog() {
     try {
-      Object context = Preconditions.checkNotNull(contextField).get(task);
-      return Preconditions.checkNotNull(instanceMethod).invoke(null, context);
+      Object context = Objects.requireNonNull(contextField).get(task);
+      return Objects.requireNonNull(instanceMethod).invoke(null, context);
     } catch (IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
@@ -141,9 +141,8 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
       }
 
       return (Boolean)
-          Preconditions.checkNotNull(isFlagSetMethod)
-              .invoke(
-                  Preconditions.checkNotNull(diagnosticField).get(diagnostic), recoverableError);
+          Objects.requireNonNull(isFlagSetMethod)
+              .invoke(Objects.requireNonNull(diagnosticField).get(diagnostic), recoverableError);
     } catch (IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
@@ -156,7 +155,7 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
 
     try {
       Class<? extends JavaCompiler.CompilationTask> compilerClass =
-          Preconditions.checkNotNull(task).getClass();
+          Objects.requireNonNull(task).getClass();
       contextField = compilerClass.getSuperclass().getDeclaredField("context");
       contextField.setAccessible(true);
       Object context = contextField.get(task);
@@ -184,7 +183,7 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
           break;
         }
       }
-      Preconditions.checkNotNull(recoverableError);
+      Objects.requireNonNull(recoverableError);
 
       Class<?> diagnosticSourceUnwrapperClass =
           Class.forName(

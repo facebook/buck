@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -110,7 +111,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.isAsset = isAsset;
 
     this.root = buildTarget.getBasePath();
-    this.makefile = Preconditions.checkNotNull(makefile);
+    this.makefile = Objects.requireNonNull(makefile);
     this.makefileContents = makefileContents;
     this.buildArtifactsDirectory = getBuildArtifactsDirectory(buildTarget, true /* isScratchDir */);
     this.genDirectory = getBuildArtifactsDirectory(buildTarget, false /* isScratchDir */);

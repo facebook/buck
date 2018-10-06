@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.plugin.adapter;
 
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskEvent;
@@ -24,6 +23,7 @@ import com.sun.source.util.TaskListener;
 import com.sun.source.util.TreePathScanner;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import javax.lang.model.element.Element;
@@ -79,7 +79,7 @@ public class PostEnterTaskListener implements TaskListener {
             if (e.getSourceFile().isNameCompatible("package-info", JavaFileObject.Kind.SOURCE)) {
               Elements elements = task.getElements();
               Element packageElement =
-                  Preconditions.checkNotNull(
+                  Objects.requireNonNull(
                       elements.getPackageElement(node.getPackageName().toString()));
               topLevelElements.add(packageElement);
             }

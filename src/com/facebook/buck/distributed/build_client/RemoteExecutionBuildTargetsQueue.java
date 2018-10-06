@@ -20,7 +20,6 @@ import com.facebook.buck.distributed.build_slave.BuildTargetsQueue;
 import com.facebook.buck.distributed.build_slave.DistributableBuildGraph;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.WorkUnit;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
@@ -28,6 +27,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -111,7 +111,7 @@ public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
 
     synchronized (this) {
       for (String finishedTarget : finishedNodes) {
-        TargetToBuild target = Preconditions.checkNotNull(targetsBuilding.remove(finishedTarget));
+        TargetToBuild target = Objects.requireNonNull(targetsBuilding.remove(finishedTarget));
         target.getCompletionFuture().set(null);
       }
 

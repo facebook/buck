@@ -57,6 +57,7 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -213,7 +214,7 @@ public class DaemonicParserState {
         Map<String, Object> rawNode = rawNodeEntry.getValue();
         if (MetaRules.INCLUDES_NAME.equals(rawNodeEntry.getKey())) {
           for (String path :
-              Preconditions.checkNotNull((Iterable<String>) rawNode.get(MetaRules.INCLUDES))) {
+              Objects.requireNonNull((Iterable<String>) rawNode.get(MetaRules.INCLUDES))) {
             dependentsOfEveryNode.add(cell.getFilesystem().resolve(path));
           }
         } else if (MetaRules.CONFIGS_NAME.equals(rawNodeEntry.getKey())) {

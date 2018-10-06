@@ -44,6 +44,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -94,7 +95,7 @@ abstract class AbstractElfRewriteDynStrSectionStep implements Step {
                             return new ElfDynamicSection.Entry(e.d_tag, newSize);
                           } else if (e.d_tag.getType() == ElfDynamicSection.DTag.Type.STRING) {
                             return new ElfDynamicSection.Entry(
-                                e.d_tag, Preconditions.checkNotNull(newStringIndices.get(e.d_un)));
+                                e.d_tag, Objects.requireNonNull(newStringIndices.get(e.d_un)));
                           } else {
                             return e;
                           }
@@ -130,7 +131,7 @@ abstract class AbstractElfRewriteDynStrSectionStep implements Step {
                     .map(
                         e ->
                             new ElfSymbolTable.Entry(
-                                Preconditions.checkNotNull(newStringIndices.get(e.st_name)),
+                                Objects.requireNonNull(newStringIndices.get(e.st_name)),
                                 e.st_info,
                                 e.st_other,
                                 e.st_shndx,
@@ -176,7 +177,7 @@ abstract class AbstractElfRewriteDynStrSectionStep implements Step {
                                                 .map(
                                                     ve ->
                                                         new ElfVerDef.Verdaux(
-                                                            Preconditions.checkNotNull(
+                                                            Objects.requireNonNull(
                                                                 newStringIndices.get(ve.vda_name)),
                                                             ve.vda_next))
                                                 .toImmutableList()))

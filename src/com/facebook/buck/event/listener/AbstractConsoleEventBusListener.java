@@ -69,6 +69,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
@@ -905,8 +906,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     Comparator<UnflavoredBuildTarget> comparator =
         (target1, target2) -> {
-          Long elapsedTime1 = Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target1));
-          Long elapsedTime2 = Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target2));
+          Long elapsedTime1 = Objects.requireNonNull(timeSpentMillisecondsInRules.get(target1));
+          Long elapsedTime2 = Objects.requireNonNull(timeSpentMillisecondsInRules.get(target2));
           long delta = elapsedTime2 - elapsedTime1;
           return Long.compare(delta, 0L);
         };

@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -27,6 +26,7 @@ import com.google.common.collect.Multimap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.function.Function;
 
@@ -49,27 +49,27 @@ public class RuleUtils {
     for (SourceWithFlags sourceWithFlags : sources) {
       Path path = rootPath.resolve(resolver.apply(sourceWithFlags.getSourcePath()));
       GroupedSource groupedSource = GroupedSource.ofSourceWithFlags(sourceWithFlags);
-      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+      entriesBuilder.put(Objects.requireNonNull(path.getParent()), groupedSource);
     }
     for (SourcePath sourcePath : extraXcodeSources) {
       Path path = rootPath.resolve(resolver.apply(sourcePath));
       GroupedSource groupedSource = GroupedSource.ofSourceWithFlags(SourceWithFlags.of(sourcePath));
-      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+      entriesBuilder.put(Objects.requireNonNull(path.getParent()), groupedSource);
     }
     for (SourcePath sourcePath : extraXcodeFiles) {
       Path path = rootPath.resolve(resolver.apply(sourcePath));
       GroupedSource groupedSource = GroupedSource.ofIgnoredSource(sourcePath);
-      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+      entriesBuilder.put(Objects.requireNonNull(path.getParent()), groupedSource);
     }
     for (SourcePath publicHeader : publicHeaders) {
       Path path = rootPath.resolve(resolver.apply(publicHeader));
       GroupedSource groupedSource = GroupedSource.ofPublicHeader(publicHeader);
-      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+      entriesBuilder.put(Objects.requireNonNull(path.getParent()), groupedSource);
     }
     for (SourcePath privateHeader : privateHeaders) {
       Path path = rootPath.resolve(resolver.apply(privateHeader));
       GroupedSource groupedSource = GroupedSource.ofPrivateHeader(privateHeader);
-      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+      entriesBuilder.put(Objects.requireNonNull(path.getParent()), groupedSource);
     }
     ImmutableMultimap<Path, GroupedSource> entries = entriesBuilder.build();
 

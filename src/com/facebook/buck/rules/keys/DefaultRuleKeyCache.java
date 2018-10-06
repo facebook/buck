@@ -31,6 +31,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -115,7 +116,7 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
                   return value;
                 })
             .value;
-    return Preconditions.checkNotNull(supplier).get();
+    return Objects.requireNonNull(supplier).get();
   }
 
   @Nullable
@@ -125,7 +126,7 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
     Node<Object, V> node = cache.get(new IdentityWrapper<Object>(rule));
     if (node != null && node.value != null) {
       request.recordHit();
-      return Preconditions.checkNotNull(node.value).get();
+      return Objects.requireNonNull(node.value).get();
     }
     request.recordMiss();
     return null;

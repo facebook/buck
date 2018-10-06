@@ -37,12 +37,12 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Objects;
 
 public final class ProjectGeneratorTestUtils {
 
@@ -57,7 +57,7 @@ public final class ProjectGeneratorTestUtils {
   }
 
   private static PBXTarget getTargetByName(PBXProject generatedProject, String name) {
-    Preconditions.checkNotNull(name);
+    Objects.requireNonNull(name);
     for (PBXTarget target : generatedProject.getTargets()) {
       if (target.getName().equals(name)) {
         return target;

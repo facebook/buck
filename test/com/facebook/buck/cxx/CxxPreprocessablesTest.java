@@ -43,13 +43,13 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -66,7 +66,7 @@ public class CxxPreprocessablesTest {
         BuildRuleParams params,
         CxxPreprocessorInput input) {
       super(buildTarget, projectFilesystem, params);
-      this.input = Preconditions.checkNotNull(input);
+      this.input = Objects.requireNonNull(input);
     }
 
     @Override

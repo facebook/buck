@@ -102,6 +102,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -166,7 +167,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourcePath> paths) {
     ImmutableSortedSet.Builder<SourcePath> fixed =
-        new ImmutableSortedSet.Builder<>(Preconditions.checkNotNull(paths.comparator()));
+        new ImmutableSortedSet.Builder<>(Objects.requireNonNull(paths.comparator()));
     for (SourcePath path : paths) {
       fixed.add(fixupSourcePath(graphBuilder, ruleFinder, cxxPlatform, path));
     }

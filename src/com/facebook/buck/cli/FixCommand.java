@@ -20,9 +20,9 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -42,7 +42,7 @@ public class FixCommand extends AbstractCommand {
         new DefaultProcessExecutor(getExecutionContext().getConsole());
     ProcessExecutorParams processParams =
         ProcessExecutorParams.builder()
-            .addCommand(Preconditions.checkNotNull(scriptPath))
+            .addCommand(Objects.requireNonNull(scriptPath))
             .setEnvironment(params.getEnvironment())
             .setDirectory(params.getCell().getFilesystem().getRootPath())
             .build();

@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.jar.Attributes;
@@ -260,7 +261,7 @@ public class JarBuilder {
     // Collect all services together for later merging and addition to the output jar
     if (isService(entryName)) {
       try (InputStream entryInputStream =
-          Preconditions.checkNotNull(entrySupplier.getInputStreamSupplier().get())) {
+          Objects.requireNonNull(entrySupplier.getInputStreamSupplier().get())) {
         Set<String> existingServices =
             services.computeIfAbsent(entryName, (m) -> new LinkedHashSet<>());
         existingServices.add(

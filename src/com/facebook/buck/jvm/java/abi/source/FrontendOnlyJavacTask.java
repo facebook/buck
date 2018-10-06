@@ -20,7 +20,6 @@ import com.facebook.buck.jvm.java.abi.source.api.SourceCodeWillNotCompileExcepti
 import com.facebook.buck.jvm.java.abi.source.api.StopCompilation;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.JavacTask;
@@ -29,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -111,7 +111,7 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
     if (elements == null) {
       initUtils();
     }
-    return Preconditions.checkNotNull(elements);
+    return Objects.requireNonNull(elements);
   }
 
   @Override
@@ -119,7 +119,7 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
     if (trees == null) {
       initUtils();
     }
-    return Preconditions.checkNotNull(trees);
+    return Objects.requireNonNull(trees);
   }
 
   @Override
@@ -127,7 +127,7 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
     if (types == null) {
       initUtils();
     }
-    return Preconditions.checkNotNull(types);
+    return Objects.requireNonNull(types);
   }
 
   private void initUtils() {

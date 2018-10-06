@@ -17,7 +17,6 @@
 package com.facebook.buck.util.zip;
 
 import com.facebook.buck.util.timing.Clock;
-import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -31,6 +30,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import javax.annotation.Nullable;
@@ -97,8 +97,8 @@ public class OverwritingZipOutputStreamImpl implements CustomZipOutputStream.Imp
 
   @Override
   public void actuallyWrite(byte[] b, int off, int len) throws IOException {
-    Preconditions.checkNotNull(currentEntry);
-    Preconditions.checkNotNull(currentOutput);
+    Objects.requireNonNull(currentEntry);
+    Objects.requireNonNull(currentOutput);
     currentEntry.write(currentOutput, b, off, len);
   }
 

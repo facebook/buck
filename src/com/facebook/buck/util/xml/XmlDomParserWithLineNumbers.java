@@ -16,9 +16,9 @@
 
 package com.facebook.buck.util.xml;
 
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
@@ -65,7 +65,7 @@ public class XmlDomParserWithLineNumbers {
         PositionalXmlHandler xmlHandler = new PositionalXmlHandler();
         parser.parse(is, xmlHandler);
         Document doc = xmlHandler.getDocument();
-        Preconditions.checkNotNull(doc);
+        Objects.requireNonNull(doc);
         return doc;
       } catch (ParserConfigurationException e) {
         throw new RuntimeException("Can't create SAX parser / DOM builder.", e);

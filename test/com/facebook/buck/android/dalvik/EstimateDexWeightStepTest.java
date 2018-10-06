@@ -27,12 +27,12 @@ import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -111,7 +111,7 @@ public class EstimateDexWeightStepTest {
 
     @Override
     public int getEstimate(FileLike fileLike) {
-      return Preconditions.checkNotNull(
+      return Objects.requireNonNull(
           relativePathToCostMap.get(pathWithPlatformSeparators(fileLike.getRelativePath())));
     }
   }

@@ -37,7 +37,6 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -57,6 +56,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -108,8 +108,7 @@ public class RealAndroidDevice implements AndroidDevice {
                 ExopackageAgent.installAgentIfNecessary(
                     eventBus,
                     this,
-                    Preconditions.checkNotNull(
-                        agentApkPath, "Agent not configured for this device.")));
+                    Objects.requireNonNull(agentApkPath, "Agent not configured for this device.")));
     this.agentPort = agentPort;
   }
 
@@ -224,10 +223,10 @@ public class RealAndroidDevice implements AndroidDevice {
       return Optional.empty();
     }
 
-    Preconditions.checkNotNull(codePath, "Could not find codePath");
-    Preconditions.checkNotNull(resourcePath, "Could not find resourcePath");
-    Preconditions.checkNotNull(nativeLibPath, "Could not find nativeLibraryPath");
-    Preconditions.checkNotNull(versionCode, "Could not find versionCode");
+    Objects.requireNonNull(codePath, "Could not find codePath");
+    Objects.requireNonNull(resourcePath, "Could not find resourcePath");
+    Objects.requireNonNull(nativeLibPath, "Could not find nativeLibraryPath");
+    Objects.requireNonNull(versionCode, "Could not find versionCode");
     if (!codePath.equals(resourcePath)) {
       throw new IllegalStateException("Code and resource path do not match");
     }

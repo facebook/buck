@@ -40,7 +40,6 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -60,6 +59,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
@@ -469,7 +469,7 @@ public class QueryCommand extends AbstractCommand {
             return ImmutableSet.of();
           }
 
-          int nodeRank = Preconditions.checkNotNull(ranks.get(node));
+          int nodeRank = Objects.requireNonNull(ranks.get(node));
           ImmutableSortedSet<TargetNode<?>> sinks =
               ImmutableSortedSet.copyOf(
                   Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test));

@@ -19,12 +19,12 @@ package com.facebook.buck.apple;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -112,8 +112,8 @@ class XctestOutputParsing {
     long timeMillis = (long) (event.totalDuration * TimeUnit.SECONDS.toMillis(1));
     TestResultSummary testResultSummary =
         new TestResultSummary(
-            Optional.ofNullable(event.className).orElse(Preconditions.checkNotNull(event.test)),
-            Optional.ofNullable(event.methodName).orElse(Preconditions.checkNotNull(event.test)),
+            Optional.ofNullable(event.className).orElse(Objects.requireNonNull(event.test)),
+            Optional.ofNullable(event.methodName).orElse(Objects.requireNonNull(event.test)),
             event.succeeded ? ResultType.SUCCESS : ResultType.FAILURE,
             timeMillis,
             formatTestMessage(event),

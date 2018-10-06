@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
@@ -130,7 +131,7 @@ public class MinionWorkloadAllocator {
         minionsAvailableForAllocation
             .stream()
             .filter(minionId -> !minionId.equals(candidateMinionId))
-            .mapToInt(minionId -> Preconditions.checkNotNull(minionFreeCapacities.get(minionId)))
+            .mapToInt(minionId -> Objects.requireNonNull(minionFreeCapacities.get(minionId)))
             .sum();
 
     return maxParallelWorkUnitsLeft <= capacityAvailableOnOtherMinions;
@@ -146,7 +147,7 @@ public class MinionWorkloadAllocator {
     trySetupMinion(minionId, minionType, maxWorkUnitsToFetch);
 
     Set<WorkUnit> workUnitsAllocatedToMinion =
-        Preconditions.checkNotNull(workUnitsAssignedToMinions.get(minionId));
+        Objects.requireNonNull(workUnitsAssignedToMinions.get(minionId));
     deallocateFinishedNodes(workUnitsAllocatedToMinion, finishedNodes);
 
     // First try and re-allocate work units from any minions that have failed recently

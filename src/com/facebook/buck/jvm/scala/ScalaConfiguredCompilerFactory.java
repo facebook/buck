@@ -29,8 +29,8 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.util.Optionals;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -70,7 +70,7 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     return new ScalacToJarStepFactory(
         getScalac(buildRuleResolver),
         scalaBuckConfig.getCompilerFlags(),
-        Preconditions.checkNotNull(arg).getExtraArguments(),
+        Objects.requireNonNull(arg).getExtraArguments(),
         buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
         getJavac(buildRuleResolver, arg),
         javacOptions,

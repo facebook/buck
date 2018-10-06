@@ -41,7 +41,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
 
   protected AbstractBuckEvent(EventKey eventKey) {
     this.isConfigured = false;
-    this.eventKey = Preconditions.checkNotNull(eventKey);
+    this.eventKey = Objects.requireNonNull(eventKey);
   }
 
   /**
@@ -98,7 +98,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   @Override
   public BuildId getBuildId() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
-    return Preconditions.checkNotNull(buildId);
+    return Objects.requireNonNull(buildId);
   }
 
   @Override

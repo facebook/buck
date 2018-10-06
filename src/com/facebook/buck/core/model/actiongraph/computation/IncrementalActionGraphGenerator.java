@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -60,7 +61,7 @@ public class IncrementalActionGraphGenerator {
       BuckEventBus eventBus, TargetGraph targetGraph, ActionGraphBuilder graphBuilder) {
     int reusedRuleCount = 0;
     if (lastActionGraphBuilder != null) {
-      Preconditions.checkNotNull(lastTargetGraph);
+      Objects.requireNonNull(lastTargetGraph);
 
       // We first walk the new target graph to find new nodes. A new node will invalidate all nodes
       // with the same unflavored target.

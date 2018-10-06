@@ -21,8 +21,8 @@ import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleC
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.CleanBuildShutdownException;
 import com.facebook.buck.util.ExitCode;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -129,7 +129,7 @@ public class LocalBuildRunner {
    */
   public void cancelAndWait(String message) throws InterruptedException {
     synchronized (this) {
-      Preconditions.checkNotNull(
+      Objects.requireNonNull(
           runLocalBuildFuture,
           String.format(
               "Attempting to kill Stampede local %s build which has not been started yet.",
@@ -141,7 +141,7 @@ public class LocalBuildRunner {
             "Attempting to kill Stampede local %s build. Waiting for Build to be initialized..",
             localBuildType));
     initializeBuildLatch.await();
-    Build build = Preconditions.checkNotNull(buildReference.get());
+    Build build = Objects.requireNonNull(buildReference.get());
     LOG.info(String.format("Killing Build for Stampede local %s build..", localBuildType));
     build.terminateBuildWithFailure(new CleanBuildShutdownException(message));
     LOG.info(
@@ -162,7 +162,7 @@ public class LocalBuildRunner {
     waitForLocalBuildCalledLatch.ifPresent(latch -> latch.countDown());
     try {
       synchronized (this) {
-        Preconditions.checkNotNull(runLocalBuildFuture).get();
+        Objects.requireNonNull(runLocalBuildFuture).get();
       }
     } catch (ExecutionException e) {
       LOG.error(

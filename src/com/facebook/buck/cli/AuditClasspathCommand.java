@@ -41,7 +41,6 @@ import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
@@ -50,6 +49,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import javax.annotation.Nullable;
@@ -173,7 +173,7 @@ public class AuditClasspathCommand extends AbstractCommand {
     }
 
     ActionGraphBuilder graphBuilder =
-        Preconditions.checkNotNull(
+        Objects.requireNonNull(
                 new ActionGraphProvider(
                         params.getBuckEventBus(),
                         ActionGraphFactory.create(
@@ -192,7 +192,7 @@ public class AuditClasspathCommand extends AbstractCommand {
     SortedSet<Path> classpathEntries = new TreeSet<>();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = Preconditions.checkNotNull(graphBuilder.requireRule(target));
+      BuildRule rule = Objects.requireNonNull(graphBuilder.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
         classpathEntries.addAll(
@@ -222,7 +222,7 @@ public class AuditClasspathCommand extends AbstractCommand {
     }
 
     ActionGraphBuilder graphBuilder =
-        Preconditions.checkNotNull(
+        Objects.requireNonNull(
                 new ActionGraphProvider(
                         params.getBuckEventBus(),
                         ActionGraphFactory.create(
@@ -241,7 +241,7 @@ public class AuditClasspathCommand extends AbstractCommand {
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = Preconditions.checkNotNull(graphBuilder.requireRule(target));
+      BuildRule rule = Objects.requireNonNull(graphBuilder.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries == null) {
         continue;

@@ -32,8 +32,8 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class OcamlBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -53,7 +53,7 @@ public class OcamlBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(SourcePathArg.of(Preconditions.checkNotNull(binary.getSourcePathToOutput())))
+        .addArg(SourcePathArg.of(Objects.requireNonNull(binary.getSourcePathToOutput())))
         .build();
   }
 
@@ -66,7 +66,7 @@ public class OcamlBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public SourcePath getSourcePathToOutput() {
     return ForwardingBuildTargetSourcePath.of(
-        getBuildTarget(), Preconditions.checkNotNull(binary.getSourcePathToOutput()));
+        getBuildTarget(), Objects.requireNonNull(binary.getSourcePathToOutput()));
   }
 
   // Since this rule doesn't actual generate the binary it references, and is just a wrapper for

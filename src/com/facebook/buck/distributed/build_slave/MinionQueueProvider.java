@@ -19,6 +19,7 @@ import com.facebook.buck.distributed.thrift.MinionType;
 import com.google.common.base.Preconditions;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /** Provides a mapping between MinionType and corresponding minion queue */
 public class MinionQueueProvider {
@@ -36,6 +37,6 @@ public class MinionQueueProvider {
         String.format(
             "No minion queue has been specified for minion type [%s]", minionType.name()));
 
-    return Preconditions.checkNotNull(minionTypeToQueueName.get(minionType));
+    return Objects.requireNonNull(minionTypeToQueueName.get(minionType));
   }
 }

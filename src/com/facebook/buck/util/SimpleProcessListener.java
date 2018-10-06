@@ -23,6 +23,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CoderResult;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -138,7 +139,7 @@ public class SimpleProcessListener extends AbstractCharsetProcessListener {
     }
 
     if (stdInToWrite == null) {
-      Preconditions.checkNotNull(process, "Process didn't start yet").closeStdin(/* force */ false);
+      Objects.requireNonNull(process, "Process didn't start yet").closeStdin(/* force */ false);
       nextStdInToWrite = null;
     }
 

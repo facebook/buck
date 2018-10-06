@@ -54,6 +54,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -226,9 +227,9 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
       inputsBuilder.addFile(
           configPath,
           () -> {
-            byte[] data = Preconditions.checkNotNull(cellToConfig.get(cell));
+            byte[] data = Objects.requireNonNull(cellToConfig.get(cell));
             return new InputFile(
-                Preconditions.checkNotNull(configHashes.get(cell)),
+                Objects.requireNonNull(configHashes.get(cell)),
                 data.length,
                 false,
                 () -> new ByteArrayInputStream(data));
@@ -330,7 +331,7 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
         .addData(
             Paths.get("__data__").resolve(hash.toString()),
             hash.toString(),
-            Preconditions.checkNotNull(nodeMap.get(hash)));
+            Objects.requireNonNull(nodeMap.get(hash)));
   }
 
   private static class Node {

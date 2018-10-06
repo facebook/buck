@@ -18,7 +18,7 @@
 package com.facebook.buck.util.xml;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import java.util.Stack;
 import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
@@ -64,7 +64,7 @@ public class PositionalXmlHandler extends DefaultHandler {
   @Override
   public void startElement(String uri, String localName, String qName, Attributes attributes) {
     addText();
-    Preconditions.checkNotNull(document);
+    Objects.requireNonNull(document);
     Element element = document.createElementNS(uri, qName);
     for (int i = 0; i < attributes.getLength(); i++) {
       element.setAttribute(attributes.getQName(i), attributes.getValue(i));
@@ -79,7 +79,7 @@ public class PositionalXmlHandler extends DefaultHandler {
     Element closedElement = elementStack.pop();
     if (elementStack.isEmpty()) { // If this is the root element
       closedElement.setUserData("encoding", getLocatorEncoding(), null);
-      Preconditions.checkNotNull(document);
+      Objects.requireNonNull(document);
       document.appendChild(closedElement);
     } else {
       Element parentElement = elementStack.peek();
@@ -96,7 +96,7 @@ public class PositionalXmlHandler extends DefaultHandler {
   @VisibleForTesting
   void addText() {
     if (textBuffer.length() > 0) {
-      Preconditions.checkNotNull(document);
+      Objects.requireNonNull(document);
       Element element = elementStack.peek();
       Node textNode = document.createTextNode(textBuffer.toString());
       element.appendChild(textNode);

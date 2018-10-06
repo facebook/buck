@@ -17,11 +17,11 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
+import java.util.Objects;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
@@ -45,12 +45,12 @@ class TreeContextScanner<R, P> extends TreeScanner<R, P> {
   }
 
   protected final TreePath getCurrentPath() {
-    return Preconditions.checkNotNull(currentPath);
+    return Objects.requireNonNull(currentPath);
   }
 
   /** Returns the {@link Element} that encloses the current tree path. */
   protected final Element getEnclosingElement() {
-    return Preconditions.checkNotNull(enclosingElement);
+    return Objects.requireNonNull(enclosingElement);
   }
 
   /**
@@ -88,7 +88,7 @@ class TreeContextScanner<R, P> extends TreeScanner<R, P> {
       case METHOD:
       case VARIABLE:
       case TYPE_PARAMETER:
-        enclosingElement = Preconditions.checkNotNull(trees.getElement(currentPath));
+        enclosingElement = Objects.requireNonNull(trees.getElement(currentPath));
         break;
         // $CASES-OMITTED$
       default:

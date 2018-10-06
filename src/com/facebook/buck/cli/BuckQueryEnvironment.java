@@ -73,6 +73,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -468,7 +469,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       Preconditions.checkState(target instanceof QueryBuildTarget);
       BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
       Cell cell = rootCell.getCell(buildTarget);
-      BuildFileTree buildFileTree = Preconditions.checkNotNull(buildFileTrees.get(cell));
+      BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
       Optional<Path> path = buildFileTree.getBasePathOfAncestorTarget(buildTarget.getBasePath());
       Preconditions.checkState(path.isPresent());
 

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 public final class MoreSuppliers {
@@ -39,7 +39,7 @@ public final class MoreSuppliers {
     private final Supplier<T> delegate;
 
     public MemoizingSupplier(Supplier<T> delegate) {
-      this.delegate = Preconditions.checkNotNull(delegate);
+      this.delegate = Objects.requireNonNull(delegate);
     }
 
     @Override
@@ -58,7 +58,7 @@ public final class MoreSuppliers {
     private final Supplier<T> delegate;
 
     public WeakMemoizingSupplier(Supplier<T> delegate) {
-      this.delegate = Preconditions.checkNotNull(delegate);
+      this.delegate = Objects.requireNonNull(delegate);
     }
 
     @Override

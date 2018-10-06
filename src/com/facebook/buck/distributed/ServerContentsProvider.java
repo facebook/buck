@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -180,7 +181,7 @@ public class ServerContentsProvider implements FileContentsProvider {
       future =
           Futures.transform(
               multiFetchFuture,
-              resultMap -> Preconditions.checkNotNull(resultMap).get(entry.getSha1()));
+              resultMap -> Objects.requireNonNull(resultMap).get(entry.getSha1()));
     }
 
     return future;

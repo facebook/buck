@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class DefaultIjModuleFactory implements IjModuleFactory {
@@ -69,7 +70,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       Class<?> nodeType = targetNode.getDescription().getClass();
       seenTypes.add(nodeType);
       IjModuleRule<?> rule =
-          Preconditions.checkNotNull(typeRegistry.getModuleRuleByTargetNodeType(nodeType));
+          Objects.requireNonNull(typeRegistry.getModuleRuleByTargetNodeType(nodeType));
       rule.apply((TargetNode) targetNode, context);
       context.setModuleType(rule.detectModuleType((TargetNode) targetNode));
     }

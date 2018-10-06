@@ -17,7 +17,7 @@
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -34,7 +34,7 @@ public class SelectorKey {
   private @Nullable final BuildTarget buildTarget;
 
   public SelectorKey(BuildTarget buildTarget) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    this.buildTarget = Objects.requireNonNull(buildTarget);
   }
 
   private SelectorKey() {
@@ -46,7 +46,7 @@ public class SelectorKey {
   }
 
   public BuildTarget getBuildTarget() {
-    Preconditions.checkNotNull(buildTarget, "Default condition has no build target");
+    Objects.requireNonNull(buildTarget, "Default condition has no build target");
     return buildTarget;
   }
 

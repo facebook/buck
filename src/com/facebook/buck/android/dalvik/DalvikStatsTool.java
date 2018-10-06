@@ -17,7 +17,6 @@
 package com.facebook.buck.android.dalvik;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -25,6 +24,7 @@ import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -236,7 +236,7 @@ public class DalvikStatsTool {
         footprint += 16;
       }
 
-      Preconditions.checkNotNull(className, "Must not call visitField before visit");
+      Objects.requireNonNull(className, "Must not call visitField before visit");
       fieldReferenceBuilder.add(DalvikMemberReference.of(className, name, desc));
 
       return fieldVisitor;
@@ -257,7 +257,7 @@ public class DalvikStatsTool {
           footprint += 4;
         }
       }
-      Preconditions.checkNotNull(className, "Must not call visitMethod before visit");
+      Objects.requireNonNull(className, "Must not call visitMethod before visit");
       methodReferenceBuilder.add(DalvikMemberReference.of(className, name, desc));
       return methodVisitor;
     }
@@ -266,7 +266,7 @@ public class DalvikStatsTool {
     public void visitOuterClass(String owner, String name, String desc) {
       super.visitOuterClass(owner, name, desc);
       if (name != null) {
-        Preconditions.checkNotNull(className, "Must not call visitOuterClass before visit");
+        Objects.requireNonNull(className, "Must not call visitOuterClass before visit");
         methodReferenceBuilder.add(DalvikMemberReference.of(className, name, desc));
       }
     }

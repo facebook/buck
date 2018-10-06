@@ -24,7 +24,6 @@
  */
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -40,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class FatJarMain {
 
@@ -124,7 +124,7 @@ public class FatJarMain {
    * @return the platform specific environment variable for setting the native library search path.
    */
   private static String getLibrarySearchPathName() {
-    String platform = Preconditions.checkNotNull(System.getProperty("os.name"));
+    String platform = Objects.requireNonNull(System.getProperty("os.name"));
     if (platform.startsWith("Linux")) {
       return "LD_LIBRARY_PATH";
     } else if (platform.startsWith("Mac OS")) {

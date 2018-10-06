@@ -30,12 +30,12 @@
 
 package com.facebook.buck.query;
 
-import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -146,7 +146,7 @@ final class Lexer {
 
     @Override
     public String toString() {
-      return kind == TokenKind.WORD ? Preconditions.checkNotNull(word) : kind.getPrettyName();
+      return kind == TokenKind.WORD ? Objects.requireNonNull(word) : kind.getPrettyName();
     }
   }
 
@@ -167,7 +167,7 @@ final class Lexer {
   private final List<Token> tokens = new ArrayList<>();
 
   private Lexer(char[] buffer) {
-    this.buffer = Preconditions.checkNotNull(buffer);
+    this.buffer = Objects.requireNonNull(buffer);
     this.pos = 0;
   }
 

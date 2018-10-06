@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java.lang.model;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -94,7 +94,7 @@ public final class MoreElements {
 
     Element walker = element;
     while (!walker.getKind().isClass() && !walker.getKind().isInterface()) {
-      walker = Preconditions.checkNotNull(walker.getEnclosingElement());
+      walker = Objects.requireNonNull(walker.getEnclosingElement());
     }
 
     return (TypeElement) walker;
@@ -108,7 +108,7 @@ public final class MoreElements {
     Element walker = element;
     while (walker.getEnclosingElement() != null
         && walker.getEnclosingElement().getKind() != ElementKind.PACKAGE) {
-      walker = Preconditions.checkNotNull(walker.getEnclosingElement());
+      walker = Objects.requireNonNull(walker.getEnclosingElement());
     }
 
     return (TypeElement) walker;
@@ -117,7 +117,7 @@ public final class MoreElements {
   public static PackageElement getPackageElement(Element element) {
     Element walker = element;
     while (walker.getKind() != ElementKind.PACKAGE) {
-      walker = Preconditions.checkNotNull(walker.getEnclosingElement());
+      walker = Objects.requireNonNull(walker.getEnclosingElement());
     }
 
     return (PackageElement) walker;
@@ -156,8 +156,7 @@ public final class MoreElements {
     }
 
     VariableElement retentionPolicy =
-        (VariableElement)
-            Preconditions.checkNotNull(findAnnotationValue(retentionAnnotation, "value"));
+        (VariableElement) Objects.requireNonNull(findAnnotationValue(retentionAnnotation, "value"));
 
     return retentionPolicy.getSimpleName().contentEquals("RUNTIME");
   }
@@ -173,8 +172,7 @@ public final class MoreElements {
     }
 
     VariableElement retentionPolicy =
-        (VariableElement)
-            Preconditions.checkNotNull(findAnnotationValue(retentionAnnotation, "value"));
+        (VariableElement) Objects.requireNonNull(findAnnotationValue(retentionAnnotation, "value"));
 
     return retentionPolicy.getSimpleName().contentEquals("SOURCE");
   }

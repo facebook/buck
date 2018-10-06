@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -166,7 +167,7 @@ public class ServerHealthManager {
 
       serverLatencies.sort(LATENCY_COMPARATOR);
       URI bestServer = serverLatencies.get(0).getFirst();
-      Preconditions.checkNotNull(allPerServerData.get(bestServer)).setBestServer(true);
+      Objects.requireNonNull(allPerServerData.get(bestServer)).setBestServer(true);
       return Optional.of(bestServer);
     } finally {
       for (PerServerData.Builder builder : allPerServerData.values()) {

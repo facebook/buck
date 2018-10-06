@@ -29,6 +29,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.cxx.AbstractCxxLibrary;
+import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
@@ -53,7 +54,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -64,6 +64,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -169,9 +170,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                 });
 
     return CxxSource.of(
-        CxxSource.Type.CXX,
-        Preconditions.checkNotNull(rule.getSourcePathToOutput()),
-        ImmutableList.of());
+        Type.CXX, Objects.requireNonNull(rule.getSourcePathToOutput()), ImmutableList.of());
   }
 
   private ImmutableList<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(

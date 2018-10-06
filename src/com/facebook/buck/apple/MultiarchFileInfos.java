@@ -31,13 +31,13 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -67,7 +67,7 @@ public class MultiarchFileInfos {
     AppleSdk sdk = null;
     for (SortedSet<Flavor> flavorSet : thinFlavorSets) {
       AppleCxxPlatform platform =
-          Preconditions.checkNotNull(appleCxxPlatforms.getValue(flavorSet).orElse(null));
+          Objects.requireNonNull(appleCxxPlatforms.getValue(flavorSet).orElse(null));
       if (sdk == null) {
         sdk = platform.getAppleSdk();
         representativePlatform = platform;
@@ -81,7 +81,7 @@ public class MultiarchFileInfos {
     MultiarchFileInfo.Builder builder =
         MultiarchFileInfo.builder()
             .setFatTarget(target)
-            .setRepresentativePlatform(Preconditions.checkNotNull(representativePlatform));
+            .setRepresentativePlatform(Objects.requireNonNull(representativePlatform));
 
     BuildTarget platformFreeTarget = target.withoutFlavors(appleCxxPlatforms.getFlavors());
     for (SortedSet<Flavor> flavorSet : thinFlavorSets) {

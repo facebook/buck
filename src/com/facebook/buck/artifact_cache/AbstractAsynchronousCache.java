@@ -315,7 +315,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     }
 
     private FetchRequest getRequest() {
-      return Preconditions.checkNotNull(request);
+      return Objects.requireNonNull(request);
     }
 
     public void setResult(CacheResult result) {

@@ -50,6 +50,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Function;
@@ -110,7 +111,7 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   @Override
   public SourcePath getSourcePathToOutput() {
     return ForwardingBuildTargetSourcePath.of(
-        getBuildTarget(), Preconditions.checkNotNull(binary.getSourcePathToOutput()));
+        getBuildTarget(), Objects.requireNonNull(binary.getSourcePathToOutput()));
   }
 
   @Override
@@ -214,7 +215,7 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
           if (ERROR.matcher(line).matches()) {
             messages.put(currentTest.get(), line);
           } else {
-            Preconditions.checkNotNull(stdout.get(currentTest.get())).add(line);
+            Objects.requireNonNull(stdout.get(currentTest.get())).add(line);
           }
         }
       }

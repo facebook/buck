@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.java.plugin.adapter;
 
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
+import java.util.Objects;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -39,18 +39,18 @@ public class TreesMessager implements Messager {
 
   @Override
   public void printMessage(Diagnostic.Kind kind, CharSequence msg, Element e) {
-    printMessage(kind, msg, Preconditions.checkNotNull(trees.getPath(e)));
+    printMessage(kind, msg, Objects.requireNonNull(trees.getPath(e)));
   }
 
   @Override
   public void printMessage(Diagnostic.Kind kind, CharSequence msg, Element e, AnnotationMirror a) {
-    printMessage(kind, msg, Preconditions.checkNotNull(trees.getPath(e, a)));
+    printMessage(kind, msg, Objects.requireNonNull(trees.getPath(e, a)));
   }
 
   @Override
   public void printMessage(
       Diagnostic.Kind kind, CharSequence msg, Element e, AnnotationMirror a, AnnotationValue v) {
-    printMessage(kind, msg, Preconditions.checkNotNull(trees.getPath(e, a, v)));
+    printMessage(kind, msg, Objects.requireNonNull(trees.getPath(e, a, v)));
   }
 
   private void printMessage(Diagnostic.Kind kind, CharSequence msg, TreePath path) {

@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -129,7 +130,7 @@ class DaemonicCellState {
 
   // TODO(mzlee): Only needed for invalidateBasedOn which does not have access to cell metadata
   Cell getCell() {
-    return Preconditions.checkNotNull(cell.get());
+    return Objects.requireNonNull(cell.get());
   }
 
   Path getCellRoot() {

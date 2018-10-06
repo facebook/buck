@@ -94,7 +94,6 @@ import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -116,6 +115,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.concurrent.Executors;
@@ -2549,7 +2549,7 @@ public class DefaultParserTest {
 
   private ActionGraphBuilder buildActionGraph(
       BuckEventBus eventBus, TargetGraph targetGraph, Cell cell) {
-    return Preconditions.checkNotNull(
+    return Objects.requireNonNull(
             new ActionGraphProviderBuilder()
                 .withEventBus(eventBus)
                 .withCellProvider(cell.getCellProvider())

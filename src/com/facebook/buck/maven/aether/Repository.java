@@ -16,7 +16,7 @@
 
 package com.facebook.buck.maven.aether;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 public class Repository {
@@ -31,6 +31,6 @@ public class Repository {
   }
 
   public String getUrl() {
-    return Preconditions.checkNotNull(url);
+    return Objects.requireNonNull(url);
   }
 }

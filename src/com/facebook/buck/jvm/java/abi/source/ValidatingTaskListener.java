@@ -21,12 +21,12 @@ import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 import javax.tools.Diagnostic;
 
@@ -62,7 +62,7 @@ public class ValidatingTaskListener implements TaskListener {
       validator = new InterfaceValidator(messageKind, javacTask, ruleInfo);
     }
 
-    return Preconditions.checkNotNull(validator);
+    return Objects.requireNonNull(validator);
   }
 
   @Override

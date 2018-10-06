@@ -17,7 +17,6 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.features.go.GoListStep.ListType;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -26,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class FilteredSourceFiles implements Iterable<Path> {
@@ -69,7 +69,7 @@ public class FilteredSourceFiles implements Iterable<Path> {
     HashSet<Path> sourceFiles = new HashSet<>();
     for (Path srcFile : rawSrcFiles) {
       GoListStep step = filterSteps.get(srcFile.getParent());
-      Preconditions.checkNotNull(step, "No GoListStep is found for " + srcFile);
+      Objects.requireNonNull(step, "No GoListStep is found for " + srcFile);
       if (step.getSourceFiles().contains(srcFile)) {
         sourceFiles.add(srcFile);
       }

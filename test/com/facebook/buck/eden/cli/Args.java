@@ -20,8 +20,8 @@ import com.facebook.buck.eden.EdenClientPool;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.facebook.thrift.TException;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
+import java.util.Objects;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommandHandler;
@@ -37,7 +37,7 @@ public class Args {
   Command command;
 
   public int run(EdenClientPool pool) throws EdenError, IOException, TException {
-    Preconditions.checkNotNull(command, "command must be set by args4j");
+    Objects.requireNonNull(command, "command must be set by args4j");
     return command.run(pool);
   }
 }

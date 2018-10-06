@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -202,7 +203,7 @@ public class MultiThreadedBlobUploader {
         results.forEach(
             result -> {
               PendingUpload pendingUpload =
-                  Preconditions.checkNotNull(data.get(result.digest.getHash()));
+                  Objects.requireNonNull(data.get(result.digest.getHash()));
               if (result.status == 0) {
                 pendingUpload.future.set(null);
               } else {

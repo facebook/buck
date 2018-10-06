@@ -37,6 +37,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
@@ -211,7 +212,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
                       path.isAbsolute()
                           ? StringArg.of(path.toString())
                           : SourcePathArg.of(
-                              Preconditions.checkNotNull(delegate.getPathSourcePath(path))))
+                              Objects.requireNonNull(delegate.getPathSourcePath(path))))
                   .build();
             });
   }

@@ -41,7 +41,6 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -53,6 +52,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -216,7 +216,7 @@ public class PrecompiledHeaderFeatureTest {
       TestData testData = new TestData();
 
       Path root =
-          Preconditions.checkNotNull(
+          Objects.requireNonNull(
               Iterables.getFirst(
                   FileSystems.getDefault().getRootDirectories(), Paths.get(File.separator)));
       CxxPrecompiledHeader firstRule = testData.generate(root.resolve("first"));

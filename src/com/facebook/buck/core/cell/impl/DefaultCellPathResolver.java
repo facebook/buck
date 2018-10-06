@@ -21,7 +21,6 @@ import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.config.Config;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -30,6 +29,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
@@ -120,7 +120,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
         ImmutableSortedSet.<String>naturalOrder().addAll(cellPaths.keySet()).build();
     for (String cellName : sortedCellNames) {
       Path cellRoot =
-          Preconditions.checkNotNull(
+          Objects.requireNonNull(
               cellPaths.get(cellName),
               "cellName is derived from the map, get() should always return a value.");
       try {

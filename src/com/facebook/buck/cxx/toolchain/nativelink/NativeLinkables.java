@@ -29,7 +29,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -38,6 +37,7 @@ import com.google.common.collect.Iterables;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -103,7 +103,7 @@ public class NativeLinkables {
         new AbstractBreadthFirstTraversal<BuildTarget>(nativeLinkables.keySet()) {
           @Override
           public ImmutableSet<BuildTarget> visit(BuildTarget target) {
-            NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
+            NativeLinkable nativeLinkable = Objects.requireNonNull(nativeLinkables.get(target));
             graph.addNode(target);
 
             // Process all the traversable deps.
@@ -266,7 +266,7 @@ public class NativeLinkables {
         new AbstractBreadthFirstTraversal<BuildTarget>(nativeLinkables.keySet()) {
           @Override
           public Iterable<BuildTarget> visit(BuildTarget target) {
-            NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
+            NativeLinkable nativeLinkable = Objects.requireNonNull(nativeLinkables.get(target));
             graph.addNode(target);
             ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
             for (NativeLinkable dep :

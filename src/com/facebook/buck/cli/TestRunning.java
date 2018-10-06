@@ -89,6 +89,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -261,7 +262,7 @@ public class TestRunning {
               UUID testUUID =
                   testUUIDMap.get(
                       testResultSummary.getTestCaseName() + ":" + testResultSummary.getTestName());
-              Preconditions.checkNotNull(testUUID);
+              Objects.requireNonNull(testUUID);
               params.getBuckEventBus().post(TestSummaryEvent.finished(testUUID, testResultSummary));
             }
 

@@ -20,7 +20,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 
 public class FastVersionControlStatsEvent extends AbstractBuckEvent {
   @JsonView(JsonViews.MachineReadableLog.class)
@@ -28,7 +28,7 @@ public class FastVersionControlStatsEvent extends AbstractBuckEvent {
 
   public FastVersionControlStatsEvent(CommonFastVersionControlStats versionControlStats) {
     super(EventKey.unique());
-    this.versionControlStats = Preconditions.checkNotNull(versionControlStats);
+    this.versionControlStats = Objects.requireNonNull(versionControlStats);
   }
 
   public CommonFastVersionControlStats getVersionControlStats() {

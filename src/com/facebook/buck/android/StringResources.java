@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -218,7 +219,7 @@ public class StringResources {
 
           for (Map.Entry<String, String> cat : categoryMap.entrySet()) {
             outputStream.writeByte(
-                Preconditions.checkNotNull(PLURAL_CATEGORY_MAP.get(cat.getKey())).byteValue());
+                Objects.requireNonNull(PLURAL_CATEGORY_MAP.get(cat.getKey())).byteValue());
             byte[] pluralValue = getUnescapedStringBytes(cat.getValue());
             writeShort(outputStream, pluralValue.length);
             dataStream.write(pluralValue);

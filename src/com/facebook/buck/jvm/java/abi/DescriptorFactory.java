@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.jvm.java.lang.model.MoreElements;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.lang.model.element.Element;
@@ -62,7 +62,7 @@ class DescriptorFactory {
   }
 
   private Type getType(Element element) {
-    return Preconditions.checkNotNull(
+    return Objects.requireNonNull(
         element.accept(
             new SimpleElementVisitor8<Type, Void>() {
               @Override
@@ -98,7 +98,7 @@ class DescriptorFactory {
   }
 
   public Type getType(TypeMirror typeMirror) {
-    return Preconditions.checkNotNull(
+    return Objects.requireNonNull(
         typeMirror.accept(
             new SimpleTypeVisitor8<Type, Void>() {
               @Override

@@ -24,7 +24,7 @@ import com.facebook.buck.features.project.intellij.model.folders.JavaTestResourc
 import com.facebook.buck.features.project.intellij.model.folders.ResourceFolderFactory;
 import com.facebook.buck.features.project.intellij.model.folders.SourceFolder;
 import com.facebook.buck.features.project.intellij.model.folders.TestFolder;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 public enum FolderTypeWithPackageInfo {
@@ -92,7 +92,7 @@ public enum FolderTypeWithPackageInfo {
   }
 
   public IJFolderFactory getFolderFactory() {
-    return Preconditions.checkNotNull(folderFactory);
+    return Objects.requireNonNull(folderFactory);
   }
 
   public Class<? extends IjFolder> getFolderTypeClass() {
@@ -104,7 +104,7 @@ public enum FolderTypeWithPackageInfo {
   }
 
   public ResourceFolderFactory getResourceFolderFactory() {
-    return Preconditions.checkNotNull(resourceFolderFactory);
+    return Objects.requireNonNull(resourceFolderFactory);
   }
 
   public boolean isResourceFolder() {
@@ -112,6 +112,6 @@ public enum FolderTypeWithPackageInfo {
   }
 
   public IjResourceFolderType getIjResourceFolderType() {
-    return Preconditions.checkNotNull(ijResourceFolderType);
+    return Objects.requireNonNull(ijResourceFolderType);
   }
 }

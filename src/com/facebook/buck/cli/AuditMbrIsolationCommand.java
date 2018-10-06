@@ -36,7 +36,6 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -51,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.kohsuke.args4j.Argument;
 
@@ -102,7 +102,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
       }
 
       ActionGraphBuilder graphBuilder =
-          Preconditions.checkNotNull(
+          Objects.requireNonNull(
                   new ActionGraphProvider(
                           params.getBuckEventBus(),
                           ActionGraphFactory.create(

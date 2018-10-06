@@ -63,6 +63,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -157,8 +158,7 @@ public class InputBasedRuleKeyFactoryTest {
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                pathResolver.getAbsolutePath(
-                    Preconditions.checkNotNull(dep.getSourcePathToOutput())),
+                pathResolver.getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput())),
                 HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
@@ -168,8 +168,7 @@ public class InputBasedRuleKeyFactoryTest {
     hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                pathResolver.getAbsolutePath(
-                    (Preconditions.checkNotNull(dep.getSourcePathToOutput()))),
+                pathResolver.getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput())),
                 HashCode.fromInt(1)));
 
     RuleKey inputKey2 =

@@ -39,6 +39,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -105,8 +106,7 @@ abstract class AbstractBuildFileSpec {
     boolean walkComplete = false;
     if (tryWatchman) {
       ProjectWatch projectWatch =
-          Preconditions.checkNotNull(
-              watchman.getProjectWatches().get(filesystemView.getRootPath()));
+          Objects.requireNonNull(watchman.getProjectWatches().get(filesystemView.getRootPath()));
       LOG.debug(
           "Searching for %s files (watch root %s, project prefix %s, base path %s) with Watchman",
           buildFileName,
@@ -208,7 +208,7 @@ abstract class AbstractBuildFileSpec {
       LOG.warn("Watchman warning from query %s: %s", query, warning);
     }
 
-    List<String> files = (List<String>) Preconditions.checkNotNull(response.get("files"));
+    List<String> files = (List<String>) Objects.requireNonNull(response.get("files"));
     LOG.verbose("Query %s -> files %s", query, files);
 
     for (String file : files) {

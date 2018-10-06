@@ -43,7 +43,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
@@ -56,6 +55,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -108,7 +108,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.annotationProcessingTool = annotationProcessingTool;
     this.extraClassPath = extraClassPath;
     this.javac = javac;
-    this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.javacOptions = Objects.requireNonNull(javacOptions);
   }
 
   @Override

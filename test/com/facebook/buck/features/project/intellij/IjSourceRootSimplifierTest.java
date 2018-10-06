@@ -27,13 +27,13 @@ import com.facebook.buck.features.project.intellij.model.folders.SourceFolder;
 import com.facebook.buck.features.project.intellij.model.folders.TestFolder;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -73,8 +73,7 @@ public class IjSourceRootSimplifierTest {
       @Override
       public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
         // The Path given here is a path to a file, not a folder.
-        pathRelativeToProjectRoot =
-            Preconditions.checkNotNull(pathRelativeToProjectRoot.getParent());
+        pathRelativeToProjectRoot = Objects.requireNonNull(pathRelativeToProjectRoot.getParent());
         if (packageMap.containsKey(pathRelativeToProjectRoot)) {
           return packageMap.get(pathRelativeToProjectRoot);
         }

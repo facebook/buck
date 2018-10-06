@@ -41,12 +41,12 @@ import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
 
 public class AppleLibraryDescriptionSwiftEnhancer {
@@ -192,7 +192,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         break;
     }
 
-    Preconditions.checkNotNull(appleLibType);
+    Objects.requireNonNull(appleLibType);
 
     return buildTarget.withFlavors(appleLibType.getFlavor(), cxxPlatform.getFlavor());
   }

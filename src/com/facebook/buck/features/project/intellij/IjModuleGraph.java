@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -69,8 +70,7 @@ public class IjModuleGraph {
         .filter(dep -> dep instanceof IjModule)
         .map(module -> (IjModule) module)
         .collect(
-            ImmutableMap.toImmutableMap(
-                k -> k, input -> Preconditions.checkNotNull(deps.get(input))));
+            ImmutableMap.toImmutableMap(k -> k, input -> Objects.requireNonNull(deps.get(input))));
   }
 
   public ImmutableMap<IjLibrary, DependencyType> getDependentLibrariesFor(IjModule source) {
@@ -80,8 +80,7 @@ public class IjModuleGraph {
         .filter(dep -> dep instanceof IjLibrary)
         .map(library -> (IjLibrary) library)
         .collect(
-            ImmutableMap.toImmutableMap(
-                k -> k, input -> Preconditions.checkNotNull(deps.get(input))));
+            ImmutableMap.toImmutableMap(k -> k, input -> Objects.requireNonNull(deps.get(input))));
   }
 
   private static void checkNamesAreUnique(

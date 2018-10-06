@@ -43,7 +43,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -53,6 +52,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
@@ -541,7 +541,7 @@ public class BuildCommandErrorsIntegrationTest {
         BuildTarget buildTarget,
         BuildRuleParams params,
         MockArg args) {
-      return Preconditions.checkNotNull(buildRuleFactory)
+      return Objects.requireNonNull(buildRuleFactory)
           .create(buildTarget, context.getProjectFilesystem());
     }
   }

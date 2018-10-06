@@ -48,6 +48,7 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -222,7 +223,7 @@ public class DefaultParserTargetNodeFactory
 
   private static RuleType parseBuildRuleTypeFromRawRule(
       KnownRuleTypes knownRuleTypes, Map<String, Object> map) {
-    String type = (String) Preconditions.checkNotNull(map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
+    String type = (String) Objects.requireNonNull(map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
     return knownRuleTypes.getRuleType(type);
   }
 }

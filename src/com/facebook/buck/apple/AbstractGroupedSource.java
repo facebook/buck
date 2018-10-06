@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import org.immutables.value.Value;
@@ -99,14 +100,14 @@ abstract class AbstractGroupedSource {
     switch (getType()) {
       case SOURCE_WITH_FLAGS:
         sourcePath = getSourceWithFlags().get().getSourcePath();
-        return Preconditions.checkNotNull(pathResolver.apply(sourcePath)).getFileName().toString();
+        return Objects.requireNonNull(pathResolver.apply(sourcePath)).getFileName().toString();
       case IGNORED_SOURCE:
         sourcePath = getSourcePath().get();
-        return Preconditions.checkNotNull(pathResolver.apply(sourcePath)).getFileName().toString();
+        return Objects.requireNonNull(pathResolver.apply(sourcePath)).getFileName().toString();
       case PUBLIC_HEADER:
       case PRIVATE_HEADER:
         sourcePath = getSourcePath().get();
-        return Preconditions.checkNotNull(pathResolver.apply(sourcePath)).getFileName().toString();
+        return Objects.requireNonNull(pathResolver.apply(sourcePath)).getFileName().toString();
       case SOURCE_GROUP:
         return getSourceGroupName().get();
       default:

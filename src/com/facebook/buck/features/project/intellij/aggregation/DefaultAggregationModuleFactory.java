@@ -19,9 +19,9 @@ package com.facebook.buck.features.project.intellij.aggregation;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.SupportedTargetTypeRegistry;
 import com.facebook.buck.features.project.intellij.model.IjModuleRule;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class DefaultAggregationModuleFactory implements AggregationModuleFactory {
 
@@ -40,7 +40,7 @@ public class DefaultAggregationModuleFactory implements AggregationModuleFactory
     for (TargetNode<?> targetNode : targetNodes) {
       Class<?> nodeType = targetNode.getDescription().getClass();
       IjModuleRule<?> rule =
-          Preconditions.checkNotNull(typeRegistry.getModuleRuleByTargetNodeType(nodeType));
+          Objects.requireNonNull(typeRegistry.getModuleRuleByTargetNodeType(nodeType));
       rule.applyDuringAggregation(context, (TargetNode) targetNode);
     }
 

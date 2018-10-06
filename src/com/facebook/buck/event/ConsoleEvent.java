@@ -16,7 +16,7 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.event.external.events.ConsoleEventExternalInterface;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import java.util.logging.Level;
 
 /**
@@ -33,7 +33,7 @@ public class ConsoleEvent extends AbstractBuckEvent implements ConsoleEventExter
     super(EventKey.unique());
     this.level = level;
     this.containsAnsiEscapeCodes = containsAnsiEscapeCodes;
-    this.message = Preconditions.checkNotNull(message);
+    this.message = Objects.requireNonNull(message);
   }
 
   public Level getLevel() {

@@ -21,8 +21,8 @@ import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.thrift.transport.TTransportException;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -86,7 +86,7 @@ public class RetryingSynchronizedThriftHelper<ClientT> {
 
     for (int numIter = 0; true; ++numIter) {
       try {
-        return foo.apply(Preconditions.checkNotNull(currentClient));
+        return foo.apply(Objects.requireNonNull(currentClient));
       } catch (TTransportException | IOException e) {
         String msg =
             String.format(

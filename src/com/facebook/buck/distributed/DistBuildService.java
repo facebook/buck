@@ -102,6 +102,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -124,7 +125,7 @@ public class DistBuildService implements Closeable {
   }
 
   public DistBuildService(FrontendService service, String username) {
-    Preconditions.checkNotNull(username, "Username needs to be set for distributed build.");
+    Objects.requireNonNull(username, "Username needs to be set for distributed build.");
     this.service = service;
     this.username = username;
   }
@@ -190,7 +191,7 @@ public class DistBuildService implements Closeable {
         continue;
       }
       ProjectFilesystem cellFilesystem =
-          Preconditions.checkNotNull(localFilesystemsByCell.get(filesystem.getCellIndex()));
+          Objects.requireNonNull(localFilesystemsByCell.get(filesystem.getCellIndex()));
       for (BuildJobStateFileHashEntry file : filesystem.entries) {
         if (file.isSetRootSymLink()) {
           LOG.info("File with path [%s] is a symlink. Skipping upload..", file.path.getPath());
@@ -284,7 +285,7 @@ public class DistBuildService implements Closeable {
                             file.setContent(
                                 Files.readAllBytes(
                                     Paths.get(
-                                        Preconditions.checkNotNull(sha1ToPathInfo.get(contentHash))
+                                        Objects.requireNonNull(sha1ToPathInfo.get(contentHash))
                                             .getPath())));
                           } catch (IOException e) {
                             throw new IOException(
@@ -450,9 +451,9 @@ public class DistBuildService implements Closeable {
     Preconditions.checkState(hashCodes.size() == fetchSourceFilesResponse.getFilesSize());
     ImmutableMap.Builder<String, byte[]> result = new ImmutableMap.Builder<>();
     for (FileInfo fileInfo : fetchSourceFilesResponse.getFiles()) {
-      Preconditions.checkNotNull(fileInfo);
-      Preconditions.checkNotNull(fileInfo.getContentHash());
-      Preconditions.checkNotNull(fileInfo.getContent());
+      Objects.requireNonNull(fileInfo);
+      Objects.requireNonNull(fileInfo.getContentHash());
+      Objects.requireNonNull(fileInfo.getContent());
       result.put(fileInfo.getContentHash(), fileInfo.getContent());
     }
 
@@ -461,7 +462,7 @@ public class DistBuildService implements Closeable {
 
   public byte[] fetchSourceFile(String hashCode) throws IOException {
     ImmutableMap<String, byte[]> result = multiFetchSourceFiles(ImmutableSet.of(hashCode));
-    return Preconditions.checkNotNull(result.get(hashCode));
+    return Objects.requireNonNull(result.get(hashCode));
   }
 
   public static FrontendRequest createFetchSourceFilesRequest(Set<String> fileHashes) {

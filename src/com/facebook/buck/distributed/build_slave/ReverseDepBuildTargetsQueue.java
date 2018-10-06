@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -153,7 +154,7 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
     totalBuiltCount += finishedNodes.size();
 
     for (String node : finishedNodes) {
-      DistributableNode target = Preconditions.checkNotNull(distributableBuildGraph.getNode(node));
+      DistributableNode target = Objects.requireNonNull(distributableBuildGraph.getNode(node));
       processFinishedNode(target);
     }
 
@@ -193,8 +194,7 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
         String.format(
             "Complete node [%s] has [%s] dependents", target.getTargetName(), dependents.size()));
     for (String dependent : dependents) {
-      DistributableNode dep =
-          Preconditions.checkNotNull(distributableBuildGraph.getNode(dependent));
+      DistributableNode dep = Objects.requireNonNull(distributableBuildGraph.getNode(dependent));
       dep.finishDependency(target.getTargetName());
 
       if (dep.areAllDependenciesResolved()
@@ -275,7 +275,7 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
       // If a node has a single parent, but that parent has multiple children and some of them
       // are not finished yet, stop at the current node.
       DistributableNode parent =
-          Preconditions.checkNotNull(
+          Objects.requireNonNull(
               distributableBuildGraph.getNode(currentNode.dependentTargets.asList().get(0)));
       if (parent.getNumUnsatisfiedDependencies() != 1
           || seenWorkingCacheableNodes.contains(parent.getTargetName())) {

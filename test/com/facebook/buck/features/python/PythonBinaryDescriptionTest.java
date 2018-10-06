@@ -79,7 +79,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -88,6 +87,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -199,7 +199,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinary binary = builder.setMainModule("main").build(graphBuilder);
     assertThat(
         pathResolver
-            .getRelativePath(Preconditions.checkNotNull(binary.getSourcePathToOutput()))
+            .getRelativePath(Objects.requireNonNull(binary.getSourcePathToOutput()))
             .toString(),
         Matchers.endsWith(".different_extension"));
   }
@@ -215,7 +215,7 @@ public class PythonBinaryDescriptionTest {
         builder.setMainModule("main").setExtension(".different_extension").build(graphBuilder);
     assertThat(
         pathResolver
-            .getRelativePath(Preconditions.checkNotNull(binary.getSourcePathToOutput()))
+            .getRelativePath(Objects.requireNonNull(binary.getSourcePathToOutput()))
             .toString(),
         Matchers.endsWith(".different_extension"));
   }

@@ -39,7 +39,6 @@ import com.facebook.buck.util.ChunkAccumulator;
 import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +52,7 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -111,7 +111,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   @Override
   public SourcePath getSourcePathToOutput() {
     return ForwardingBuildTargetSourcePath.of(
-        getBuildTarget(), Preconditions.checkNotNull(binary.getSourcePathToOutput()));
+        getBuildTarget(), Objects.requireNonNull(binary.getSourcePathToOutput()));
   }
 
   @Override
@@ -174,7 +174,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         } else if (END.matcher(line.trim()).matches()) {
           currentTest = Optional.empty();
         } else if (currentTest.isPresent()) {
-          Preconditions.checkNotNull(stdout.get(currentTest.get())).append(line);
+          Objects.requireNonNull(stdout.get(currentTest.get())).append(line);
         }
       }
     }

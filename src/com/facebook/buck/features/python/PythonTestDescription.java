@@ -64,7 +64,6 @@ import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -75,6 +74,7 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
@@ -215,7 +215,7 @@ public class PythonTestDescription
         graphBuilder.computeIfAbsent(
             baseTarget.withFlavors(InternalFlavor.of("python-test-main")),
             target -> new PythonTestMainRule(target, filesystem));
-    return Preconditions.checkNotNull(testMainRule.getSourcePathToOutput());
+    return Objects.requireNonNull(testMainRule.getSourcePathToOutput());
   }
 
   @Override

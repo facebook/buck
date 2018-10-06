@@ -24,7 +24,6 @@ import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.build_slave.DistributableBuildGraph.DistributableNode;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -38,6 +37,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -204,8 +204,8 @@ public class CacheOptimizedBuildTargetsQueueFactory {
         if (!results.allReverseDeps.containsKey(dependencyTarget)) {
           results.allReverseDeps.put(dependencyTarget, new HashSet<>());
         }
-        Preconditions.checkNotNull(results.allReverseDeps.get(dependencyTarget)).add(target);
-        Preconditions.checkNotNull(results.allForwardDeps.get(target)).add(dependencyTarget);
+        Objects.requireNonNull(results.allReverseDeps.get(dependencyTarget)).add(target);
+        Objects.requireNonNull(results.allForwardDeps.get(target)).add(dependencyTarget);
 
         if (!results.visitedRules.contains(dependencyRule)) {
           results.visitedRules.add(dependencyRule);
@@ -371,7 +371,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
           new DistributableNode(
               target,
               ImmutableSet.copyOf(currentRevDeps),
-              ImmutableSet.copyOf(Preconditions.checkNotNull(results.allForwardDeps.get(target))),
+              ImmutableSet.copyOf(Objects.requireNonNull(results.allForwardDeps.get(target))),
               results.uncachableTargets.contains(target));
       allNodes.put(target, distributableNode);
 

@@ -69,6 +69,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class IjProjectCommandHelper {
@@ -259,7 +260,7 @@ public class IjProjectCommandHelper {
   private ImmutableSet<BuildTarget> writeProjectAndGetRequiredBuildTargets(
       TargetGraphAndTargets targetGraphAndTargets) throws IOException {
     ActionGraphAndBuilder result =
-        Preconditions.checkNotNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
+        Objects.requireNonNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
 
     ActionGraphBuilder graphBuilder = result.getActionGraphBuilder();
 

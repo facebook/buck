@@ -18,13 +18,13 @@ package com.facebook.buck.io.file;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ public class MorePosixFilePermissionsTest {
     public final long mode;
 
     public Sample(long mode, Set<PosixFilePermission> permissions) {
-      this.permissions = Preconditions.checkNotNull(permissions);
+      this.permissions = Objects.requireNonNull(permissions);
       this.mode = mode;
     }
   }

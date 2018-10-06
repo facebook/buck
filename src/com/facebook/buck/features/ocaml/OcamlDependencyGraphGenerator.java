@@ -18,13 +18,13 @@ package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -35,13 +35,13 @@ public class OcamlDependencyGraphGenerator {
   private static final String OCAML_SOURCE_AND_DEPS_SEPARATOR = ":";
   private static final String OCAML_DEPS_SEPARATOR = " ";
   private static final String LINE_SEPARATOR =
-      Preconditions.checkNotNull(System.getProperty("line.separator"));
+      Objects.requireNonNull(System.getProperty("line.separator"));
 
   @Nullable private MutableDirectedGraph<String> graph;
 
   public ImmutableList<String> generate(String depToolOutput) {
     parseDependencies(depToolOutput);
-    Preconditions.checkNotNull(graph);
+    Objects.requireNonNull(graph);
     ImmutableList<String> sortedDeps = TopologicalSort.sort(graph);
 
     // Two copies of dependencies as .cmo can map to .ml or .re
@@ -115,7 +115,7 @@ public class OcamlDependencyGraphGenerator {
   }
 
   private void addSourceDeps(List<String> sourceAndDeps, String source) {
-    Preconditions.checkNotNull(graph);
+    Objects.requireNonNull(graph);
     graph.addNode(source);
     if (sourceAndDeps.size() >= 2) {
       String deps = sourceAndDeps.get(1);

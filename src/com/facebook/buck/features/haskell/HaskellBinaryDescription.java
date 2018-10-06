@@ -58,13 +58,13 @@ import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionRoot;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -180,7 +180,7 @@ public class HaskellBinaryDescription
         args.getDepsQuery()
             .map(
                 query ->
-                    Preconditions.checkNotNull(query.getResolvedQuery())
+                    Objects.requireNonNull(query.getResolvedQuery())
                         .stream()
                         .map(graphBuilder::getRule)
                         .filter(NativeLinkable.class::isInstance))
