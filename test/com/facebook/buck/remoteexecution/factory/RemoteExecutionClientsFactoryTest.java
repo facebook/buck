@@ -25,7 +25,6 @@ import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionClients;
-import com.facebook.buck.remoteexecution.thrift.ThriftRemoteExecution;
 import com.facebook.buck.remoteexecution.util.OutOfProcessIsolatedExecutionClients;
 import com.facebook.buck.util.timing.FakeClock;
 import java.io.IOException;
@@ -62,61 +61,6 @@ public class RemoteExecutionClientsFactoryTest {
     BuckConfig config =
         FakeBuckConfig.builder()
             .setSections("[remoteexecution]", "type=debug_grpc_in_process")
-            .build();
-
-    try (RemoteExecutionClients remoteExecutionClients =
-        new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
-            .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")))) {
-      assertTrue(remoteExecutionClients instanceof OutOfProcessIsolatedExecutionClients);
-    }
-  }
-
-  @Test
-  public void thriftConfiguration() throws IOException {
-    BuckConfig config =
-        FakeBuckConfig.builder().setSections("[remoteexecution]", "type=thrift").build();
-
-    try (RemoteExecutionClients remoteExecutionClients =
-        new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
-            .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")))) {
-      assertTrue(remoteExecutionClients instanceof ThriftRemoteExecution);
-    }
-  }
-
-  @Test
-  public void thriftInProcessConfiguration() throws IOException {
-    BuckConfig config =
-        FakeBuckConfig.builder()
-            .setSections("[remoteexecution]", "type=debug_thrift_in_process")
-            .build();
-
-    try (RemoteExecutionClients remoteExecutionClients =
-        new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
-            .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")))) {
-      assertTrue(remoteExecutionClients instanceof OutOfProcessIsolatedExecutionClients);
-    }
-  }
-
-  // Deprecated configuration tests.
-  @Test
-  public void deprecatedThriftConfiguration() throws IOException {
-    BuckConfig config =
-        FakeBuckConfig.builder()
-            .setSections("[modern_build_rule]", "strategy=thrift_remote")
-            .build();
-
-    try (RemoteExecutionClients remoteExecutionClients =
-        new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
-            .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")))) {
-      assertTrue(remoteExecutionClients instanceof ThriftRemoteExecution);
-    }
-  }
-
-  @Test
-  public void deprecatedThriftrpcInProcessConfiguration() throws IOException {
-    BuckConfig config =
-        FakeBuckConfig.builder()
-            .setSections("[modern_build_rule]", "strategy=debug_isolated_out_of_process")
             .build();
 
     try (RemoteExecutionClients remoteExecutionClients =

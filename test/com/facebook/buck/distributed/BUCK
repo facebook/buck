@@ -44,7 +44,7 @@ standard_java_test(
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/remoteexecution:remoteexecution",
-        "//src/com/facebook/buck/remoteexecution/thrift:thrift",
+        "//src/com/facebook/buck/remoteexecution/grpc:grpc",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/keys:keys",

@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
-import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
+import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.util.FileTreeBuilder;
 import com.facebook.buck.remoteexecution.util.FileTreeBuilder.InputFile;
 import com.facebook.buck.remoteexecution.util.FileTreeBuilder.ProtocolTreeBuilder;
@@ -47,7 +47,7 @@ public class LocalContentAddressedStorageTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private LocalContentAddressedStorage storage;
   private Path storageDir;
-  private final Protocol protocol = new ThriftProtocol();
+  private final Protocol protocol = new GrpcProtocol();
   private HashFunction hasher = Hashing.sipHash24();
 
   @Before

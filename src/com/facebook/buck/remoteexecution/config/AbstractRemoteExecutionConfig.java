@@ -90,12 +90,6 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       case GRPC_REMOTE:
         specifiedType = Optional.of(RemoteExecutionType.GRPC);
         break;
-      case THRIFT_REMOTE:
-        specifiedType = Optional.of(RemoteExecutionType.THRIFT);
-        break;
-      case DEBUG_ISOLATED_OUT_OF_PROCESS:
-        specifiedType = Optional.of(RemoteExecutionType.DEBUG_THRIFT_IN_PROCESS);
-        break;
       case DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC:
         specifiedType = Optional.of(RemoteExecutionType.DEBUG_GRPC_IN_PROCESS);
         break;

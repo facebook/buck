@@ -20,10 +20,8 @@ package com.facebook.buck.remoteexecution.config;
 public enum RemoteExecutionType {
   NONE,
   GRPC,
-  THRIFT,
 
   DEBUG_GRPC_IN_PROCESS,
-  DEBUG_THRIFT_IN_PROCESS,
 
   DEBUG_GRPC_LOCAL;
 

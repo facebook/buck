@@ -108,10 +108,6 @@ public class ModernBuildRuleStrategyIntegrationTest {
             })
         .add(
             new Object[] {
-              ModernBuildRuleBuildStrategy.REMOTE, RemoteExecutionType.DEBUG_THRIFT_IN_PROCESS
-            })
-        .add(
-            new Object[] {
               ModernBuildRuleBuildStrategy.REMOTE, RemoteExecutionType.DEBUG_GRPC_LOCAL
             })
         .build();

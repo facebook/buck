@@ -22,7 +22,7 @@ import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
-import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
+import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.util.FileTreeBuilder;
 import com.facebook.buck.remoteexecution.util.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
@@ -57,7 +57,7 @@ class InProcessIsolatedExecution implements IsolatedExecution {
     this.eventBus = eventBus;
     this.console = console;
     this.workDir = new NamedTemporaryDirectory("__work__");
-    this.protocol = new ThriftProtocol();
+    this.protocol = new GrpcProtocol();
     this.storage =
         new LocalContentAddressedStorage(workDir.getPath().resolve("__cache__"), protocol);
   }

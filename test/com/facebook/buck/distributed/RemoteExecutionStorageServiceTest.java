@@ -20,7 +20,7 @@ import com.facebook.buck.distributed.testutil.InMemoryRemoteExecutionHttpService
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadData;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
-import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
+import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -42,13 +42,13 @@ import org.junit.Test;
 public class RemoteExecutionStorageServiceTest {
   private InMemoryRemoteExecutionHttpService inMemoryService;
   private RemoteExecutionStorageService service;
-  private ThriftProtocol protocol;
+  private GrpcProtocol protocol;
 
   @Before
   public void setUp() {
     inMemoryService = new InMemoryRemoteExecutionHttpService();
     service = inMemoryService.createRemoteExecutionStorageService();
-    protocol = new ThriftProtocol();
+    protocol = new GrpcProtocol();
   }
 
   @Test

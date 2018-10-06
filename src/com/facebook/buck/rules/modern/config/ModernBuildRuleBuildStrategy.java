@@ -38,7 +38,6 @@ public enum ModernBuildRuleBuildStrategy {
   // The following are all deprecated. They should be configured with a combination of
   // modern_build_rule.strategy=remote and an appropriate value for remoteexecution.type.
   GRPC_REMOTE,
-  THRIFT_REMOTE,
   DEBUG_GRPC_SERVICE_IN_PROCESS,
   /**
    * This strategy will construct a separate isolated build directory for each rule. The rule will
@@ -47,7 +46,6 @@ public enum ModernBuildRuleBuildStrategy {
    * separate subprocess will be created to deserialize and run the rule. Outputs will then be
    * copied back to the real build directory.
    */
-  DEBUG_ISOLATED_OUT_OF_PROCESS,
   DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC,
   ;
 

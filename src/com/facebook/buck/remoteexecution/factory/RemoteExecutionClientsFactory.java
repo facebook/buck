@@ -23,14 +23,11 @@ import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionType;
 import com.facebook.buck.remoteexecution.grpc.GrpcExecutionFactory;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
-import com.facebook.buck.remoteexecution.thrift.ThriftProtocol;
-import com.facebook.buck.remoteexecution.thrift.ThriftRemoteExecutionFactory;
 import com.facebook.buck.remoteexecution.util.OutOfProcessIsolatedExecutionClients;
 import java.io.IOException;
 
 /**
- * Factory for creating all manner of different remote execution clients (grpc, thrift, in-process,
- * etc).
+ * Factory for creating all manner of different remote execution clients (grpc, in-process, etc).
  */
 public class RemoteExecutionClientsFactory {
   private final RemoteExecutionConfig remoteExecutionConfig;
@@ -56,12 +53,8 @@ public class RemoteExecutionClientsFactory {
             remoteExecutionConfig.getCasPort(),
             remoteExecutionConfig.getTraceID(),
             eventBus);
-      case THRIFT:
-        return ThriftRemoteExecutionFactory.createRemote(remoteExecutionConfig, eventBus);
       case DEBUG_GRPC_IN_PROCESS:
         return OutOfProcessIsolatedExecutionClients.create(new GrpcProtocol(), eventBus);
-      case DEBUG_THRIFT_IN_PROCESS:
-        return OutOfProcessIsolatedExecutionClients.create(new ThriftProtocol(), eventBus);
       case DEBUG_GRPC_LOCAL:
         return GrpcExecutionFactory.createInProcess(eventBus);
     }
