@@ -13,17 +13,20 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
 
   private static final org.apache.thrift.protocol.TField CATEGORY_FIELD_DESC = new org.apache.thrift.protocol.TField("category", org.apache.thrift.protocol.TType.STRING, (short)1);
   private static final org.apache.thrift.protocol.TField LINES_FIELD_DESC = new org.apache.thrift.protocol.TField("lines", org.apache.thrift.protocol.TType.LIST, (short)2);
+  private static final org.apache.thrift.protocol.TField BUCKET_FIELD_DESC = new org.apache.thrift.protocol.TField("bucket", org.apache.thrift.protocol.TType.I32, (short)3);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new ScribeDataStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new ScribeDataTupleSchemeFactory();
 
   public java.lang.String category; // optional
   public java.util.List<java.lang.String> lines; // optional
+  public int bucket; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     CATEGORY((short)1, "category"),
-    LINES((short)2, "lines");
+    LINES((short)2, "lines"),
+    BUCKET((short)3, "bucket");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -42,6 +45,8 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
           return CATEGORY;
         case 2: // LINES
           return LINES;
+        case 3: // BUCKET
+          return BUCKET;
         default:
           return null;
       }
@@ -82,7 +87,9 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.CATEGORY,_Fields.LINES};
+  private static final int __BUCKET_ISSET_ID = 0;
+  private byte __isset_bitfield = 0;
+  private static final _Fields optionals[] = {_Fields.CATEGORY,_Fields.LINES,_Fields.BUCKET};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -91,6 +98,8 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
     tmpMap.put(_Fields.LINES, new org.apache.thrift.meta_data.FieldMetaData("lines", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
+    tmpMap.put(_Fields.BUCKET, new org.apache.thrift.meta_data.FieldMetaData("bucket", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ScribeData.class, metaDataMap);
   }
@@ -102,6 +111,7 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
    * Performs a deep copy on <i>other</i>.
    */
   public ScribeData(ScribeData other) {
+    __isset_bitfield = other.__isset_bitfield;
     if (other.isSetCategory()) {
       this.category = other.category;
     }
@@ -109,6 +119,7 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
       java.util.List<java.lang.String> __this__lines = new java.util.ArrayList<java.lang.String>(other.lines);
       this.lines = __this__lines;
     }
+    this.bucket = other.bucket;
   }
 
   public ScribeData deepCopy() {
@@ -119,6 +130,8 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
   public void clear() {
     this.category = null;
     this.lines = null;
+    setBucketIsSet(false);
+    this.bucket = 0;
   }
 
   public java.lang.String getCategory() {
@@ -184,6 +197,29 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
     }
   }
 
+  public int getBucket() {
+    return this.bucket;
+  }
+
+  public ScribeData setBucket(int bucket) {
+    this.bucket = bucket;
+    setBucketIsSet(true);
+    return this;
+  }
+
+  public void unsetBucket() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __BUCKET_ISSET_ID);
+  }
+
+  /** Returns true if field bucket is set (has been assigned a value) and false otherwise */
+  public boolean isSetBucket() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __BUCKET_ISSET_ID);
+  }
+
+  public void setBucketIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __BUCKET_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case CATEGORY:
@@ -202,6 +238,14 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
       }
       break;
 
+    case BUCKET:
+      if (value == null) {
+        unsetBucket();
+      } else {
+        setBucket((java.lang.Integer)value);
+      }
+      break;
+
     }
   }
 
@@ -212,6 +256,9 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
 
     case LINES:
       return getLines();
+
+    case BUCKET:
+      return getBucket();
 
     }
     throw new java.lang.IllegalStateException();
@@ -228,6 +275,8 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
       return isSetCategory();
     case LINES:
       return isSetLines();
+    case BUCKET:
+      return isSetBucket();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -265,6 +314,15 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
         return false;
     }
 
+    boolean this_present_bucket = true && this.isSetBucket();
+    boolean that_present_bucket = true && that.isSetBucket();
+    if (this_present_bucket || that_present_bucket) {
+      if (!(this_present_bucket && that_present_bucket))
+        return false;
+      if (this.bucket != that.bucket)
+        return false;
+    }
+
     return true;
   }
 
@@ -279,6 +337,10 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
     hashCode = hashCode * 8191 + ((isSetLines()) ? 131071 : 524287);
     if (isSetLines())
       hashCode = hashCode * 8191 + lines.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetBucket()) ? 131071 : 524287);
+    if (isSetBucket())
+      hashCode = hashCode * 8191 + bucket;
 
     return hashCode;
   }
@@ -307,6 +369,16 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
     }
     if (isSetLines()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.lines, other.lines);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetBucket()).compareTo(other.isSetBucket());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetBucket()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.bucket, other.bucket);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -350,6 +422,12 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
       }
       first = false;
     }
+    if (isSetBucket()) {
+      if (!first) sb.append(", ");
+      sb.append("bucket:");
+      sb.append(this.bucket);
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -369,6 +447,8 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
 
   private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
     try {
+      // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+      __isset_bitfield = 0;
       read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
     } catch (org.apache.thrift.TException te) {
       throw new java.io.IOException(te);
@@ -419,6 +499,14 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 3: // BUCKET
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.bucket = iprot.readI32();
+              struct.setBucketIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -455,6 +543,11 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
           oprot.writeFieldEnd();
         }
       }
+      if (struct.isSetBucket()) {
+        oprot.writeFieldBegin(BUCKET_FIELD_DESC);
+        oprot.writeI32(struct.bucket);
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -479,7 +572,10 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
       if (struct.isSetLines()) {
         optionals.set(1);
       }
-      oprot.writeBitSet(optionals, 2);
+      if (struct.isSetBucket()) {
+        optionals.set(2);
+      }
+      oprot.writeBitSet(optionals, 3);
       if (struct.isSetCategory()) {
         oprot.writeString(struct.category);
       }
@@ -492,12 +588,15 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
           }
         }
       }
+      if (struct.isSetBucket()) {
+        oprot.writeI32(struct.bucket);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, ScribeData struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(2);
+      java.util.BitSet incoming = iprot.readBitSet(3);
       if (incoming.get(0)) {
         struct.category = iprot.readString();
         struct.setCategoryIsSet(true);
@@ -514,6 +613,10 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
           }
         }
         struct.setLinesIsSet(true);
+      }
+      if (incoming.get(2)) {
+        struct.bucket = iprot.readI32();
+        struct.setBucketIsSet(true);
       }
     }
   }

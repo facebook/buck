@@ -18,7 +18,13 @@ package com.facebook.buck.util.network;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
+import java.util.Optional;
 
 public abstract class ScribeLogger implements Closeable {
-  public abstract ListenableFuture<Void> log(String category, Iterable<String> lines);
+  public ListenableFuture<Void> log(String category, Iterable<String> lines) {
+    return log(category, lines, Optional.empty());
+  }
+
+  public abstract ListenableFuture<Void> log(
+      String category, Iterable<String> lines, Optional<Integer> bucket);
 }

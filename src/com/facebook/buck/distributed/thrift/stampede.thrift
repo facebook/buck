@@ -131,6 +131,7 @@ struct StreamLogs {
 struct ScribeData {
   1: optional string category;
   2: optional list<string> lines;
+  3: optional i32 bucket;
 }
 
 enum LogRequestType {

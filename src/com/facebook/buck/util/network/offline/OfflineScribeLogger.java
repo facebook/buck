@@ -139,8 +139,9 @@ public class OfflineScribeLogger extends ScribeLogger {
   }
 
   @Override
-  public ListenableFuture<Void> log(String category, Iterable<String> lines) {
-    ListenableFuture<Void> upload = scribeLogger.log(category, lines);
+  public ListenableFuture<Void> log(
+      String category, Iterable<String> lines, Optional<Integer> bucket) {
+    ListenableFuture<Void> upload = scribeLogger.log(category, lines, bucket);
     Futures.addCallback(
         upload,
         new FutureCallback<Void>() {
@@ -165,7 +166,11 @@ public class OfflineScribeLogger extends ScribeLogger {
                 scribeData =
                     ObjectMappers.WRITER
                         .writeValueAsString(
-                            ScribeData.builder().setCategory(category).setLines(lines).build())
+                            ScribeData.builder()
+                                .setCategory(category)
+                                .setLines(lines)
+                                .setBucket(bucket)
+                                .build())
                         .getBytes(Charsets.UTF_8);
               } catch (Exception e) {
                 if (categoriesReportedAnError.add(category)) {

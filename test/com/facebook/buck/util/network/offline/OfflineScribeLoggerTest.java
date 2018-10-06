@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.hamcrest.Matchers;
@@ -181,7 +182,8 @@ public class OfflineScribeLoggerTest {
     ScribeLogger succeeddingLogger =
         new ScribeLogger() {
           @Override
-          public ListenableFuture<Void> log(String category, Iterable<String> lines) {
+          public ListenableFuture<Void> log(
+              String category, Iterable<String> lines, Optional<Integer> bucket) {
             if (!category.equals(testCategory)) {
               sentData.add(new Pair<>(category, lines));
             }
@@ -285,7 +287,8 @@ public class OfflineScribeLoggerTest {
     }
 
     @Override
-    public ListenableFuture<Void> log(String category, Iterable<String> lines) {
+    public ListenableFuture<Void> log(
+        String category, Iterable<String> lines, Optional<Integer> bucket) {
       ListenableFuture<Void> upload = offlineScribeLogger.log(category, lines);
       Futures.addCallback(
           upload,

@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -30,4 +31,6 @@ abstract class AbstractScribeData {
   public abstract String getCategory();
 
   public abstract ImmutableList<String> getLines();
+
+  public abstract Optional<Integer> getBucket();
 }

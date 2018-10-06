@@ -19,6 +19,7 @@ package com.facebook.buck.util.network;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -30,7 +31,8 @@ public final class FakeFailingScribeLogger extends ScribeLogger {
   private AtomicBoolean failLogging = new AtomicBoolean(false);
 
   @Override
-  public ListenableFuture<Void> log(String category, Iterable<String> lines) {
+  public ListenableFuture<Void> log(
+      String category, Iterable<String> lines, Optional<Integer> bucket) {
     return failLogging.compareAndSet(false, true)
         ? Futures.immediateFuture(null)
         : Futures.immediateFailedFuture(new IOException());

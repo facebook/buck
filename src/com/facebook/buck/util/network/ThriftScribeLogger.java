@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.util.Optional;
 
 public class ThriftScribeLogger extends ScribeLogger {
 
@@ -42,7 +43,8 @@ public class ThriftScribeLogger extends ScribeLogger {
   }
 
   @Override
-  public ListenableFuture<Void> log(final String category, final Iterable<String> lines) {
+  public ListenableFuture<Void> log(
+      final String category, final Iterable<String> lines, Optional<Integer> bucket) {
     synchronized (executorService) {
       if (executorService.isShutdown()) {
         // If executor is shut down, we do nothing. We can't throw here because Buck may want to
@@ -53,16 +55,20 @@ public class ThriftScribeLogger extends ScribeLogger {
 
     return executorService.submit(
         () -> {
-          sendViaThrift(category, lines);
+          sendViaThrift(category, lines, bucket);
           return null;
         });
   }
 
-  private void sendViaThrift(String category, Iterable<String> lines) throws IOException {
+  private void sendViaThrift(String category, Iterable<String> lines, Optional<Integer> bucket)
+      throws IOException {
     // Prepare log request.
     ScribeData scribeData = new ScribeData();
     scribeData.setCategory(category);
     copyLinesWithoutNulls(lines, scribeData);
+    if (bucket.isPresent()) {
+      scribeData.setBucket(bucket.get());
+    }
     LogRequest logRequest = new LogRequest();
     logRequest.setType(LogRequestType.SCRIBE_DATA);
     logRequest.setScribeData(scribeData);
