@@ -83,7 +83,8 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
                 return Futures.immediateCancelledFuture();
               }
 
-              ImmutableList.Builder<ListenableFuture<T>> allNodeJobs = ImmutableList.builder();
+              ImmutableList.Builder<ListenableFuture<T>> allNodeJobs =
+                  ImmutableList.builderWithExpectedSize(allToConvert.size());
 
               for (F from : allToConvert) {
                 BuildTarget target =
