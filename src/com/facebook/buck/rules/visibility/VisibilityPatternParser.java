@@ -28,7 +28,7 @@ public class VisibilityPatternParser {
   private static final BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
       BuildTargetPatternParser.forVisibilityArgument();
 
-  public VisibilityPattern parse(CellPathResolver cellNames, String buildTargetPattern) {
+  public static VisibilityPattern parse(CellPathResolver cellNames, String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
       return PublicVisibilityPattern.of();
     } else {

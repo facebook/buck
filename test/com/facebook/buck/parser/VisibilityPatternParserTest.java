@@ -29,7 +29,6 @@ import org.junit.Test;
 
 public class VisibilityPatternParserTest {
 
-  private final VisibilityPatternParser parser = new VisibilityPatternParser();
   private ProjectFilesystem filesystem;
 
   @Before
@@ -40,17 +39,14 @@ public class VisibilityPatternParserTest {
   @Test
   public void visibilityParserCanHandleSpecialCasedPublicVisibility()
       throws NoSuchBuildTargetException {
-    VisibilityPatternParser parser = new VisibilityPatternParser();
-
-    VisibilityPattern publicPattern = parser.parse(null, "PUBLIC");
+    VisibilityPattern publicPattern = VisibilityPatternParser.parse(null, "PUBLIC");
     assertNotNull(publicPattern);
     assertEquals("PUBLIC", publicPattern.getRepresentation());
   }
 
   @Test
   public void getDescriptionWorksForVariousPatternTypes() throws NoSuchBuildTargetException {
-
-    assertEquals("PUBLIC", parser.parse(null, "PUBLIC").getRepresentation());
+    assertEquals("PUBLIC", VisibilityPatternParser.parse(null, "PUBLIC").getRepresentation());
     assertEquals(
         "//test/com/facebook/buck/parser:parser",
         parseVisibilityPattern("//test/com/facebook/buck/parser:parser").getRepresentation());
@@ -63,6 +59,6 @@ public class VisibilityPatternParserTest {
   }
 
   private VisibilityPattern parseVisibilityPattern(String pattern) {
-    return parser.parse(createCellRoots(filesystem), pattern);
+    return VisibilityPatternParser.parse(createCellRoots(filesystem), pattern);
   }
 }

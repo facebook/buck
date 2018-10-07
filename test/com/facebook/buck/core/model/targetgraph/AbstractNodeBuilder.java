@@ -60,8 +60,6 @@ public abstract class AbstractNodeBuilder<
     TDescription extends DescriptionWithTargetGraph<TArg>,
     TBuildRule extends BuildRule> {
   protected static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
-  private static final VisibilityPatternParser VISIBILITY_PATTERN_PARSER =
-      new VisibilityPatternParser();
 
   protected final TDescription description;
   protected final ProjectFilesystem filesystem;
@@ -184,7 +182,7 @@ public abstract class AbstractNodeBuilder<
               target,
               getDepsFromArg(populatedArg),
               ImmutableSet.of(
-                  VISIBILITY_PATTERN_PARSER.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
+                  VisibilityPatternParser.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
               ImmutableSet.of(),
               cellRoots)
           .withSelectedVersions(selectedVersions);

@@ -236,7 +236,6 @@ public class TargetNodeVisibilityTest {
   private static TargetNode<?> createTargetNode(
       BuildTarget buildTarget, ImmutableList<String> visibilities, ImmutableList<String> withinView)
       throws NoSuchBuildTargetException {
-    VisibilityPatternParser parser = new VisibilityPatternParser();
     CellPathResolver cellNames = TestCellPathResolver.get(filesystem);
     FakeRuleDescription description = new FakeRuleDescription();
     FakeRuleDescriptionArg arg =
@@ -251,11 +250,11 @@ public class TargetNodeVisibilityTest {
             ImmutableSet.of(),
             visibilities
                 .stream()
-                .map(s -> parser.parse(cellNames, s))
+                .map(s -> VisibilityPatternParser.parse(cellNames, s))
                 .collect(ImmutableSet.toImmutableSet()),
             withinView
                 .stream()
-                .map(s -> parser.parse(cellNames, s))
+                .map(s -> VisibilityPatternParser.parse(cellNames, s))
                 .collect(ImmutableSet.toImmutableSet()),
             createCellRoots(filesystem));
   }
