@@ -15,8 +15,6 @@
  */
 package com.facebook.buck.core.config;
 
-import org.immutables.value.Value;
-
 /**
  * A view of a particular config class.
  *
@@ -41,6 +39,5 @@ import org.immutables.value.Value;
  * @param <T> Config type.
  */
 public interface ConfigView<T> {
-  @Value.Parameter
   T getDelegate();
 }

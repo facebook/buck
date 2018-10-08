@@ -36,6 +36,10 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractToolConfig implements ConfigView<BuckConfig> {
 
+  @Override
+  @Value.Parameter
+  public abstract BuckConfig getDelegate();
+
   /**
    * @return a {@link Tool} identified by a @{link BuildTarget} or {@link Path} reference by the
    *     given section:field, if set.

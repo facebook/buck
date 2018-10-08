@@ -79,6 +79,10 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     ALL
   }
 
+  @Override
+  @Value.Parameter
+  public abstract BuckConfig getDelegate();
+
   @Value.Lazy
   public boolean getAllowEmptyGlobs() {
     return getDelegate()

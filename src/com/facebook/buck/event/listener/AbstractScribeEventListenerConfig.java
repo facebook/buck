@@ -28,6 +28,10 @@ abstract class AbstractScribeEventListenerConfig implements ConfigView<BuckConfi
 
   public static final String BUILDFILE_SECTION_NAME = "scribe_event_listener";
 
+  @Override
+  @Value.Parameter
+  public abstract BuckConfig getDelegate();
+
   /** If false (default) then Buck events are not logged to Scribe */
   @Value.Lazy
   public boolean getEnabled() {

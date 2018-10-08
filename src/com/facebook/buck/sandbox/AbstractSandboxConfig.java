@@ -29,22 +29,29 @@ public abstract class AbstractSandboxConfig implements ConfigView<BuckConfig> {
 
   private static final String SANDBOX_CONFIG_SECTION = "sandbox";
 
+  @Override
+  @Value.Parameter
+  public abstract BuckConfig getDelegate();
+
   /**
    * Whether `genrule` should use sandboxing.
    *
    * <p>`genrule` sandboxing can be enabled or disabled for particular targets using {@code
    * enable_sandbox} parameter.
    */
+  @Value.Lazy
   public boolean isGenruleSandboxEnabled() {
     return getDelegate().getBooleanValue(SANDBOX_CONFIG_SECTION, "genrule_sandbox_enabled", false);
   }
 
   /** Whether sandboxing is enabled on Darwin (OS X). */
+  @Value.Lazy
   public boolean isDarwinSandboxEnabled() {
     return getDelegate().getBooleanValue(SANDBOX_CONFIG_SECTION, "darwin_sandbox_enabled", false);
   }
 
   /** Whether sandboxing is enabled on the current platform. */
+  @Value.Lazy
   public boolean isSandboxEnabledForCurrentPlatform() {
     Platform platform = Platform.detect();
     if (platform == Platform.MACOS) {

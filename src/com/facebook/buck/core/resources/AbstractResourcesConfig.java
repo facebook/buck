@@ -34,6 +34,11 @@ abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
   public static final String RESOURCES_SECTION_HEADER = "resources";
   public static final String RESOURCES_PER_RULE_SECTION_HEADER = "resources_per_rule";
 
+  @Override
+  @Value.Parameter
+  public abstract BuckConfig getDelegate();
+
+  @Value.Lazy
   public ResourceAllocationFairness getResourceAllocationFairness() {
     return getDelegate()
         .getEnum(
@@ -43,11 +48,13 @@ abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
         .orElse(ResourceAllocationFairness.FAIR);
   }
 
+  @Value.Lazy
   public boolean isResourceAwareSchedulingEnabled() {
     return getDelegate()
         .getBooleanValue(RESOURCES_SECTION_HEADER, "resource_aware_scheduling_enabled", false);
   }
 
+  @Value.Lazy
   public ImmutableMap<String, ResourceAmounts> getResourceAmountsPerRuleType() {
     ImmutableMap.Builder<String, ResourceAmounts> result = ImmutableMap.builder();
     ImmutableMap<String, String> entries =
@@ -74,6 +81,7 @@ abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
     return result.build();
   }
 
+  @Value.Lazy
   public int getManagedThreadCount() {
     if (!isResourceAwareSchedulingEnabled()) {
       return getDelegate().getNumThreads();
@@ -85,6 +93,7 @@ abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
         .intValue();
   }
 
+  @Value.Lazy
   public ResourceAmounts getDefaultResourceAmounts() {
     if (!isResourceAwareSchedulingEnabled()) {
       return ResourceAmounts.of(1, 0, 0, 0);
@@ -104,6 +113,7 @@ abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
             .orElse(ResourceAmountsEstimator.DEFAULT_NETWORK_IO_AMOUNT));
   }
 
+  @Value.Lazy
   public ResourceAmounts getMaximumResourceAmounts() {
     ResourceAmounts estimated = ResourceAmountsEstimator.getEstimatedAmounts();
     return ResourceAmounts.of(
@@ -124,6 +134,7 @@ abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
    *
    * @return New instance of ConcurrencyLimit.
    */
+  @Value.Lazy
   public ConcurrencyLimit getConcurrencyLimit() {
     return new ConcurrencyLimit(
         getDelegate().getNumThreads(),
