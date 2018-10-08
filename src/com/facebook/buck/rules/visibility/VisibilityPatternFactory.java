@@ -35,8 +35,10 @@ public class VisibilityPatternFactory {
       throw new RuntimeException(
           String.format("Expected an array for %s but was %s", paramName, value));
     }
-    ImmutableSet.Builder<VisibilityPattern> patterns = new ImmutableSet.Builder<>();
-    for (String visibility : (List<String>) value) {
+    List<String> originalPatterns = (List<String>) value;
+    ImmutableSet.Builder<VisibilityPattern> patterns =
+        ImmutableSet.builderWithExpectedSize(originalPatterns.size());
+    for (String visibility : originalPatterns) {
       try {
         patterns.add(VisibilityPatternParser.parse(cellNames, visibility));
       } catch (IllegalArgumentException e) {
