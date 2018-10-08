@@ -22,6 +22,7 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 
 import com.facebook.buck.artifact_cache.ArtifactCaches;
+import com.facebook.buck.artifact_cache.ClientCertificateHandler;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
@@ -1019,7 +1020,8 @@ public final class Main {
                     stampedeSyncBuildHttpFetchExecutorService.get(),
                     managerScope,
                     getArtifactProducerId(executionEnvironment),
-                    executionEnvironment.getHostname());
+                    executionEnvironment.getHostname(),
+                    ClientCertificateHandler.fromConfiguration(cacheBuckConfig));
 
             // Once command completes it should be safe to not wait for executors and other stateful
             // objects to terminate and release semaphore right away. It will help to retry

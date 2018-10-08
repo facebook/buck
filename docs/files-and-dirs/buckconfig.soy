@@ -1155,6 +1155,32 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
 
 {call buckconfig.entry}
   {param section: 'cache' /}
+  {param name: 'http_client_tls_cert' /}
+  {param example_value: '/etc/pki/client.crt' /}
+  {param description}
+    The path to a PEM encoded client X.509 TLS certificate that should be used for any http requests to a remote cache.
+    This is used when http_mode settings are one of "http" or "thrift_over_http", and operates on both read and write connections.
+    This can be useful within a server to restrict access to a write path, log which users are writing which artifacts, and generally authenticate cache clients.
+
+    <p>Note: http_client_tls_cert must be set for this setting to be used.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_client_tls_key' /}
+  {param example_value: '/etc/pki/client.key' /}
+  {param description}
+    The path to a PEM encoded PKCS#8 key that should be used for any http requests to a remote cache.
+    This is used when http_mode settings are one of "http" or "thrift_over_http", and operates on both read and write connections.
+    This can be useful within a server to restrict access to a write path, log which users are writing which artifacts, and generally authenticate cache clients.
+
+    <p>Note: http_client_tls_cert must be set for this setting to be used.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
   {param name: 'serve_local_cache' /}
   {param example_value: 'false' /}
   {param description}

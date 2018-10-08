@@ -76,7 +76,8 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 managerScope,
                 "test://",
-                "hostname")
+                "hostname",
+                ClientCertificateHandler.fromConfiguration(cacheConfig))
             .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
     artifactCache.close();
@@ -100,7 +101,8 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 managerScope,
                 "test://",
-                "hostname")
+                "hostname",
+                ClientCertificateHandler.fromConfiguration(cacheConfig))
             .newInstance();
 
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
@@ -127,7 +129,8 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 managerScope,
                 "test://",
-                "hostname")
+                "hostname",
+                ClientCertificateHandler.fromConfiguration(cacheConfig))
             .newInstance();
 
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(SQLiteArtifactCache.class));
@@ -161,7 +164,8 @@ public class ArtifactCachesTest {
                     MoreExecutors.newDirectExecutorService(),
                     managerScope,
                     "test://",
-                    "hostname")
+                    "hostname",
+                    ClientCertificateHandler.fromConfiguration(cacheConfig))
                 .newInstance());
 
     assertThat(artifactCache, Matchers.instanceOf(MultiArtifactCache.class));
@@ -212,7 +216,8 @@ public class ArtifactCachesTest {
                     MoreExecutors.newDirectExecutorService(),
                     managerScope,
                     "test://",
-                    "hostname")
+                    "hostname",
+                    ClientCertificateHandler.fromConfiguration(cacheConfig))
                 .newInstance());
 
     assertThat(artifactCache, Matchers.instanceOf(MultiArtifactCache.class));
@@ -257,7 +262,8 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 managerScope,
                 "test://",
-                "hostname")
+                "hostname",
+                ClientCertificateHandler.fromConfiguration(cacheConfig))
             .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(MultiArtifactCache.class));
     artifactCache.close();
@@ -282,7 +288,8 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 managerScope,
                 "test://",
-                "hostname")
+                "hostname",
+                ClientCertificateHandler.fromConfiguration(cacheConfig))
             .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
     artifactCache.close();
@@ -306,7 +313,8 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 managerScope,
                 "test://",
-                "hostname")
+                "hostname",
+                ClientCertificateHandler.fromConfiguration(cacheConfig))
             .remoteOnlyInstance(false, false);
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
     artifactCache.close();
@@ -330,7 +338,8 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 managerScope,
                 "test://",
-                "hostname")
+                "hostname",
+                ClientCertificateHandler.fromConfiguration(cacheConfig))
             .localOnlyInstance(false, false);
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
     artifactCache.close();

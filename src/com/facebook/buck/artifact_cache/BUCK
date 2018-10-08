@@ -15,6 +15,7 @@ PUBLIC_API_SOURCES = [
     "ArtifactCacheFactory.java",
     "ArtifactUploader.java",
     "CacheResultType.java",
+    "ClientCertificateHandler.java",
     "DirArtifactCache.java",
     "DirArtifactCacheEvent.java",
     "HttpArtifactCacheEvent.java",
@@ -58,6 +59,7 @@ java_immutables_library(
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/okhttp:okhttp-tls",
         "//third-party/java/zstd-jni:zstd-jni",
     ],
 )
@@ -129,6 +131,7 @@ java_immutables_library(
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/okhttp:okhttp",
+        "//third-party/java/okhttp:okhttp-tls",
         "//third-party/java/sqlite:sqlite",
     ],
 )

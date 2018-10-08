@@ -68,6 +68,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.tls.HandshakeCertificates;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
@@ -91,6 +92,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private final TaskManagerScope managerScope;
   private final String producerId;
   private final String producerHostname;
+  private final Optional<ClientCertificateHandler> clientCertificateHandler;
 
   /** {@link TaskAction} implementation for {@link ArtifactCaches}. */
   static class ArtifactCachesCloseAction implements TaskAction<List<ArtifactCache>> {
@@ -136,6 +138,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
    * @param wifiSsid current WiFi ssid to decide if we want the http cache or not
    * @param producerId free-form identifier of a user or machine uploading artifacts, can be used on
    *     cache server side for monitoring
+   * @param clientCertificateHandler container for client certificate information
    */
   public ArtifactCaches(
       ArtifactCacheBuckConfig buckConfig,
@@ -147,7 +150,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService,
       TaskManagerScope managerScope,
       String producerId,
-      String producerHostname) {
+      String producerHostname,
+      Optional<ClientCertificateHandler> clientCertificateHandler) {
     this.buckConfig = buckConfig;
     this.buckEventBus = buckEventBus;
     this.projectFilesystem = projectFilesystem;
@@ -158,6 +162,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     this.managerScope = managerScope;
     this.producerId = producerId;
     this.producerHostname = producerHostname;
+    this.clientCertificateHandler = clientCertificateHandler;
   }
 
   private static Request.Builder addHeadersToBuilder(
@@ -222,7 +227,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             cacheTypeBlacklist,
             distributedBuildModeEnabled,
             producerId,
-            producerHostname);
+            producerHostname,
+            clientCertificateHandler);
 
     artifactCaches.add(artifactCache);
 
@@ -242,7 +248,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         downloadHeavyBuildHttpFetchExecutorService,
         managerScope,
         producerId,
-        producerHostname);
+        producerHostname,
+        clientCertificateHandler);
   }
 
   /**
@@ -269,7 +276,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ImmutableSet<CacheType> cacheTypeBlacklist,
       boolean distributedBuildModeEnabled,
       String producerId,
-      String producerHostname) {
+      String producerHostname,
+      Optional<ClientCertificateHandler> clientCertificateHandler) {
     ImmutableSet<ArtifactCacheMode> modes = buckConfig.getArtifactCacheModes();
     if (modes.isEmpty()) {
       return new NoopArtifactCache();
@@ -298,7 +306,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
               httpFetchExecutorService,
               builder,
               HttpArtifactCache::new,
-              mode);
+              mode,
+              clientCertificateHandler);
           break;
         case sqlite:
           initializeSQLiteCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
@@ -326,7 +335,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                       buckConfig.getHttpFetchConcurrency(),
                       producerId,
                       producerHostname),
-              mode);
+              mode,
+              clientCertificateHandler);
           break;
       }
     }
@@ -374,7 +384,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpFetchExecutorService,
       ImmutableList.Builder<ArtifactCache> builder,
       NetworkCacheFactory factory,
-      ArtifactCacheMode cacheMode) {
+      ArtifactCacheMode cacheMode,
+      Optional<ClientCertificateHandler> clientCertificateHandler) {
     for (HttpCacheEntry cacheEntry : artifactCacheEntries.getHttpCacheEntries()) {
       if (!cacheEntry.isWifiUsableForDistributedCache(wifiSsid)) {
         buckEventBus.post(
@@ -396,7 +407,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
               httpFetchExecutorService,
               buckConfig,
               factory,
-              cacheMode));
+              cacheMode,
+              clientCertificateHandler));
     }
   }
 
@@ -451,7 +463,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpFetchExecutorService,
       ArtifactCacheBuckConfig config,
       NetworkCacheFactory factory,
-      ArtifactCacheMode cacheMode) {
+      ArtifactCacheMode cacheMode,
+      Optional<ClientCertificateHandler> clientCertificateHandler) {
     ArtifactCache cache =
         createHttpArtifactCache(
             cacheDescription,
@@ -462,7 +475,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             httpFetchExecutorService,
             config,
             factory,
-            cacheMode);
+            cacheMode,
+            clientCertificateHandler);
     return new RetryingCacheDecorator(cacheMode, cache, config.getMaxFetchRetries(), buckEventBus);
   }
 
@@ -475,7 +489,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpFetchExecutorService,
       ArtifactCacheBuckConfig config,
       NetworkCacheFactory factory,
-      ArtifactCacheMode cacheMode) {
+      ArtifactCacheMode cacheMode,
+      Optional<ClientCertificateHandler> clientCertificateHandler) {
 
     // Setup the default client to use.
     OkHttpClient.Builder storeClientBuilder = new OkHttpClient.Builder();
@@ -520,6 +535,15 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                   chain.proceed(
                       addHeadersToBuilder(chain.request().newBuilder(), writeHeaders).build()));
     }
+
+    // Add client certificate information if present
+    clientCertificateHandler.ifPresent(
+        handler -> {
+          HandshakeCertificates certificates = handler.getHandshakeCertificates();
+          storeClientBuilder.sslSocketFactory(
+              certificates.sslSocketFactory(), certificates.trustManager());
+          handler.getHostnameVerifier().ifPresent(storeClientBuilder::hostnameVerifier);
+        });
 
     OkHttpClient storeClient = storeClientBuilder.build();
 

@@ -25,6 +25,7 @@ import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.artifact_cache.ClientCertificateHandler;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
@@ -531,7 +532,7 @@ public class ServedCacheIntegrationTest {
     return cacheResult.getType().isSuccess();
   }
 
-  private ArtifactCache createArtifactCache(ArtifactCacheBuckConfig buckConfig) {
+  private ArtifactCache createArtifactCache(ArtifactCacheBuckConfig buckConfig) throws IOException {
     return new ArtifactCaches(
             buckConfig,
             buckEventBus,
@@ -542,7 +543,8 @@ public class ServedCacheIntegrationTest {
             DIRECT_EXECUTOR_SERVICE,
             managerScope,
             "test://",
-            "hostname")
+            "hostname",
+            ClientCertificateHandler.fromConfiguration(buckConfig))
         .newInstance();
   }
 }

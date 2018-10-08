@@ -20,9 +20,12 @@ import static java.nio.charset.StandardCharsets.UTF_16;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.ClientCertificateHandler;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import io.netty.handler.codec.http.HttpVersion;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -30,6 +33,13 @@ import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -41,10 +51,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
@@ -53,6 +66,7 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.log.JavaUtilLog;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.StdErrLog;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 /** Lightweight wrapper around an httpd to make testing using an httpd nicer. */
 public class HttpdForTests implements AutoCloseable {
@@ -74,7 +88,65 @@ public class HttpdForTests implements AutoCloseable {
     server.addConnector(connector);
 
     handlerList = new HandlerList();
-    localhost = getLocalhostAddress().getHostAddress();
+    localhost = getLocalhostAddress(true).getHostAddress();
+  }
+
+  /**
+   * Creates an HTTPS server that requires client authentication (though doesn't validate the chain)
+   *
+   * @param caPath The path to a CA certificate to put in the keystore.
+   * @param certificatePath The path to a pem encoded x509 certificate
+   * @param keyPath The path to a pem encoded PKCS#8 certificate
+   * @throws IOException Any of the keys could not be read
+   * @throws KeyStoreException There's a problem writing the key into the keystore
+   * @throws CertificateException The certificate was not valid
+   * @throws NoSuchAlgorithmException The algorithm used by the certificate/key are invalid
+   */
+  public HttpdForTests(Path caPath, Path certificatePath, Path keyPath)
+      throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
+
+    // Configure the logging for jetty. Which uses a singleton. Ho hum.
+    Log.setLog(new JavaUtilLog());
+    server = new Server();
+
+    String password = "super_sekret";
+
+    X509Certificate caCert = ClientCertificateHandler.parseCertificate(caPath);
+    X509Certificate serverCert = ClientCertificateHandler.parseCertificate(certificatePath);
+    PrivateKey privateKey = ClientCertificateHandler.parsePrivateKey(keyPath, serverCert);
+
+    KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+    ks.load(null, password.toCharArray());
+    ks.setKeyEntry(
+        "private", privateKey, password.toCharArray(), new Certificate[] {serverCert, caCert});
+    ks.setCertificateEntry("ca", caCert);
+
+    SslContextFactory sslFactory = new SslContextFactory();
+    sslFactory.setKeyStore(ks);
+    sslFactory.setKeyStorePassword(password);
+    sslFactory.setCertAlias("private");
+    sslFactory.setTrustStore(ks);
+    sslFactory.setTrustStorePassword(password);
+    // *Require* a client cert, but don't validate it (getting TLS auth working properly was a
+    // bit of a pain). We'll store peers' certs in the handler, and validate the certs manually
+    // in our tests.
+    sslFactory.setNeedClientAuth(true);
+    sslFactory.setTrustAll(true);
+
+    HttpConfiguration https_config = new HttpConfiguration();
+    https_config.setSecurePort(0);
+    https_config.setSecureScheme("https");
+    https_config.addCustomizer(new SecureRequestCustomizer());
+
+    ServerConnector sslConnector =
+        new ServerConnector(
+            server,
+            new SslConnectionFactory(sslFactory, HttpVersion.HTTP_1_1.toString()),
+            new HttpConnectionFactory(https_config));
+    server.addConnector(sslConnector);
+
+    handlerList = new HandlerList();
+    localhost = getLocalhostAddress(false).getHostAddress();
   }
 
   public void addHandler(Handler handler) {
@@ -137,8 +209,11 @@ public class HttpdForTests implements AutoCloseable {
   /**
    * @return an address that's either on a loopback or local network interface that refers to
    *     localhost.
+   * @param allowScopedLinkLocal Whether or not to consider link local interfaces that have scopes.
+   *     Some clients don't support the %{scope} syntax in ipv6, e.g. okhttp:
+   *     https://github.com/square/okhttp/issues/1706 so allow those to be skipped.
    */
-  private InetAddress getLocalhostAddress() throws SocketException {
+  private InetAddress getLocalhostAddress(boolean allowScopedLinkLocal) throws SocketException {
     // It turns out that:
     //   InetAddress.getLocalHost().getHostAddress()
     // will occasionally just make up return values. I have no idea why. To work around this, figure
@@ -157,7 +232,11 @@ public class HttpdForTests implements AutoCloseable {
         continue;
       }
       if (iface.isLoopback()) {
-        candidateLoopbacks.addAll(getInetAddresses(iface));
+        candidateLoopbacks.addAll(
+            getInetAddresses(iface)
+                .stream()
+                .filter(i -> allowScopedLinkLocal || !i.getHostAddress().contains("%"))
+                .collect(ImmutableSet.toImmutableSet()));
       } else {
         candidateLocal.addAll(getInetAddresses(iface));
       }

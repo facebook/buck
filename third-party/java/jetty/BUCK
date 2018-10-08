@@ -24,6 +24,7 @@ java_library(
         "//test/com/facebook/buck/maven:maven",
         "//test/com/facebook/buck/maven:testutil",
         "//test/com/facebook/buck/testutil/integration:",
+        "//test/com/facebook/buck/artifact_cache:artifact_cache",
     ],
     deps = [],
 )

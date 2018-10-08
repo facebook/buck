@@ -382,6 +382,27 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
         .map(SizeUnit::parseBytes);
   }
 
+  /**
+   * Gets the path to a PEM encoded X509 certifiate to use as the TLS client certificate for HTTP
+   * cache requests
+   *
+   * <p>Both the key and certificate must be set for client TLS certificates to be used
+   */
+  public Optional<Path> getClientTlsCertificate() {
+    return buckConfig.getValue("cache", "http_client_tls_cert").map(Paths::get);
+  }
+
+  /**
+   * Gets the path to a PEM encoded PCKS#8 key to use as the TLS client key for HTTP cache requests.
+   * This may be a file that contains both the private key and the certificate if both objects are
+   * newline delimited.
+   *
+   * <p>Both the key and certificate must be set for client TLS certificates to be used
+   */
+  public Optional<Path> getClientTlsKey() {
+    return buckConfig.getValue("cache", "http_client_tls_key").map(Paths::get);
+  }
+
   private boolean getServingLocalCacheEnabled() {
     return buckConfig.getBooleanValue(CACHE_SECTION_NAME, SERVED_CACHE_ENABLED_FIELD_NAME, false);
   }
