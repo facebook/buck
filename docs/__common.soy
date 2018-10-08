@@ -699,9 +699,10 @@ docsearch({
 /**
  * @param page
  * @param name
+ * @param? navid
  */
 {template .concept_link}
-<a href="{ROOT}concept/{$page}.html">{$name}</a>
+<a href="{ROOT}concept/{$page}.html{if isNonnull($navid)}#{$navid}{/if}">{$name}</a>
 {/template}
 
 /**

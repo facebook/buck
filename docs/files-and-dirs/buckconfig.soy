@@ -916,7 +916,10 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
         <code>dir</code> (default): Use a directory-based cache on the local filesystem.
       </li>
       <li>
-        <code>http</code>: Use an http-based cache.
+        <code>http</code>: Use an http-based cache. See {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Binary HTTP Cache API' /}{param navid:'binary_http' /}{/call}.
+      </li>
+      <li>
+        <code>http</code>: Use an http-based cache that uses thrift for object metadata. See {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Thrift over HTTP Cache API' /}{param navid:'thrift_http' /}{/call}.
       </li>
       <li>
         <code>sqlite</code>: Use a SQLite-based cache that inlines small artifacts in the database
@@ -1176,6 +1179,15 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
     This can be useful within a server to restrict access to a write path, log which users are writing which artifacts, and generally authenticate cache clients.
 
     <p>Note: http_client_tls_cert must be set for this setting to be used.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'hybrid_thrift_endpoint' /}
+  {param example_value: '/hybrid_endpoint' /}
+  {param description}
+  The HTTP endpoint to call if using {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Thrift over HTTP Cache API' /}{param navid:'thrift_http' /}{/call}. Note that {call buckconfig.cache_mode /} must be set to thrift_over_http.
   {/param}
 {/call}
 
