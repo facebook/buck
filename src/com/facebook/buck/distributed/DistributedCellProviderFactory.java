@@ -105,12 +105,12 @@ public class DistributedCellProviderFactory {
                       // Distributed builds don't care about cell names, use a sentinel value that
                       // will show up if it actually does care about them.
                       cellParam.getCanonicalName(),
+                      cellParam.getFilesystem(),
+                      configWithResolver,
                       cellProvider,
                       toolchainProvider,
                       ruleKeyConfiguration,
-                      currentCellResolver,
-                      cellParam.getFilesystem(),
-                      configWithResolver);
+                      currentCellResolver);
                 }),
         cellProvider ->
             RootCellFactory.create(

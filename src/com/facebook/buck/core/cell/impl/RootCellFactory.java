@@ -71,12 +71,12 @@ public class RootCellFactory {
     return ImmutableCell.of(
         rootCellCellPathResolver.getKnownRoots(),
         Optional.empty(),
+        rootFilesystem,
+        rootConfig,
         cellProvider,
         toolchainProvider,
         ruleKeyConfiguration,
-        rootCellPathResolver,
-        rootFilesystem,
-        rootConfig);
+        rootCellPathResolver);
   }
 
   static Cell create(
@@ -96,11 +96,11 @@ public class RootCellFactory {
     return ImmutableCell.of(
         rootCellCellPathResolver.getKnownRoots(),
         Optional.empty(),
+        rootFilesystem,
+        rootConfig,
         cellProvider,
         toolchainProvider,
         ruleKeyConfiguration,
-        rootCellCellPathResolver,
-        rootFilesystem,
-        rootConfig);
+        rootCellCellPathResolver);
   }
 }

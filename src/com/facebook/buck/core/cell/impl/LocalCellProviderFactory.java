@@ -156,12 +156,12 @@ public class LocalCellProviderFactory {
                 return ImmutableCell.of(
                     cellPathResolver.getKnownRoots(),
                     canonicalCellName,
+                    cellFilesystem,
+                    buckConfig,
                     cellProvider,
                     toolchainProvider,
                     ruleKeyConfiguration,
-                    cellPathResolver,
-                    cellFilesystem,
-                    buckConfig);
+                    cellPathResolver);
               }
             },
         cellProvider ->
