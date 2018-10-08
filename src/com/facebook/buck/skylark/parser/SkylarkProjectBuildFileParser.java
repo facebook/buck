@@ -169,7 +169,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       rules = parseResult.getRawRules();
     } finally {
       // TODO(ttsugrii): think about reporting processed bytes and profiling support
-      buckEventBus.post(ParseBuckFileEvent.finished(startEvent, rules, 0L, Optional.empty()));
+      buckEventBus.post(
+          ParseBuckFileEvent.finished(startEvent, rules.size(), 0L, Optional.empty()));
     }
     return parseResult;
   }

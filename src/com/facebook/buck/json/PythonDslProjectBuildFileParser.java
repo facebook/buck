@@ -435,7 +435,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       long parsedBytes = buckPyProcessInput.getCount() - alreadyReadBytes;
       processedBytes.ifPresent(processedBytes -> processedBytes.addAndGet(parsedBytes));
       buckEventBus.post(
-          ParseBuckFileEvent.finished(parseBuckFileStarted, values, parsedBytes, profile));
+          ParseBuckFileEvent.finished(parseBuckFileStarted, values.size(), parsedBytes, profile));
     }
   }
 
