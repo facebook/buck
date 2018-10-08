@@ -187,6 +187,7 @@
     <include name="nuprocess/nuprocess-1.2.4.jar" />
     <include name="objenesis/objenesis-1.2.jar" />
     <include name="okhttp/okhttp-3.11.0.jar" />
+    <include name="okhttp/okhttp-tls-3.11.0.jar" />
     <include name="okio/okio-1.13.0.jar" />
     <include name="opencensus/opencensus-api-0.12.2.jar" />
     <include name="opencensus/opencensus-contrib-grpc-metrics-0.12.2.jar" />
