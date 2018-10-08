@@ -67,10 +67,7 @@ public class TestParserFactory {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     return new DefaultParser(
-        new DaemonicParserState(
-            typeCoercerFactory,
-            parserConfig.getNumParsingThreads(),
-            parserConfig.shouldIgnoreEnvironmentVariablesChanges()),
+        new DaemonicParserState(typeCoercerFactory, parserConfig.getNumParsingThreads()),
         perBuildStateFactory,
         new TargetSpecResolver(),
         WatchmanFactory.NULL_WATCHMAN,

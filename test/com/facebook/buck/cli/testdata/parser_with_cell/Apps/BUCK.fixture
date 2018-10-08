@@ -1,9 +1,0 @@
-cxx_library(
-    name = "TestAppsLibrary",
-    srcs = [],
-    deps = [
-        "bar//Dep2:Dep2",
-        "//Libraries/Dep1:Dep1_1",
-        "//Libraries/Dep1:Dep1_2",
-    ],
-)
