@@ -51,7 +51,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
@@ -77,8 +76,6 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
-import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
-import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -1964,66 +1961,6 @@ public class DefaultParserTest {
               .lookupComputedNode(cell, target, eventBus)
               .isPresent());
     }
-  }
-
-  @Test
-  public void daemonicParserStateSerializesAndDeserializesCorrectly() throws Exception {
-    tempDir.newFolder("foo");
-
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
-    Files.write(
-        testFooBuckFile,
-        "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n"
-            .getBytes(UTF_8));
-
-    Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
-    Files.write(testFooJavaFile, "// Nothing to see here, move along!\n".getBytes(UTF_8));
-
-    Path testBarJavaFile = tempDir.newFile("foo/Bar.java");
-    Files.write(testBarJavaFile, "// Plz, leave me alone!\n".getBytes(UTF_8));
-
-    BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
-
-    TargetGraph oldGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
-
-    // Serialize target graph information.
-    RemoteDaemonicParserState remote = parser.getPermState().serializeDaemonicParserState(cell);
-
-    assertTrue(remote.isSetCachedIncludes());
-    assertEquals(remote.cachedIncludes.size(), 1);
-    assertTrue(remote.isSetCellPathToDaemonicState());
-    assertEquals(remote.cellPathToDaemonicState.size(), 1);
-    RemoteDaemonicCellState cellState = remote.cellPathToDaemonicState.get("");
-    assertTrue(cellState.isSetAllRawNodesJsons());
-    assertEquals(cellState.allRawNodesJsons.size(), 1);
-    assertTrue(cellState.isSetBuildFileDependents());
-    assertEquals(cellState.buildFileDependents.size(), 2);
-    assertTrue(cellState.isSetBuildFileEnv());
-    assertEquals(cellState.buildFileEnv.size(), 1);
-    assertTrue(remote.isSetCellPaths());
-    assertEquals(remote.cellPaths.size(), 1);
-
-    // Reset parser to square one.
-    parser = TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider);
-    // Restore state.
-    parser.getPermState().restoreState(remote, cell);
-    // Try to use the restored target graph.
-    TargetGraph newGraph =
-        parser
-            .buildTargetGraphForTargetNodeSpecs(
-                cell,
-                false,
-                executorService,
-                ImmutableList.of(
-                    BuildTargetSpec.of(
-                        ImmutableBuildTarget.of(
-                            ImmutableUnflavoredBuildTarget.of(
-                                cell.getRoot(), cell.getCanonicalName(), "//foo", "lib")),
-                        BuildFileSpec.of(Paths.get("foo"), false, cell.getRoot()))),
-                ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
-            .getTargetGraph();
-    assertEquals(oldGraph, newGraph);
   }
 
   @Test
