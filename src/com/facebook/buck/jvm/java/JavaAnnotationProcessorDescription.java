@@ -89,10 +89,7 @@ public class JavaAnnotationProcessorDescription
   interface AbstractJavaAnnotationProcessorDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps {
 
-    @Value.Default
-    default Optional<String> getProcessorClass() {
-      return Optional.empty();
-    }
+    Optional<String> getProcessorClass();
 
     ImmutableSet<String> getProcessorClasses();
 

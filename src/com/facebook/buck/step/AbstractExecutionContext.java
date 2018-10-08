@@ -177,10 +177,7 @@ abstract class AbstractExecutionContext implements Closeable {
     return getConsole().getAnsi();
   }
 
-  @Value.Default
-  public Optional<Profiler> getProfiler() {
-    return Optional.empty();
-  }
+  public abstract Optional<Profiler> getProfiler();
 
   public void logError(Throwable error, String msg, Object... formatArgs) {
     getBuckEventBus().post(ThrowableConsoleEvent.create(error, msg, formatArgs));

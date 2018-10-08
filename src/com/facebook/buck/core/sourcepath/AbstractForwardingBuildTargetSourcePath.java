@@ -37,10 +37,7 @@ public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTa
 
   @Override
   @Value.Parameter(value = false)
-  @Value.Default
-  public Optional<HashCode> getPrecomputedHash() {
-    return Optional.empty();
-  }
+  public abstract Optional<HashCode> getPrecomputedHash();
 
   @Override
   public int hashCode() {

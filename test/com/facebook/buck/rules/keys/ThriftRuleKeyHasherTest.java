@@ -51,6 +51,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TException;
@@ -175,6 +176,11 @@ public class ThriftRuleKeyHasherTest {
           public BuildTarget getTarget() {
             return ImmutableBuildTarget.of(
                 new File("cell_path_2").toPath(), "//base_name_2", "rule_name_2");
+          }
+
+          @Override
+          public Optional<HashCode> getPrecomputedHash() {
+            return Optional.empty();
           }
         });
     hasher.putKey(".build_target_source_path_value");

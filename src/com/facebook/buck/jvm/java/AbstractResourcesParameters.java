@@ -45,11 +45,8 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
     return ImmutableSortedMap.of();
   }
 
-  @Value.Default
   @AddToRuleKey
-  public Optional<String> getResourcesRoot() {
-    return Optional.empty();
-  }
+  public abstract Optional<String> getResourcesRoot();
 
   public static ResourcesParameters of() {
     return ResourcesParameters.builder().build();

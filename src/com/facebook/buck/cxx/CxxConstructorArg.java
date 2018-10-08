@@ -129,10 +129,7 @@ public interface CxxConstructorArg
     return PatternMatchedCollection.of();
   }
 
-  @Value.Default
-  default Optional<String> getExecutableName() {
-    return Optional.empty();
-  }
+  Optional<String> getExecutableName();
 
   @Value.Default
   default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPostPlatformLinkerFlags() {

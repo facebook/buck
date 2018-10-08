@@ -86,10 +86,7 @@ public class ZipFileDescription
       return false;
     }
 
-    @Value.Default
-    default Optional<Boolean> getMergeSourceZips() {
-      return Optional.empty();
-    }
+    Optional<Boolean> getMergeSourceZips();
 
     ImmutableSet<Pattern> getEntriesToExclude();
 
