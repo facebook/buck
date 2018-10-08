@@ -193,7 +193,6 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   }
 
   /** Computes the inputs of the build rule. */
-  @SuppressWarnings("unused")
   public ImmutableSortedSet<SourcePath> computeInputs() {
     return computeInputs(getBuildable(), classInfo);
   }

@@ -126,7 +126,6 @@ public interface BuildRule extends Comparable<BuildRule> {
    * to be cached, it must update its BuildRuleResolver when a new action graph is constructed to
    * avoid leaking the entire action graph it was originally associated with.
    */
-  @SuppressWarnings("unused")
   void updateBuildRuleResolver(
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,

@@ -104,7 +104,6 @@ public class AabBuilderStep implements Step {
           appBuilderBase.createKeystoreProperties();
       File fakeResApk = filesystem.createTempFile("fake", ".txt").toFile();
       fakeResApk.createNewFile();
-      @SuppressWarnings("null")
       ApkBuilder builder =
           new ApkBuilder(
               filesystem.getPathForRelativePath(pathToOutputApkFile).toFile(),

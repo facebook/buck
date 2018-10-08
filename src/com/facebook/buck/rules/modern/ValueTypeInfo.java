@@ -22,7 +22,6 @@ import javax.annotation.Nullable;
 /**
  * ValueTypeInfo&lt;T&gt; provides methods to extract deps, outputs, rulekeys from values of type T.
  */
-@SuppressWarnings("unused")
 public interface ValueTypeInfo<T> {
   <E extends Exception> void visit(T value, ValueVisitor<E> visitor) throws E;
 
