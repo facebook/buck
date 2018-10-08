@@ -27,7 +27,7 @@ import org.immutables.value.Value;
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
 public abstract class AbstractJavaOptionsProvider implements Toolchain {
-  public static String DEFAULT_NAME = "java-options";
+  public static final String DEFAULT_NAME = "java-options";
 
   @Override
   public String getName() {
