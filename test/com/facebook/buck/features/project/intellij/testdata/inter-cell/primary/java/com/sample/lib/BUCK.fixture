@@ -1,6 +1,9 @@
 android_library(
     name = "lib",
     srcs = glob(["*.java"]),
+    resources = [
+        "secondary//js:generated",
+    ],
     visibility = [
         "PUBLIC",
     ],
