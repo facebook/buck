@@ -24,14 +24,13 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
-public class VisibilityPatternFactoryTest {
+public class VisibilityPatternsTest {
   @Test(expected = HumanReadableException.class)
   public void bogusVisibilityGivesFriendlyError() {
-    new VisibilityPatternFactory()
-        .createFromStringList(
-            createCellRoots(new FakeProjectFilesystem()),
-            "visibility",
-            ImmutableList.of(":marmosets"),
-            BuildTargetFactory.newInstance("//example/path:three"));
+    VisibilityPatterns.createFromStringList(
+        createCellRoots(new FakeProjectFilesystem()),
+        "visibility",
+        ImmutableList.of(":marmosets"),
+        BuildTargetFactory.newInstance("//example/path:three"));
   }
 }

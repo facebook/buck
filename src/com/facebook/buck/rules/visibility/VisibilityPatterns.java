@@ -23,10 +23,14 @@ import com.google.common.collect.ImmutableSet;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class VisibilityPatternFactory {
+/** Provides additional ways to create {@link VisibilityPattern}s. */
+public class VisibilityPatterns {
+
+  /** Prevent instantiations. */
+  private VisibilityPatterns() {}
 
   @SuppressWarnings("unchecked")
-  public ImmutableSet<VisibilityPattern> createFromStringList(
+  public static ImmutableSet<VisibilityPattern> createFromStringList(
       CellPathResolver cellNames, String paramName, @Nullable Object value, BuildTarget target) {
     if (value == null) {
       return ImmutableSet.of();

@@ -39,7 +39,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.visibility.VisibilityPatternFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -165,10 +164,7 @@ public class PerBuildStateFactory {
               buildFileRawNodeParsePipeline,
               buildTargetRawNodeParsePipeline,
               new DefaultRawTargetNodeFactory(
-                  knownRuleTypesProvider,
-                  marshaller,
-                  new VisibilityPatternFactory(),
-                  new BuiltTargetVerifier()));
+                  knownRuleTypesProvider, marshaller, new BuiltTargetVerifier()));
 
       PackageBoundaryChecker packageBoundaryChecker =
           new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
@@ -240,7 +236,6 @@ public class PerBuildStateFactory {
                   daemonicParserState.getBuildFileTrees(),
                   symlinkCheckers,
                   targetNodeFactory,
-                  new VisibilityPatternFactory(),
                   rootCell.getRuleKeyConfiguration()),
               parserConfig.getEnableParallelParsing()
                   ? executorService

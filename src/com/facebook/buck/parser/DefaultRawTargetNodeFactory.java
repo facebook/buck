@@ -33,7 +33,7 @@ import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
-import com.facebook.buck.rules.visibility.VisibilityPatternFactory;
+import com.facebook.buck.rules.visibility.VisibilityPatterns;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -49,17 +49,14 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
 
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final ConstructorArgMarshaller marshaller;
-  private final VisibilityPatternFactory visibilityPatternFactory;
   private final BuiltTargetVerifier builtTargetVerifier;
 
   public DefaultRawTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
-      VisibilityPatternFactory visibilityPatternFactory,
       BuiltTargetVerifier builtTargetVerifier) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
-    this.visibilityPatternFactory = visibilityPatternFactory;
     this.builtTargetVerifier = builtTargetVerifier;
   }
 
@@ -93,10 +90,10 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
               description.getConstructorArgType(),
               rawAttributes);
       visibilityPatterns =
-          visibilityPatternFactory.createFromStringList(
+          VisibilityPatterns.createFromStringList(
               cell.getCellPathResolver(), "visibility", rawAttributes.get("visibility"), target);
       withinViewPatterns =
-          visibilityPatternFactory.createFromStringList(
+          VisibilityPatterns.createFromStringList(
               cell.getCellPathResolver(), "within_view", rawAttributes.get("within_view"), target);
     } catch (CoerceFailedException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
