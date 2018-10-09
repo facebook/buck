@@ -39,8 +39,8 @@ class UntrackedHeaderReporterBasic implements UntrackedHeaderReporter {
   public String getErrorReport(Path header) {
     String errorMessage =
         String.format(
-            "%s: included an untracked header %s",
-            prettyPrintFileName(inputPath, false), prettyPrintFileName(header, true));
+            "%s: included an untracked header: %n%s",
+            prettyPrintFileName(inputPath, false), prettyPrintFileName(header, false));
     return errorMessage;
   }
 

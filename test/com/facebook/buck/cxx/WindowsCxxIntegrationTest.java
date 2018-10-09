@@ -158,7 +158,9 @@ public class WindowsCxxIntegrationTest {
     Assert.assertThat(
         result.getStderr(),
         Matchers.containsString(
-            "header_check\\untracked_header.cpp: included an untracked header \"header_check\\untracked_header.h\""));
+            String.format(
+                "header_check\\untracked_header.cpp: included an untracked header: %n"
+                    + "header_check\\untracked_header.h")));
   }
 
   @Test
@@ -175,8 +177,10 @@ public class WindowsCxxIntegrationTest {
     Assert.assertThat(
         result.getStderr(),
         Matchers.containsString(
-            "header_check\\nested_untracked_header.cpp: included an untracked header \"header_check\\untracked_header.h\", which is included by:\n"
-                + "\t\"header_check\\untracked_header_includer.h\", which is included by:\n"
-                + "\t\"header_check\\parent_header.h\""));
+            String.format(
+                "header_check\\nested_untracked_header.cpp: included an untracked header: %n"
+                    + "header_check\\untracked_header.h, which is included by: %n"
+                    + "header_check\\untracked_header_includer.h, which is included by: %n"
+                    + "header_check\\parent_header.h")));
   }
 }

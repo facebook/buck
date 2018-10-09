@@ -63,8 +63,10 @@ class Depfiles {
   private static final String ESCAPED_TARGET_CHARS = ": #";
   private static final String ESCAPED_PREREQ_CHARS = " #";
   private static final String UNTRACKED_HEADER_ERROR_TIPS =
-      "Untracked headers detected. Please reference these headers \n"
-          + "from \"headers\", \"exported_headers\" or \"raw_headers\" \n"
+      "Untracked headers detected. Please reference these headers "
+          + System.lineSeparator()
+          + "from \"headers\", \"exported_headers\" or \"raw_headers\" "
+          + System.lineSeparator()
           + "in the appropriate build rule.";
 
   /**
@@ -319,8 +321,9 @@ class Depfiles {
     if (!errors.isEmpty()) {
       String errorMessage =
           String.format(
-              "%s\n\n%s",
-              errors.stream().collect(Collectors.joining("\n")), UNTRACKED_HEADER_ERROR_TIPS);
+              "%s%n%n%s",
+              errors.stream().collect(Collectors.joining(System.lineSeparator())),
+              UNTRACKED_HEADER_ERROR_TIPS);
       eventBus.post(
           ConsoleEvent.create(
               headerVerification.getMode() == HeaderVerification.Mode.ERROR

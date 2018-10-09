@@ -576,7 +576,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
     assertThat(
         result.getStderr(),
         containsString(
-            "untracked_header.cpp: included an untracked header \"untracked_header.h\""));
+            String.format(
+                "untracked_header.cpp: included an untracked header: %n" + "untracked_header.h")));
   }
 
   @Test
@@ -593,11 +594,15 @@ public class CxxPreprocessAndCompileIntegrationTest {
     assertThat(
         result.getStderr(),
         containsString(
-            "two_untracked_headers.cpp: included an untracked header \"untracked_header.h\""));
+            String.format(
+                "two_untracked_headers.cpp: included an untracked header: %n"
+                    + "untracked_header.h")));
     assertThat(
         result.getStderr(),
         containsString(
-            "two_untracked_headers.cpp: included an untracked header \"untracked_header_2.h\""));
+            String.format(
+                "two_untracked_headers.cpp: included an untracked header: %n"
+                    + "untracked_header_2.h")));
   }
 
   @Test
