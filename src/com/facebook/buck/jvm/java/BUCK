@@ -361,7 +361,6 @@ java_library_with_plugins(
         "FatJar.java",
         "FatJarMain.java",
         "//src/com/facebook/buck/util/liteinfersupport:Nullable.java",
-        "//src/com/facebook/buck/util/liteinfersupport:Preconditions.java",
     ],
     tests = [
         "//test/com/facebook/buck/jvm/java:integration-slow",
