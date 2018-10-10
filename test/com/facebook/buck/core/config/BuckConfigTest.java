@@ -209,6 +209,15 @@ public class BuckConfigTest {
   }
 
   @Test
+  public void testBuildThreadsRatioGreaterThanOne() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "2")))
+            .build();
+    assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(20));
+  }
+
+  @Test
   public void testBuildThreadsRatioGreaterThanZero() {
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
@@ -274,6 +283,20 @@ public class BuckConfigTest {
                     "build",
                     ImmutableMap.of(
                         "thread_core_ratio", "1",
+                        "thread_core_ratio_reserved_cores", "2")))
+            .build();
+    assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(8));
+  }
+
+  @Test
+  public void testBuildThreadsRatioGreaterThanOneWithReservedCores() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "build",
+                    ImmutableMap.of(
+                        "thread_core_ratio", "2",
                         "thread_core_ratio_reserved_cores", "2")))
             .build();
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(8));

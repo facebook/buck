@@ -607,15 +607,17 @@ public class BuckConfig {
 
     int scaledValue = (int) Math.ceil(ratio * detectedProcessorCount);
 
-    int threadLimit = detectedProcessorCount;
+
 
     Optional<Long> reservedCores = getNumberOfReservedCores();
     if (reservedCores.isPresent()) {
-      threadLimit -= reservedCores.get();
-    }
+      int threadLimit = detectedProcessorCount;
 
-    if (scaledValue > threadLimit) {
-      scaledValue = threadLimit;
+      threadLimit -= reservedCores.get();
+
+      if (scaledValue > threadLimit) {
+        scaledValue = threadLimit;
+      }
     }
 
     Optional<Long> minThreads = getThreadCoreRatioMinThreads();
@@ -630,11 +632,6 @@ public class BuckConfig {
       if (minThreads.isPresent() && minThreads.get() > maxThreadsValue) {
         throw new HumanReadableException(
             "thread_core_ratio_max_cores must be larger than thread_core_ratio_min_cores");
-      }
-
-      if (maxThreadsValue > threadLimit) {
-        throw new HumanReadableException(
-            "thread_core_ratio_max_cores is larger than thread_core_ratio_reserved_cores allows");
       }
 
       scaledValue = Math.min(scaledValue, (int) maxThreadsValue);
