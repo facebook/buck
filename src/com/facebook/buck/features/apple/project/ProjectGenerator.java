@@ -1498,21 +1498,28 @@ public class ProjectGenerator {
 
         // If the $(CONTENTS_FOLDER_PATH:file:identifier) expands to this, we add the deep bundle
         // path into the bundle loader. See above for the case when it will expand to this value.
-        String bundleLoaderOutputPathDeepSetting =
-            "BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_Contents";
-        String bundleLoaderOutputPathDeepValue = "Contents/MacOS/";
-
-        String bundleLoaderOutputPathValue =
+        extraSettingsBuilder.put(
+            "BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_Contents",
             Joiner.on('/')
                 .join(
                     getTargetOutputPath(bundleLoader),
                     bundleLoaderBundleName,
-                    bundleLoaderOutputPathConditional,
-                    bundleLoaderProductName);
+                    "Contents/MacOS",
+                    bundleLoaderProductName));
+
+        extraSettingsBuilder.put(
+            "BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_"
+                + getProductName(bundle.get())
+                + "_"
+                + getExtensionString(bundle.get().getConstructorArg().getExtension()),
+            Joiner.on('/')
+                .join(
+                    getTargetOutputPath(bundleLoader),
+                    bundleLoaderBundleName,
+                    bundleLoaderProductName));
 
         extraSettingsBuilder
-            .put(bundleLoaderOutputPathDeepSetting, bundleLoaderOutputPathDeepValue)
-            .put("BUNDLE_LOADER", bundleLoaderOutputPathValue)
+            .put("BUNDLE_LOADER", bundleLoaderOutputPathConditional)
             .put("TEST_HOST", "$(BUNDLE_LOADER)");
 
         addPBXTargetDependency(target, bundleLoader.getBuildTarget());
