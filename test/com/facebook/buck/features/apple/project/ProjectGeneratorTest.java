@@ -148,6 +148,7 @@ import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -3077,15 +3078,15 @@ public class ProjectGeneratorTest {
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
 
     assertEquals(
-        "-Wno-deprecated -Wno-conversion -ffoo -fbar "
+        "$(inherited) "
             + "-Wno-deprecated -Wno-conversion -ffoo -fbar",
         settings.get("OTHER_CFLAGS"));
     assertEquals(
-        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar "
+        "$(inherited) "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
     assertEquals(
-        "-fatal_warnings -ObjC -lbaz -fatal_warnings -ObjC -lbaz", settings.get("OTHER_LDFLAGS"));
+        "$(inherited) -fatal_warnings -ObjC -lbaz", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -3135,25 +3136,21 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings =
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
 
+    assertEquals("$(inherited) -Wno-deprecated -Wno-conversion", settings.get("OTHER_CFLAGS"));
     assertEquals(
-        "-Wno-deprecated -Wno-conversion -Wno-deprecated -Wno-conversion",
-        settings.get("OTHER_CFLAGS"));
-    assertEquals(
-        "-Wundeclared-selector -Wno-objc-designated-initializers "
-            + "-Wundeclared-selector -Wno-objc-designated-initializers",
+        "$(inherited) " + "-Wundeclared-selector -Wno-objc-designated-initializers",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
-    assertEquals("-fatal_warnings -ObjC -fatal_warnings -ObjC", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -fatal_warnings -ObjC", settings.get("OTHER_LDFLAGS"));
 
     assertEquals(
-        "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone "
-            + "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
+        "$(inherited) " + "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone "
+        "$(inherited) "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "-fatal_warnings -ObjC -lbaz-iphone -fatal_warnings -ObjC -lbaz-iphone",
+        "$(inherited) -fatal_warnings -ObjC -lbaz-iphone",
         settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
   }
 
@@ -3176,7 +3173,7 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings =
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
     assertEquals(
-        "-Wno-deprecated -Wno-conversion -DHELLO -Wno-deprecated -Wno-conversion -DHELLO",
+        "$(inherited) -Wno-deprecated -Wno-conversion -DHELLO",
         settings.get("OTHER_CFLAGS"));
   }
 
@@ -3254,10 +3251,10 @@ public class ProjectGeneratorTest {
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
 
     assertEquals(
-        "-Wno-deprecated -Wno-conversion -fbar-iphone -Wno-deprecated -Wno-conversion -fbar-iphone",
+        "$(inherited) -Wno-deprecated -Wno-conversion -fbar-iphone",
         settings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone "
+        "$(inherited) "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(null, settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
@@ -3270,11 +3267,11 @@ public class ProjectGeneratorTest {
             projectFilesystem, dependentBuildTarget, dependentTarget, "Debug");
 
     assertEquals(
-        "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone "
+        "$(inherited) "
             + "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone "
+        "$(inherited) "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(null, dependentSettings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
@@ -5222,12 +5219,11 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> profileSettings =
         ProjectGeneratorTestUtils.getBuildSettings(
             projectFilesystem, buildTarget, target, "Profile");
-    assertThat(debugSettings, Matchers.equalTo(profileSettings));
 
     ImmutableMap<String, String> releaseSettings =
         ProjectGeneratorTestUtils.getBuildSettings(
             projectFilesystem, buildTarget, target, "Release");
-    assertThat(debugSettings, Matchers.equalTo(releaseSettings));
+    assertThat(profileSettings, Matchers.equalTo(releaseSettings));
   }
 
   @Test
@@ -6596,12 +6592,19 @@ public class ProjectGeneratorTest {
   private void assertHasConfigurations(PBXTarget target, String... names) {
     Map<String, XCBuildConfiguration> buildConfigurationMap =
         target.getBuildConfigurationList().getBuildConfigurationsByName().asMap();
+    HashSet<String> configs = new HashSet<String>();
+    configs.add(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
+    configs.add(CxxPlatformXcodeConfigGenerator.PROFILE_BUILD_CONFIGURATION_NAME);
+    configs.add(CxxPlatformXcodeConfigGenerator.RELEASE_BUILD_CONFIGURATION_NAME);
+    for (String config : names) {
+      configs.add(config);
+    }
     assertEquals(
         "Configuration list has expected number of entries",
-        names.length,
+        configs.size(),
         buildConfigurationMap.size());
 
-    for (String name : names) {
+    for (String name : configs) {
       XCBuildConfiguration configuration = buildConfigurationMap.get(name);
 
       assertNotNull("Configuration entry exists", configuration);
