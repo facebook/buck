@@ -328,6 +328,7 @@ public class CleanCommandTest {
         executableFinder,
         pluginManager,
         TestBuckModuleManagerFactory.create(pluginManager),
-        Main.getForkJoinPoolSupplier(buckConfig));
+        Main.getForkJoinPoolSupplier(buckConfig),
+        Optional.empty());
   }
 }

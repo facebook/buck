@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.factory.RemoteExecutionClientsFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
@@ -53,7 +54,8 @@ public class ModernBuildRuleBuilderFactory {
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
       Console console,
-      ExecutorService remoteExecutorService) {
+      ExecutorService remoteExecutorService,
+      Optional<TraceInfoProvider> traceInfoProvider) {
     try {
       RemoteExecutionClientsFactory remoteExecutionFactory =
           new RemoteExecutionClientsFactory(remoteExecutionConfig);
@@ -86,7 +88,7 @@ public class ModernBuildRuleBuilderFactory {
                   remoteExecutionConfig.useWorkerThreadPool()
                       ? Optional.of(remoteExecutorService)
                       : Optional.empty(),
-                  remoteExecutionFactory.create(eventBus),
+                  remoteExecutionFactory.create(eventBus, traceInfoProvider),
                   new SourcePathRuleFinder(resolver),
                   cellResolver,
                   rootCell,

@@ -17,6 +17,7 @@
 package com.facebook.buck.remoteexecution.grpc;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
@@ -73,7 +74,7 @@ public class GrpcExecutionFactory {
       int executionEnginePort,
       String casHost,
       int casPort,
-      Optional<String> traceID,
+      Optional<TraceInfoProvider> traceInfoProvider,
       BuckEventBus buckEventBus)
       throws IOException {
     ManagedChannel executionEngineChannel =
@@ -89,6 +90,6 @@ public class GrpcExecutionFactory {
             .build();
 
     return new GrpcRemoteExecutionClients(
-        "buck", executionEngineChannel, casChannel, traceID, buckEventBus);
+        "buck", executionEngineChannel, casChannel, traceInfoProvider, buckEventBus);
   }
 }

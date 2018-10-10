@@ -26,6 +26,7 @@ import build.bazel.remote.execution.v2.ExecutionGrpc;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.ContentAddressedStorage;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
@@ -80,7 +81,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       String instanceName,
       ManagedChannel executionEngineChannel,
       ManagedChannel casChannel,
-      Optional<String> traceID,
+      Optional<TraceInfoProvider> traceInfoProvider,
       BuckEventBus buckEventBus) {
     this.executionEngineChannel = executionEngineChannel;
     this.casChannel = casChannel;
@@ -94,9 +95,11 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
             PROTOCOL,
             buckEventBus);
     ExecutionStub executionStub = ExecutionGrpc.newStub(executionEngineChannel);
-    if (traceID.isPresent()) {
+    if (traceInfoProvider.isPresent()) {
       Metadata headers = new Metadata();
-      headers.put(Metadata.Key.of("trace-id", Metadata.ASCII_STRING_MARSHALLER), traceID.get());
+      headers.put(
+          Metadata.Key.of("trace-id", Metadata.ASCII_STRING_MARSHALLER),
+          traceInfoProvider.get().getTraceId());
       executionStub = MetadataUtils.attachHeaders(executionStub, headers);
     }
     this.executionService =

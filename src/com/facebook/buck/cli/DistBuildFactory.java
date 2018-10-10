@@ -228,6 +228,7 @@ public abstract class DistBuildFactory {
             .setHealthCheckStatsTracker(healthCheckStatsTracker)
             .setRuleKeyCacheScope(ruleKeyCacheScope)
             .setRemoteCommand(state.getRemoteState().getCommand())
+            .setTraceInfoProvider(params.getTraceInfoProvider())
             .build());
   }
 }

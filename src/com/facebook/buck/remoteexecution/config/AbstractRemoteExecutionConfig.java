@@ -112,10 +112,6 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     return specifiedType.get();
   }
 
-  public Optional<String> getTraceID() {
-    return getValueWithFallback("trace_id");
-  }
-
   public Optional<String> getValueWithFallback(String key) {
     Optional<String> value = getDelegate().getValue(SECTION, key);
     if (value.isPresent()) {

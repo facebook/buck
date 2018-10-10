@@ -1427,7 +1427,8 @@ public class BuildCommand extends AbstractCommand {
             ruleKeyCacheScope,
             getBuildEngineMode(),
             ruleKeyLogger,
-            remoteBuildRuleCompletionWaiter);
+            remoteBuildRuleCompletionWaiter,
+            params.getTraceInfoProvider());
     localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
     builder.shutdown();
   }
@@ -1459,7 +1460,8 @@ public class BuildCommand extends AbstractCommand {
             ruleKeyCacheScope,
             getBuildEngineMode(),
             ruleKeyLogger,
-            remoteBuildRuleCompletionWaiter);
+            remoteBuildRuleCompletionWaiter,
+            params.getTraceInfoProvider());
     buildReference.set(builder.getBuild());
     // TODO(alisdair): ensure that all Stampede local builds re-use same calculator
     localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());

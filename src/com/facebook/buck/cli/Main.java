@@ -104,6 +104,7 @@ import com.facebook.buck.log.ConsoleHandlerState;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
+import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DaemonicParserState;
@@ -1088,6 +1089,7 @@ public final class Main {
                       .getEventListeners(executors, scheduledExecutorPool.get())
                   : ImmutableList.of();
 
+          Optional<TraceInfoProvider> traceInfoProvider = Optional.empty();
           if (isRemoteExecutionBuild(command, buckConfig)) {
             List<BuckEventListener> remoteExecutionsListeners = Lists.newArrayList();
             if (remoteExecutionListener.isPresent()) {
@@ -1283,7 +1285,8 @@ public final class Main {
                         executableFinder,
                         pluginManager,
                         moduleManager,
-                        forkJoinPoolSupplier));
+                        forkJoinPoolSupplier,
+                        traceInfoProvider));
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
             throw e;
