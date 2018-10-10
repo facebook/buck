@@ -36,24 +36,17 @@ import java.util.regex.Pattern;
 /** Cross-cell navigation helper. */
 public class BuckCellFinder extends AbstractProjectComponent {
   public static BuckCellFinder getInstance(Project project) {
-    return new BuckCellFinder(project);
+    return project.getComponent(BuckCellFinder.class);
   }
 
   private BuckProjectSettingsProvider projectSettingsProvider;
   private Function<String, String> pathMacroExpander;
 
-  public BuckCellFinder(Project project) {
-    this(
-        project,
-        BuckProjectSettingsProvider.getInstance(project),
-        new Function<String, String>() {
-          final PathMacroManager manager = PathMacroManager.getInstance(project);
-
-          @Override
-          public String apply(String s) {
-            return manager.expandPath(s);
-          }
-        });
+  public BuckCellFinder(
+      Project project,
+      BuckProjectSettingsProvider buckProjectSettingsProvider,
+      PathMacroManager pathMacroManager) {
+    this(project, buckProjectSettingsProvider, pathMacroManager::expandPath);
   }
 
   @VisibleForTesting
