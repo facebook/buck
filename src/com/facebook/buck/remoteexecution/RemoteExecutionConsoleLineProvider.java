@@ -54,7 +54,7 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
     if (showActionsStatsLine) {
       String actionsLine =
           String.format(
-              "RE Actions: Local=%d Remote=[%s]",
+              "[RE] Actions: Local=%d Remote=[%s]",
               getLocallyBuiltRules(statsProvider.getTotalRulesBuilt(), actionsPerState),
               getStatesString(actionsPerState));
       lines.add(actionsLine);
@@ -63,7 +63,7 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
     if (showCasStatsLine) {
       String casLine =
           String.format(
-              "RE CAS: Upl=[Count:%d Size=%s] Dwl=[Count:%d Size=%s]",
+              "[RE] CAS: Upl=[Count:%d Size=%s] Dwl=[Count:%d Size=%s]",
               statsProvider.getCasUploads(),
               prettyPrintSize(statsProvider.getCasUploadSizeBytes()),
               statsProvider.getCasDownloads(),
