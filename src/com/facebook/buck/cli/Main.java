@@ -188,6 +188,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -225,6 +226,7 @@ import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -1086,6 +1088,20 @@ public final class Main {
                       .getEventListeners(executors, scheduledExecutorPool.get())
                   : ImmutableList.of();
 
+          if (isRemoteExecutionBuild(command, buckConfig)) {
+            List<BuckEventListener> remoteExecutionsListeners = Lists.newArrayList();
+            if (remoteExecutionListener.isPresent()) {
+              remoteExecutionsListeners.add(remoteExecutionListener.get());
+            }
+
+
+            commandEventListeners =
+                new ImmutableList.Builder<BuckEventListener>()
+                    .addAll(commandEventListeners)
+                    .addAll(remoteExecutionsListeners)
+                    .build();
+          }
+
           eventListeners =
               addEventListeners(
                   buildEventBus,
@@ -1098,8 +1114,7 @@ public final class Main {
                   consoleListener,
                   counterRegistry,
                   commandEventListeners,
-                  managerScope,
-                  remoteExecutionListener);
+                  managerScope);
 
           if (buckConfig.isBuckConfigLocalWarningEnabled() && !console.getVerbosity().isSilent()) {
             ImmutableList<Path> localConfigFiles =
@@ -1311,6 +1326,14 @@ public final class Main {
       }
     }
     return exitCode;
+  }
+
+  private boolean isRemoteExecutionBuild(BuckCommand command, BuckConfig config) {
+    ModernBuildRuleBuildStrategy strategy =
+        config.getView(ModernBuildRuleConfig.class).getBuildStrategy();
+    return command.getSubcommand().isPresent()
+        && command.getSubcommand().get() instanceof BuildCommand
+        && strategy == ModernBuildRuleBuildStrategy.REMOTE;
   }
 
   @Nonnull
@@ -1787,8 +1810,7 @@ public final class Main {
       AbstractConsoleEventBusListener consoleEventBusListener,
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners,
-      TaskManagerScope managerScope,
-      Optional<RemoteExecutionEventListener> remoteExecutionListener) {
+      TaskManagerScope managerScope) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(consoleEventBusListener)
@@ -1875,10 +1897,6 @@ public final class Main {
               invocationInfo, projectFilesystem, buckConfig.getCriticalPathCount(), managerScope));
     }
     eventListenersBuilder.addAll(commandSpecificEventListeners);
-
-    if (remoteExecutionListener.isPresent()) {
-      eventListenersBuilder.add(remoteExecutionListener.get());
-    }
 
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
     eventListeners.forEach(buckEventBus::register);

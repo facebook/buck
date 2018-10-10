@@ -184,13 +184,14 @@ public final class RemoteExecution implements IsolatedExecution {
     Digest actionDigest;
 
     try (Scope ignored =
-        RemoteExecutionActionEvent.sendEvent(eventBus, State.DELETING_STALE_OUTPUTS)) {
+        RemoteExecutionActionEvent.sendEvent(eventBus, State.DELETING_STALE_OUTPUTS, buildTarget)) {
       for (Path path : outputs) {
         MostFiles.deleteRecursivelyIfExists(cellPrefixRoot.resolve(path));
       }
     }
 
-    try (Scope ignored = RemoteExecutionActionEvent.sendEvent(eventBus, State.COMPUTING_ACTION)) {
+    try (Scope ignored =
+        RemoteExecutionActionEvent.sendEvent(eventBus, State.COMPUTING_ACTION, buildTarget)) {
       ImmutableList<Path> isolatedClasspath =
           processClasspath(inputsBuilder, cellPrefixRoot, classPath);
       ImmutableList<Path> isolatedBootstrapClasspath =
@@ -228,22 +229,25 @@ public final class RemoteExecution implements IsolatedExecution {
       requiredDataBuilder.put(actionDigest, () -> new ByteArrayInputStream(actionData));
     }
 
-    try (Scope scope = RemoteExecutionActionEvent.sendEvent(eventBus, State.UPLOADING_INPUTS)) {
+    try (Scope scope =
+        RemoteExecutionActionEvent.sendEvent(eventBus, State.UPLOADING_INPUTS, buildTarget)) {
       getStorage().addMissing(ImmutableMap.copyOf(requiredDataBuilder));
     }
 
     ExecutionResult result = null;
-    try (Scope scope = RemoteExecutionActionEvent.sendEvent(eventBus, State.EXECUTING)) {
+    try (Scope scope =
+        RemoteExecutionActionEvent.sendEvent(eventBus, State.EXECUTING, buildTarget)) {
       result = getExecutionService().execute(actionDigest);
     }
 
     if (result.getExitCode() == 0) {
       try (Scope scope =
-          RemoteExecutionActionEvent.sendEvent(eventBus, State.MATERIALIZING_OUTPUTS)) {
+          RemoteExecutionActionEvent.sendEvent(
+              eventBus, State.MATERIALIZING_OUTPUTS, buildTarget)) {
         getStorage()
             .materializeOutputs(
                 result.getOutputDirectories(), result.getOutputFiles(), cellPrefixRoot);
-        RemoteExecutionActionEvent.sendTerminalEvent(eventBus, State.ACTION_SUCCEEDED);
+        RemoteExecutionActionEvent.sendTerminalEvent(eventBus, State.ACTION_SUCCEEDED, buildTarget);
       }
     } else {
       LOG.error(
@@ -251,7 +255,7 @@ public final class RemoteExecution implements IsolatedExecution {
           buildTarget.getFullyQualifiedName(),
           result.getExitCode(),
           result.getStderr().orElse("<empty>"));
-      RemoteExecutionActionEvent.sendTerminalEvent(eventBus, State.ACTION_FAILED);
+      RemoteExecutionActionEvent.sendTerminalEvent(eventBus, State.ACTION_FAILED, buildTarget);
       throw StepFailedException.createForFailingStepWithExitCode(
           new AbstractExecutionStep("remote_execution") {
             @Override

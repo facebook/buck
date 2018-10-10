@@ -16,6 +16,8 @@
 
 package com.facebook.buck.remoteexecution;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.LeafEvent;
@@ -31,6 +33,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class RemoteExecutionActionEventTest {
+  private final BuildTarget BUILD_TARGET = BuildTargetFactory.newInstance("//test:test");
+
   private BuckEventBus eventBus;
   private List<RemoteExecutionActionEvent> remoteExecutionActionEvents;
   private List<LeafEvent> leafEvents;
@@ -55,7 +59,7 @@ public class RemoteExecutionActionEventTest {
       if (RemoteExecutionActionEvent.isTerminalState(state)) {
         continue;
       }
-      try (Scope scope = RemoteExecutionActionEvent.sendEvent(eventBus, state)) {
+      try (Scope scope = RemoteExecutionActionEvent.sendEvent(eventBus, state, BUILD_TARGET)) {
         Assert.assertEquals(totalEvents + 1, leafEvents.size());
         totalEvents += 2;
       }
@@ -64,7 +68,7 @@ public class RemoteExecutionActionEventTest {
 
   @Test
   public void testNotClosingScopeDoesNotSendFinishedEvent() {
-    RemoteExecutionActionEvent.sendEvent(eventBus, State.COMPUTING_ACTION);
+    RemoteExecutionActionEvent.sendEvent(eventBus, State.COMPUTING_ACTION, BUILD_TARGET);
     Assert.assertEquals(1, remoteExecutionActionEvents.size());
   }
 

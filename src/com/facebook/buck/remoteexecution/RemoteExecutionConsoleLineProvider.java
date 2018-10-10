@@ -97,7 +97,7 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
     return Joiner.on(" ").join(states);
   }
 
-  private static String prettyPrintSize(long sizeBytes) {
+  public static String prettyPrintSize(long sizeBytes) {
     return SizeUnit.toHumanReadableString(
         SizeUnit.getHumanReadableSize(sizeBytes, SizeUnit.BYTES), Locale.getDefault());
   }
