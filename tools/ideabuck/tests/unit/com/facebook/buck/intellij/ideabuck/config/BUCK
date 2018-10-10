@@ -7,6 +7,7 @@ java_test(
     deps = [
         "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
+        "//third-party/java/guava:guava-testlib",
         "//third-party/java/intellij:intellij-plugin-sdk",
         "//third-party/java/junit:junit",
         "//tools/ideabuck:ideabuck-lib",
