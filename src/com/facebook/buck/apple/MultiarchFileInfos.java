@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -152,32 +153,40 @@ public class MultiarchFileInfos {
       return existingRule.get();
     }
 
-    for (BuildRule rule : thinRules) {
-      if (rule.getSourcePathToOutput() == null) {
-        throw new HumanReadableException("%s: no output so it cannot be a multiarch input", rule);
-      }
-    }
-
+    // Thin rules filtered to remove those with null output
     ImmutableSortedSet<SourcePath> inputs =
         FluentIterable.from(thinRules)
             .transform(BuildRule::getSourcePathToOutput)
+            .filter(SourcePath.class)
             .toSortedSet(Ordering.natural());
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    String multiarchOutputPathFormat = getMultiarchOutputFormatString(pathResolver, inputs);
+    // If any thin rule exists with output, use `MultiarchFile` to generate binary. Otherwise,
+    // use a `NoopBuildRule` to handle inputs like those without any sources.
+    if (!inputs.isEmpty()) {
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      String multiarchOutputPathFormat = getMultiarchOutputFormatString(pathResolver, inputs);
 
-    MultiarchFile multiarchFile =
-        new MultiarchFile(
-            buildTarget,
-            projectFilesystem,
-            params.withoutDeclaredDeps().withExtraDeps(thinRules),
-            ruleFinder,
-            info.getRepresentativePlatform().getLipo(),
-            inputs,
-            BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, multiarchOutputPathFormat));
-    graphBuilder.addToIndex(multiarchFile);
-    return multiarchFile;
+      MultiarchFile multiarchFile =
+          new MultiarchFile(
+              buildTarget,
+              projectFilesystem,
+              params.withoutDeclaredDeps().withExtraDeps(thinRules),
+              ruleFinder,
+              info.getRepresentativePlatform().getLipo(),
+              inputs,
+              BuildTargetPaths.getGenPath(
+                  projectFilesystem, buildTarget, multiarchOutputPathFormat));
+      graphBuilder.addToIndex(multiarchFile);
+      return multiarchFile;
+    } else {
+      return new NoopBuildRule(buildTarget, projectFilesystem) {
+        @Override
+        public SortedSet<BuildRule> getBuildDeps() {
+          return ImmutableSortedSet.of();
+        }
+      };
+    }
   }
 
   private static final String BASE_OUTPUT_FORMAT_STRING = "%s";

@@ -202,6 +202,17 @@ public class FakeAppleRuleDescriptions {
           new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
           FAKE_XCODE_BUILD_VERSION_CACHE);
 
+  public static final AppleCxxPlatform DEFAULT_WATCHOS_ARM6432_PLATFORM =
+      AppleCxxPlatforms.buildWithXcodeToolFinder(
+          FAKE_PROJECT_FILESYSTEM,
+          DEFAULT_WATCHOS_SDK,
+          "2.0",
+          "arm64_32",
+          DEFAULT_IPHONEOS_SDK_PATHS,
+          DEFAULT_BUCK_CONFIG,
+          new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
+          FAKE_XCODE_BUILD_VERSION_CACHE);
+
   public static final AppleCxxPlatform DEFAULT_MACOSX_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithXcodeToolFinder(
           FAKE_PROJECT_FILESYSTEM,
@@ -231,7 +242,8 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_IPHONEOS_I386_PLATFORM,
           DEFAULT_IPHONEOS_X86_64_PLATFORM,
           DEFAULT_MACOSX_X86_64_PLATFORM,
-          DEFAULT_WATCHOS_ARMV7K_PLATFORM);
+          DEFAULT_WATCHOS_ARMV7K_PLATFORM,
+          DEFAULT_WATCHOS_ARM6432_PLATFORM);
 
   public static final FlavorDomain<SwiftPlatform> DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN =
       new FlavorDomain<>(
