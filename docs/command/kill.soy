@@ -1,0 +1,38 @@
+{namespace buck.kill}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck kill' /}
+    {param navid: 'command_kill' /}
+    {param description}
+      Kill the Buck Daemon (buckd) for the current project.
+    {/param}
+    {param content}
+
+      {call buck.command}
+
+      {param overview}
+
+        <p>
+          Kill the 
+          {sp}{call buck.concept_link}{param page: 'buckd' /}{param name: 'Buck Daemon (<code>buckd</code>)' /}{/call}{sp}
+          for the current project.
+          To kill all the Buck Daemon processes running on the host computer, 
+          use <code>buck killall</code>.
+        </p>
+
+        <p>
+          For an explanation of Buck's concept of a <em>project</em>, see the 
+          the {call buck.key_concepts_link}{param rendered_text: 'Key Concepts' /}{/call} topic.
+        </p>
+
+      {/param} // overview
+
+      {/call} // buck.command
+
+    {/param}  // content
+
+  {/call} // buck.page
+
+{/template}

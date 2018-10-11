@@ -702,7 +702,7 @@ docsearch({
  * @param? navid
  */
 {template .concept_link}
-<a href="{ROOT}concept/{$page}.html{if isNonnull($navid)}#{$navid}{/if}">{$name}</a>
+<a href="{ROOT}concept/{$page}.html{if isNonnull($navid)}#{$navid}{/if}">{$name|noAutoescape}</a>
 {/template}
 
 /**
@@ -801,6 +801,11 @@ docsearch({
 /***/
 {template .cmd_install}
 {call .cmd_link}{param name : 'install' /}{/call}
+{/template}
+
+/***/
+{template .cmd_kill}
+{call .cmd_link}{param name : 'kill' /}{/call}
 {/template}
 
 /***/
