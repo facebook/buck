@@ -143,7 +143,7 @@ public class CxxPreprocessables {
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
       Iterable<? extends BuildRule> inputs) {
-    return getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, inputs, x -> true);
+    return getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, inputs, x -> false);
   }
 
   /**

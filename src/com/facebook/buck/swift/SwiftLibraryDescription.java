@@ -260,7 +260,7 @@ public class SwiftLibraryDescription
       CxxPreprocessorInput inputs =
           CxxPreprocessorInput.concat(
               CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                  cxxPlatform, graphBuilder, params.getBuildDeps()));
+                  cxxPlatform, graphBuilder, params.getBuildDeps(), x -> true));
       PreprocessorFlags cxxDeps =
           PreprocessorFlags.of(
               Optional.empty(),
