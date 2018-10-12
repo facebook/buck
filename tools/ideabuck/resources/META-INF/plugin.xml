@@ -351,5 +351,14 @@
       <implementation-class>com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider
       </implementation-class>
     </component>
+
+    <!--
+      Components in the package com.facebook.buck.intellij.ideabuck.api have
+      stable APIs that are intended for use by other plugins.
+     -->
+    <component>
+      <interface-class>com.facebook.buck.intellij.ideabuck.api.BuckCellManager</interface-class>
+      <implementation-class>com.facebook.buck.intellij.ideabuck.impl.BuckCellManagerImpl</implementation-class>
+    </component>
   </project-components>
 </idea-plugin>
