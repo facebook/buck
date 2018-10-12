@@ -18,6 +18,18 @@ cxx_binary(
     ],
 )
 
+cxx_binary(
+    name = "nested_untracked_header_with_cycle",
+    srcs = [
+        "nested_untracked_header_with_cycle.cpp",
+    ],
+    link_style = "static",
+    raw_headers = [
+        "parent_header.h",
+        "untracked_header_includer.h",
+    ],
+)
+
 genrule(
     name = "log",
     out = "log.txt",

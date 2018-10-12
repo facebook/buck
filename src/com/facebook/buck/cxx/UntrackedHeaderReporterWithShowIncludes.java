@@ -17,11 +17,11 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
@@ -60,19 +60,20 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
     this.treeParents = null;
   }
 
-  private ListMultimap<Path, Path> parseDepFile() throws IOException {
+  private List<Path> getPathToUntrackedHeader(Path header) throws IOException {
     // An intermediate depfile in `show_include` mode contains a source file + used headers
     // (see CxxPreprocessAndCompileStep for details).
     // So, we "strip" the the source file first.
     List<String> srcAndIncludes = filesystem.readLines(sourceDepFile);
     List<String> includes = srcAndIncludes.subList(1, srcAndIncludes.size());
-    return parseIncludeLines(includes);
+    return getPathToUntrackedHeader(includes, header);
   }
 
-  /** @return a multimap mapping each header to the headers that include it, i.e. its parents. */
-  private ListMultimap<Path, Path> parseIncludeLines(List<String> includeLines) {
+  /**
+   * @return a list of headers that represents a chain of includes ending in a particular header.
+   */
+  private List<Path> getPathToUntrackedHeader(List<String> includeLines, Path header) {
     // We parse the tree structure linearly by maintaining a stack of the current active parents.
-    ListMultimap<Path, Path> parents = ArrayListMultimap.create();
     Stack<Path> active_parents = new Stack<Path>();
     for (String line : includeLines) {
       int currentDeepLevel = countCharAtTheBeginning(line, ' ') - 1;
@@ -89,19 +90,18 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
               .getAbsolutePathForUnnormalizedPath(currentHeader)
               .orElse(currentHeader);
       active_parents.push(currentHeader);
-      // If this is not a root node we save its current parent
-      if (currentDeepLevel > 0) {
-        parents.put(currentHeader, active_parents.elementAt(currentDeepLevel - 1));
+      if (currentHeader.equals(header)) {
+        return Lists.reverse(active_parents);
       }
     }
-    return parents;
+    return Collections.singletonList(header);
   }
 
   @Override
   public String getErrorReport(Path header) throws IOException {
     Path absolutePath =
         headerPathNormalizer.getAbsolutePathForUnnormalizedPath(header).orElse(header);
-    List<Path> chain = computeIncludeChain(absolutePath);
+    List<Path> chain = getPathToUntrackedHeader(absolutePath);
     String errorMessage =
         String.format(
             "%s: included an untracked header: %n%s",
@@ -123,25 +123,6 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
         .stream()
         .map((file) -> prettyPrintFileName(file, false))
         .collect(Collectors.joining(CHAIN_SEPARATOR));
-  }
-
-  /**
-   * Function to create a chain of includes ending in an specific header, by making use of the
-   * parsed tree structure.
-   */
-  private List<Path> computeIncludeChain(Path header) throws IOException {
-    if (treeParents == null) {
-      treeParents = parseDepFile();
-    }
-    List<Path> list = new ArrayList<>();
-    list.add(header);
-    // We create the chain by climbing in the tree structure
-    for (Path current = header; treeParents.containsKey(current); ) {
-      Path next = treeParents.get(current).get(0);
-      list.add(next);
-      current = next;
-    }
-    return list;
   }
 
   private static int countCharAtTheBeginning(String str, char c) {
