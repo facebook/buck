@@ -22,7 +22,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
@@ -34,7 +33,7 @@ import java.util.concurrent.ExecutionException;
  *
  * @param <T> The type of node this pipeline will produce (raw nodes, target nodes, etc)
  */
-public interface BuildFileParsePipeline<K, T> extends AutoCloseable {
+public interface BuildFileParsePipeline<T> extends AutoCloseable {
 
   /**
    * Obtain all {@link TargetNode}s from a build file. This may block if the file is not cached.
@@ -44,7 +43,7 @@ public interface BuildFileParsePipeline<K, T> extends AutoCloseable {
    * @return all targets from the file
    * @throws BuildFileParseException for syntax errors.
    */
-  default ImmutableMap<K, T> getAllNodes(Cell cell, Path buildFile) throws BuildFileParseException {
+  default T getAllNodes(Cell cell, Path buildFile) throws BuildFileParseException {
     try {
       return getAllNodesJob(cell, buildFile).get();
     } catch (Exception e) {
@@ -67,6 +66,5 @@ public interface BuildFileParsePipeline<K, T> extends AutoCloseable {
    * @param buildFile absolute path to the file to process.
    * @return future.
    */
-  ListenableFuture<ImmutableMap<K, T>> getAllNodesJob(Cell cell, Path buildFile)
-      throws BuildTargetException;
+  ListenableFuture<T> getAllNodesJob(Cell cell, Path buildFile) throws BuildTargetException;
 }

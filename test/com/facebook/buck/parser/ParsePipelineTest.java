@@ -35,8 +35,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.BuildFileManifestFactory;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
-import com.facebook.buck.parser.api.MetaRules;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -213,7 +214,8 @@ public class ParsePipelineTest {
           .putComputedNodeIfNotPresent(
               cell,
               rootBuildFilePath,
-              ImmutableMap.of("bar", ImmutableMap.of("name", "bar")),
+              BuildFileManifestFactory.create(
+                  ImmutableMap.of("bar", ImmutableMap.of("name", "bar"))),
               eventBus);
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage("malformed raw data");
@@ -228,7 +230,7 @@ public class ParsePipelineTest {
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
       fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
-      Optional<ImmutableMap<String, Map<String, Object>>> rootRawNodes =
+      Optional<BuildFileManifest> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()
               .lookupComputedNode(cell, rootBuildFilePath, eventBus);
@@ -252,7 +254,7 @@ public class ParsePipelineTest {
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
       fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
-      Optional<ImmutableMap<String, Map<String, Object>>> rootRawNodes =
+      Optional<BuildFileManifest> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()
               .lookupComputedNode(cell, rootBuildFilePath, eventBus);
@@ -312,27 +314,6 @@ public class ParsePipelineTest {
     }
   }
 
-  private static class RawNodeParsePipelineCache
-      extends TypedParsePipelineCache<Path, ImmutableMap<String, Map<String, Object>>> {
-
-    @Override
-    public synchronized ImmutableMap<String, Map<String, Object>> putComputedNodeIfNotPresent(
-        Cell cell,
-        Path buildFile,
-        ImmutableMap<String, Map<String, Object>> rawNodes,
-        BuckEventBus eventBus) {
-      return super.putComputedNodeIfNotPresent(
-          cell,
-          buildFile,
-          rawNodes
-              .entrySet()
-              .stream()
-              .filter(node -> !MetaRules.isMetaRuleName(node.getKey()))
-              .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)),
-          eventBus);
-    }
-  }
-
   private Fixture createMultiThreadedFixture(String scenario) throws Exception {
     return new Fixture(
         scenario,
@@ -358,7 +339,7 @@ public class ParsePipelineTest {
     private final ProjectBuildFileParserPool projectBuildFileParserPool;
     private final Cell cell;
     private final TypedParsePipelineCache<BuildTarget, TargetNode<?>> targetNodeParsePipelineCache;
-    private final RawNodeParsePipelineCache rawNodeParsePipelineCache;
+    private final TypedParsePipelineCache<Path, BuildFileManifest> rawNodeParsePipelineCache;
     private final ListeningExecutorService executorService;
     private final Set<CloseRecordingProjectBuildFileParserDecorator> projectBuildFileParsers;
 
@@ -376,7 +357,7 @@ public class ParsePipelineTest {
 
       this.cell = this.workspace.asCell();
       this.targetNodeParsePipelineCache = new TypedParsePipelineCache<>();
-      this.rawNodeParsePipelineCache = new RawNodeParsePipelineCache();
+      this.rawNodeParsePipelineCache = new TypedParsePipelineCache<>();
       TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
       ConstructorArgMarshaller constructorArgMarshaller =
           new ConstructorArgMarshaller(coercerFactory);
@@ -458,7 +439,7 @@ public class ParsePipelineTest {
       return targetNodeParsePipelineCache;
     }
 
-    public RawNodeParsePipelineCache getRawNodeParsePipelineCache() {
+    public TypedParsePipelineCache<Path, BuildFileManifest> getRawNodeParsePipelineCache() {
       return rawNodeParsePipelineCache;
     }
 

@@ -19,28 +19,26 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** A pipeline that provides raw nodes for a given build file. */
-public class BuildFileRawNodeParsePipeline
-    implements BuildFileParsePipeline<String, Map<String, Object>> {
+public class BuildFileRawNodeParsePipeline implements BuildFileParsePipeline<BuildFileManifest> {
 
   private final BuckEventBus eventBus;
-  private final PipelineNodeCache<Path, ImmutableMap<String, Map<String, Object>>> cache;
+  private final PipelineNodeCache<Path, BuildFileManifest> cache;
   private final ListeningExecutorService executorService;
   private final ProjectBuildFileParserPool projectBuildFileParserPool;
   private final Watchman watchman;
   private final AtomicBoolean shuttingDown;
 
   public BuildFileRawNodeParsePipeline(
-      PipelineNodeCache<Path, ImmutableMap<String, Map<String, Object>>> cache,
+      PipelineNodeCache<Path, BuildFileManifest> cache,
       ProjectBuildFileParserPool projectBuildFileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
@@ -54,8 +52,8 @@ public class BuildFileRawNodeParsePipeline
   }
 
   @Override
-  public ListenableFuture<ImmutableMap<String, Map<String, Object>>> getAllNodesJob(
-      Cell cell, Path buildFile) throws BuildTargetException {
+  public ListenableFuture<BuildFileManifest> getAllNodesJob(Cell cell, Path buildFile)
+      throws BuildTargetException {
 
     if (shuttingDown.get()) {
       return Futures.immediateCancelledFuture();
@@ -76,11 +74,8 @@ public class BuildFileRawNodeParsePipeline
                 pathToCheck);
           }
 
-          return Futures.transform(
-              projectBuildFileParserPool.getBuildFileManifest(
-                  eventBus, cell, watchman, buildFile, executorService),
-              buildFileManifest -> buildFileManifest.toRawNodes(),
-              executorService);
+          return projectBuildFileParserPool.getBuildFileManifest(
+              eventBus, cell, watchman, buildFile, executorService);
         },
         eventBus);
   }

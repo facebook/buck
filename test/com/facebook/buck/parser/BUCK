@@ -302,6 +302,7 @@ java_test(
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/io/watchman:testutil",
         "//test/com/facebook/buck/parser:testutil",
+        "//test/com/facebook/buck/parser/api:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/sandbox:testutil",

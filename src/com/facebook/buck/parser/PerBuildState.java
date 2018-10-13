@@ -74,7 +74,7 @@ public class PerBuildState implements AutoCloseable {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
-    return buildFileRawNodeParsePipeline.getAllNodes(cell, buildFile);
+    return buildFileRawNodeParsePipeline.getAllNodes(cell, buildFile).getTargets();
   }
 
   @Override

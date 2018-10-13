@@ -87,7 +87,7 @@ public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object
       Cell cell, Path buildFile) throws BuildTargetException {
     return Futures.transform(
         buildFileRawNodeParsePipeline.getAllNodesJob(cell, buildFile),
-        map -> ImmutableList.copyOf(map.values()));
+        map -> ImmutableList.copyOf(map.getTargets().values()));
   }
 
   @Override

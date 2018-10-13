@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
@@ -92,7 +93,7 @@ class DaemonicCellState {
   private final Map<Path, ImmutableMap<String, Optional<String>>> buildFileEnv;
 
   @GuardedBy("rawAndComputedNodesLock")
-  private final ConcurrentMapCache<Path, ImmutableMap<String, Map<String, Object>>> allRawNodes;
+  private final ConcurrentMapCache<Path, BuildFileManifest> allRawNodes;
   // Tracks all targets in `allRawNodes`.  Used to verify that every target in `allComputedNodes`
   // is also in `allRawNodes`, as we use the latter for bookkeeping invalidations.
   @GuardedBy("rawAndComputedNodesLock")
@@ -148,21 +149,20 @@ class DaemonicCellState {
     }
   }
 
-  Optional<ImmutableMap<String, Map<String, Object>>> lookupRawNodes(Path buildFile) {
+  Optional<BuildFileManifest> lookupRawNodes(Path buildFile) {
     try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
       return Optional.ofNullable(allRawNodes.getIfPresent(buildFile));
     }
   }
 
-  ImmutableMap<String, Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
+  BuildFileManifest putRawNodesIfNotPresentAndStripMetaEntries(
       Path buildFile,
-      ImmutableMap<String, Map<String, Object>> withoutMetaIncludes,
+      BuildFileManifest withoutMetaIncludes,
       ImmutableSet<Path> dependentsOfEveryNode,
       ImmutableMap<String, Optional<String>> env) {
     try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
-      ImmutableMap<String, Map<String, Object>> updated =
-          allRawNodes.putIfAbsentAndGet(buildFile, withoutMetaIncludes);
-      for (Map<String, Object> node : updated.values()) {
+      BuildFileManifest updated = allRawNodes.putIfAbsentAndGet(buildFile, withoutMetaIncludes);
+      for (Map<String, Object> node : updated.getTargets().values()) {
         allRawNodeTargets.add(
             UnflavoredBuildTargetFactory.createFromRawNode(
                 cellRoot, cellCanonicalName, node, buildFile));
@@ -182,8 +182,9 @@ class DaemonicCellState {
   int invalidatePath(Path path) {
     try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
       int invalidatedRawNodes = 0;
-      ImmutableMap<String, Map<String, Object>> rawNodes = allRawNodes.getIfPresent(path);
-      if (rawNodes != null) {
+      BuildFileManifest buildFileManifest = allRawNodes.getIfPresent(path);
+      if (buildFileManifest != null) {
+        ImmutableMap<String, Map<String, Object>> rawNodes = buildFileManifest.getTargets();
         // Increment the counter
         invalidatedRawNodes = rawNodes.size();
         for (Map<String, Object> rawNode : rawNodes.values()) {

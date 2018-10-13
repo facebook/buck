@@ -50,22 +50,4 @@ abstract class AbstractBuildFileManifest {
   /** @return A list of the glob operations performed with their results. */
   @Value.Parameter
   public abstract ImmutableList<GlobSpecWithResult> getGlobManifest();
-
-  /**
-   * Converts targets and their metadata into a single set of raw nodes.
-   *
-   * <p>This is for a temporary solution until all clients switch to using build file manifest.
-   */
-  public ImmutableMap<String, Map<String, Object>> toRawNodes() {
-    ImmutableMap.Builder<String, Map<String, Object>> builder = ImmutableMap.builder();
-
-    builder.putAll(getTargets());
-    builder.put(MetaRules.INCLUDES_NAME, ImmutableMap.of(MetaRules.INCLUDES, getIncludes()));
-    builder.put(MetaRules.CONFIGS_NAME, ImmutableMap.of(MetaRules.CONFIGS, getConfigs()));
-
-    if (getEnv().isPresent()) {
-      builder.put(MetaRules.ENV_NAME, ImmutableMap.of(MetaRules.ENV, getEnv().get()));
-    }
-    return builder.build();
-  }
 }

@@ -15,22 +15,17 @@
  */
 package com.facebook.buck.parser.api;
 
-/**
- * Contains information about meta rules (rules that are created by Buck to pass internal
- * information about parsing process)
- */
-public class MetaRules {
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
+import java.util.Optional;
 
-  /**
-   * Key of the meta-rule that lists the build files executed while reading rules. The value is a
-   * list of strings with the root build file as the head and included build files as the tail, for
-   * example: {"__includes":["/foo/BUCK", "/foo/buck_includes"]}
-   */
-  public static final String INCLUDES = "__includes";
+public class BuildFileManifestFactory {
 
-  public static final String CONFIGS = "__configs";
+  private BuildFileManifestFactory() {}
 
-  public static final String ENV = "__env";
-
-  private MetaRules() {}
+  public static BuildFileManifest create(ImmutableMap<String, Map<String, Object>> targets) {
+    return BuildFileManifest.of(
+        targets, ImmutableList.of(), ImmutableMap.of(), Optional.empty(), ImmutableList.of());
+  }
 }

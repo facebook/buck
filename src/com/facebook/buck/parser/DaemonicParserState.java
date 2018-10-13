@@ -30,7 +30,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
-import com.facebook.buck.parser.api.MetaRules;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -51,7 +51,6 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -155,11 +154,10 @@ public class DaemonicParserState {
   }
 
   /** Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}. */
-  private class DaemonicRawCacheView
-      implements PipelineNodeCache.Cache<Path, ImmutableMap<String, Map<String, Object>>> {
+  private class DaemonicRawCacheView implements PipelineNodeCache.Cache<Path, BuildFileManifest> {
 
     @Override
-    public Optional<ImmutableMap<String, Map<String, Object>>> lookupComputedNode(
+    public Optional<BuildFileManifest> lookupComputedNode(
         Cell cell, Path buildFile, BuckEventBus eventBus) throws BuildTargetException {
       Preconditions.checkState(buildFile.isAbsolute());
       invalidateIfProjectBuildFileParserStateChanged(cell);
@@ -179,16 +177,11 @@ public class DaemonicParserState {
      *
      * @param cell cell
      * @param buildFile build file
-     * @param rawNodes nodes to insert
      * @return previous nodes for the file if the cache contained it, new ones otherwise.
      */
-    @SuppressWarnings({"unchecked", "PMD.EmptyIfStmt"})
     @Override
-    public ImmutableMap<String, Map<String, Object>> putComputedNodeIfNotPresent(
-        Cell cell,
-        Path buildFile,
-        ImmutableMap<String, Map<String, Object>> rawNodes,
-        BuckEventBus eventBus)
+    public BuildFileManifest putComputedNodeIfNotPresent(
+        Cell cell, Path buildFile, BuildFileManifest manifest, BuckEventBus eventBus)
         throws BuildTargetException {
       Preconditions.checkState(buildFile.isAbsolute());
       // Technically this leads to inconsistent state if the state change happens after rawNodes
@@ -198,29 +191,15 @@ public class DaemonicParserState {
       // invalidated mid-way through the parse).
       invalidateIfProjectBuildFileParserStateChanged(cell);
 
-      ImmutableMap.Builder<String, Map<String, Object>> withoutMetaIncludesBuilder =
-          ImmutableMap.builderWithExpectedSize(rawNodes.size());
       ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
-      ImmutableMap<String, Optional<String>> env = ImmutableMap.of();
-      for (Map.Entry<String, Map<String, Object>> rawNodeEntry : rawNodes.entrySet()) {
-        Map<String, Object> rawNode = rawNodeEntry.getValue();
-        if (MetaRules.INCLUDES_NAME.equals(rawNodeEntry.getKey())) {
-          for (String path :
-              Objects.requireNonNull((Iterable<String>) rawNode.get(MetaRules.INCLUDES))) {
-            dependentsOfEveryNode.add(cell.getFilesystem().resolve(path));
-          }
-        } else if (MetaRules.CONFIGS_NAME.equals(rawNodeEntry.getKey())) {
-        } else if (MetaRules.ENV_NAME.equals(rawNodeEntry.getKey())) {
-          env = ((ImmutableMap<String, Optional<String>>) rawNode.get(MetaRules.ENV));
-        } else {
-          withoutMetaIncludesBuilder.put(rawNodeEntry.getKey(), rawNode);
-        }
-      }
-      ImmutableMap<String, Map<String, Object>> withoutMetaIncludes =
-          withoutMetaIncludesBuilder.build();
 
-      // We also know that the rules all depend on the default includes for the
-      // cell.
+      manifest
+          .getIncludes()
+          .forEach(
+              includedPath ->
+                  dependentsOfEveryNode.add(cell.getFilesystem().resolve(includedPath)));
+
+      // We also know that the rules all depend on the default includes for the cell.
       BuckConfig buckConfig = cell.getBuckConfig();
       Iterable<String> defaultIncludes =
           buckConfig.getView(ParserConfig.class).getDefaultIncludes();
@@ -230,7 +209,10 @@ public class DaemonicParserState {
 
       return getOrCreateCellState(cell)
           .putRawNodesIfNotPresentAndStripMetaEntries(
-              buildFile, withoutMetaIncludes, dependentsOfEveryNode.build(), env);
+              buildFile,
+              manifest,
+              dependentsOfEveryNode.build(),
+              manifest.getEnv().orElse(ImmutableMap.of()));
     }
 
     /**
@@ -355,8 +337,7 @@ public class DaemonicParserState {
     }
   }
 
-  public PipelineNodeCache.Cache<Path, ImmutableMap<String, Map<String, Object>>>
-      getRawNodeCache() {
+  public PipelineNodeCache.Cache<Path, BuildFileManifest> getRawNodeCache() {
     return rawNodeCache;
   }
 
