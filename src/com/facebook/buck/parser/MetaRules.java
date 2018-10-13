@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.parser.api;
+package com.facebook.buck.parser;
 
 /**
  * Contains information about meta rules (rules that are created by Buck to pass internal

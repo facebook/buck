@@ -31,7 +31,6 @@ import com.facebook.buck.json.BuildFileParseExceptionStackTraceEntry;
 import com.facebook.buck.json.BuildFilePythonResult;
 import com.facebook.buck.json.BuildFileSyntaxError;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.MetaRules;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
