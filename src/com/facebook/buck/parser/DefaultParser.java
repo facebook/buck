@@ -32,6 +32,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.MoreMaps;
@@ -100,11 +101,10 @@ public class DefaultParser implements Parser {
   }
 
   @VisibleForTesting
-  static ImmutableMap<String, Map<String, Object>> getTargetNodeRawAttributes(
+  static BuildFileManifest getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
     Preconditions.checkState(buildFile.isAbsolute());
-    Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
-    return state.getAllRawNodes(cell, buildFile);
+    return state.getBuildFileManifest(cell, buildFile);
   }
 
   @Override
@@ -146,25 +146,25 @@ public class DefaultParser implements Parser {
   public SortedMap<String, Object> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
     Cell owningCell = cell.getCell(targetNode.getBuildTarget());
-    ImmutableMap<String, Map<String, Object>> allRawNodes =
+    BuildFileManifest buildFileManifest =
         getTargetNodeRawAttributes(
             state, owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
-
     String shortName = targetNode.getBuildTarget().getShortName();
-    for (Map.Entry<String, Map<String, Object>> rawNodeEntry : allRawNodes.entrySet()) {
-      if (shortName.equals(rawNodeEntry.getKey())) {
-        SortedMap<String, Object> toReturn = new TreeMap<>(rawNodeEntry.getValue());
-        toReturn.put(
-            "buck.direct_dependencies",
-            targetNode
-                .getParseDeps()
-                .stream()
-                .map(Object::toString)
-                .collect(ImmutableList.toImmutableList()));
-        return toReturn;
-      }
+
+    if (!buildFileManifest.getTargets().containsKey(shortName)) {
+      return null;
     }
-    return null;
+
+    SortedMap<String, Object> attributes =
+        new TreeMap<>(buildFileManifest.getTargets().get(shortName));
+    attributes.put(
+        "buck.direct_dependencies",
+        targetNode
+            .getParseDeps()
+            .stream()
+            .map(Object::toString)
+            .collect(ImmutableList.toImmutableList()));
+    return attributes;
   }
 
   /**

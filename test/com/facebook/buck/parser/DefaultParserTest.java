@@ -201,7 +201,7 @@ public class DefaultParserTest {
                 enableProfiling,
                 SpeculativeParsing.DISABLED)) {
       return ImmutableList.copyOf(
-          DefaultParser.getTargetNodeRawAttributes(state, cell, buildFile).values());
+          DefaultParser.getTargetNodeRawAttributes(state, cell, buildFile).getTargets().values());
     }
   }
 
