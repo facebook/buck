@@ -30,13 +30,13 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractParseResult {
   /**
-   * Returns a list of map instances where keys represent rule parameters and values represent rule
-   * arguments.
+   * Returns rules organized in a map where a key is a rule name and the value is a map with keys
+   * representing rule parameters and values representing rule arguments.
    *
    * <p>For example {"name": "my_rule", ...}
    */
   @Value.Parameter
-  public abstract ImmutableList<Map<String, Object>> getRawRules();
+  public abstract ImmutableMap<String, Map<String, Object>> getRawRules();
   /**
    * Returns a set of extension paths that were loaded explicitly or transitively when parsing
    * current build file.

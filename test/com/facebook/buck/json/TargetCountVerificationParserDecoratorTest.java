@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -43,7 +42,7 @@ public class TargetCountVerificationParserDecoratorTest {
   private CapturingConsoleEventListener capturingConsoleEventListener;
   private Path path;
   private ProjectBuildFileParser parserMock;
-  private ImmutableList<Map<String, Object>> rawTargets;
+  private ImmutableMap<String, Map<String, Object>> rawTargets;
   private BuckEventBus eventBus;
 
   @Before
@@ -61,14 +60,14 @@ public class TargetCountVerificationParserDecoratorTest {
     retMap1.put("d", "d");
     retMap1.put("e", "e");
 
-    ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
-    list.add(retMap1);
-    list.add(retMap1);
-    list.add(retMap1);
-    list.add(retMap1);
-    list.add(retMap1);
+    String[] names = {"a", "b", "c", "d", "e"};
+    ImmutableMap.Builder<String, Map<String, Object>> builder =
+        ImmutableMap.builderWithExpectedSize(names.length);
+    for (String name : names) {
+      builder.put(name, retMap1);
+    }
 
-    rawTargets = ImmutableList.copyOf(list);
+    rawTargets = builder.build();
   }
 
   private void assertWarningIsEmitted() {
@@ -106,7 +105,8 @@ public class TargetCountVerificationParserDecoratorTest {
     assertWarningIsEmitted();
   }
 
-  private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> rawTargets) {
+  private BuildFileManifest toBuildFileManifest(
+      ImmutableMap<String, Map<String, Object>> rawTargets) {
     return BuildFileManifest.of(
         rawTargets,
         ImmutableSortedSet.of(),

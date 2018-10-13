@@ -17,7 +17,6 @@
 package com.facebook.buck.skylark.parser.context;
 
 import com.facebook.buck.skylark.packages.PackageContext;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -82,8 +81,8 @@ public class ParseContext {
    * @return The list of raw build rules discovered in parsed build file. Raw rule is presented as a
    *     map with attributes as keys and parameters as values.
    */
-  public ImmutableList<ImmutableMap<String, Object>> getRecordedRules() {
-    return ImmutableList.copyOf(rawRules.values());
+  public ImmutableMap<String, ImmutableMap<String, Object>> getRecordedRules() {
+    return ImmutableMap.copyOf(rawRules);
   }
 
   /** @return {@code true} if the rule with provided name exists, {@code false} otherwise. */

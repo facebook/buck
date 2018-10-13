@@ -160,7 +160,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private ParseResult parseBuildFile(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    ImmutableList<Map<String, Object>> rules = ImmutableList.of();
+    ImmutableMap<String, Map<String, Object>> rules = ImmutableMap.of();
     ParseBuckFileEvent.Started startEvent = ParseBuckFileEvent.started(buildFile);
     buckEventBus.post(startEvent);
     ParseResult parseResult;
@@ -207,8 +207,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         throw BuildFileParseException.createForUnknownParseError(
             "Cannot evaluate build file " + buildFile);
       }
-      ImmutableList<ImmutableMap<String, Object>> rules = parseContext.getRecordedRules();
-      LOG.verbose("Got rules: %s", rules);
+      ImmutableMap<String, ImmutableMap<String, Object>> rules = parseContext.getRecordedRules();
+      if (LOG.isVerboseEnabled()) {
+        LOG.verbose("Got rules: %s", rules.values());
+      }
       LOG.verbose("Parsed %d rules from %s", rules.size(), buildFile);
       ImmutableList.Builder<String> loadedPaths =
           ImmutableList.builderWithExpectedSize(envData.getLoadedPaths().size() + 1);

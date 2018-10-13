@@ -424,7 +424,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         // in case Python process cannot send values due to serialization issues, it will send an
         // empty list
         return BuildFileManifest.of(
-            ImmutableList.of(),
+            ImmutableMap.of(),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
             Optional.empty(),
@@ -442,9 +442,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @SuppressWarnings("unchecked")
   private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> values) {
     return BuildFileManifest.of(
-        values.subList(0, values.size() - 3).asList(),
+        indexTargetsByName(values.subList(0, values.size() - 3).asList()),
         ImmutableList.copyOf(
-            Objects.requireNonNull((List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))),
+            Objects.requireNonNull(
+                (List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))),
         Objects.requireNonNull(
             (Map<String, Object>) values.get(values.size() - 2).get(MetaRules.CONFIGS)),
         Optional.of(
@@ -454,6 +455,14 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                         (Map<String, String>) values.get(values.size() - 1).get(MetaRules.ENV)),
                     Optional::ofNullable))),
         ImmutableList.of());
+  }
+
+  private static ImmutableMap<String, Map<String, Object>> indexTargetsByName(
+      ImmutableList<Map<String, Object>> targets) {
+    ImmutableMap.Builder<String, Map<String, Object>> builder =
+        ImmutableMap.builderWithExpectedSize(targets.size());
+    targets.forEach(target -> builder.put((String) target.get("name"), target));
+    return builder.build();
   }
 
   private BuildFilePythonResult performJsonRequest(ImmutableMap<String, String> request)

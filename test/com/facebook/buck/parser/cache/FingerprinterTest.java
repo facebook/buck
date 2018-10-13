@@ -97,7 +97,7 @@ public class FingerprinterTest {
         ImmutableList.of("/foo/bar/FooBar.bzl", "/foo/bar/BUCK", "/foo/bar/BarFoo.bzl");
     BuildFileManifest buildFileManifest =
         BuildFileManifest.of(
-            ImmutableList.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());
+            ImmutableMap.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());
     HashCode strongFingerprintHash = Fingerprinter.getStrongFingerprint(fs, includes);
     ImmutableSortedSet<String> sortedIncludes =
         ImmutableSortedSet.copyOf(buildFileManifest.getIncludes());
@@ -124,7 +124,7 @@ public class FingerprinterTest {
         ImmutableList.of("/foo/bar/FooBar.bzl", "/foo/bar/BUCK", "/foo/bar/BarFoo.bzl");
     BuildFileManifest buildFileManifest =
         BuildFileManifest.of(
-            ImmutableList.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());
+            ImmutableMap.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());
 
     Fingerprinter.getStrongFingerprint(fs, buildFileManifest.getIncludes());
   }

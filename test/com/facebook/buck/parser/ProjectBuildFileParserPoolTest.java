@@ -59,7 +59,7 @@ public class ProjectBuildFileParserPoolTest {
 
   public static final BuildFileManifest EMPTY_BUILD_FILE_MANIFEST =
       BuildFileManifest.of(
-          ImmutableSet.of(),
+          ImmutableMap.of(),
           ImmutableSortedSet.of(),
           ImmutableMap.of(),
           Optional.empty(),

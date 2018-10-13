@@ -142,7 +142,7 @@ public class EventReportingProjectBuildFileParserTest {
   public void getBuildFileManifestReturnsUnderlyingRules() throws Exception {
     allRulesAndMetadata =
         BuildFileManifest.of(
-            ImmutableList.of(),
+            ImmutableMap.of(),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
             Optional.empty(),

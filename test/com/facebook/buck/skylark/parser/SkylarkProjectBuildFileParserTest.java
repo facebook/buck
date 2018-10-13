@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.parser;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.Matchers.stringContainsInOrder;
@@ -399,7 +400,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.createFile(directory.resolve("file2"));
     Files.createFile(directory.resolve("bad_file"));
     BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(1));
+    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
     assertThat(
         buildFileManifest.getGlobManifest(),
         equalTo(
@@ -1010,8 +1011,9 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name='foo', binary_jar=get_name())"));
     Files.write(extensionFile, Arrays.asList("def get_name():", "  return 'jar'"));
     BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(1));
-    Map<String, Object> prebuiltJarRule = buildFileManifest.getTargets().get(0);
+    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
+    Map<String, Object> prebuiltJarRule =
+        Iterables.getOnlyElement(buildFileManifest.getTargets().values());
     assertThat(prebuiltJarRule.get("name"), equalTo("foo"));
     ImmutableList<String> includes = buildFileManifest.getIncludes();
     assertThat(
@@ -1214,9 +1216,8 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name='foo', binary_jar='binary.jar')",
             "prebuilt_jar(name=str(rule_exists('foo')), binary_jar='foo')"));
     BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(2));
-    Map<String, Object> rule = buildFileManifest.getTargets().get(1);
-    assertThat(rule.get("name"), equalTo("True"));
+    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(2));
+    assertThat(buildFileManifest.getTargets(), hasKey("foo"));
   }
 
   @Test
@@ -1239,8 +1240,8 @@ public class SkylarkProjectBuildFileParserTest {
         extensionFile,
         Collections.singletonList("load('//src/test:extension_rules.bzl', 'get_name')"));
     BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(2));
-    Map<String, Object> rule = buildFileManifest.getTargets().get(0);
+    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(2));
+    Map<String, Object> rule = Iterables.getFirst(buildFileManifest.getTargets().values(), null);
     assertThat(rule.get("name"), is("foo"));
     assertThat(rule.get("binaryJar"), equalTo("True"));
   }
@@ -1267,7 +1268,7 @@ public class SkylarkProjectBuildFileParserTest {
   private Map<String, Object> getSingleRule(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(1));
-    return buildFileManifest.getTargets().get(0);
+    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
+    return Iterables.getOnlyElement(buildFileManifest.getTargets().values());
   }
 }

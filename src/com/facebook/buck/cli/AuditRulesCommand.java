@@ -28,7 +28,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
-import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.devtools.build.lib.syntax.SelectorList;
@@ -127,7 +127,7 @@ public class AuditRulesCommand extends AbstractCommand {
           }
 
           // Parse the rules from the build file.
-          ImmutableCollection<Map<String, Object>> rawRules =
+          ImmutableMap<String, Map<String, Object>> rawRules =
               parser.getBuildFileManifest(path).getTargets();
 
           // Format and print the rules from the raw data, filtered by type.
@@ -155,17 +155,18 @@ public class AuditRulesCommand extends AbstractCommand {
 
   private void printRulesToStdout(
       PrintStream stdOut,
-      ImmutableCollection<Map<String, Object>> rawRules,
+      ImmutableMap<String, Map<String, Object>> rawRules,
       Predicate<String> includeType) {
     rawRules
+        .entrySet()
         .stream()
         .filter(
             rawRule -> {
-              String type = (String) rawRule.get(BuckPyFunction.TYPE_PROPERTY_NAME);
+              String type = (String) rawRule.getValue().get(BuckPyFunction.TYPE_PROPERTY_NAME);
               return includeType.test(type);
             })
-        .sorted(Comparator.comparing(rule -> ((String) rule.getOrDefault("name", ""))))
-        .forEach(rawRule -> printRuleAsPythonToStdout(stdOut, rawRule));
+        .sorted(Comparator.comparing(Map.Entry::getKey))
+        .forEach(rawRule -> printRuleAsPythonToStdout(stdOut, rawRule.getValue()));
   }
 
   private static void printRuleAsPythonToStdout(PrintStream out, Map<String, Object> rawRule) {

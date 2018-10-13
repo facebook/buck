@@ -30,7 +30,7 @@ import org.immutables.value.Value;
 abstract class AbstractBuildFileManifest {
   /** @return a list of targets defined in the build file. */
   @Value.Parameter
-  public abstract ImmutableList<Map<String, Object>> getTargets();
+  public abstract ImmutableMap<String, Map<String, Object>> getTargets();
 
   /** @return a set of extension files read during parsing. */
   @Value.Parameter
@@ -58,8 +58,8 @@ abstract class AbstractBuildFileManifest {
    */
   public ImmutableMap<String, Map<String, Object>> toRawNodes() {
     ImmutableMap.Builder<String, Map<String, Object>> builder = ImmutableMap.builder();
-    getTargets().forEach(target -> builder.put((String) target.get("name"), target));
 
+    builder.putAll(getTargets());
     builder.put(MetaRules.INCLUDES_NAME, ImmutableMap.of(MetaRules.INCLUDES, getIncludes()));
     builder.put(MetaRules.CONFIGS_NAME, ImmutableMap.of(MetaRules.CONFIGS, getConfigs()));
 

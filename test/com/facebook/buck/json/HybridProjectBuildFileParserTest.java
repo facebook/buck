@@ -45,7 +45,7 @@ public class HybridProjectBuildFileParserTest {
 
   private static final BuildFileManifest EMPTY_BUILD_FILE_MANIFEST =
       BuildFileManifest.of(
-          ImmutableList.of(),
+          ImmutableMap.of(),
           ImmutableSortedSet.of(),
           ImmutableMap.of(),
           Optional.empty(),
