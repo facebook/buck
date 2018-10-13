@@ -86,22 +86,31 @@ public class IjProjectWriter {
     writeWorkspace();
 
     if (projectConfig.isGeneratingTargetModuleMapEnabled()) {
-      updateTargetModuleMap();
+      writeTargetModules(
+          updateTargetModules(new HashMap<>(), projectDataPreparer.getModulesToBeWritten()));
     }
   }
 
-  private void updateTargetModuleMap() throws IOException {
+  private Map<String, String> readTargetModules() throws IOException {
     Path targetModulesPath = getIdeaConfigDir().resolve("target-modules.json");
-    Map<String, String> targetModules =
-        outFilesystem.exists(targetModulesPath)
-            ? ObjectMappers.createParser(outFilesystem.newFileInputStream(targetModulesPath))
-                .readValueAs(new TypeReference<Map<String, String>>() {})
-            : new HashMap<>();
-    for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
+    return outFilesystem.exists(targetModulesPath)
+        ? ObjectMappers.createParser(outFilesystem.newFileInputStream(targetModulesPath))
+            .readValueAs(new TypeReference<Map<String, String>>() {})
+        : new HashMap<>();
+  }
+
+  private static Map<String, String> updateTargetModules(
+      Map<String, String> existingModules, Set<IjModule> newModules) {
+    for (IjModule module : newModules) {
       for (BuildTarget target : module.getTargets()) {
-        targetModules.put(target.getFullyQualifiedName(), module.getName());
+        existingModules.put(target.getFullyQualifiedName(), module.getName());
       }
     }
+    return existingModules;
+  }
+
+  private void writeTargetModules(Map<String, String> targetModules) throws IOException {
+    Path targetModulesPath = getIdeaConfigDir().resolve("target-modules.json");
     try (JsonGenerator generator =
         ObjectMappers.createGenerator(outFilesystem.newFileOutputStream(targetModulesPath))) {
       generator.writeObject(targetModules);
@@ -255,7 +264,8 @@ public class IjProjectWriter {
     updateModulesIndex(projectDataPreparer.getModulesToBeWritten());
 
     if (projectConfig.isGeneratingTargetModuleMapEnabled()) {
-      updateTargetModuleMap();
+      writeTargetModules(
+          updateTargetModules(readTargetModules(), projectDataPreparer.getModulesToBeWritten()));
     }
   }
 

@@ -104,6 +104,26 @@ public class IjProjectWriterTest {
             "//java/com/example/base:base", "java_com_example_base",
             "//third_party/guava:guava", "third_party_guava"));
 
+    writer(filesystem, filesystem, moduleGraph2()).write();
+    targetModuleMap =
+        readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
+    assertEquals(
+        targetModuleMap,
+        ImmutableMap.of("//java/com/example/base2:base2", "java_com_example_base2"));
+  }
+
+  @Test
+  public void testTargetModuleMapUpdate() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    writer(filesystem, filesystem, moduleGraph1()).write();
+    Map<String, String> targetModuleMap =
+        readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
+    assertEquals(
+        targetModuleMap,
+        ImmutableMap.of(
+            "//java/com/example/base:base", "java_com_example_base",
+            "//third_party/guava:guava", "third_party_guava"));
+
     writer(filesystem, filesystem, moduleGraph2()).update();
     targetModuleMap =
         readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
