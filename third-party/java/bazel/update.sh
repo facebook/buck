@@ -1,4 +1,4 @@
-#!/bin/bash -e -x
+#!/bin/bash -ex
 
 readonly WORK_DIR=$(mktemp -d)
 readonly BAZEL_DIR="${WORK_DIR}/bazel"
