@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.json;
+package com.facebook.buck.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.log.Logger;
@@ -26,6 +26,10 @@ import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.WatchmanDiagnostic;
 import com.facebook.buck.io.watchman.WatchmanDiagnosticEvent;
+import com.facebook.buck.json.BuildFileParseExceptionData;
+import com.facebook.buck.json.BuildFileParseExceptionStackTraceEntry;
+import com.facebook.buck.json.BuildFilePythonResult;
+import com.facebook.buck.json.BuildFileSyntaxError;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.MetaRules;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;

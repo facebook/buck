@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.json;
+package com.facebook.buck.parser;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 

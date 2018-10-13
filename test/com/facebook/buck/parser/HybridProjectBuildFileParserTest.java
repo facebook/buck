@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.json;
+package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;

@@ -26,8 +26,6 @@ import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.json.HybridProjectBuildFileParser;
-import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.json.TargetCountVerificationParserDecorator;
 import com.facebook.buck.parser.AbstractParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
