@@ -177,10 +177,14 @@ public class PerBuildStateFactory {
               packageBoundaryChecker,
               symlinkCheckers);
 
+      // This pipeline uses a direct executor instead of pipelineExecutorService to avoid
+      // deadlocks happening when too many node are requested from targetNodeParsePipeline.
+      // That pipeline does blocking calls to get nodes from nonResolvingTargetNodeParsePipeline
+      // which can lead to deadlocks.
       ParsePipeline<TargetNode<?>> nonResolvingTargetNodeParsePipeline =
           new RawTargetNodeToTargetNodeParsePipeline(
               daemonicParserState.getOrCreateNodeCache(TargetNode.class),
-              pipelineExecutorService,
+              MoreExecutors.newDirectExecutorService(),
               rawTargetNodePipeline,
               eventBus,
               enableSpeculativeParsing,
