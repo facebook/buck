@@ -20,6 +20,7 @@ import com.google.common.base.Throwables;
 import java.util.function.Supplier;
 
 /** This version of {@code Supplier<T>} can throw an exception. */
+@FunctionalInterface
 public interface ThrowingSupplier<T, E extends Exception> {
   T get() throws E;
 
