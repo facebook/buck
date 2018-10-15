@@ -118,13 +118,12 @@ public class JsBundleGenrule extends Genrule
                 .orElse(""))
         .put("RELEASE", getBuildTarget().getFlavors().contains(JsFlavors.RELEASE) ? "1" : "")
         .put(
-            "RES_DIR",
-            pathResolver.getAbsolutePath(jsBundle.getSourcePathToResources()).toString());
+            "RES_DIR", pathResolver.getAbsolutePath(jsBundle.getSourcePathToResources()).toString())
+        .put(
+            "SOURCEMAP",
+            pathResolver.getAbsolutePath(jsBundle.getSourcePathToSourceMap()).toString());
 
     if (rewriteSourcemap) {
-      environmentVariablesBuilder.put(
-          "SOURCEMAP",
-          pathResolver.getAbsolutePath(jsBundle.getSourcePathToSourceMap()).toString());
       environmentVariablesBuilder.put(
           "SOURCEMAP_OUT", pathResolver.getAbsolutePath(getSourcePathToSourceMap()).toString());
     }

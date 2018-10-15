@@ -483,21 +483,30 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
-  public void addsSourceMapAndSourceMapOutAsEnvironmentVariable() {
+  public void addsSourceMapAsEnvironmentVariable() {
+    setUp();
+
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+
+    assertThat(
+        builder.build(),
+        hasEntry(
+            "SOURCEMAP",
+            pathResolver.getAbsolutePath(setup.jsBundle().getSourcePathToSourceMap()).toString()));
+  }
+
+  @Test
+  public void addsSourceMapOutAsEnvironmentVariable() {
     setUpWithRewriteSourceMap();
 
     SourcePathResolver pathResolver = sourcePathResolver();
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, builder);
-    ImmutableMap<String, String> env = builder.build();
 
     assertThat(
-        env,
-        hasEntry(
-            "SOURCEMAP",
-            pathResolver.getAbsolutePath(setup.jsBundle().getSourcePathToSourceMap()).toString()));
-    assertThat(
-        env,
+        builder.build(),
         hasEntry(
             "SOURCEMAP_OUT",
             pathResolver.getAbsolutePath(setup.genrule().getSourcePathToSourceMap()).toString()));
