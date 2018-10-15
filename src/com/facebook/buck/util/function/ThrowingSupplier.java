@@ -35,4 +35,9 @@ public interface ThrowingSupplier<T, E extends Exception> {
       }
     };
   }
+
+  /** Returns a {@link ThrowingSupplier} from a {@link Supplier} */
+  static <T, E extends Exception> ThrowingSupplier<T, E> fromSupplier(Supplier<T> supplier) {
+    return () -> supplier.get();
+  }
 }
