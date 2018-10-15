@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -151,5 +152,46 @@ public class MoreSuppliersTest {
     Supplier<Object> supplier = MoreSuppliers.weakMemoize(Object::new);
     Supplier<Object> twiceMemoized = MoreSuppliers.weakMemoize(supplier);
     Assert.assertSame("should have just returned the same instance", supplier, twiceMemoized);
+  }
+
+  @Test
+  public void throwingSupplierShouldMemoizeValueReturned() throws Exception {
+    ThrowingSupplier<Object, Exception> throwingSupplier =
+        MoreSuppliers.memoize(Object::new, Exception.class);
+
+    Assert.assertSame(
+        "Calling supplier twice should get the same object instance",
+        throwingSupplier.get(),
+        throwingSupplier.get());
+  }
+
+  @Test
+  public void throwingSupplierShouldMemoizeException() {
+    ThrowingSupplier<Object, Exception> throwingSupplier =
+        MoreSuppliers.memoize(
+            () -> {
+              throw new Exception();
+            },
+            Exception.class);
+
+    Exception e1 = null;
+    Exception e2 = null;
+    try {
+      throwingSupplier.get();
+      fail("Supplier should throw");
+    } catch (Exception e) {
+      e1 = e;
+    }
+    try {
+      throwingSupplier.get();
+      fail("Supplier should throw");
+    } catch (Exception e) {
+      e2 = e;
+    }
+
+    Assert.assertNotNull(e1);
+    Assert.assertNotNull(e2);
+
+    Assert.assertSame("Calling supplier twice should get the same exception instance", e1, e2);
   }
 }
