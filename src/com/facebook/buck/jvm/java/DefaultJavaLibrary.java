@@ -119,6 +119,7 @@ public class DefaultJavaLibrary
   private final JavaAbiInfo javaAbiInfo;
 
   @Nullable private CalculateSourceAbi sourceAbi;
+  private final boolean isDesugarEnbled;
   private SourcePathRuleFinder ruleFinder;
   private final Optional<SourcePath> sourcePathForOutputJar;
 
@@ -166,7 +167,8 @@ public class DefaultJavaLibrary
       boolean requiredForSourceOnlyAbi,
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
-      @Nullable CalculateSourceAbi sourceAbi) {
+      @Nullable CalculateSourceAbi sourceAbi,
+      boolean isDesugarEnabled) {
     super(
         buildTarget,
         projectFilesystem,
@@ -184,6 +186,7 @@ public class DefaultJavaLibrary
             jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget(), getProjectFilesystem()));
 
     this.sourceAbi = sourceAbi;
+    this.isDesugarEnbled = isDesugarEnabled;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -244,6 +247,11 @@ public class DefaultJavaLibrary
                 + "must be a type of java library.");
       }
     }
+  }
+
+  @Override
+  public boolean IsDesugarEnabled() {
+    return isDesugarEnbled;
   }
 
   @Override

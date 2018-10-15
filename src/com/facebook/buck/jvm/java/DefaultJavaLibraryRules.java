@@ -40,6 +40,8 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -67,7 +69,8 @@ public abstract class DefaultJavaLibraryRules {
         boolean requiredForSourceOnlyAbi,
         UnusedDependenciesAction unusedDependenciesAction,
         Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
-        @Nullable CalculateSourceAbi previousRuleInPipeline);
+        @Nullable CalculateSourceAbi previousRuleInPipeline,
+        boolean isDesugarRequired);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -269,6 +272,20 @@ public abstract class DefaultJavaLibraryRules {
     return !getSrcs().isEmpty() || !getResources().isEmpty() || getManifestFile().isPresent();
   }
 
+  // regex pattern to extract java version from both "7" and "1.7" notations.
+  private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("^(1\\.)*(?<version>\\d)$");
+
+  private boolean isDesugarRequired() {
+    String sourceLevel = getJavacOptions().getSourceLevel();
+    Matcher matcher = JAVA_VERSION_PATTERN.matcher(sourceLevel);
+    if (!matcher.find()) {
+      return false;
+    }
+    int version = Integer.parseInt(matcher.group("version"));
+    // Currently only java 8+ requires desugaring on Android
+    return version > 7;
+  }
+
   @Value.Lazy
   AbiGenerationMode getAbiGenerationMode() {
     AbiGenerationMode result = null;
@@ -411,7 +428,8 @@ public abstract class DefaultJavaLibraryRules {
                 getRequiredForSourceOnlyAbi(),
                 unusedDependenciesAction,
                 unusedDependenciesFinderFactory,
-                sourceAbiRule);
+                sourceAbiRule,
+                isDesugarRequired());
 
     getActionGraphBuilder().addToIndex(libraryRule);
     return libraryRule;

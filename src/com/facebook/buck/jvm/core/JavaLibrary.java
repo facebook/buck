@@ -31,6 +31,7 @@ public interface JavaLibrary
     extends BuildRule,
         HasClasspathEntries,
         HasClasspathDeps,
+        HasDesugarSupport,
         HasJavaAbi,
         HasJavaClassHashes,
         HasMavenCoordinates,

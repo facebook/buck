@@ -95,7 +95,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       boolean requiredForSourceOnlyAbi,
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
-      @Nullable CalculateSourceAbi sourceAbi) {
+      @Nullable CalculateSourceAbi sourceAbi,
+      boolean isDesugarEnabled) {
     super(
         buildTarget,
         projectFilesystem,
@@ -113,7 +114,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         requiredForSourceOnlyAbi,
         unusedDependenciesAction,
         unusedDependenciesFinderFactory,
-        sourceAbi);
+        sourceAbi,
+        isDesugarEnabled);
     this.manifestFile = manifestFile;
   }
 
@@ -184,7 +186,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 boolean requiredForSourceOnlyAbi,
                 UnusedDependenciesAction unusedDependenciesAction,
                 Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
-                @Nullable CalculateSourceAbi sourceAbi) {
+                @Nullable CalculateSourceAbi sourceAbi,
+                boolean isDesugarEnabled) {
               return new AndroidLibrary(
                   buildTarget,
                   projectFilesystem,
@@ -203,7 +206,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   requiredForSourceOnlyAbi,
                   unusedDependenciesAction,
                   unusedDependenciesFinderFactory,
-                  sourceAbi);
+                  sourceAbi,
+                  isDesugarEnabled);
             }
           });
       delegateBuilder.setJavacOptions(javacOptions);

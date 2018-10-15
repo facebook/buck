@@ -36,6 +36,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -51,6 +52,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
@@ -62,8 +64,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -120,7 +125,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
       JavaLibrary javaLibrary,
       String dexTool,
       int weightFactor) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem, maybeAddDesugarDeps(javaLibrary, params));
     this.androidPlatformTarget = androidPlatformTarget;
     this.javaLibrary = javaLibrary;
     this.dexTool = dexTool;
@@ -177,7 +182,8 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
                   DxStep.Option.FORCE_JUMBO),
               Optional.empty(),
               dexTool,
-              dexTool.equals(DxStep.D8));
+              dexTool.equals(DxStep.D8),
+              getDesugarClassPaths(javaLibrary, context.getSourcePathResolver()));
       steps.add(dx);
 
       // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making
@@ -226,6 +232,41 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
     steps.add(recordArtifactAndMetadataStep);
 
     return steps.build();
+  }
+
+  @VisibleForTesting
+  static BuildRuleParams maybeAddDesugarDeps(
+      JavaLibrary javaLibrary, BuildRuleParams buildRuleParams) {
+    if (javaLibrary.IsDesugarEnabled()) {
+      buildRuleParams =
+          buildRuleParams.copyAppendingExtraDeps(
+              getDesugarDeps(javaLibrary).toArray(BuildRule[]::new));
+    }
+    return buildRuleParams;
+  }
+
+  @VisibleForTesting
+  static @Nullable Collection<Path> getDesugarClassPaths(
+      JavaLibrary javaLibrary, SourcePathResolver sourcePathResolver) {
+    if (!javaLibrary.IsDesugarEnabled()) {
+      // returning null will disable desugar step
+      return null;
+    }
+    return getDesugarDeps(javaLibrary)
+        .map(BuildRule::getSourcePathToOutput)
+        .filter(Objects::nonNull)
+        .map(sourcePathResolver::getAbsolutePath)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+  }
+
+  @VisibleForTesting
+  static Stream<BuildRule> getDesugarDeps(JavaLibrary javaLibrary) {
+    return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(javaLibrary)
+        .stream()
+        .filter(Predicate.isEqual(javaLibrary).negate())
+        .filter(JavaLibrary::IsDesugarEnabled)
+        .filter(rule -> rule.getSourcePathToOutput() != null)
+        .map(BuildRule.class::cast);
   }
 
   @Override
