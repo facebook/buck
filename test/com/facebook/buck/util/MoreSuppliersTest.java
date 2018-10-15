@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import static org.junit.Assert.fail;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +43,34 @@ public class MoreSuppliersTest {
     Object a = supplier.get();
     Object b = supplier.get();
     Assert.assertSame("Supplier should have cached the instance", a, b);
+  }
+
+  @Test
+  public void memoizingSupplierShouldMemoizeResult() {
+    Supplier<Object> supplier = MoreSuppliers.memoize(Object::new);
+    Object a = supplier.get();
+    Object b = supplier.get();
+    Assert.assertSame("Supplier should have cached the instance", a, b);
+  }
+
+  @Test
+  public void memoizingSupplierShouldMemoizeRuntimeException() {
+    Supplier<Object> supplier =
+        MoreSuppliers.memoize(
+            () -> {
+              throw new RuntimeException();
+            });
+    try {
+      supplier.get();
+      fail("Expected runtime exception");
+    } catch (RuntimeException e1) {
+      try {
+        supplier.get();
+        fail("Expected runtime exception");
+      } catch (RuntimeException e2) {
+        Assert.assertSame("Supplier should have cached the instance", e1, e2);
+      }
+    }
   }
 
   @Test
