@@ -83,7 +83,7 @@
  * @param? link_text The text of the link
  */
 {template .entry_link}
-<a href="{ROOT}files-and-dirs/buckconfig.html#{$section}.{$entry}">{if isNonnull($link_text)}{$link_text}{else}{$section}.{$entry}{/if}</a>
+<a href="{ROOT}files-and-dirs/buckconfig.html#{$section}.{$entry}">{if isNonnull($link_text)}{$link_text}{else}<code>[{$section}].{$entry}</code>{/if}</a>
 {/template}
 
 /***/
@@ -202,6 +202,22 @@
 {call .entry_link}
   {param section: 'cxx' /}
   {param entry: 'gtest_dep' /}
+{/call}
+{/template}
+
+/***/
+{template .should_remap_host_platform}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'should_remap_host_platform' /}
+{/call}
+{/template}
+
+/***/
+{template .host_platform}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'host_platform' /}
 {/call}
 {/template}
 

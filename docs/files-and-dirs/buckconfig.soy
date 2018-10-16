@@ -1941,41 +1941,103 @@ cxx_library(
 {call buckconfig.entry}
   {param section: 'cxx' /}
   {param name: 'should_remap_host_platform' /}
-  {param example_value: 'true' /}
   {param description}
     <p>
-    Whether the <code>default</code> flavor should be remapped to the
-    {sp}<a href="#cxx.host_platform"><code>host_platform</code></a>.
-    If <code>host_platform</code> is not set, Buck will fall back to the
-    inferred host platform.
+      Specifies whether the <code>default</code> flavor should be remapped to the value of 
+      the {call buckconfig.host_platform /} configuration parameter.
+    </p>
+
+<p>
+<pre>
+{literal}
+[cxx]
+  should_remap_host_platform = true
+{/literal}
+</pre>
+</p>
+
+    <p>
+      Default is <code>false</code>.
     </p>
 
     <p>
-    Default is <code>false</code>.
+      Because Buck is designed for cross-platform development, Buck
+      normally ignores the host platform when building a target. For
+      example, Buck normally builds the same Linux target irrespective
+      of whether Buck itself is running on, say, Linux or macOS. 
+      The <code>should_remap_host_platform</code> configuration parameter 
+      enables you to change Buck's behavior so that Buck's target
+      platform is the host platform on which Buck is running.
     </p>
+
   {/param}
 {/call}
 
 {call buckconfig.entry}
   {param section: 'cxx' /}
   {param name: 'host_platform' /}
-  {param example_value: 'linux-x86_64' /}
   {param description}
     <p>
-    Override the inferred <code>host_platform</code> for build rules. Unused unless
-    {sp}<a href="#cxx.should_remap_host_platform"><code>should_remap_host_platform</code></a>{sp}
-    is also set to true.
+      Specifies the host platform to use 
+      if {call buckconfig.should_remap_host_platform /} is <code>true</code>.  
     </p>
 
     <p>
-    Default is inferred based on the local computer from one of
-    <ul>
-      <li><code>LINUX</code></li>
-      <li><code>MACOS</code></li>
-      <li><code>FREEBSD</code></li>
-      <li><code>WINDOWS</code></li>
-    </ul>
+      The value that you specify could be one of Buck's internal platform
+      flavors, such as <code>linux-x86_64</code> or <code>macosx-x86_64</code>:
     </p>
+
+<p>
+<pre>
+{literal}
+[cxx]
+  host_platform = linux-x86_64
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+[cxx]
+  host_platform = macosx-x86_64
+{/literal}
+</pre>
+</p>
+
+<p>
+or the value could be a custom platform flavor:
+</p>
+
+<p>
+<pre>
+{literal}
+[cxx]
+  host_platform = my-custom-flavor
+{/literal}
+</pre>
+</p>
+
+    <p>
+      If <code>[cxx].should_remap_host_platform</code> is <code>true</code>,
+      but <code>host_platform</code> is unspecified, then Buck infers
+      the host platform from the local computer to be one of the following values:
+    </p>
+
+    <ul>
+      <li><code>linux-x86_64</code> (Linux)</li>
+      <li><code>macosx-x86_64</code> (macOS)</li>
+      <li><code>freebsd-x86_64</code> (FreeBSD)</li>
+      <li><code>windows-x86_64</code> (Windows)</li>
+    </ul>
+
+
+    <p>
+      If <code>[cxx].should_remap_host_platform</code> is 
+      unset&mdash;or explicitly set to <code>false</code>&mdash;then 
+      Buck ignores the value of <code>host_platform</code></a>{sp}.
+    </p>
+
   {/param}
 {/call}
 
