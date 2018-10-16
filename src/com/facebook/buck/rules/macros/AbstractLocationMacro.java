@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
@@ -77,8 +78,10 @@ abstract class AbstractLocationMacro extends BuildTargetMacro {
    */
   public static SplitResult splitSupplementaryOutputPart(String targetish) {
     Matcher matcher = BUILD_TARGET_WITH_SUPPLEMENTARY_OUTPUT_PATTERN.matcher(targetish);
-    String outputNamePart = matcher.matches() ? matcher.group("output") : null;
-    return new SplitResult(matcher.group("target"), Optional.ofNullable(outputNamePart));
+    if (!matcher.matches()) {
+      throw new HumanReadableException(String.format("Cannot parse build target: %s", targetish));
+    }
+    return new SplitResult(matcher.group("target"), Optional.ofNullable(matcher.group("output")));
   }
 
   /** Result object of {@link #splitSupplementaryOutputPart}. */
