@@ -1279,9 +1279,23 @@ public class ProjectGeneratorTest {
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo/dir1/bar.h")))
+            .setExportedPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofUnnamedSources(
+                            ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup2/foo3.h"))))
+                    .build())
             .setHeaders(
                 ImmutableSortedSet.of(
                     FakeSourcePath.of("foo/dir1/foo.h"), FakeSourcePath.of("foo/dir2/baz.h")))
+            .setPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofUnnamedSources(
+                            ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup1/foo1.h"))))
+                    .build())
             .setSrcs(ImmutableSortedSet.of())
             .build();
 
@@ -1295,7 +1309,10 @@ public class ProjectGeneratorTest {
     assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
     assertThatHeaderSymlinkTreeContains(
         Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-        ImmutableMap.of("foo/dir1/bar.h", "foo/dir1/bar.h"));
+        ImmutableMap.<String, String>builder()
+            .put("foo/dir1/bar.h", "foo/dir1/bar.h")
+            .put("foo/HeaderGroup2/foo3.h", "foo/HeaderGroup2/foo3.h")
+            .build());
 
     assertThat(
         headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
@@ -1304,6 +1321,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.<String, String>builder()
             .put("foo/dir1/foo.h", "foo/dir1/foo.h")
             .put("foo/dir2/baz.h", "foo/dir2/baz.h")
+            .put("foo/HeaderGroup1/foo1.h", "foo/HeaderGroup1/foo1.h")
             .build());
   }
 
@@ -1313,9 +1331,23 @@ public class ProjectGeneratorTest {
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo/dir1/bar.h")))
+            .setExportedPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofUnnamedSources(
+                            ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup2/foo3.h"))))
+                    .build())
             .setHeaders(
                 ImmutableSortedSet.of(
                     FakeSourcePath.of("foo/dir1/foo.h"), FakeSourcePath.of("foo/dir2/baz.h")))
+            .setPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofUnnamedSources(
+                            ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup1/foo1.h"))))
+                    .build())
             .setSrcs(ImmutableSortedSet.of())
             .setXcodePublicHeadersSymlinks(false)
             .setXcodePrivateHeadersSymlinks(false)
@@ -1331,7 +1363,10 @@ public class ProjectGeneratorTest {
     assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
     assertThatHeaderMapWithoutSymLinksContains(
         Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-        ImmutableMap.of("foo/dir1/bar.h", "foo/dir1/bar.h"));
+        ImmutableMap.<String, String>builder()
+            .put("foo/dir1/bar.h", "foo/dir1/bar.h")
+            .put("foo/HeaderGroup2/foo3.h", "foo/HeaderGroup2/foo3.h")
+            .build());
 
     assertThat(
         headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
@@ -1340,6 +1375,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.<String, String>builder()
             .put("foo/dir1/foo.h", "foo/dir1/foo.h")
             .put("foo/dir2/baz.h", "foo/dir2/baz.h")
+            .put("foo/HeaderGroup1/foo1.h", "foo/HeaderGroup1/foo1.h")
             .build());
   }
 
@@ -1349,9 +1385,23 @@ public class ProjectGeneratorTest {
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo/dir1/bar.h")))
+            .setExportedPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofUnnamedSources(
+                            ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup2/foo3.h"))))
+                    .build())
             .setHeaders(
                 ImmutableSortedSet.of(
                     FakeSourcePath.of("foo/dir1/foo.h"), FakeSourcePath.of("foo/dir2/baz.h")))
+            .setPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofUnnamedSources(
+                            ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup1/foo1.h"))))
+                    .build())
             .setSrcs(ImmutableSortedSet.of())
             .setHeaderNamespace("name/space")
             .build();
@@ -1366,7 +1416,10 @@ public class ProjectGeneratorTest {
     assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
     assertThatHeaderSymlinkTreeContains(
         Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-        ImmutableMap.of("name/space/dir1/bar.h", "foo/dir1/bar.h"));
+        ImmutableMap.<String, String>builder()
+            .put("name/space/dir1/bar.h", "foo/dir1/bar.h")
+            .put("name/space/HeaderGroup2/foo3.h", "foo/HeaderGroup2/foo3.h")
+            .build());
 
     assertThat(
         headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
@@ -1375,6 +1428,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.<String, String>builder()
             .put("name/space/dir1/foo.h", "foo/dir1/foo.h")
             .put("name/space/dir2/baz.h", "foo/dir2/baz.h")
+            .put("name/space/HeaderGroup1/foo1.h", "foo/HeaderGroup1/foo1.h")
             .build());
   }
 
@@ -1397,11 +1451,27 @@ public class ProjectGeneratorTest {
                     FakeSourcePath.of("foo/dir1/bar.h"),
                     "and/one/more.h",
                     DefaultBuildTargetSourcePath.of(publicGeneratedTarget)))
+            .setExportedPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofNamedSources(
+                            ImmutableSortedMap.of(
+                                "any/name2.h", FakeSourcePath.of("HeaderGroup2/foo2.h"))))
+                    .build())
             .setHeaders(
                 ImmutableSortedMap.of(
                     "any/name.h", FakeSourcePath.of("foo/dir1/foo.h"),
                     "different/name.h", FakeSourcePath.of("foo/dir2/baz.h"),
                     "one/more/name.h", DefaultBuildTargetSourcePath.of(privateGeneratedTarget)))
+            .setPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofNamedSources(
+                            ImmutableSortedMap.of(
+                                "any/name1.h", FakeSourcePath.of("HeaderGroup1/foo1.h"))))
+                    .build())
             .setSrcs(ImmutableSortedSet.of())
             .build();
 
@@ -1418,7 +1488,8 @@ public class ProjectGeneratorTest {
         Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
         ImmutableMap.of(
             "foo/yet/another/name.h", "foo/dir1/bar.h",
-            "foo/and/one/more.h", "foo/generated2.h"));
+            "foo/and/one/more.h", "foo/generated2.h",
+            "foo/any/name2.h", "HeaderGroup2/foo2.h"));
 
     assertThat(
         headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
@@ -1427,7 +1498,8 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(
             "foo/any/name.h", "foo/dir1/foo.h",
             "foo/different/name.h", "foo/dir2/baz.h",
-            "foo/one/more/name.h", "foo/generated1.h"));
+            "foo/one/more/name.h", "foo/generated1.h",
+            "foo/any/name1.h", "HeaderGroup1/foo1.h"));
   }
 
   @Test
@@ -1449,11 +1521,27 @@ public class ProjectGeneratorTest {
                     FakeSourcePath.of("foo/dir1/bar.h"),
                     "and/one/more.h",
                     DefaultBuildTargetSourcePath.of(publicGeneratedTarget)))
+            .setExportedPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofNamedSources(
+                            ImmutableSortedMap.of(
+                                "any/name2.h", FakeSourcePath.of("HeaderGroup2/foo2.h"))))
+                    .build())
             .setHeaders(
                 ImmutableSortedMap.of(
                     "any/name.h", FakeSourcePath.of("foo/dir1/foo.h"),
                     "different/name.h", FakeSourcePath.of("foo/dir2/baz.h"),
                     "one/more/name.h", DefaultBuildTargetSourcePath.of(privateGeneratedTarget)))
+            .setPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofNamedSources(
+                            ImmutableSortedMap.of(
+                                "any/name1.h", FakeSourcePath.of("HeaderGroup1/foo1.h"))))
+                    .build())
             .setSrcs(ImmutableSortedSet.of())
             .setHeaderNamespace("name/space")
             .build();
@@ -1471,7 +1559,8 @@ public class ProjectGeneratorTest {
         Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
         ImmutableMap.of(
             "name/space/yet/another/name.h", "foo/dir1/bar.h",
-            "name/space/and/one/more.h", "foo/generated2.h"));
+            "name/space/and/one/more.h", "foo/generated2.h",
+            "name/space/any/name2.h", "HeaderGroup2/foo2.h"));
 
     assertThat(
         headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
@@ -1480,7 +1569,8 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(
             "name/space/any/name.h", "foo/dir1/foo.h",
             "name/space/different/name.h", "foo/dir2/baz.h",
-            "name/space/one/more/name.h", "foo/generated1.h"));
+            "name/space/one/more/name.h", "foo/generated1.h",
+            "name/space/any/name1.h", "HeaderGroup1/foo1.h"));
   }
 
   @Test
@@ -1490,6 +1580,13 @@ public class ProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setSrcs(ImmutableSortedSet.of())
             .setHeaders(ImmutableSortedMap.of("key.h", FakeSourcePath.of("value.h")))
+            .setPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofNamedSources(
+                            ImmutableSortedMap.of("key1.h", FakeSourcePath.of("value1.h"))))
+                    .build())
             .build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node));
@@ -1501,7 +1598,8 @@ public class ProjectGeneratorTest {
 
     assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(1).toString());
     assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"), ImmutableMap.of("key.h", "value.h"));
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
+        ImmutableMap.of("key.h", "value.h", "key1.h", "value1.h"));
 
     node =
         AppleLibraryBuilder.createBuilder(buildTarget)
@@ -1859,6 +1957,20 @@ public class ProjectGeneratorTest {
             .setHeaders(
                 ImmutableSortedSet.of(
                     FakeSourcePath.of("foo/dir1/foo.h"), FakeSourcePath.of("foo/dir2/baz.h")))
+            .setPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofUnnamedSources(
+                            ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup1/foo1.h"))))
+                    .build())
+            .setExportedPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("iphone.*"),
+                        SourceSortedSet.ofUnnamedSources(
+                            ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup2/foo3.h"))))
+                    .build())
             .setSrcs(ImmutableSortedSet.of())
             .build();
 
@@ -1881,7 +1993,11 @@ public class ProjectGeneratorTest {
     assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
     assertThatHeaderSymlinkTreeContains(
         Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-        ImmutableMap.of("foo/dir1/bar.h", "foo/dir1/bar.h"));
+        ImmutableMap.of(
+            "foo/dir1/bar.h",
+            "foo/dir1/bar.h",
+            "foo/HeaderGroup2/foo3.h",
+            "foo/HeaderGroup2/foo3.h"));
 
     assertThat(
         headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
@@ -1890,6 +2006,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.<String, String>builder()
             .put("foo/dir1/foo.h", "foo/dir1/foo.h")
             .put("foo/dir2/baz.h", "foo/dir2/baz.h")
+            .put("foo/HeaderGroup1/foo1.h", "foo/HeaderGroup1/foo1.h")
             .build());
   }
 
