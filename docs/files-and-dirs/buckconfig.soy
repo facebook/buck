@@ -1672,9 +1672,59 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
   {param name: 'cxx' /}
   {param description}
     <p>
-      This section configures the paths to the C++ and C toolchains' binaries and the default flags
-      to pass to all invocations of them.
+      This section configures the paths to the C and C++  toolchains'
+      binaries and the default flags to pass to all invocations of them.
     </p>
+
+    <h4>C/C++ platform flavors in <code>.buckconfig</code></h4>
+    <p>
+      Buck enables you to create additional platform <em>flavors</em> for 
+      C/C++ in <code>.buckconfig</code>. A platform flavor groups together a set of
+      configuration parameters, which you can then reference at build time.
+    </p>
+    <p>
+      To create a new C/C++ platform flavor, add a section with the header 
+    </p>
+
+<p>
+<pre class="prettyprint">
+{literal}
+[cxx#<i>flavor</i>]
+{/literal}
+</pre>
+</p>
+
+    <p>
+      to <code>.buckconfig</code>. 
+    </p>
+
+    <p>
+      If you invoke Buck with the specified <em>flavor</em> appended 
+      to the {sp}{call buck.build_target /}, Buck uses the values in 
+      this section instead of those in {sp}<code>[cxx]</code>.
+      For example, to build with the values 
+      in {sp}<code>[cxx#my-custom-flavor]</code> instead of <code>[cxx]</code>,
+      you could invoke Buck using the following command:
+    </p>
+
+<p>
+<pre class="prettyprint">
+{literal}
+$ buck build app#my-custom-flavor
+{/literal}
+</pre>
+</p>
+
+    <p>
+      You can also use these platform flavors, in the <code>platform_*</code> arguments 
+      of the {call buck.ruleLink}{param name : 'cxx_binary' /}{/call} and {call buck.ruleLink}{param name : 'cxx_library' /}{/call} rules.
+    </p>
+
+    <p>
+      The <a href="https://github.com/fbsamples/bucksamples/tree/master/hello-buck-cxx">Buck sample for C++</a> demonstrates 
+      how to use a custom platform flavor.
+    </p>
+
   {/param}
 {/call}
 
