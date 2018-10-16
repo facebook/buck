@@ -32,6 +32,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -72,6 +74,9 @@ class CxxPreprocessAndCompileStep implements Step {
       new FileLastModifiedDateContentsScrubber();
 
   private static final String DEPENDENCY_OUTPUT_PREFIX = "Note: including file:";
+  private static final String INCLUDE_GUARD_SUGGESTION =
+      "Multiple include guards may be useful for:";
+  private static final Pattern showHeadersLinePattern = Pattern.compile("\\.+ .+");
 
   public CxxPreprocessAndCompileStep(
       ProjectFilesystem filesystem,
@@ -231,10 +236,6 @@ class CxxPreprocessAndCompileStep implements Step {
     String stdErr = compiler.getStderr(result).orElse("");
     Stream<String> lines = MoreStrings.lines(stdErr).stream();
 
-    CxxErrorTransformer cxxErrorTransformer =
-        new CxxErrorTransformer(
-            filesystem, context.shouldReportAbsolutePaths(), headerPathNormalizer);
-
     if (compiler.needsToRemoveCompiledFilenamesFromOutput()) {
       // In order to get cleaner logs, the following filter removes lines
       // with only the filename of the file being compiled,
@@ -244,27 +245,63 @@ class CxxPreprocessAndCompileStep implements Step {
 
     String err;
     if (compiler.getDependencyTrackingMode() == DependencyTrackingMode.SHOW_INCLUDES) {
+      // Include lines and errors lines should be processed differently.
       Map<Boolean, List<String>> includesAndErrors =
           lines.collect(Collectors.partitioningBy(CxxPreprocessAndCompileStep::isShowIncludeLine));
-      List<String> includeLines =
-          includesAndErrors
-              .getOrDefault(true, Collections.emptyList())
+      List<String> includeLines = includesAndErrors.getOrDefault(true, Collections.emptyList());
+      List<String> errorLines = includesAndErrors.getOrDefault(false, Collections.emptyList());
+
+      includeLines =
+          includeLines
               .stream()
               .map(CxxPreprocessAndCompileStep::parseShowIncludeLine)
               .collect(Collectors.toList());
-      Iterable<String> srcAndIncludes =
-          Iterables.concat(ImmutableList.of(filesystem.resolve(input).toString()), includeLines);
-      filesystem.writeLinesToPath(srcAndIncludes, depFile.get());
+      writeSrcAndIncludes(includeLines);
+      err = formatErrors(errorLines.stream(), context);
+    } else if (compiler.getDependencyTrackingMode() == DependencyTrackingMode.SHOW_HEADERS) {
+      // Headers lines and errors lines should be processed differently.
+      Map<Boolean, List<String>> includesAndErrors =
+          lines.collect(Collectors.partitioningBy(CxxPreprocessAndCompileStep::isShowHeadersLine));
+      List<String> includeLines = includesAndErrors.getOrDefault(true, Collections.emptyList());
       List<String> errorLines = includesAndErrors.getOrDefault(false, Collections.emptyList());
-      err =
-          errorLines
+
+      includeLines =
+          includeLines
               .stream()
-              .map(cxxErrorTransformer::transformLine)
-              .collect(Collectors.joining("\n"));
+              .map(CxxPreprocessAndCompileStep::parseShowHeadersLine)
+              .collect(Collectors.toList());
+      writeSrcAndIncludes(includeLines);
+      // We are not interested in showing suggestions about include guards.
+      errorLines = stripIncludeGuardSuggestions(errorLines);
+      err = formatErrors(errorLines.stream(), context);
     } else {
-      err = lines.map(cxxErrorTransformer::transformLine).collect(Collectors.joining("\n"));
+      err = formatErrors(lines, context);
     }
     return err;
+  }
+
+  private static List<String> stripIncludeGuardSuggestions(List<String> errorLines) {
+    int includeGuardSuggestionIdx = errorLines.indexOf(INCLUDE_GUARD_SUGGESTION);
+    if (includeGuardSuggestionIdx != -1) {
+      return errorLines.subList(0, includeGuardSuggestionIdx);
+    } else {
+      return errorLines;
+    }
+  }
+
+  private void writeSrcAndIncludes(List<String> includeLines) throws IOException {
+    Iterable<String> srcAndIncludes =
+        Iterables.concat(ImmutableList.of(filesystem.resolve(input).toString()), includeLines);
+    filesystem.writeLinesToPath(srcAndIncludes, depFile.get());
+  }
+
+  private String formatErrors(Stream<String> errorLines, ExecutionContext context) {
+    CxxErrorTransformer cxxErrorTransformer =
+        new CxxErrorTransformer(
+            filesystem, context.shouldReportAbsolutePaths(), headerPathNormalizer);
+    return errorLines
+        .map(cxxErrorTransformer::transformLine)
+        .collect(Collectors.joining(System.lineSeparator()));
   }
 
   private static boolean isShowIncludeLine(String line) {
@@ -274,6 +311,16 @@ class CxxPreprocessAndCompileStep implements Step {
   private static String parseShowIncludeLine(String line) {
     // We keep the spaces at the beginning since we may use them to reconstruct the include tree
     return line.substring(DEPENDENCY_OUTPUT_PREFIX.length());
+  }
+
+  private static boolean isShowHeadersLine(String line) {
+    return showHeadersLinePattern.matcher(line).matches();
+  }
+
+  private static String parseShowHeadersLine(String line) {
+    // Replace . with spaces at the beginning to match with showIncludes format.
+    int nestedDepth = line.indexOf(' ');
+    return Strings.repeat(" ", nestedDepth) + line.substring(nestedDepth + 1);
   }
 
   private ConsoleEvent createConsoleEvent(

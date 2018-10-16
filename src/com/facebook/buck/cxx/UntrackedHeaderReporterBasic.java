@@ -36,6 +36,11 @@ class UntrackedHeaderReporterBasic implements UntrackedHeaderReporter {
   }
 
   @Override
+  public boolean isDetailed() {
+    return false;
+  }
+
+  @Override
   public String getErrorReport(Path header) {
     String errorMessage =
         String.format(

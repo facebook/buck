@@ -22,9 +22,36 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public class ClangCompiler extends DefaultCompiler {
+  /**
+   * Whether we should use -MD (dependency list) or -H (dependency tree) for dependency tracking.
+   */
+  /** The tree may be used for detailed untracked header error message but may hurt performance. */
+  private final boolean useDependencyTree;
 
-  public ClangCompiler(Tool tool) {
+  private final DependencyTrackingMode dependencyTrackingMode;
+
+  public ClangCompiler(Tool tool, boolean useDependencyTree) {
     super(tool);
+    this.useDependencyTree = useDependencyTree;
+    if (useDependencyTree) {
+      dependencyTrackingMode = DependencyTrackingMode.SHOW_HEADERS;
+    } else {
+      dependencyTrackingMode = DependencyTrackingMode.MAKEFILE;
+    }
+  }
+
+  @Override
+  public DependencyTrackingMode getDependencyTrackingMode() {
+    return dependencyTrackingMode;
+  }
+
+  @Override
+  public ImmutableList<String> outputDependenciesArgs(String outputPath) {
+    if (useDependencyTree) {
+      return ImmutableList.of("-H");
+    } else {
+      return ImmutableList.of("-MD", "-MF", outputPath);
+    }
   }
 
   @Override

@@ -98,6 +98,11 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
   }
 
   @Override
+  public boolean isDetailed() {
+    return true;
+  }
+
+  @Override
   public String getErrorReport(Path header) throws IOException {
     Path absolutePath =
         headerPathNormalizer.getAbsolutePathForUnnormalizedPath(header).orElse(header);

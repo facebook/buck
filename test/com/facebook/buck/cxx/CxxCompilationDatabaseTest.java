@@ -146,7 +146,8 @@ public class CxxCompilationDatabaseTest {
                 new CompilerDelegate(
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                     new GccCompiler(
-                        new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("compiler")))),
+                        new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("compiler"))),
+                        false),
                     CxxToolFlags.of()),
                 "test.o",
                 FakeSourcePath.of(filesystem, "test.cpp"),

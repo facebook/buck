@@ -87,6 +87,8 @@ public class CxxBuckConfig {
   private static final String CONFLICTING_HEADER_BASENAME_WHITELIST =
       "conflicting_header_basename_whitelist";
   private static final String HEADER_MODE = "header_mode";
+  private static final String DETAILED_UNTRACKED_HEADER_MESSAGES =
+      "detailed_untracked_header_messages";
 
   private static final String ASFLAGS = "asflags";
   private static final String ASPPFLAGS = "asppflags";
@@ -295,6 +297,7 @@ public class CxxBuckConfig {
               .setSource(source)
               .setBuildTarget(target.get())
               .setType(type)
+              .setPreferDependencyTree(getUseDetailedUntrackedHeaderMessages())
               .build());
     } else {
       return Optional.of(
@@ -302,6 +305,7 @@ public class CxxBuckConfig {
               .setSource(source)
               .setPath(delegate.getPathSourcePath(delegate.getRequiredPath(cxxSection, field)))
               .setType(type)
+              .setPreferDependencyTree(getUseDetailedUntrackedHeaderMessages())
               .build());
     }
   }
@@ -526,6 +530,11 @@ public class CxxBuckConfig {
     return delegate.getEnum(cxxSection, HEADER_MODE, HeaderMode.class);
   }
 
+  /** @return whether to generate more detailed untracked header messages. */
+  public Boolean getUseDetailedUntrackedHeaderMessages() {
+    return delegate.getBooleanValue(cxxSection, DETAILED_UNTRACKED_HEADER_MESSAGES, false);
+  }
+
   public BuckConfig getDelegate() {
     return delegate;
   }
@@ -541,6 +550,8 @@ public class CxxBuckConfig {
     public abstract Optional<PathSourcePath> getPath();
 
     public abstract Optional<CxxToolProvider.Type> getType();
+
+    public abstract Optional<Boolean> getPreferDependencyTree();
 
     @Value.Check
     protected void check() {
@@ -560,9 +571,12 @@ public class CxxBuckConfig {
     public CompilerProvider getCompilerProvider() {
       if (getBuildTarget().isPresent()) {
         return new CompilerProvider(
-            new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()), getType().get());
+            new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()),
+            getType().get(),
+            false);
       } else {
-        return new CompilerProvider(getPath().get(), getType());
+        return new CompilerProvider(
+            getPath().get(), getType(), getPreferDependencyTree().orElse(false));
       }
     }
   }

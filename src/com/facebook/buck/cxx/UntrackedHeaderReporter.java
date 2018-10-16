@@ -27,6 +27,7 @@ import java.nio.file.Path;
  * error.
  */
 public interface UntrackedHeaderReporter {
+  boolean isDetailed();
 
   /**
    * @throws Exception in case there is some error while generating the report. Some reporters

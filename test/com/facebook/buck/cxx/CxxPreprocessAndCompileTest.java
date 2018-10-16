@@ -130,7 +130,8 @@ public class CxxPreprocessAndCompileTest {
               () ->
                   PathSourcePath.of(
                       projectFilesystem,
-                      PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/compiler")))));
+                      PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/compiler")))),
+          false);
   private Preprocessor PREPROCESSOR_WITH_COLOR_SUPPORT =
       new PreprocessorWithColorSupport(
           new HashedFileTool(
@@ -217,7 +218,8 @@ public class CxxPreprocessAndCompileTest {
                                 PathSourcePath.of(
                                     projectFilesystem,
                                     PathNormalizer.toWindowsPathIfNeeded(
-                                        Paths.get("/root/different"))))),
+                                        Paths.get("/root/different")))),
+                            false),
                         DEFAULT_TOOL_FLAGS),
                     DEFAULT_OUTPUT,
                     DEFAULT_INPUT,
@@ -499,7 +501,7 @@ public class CxxPreprocessAndCompileTest {
             ruleFinder,
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                new GccCompiler(compilerTool),
+                new GccCompiler(compilerTool, false),
                 CxxToolFlags.of()),
             DEFAULT_OUTPUT,
             fakeInput,
