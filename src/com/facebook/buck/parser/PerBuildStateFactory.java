@@ -39,12 +39,14 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 public class PerBuildStateFactory {
 
@@ -203,6 +205,12 @@ public class PerBuildStateFactory {
       ConstraintResolver constraintResolver =
           new RuleBasedConstraintResolver(configurationRuleResolver);
 
+      Supplier<Platform> targetPlatform =
+          Suppliers.memoize(
+              () ->
+                  getTargetPlatform(
+                      configurationRuleResolver, constraintResolver, rootCell, targetPlatforms));
+
       RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
           new RawTargetNodeToTargetNodeFactory(
               knownRuleTypesProvider,
@@ -212,9 +220,7 @@ public class PerBuildStateFactory {
               symlinkCheckers,
               selectorListResolver,
               constraintResolver,
-              () ->
-                  getTargetPlatform(
-                      configurationRuleResolver, constraintResolver, rootCell, targetPlatforms));
+              targetPlatform);
 
       targetNodeParsePipeline =
           new RawTargetNodeToTargetNodeParsePipeline(
