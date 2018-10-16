@@ -113,7 +113,7 @@ class ExecuteTarget(Exception):
             os.execvpe(self._path, self._argv, self._envp)
         else:
             child = subprocess.Popen(
-                self._argv, executable=self._path, env=self._envp, cwd=self._cwd
+                self._argv, env=self._envp, cwd=self._cwd
             )
             child.wait()
             sys.exit(child.returncode)
