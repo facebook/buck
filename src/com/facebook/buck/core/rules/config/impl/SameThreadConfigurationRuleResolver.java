@@ -55,12 +55,12 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
       return configurationRule;
     }
     configurationRule = mappingFunction.apply(target);
-    configurationRuleIndex.put(target, configurationRule);
-    return configurationRule;
+    ConfigurationRule previousRule = configurationRuleIndex.putIfAbsent(target, configurationRule);
+    return previousRule == null ? configurationRule : previousRule;
   }
 
   @Override
-  public synchronized ConfigurationRule getRule(BuildTarget buildTarget) {
+  public ConfigurationRule getRule(BuildTarget buildTarget) {
     return computeIfAbsent(buildTarget, this::createConfigurationRule);
   }
 
