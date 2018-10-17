@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
 java_library(
     name = "testutil",
     srcs = glob(
@@ -11,5 +13,15 @@ java_library(
     deps = [
         "//src/com/facebook/buck/core/model:model",
         "//third-party/java/guava:guava",
+    ],
+)
+
+java_test(
+    name = "select",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/junit:junit",
     ],
 )
