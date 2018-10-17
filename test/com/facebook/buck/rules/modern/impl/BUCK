@@ -119,7 +119,6 @@ java_test(
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
-        "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/shell:testutil",
         "//test/com/facebook/buck/step:testutil",

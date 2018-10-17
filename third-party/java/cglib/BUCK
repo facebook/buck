@@ -5,7 +5,6 @@ prebuilt_jar(
         "LICENSE",
     ],
     visibility = [
-        "//test/com/facebook/buck/rules:testutil",
         "//third-party/java/easymock:easymock",
     ],
 )

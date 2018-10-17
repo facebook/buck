@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.impl;
 
 import static com.facebook.buck.core.build.engine.BuildRuleSuccessType.BUILT_LOCALLY;
 import static org.hamcrest.Matchers.equalTo;

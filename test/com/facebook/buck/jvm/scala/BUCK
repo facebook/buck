@@ -102,7 +102,6 @@ java_test(
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
-        "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/aether:aether-api",
