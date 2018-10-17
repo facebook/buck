@@ -1,18 +1,6 @@
 java_library(
     name = "arg",
-    srcs = [
-        "CommonDescriptionArg.java",
-        "HasContacts.java",
-        "HasDeclaredDeps.java",
-        "HasDefaultPlatform.java",
-        "HasDepsQuery.java",
-        "HasProvidedDeps.java",
-        "HasProvidedDepsQuery.java",
-        "HasSrcs.java",
-        "HasTestTimeout.java",
-        "HasTests.java",
-        "Hint.java",
-    ],
+    srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/sourcepath:sourcepath",
