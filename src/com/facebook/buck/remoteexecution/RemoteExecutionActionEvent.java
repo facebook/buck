@@ -25,6 +25,7 @@ import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.util.Scope;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import java.util.Optional;
 
 /** Tracks events related to Remote Execution Actions. */
 public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
@@ -57,8 +58,12 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   }
 
   /** Takes care of sending both Started and Finished events within a Scope. */
-  public static Scope sendEvent(BuckEventBus eventBus, State state, BuildTarget buildTarget) {
-    final Started startedEvent = new Started(state, buildTarget);
+  public static Scope sendEvent(
+      BuckEventBus eventBus,
+      State state,
+      BuildTarget buildTarget,
+      Optional<Protocol.Digest> actionDigest) {
+    final Started startedEvent = new Started(state, buildTarget, actionDigest);
     eventBus.post(startedEvent);
     final Scope leftEventScope = LeafEvents.scope(eventBus, state.toString().toLowerCase());
     return () -> {
@@ -69,8 +74,11 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
   /** Sends the terminal event of an action [FAIL|SUCCESS]. */
   public static void sendTerminalEvent(
-      BuckEventBus eventBus, State state, BuildTarget buildTarget) {
-    final Terminal event = new Terminal(state, buildTarget);
+      BuckEventBus eventBus,
+      State state,
+      BuildTarget buildTarget,
+      Optional<Protocol.Digest> actionDigest) {
+    final Terminal event = new Terminal(state, buildTarget, actionDigest);
     eventBus.post(event);
   }
 
@@ -82,9 +90,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   public static class Terminal extends RemoteExecutionActionEvent {
     private final State state;
     private final BuildTarget buildTarget;
+    private final Optional<Protocol.Digest> actionDigest;
 
     @VisibleForTesting
-    Terminal(State state, BuildTarget buildTarget) {
+    Terminal(State state, BuildTarget buildTarget, Optional<Protocol.Digest> actionDigest) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           RemoteExecutionActionEvent.isTerminalState(state),
@@ -92,6 +101,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
           state);
       this.state = state;
       this.buildTarget = buildTarget;
+      this.actionDigest = actionDigest;
     }
 
     public State getState() {
@@ -100,6 +110,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
     public BuildTarget getBuildTarget() {
       return buildTarget;
+    }
+
+    public Optional<Protocol.Digest> getActionDigest() {
+      return actionDigest;
     }
 
     @Override
@@ -112,9 +126,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   public static class Started extends RemoteExecutionActionEvent {
     private final State state;
     private final BuildTarget buildTarget;
+    private final Optional<Protocol.Digest> actionDigest;
 
     @VisibleForTesting
-    Started(State state, BuildTarget buildTarget) {
+    Started(State state, BuildTarget buildTarget, Optional<Protocol.Digest> actionDigest) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           !RemoteExecutionActionEvent.isTerminalState(state),
@@ -122,6 +137,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
           state);
       this.buildTarget = buildTarget;
       this.state = state;
+      this.actionDigest = actionDigest;
     }
 
     public State getState() {
@@ -130,6 +146,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
     public BuildTarget getBuildTarget() {
       return buildTarget;
+    }
+
+    public Optional<Protocol.Digest> getActionDigest() {
+      return actionDigest;
     }
 
     @Override
@@ -162,5 +182,9 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   @Override
   public String getEventName() {
     return getClass().getSimpleName();
+  }
+
+  public static String actionDigestToString(Protocol.Digest actionDigest) {
+    return String.format("%s:%d", actionDigest.getHash(), actionDigest.getSize());
   }
 }

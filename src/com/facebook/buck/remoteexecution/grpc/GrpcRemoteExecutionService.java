@@ -20,9 +20,11 @@ import build.bazel.remote.execution.v2.ActionResult;
 import build.bazel.remote.execution.v2.ExecuteRequest;
 import build.bazel.remote.execution.v2.ExecuteResponse;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
+import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.Protocol.OutputFile;
+import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.RemoteExecutionService;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputDirectory;
@@ -33,6 +35,9 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.longrunning.Operation;
 import com.google.protobuf.ByteString;
+import io.grpc.Metadata;
+import io.grpc.Metadata.Key;
+import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.List;
@@ -43,15 +48,39 @@ import javax.annotation.Nullable;
 
 /** Implementation of the GRPC client for the Remote Execution service. */
 public class GrpcRemoteExecutionService implements RemoteExecutionService {
+  private static final Key<? super String> TRACE_ID_KEY =
+      Metadata.Key.of("trace-id", Metadata.ASCII_STRING_MARSHALLER);
+  private static final Key<? super String> EDGE_ID_KEY =
+      Metadata.Key.of("edge-id", Metadata.ASCII_STRING_MARSHALLER);
   private final ExecutionStub executionStub;
   private final ByteStreamStub byteStreamStub;
   private final String instanceName;
+  private final Optional<TraceInfoProvider> traceInfoProvider;
 
   public GrpcRemoteExecutionService(
-      ExecutionStub executionStub, ByteStreamStub byteStreamStub, String instanceName) {
+      ExecutionStub executionStub,
+      ByteStreamStub byteStreamStub,
+      String instanceName,
+      Optional<TraceInfoProvider> traceInfoProvider) {
     this.executionStub = executionStub;
     this.byteStreamStub = byteStreamStub;
     this.instanceName = instanceName;
+    this.traceInfoProvider = traceInfoProvider;
+  }
+
+  private ExecutionStub getStubWithTraceInfo(Protocol.Digest actionDigest) {
+    if (!traceInfoProvider.isPresent()) {
+      return executionStub;
+    }
+
+    Metadata extraHeaders = new Metadata();
+    extraHeaders.put(TRACE_ID_KEY, traceInfoProvider.get().getTraceId());
+    extraHeaders.put(
+        EDGE_ID_KEY,
+        traceInfoProvider
+            .get()
+            .getEdgeId(RemoteExecutionActionEvent.actionDigestToString(actionDigest)));
+    return MetadataUtils.attachHeaders(executionStub, extraHeaders);
   }
 
   @Override
@@ -59,30 +88,31 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
       throws IOException, InterruptedException {
     SettableFuture<Operation> future = SettableFuture.create();
 
-    executionStub.execute(
-        ExecuteRequest.newBuilder()
-            .setInstanceName(instanceName)
-            .setActionDigest(GrpcProtocol.get(actionDigest))
-            .setSkipCacheLookup(false)
-            .build(),
-        new StreamObserver<Operation>() {
-          @Nullable Operation op = null;
+    getStubWithTraceInfo(actionDigest)
+        .execute(
+            ExecuteRequest.newBuilder()
+                .setInstanceName(instanceName)
+                .setActionDigest(GrpcProtocol.get(actionDigest))
+                .setSkipCacheLookup(false)
+                .build(),
+            new StreamObserver<Operation>() {
+              @Nullable Operation op = null;
 
-          @Override
-          public void onNext(Operation value) {
-            op = value;
-          }
+              @Override
+              public void onNext(Operation value) {
+                op = value;
+              }
 
-          @Override
-          public void onError(Throwable t) {
-            future.setException(t);
-          }
+              @Override
+              public void onError(Throwable t) {
+                future.setException(t);
+              }
 
-          @Override
-          public void onCompleted() {
-            future.set(op);
-          }
-        });
+              @Override
+              public void onCompleted() {
+                future.set(op);
+              }
+            });
 
     try {
       Operation operation = future.get();

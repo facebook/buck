@@ -19,4 +19,6 @@ package com.facebook.buck.log;
 /** Provides any tracing related information. */
 public interface TraceInfoProvider {
   String getTraceId();
+
+  String getEdgeId(String actionDigest);
 }
