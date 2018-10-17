@@ -18,7 +18,7 @@ index 7b64280829..a67cedc515 100644
  #
 -java_library(
 +java_binary(
-     name = "skylark-lang",
+     name = "bazel",
 +    srcs = glob([
 +        "syntax/**/*.java",
 +    ]) + glob(["events/*.java"]) + glob(["vfs/inmemoryfs/*.java"]) + glob([

@@ -13,7 +13,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/skylark/function:function",  # this is where the functions are coming from
         "//third-party/java/args4j:args4j",
-        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/bazel:bazel",
         "//third-party/java/guava:guava",
         "//tools/documentation_generator/src/com/facebook/buck/tools/documentation/generator/skylark:collector",
         "//tools/documentation_generator/src/com/facebook/buck/tools/documentation/generator/skylark/rendering:rendering",

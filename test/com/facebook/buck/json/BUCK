@@ -67,7 +67,7 @@ standard_java_test(
         "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
-        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/bazel:bazel",
         "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",

@@ -125,7 +125,7 @@
     <include name="jna/jna-4.5.1.jar" />
     <include name="jna/jna-platform-4.5.1.jar" />
     <include name="sqlite/sqlite-jdbc-3.20.0.jar" />
-    <include name="bazel/skylark-lang_deploy.jar" />
+    <include name="bazel/bazel_deploy.jar" />
     <include name="remote-apis/remote-apis.jar" />
   </fileset>
 
@@ -137,7 +137,7 @@
     <include name="aopalliance/aopalliance.jar" />
     <include name="aosp/apksig.jar" />
     <include name="asm/asm*-6.2.1.jar" />
-    <include name="bazel/skylark-lang_deploy.jar" />
+    <include name="bazel/bazel_deploy.jar" />
     <include name="bundletool/bundle.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.18.jar" />
