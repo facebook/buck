@@ -104,7 +104,7 @@ public final class IjModuleGraphFactory {
 
     aggregationTree
         .getModules()
-        .stream()
+        .parallelStream()
         .filter(aggregationModule -> !aggregationModule.getTargets().isEmpty())
         .forEach(
             aggregationModule -> {
@@ -113,9 +113,11 @@ public final class IjModuleGraphFactory {
                       aggregationModule.getModuleBasePath(),
                       aggregationModule.getTargets(),
                       aggregationModule.getExcludes());
-              module
-                  .getTargets()
-                  .forEach(buildTarget -> moduleByBuildTarget.put(buildTarget, module));
+              synchronized (moduleByBuildTarget) {
+                module
+                    .getTargets()
+                    .forEach(buildTarget -> moduleByBuildTarget.put(buildTarget, module));
+              }
             });
 
     return moduleByBuildTarget.build();

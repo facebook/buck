@@ -75,13 +75,29 @@ public class IjProjectWriter {
 
     writeProjectSettings();
 
-    for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
-      ImmutableList<ContentRoot> contentRoots = projectDataPreparer.getContentRoots(module);
-      writeModule(module, contentRoots);
-    }
-    for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
-      writeLibrary(library);
-    }
+    projectDataPreparer
+        .getModulesToBeWritten()
+        .parallelStream()
+        .forEach(
+            module -> {
+              try {
+                writeModule(module, projectDataPreparer.getContentRoots(module));
+              } catch (IOException exception) {
+                throw new RuntimeException(exception);
+              }
+            });
+    projectDataPreparer
+        .getLibrariesToBeWritten()
+        .parallelStream()
+        .forEach(
+            library -> {
+              try {
+                writeLibrary(library);
+              } catch (IOException exception) {
+                throw new RuntimeException(exception);
+              }
+            });
+
     writeModulesIndex(projectDataPreparer.getModuleIndexEntries());
     writeWorkspace();
 
