@@ -39,4 +39,16 @@ public class SelectIntegrationTest {
         containsString(
             "//:a was used to resolve configurable attribute but it is not a configuration rule"));
   }
+
+  @Test
+  public void testNonConfigSettingRuleProducesMeaningfulMessage() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckBuild(":non_config_setting_rule").getStderr(),
+        containsString(
+            "//:b is used to resolve configurable attributes but it has the wrong type"));
+  }
 }
