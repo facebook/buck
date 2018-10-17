@@ -4807,9 +4807,16 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:HostApp");
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
-    // Check starts with as the remainder depends on the bundle style at build time.
-    assertTrue(settings.get("BUNDLE_LOADER").startsWith("$BUILT_PRODUCTS_DIR/./TestHostApp.app/"));
+    assertEquals(
+        "$(BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_$(CONTENTS_FOLDER_PATH:file:identifier))",
+        settings.get("BUNDLE_LOADER"));
     assertEquals("$(BUNDLE_LOADER)", settings.get("TEST_HOST"));
+    assertEquals(
+        "$BUILT_PRODUCTS_DIR/./TestHostApp.app/Contents/MacOS/TestHostApp",
+        settings.get("BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_Contents"));
+    assertEquals(
+        "$BUILT_PRODUCTS_DIR/./TestHostApp.app/TestHostApp",
+        settings.get("BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_AppTest_xctest"));
   }
 
   @Test
