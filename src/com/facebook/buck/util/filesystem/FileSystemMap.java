@@ -196,7 +196,7 @@ public class FileSystemMap<T> {
       //   1. Remove a path that has been found as a leaf in the trie (easy case).
       //   2. Support prefix removal as well (i.e.: if we want to remove an intermediate node.
 
-      if (stack.size() == 0) {
+      if (stack.isEmpty()) {
         // this can only happen if path we are trying to remove is empty
         return;
       }
@@ -224,7 +224,7 @@ public class FileSystemMap<T> {
   private void removeChild(Entry<T> parent, Path childPath) {
     map.remove(childPath);
     Entry<T> child = parent.subLevels.remove(childPath);
-    if (parent.subLevels.size() == 0) {
+    if (parent.subLevels.isEmpty()) {
       parent.subLevels = null;
     }
 

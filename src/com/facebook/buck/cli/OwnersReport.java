@@ -85,10 +85,10 @@ final class OwnersReport {
   }
 
   private boolean isEmpty() {
-    return owners.size() == 0
-        && inputsWithNoOwners.size() == 0
-        && nonExistentInputs.size() == 0
-        && nonFileInputs.size() == 0;
+    return owners.isEmpty()
+        && inputsWithNoOwners.isEmpty()
+        && nonExistentInputs.isEmpty()
+        && nonFileInputs.isEmpty();
   }
 
   @VisibleForTesting

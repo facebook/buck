@@ -160,7 +160,7 @@ public class ServerHealthManager {
         }
       }
 
-      if (serverLatencies.size() == 0) {
+      if (serverLatencies.isEmpty()) {
         data.setNoHealthyServersAvailable(true);
         return Optional.empty();
       }

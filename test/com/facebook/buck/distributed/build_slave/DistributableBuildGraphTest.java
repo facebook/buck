@@ -55,7 +55,7 @@ public class DistributableBuildGraphTest {
       DistributableNode node =
           new DistributableNode(name, dependents, dependencies, uncachableNodes.contains(name));
       allNodes.put(name, node);
-      if (dependencies.size() == 0) {
+      if (dependencies.isEmpty()) {
         leafNodes.add(node);
       }
     }

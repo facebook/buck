@@ -285,7 +285,7 @@ public class DistBuildSlaveEventBusListener
         slaveEvents = new ArrayList<>(pendingSlaveEvents);
       }
       createCoordinatorBuildProgressEvent().ifPresent(slaveEvents::add);
-      if (slaveEvents.size() == 0) {
+      if (slaveEvents.isEmpty()) {
         return;
       }
 
@@ -431,7 +431,7 @@ public class DistBuildSlaveEventBusListener
 
   @Override
   public void createBuildRuleStartedEvents(ImmutableList<String> startedTargets) {
-    if (startedTargets.size() == 0) {
+    if (startedTargets.isEmpty()) {
       return;
     }
     List<BuildSlaveEvent> ruleStartedEvents = new LinkedList<>();
@@ -454,7 +454,7 @@ public class DistBuildSlaveEventBusListener
 
   @Override
   public void createBuildRuleCompletionEvents(ImmutableList<String> finishedTargets) {
-    if (finishedTargets.size() == 0) {
+    if (finishedTargets.isEmpty()) {
       return;
     }
     List<BuildSlaveEvent> ruleCompletionEvents = new LinkedList<>();
@@ -477,7 +477,7 @@ public class DistBuildSlaveEventBusListener
 
   @Override
   public void createBuildRuleUnlockedEvents(ImmutableList<String> unlockedTargets) {
-    if (unlockedTargets.size() == 0) {
+    if (unlockedTargets.isEmpty()) {
       return;
     }
     List<BuildSlaveEvent> ruleUnlockedEvents = new LinkedList<>();

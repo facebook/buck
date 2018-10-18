@@ -196,7 +196,7 @@ public class DistBuildUtil {
   /** Checks whether the given targets match the Stampede project whitelist */
   protected static boolean doTargetsMatchProjectWhitelist(
       ImmutableSet<String> buildTargets, ImmutableSet<String> projectWhitelist) {
-    if (buildTargets.size() == 0) {
+    if (buildTargets.isEmpty()) {
       return false;
     }
     boolean mismatchFound = false;

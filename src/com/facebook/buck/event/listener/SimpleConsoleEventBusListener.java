@@ -415,7 +415,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     // Print through the {@code DirtyPrintStreamDecorator} so printing from the simple console
     // is considered to dirty stderr and stdout and so it gets synchronized to avoid interlacing
     // output.
-    if (lines.size() == 0) {
+    if (lines.isEmpty()) {
       return;
     }
     console.getStdErr().println(String.join(System.lineSeparator(), lines));

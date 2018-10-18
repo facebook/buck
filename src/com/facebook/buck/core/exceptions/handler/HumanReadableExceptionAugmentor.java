@@ -51,7 +51,7 @@ public class HumanReadableExceptionAugmentor {
    *     appended to the end
    */
   public String getAugmentedError(String humanReadableErrorMessage) {
-    if (augmentations.size() == 0) {
+    if (augmentations.isEmpty()) {
       return humanReadableErrorMessage;
     }
 

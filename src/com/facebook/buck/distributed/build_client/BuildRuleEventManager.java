@@ -126,7 +126,7 @@ public class BuildRuleEventManager {
     }
 
     synchronized (this) {
-      if (pendingBuildRuleFinishedEvent.size() == 0) {
+      if (pendingBuildRuleFinishedEvent.isEmpty()) {
         return;
       }
     }
@@ -163,7 +163,7 @@ public class BuildRuleEventManager {
    */
   public void publishCacheSynchronizedBuildRuleFinishedEvents() {
     synchronized (this) {
-      if (pendingBuildRuleFinishedEvent.size() == 0) {
+      if (pendingBuildRuleFinishedEvent.isEmpty()) {
         return;
       }
     }

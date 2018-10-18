@@ -232,7 +232,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
             .filter(rule -> !remoteCacheContainsFutures.containsKey(rule))
             .collect(Collectors.toSet());
 
-    if (unseenRules.size() == 0) {
+    if (unseenRules.isEmpty()) {
       return;
     }
 

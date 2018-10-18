@@ -244,7 +244,7 @@ abstract class GoDescriptors {
             cxxPlatform, graphBuilder, linkables, linkStyle, r -> Optional.empty());
 
     // skip setting any arg if no linkable inputs are present
-    if (linkableInput.getArgs().size() == 0 && Iterables.size(externalLinkerFlags) == 0) {
+    if (linkableInput.getArgs().isEmpty() && Iterables.size(externalLinkerFlags) == 0) {
       return argsBuilder.build();
     }
 

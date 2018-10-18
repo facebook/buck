@@ -337,7 +337,7 @@ public class TargetsCommand extends AbstractCommand {
     // referencedFiles can try to find targets based on a file, so make sure at least
     // /something/ is provided. We don't want people accidentally crawling a whole repo
     // when they didn't intend to.
-    if (getArguments().size() == 0 && this.referencedFiles.get().size() == 0) {
+    if (getArguments().isEmpty() && this.referencedFiles.get().isEmpty()) {
       throw new CommandLineException(
           "Must specify at least one build target pattern. See https://buckbuild.com/concept/build_target_pattern.html");
     }
@@ -559,7 +559,7 @@ public class TargetsCommand extends AbstractCommand {
   private TargetGraphAndBuildTargets filterTargetGraphAndBuildTargetsByType(
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses) {
-    if (!descriptionClasses.isPresent() || descriptionClasses.get().size() == 0) {
+    if (!descriptionClasses.isPresent() || descriptionClasses.get().isEmpty()) {
       return targetGraphAndBuildTargets;
     }
 

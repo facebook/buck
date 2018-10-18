@@ -74,7 +74,7 @@ public class DistBuildTrace {
   @VisibleForTesting
   static Optional<RuleTrace> computeCriticalPaths(
       Map<String, List<RuleTrace>> rulesByMinionId, DistributableBuildGraph graph) {
-    if (rulesByMinionId.size() == 0) {
+    if (rulesByMinionId.isEmpty()) {
       return Optional.empty();
     }
 

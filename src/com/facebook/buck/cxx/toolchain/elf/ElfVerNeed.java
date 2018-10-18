@@ -83,7 +83,7 @@ public class ElfVerNeed {
                           verneed.vn_version,
                           vernauxes.size(),
                           verneed.vn_file,
-                          vernauxes.size() == 0 ? 0 : ElfVerNeed.Verneed.BYTES,
+                          vernauxes.isEmpty() ? 0 : ElfVerNeed.Verneed.BYTES,
                           verneedIndex == entries.size() - 1
                               ? 0
                               : ElfVerNeed.Verneed.BYTES

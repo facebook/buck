@@ -73,7 +73,7 @@ interface HttpCommonDescriptionArg extends CommonDescriptionArg {
      */
     static void validateUris(ImmutableList<URI> uris, BuildTarget target)
         throws HumanReadableException {
-      if (uris.size() == 0) {
+      if (uris.isEmpty()) {
         throw new HumanReadableException(
             "At least one url must be provided for %s",
             target.getUnflavoredBuildTarget().getFullyQualifiedName());

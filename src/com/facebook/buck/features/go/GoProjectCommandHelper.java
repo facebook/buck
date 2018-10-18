@@ -195,7 +195,7 @@ public class GoProjectCommandHelper {
       throws IOException, InterruptedException {
     Map<BuildTargetSourcePath, Path> generatedPackages =
         findCodeGenerationTargets(targetGraphAndTargets);
-    if (generatedPackages.size() == 0) {
+    if (generatedPackages.isEmpty()) {
       return ExitCode.SUCCESS;
     }
     // Run code generation targets

@@ -289,7 +289,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
       ImmutableSet<RuleKey> contentHashes, BorrowablePath content) {
     try {
       ImmutableSet<RuleKey> toStore = notPreexisting(contentHashes);
-      if (toStore.size() == 0) {
+      if (toStore.isEmpty()) {
         return Futures.immediateFuture(null);
       }
 

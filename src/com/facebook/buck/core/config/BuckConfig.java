@@ -203,7 +203,7 @@ public class BuckConfig {
 
   public ImmutableList<BuildTarget> getBuildTargetList(String section, String key) {
     ImmutableList<String> targetsToForce = getListWithoutComments(section, key);
-    if (targetsToForce.size() == 0) {
+    if (targetsToForce.isEmpty()) {
       return ImmutableList.of();
     }
     // TODO(cjhopman): Should this be moved to AliasConfig? It depends on that. Should AliasConfig

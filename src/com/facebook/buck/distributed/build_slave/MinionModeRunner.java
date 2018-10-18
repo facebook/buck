@@ -232,9 +232,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
 
     // Try to reserve available capacity
     int reservedCapacity = buildTracker.reserveAllAvailableCapacity();
-    if (reservedCapacity == 0
-        && exitCode.get() == ExitCode.SUCCESS
-        && targetsToSignal.size() == 0) {
+    if (reservedCapacity == 0 && exitCode.get() == ExitCode.SUCCESS && targetsToSignal.isEmpty()) {
       return; // Making a request will not move the build forward, so wait a while and try again.
     }
 
@@ -277,7 +275,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
   private void performBuildOfWorkUnits(String minionId) throws IOException {
     List<String> targetsToBuild = buildTracker.getTargetsToBuild();
 
-    if (targetsToBuild.size() == 0) {
+    if (targetsToBuild.isEmpty()) {
       return; // All outstanding targets have already been picked up by an earlier build thread.
     }
 

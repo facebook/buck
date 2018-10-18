@@ -614,7 +614,7 @@ public class BuildPhase {
 
     List<LogLineBatchRequest> newLogLineRequests =
         distBuildLogStateTracker.createStreamLogRequests(job.getBuildSlaves());
-    if (newLogLineRequests.size() == 0) {
+    if (newLogLineRequests.isEmpty()) {
       return Futures.immediateFuture(null);
     }
 

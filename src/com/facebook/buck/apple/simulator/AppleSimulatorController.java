@@ -95,7 +95,7 @@ public class AppleSimulatorController {
   public boolean canStartSimulator(String simulatorUdid) throws IOException, InterruptedException {
     ImmutableSet<String> bootedSimulatorDeviceUdids =
         getBootedSimulatorDeviceUdids(processExecutor);
-    if (bootedSimulatorDeviceUdids.size() == 0) {
+    if (bootedSimulatorDeviceUdids.isEmpty()) {
       return true;
     } else if (bootedSimulatorDeviceUdids.size() > 1) {
       LOG.debug(

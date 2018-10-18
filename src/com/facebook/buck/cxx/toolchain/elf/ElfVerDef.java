@@ -85,7 +85,7 @@ public class ElfVerDef {
                           verdef.vd_ndx,
                           verdauxes.size(),
                           verdef.vd_hash,
-                          verdauxes.size() == 0 ? 0 : Verdef.BYTES,
+                          verdauxes.isEmpty() ? 0 : Verdef.BYTES,
                           verdefIndex == entries.size() - 1
                               ? 0
                               : Verdef.BYTES + Verdaux.BYTES * verdauxes.size()),
