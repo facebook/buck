@@ -7,7 +7,7 @@ export_file(
 # Has no deps
 java_library(
     name = "example",
-    resources = ["beta.txt"],
+    resources = ["beta.txt", "file with spaces.txt"],
     deps = [],
 )
 
@@ -20,5 +20,5 @@ genrule(
 genrule(
     name = "files",
     out = "files.txt",
-    cmd = "echo $(query_paths 'inputs(deps(:example))') >$OUT",
+    cmd = 'PATHS=($(query_paths "inputs(deps(:example))")); for p in "${PATHS[@]}"; do echo "$p"; done | sort > $OUT',
 )

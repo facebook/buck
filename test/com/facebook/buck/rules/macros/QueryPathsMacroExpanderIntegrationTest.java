@@ -60,8 +60,9 @@ public class QueryPathsMacroExpanderIntegrationTest {
     // Remove the newline added by echo from the result
     String seen = new String(Files.readAllBytes(result), UTF_8).trim();
 
-    Path expected = workspace.getPath("beta.txt");
-    assertTrue(expected.isAbsolute());
-    assertEquals(expected.toString(), seen);
+    Path beta = workspace.getPath("beta.txt");
+    Path spaces = workspace.getPath("file with spaces.txt");
+    assertTrue(beta.isAbsolute());
+    assertEquals(beta.toString() + "\n" + spaces.toString(), seen);
   }
 }
