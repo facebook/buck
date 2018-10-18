@@ -3078,15 +3078,12 @@ public class ProjectGeneratorTest {
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
 
     assertEquals(
-        "$(inherited) "
-            + "-Wno-deprecated -Wno-conversion -ffoo -fbar",
+        "$(inherited) " + "-Wno-deprecated -Wno-conversion -ffoo -fbar",
         settings.get("OTHER_CFLAGS"));
     assertEquals(
-        "$(inherited) "
-            + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar",
+        "$(inherited) " + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
-    assertEquals(
-        "$(inherited) -fatal_warnings -ObjC -lbaz", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -fatal_warnings -ObjC -lbaz", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -3173,8 +3170,7 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings =
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
     assertEquals(
-        "$(inherited) -Wno-deprecated -Wno-conversion -DHELLO",
-        settings.get("OTHER_CFLAGS"));
+        "$(inherited) -Wno-deprecated -Wno-conversion -DHELLO", settings.get("OTHER_CFLAGS"));
   }
 
   @Test
@@ -3254,8 +3250,7 @@ public class ProjectGeneratorTest {
         "$(inherited) -Wno-deprecated -Wno-conversion -fbar-iphone",
         settings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "$(inherited) "
-            + "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone",
+        "$(inherited) " + "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(null, settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
 
@@ -3267,8 +3262,7 @@ public class ProjectGeneratorTest {
             projectFilesystem, dependentBuildTarget, dependentTarget, "Debug");
 
     assertEquals(
-        "$(inherited) "
-            + "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
+        "$(inherited) " + "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
         "$(inherited) "
