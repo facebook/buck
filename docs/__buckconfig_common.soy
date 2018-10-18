@@ -411,6 +411,14 @@
 {/template}
 
 /***/
+{template .go_vendor_path}
+{call buckconfig.entry_link}
+  {param section: 'go' /}
+  {param entry: 'vendor_path' /}
+{/call}
+{/template}
+
+/***/
 {template .ndk_path}
 {call .entry_link}
     {param section: 'ndk' /}
