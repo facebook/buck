@@ -88,9 +88,7 @@ public class HgCmdLineInterfaceIntegrationTest {
    * <p>hg_repo_two: above, current tip @branch_from_master2, and no local changes. hg_repo_three:
    * above, current tip @branch_from_master3, and with local changes.
    */
-  @SuppressWarnings("javadoc")
-  @ClassRule
-  public static TemporaryFolder tempFolder = new TemporaryFolder();
+  @ClassRule public static TemporaryFolder tempFolder = new TemporaryFolder();
 
   private static VersionControlCmdLineInterface repoTwoCmdLine;
   private static VersionControlCmdLineInterface repoThreeCmdLine;

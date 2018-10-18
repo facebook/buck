@@ -95,7 +95,6 @@ public class AuditActionGraphCommandIntegrationTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void dumpsNodeAndDependencyInformationInDotFormat() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_action_graph", tmp);
@@ -111,7 +110,6 @@ public class AuditActionGraphCommandIntegrationTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void dumpsNodeAndDependencyInformationWithRuntimeDepsInDotFormat() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_action_graph", tmp);

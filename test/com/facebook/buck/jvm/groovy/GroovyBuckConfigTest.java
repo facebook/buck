@@ -72,7 +72,6 @@ public class GroovyBuckConfigTest {
     String systemGroovyHome = System.getenv("GROOVY_HOME");
     assumeTrue(systemGroovyHome != null);
 
-    //noinspection ConstantConditions
     ImmutableMap<String, String> environment = ImmutableMap.of("GROOVY_HOME", systemGroovyHome);
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig = ImmutableMap.of();
     GroovyBuckConfig groovyBuckConfig = createGroovyConfig(environment, rawConfig);
@@ -88,7 +87,6 @@ public class GroovyBuckConfigTest {
 
     // deliberately break the env
     ImmutableMap<String, String> environment = ImmutableMap.of("GROOVY_HOME", "/oops");
-    //noinspection ConstantConditions
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig =
         ImmutableMap.of("groovy", ImmutableMap.of("groovy_home", systemGroovyHome));
     GroovyBuckConfig groovyBuckConfig = createGroovyConfig(environment, rawConfig);

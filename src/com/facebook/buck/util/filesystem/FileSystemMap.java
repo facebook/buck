@@ -221,7 +221,6 @@ public class FileSystemMap<T> {
     }
   }
 
-  @SuppressWarnings("NullableProblems")
   private void removeChild(Entry<T> parent, Path childPath) {
     map.remove(childPath);
     Entry<T> child = parent.subLevels.remove(childPath);
