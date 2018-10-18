@@ -10,7 +10,11 @@ ARG repository=facebook/buck
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
 # Download enough to bootstrap a build
-RUN choco install -y ant jdk8 python2 git
+RUN choco install -y python2 git jdk8
+
+# The JRE package that ant depends on seems to be somewhat spotty,
+# install the jdk instead and use its java binary.
+RUN choco install -y -i ant
 
 # Clone buck
 RUN git clone --branch v${env:version} --depth 1 https://github.com/${env:repository}.git c:\src
