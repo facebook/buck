@@ -494,18 +494,18 @@ public class ProjectIntegrationTest {
         workspace.runBuckCommand("project", "//app:bundle");
     result.assertSuccess();
 
-    ProcessResult xcodeTestResult =
-        workspace.runBuckCommand(
+    ProcessExecutor.Result xcodeTestResult =
+        workspace.runCommand(
             "xcodebuild",
             "-workspace",
             "app/bundle.xcworkspace",
             "-scheme",
             "bundle",
-            "-destination",
-            "'platform=OS X,arch=x86_64'",
+            "-destination 'platform=OS X,arch=x86_64'",
             "clean",
             "test");
-    result.assertSuccess();
+    xcodeTestResult.getStderr().ifPresent(System.err::print);
+    assertEquals("xcodebuild should succeed", 0, xcodeTestResult.getExitCode());
   }
 
   @Test
