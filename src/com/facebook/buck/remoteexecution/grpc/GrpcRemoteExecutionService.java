@@ -74,12 +74,13 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
     }
 
     Metadata extraHeaders = new Metadata();
-    extraHeaders.put(TRACE_ID_KEY, traceInfoProvider.get().getTraceId());
-    extraHeaders.put(
-        EDGE_ID_KEY,
+    String traceId = traceInfoProvider.get().getTraceId();
+    extraHeaders.put(TRACE_ID_KEY, traceId);
+    String edgeId =
         traceInfoProvider
             .get()
-            .getEdgeId(RemoteExecutionActionEvent.actionDigestToString(actionDigest)));
+            .getEdgeId(RemoteExecutionActionEvent.actionDigestToString(actionDigest));
+    extraHeaders.put(EDGE_ID_KEY, edgeId);
     return MetadataUtils.attachHeaders(executionStub, extraHeaders);
   }
 
