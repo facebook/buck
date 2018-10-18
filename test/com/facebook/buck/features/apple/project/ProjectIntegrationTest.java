@@ -485,13 +485,14 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectWithAppleBundleTests() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "project_with_apple_bundle_test", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckCommand("project", "//app:bundle");
+    ProcessResult result = workspace.runBuckCommand("project", "//app:bundle");
     result.assertSuccess();
 
     ProcessExecutor.Result xcodeTestResult =
