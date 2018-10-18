@@ -550,7 +550,7 @@ class BuckTool(object):
                 "-XX:+UnlockDiagnosticVMOptions",
                 "-XX:GuaranteedSafepointInterval=5000",
                 "-Djava.io.tmpdir={0}".format(buckd_tmp_dir),
-                "-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
+                "-Dcom.facebook.nailgun.NGServer.outputPath={0}".format(
                     ngserver_output_path
                 ),
                 "-XX:+UseG1GC",

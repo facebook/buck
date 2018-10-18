@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright 2004-2015, Martian Software, Inc.
+# Copyright 2017-Present Facebook, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,7 +56,7 @@ def bytes_to_str(bytes_to_convert):
 #
 # Please try to keep this working on Python 2.6.
 
-NAILGUN_VERSION = "0.9.3"
+NAILGUN_VERSION = "1.0.0"
 BUFSIZE = 2048
 NAILGUN_PORT_DEFAULT = 2113
 CHUNK_HEADER_LEN = 5
