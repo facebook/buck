@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -26,9 +27,9 @@ public class ClangCompiler extends DefaultCompiler {
    * Whether we should use -MD (dependency list) or -H (dependency tree) for dependency tracking.
    */
   /** The tree may be used for detailed untracked header error message but may hurt performance. */
-  private final boolean useDependencyTree;
+  @AddToRuleKey private final boolean useDependencyTree;
 
-  private final DependencyTrackingMode dependencyTrackingMode;
+  @AddToRuleKey private final DependencyTrackingMode dependencyTrackingMode;
 
   public ClangCompiler(Tool tool, boolean useDependencyTree) {
     super(tool);
