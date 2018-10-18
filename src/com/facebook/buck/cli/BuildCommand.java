@@ -400,9 +400,10 @@ public class BuildCommand extends AbstractCommand {
       throw BuildFileParseException.createForUnknownParseError(e.getMessage());
     }
 
-    return buildCommand.computeDistBuildState(
+    return buildCommand
+        .computeDistBuildState(
             params, graphsAndBuildTargets, executor, Optional.empty(), RemoteCommand.BUILD)
-        .asyncJobState;
+        .getAsyncJobState();
   }
 
   @Override
@@ -829,7 +830,7 @@ public class BuildCommand extends AbstractCommand {
         },
         MoreExecutors.directExecutor());
 
-    return new AsyncJobStateAndCells(asyncJobState, cellIndexer);
+    return AsyncJobStateAndCells.of(asyncJobState, cellIndexer);
   }
 
   private ListeningExecutorService createStampedeControllerExecutorService(int maxThreads) {
@@ -891,8 +892,8 @@ public class BuildCommand extends AbstractCommand {
             executorService,
             Optional.of(distBuildClientStats),
             remoteCommand);
-    ListenableFuture<BuildJobState> asyncJobState = stateAndCells.asyncJobState;
-    DistBuildCellIndexer distBuildCellIndexer = stateAndCells.distBuildCellIndexer;
+    ListenableFuture<BuildJobState> asyncJobState = stateAndCells.getAsyncJobState();
+    DistBuildCellIndexer distBuildCellIndexer = stateAndCells.getDistBuildCellIndexer();
 
     if (distributedBuildStateFile != null) {
       BuildJobState jobState;
@@ -1533,17 +1534,6 @@ public class BuildCommand extends AbstractCommand {
       listeners.add(distBuildClientEventListener);
     }
     return listeners.build();
-  }
-
-  private static class AsyncJobStateAndCells {
-    final ListenableFuture<BuildJobState> asyncJobState;
-    final DistBuildCellIndexer distBuildCellIndexer;
-
-    AsyncJobStateAndCells(
-        ListenableFuture<BuildJobState> asyncJobState, DistBuildCellIndexer cellIndexer) {
-      this.asyncJobState = asyncJobState;
-      this.distBuildCellIndexer = cellIndexer;
-    }
   }
 
   public static class ActionGraphCreationException extends Exception {
