@@ -20,7 +20,6 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -101,8 +100,7 @@ public class BuildFileManifestObjectConverter extends JsonDeserializer<BuildFile
 
   @Override
   public BuildFileManifest deserialize(
-      JsonParser jsonParser, DeserializationContext deserializationContext)
-      throws IOException, JsonProcessingException {
+      JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
     TreeNode treeNode = jsonParser.readValueAsTree();
 
     ImmutableMap<String, ImmutableMap<String, Object>> targets = readTargets(jsonParser, treeNode);
