@@ -20,60 +20,110 @@
     {param content}
 
 <p>
-The root of your project must contain a configuration file
-named <code>.buckconfig</code>. If present, Buck will read this file
-before executing its business logic so that any customizations specified
-in <code>.buckconfig</code> will take effect. This file uses the
-{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a> with
-a few extensions discussed below.
+The root of your {call buck.key_concepts_link}{param rendered_text: 'project' /}{/call} must 
+contain a configuration file named <code>.buckconfig</code>. 
+Before executing, Buck reads this file to incorporate any customizations
+it specifies.
 </p>
 
 <p>
-Although the INI format only recognizes strings as values, Buck allows
-fields to be parsed as a list of strings, separated by a separator character.
-For example, a field containing command line flags to be passed to a compiler
-may parse its value as a list of strings, separated by space, so
-that <code>-foo -bar</code> is parsed as a list of two strings, instead of
-a single string.
+The <code>.buckconfig</code> file uses the
+{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a>. 
+That is, it is divided into <em>sections</em> where each section
+contains a collection of key <em>names</em> and key <em>values</em>.
+The <code>.buckconfig</code> implementation supports some modifications
+to the INI file format; these are discussed below.
 </p>
 
-<p>
 
-To ensure that any character can be encoded in a <code>.buckconfig</code> value, Buck
-allows values or part of values to be quoted by surrounding them by double
-quotes. Inside double quotes, escape sequences can be used to encode
-characters that would otherwise be problematic to use in values. The
+<h2>Character encoding</h2>
+
+<p>
+To ensure that any character can be encoded in a <code>.buckconfig</code> key 
+value, Buck allows values or part of values to be quoted by surrounding
+them with double quotes. Inside double quotes, you can use escape sequences 
+to encode characters that would otherwise be problematic to use in values. The
 following escape sequences are supported:
+</p>
 
 <table summary="Escape sequences in .buckconfig"><tr>
-<td>\\</td><td>backslash</td>
+<td><code>\\</code></td><td>backslash</td>
 </tr><tr>
-<td>\"</td><td>double quote</td>
+<td><code>\"</code></td><td>double quote</td>
 </tr><tr>
-<td>\n</td><td>newline</td>
+<td><code>\n</code></td><td>newline</td>
 </tr><tr>
-<td>\r</td><td>carriage return</td>
+<td><code>\r</code></td><td>carriage return</td>
 </tr><tr>
-<td>\t</td><td>tab</td>
+<td><code>\t</code></td><td>tab</td>
 </tr><tr>
-<td>\x##</td><td>Unicode character with code point ## (in hex)</td>
+<td><code>\x##</code></td><td>Unicode character with code point ## (in hex)</td>
 </tr><tr>
-<td>\u####</td><td>Unicode character with code point #### (in hex)</td>
+<td><code>\u####</code></td><td>Unicode character with code point #### (in hex)</td>
 </tr><tr>
-<td>\U########</td><td>Unicode character with code point ######## (in hex)</td>
+<td><code>\U########</code></td><td>Unicode character with code point ######## (in hex)</td>
 </tr></table>
 
-<p>
 
-In addition, when a field is parsed as a list instead of a string,
-the separator character is only interpreted as a separator when it occurs
-outside double quotes. For example, if <em>flags</em> is a field being
-interpreted as a list of strings separated by
-spaces, <code>flags=-foo "-bar \u0429"</code> will result in two
-strings: <q>foo</q> and <q>-bar &#1065;</q>.
+<h2>Key values as lists</h2>
 
 <p>
-Other fields' values can be interpolated by including <code>$(config &lt;section&gt;.&lt;field&gt;)</code> inside a value. For example, to use the go vendor path in a custom setting:
+Although the standard INI format supports only key values that represent 
+a single item, Buck supports key values that represent a list of items.
+The syntax is to separate the items in the list using the space (<code>0x20</code>) character.
+For example, a key value for the list of command-line flags to be passed
+to a compiler could be represented as a list of the flags separated by
+spaces:
+</p>
+
+<p>
+<pre>
+{literal}
+flags = -foo -bar -baz -qux
+{/literal}
+</pre>
+</p>
+
+<p>
+When a key value is parsed as a list instead of a single item,
+the separator character is interpreted as a separator only when it 
+occurs <em>outside of double quotes</em>. For example, if <code>flags</code> is 
+a key value interpreted as a list of items separated by spaces, then 
+</p>
+
+<p>
+<pre>
+{literal}
+flags = -foo "-bar \u0429"
+{/literal}
+</pre>
+</p>                                   
+
+<p>
+results in the two strings: <code>foo</code> and <code>-bar &#1065;</code>; 
+the space character between <code>-bar</code> and <code>\u0429</code> is 
+not interpreted as a separator.
+</p>
+
+
+<h2>Transclusion of values from one key to another</h2>
+
+<p>
+Values from other keys can be transcluded into the current key using 
+the following syntax inside the current key value. 
+</p>
+
+<p>
+<pre>
+{literal}
+$(config &lt;section&gt;.&lt;field&gt;)
+{/literal}
+</pre>
+</p>
+
+<p>
+For example, to use the {call buckconfig.go_vendor_path /} in 
+a custom setting:
 </p>
 
 <p>
@@ -84,34 +134,46 @@ custom_value = $(config go.vendor_path)
 {/literal}
 </p>
 
+
+<h2>Comments</h2>
+
 <p>
-Finally, you can use the pound sign (<code>#</code>), in addition to the 
-semicolon (<code>;</code>), as a comment character in <code>.buckconfig</code>.
+In addition to the semicolon (<code>;</code>), 
+you can use the pound sign (<code>#</code>), 
+as a comment character in <code>.buckconfig</code>.
 </p>
 
 
 <h2>.buckconfig.local</h2>
 
-The root of your project may also contain a second configuration file
-named <code>.buckconfig.local</code>. Its format is exactly the same as
-that of <code>.buckconfig</code>, but any definition in <code>.buckconfig.local</code>{sp}
-will override that of <code>.buckconfig</code>. In practice, <code>.buckconfig</code> will be a
+<p>
+The root of your {call buck.key_concepts_link}{param rendered_text: 'project' /}{/call} may 
+also contain a second configuration file named <code>.buckconfig.local</code>. Its format is 
+the same as that of <code>.buckconfig</code>, but definitions in <code>.buckconfig.local</code>{sp}
+override those in <code>.buckconfig</code>. In practice, <code>.buckconfig</code> is a
 version-controlled file that contains settings that are applicable to all team members (such as
-standard includes for build files), whereas <code>.buckconfig.local</code> will be excluded from
-version control because it contains user-specific overrides (such as personal aliases).
+standard includes for build files), whereas <code>.buckconfig.local</code> is excluded from
+version control because it contains user-specific overrides, such as personal aliases.
+</p>
+
+
+<h2>Other initialization files</h2>
 
 <p>
-
 If a configuration option is not found in the project's <code>.buckconfig</code>, it will fall
 back to a <code>.buckconfig</code> file and <code>.buckconfig.d</code> directory in your home
 directory. Each of those has the same format as a <code>.buckconfig</code> file but will have
 any settings overridden by project-specific configurations. If you have build issues, make sure
 that there is nothing in your <code>.buckconfig</code> or <code>.buckconfig.d</code> that could
 be conflicting with the project you're trying to build.
+</p>
+
 
 <h2>Sections</h2>
 
+<p>
 The following sections are recognized by Buck:
+</p>
 
 <p>
 
