@@ -98,8 +98,10 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
-    String projectIde = ide == null ? getIdeFromBuckConfig(params.getBuckConfig())
-        .map(String::toLowerCase).orElse(null) : ide.toLowerCase();
+    String projectIde =
+        ide == null
+            ? getIdeFromBuckConfig(params.getBuckConfig()).map(String::toLowerCase).orElse(null)
+            : ide.toLowerCase();
 
     if (projectIde == null) {
       throw new CommandLineException("project IDE is not specified in Buck config or --ide");
