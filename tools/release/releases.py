@@ -5,16 +5,19 @@ import tempfile
 import dateutil.parser
 import magic
 import requests
-
 from platforms.common import ReleaseException, run
 
-MESSAGE_TEMPLATE = """\
+MESSAGE_PROMPT_TEMPLATE = """\
 # Add release notes below. Any lines starting with '#' will be ignored.
 This release as always includes many improvements and bug fixes.
 
 # Commits since last release:
 #
 {commit_messages}
+"""
+
+MESSAGE_TEMPLATE = """\
+Includes various improvements and bug fixes, viewable here: {html_url}
 """
 
 
@@ -106,7 +109,11 @@ def get_summaries_between_releases(
     headers = get_headers(github_token)
     response = requests.get(url, headers=headers)
     response.raise_for_status()
-    return [get_summary_from_commit(commit) for commit in response.json()["commits"]]
+    js = response.json()
+    return (
+        js["html_url"],
+        [get_summary_from_commit(commit) for commit in js["commits"]],
+    )
 
 
 def get_headers(github_token):
@@ -194,7 +201,7 @@ def prompt_for_message(summaries):
     temp_fd, temp_path = tempfile.mkstemp()
     try:
         with open(temp_path, "w") as fout:
-            fout.write(MESSAGE_TEMPLATE.format(commit_messages=summaries_text))
+            fout.write(MESSAGE_PROMPT_TEMPLATE.format(commit_messages=summaries_text))
         editor = os.environ.get("EDITOR", "vim")
         run([editor, temp_path])
         with open(temp_path, "r") as fin:
@@ -206,6 +213,10 @@ def prompt_for_message(summaries):
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+
+def create_default_message(html_url):
+    return MESSAGE_TEMPLATE.format(html_url=html_url)
 
 
 def add_assets(release, github_token, path):
@@ -239,7 +250,9 @@ def add_assets(release, github_token, path):
     return ret
 
 
-def create_new_release(repository, github_token, version_tag, message):
+def create_new_release(
+    repository, github_token, version_tag, message, should_prompt_for_message
+):
     """
     Creates a new release, optionally prompting the user for a release message
 
@@ -247,8 +260,11 @@ def create_new_release(repository, github_token, version_tag, message):
         repository: The github repository
         github_token: The github token that can create releases
         verison_tag: The version tag that should be created at the current 'master'
-        message: If None, prompt the user for a message, otherwise use this message
-                 for the release summary.
+        message: If None, prompt the user for a message (or create a default one),
+                 otherwise use this message for the release summary.
+        should_prompt_for_message: If false, just create a release that points to the
+                            list of changes between the last release and this one.
+                            Otherwise, prompt the user for a message.
 
     Returns:
         The github repository object
@@ -257,14 +273,18 @@ def create_new_release(repository, github_token, version_tag, message):
     if not message:
         latest_release = get_latest_release(repository, github_token)
         commit_summaries = []
+        html_url = ""
         if latest_release:
             latest_release_hash = get_commit(
                 repository, github_token, latest_release["tag_name"]
             )
-            commit_summaries = get_summaries_between_releases(
+            html_url, commit_summaries = get_summaries_between_releases(
                 repository, github_token, latest_release_hash, master_commit
             )
-        message = prompt_for_message(commit_summaries)
+        if should_prompt_for_message:
+            message = prompt_for_message(commit_summaries)
+        else:
+            message = create_default_message(html_url)
     release = create_release(
         repository, github_token, message, version_tag, master_commit
     )
