@@ -3,4 +3,6 @@ java_library(
     srcs = [
         "Test.java",
     ],
+    source = "8",
+    target = "8",
 )
