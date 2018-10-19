@@ -148,7 +148,8 @@ public class CxxCompilationDatabaseTest {
                     new GccCompiler(
                         new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("compiler"))),
                         false),
-                    CxxToolFlags.of()),
+                    CxxToolFlags.of(),
+                    Optional.empty()),
                 "test.o",
                 FakeSourcePath.of(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,

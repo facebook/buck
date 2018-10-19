@@ -33,6 +33,7 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -42,11 +43,17 @@ class CompilerDelegate implements AddsToRuleKey {
   @AddToRuleKey private final Compiler compiler;
   @AddToRuleKey private final CxxToolFlags compilerFlags;
   @AddToRuleKey private final DebugPathSanitizer sanitizer;
+  @AddToRuleKey private final Optional<Boolean> useArgFile;
 
-  public CompilerDelegate(DebugPathSanitizer sanitizer, Compiler compiler, CxxToolFlags flags) {
+  public CompilerDelegate(
+      DebugPathSanitizer sanitizer,
+      Compiler compiler,
+      CxxToolFlags flags,
+      Optional<Boolean> useArgFile) {
     this.sanitizer = sanitizer;
     this.compiler = compiler;
     this.compilerFlags = flags;
+    this.useArgFile = useArgFile;
   }
 
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
@@ -92,7 +99,7 @@ class CompilerDelegate implements AddsToRuleKey {
   }
 
   public boolean isArgFileSupported() {
-    return compiler.isArgFileSupported();
+    return useArgFile.orElse(compiler.isArgFileSupported());
   }
 
   public DependencyTrackingMode getDependencyTrackingMode() {

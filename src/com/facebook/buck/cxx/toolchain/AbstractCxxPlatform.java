@@ -112,6 +112,8 @@ interface AbstractCxxPlatform extends FlavorConvertible {
 
   HeaderVerification getHeaderVerification();
 
+  Optional<Boolean> getUseArgFile();
+
   /**
    * @return a map for macro names to their respective expansions, to be used to expand macro
    *     references in user-provided flags.

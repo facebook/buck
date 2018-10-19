@@ -378,7 +378,11 @@ abstract class AbstractCxxSourceRuleFactory {
             .build();
 
     CompilerDelegate compilerDelegate =
-        new CompilerDelegate(getCxxPlatform().getCompilerDebugPathSanitizer(), compiler, flags);
+        new CompilerDelegate(
+            getCxxPlatform().getCompilerDebugPathSanitizer(),
+            compiler,
+            flags,
+            getCxxPlatform().getUseArgFile());
 
     // TODO(steveo): this does not account for `precompiledHeaderRule`.
 
@@ -502,7 +506,8 @@ abstract class AbstractCxxSourceRuleFactory {
             CxxSourceTypes.getCompiler(
                     getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(source.getType()))
                 .resolve(getActionGraphBuilder()),
-            computeCompilerFlags(source.getType(), source.getFlags()));
+            computeCompilerFlags(source.getType(), source.getFlags()),
+            getCxxPlatform().getUseArgFile());
 
     PreprocessorDelegateCacheValue preprocessorDelegateValue =
         preprocessorDelegates.apply(

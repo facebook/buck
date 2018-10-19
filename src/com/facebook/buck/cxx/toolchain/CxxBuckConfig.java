@@ -89,6 +89,7 @@ public class CxxBuckConfig {
   private static final String HEADER_MODE = "header_mode";
   private static final String DETAILED_UNTRACKED_HEADER_MESSAGES =
       "detailed_untracked_header_messages";
+  private static final String USE_ARG_FILE = "use_arg_file";
 
   private static final String ASFLAGS = "asflags";
   private static final String ASPPFLAGS = "asppflags";
@@ -357,6 +358,10 @@ public class CxxBuckConfig {
 
   public Optional<PreprocessorProvider> getAsmpp() {
     return getPreprocessorProvider(ASMPP);
+  }
+
+  public Optional<Boolean> getUseArgFile() {
+    return delegate.getBoolean(cxxSection, USE_ARG_FILE);
   }
 
   /**
