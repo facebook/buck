@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -110,7 +109,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
             Futures.transformAsync(
                 getItemToConvert(cell, buildTarget),
                 from -> dispatchComputeNode(cell, buildTarget, from),
-                MoreExecutors.directExecutor()),
+                executorService),
         eventBus);
   }
 
