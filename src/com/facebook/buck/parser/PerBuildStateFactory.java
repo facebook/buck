@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
@@ -25,6 +26,7 @@ import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
@@ -37,14 +39,21 @@ import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.concurrent.CommandThreadFactory;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
@@ -222,10 +231,14 @@ public class PerBuildStateFactory {
               constraintResolver,
               targetPlatform);
 
+      ListeningExecutorService configuredPipeline =
+          MoreExecutors.listeningDecorator(
+              createExecutorService(rootCell.getBuckConfig(), "configured-pipeline"));
+
       targetNodeParsePipeline =
           new RawTargetNodeToTargetNodeParsePipeline(
               daemonicParserState.getOrCreateNodeCache(TargetNode.class),
-              pipelineExecutorService,
+              configuredPipeline,
               rawTargetNodePipeline,
               eventBus,
               enableSpeculativeParsing,
@@ -234,6 +247,10 @@ public class PerBuildStateFactory {
             public void close() {
               super.close();
               nonResolvingTargetNodeParsePipeline.close();
+              try {
+                MostExecutors.shutdown(configuredPipeline, 1, TimeUnit.MINUTES);
+              } catch (InterruptedException e) {
+              }
             }
           };
     } else {
@@ -260,6 +277,22 @@ public class PerBuildStateFactory {
     cellManager.register(rootCell);
 
     return new PerBuildState(cellManager, buildFileRawNodeParsePipeline, targetNodeParsePipeline);
+  }
+
+  @SuppressWarnings("PMD.AvoidThreadGroup")
+  private static ExecutorService createExecutorService(BuckConfig buckConfig, String name) {
+    ConcurrencyLimit concurrencyLimit =
+        buckConfig.getView(ResourcesConfig.class).getConcurrencyLimit();
+
+    return MostExecutors.newMultiThreadExecutor(
+        new ThreadFactoryBuilder()
+            .setNameFormat(name + "-%d")
+            .setThreadFactory(
+                new CommandThreadFactory(
+                    r -> new Thread(new ThreadGroup(name), r),
+                    GlobalStateManager.singleton().getThreadToCommandRegister()))
+            .build(),
+        concurrencyLimit.managedThreadCount);
   }
 
   private Platform getTargetPlatform(
