@@ -72,7 +72,7 @@ public class SwiftOSXBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "objc_mix_swift", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("swift", "version", "2.3");
+    workspace.addBuckConfigLocalOption("swift", "version", "3");
 
     ProcessResult runResult = workspace.runBuckCommand("run", ":DemoMix#macosx-x86_64");
     runResult.assertSuccess();

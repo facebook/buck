@@ -1032,7 +1032,15 @@ public class ProjectGenerator {
   private Optional<String> getSwiftVersionForTargetNode(TargetNode<?> targetNode) {
     Optional<TargetNode<SwiftCommonArg>> targetNodeWithSwiftArgs =
         TargetNodes.castArg(targetNode, SwiftCommonArg.class);
-    return targetNodeWithSwiftArgs.flatMap(t -> t.getConstructorArg().getSwiftVersion());
+    Optional<String> targetExplicitSwiftVersion =
+        targetNodeWithSwiftArgs.flatMap(t -> t.getConstructorArg().getSwiftVersion());
+    if (!targetExplicitSwiftVersion.isPresent()
+        && (targetNode.getDescription() instanceof AppleLibraryDescription
+            || targetNode.getDescription() instanceof AppleBinaryDescription
+            || targetNode.getDescription() instanceof AppleTestDescription)) {
+      return swiftBuckConfig.getVersion();
+    }
+    return targetExplicitSwiftVersion;
   }
 
   private static String sourceNameRelativeToOutput(

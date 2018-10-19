@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -31,6 +32,7 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
@@ -54,8 +56,14 @@ public class SwiftDescriptionsTest {
         ImmutableSortedSet.of(
             SourceWithFlags.of(FakeSourcePath.of("foo/foo.cpp")), SourceWithFlags.of(swiftSrc)));
 
+    SwiftBuckConfig swiftBuckConfig =
+        new SwiftBuckConfig(
+            FakeBuckConfig.builder()
+                .setSections(ImmutableMap.of("swift", ImmutableMap.of("compiler_flags", "-g")))
+                .build());
+
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-        pathResolver, outputBuilder, args.build(), buildTarget);
+        swiftBuckConfig, pathResolver, outputBuilder, args.build(), buildTarget);
     SwiftLibraryDescriptionArg output = outputBuilder.build();
     assertThat(output.getModuleName().get(), equalTo("bar"));
     assertThat(output.getSrcs(), equalTo(ImmutableSortedSet.<SourcePath>of(swiftSrc)));
@@ -63,7 +71,7 @@ public class SwiftDescriptionsTest {
     args.setModuleName("baz");
 
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-        pathResolver, outputBuilder, args.build(), buildTarget);
+        swiftBuckConfig, pathResolver, outputBuilder, args.build(), buildTarget);
     output = outputBuilder.build();
     assertThat(output.getModuleName().get(), equalTo("baz"));
     assertThat(output.getVersion().get(), equalTo("3"));
