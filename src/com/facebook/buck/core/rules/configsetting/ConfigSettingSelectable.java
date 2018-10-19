@@ -108,4 +108,9 @@ public class ConfigSettingSelectable implements Selectable {
     }
     return currentValue.get().equals(value);
   }
+
+  @Override
+  public String toString() {
+    return buildTarget.toString();
+  }
 }

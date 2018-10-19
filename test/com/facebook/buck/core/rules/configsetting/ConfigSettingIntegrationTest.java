@@ -119,7 +119,10 @@ public class ConfigSettingIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            "Multiple matches found when resolving configurable attribute \"cmd\" in //:echo_with_one_none"));
+            "Multiple matches found when resolving configurable attribute \"cmd\" in //:echo_with_one_none:\n"
+                + "//:c\n"
+                + "//:a\n"
+                + "Multiple matches are not allowed unless one is unambiguously more specialized."));
   }
 
   @Test
