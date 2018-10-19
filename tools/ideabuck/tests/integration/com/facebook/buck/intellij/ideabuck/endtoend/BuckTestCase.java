@@ -29,6 +29,7 @@ public abstract class BuckTestCase extends LightPlatformCodeInsightFixtureTestCa
     Logger.setFactory(TestLoggerFactory.class);
   }
 
+  @Override
   public String getTestDataPath() {
     return "tests/testdata";
   }
