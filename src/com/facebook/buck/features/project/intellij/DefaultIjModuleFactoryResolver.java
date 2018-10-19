@@ -39,6 +39,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
@@ -46,14 +48,14 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   private final SourcePathResolver sourcePathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
-  private final ImmutableSet.Builder<BuildTarget> requiredBuildTargets;
+  private final Set<BuildTarget> requiredBuildTargets;
 
   DefaultIjModuleFactoryResolver(
       ActionGraphBuilder graphBuilder,
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
-      ImmutableSet.Builder<BuildTarget> requiredBuildTargets) {
+      Set<BuildTarget> requiredBuildTargets) {
     this.graphBuilder = graphBuilder;
     this.sourcePathResolver = sourcePathResolver;
     this.ruleFinder = ruleFinder;
@@ -155,7 +157,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
     requiredBuildTargets.addAll(
         Optionals.toStream(ruleFinder.getRule(sourcePath).map(BuildRule::getBuildTarget))
-            .iterator());
+            .collect(Collectors.toList()));
     return sourcePathResolver.getRelativePath(sourcePath);
   }
 }

@@ -27,23 +27,23 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 
 class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
   private final ProjectFilesystem projectFilesystem;
   private final SourcePathResolver sourcePathResolver;
   private final BuildRuleResolver buildRuleResolver;
   private final SourcePathRuleFinder ruleFinder;
-  private final ImmutableSet.Builder<BuildTarget> requiredBuildTargets;
+  private final Set<BuildTarget> requiredBuildTargets;
 
   DefaultIjLibraryFactoryResolver(
       ProjectFilesystem projectFilesystem,
       SourcePathResolver sourcePathResolver,
       BuildRuleResolver buildRuleResolver,
       SourcePathRuleFinder ruleFinder,
-      ImmutableSet.Builder<BuildTarget> requiredBuildTargets) {
+      Set<BuildTarget> requiredBuildTargets) {
     this.projectFilesystem = projectFilesystem;
     this.sourcePathResolver = sourcePathResolver;
     this.buildRuleResolver = buildRuleResolver;
