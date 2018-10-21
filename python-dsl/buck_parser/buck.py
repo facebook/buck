@@ -1705,7 +1705,7 @@ def _optparse_store_kv(option, opt_str, value, parser):
     result = value.split("=", 1)
     if len(result) != 2:
         raise optparse.OptionError(
-            "Expected argument of to be in the form of X=Y".format(opt_str)
+            "Expected argument of to be in the form of X=Y".format(opt_str), option
         )
     (k, v) = result
 
