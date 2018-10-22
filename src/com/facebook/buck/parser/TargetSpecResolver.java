@@ -135,6 +135,9 @@ public class TargetSpecResolver {
             ImmutableSet.builderWithExpectedSize(filesystem.getBlacklistedPaths().size() + 1);
         parsingIgnores.addAll(filesystem.getBlacklistedPaths());
         parsingIgnores.add(RecursiveFileMatcher.of(filesystem.getBuckPaths().getBuckOut()));
+        for (Path subCellRoots : cell.getKnownRoots()) {
+          parsingIgnores.add(RecursiveFileMatcher.of(filesystem.relativize(subCellRoots)));
+        }
 
         buildFiles =
             spec.getBuildFileSpec()

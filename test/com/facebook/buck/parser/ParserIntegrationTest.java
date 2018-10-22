@@ -574,4 +574,12 @@ public class ParserIntegrationTest {
         workspace.runBuckCommand("build", "//:glob"),
         "Recursive globs are prohibited at top-level directory");
   }
+
+  @Test
+  public void parseAllFromRootCellShouldIgnoreSubcells() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "subcell_ignored", temporaryFolder);
+    workspace.setUp();
+    workspace.runBuckBuild("//...").assertSuccess();
+  }
 }
