@@ -67,10 +67,7 @@ public interface Parser {
   @Nullable
   @Deprecated
   SortedMap<String, Object> getTargetNodeRawAttributes(
-      Cell cell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      TargetNode<?> targetNode)
+      Cell cell, ListeningExecutorService executor, TargetNode<?> targetNode)
       throws BuildFileParseException;
 
   TargetGraph buildTargetGraph(

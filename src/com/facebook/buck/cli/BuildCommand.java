@@ -775,10 +775,7 @@ public class BuildCommand extends AbstractCommand {
               return params
                   .getParser()
                   .getTargetNodeRawAttributes(
-                      params.getCell().getCell(input.getBuildTarget()),
-                      false /* enableProfiling */,
-                      executorService,
-                      input);
+                      params.getCell().getCell(input.getBuildTarget()), executorService, input);
             },
             targetGraphAndBuildTargets
                 .getBuildTargets()

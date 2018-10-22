@@ -222,7 +222,6 @@ public class DelegateAndGraphsInitializer {
             return args.getParser()
                 .getTargetNodeRawAttributes(
                     args.getState().getRootCell().getCell(input.getBuildTarget()),
-                    /* enableProfiling */ false,
                     args.getExecutorService(),
                     input);
           } catch (BuildFileParseException e) {

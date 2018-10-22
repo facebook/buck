@@ -405,7 +405,6 @@ public class DistBuildStateTest {
                   .get()
                   .getTargetNodeRawAttributes(
                       cell.getCell(input.getBuildTarget()),
-                      /* enableProfiling */ false,
                       MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService()),
                       input);
             } catch (BuildFileParseException e) {
