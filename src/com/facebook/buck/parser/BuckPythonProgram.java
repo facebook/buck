@@ -146,7 +146,7 @@ class BuckPythonProgram implements AutoCloseable {
       out.write(
           Joiner.on("\n")
               .join(
-                  "from __future__ import absolute_import",
+                  "from __future__ import absolute_import, print_function",
                   "import sys",
                   "PY2 = sys.version_info[0] == 2",
                   "sys.path.insert(0, "
@@ -173,7 +173,7 @@ class BuckPythonProgram implements AutoCloseable {
                   "        from buck_parser import buck",
                   "        buck.main()",
                   "    except KeyboardInterrupt:",
-                  "        print >> sys.stderr, 'Killed by User'",
+                  "        print('Killed by User', file=sys.stderr)",
                   ""));
     }
 
