@@ -438,7 +438,7 @@ public class CxxBuckConfig {
 
   /** @return whether to remap to the underlying host platform or to use #default */
   public boolean getShouldRemapHostPlatform() {
-    return delegate.getBooleanValue(cxxSection, SHOULD_REMAP_HOST_PLATFORM, false);
+    return delegate.getBooleanValue(cxxSection, SHOULD_REMAP_HOST_PLATFORM, true);
   }
 
   private Optional<ToolProvider> getToolProvider(String name) {
