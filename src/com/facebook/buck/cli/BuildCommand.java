@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_FILE_HASH_COMPUTATION;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PERFORM_LOCAL_BUILD;
@@ -43,7 +42,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
-import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -61,11 +59,8 @@ import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildClientStatsEvent;
 import com.facebook.buck.distributed.DistBuildConfig;
-import com.facebook.buck.distributed.DistBuildFileHashes;
 import com.facebook.buck.distributed.DistBuildPostBuildAnalysis;
 import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.DistBuildState;
-import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.DistLocalBuildMode;
 import com.facebook.buck.distributed.DistributedExitCode;
 import com.facebook.buck.distributed.RuleKeyNameAndType;
@@ -91,15 +86,9 @@ import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.PathTypeCoercer;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -124,8 +113,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -148,7 +135,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Immutable;
@@ -400,8 +386,7 @@ public class BuildCommand extends AbstractCommand {
       throw BuildFileParseException.createForUnknownParseError(e.getMessage());
     }
 
-    return buildCommand
-        .computeDistBuildState(
+    return AsyncJobStateFactory.computeDistBuildState(
             params, graphsAndBuildTargets, executor, Optional.empty(), RemoteCommand.BUILD)
         .getAsyncJobState();
   }
@@ -720,116 +705,6 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private AsyncJobStateAndCells computeDistBuildState(
-      CommandRunnerParams params,
-      GraphsAndBuildTargets graphsAndBuildTargets,
-      WeightedListeningExecutorService executorService,
-      Optional<ClientStatsTracker> clientStatsTracker,
-      RemoteCommand remoteCommand) {
-    DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
-
-    // Compute the file hashes.
-    ActionGraphAndBuilder actionGraphAndBuilder =
-        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder();
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-
-    clientStatsTracker.ifPresent(tracker -> tracker.startTimer(LOCAL_FILE_HASH_COMPUTATION));
-    DistBuildFileHashes distributedBuildFileHashes =
-        new DistBuildFileHashes(
-            actionGraphAndBuilder.getActionGraph(),
-            pathResolver,
-            ruleFinder,
-            params.getFileHashCache(),
-            cellIndexer,
-            executorService,
-            params.getRuleKeyConfiguration(),
-            params.getCell());
-    distributedBuildFileHashes
-        .getFileHashesComputationFuture()
-        .addListener(
-            () ->
-                clientStatsTracker.ifPresent(
-                    tracker -> tracker.stopTimer(LOCAL_FILE_HASH_COMPUTATION)),
-            executorService);
-
-    // Distributed builds serialize and send the unversioned target graph,
-    // and then deserialize and version remotely.
-    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
-        graphsAndBuildTargets.getGraphs().getTargetGraphForDistributedBuild();
-
-    TypeCoercerFactory typeCoercerFactory =
-        new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
-    ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
-        DefaultParserTargetNodeFactory.createForDistributedBuild(
-            params.getKnownRuleTypesProvider(),
-            new ConstructorArgMarshaller(typeCoercerFactory),
-            new TargetNodeFactory(typeCoercerFactory),
-            params.getRuleKeyConfiguration());
-    DistBuildTargetGraphCodec targetGraphCodec =
-        new DistBuildTargetGraphCodec(
-            executorService,
-            parserTargetNodeFactory,
-            input -> {
-              return params
-                  .getParser()
-                  .getTargetNodeRawAttributes(
-                      params.getCell().getCell(input.getBuildTarget()), executorService, input);
-            },
-            targetGraphAndBuildTargets
-                .getBuildTargets()
-                .stream()
-                .map(t -> t.getFullyQualifiedName())
-                .collect(Collectors.toSet()));
-
-    ListenableFuture<BuildJobState> asyncJobState =
-        executorService.submit(
-            () -> {
-              try {
-                BuildJobState state =
-                    DistBuildState.dump(
-                        cellIndexer,
-                        distributedBuildFileHashes,
-                        targetGraphCodec,
-                        targetGraphAndBuildTargets.getTargetGraph(),
-                        graphsAndBuildTargets.getBuildTargets(),
-                        remoteCommand,
-                        clientStatsTracker);
-                LOG.info("Finished computing serializable distributed build state.");
-                return state;
-              } catch (InterruptedException ex) {
-                distributedBuildFileHashes.cancel();
-                LOG.warn(
-                    ex,
-                    "Failed computing serializable distributed build state as interrupted. Local build probably finished first.");
-                Thread.currentThread().interrupt();
-                throw ex;
-              }
-            });
-
-    Futures.addCallback(
-        asyncJobState,
-        new FutureCallback<BuildJobState>() {
-          @Override
-          public void onSuccess(@Nullable BuildJobState result) {
-            LOG.info("Finished creating stampede BuildJobState.");
-          }
-
-          @Override
-          public void onFailure(Throwable t) {
-            // We need to cancel file hash computation here as well, in case the asyncJobState
-            // future didn't start at all, and hence wasn't able to cancel file hash computation
-            // itself.
-            LOG.warn("Failed to create stampede BuildJobState. Cancelling file hash computation.");
-            distributedBuildFileHashes.cancel();
-          }
-        },
-        MoreExecutors.directExecutor());
-
-    return AsyncJobStateAndCells.of(asyncJobState, cellIndexer);
-  }
-
   private ListeningExecutorService createStampedeControllerExecutorService(int maxThreads) {
     CommandThreadFactory stampedeCommandThreadFactory =
         new CommandThreadFactory(
@@ -883,7 +758,7 @@ public class BuildCommand extends AbstractCommand {
             ? RemoteCommand.RULE_KEY_DIVERGENCE_CHECK
             : RemoteCommand.BUILD;
     AsyncJobStateAndCells stateAndCells =
-        computeDistBuildState(
+        AsyncJobStateFactory.computeDistBuildState(
             params,
             graphsAndBuildTargets,
             executorService,
