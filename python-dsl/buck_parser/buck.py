@@ -448,6 +448,7 @@ def add_rule(rule, build_env):
 def glob(
     includes, excludes=None, include_dotfiles=False, build_env=None, search_base=None
 ):
+    # type: (List[str], Optional[List[str]], bool, BuildFileContext, str) -> List[str]
     if excludes is None:
         excludes = []
     assert isinstance(
@@ -1169,7 +1170,7 @@ class BuildFileProcessor(object):
             % (exclude + excludes)
         )
         excludes = excludes or exclude
-        build_env = self._current_build_env
+        build_env = self._current_build_env  # type: BuildFileContext
         return glob(
             includes,
             excludes=excludes,
