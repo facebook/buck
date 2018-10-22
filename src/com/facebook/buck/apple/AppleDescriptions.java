@@ -639,7 +639,8 @@ public class AppleDescriptions {
       Optional<String> codesignAdhocIdentity,
       Optional<Boolean> ibtoolModuleFlag,
       Duration codesignTimeout,
-      boolean copySwiftStdlibToFrameworks) {
+      boolean copySwiftStdlibToFrameworks,
+      boolean cacheLinks) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             cxxPlatformsProvider,
@@ -795,7 +796,7 @@ public class AppleDescriptions {
               debugFormat,
               cxxPlatformsProvider,
               appleCxxPlatforms,
-              cacheable);
+              cacheLinks);
       targetDebuggableBinaryRule = debuggableBinary;
       appleDsym = debuggableBinary.getAppleDsym();
     } else {

@@ -398,7 +398,8 @@ public class AppleBinaryDescription
         Optional.empty(),
         Optional.empty(),
         appleConfig.getCodesignTimeout(),
-        swiftBuckConfig.getCopyStdlibToFrameworks());
+        swiftBuckConfig.getCopyStdlibToFrameworks(),
+        cxxBuckConfig.shouldCacheLinks());
   }
 
   private BuildRule createBinary(

@@ -441,7 +441,8 @@ public class AppleLibraryDescription
         Optional.empty(),
         Optional.empty(),
         appleConfig.getCodesignTimeout(),
-        swiftBuckConfig.getCopyStdlibToFrameworks());
+        swiftBuckConfig.getCopyStdlibToFrameworks(),
+        cxxBuckConfig.shouldCacheLinks());
   }
 
   /**

@@ -343,7 +343,8 @@ public class FakeAppleRuleDescriptions {
           BINARY_DESCRIPTION,
           LIBRARY_DESCRIPTION,
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
-          DEFAULT_BUCK_CONFIG.getView(SwiftBuckConfig.class));
+          DEFAULT_BUCK_CONFIG.getView(SwiftBuckConfig.class),
+          CxxPlatformUtils.DEFAULT_CONFIG);
 
   /** A fake apple_test description with an iOS platform for use in tests. */
   public static final AppleTestDescription TEST_DESCRIPTION =
@@ -352,6 +353,7 @@ public class FakeAppleRuleDescriptions {
           XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager()),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
           DEFAULT_BUCK_CONFIG.getView(SwiftBuckConfig.class),
+          CxxPlatformUtils.DEFAULT_CONFIG,
           LIBRARY_DESCRIPTION);
 
   private static ToolchainProvider createTestToolchainProviderForSwiftPlatform(
