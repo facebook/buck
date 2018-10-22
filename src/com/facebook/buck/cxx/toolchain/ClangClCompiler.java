@@ -38,6 +38,17 @@ public class ClangClCompiler extends WindowsCompiler {
   @Override
   public Optional<String> getStderr(ProcessExecutor.Result result) {
     // clang-cl is sensible
-    return result.getStderr();
+    // But also insensible. It emits /showIncludes output to stdout. We need to combine
+    // the streams to get anything reasonable to work, including depfiles.
+    Optional<String> stdout = result.getStdout();
+    Optional<String> stderr = result.getStderr();
+    if (stdout.isPresent()) {
+      if (stderr.isPresent()) {
+        return Optional.of(stdout.get() + stderr.get());
+      }
+      return stdout;
+    }
+    // Either !isPresent or has a value, either way it's the only right answer.
+    return stderr;
   }
 }
