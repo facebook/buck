@@ -148,13 +148,15 @@ class BuckPythonProgram implements AutoCloseable {
               .join(
                   "from __future__ import absolute_import",
                   "import sys",
+                  "PY2 = sys.version_info[0] == 2",
                   "sys.path.insert(0, "
                       + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(pathlibDir))
                       + ")",
                   "sys.path.insert(0, "
                       + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(watchmanDir))
                       + ")",
-                  "sys.path.insert(0, "
+                  "if PY2:",
+                  "    sys.path.insert(0, "
                       + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(typingDir))
                       + ")",
                   // Path to the bundled python code.
