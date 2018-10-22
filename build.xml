@@ -50,11 +50,6 @@
 
   <property name="eclipse.dir" value="${basedir}/third-party/java/eclipse" />
 
-  <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
-  <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
-  <property name="typing.dir" value="${third-party.dir}/py/typing/python2" />
-  <property name="nailgun.dir" value="${third-party.dir}/nailgun" />
-
   <property name="immutables-builder-standalone.jar" value="${third-party.dir}/java/immutables/builder-2.5.7-SNAPSHOT.jar" />
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.5.7-SNAPSHOT.jar" />
   <property name="pf4j-standalone.jar" value="${third-party.dir}/java/pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
