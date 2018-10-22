@@ -323,7 +323,8 @@ public class AppleBinaryDescription
         unstrippedBinaryRule,
         AppleDebugFormat.FLAVOR_DOMAIN.getRequiredValue(buildTarget),
         cxxPlatformsProvider,
-        appleCxxPlatformsFlavorDomain);
+        appleCxxPlatformsFlavorDomain,
+        cxxBuckConfig.shouldCacheLinks());
   }
 
   private BuildRule createBundleBuildRule(

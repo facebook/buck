@@ -66,6 +66,8 @@ public class AppleDsym extends AbstractBuildRule
 
   private ImmutableSortedSet<BuildRule> buildDeps;
 
+  private boolean cacheable;
+
   public AppleDsym(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -74,13 +76,15 @@ public class AppleDsym extends AbstractBuildRule
       Tool lldb,
       SourcePath unstrippedBinarySourcePath,
       ImmutableSortedSet<SourcePath> additionalSymbolDeps,
-      Path dsymOutputPath) {
+      Path dsymOutputPath,
+      boolean cacheable) {
     super(buildTarget, projectFilesystem);
     this.dsymutil = dsymutil;
     this.lldb = lldb;
     this.unstrippedBinarySourcePath = unstrippedBinarySourcePath;
     this.additionalSymbolDeps = additionalSymbolDeps;
     this.dsymOutputPath = dsymOutputPath;
+    this.cacheable = cacheable;
     this.buildDeps =
         Stream.concat(
                 Stream.of(this.unstrippedBinarySourcePath), this.additionalSymbolDeps.stream())
@@ -170,4 +174,7 @@ public class AppleDsym extends AbstractBuildRule
   public SortedSet<BuildRule> getBuildDeps() {
     return buildDeps;
   }
+
+  @Override
+  public boolean isCacheable() { return cacheable; }
 }
