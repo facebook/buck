@@ -19,6 +19,8 @@ package com.facebook.buck.swift;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
+import com.facebook.buck.apple.AppleLibraryDescription;
+import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -46,9 +48,9 @@ public class SwiftDescriptionsTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
 
     SwiftLibraryDescriptionArg.Builder outputBuilder =
-        SwiftLibraryDescriptionArg.builder().setName("bar").setVersion("3");
+        SwiftLibraryDescriptionArg.builder();
 
-    CxxLibraryDescriptionArg.Builder args = CxxLibraryDescriptionArg.builder().setName("bar");
+    AppleLibraryDescriptionArg.Builder args = AppleLibraryDescriptionArg.builder().setName("bar");
 
     PathSourcePath swiftSrc = FakeSourcePath.of("foo/bar.swift");
 
@@ -59,7 +61,9 @@ public class SwiftDescriptionsTest {
     SwiftBuckConfig swiftBuckConfig =
         new SwiftBuckConfig(
             FakeBuckConfig.builder()
-                .setSections(ImmutableMap.of("swift", ImmutableMap.of("compiler_flags", "-g")))
+                .setSections(
+                    ImmutableMap.of(
+                        "swift", ImmutableMap.of("compiler_flags", "-g", "version", "3")))
                 .build());
 
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
@@ -67,13 +71,14 @@ public class SwiftDescriptionsTest {
     SwiftLibraryDescriptionArg output = outputBuilder.build();
     assertThat(output.getModuleName().get(), equalTo("bar"));
     assertThat(output.getSrcs(), equalTo(ImmutableSortedSet.<SourcePath>of(swiftSrc)));
+    assertThat(output.getVersion().get(), equalTo("3"));
 
-    args.setModuleName("baz");
+    args.setModuleName("baz").setSwiftVersion("4");
 
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
         swiftBuckConfig, pathResolver, outputBuilder, args.build(), buildTarget);
     output = outputBuilder.build();
     assertThat(output.getModuleName().get(), equalTo("baz"));
-    assertThat(output.getVersion().get(), equalTo("3"));
+    assertThat(output.getVersion().get(), equalTo("4"));
   }
 }
