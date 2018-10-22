@@ -21,7 +21,18 @@ package com.facebook.buck.jvm.core;
  * java 8 to java 7 desugar for Android builds.
  */
 public interface HasDesugarSupport {
-  default boolean IsDesugarEnabled() {
+
+  /**
+   * Desugar support for java 8 features withing single class file.
+   *
+   * <p>Such as Lambda expressions, Method references, Repeating annotations
+   */
+  default boolean isDesugarEnabled() {
+    return false;
+  }
+
+  /** Desugar support for interface default and static methods. */
+  default boolean isInterfaceMethodsDesugarEnabled() {
     return false;
   }
 }

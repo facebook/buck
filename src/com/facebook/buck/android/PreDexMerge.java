@@ -92,6 +92,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       EnumSet.of(
           DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
           DxStep.Option.RUN_IN_PROCESS,
+          DxStep.Option.NO_DESUGAR,
           DxStep.Option.NO_OPTIMIZE);
 
   @AddToRuleKey private final DexSplitMode dexSplitMode;

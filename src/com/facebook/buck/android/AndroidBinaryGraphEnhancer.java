@@ -44,6 +44,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -52,6 +53,7 @@ import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
+import com.facebook.buck.test.selectors.Nullable;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Either;
@@ -77,6 +79,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.SortedSet;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -727,20 +730,46 @@ public class AndroidBinaryGraphEnhancer {
           graphBuilder.computeIfAbsent(
               javaLibrary.getBuildTarget().withAppendedFlavors(getDexFlavor(dexTool)),
               preDexTarget -> {
+                @Nullable
+                ImmutableSortedSet<BuildRule> desugarDeps =
+                    dexTool.equals(DxStep.D8) && javaLibrary.isInterfaceMethodsDesugarEnabled()
+                        ? getDesugarDeps(javaLibrary)
+                        : null;
                 BuildRuleParams paramsForPreDex =
                     buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(javaLibrary));
+
                 return new DexProducedFromJavaLibrary(
                     preDexTarget,
                     javaLibrary.getProjectFilesystem(),
                     androidPlatformTarget,
                     paramsForPreDex,
                     javaLibrary,
-                    dexTool);
+                    dexTool,
+                    1,
+                    desugarDeps);
               });
       preDexDeps.put(
           apkModuleGraph.findModuleForTarget(buildTarget), (DexProducedFromJavaLibrary) preDexRule);
     }
     return preDexDeps.build();
+  }
+
+  /**
+   * Provides {@see BuildRule} set of abi dependencies that have desugar enabled on them.
+   *
+   * <p>These are the deps that are required for full desugaring of default and static interface
+   * methods
+   */
+  private ImmutableSortedSet<BuildRule> getDesugarDeps(JavaLibrary javaLibrary) {
+    return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(javaLibrary)
+        .stream()
+        .filter(Predicate.isEqual(javaLibrary).negate())
+        .filter(JavaLibrary::isDesugarEnabled)
+        .map(JavaLibrary::getAbiJar)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .map(graphBuilder::getRule)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   private NonPreDexedDexBuildable createNonPredexedDexBuildable(

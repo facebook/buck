@@ -319,6 +319,18 @@ public class JavaBuckConfigTest {
   }
 
   @Test
+  public void desugarInterfaceMethodsCanBeEnabled() {
+    JavaBuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of("java", ImmutableMap.of("desugar_interface_methods", "true")))
+            .build()
+            .getView(JavaBuckConfig.class);
+
+    assertTrue(config.shouldDesugarInterfaceMethods());
+  }
+
+  @Test
   public void doNotTrackClassUsageByDefaultForExternJavac() throws IOException {
     JavaBuckConfig config =
         FakeBuckConfig.builder()

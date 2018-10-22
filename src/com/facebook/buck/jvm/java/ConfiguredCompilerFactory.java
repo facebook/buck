@@ -37,6 +37,10 @@ public abstract class ConfiguredCompilerFactory {
     return false;
   }
 
+  public boolean shouldDesugarInterfaceMethods() {
+    return false;
+  }
+
   public boolean shouldCompileAgainstAbis() {
     // Buck's ABI generation support was built for Java and hasn't been extended for other JVM
     // languages yet, so this is defaulted false.

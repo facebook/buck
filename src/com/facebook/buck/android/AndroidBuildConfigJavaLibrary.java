@@ -87,6 +87,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         UnusedDependenciesAction.IGNORE,
         Optional.empty(),
         null,
+        false,
         false);
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(getBuildDeps().contains(androidBuildConfig));

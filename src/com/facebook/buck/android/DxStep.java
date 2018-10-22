@@ -74,6 +74,8 @@ public class DxStep extends ShellStep {
 
     /** Run DX with the --no-locals flag. */
     NO_LOCALS,
+    /** Disable java 8 desugaring when running D8 dexing tool. */
+    NO_DESUGAR,
     ;
   }
 
@@ -182,8 +184,7 @@ public class DxStep extends ShellStep {
    * @param options to pass to {@code dx}.
    * @param maxHeapSize The max heap size used for out of process dex.
    * @param dexTool the tool used to perform dexing.
-   * @param classpathFiles optionally specifies classpath resources that d8 may require to compile
-   *     your project's DEX files.
+   * @param classpathFiles specifies classpath for interface static and default methods desugaring.
    */
   public DxStep(
       ProjectFilesystem filesystem,
@@ -335,16 +336,15 @@ public class DxStep extends ShellStep {
                     options.contains(Option.NO_OPTIMIZE)
                         ? CompilationMode.DEBUG
                         : CompilationMode.RELEASE)
-                .setOutput(output, OutputMode.DexIndexed);
-        if (classpathFiles != null) {
+                .setOutput(output, OutputMode.DexIndexed)
+                .setDisableDesugaring(options.contains(Option.NO_DESUGAR));
+        if (classpathFiles != null && !classpathFiles.isEmpty()) {
           // classpathFiles is needed only for D8 java 8 desugar
           builder.addClasspathFiles(
               classpathFiles
                   .stream()
                   .map(filesystem::getPathForRelativeExistingPath)
                   .toArray(Path[]::new));
-        } else {
-          builder.setDisableDesugaring(true);
         }
         D8Command d8Command = builder.build();
         com.android.tools.r8.D8.run(d8Command);

@@ -156,8 +156,13 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public boolean IsDesugarEnabled() {
+  public boolean isDesugarEnabled() {
     return true;
+  }
+
+  @Override
+  public boolean isInterfaceMethodsDesugarEnabled() {
+    return false;
   }
 
   @Override

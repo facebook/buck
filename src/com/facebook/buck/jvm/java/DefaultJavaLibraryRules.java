@@ -70,7 +70,8 @@ public abstract class DefaultJavaLibraryRules {
         UnusedDependenciesAction unusedDependenciesAction,
         Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
         @Nullable CalculateSourceAbi previousRuleInPipeline,
-        boolean isDesugarRequired);
+        boolean isDesugarEnabled,
+        boolean isInterfaceMethodsDesugarEnabled);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -429,7 +430,8 @@ public abstract class DefaultJavaLibraryRules {
                 unusedDependenciesAction,
                 unusedDependenciesFinderFactory,
                 sourceAbiRule,
-                isDesugarRequired());
+                isDesugarRequired(),
+                getConfiguredCompilerFactory().shouldDesugarInterfaceMethods());
 
     getActionGraphBuilder().addToIndex(libraryRule);
     return libraryRule;
