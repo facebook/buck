@@ -103,11 +103,12 @@ public class BuckQueryEnvironmentTest {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
     PerBuildStateFactory perBuildStateFactory =
-        new PerBuildStateFactory(
+        PerBuildStateFactory.createFactory(
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
+            cell.getBuckConfig(),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus);
     Parser parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory, eventBus);

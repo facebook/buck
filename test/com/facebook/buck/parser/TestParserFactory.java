@@ -43,11 +43,12 @@ public class TestParserFactory {
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     return create(
         buckConfig,
-        new PerBuildStateFactory(
+        PerBuildStateFactory.createFactory(
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
+            buckConfig,
             WatchmanFactory.NULL_WATCHMAN,
             eventBus),
         eventBus);

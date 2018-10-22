@@ -100,11 +100,12 @@ public class TargetSpecResolverTest {
     parserPythonInterpreterProvider =
         new ParserPythonInterpreterProvider(parserConfig, executableFinder);
     perBuildStateFactory =
-        new PerBuildStateFactory(
+        PerBuildStateFactory.createFactory(
             typeCoercerFactory,
             constructorArgMarshaller,
             knownRuleTypesProvider,
             parserPythonInterpreterProvider,
+            cell.getBuckConfig(),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus);
     targetNodeTargetSpecResolver = new TargetSpecResolver();

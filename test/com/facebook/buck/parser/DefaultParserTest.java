@@ -186,11 +186,12 @@ public class DefaultParserTest {
       Path buildFile)
       throws BuildFileParseException {
     try (PerBuildState state =
-        new PerBuildStateFactory(
+        PerBuildStateFactory.createFactory(
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
+                cell.getBuckConfig(),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus)
             .create(

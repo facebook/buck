@@ -102,11 +102,12 @@ public class QueryCommandTest {
     ListeningExecutorService executorService = new FakeListeningExecutorService();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PerBuildState perBuildState =
-        new PerBuildStateFactory(
+        PerBuildStateFactory.createFactory(
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
+                cell.getBuckConfig(),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus)
             .create(

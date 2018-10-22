@@ -1439,11 +1439,12 @@ public final class Main {
       Parser parser =
           new DefaultParser(
               daemon.getDaemonicParserState(),
-              new PerBuildStateFactory(
+              PerBuildStateFactory.createFactory(
                   typeCoercerFactory,
                   new ConstructorArgMarshaller(typeCoercerFactory),
                   knownRuleTypesProvider,
                   new ParserPythonInterpreterProvider(parserConfig, executableFinder),
+                  rootCell.getBuckConfig(),
                   watchman,
                   buildEventBus),
               new TargetSpecResolver(),
@@ -1472,11 +1473,12 @@ public final class Main {
           ParserAndCaches.of(
               new DefaultParser(
                   new DaemonicParserState(typeCoercerFactory, parserConfig.getNumParsingThreads()),
-                  new PerBuildStateFactory(
+                  PerBuildStateFactory.createFactory(
                       typeCoercerFactory,
                       new ConstructorArgMarshaller(typeCoercerFactory),
                       knownRuleTypesProvider,
                       new ParserPythonInterpreterProvider(parserConfig, executableFinder),
+                      rootCell.getBuckConfig(),
                       watchman,
                       buildEventBus),
                   new TargetSpecResolver(),
