@@ -87,7 +87,6 @@ import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -360,37 +359,6 @@ public class BuildCommand extends AbstractCommand {
   private final SettableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator =
       SettableFuture.create();
 
-  /**
-   * Create the serializable {@link BuildJobState} for distributed builds.
-   *
-   * @param buildTargets - Top level targets.
-   * @param params - Client side parameters.
-   * @param executor - Executor for async ops.
-   * @return - New instance of serializable {@link BuildJobState}.
-   * @throws InterruptedException
-   * @throws IOException
-   */
-  public static ListenableFuture<BuildJobState> getAsyncDistBuildState(
-      List<String> buildTargets,
-      CommandRunnerParams params,
-      WeightedListeningExecutorService executor)
-      throws InterruptedException, IOException {
-    BuildCommand buildCommand = new BuildCommand(buildTargets);
-    buildCommand.assertArguments(params);
-
-    GraphsAndBuildTargets graphsAndBuildTargets = null;
-    try {
-      graphsAndBuildTargets =
-          buildCommand.createGraphsAndTargets(params, executor, Optional.empty());
-    } catch (ActionGraphCreationException e) {
-      throw BuildFileParseException.createForUnknownParseError(e.getMessage());
-    }
-
-    return AsyncJobStateFactory.computeDistBuildState(
-            params, graphsAndBuildTargets, executor, Optional.empty(), RemoteCommand.BUILD)
-        .getAsyncJobState();
-  }
-
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
@@ -459,7 +427,7 @@ public class BuildCommand extends AbstractCommand {
     return started;
   }
 
-  private GraphsAndBuildTargets createGraphsAndTargets(
+  GraphsAndBuildTargets createGraphsAndTargets(
       CommandRunnerParams params,
       ListeningExecutorService executorService,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger)
