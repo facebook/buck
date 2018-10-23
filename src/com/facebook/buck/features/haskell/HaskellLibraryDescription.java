@@ -779,7 +779,8 @@ public class HaskellLibraryDescription
               args.getCompilerFlags(),
               Optional.empty(),
               Optional.empty(),
-              ImmutableList.of());
+              ImmutableList.of(),
+              args.isEnableProfiling());
       }
 
       throw new IllegalStateException(

@@ -423,9 +423,8 @@ public class HaskellDescriptionUtils {
       ImmutableList<String> argCompilerFlags,
       Optional<BuildTarget> argGhciBinDep,
       Optional<SourcePath> argGhciInit,
-      ImmutableList<SourcePath> argExtraScriptTemplates) {
-    boolean hsProfile = true; // Always build profiled for ghci
-
+      ImmutableList<SourcePath> argExtraScriptTemplates,
+      boolean hsProfile) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
