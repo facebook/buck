@@ -26,6 +26,33 @@ Before executing, Buck reads this file to incorporate any customizations
 it specifies.
 </p>
 
+
+<h2>Performance impact of Buck configuration changes</h2>
+
+<p>
+Changes to Buck's configuration can&mdash;temporarily&mdash;degrade 
+Buck's performance because of how they affect Buck's parsing and caching 
+behavior.
+</p>
+
+<p>
+If you change the Buck configuration in any of the locations discussed
+here, it can trigger Buck to reparse your build files the next time
+you build. If your build files are large or you have many build files,
+this reparsing can impact your build time.
+</p>
+
+<p>
+Also, because configuration settings are sometimes included in the cache
+keys that Buck uses in its caching system, changes to Buck's
+configuration can invalidate previously-built artifacts in Buck's
+caches. If this occurs, Buck rebuilds those artifacts, which can impact
+your build time.  
+</p>
+
+
+<h2>The .buckconfig file uses the INI file format</h2>
+
 <p>
 The <code>.buckconfig</code> file uses the
 {sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a>. 
@@ -148,24 +175,121 @@ as a comment character in <code>.buckconfig</code>.
 
 <p>
 The root of your {call buck.key_concepts_link}{param rendered_text: 'project' /}{/call} may 
-also contain a second configuration file named <code>.buckconfig.local</code>. Its format is 
-the same as that of <code>.buckconfig</code>, but definitions in <code>.buckconfig.local</code>{sp}
+contain a second configuration file named <code>.buckconfig.local</code>. Its format is 
+the same as that of <code>.buckconfig</code>, but settings in <code>.buckconfig.local</code>{sp}
 override those in <code>.buckconfig</code>. In practice, <code>.buckconfig</code> is a
-version-controlled file that contains settings that are applicable to all team members (such as
-standard includes for build files), whereas <code>.buckconfig.local</code> is excluded from
-version control because it contains user-specific overrides, such as personal aliases.
+version-controlled file that contains settings that are applicable to all team members, 
+whereas <code>.buckconfig.local</code> is excluded from version control to allow users to define
+personal settings, such as personal aliases.
 </p>
 
 
 <h2>Other initialization files</h2>
 
 <p>
-If a configuration option is not found in the project's <code>.buckconfig</code>, it will fall
-back to a <code>.buckconfig</code> file and <code>.buckconfig.d</code> directory in your home
-directory. Each of those has the same format as a <code>.buckconfig</code> file but will have
-any settings overridden by project-specific configurations. If you have build issues, make sure
-that there is nothing in your <code>.buckconfig</code> or <code>.buckconfig.d</code> that could
-be conflicting with the project you're trying to build.
+In addition to the <code>.buckconfig</code> and <code>.buckconfig.local</code> files in 
+the project root, Buck supports a cascading set of other configuration
+files. These files are identified either by having the name <code>.buckconfig</code> or 
+by being located in a subdirectory named <code>.buckconfig.d</code>.
+</p>
+
+<p>
+Buck supports the following locations for additional <code>.buckconfig</code> files 
+and <code>.buckconfig.d</code> directories:
+</p>
+
+<ol>
+
+  <li>
+    The root directory of your Buck project. That is, you can locate 
+    a <code>.buckconfig.d</code> directory in the same location 
+    as <code>.buckconfig.local</code> and the primary <code>.buckconfig</code>. 
+  </li>
+
+  <li>
+    The current user's home directory which, on Unix-like systems, is
+    available from the <code>HOME</code> environment variable or through
+    the <code>~</code> symbol.
+  </li>
+
+  <li>
+    The system directory <code>/etc/</code>.
+  </li>
+
+</ol>
+
+
+<p>
+Buck treats <em>any</em> file&mdash;irrespective of name&mdash;in a <code>.buckconfig.d</code> directory 
+as a Buck configuration file, provided that it adheres to <code>.buckconfig</code> syntax.
+</p>
+
+<p>
+Note that a <code>.buckconfig.d</code> directory is distinct from the 
+similarly-named <code>.buckd</code> directory which is used by 
+the {sp}{call buck.concept_link}{param page: 'buckd' /}{param name: 'Buck Daemon (<code>buckd</code>)' /}{/call}{sp}.
+</p>
+
+<p>
+For a description of how Buck resolves collisions between settings in
+these configuration files, see the 
+section <strong>Precedence of Buck configuration specifications</strong> below.
+</p>
+
+
+<h2>Command-line control of configuration</h2>
+
+<p>
+In addition to the above configuration files, Buck supports specifying 
+additional configuration files from the Buck command line using 
+the <code>--config-file</code> parameter.
+</p>
+
+<p>
+You can also specify configuration settings <em>individually</em> on 
+the Buck command line using the <code>--config</code> (<code>-c</code>) parameter.
+Furthermore, you can aggregate these settings into <em>flag files</em> using 
+the <code>--flagfile</code> parameter. A flag file provides similar
+functionality to a configuration file but uses a different syntax.
+Flag files are sometimes called <em>mode files</em> or <em>at</em> (<code>@</code>) files.
+</p>
+
+<p>
+For more information about the <code>--config-file</code> and <code>--flagfile</code> parameters, 
+see the {call buck.cmd_link}{param name: 'common_parameters' /}{param
+rendered_text: '<strong>Common Parameters</strong>' /}{/call} topic.
+</p>
+
+
+<h2>Precedence of Buck configuration specifications</h2>
+
+<p>
+The following list shows the order of precedence for how Buck interprets
+its configuration specifications. Settings specified using a method closer 
+to the top of the list have higher precedence and will override those lower 
+on the list. For example, the <code>.buckconfig</code> file in the project directory
+overrides a <code>.buckconfig</code> file in the user's <code>HOME</code> directory.
+</p>
+
+<ol>
+<li>
+Configuration specified on the command line using <code>--config</code> (<code>-c</code>), <code>--config-file</code> and <code>--flag-file</code>. 
+Configuration specified later on the command line overrides configuration specified earlier.
+</li>
+<li><code>.buckconfig.local</code> in the project directory.</li>
+<li><code>.buckconfig</code> in the project directory.</li>
+<li><code>.buckconfig</code> in the <code>HOME</code> directory.</li>
+<li>Files in a <code>.buckconfig.d</code> subdirectory of the project directory, irrespective of filename.</li>
+<li>Files in a <code>.buckconfig.d</code> subdirectory of the <code>HOME</code> directory, irrespective of filename.</li>
+<li><code>.buckconfig</code> in the <code>/etc/</code> directory.</li>
+<li>Files in a <code>.buckconfig.d</code> subdirectory of the <code>/etc/</code> directory, irrespective of filename.</li>
+</ol>
+
+<p>
+Files in a <code>.buckconfig.d</code> directory have precedence
+according to the lexicographical order of their file names. 
+Files <em>later</em> in the lexicographical order have precedence 
+over files earlier in that order.
 </p>
 
 
