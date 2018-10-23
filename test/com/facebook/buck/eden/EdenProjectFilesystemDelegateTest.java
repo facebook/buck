@@ -24,6 +24,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
@@ -33,9 +35,12 @@ import com.google.common.hash.Hashing;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -182,5 +187,76 @@ public class EdenProjectFilesystemDelegateTest {
         edenDelegate.computeSha1(target));
 
     verify(mount);
+  }
+
+  @Test
+  public void computeSha1ViaXattrForFileUnderMount() throws IOException {
+    FileSystem fs =
+        Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("user").build());
+    Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
+    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+
+    Path path = fs.getPath("/foo");
+    Files.createFile(path);
+    UserDefinedFileAttributeView view =
+        Files.getFileAttributeView(path, UserDefinedFileAttributeView.class);
+
+    ByteBuffer buf = ByteBuffer.wrap(DUMMY_SHA1.toString().getBytes(StandardCharsets.UTF_8));
+    view.write("sha1", buf);
+    EdenMount mount = createMock(EdenMount.class);
+    Config config = ConfigBuilder.createFromText("[eden]", "use_xattr = true");
+    EdenProjectFilesystemDelegate edenDelegate =
+        new EdenProjectFilesystemDelegate(mount, delegate, config);
+    assertEquals(DUMMY_SHA1, edenDelegate.computeSha1(path));
+  }
+
+  @Test
+  public void computeSha1ViaXattrForFileUnderMountInvalidUTF8() throws IOException {
+    FileSystem fs =
+        Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("user").build());
+    Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
+    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+
+    Path path = fs.getPath("/foo");
+    Files.createFile(path);
+    byte[] bytes = new byte[] {66, 85, 67, 75};
+    Files.write(path, bytes);
+    UserDefinedFileAttributeView view =
+        Files.getFileAttributeView(path, UserDefinedFileAttributeView.class);
+
+    ByteBuffer buf = ByteBuffer.allocate(2);
+    buf.putChar((char) 0xfffe);
+    view.write("sha1", buf);
+    EdenMount mount = createMock(EdenMount.class);
+    Config config = ConfigBuilder.createFromText("[eden]", "use_xattr = true");
+    EdenProjectFilesystemDelegate edenDelegate =
+        new EdenProjectFilesystemDelegate(mount, delegate, config);
+    assertEquals(
+        "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of the contents",
+        Sha1HashCode.fromHashCode(Hashing.sha1().hashBytes(bytes)),
+        edenDelegate.computeSha1(path));
+  }
+
+  @Test
+  public void computeSha1ViaXattrForFileOutsideMount() throws IOException {
+    FileSystem fs =
+        Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("user").build());
+    Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
+    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+
+    Path path = fs.getPath("/foo");
+    Files.createFile(path);
+    byte[] bytes = new byte[] {66, 85, 67, 75};
+    Files.write(path, bytes);
+
+    EdenMount mount = createMock(EdenMount.class);
+    Config config = ConfigBuilder.createFromText("[eden]", "use_xattr = true");
+    EdenProjectFilesystemDelegate edenDelegate =
+        new EdenProjectFilesystemDelegate(mount, delegate, config);
+    assertEquals(
+        "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of a file that is "
+            + "outside of the EdenFS root.",
+        Sha1HashCode.fromHashCode(Hashing.sha1().hashBytes(bytes)),
+        edenDelegate.computeSha1(path));
   }
 }
