@@ -19,7 +19,6 @@ package com.facebook.buck.swift;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
@@ -33,7 +32,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
@@ -47,8 +45,7 @@ public class SwiftDescriptionsTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
 
-    SwiftLibraryDescriptionArg.Builder outputBuilder =
-        SwiftLibraryDescriptionArg.builder();
+    SwiftLibraryDescriptionArg.Builder outputBuilder = SwiftLibraryDescriptionArg.builder();
 
     AppleLibraryDescriptionArg.Builder args = AppleLibraryDescriptionArg.builder().setName("bar");
 
