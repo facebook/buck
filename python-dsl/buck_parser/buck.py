@@ -34,7 +34,7 @@ from typing import (
 
 import pywatchman
 from pywatchman import WatchmanError
-from six import string_types
+from six import iteritems, itervalues, string_types
 
 # Python 2.6, 2.7, use iterator filter from Python 3
 from six.moves import builtins, filter
@@ -733,7 +733,7 @@ def flatten_list_of_dicts(list_of_dicts):
     """
     return_value = {}
     for d in list_of_dicts:
-        for k, v in d.iteritems():
+        for k, v in iteritems(d):
             return_value[k] = v
     return return_value
 
@@ -981,7 +981,7 @@ class BuildFileProcessor(object):
                 dst[symbol] = src.__dict__[symbol]
 
         if whitelist_mapping is not None:
-            for exported_name, symbol in whitelist_mapping.iteritems():
+            for exported_name, symbol in iteritems(whitelist_mapping):
                 if symbol not in src.__dict__:
                     raise KeyError('"%s" is not defined in %s' % (symbol, src.__name__))
                 dst[exported_name] = src.__dict__[symbol]
@@ -1012,9 +1012,9 @@ class BuildFileProcessor(object):
         Updates the build functions to use the given build context when called.
         """
 
-        for function in self._global_functions.itervalues():
+        for function in itervalues(self._global_functions):
             function.build_env = build_env
-        for function in self._native_functions.itervalues():
+        for function in itervalues(self._native_functions):
             function.build_env = build_env
 
     def _install_builtins(self, namespace, force_native_rules=False):
@@ -1022,10 +1022,10 @@ class BuildFileProcessor(object):
         Installs the build functions, by their name, into the given namespace.
         """
 
-        for name, function in self._global_functions.iteritems():
+        for name, function in iteritems(self._global_functions):
             namespace[name] = function.invoke
         if not self._disable_implicit_native_rules or force_native_rules:
-            for name, function in self._native_functions.iteritems():
+            for name, function in iteritems(self._native_functions):
                 namespace[name] = function.invoke
 
     @contextlib.contextmanager
@@ -1603,7 +1603,7 @@ def encode_result(values, diagnostics, profile):
     # type: (List[Dict[str, object]], List[Diagnostic], Optional[str]) -> str
     result = {
         "values": [
-            dict((k, v) for k, v in value.iteritems() if v is not None)
+            dict((k, v) for k, v in iteritems(value) if v is not None)
             for value in values
         ]
     }
@@ -1838,7 +1838,7 @@ def main():
     project_root = os.path.abspath(options.project_root)
     cell_roots = dict(
         (k, os.path.abspath(cygwin_adjusted_path(v)))
-        for (k, v) in options.cell_roots.iteritems()
+        for (k, v) in iteritems(options.cell_roots)
     )
 
     watchman_client = None
@@ -1860,8 +1860,8 @@ def main():
     configs = {}
     if options.config is not None:
         with open(options.config, "rb") as f:
-            for section, contents in json.load(f).iteritems():
-                for field, value in contents.iteritems():
+            for section, contents in iteritems(json.load(f)):
+                for field, value in iteritems(contents):
                     configs[(section, field)] = value
 
     ignore_paths = []
