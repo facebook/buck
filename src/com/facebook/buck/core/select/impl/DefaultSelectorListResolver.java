@@ -83,7 +83,7 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
     }
 
     if (matchingResult == null) {
-      assertSelectorHasDefault(attributeName, selector);
+      assertSelectorHasDefault(buildTarget, attributeName, selector);
       matchingResult = selector.hasDefaultCondition() ? selector.getDefaultConditionValue() : null;
     }
 
@@ -143,13 +143,18 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
     }
   }
 
-  private static void assertSelectorHasDefault(String attributeName, Selector<?> selector) {
+  private static void assertSelectorHasDefault(
+      BuildTarget buildTarget, String attributeName, Selector<?> selector) {
     if (selector.hasDefaultCondition()) {
       return;
     }
 
     String noMatchMessage =
-        "None of the conditions in attribute \"" + attributeName + "\" match the configuration";
+        "None of the conditions in attribute \""
+            + attributeName
+            + "\" of "
+            + buildTarget
+            + " match the configuration";
     if (selector.getNoMatchMessage().isEmpty()) {
       Iterable<?> keys =
           selector
@@ -159,7 +164,7 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
               .filter(key -> !key.isReserved())
               .map(SelectorKey::getBuildTarget)
               .collect(Collectors.toList());
-      noMatchMessage += ". Checked conditions:\n " + Joiner.on("\n ").join(keys);
+      noMatchMessage += ".\nChecked conditions:\n " + Joiner.on("\n ").join(keys);
     } else {
       noMatchMessage += ": " + selector.getNoMatchMessage();
     }

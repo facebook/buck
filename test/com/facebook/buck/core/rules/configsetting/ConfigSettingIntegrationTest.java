@@ -57,7 +57,7 @@ public class ConfigSettingIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            "None of the conditions in attribute \"srcs\" match the configuration. Checked conditions:\n"
+            "None of the conditions in attribute \"srcs\" of //:cat match the configuration.\nChecked conditions:\n"
                 + " //:a\n"
                 + " //:b"));
   }
@@ -193,7 +193,7 @@ public class ConfigSettingIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            "None of the conditions in attribute \"srcs\" match the configuration. Checked conditions:\n"
+            "None of the conditions in attribute \"srcs\" of //:cat match the configuration.\nChecked conditions:\n"
                 + " //:osx_config\n"
                 + " //:linux_aarch64_config"));
   }
