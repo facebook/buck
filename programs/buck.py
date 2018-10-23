@@ -56,7 +56,6 @@ if sys.version_info < (2, 7):
 
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-REQUIRED_JAVA_VERSION = "8"
 
 
 # Kill all buck processes
@@ -107,7 +106,7 @@ def _get_java_version(java_path):
     return pieces[1]
 
 
-def _try_to_verify_java_version(java_version_status_queue):
+def _try_to_verify_java_version(java_version_status_queue, required_java_version):
     """
     Best effort check to make sure users have required Java version installed.
     """
@@ -115,11 +114,11 @@ def _try_to_verify_java_version(java_version_status_queue):
     warning = None
     try:
         java_version = _get_java_version(java_path)
-        if java_version and java_version != REQUIRED_JAVA_VERSION:
+        if java_version and java_version != required_java_version:
             warning = "You're using Java {}, but Buck requires Java {}.\nPlease follow \
 https://buckbuild.com/setup/getting_started.html \
 to properly setup your local environment and avoid build issues.".format(
-                java_version, REQUIRED_JAVA_VERSION
+                java_version, required_java_version
             )
 
     except:
@@ -131,13 +130,16 @@ is correct.".format(
     java_version_status_queue.put(warning)
 
 
-def _try_to_verify_java_version_off_thread(java_version_status_queue):
+def _try_to_verify_java_version_off_thread(
+    java_version_status_queue, required_java_version
+):
     """ Attempts to validate the java version off main execution thread.
         The reason for this is to speed up the start-up time for the buck process.
         testing has shown that starting java process is rather expensive and on local tests,
         this optimization has reduced startup time of 'buck run' from 673 ms to 520 ms. """
     verify_java_version_thread = threading.Thread(
-        target=_try_to_verify_java_version, args=(java_version_status_queue,)
+        target=_try_to_verify_java_version,
+        args=(java_version_status_queue, required_java_version),
     )
     verify_java_version_thread.daemon = True
     verify_java_version_thread.start()
@@ -164,8 +166,17 @@ def _emit_java_version_warnings_if_any(java_version_status_queue):
 
 def main(argv, reporter):
     java_version_status_queue = Queue(maxsize=1)
+    required_java_version = "8"
 
-    _try_to_verify_java_version_off_thread(java_version_status_queue)
+    java10_test_mode_arg = "--java10-test-mode"
+    java10_test_mode = java10_test_mode_arg in argv
+    if java10_test_mode:
+        argv.remove(java10_test_mode_arg)
+        required_java_version = "10"
+
+    _try_to_verify_java_version_off_thread(
+        java_version_status_queue, required_java_version
+    )
 
     def get_repo(p):
         # Try to detect if we're running a PEX by checking if we were invoked
@@ -180,7 +191,7 @@ def main(argv, reporter):
             return BuckRepo(THIS_DIR, p, reporter)
 
     # If 'killall' is the second argument, shut down all the buckd processes
-    if sys.argv[1:] == ["killall"]:
+    if argv[1:] == ["killall"]:
         return killall_buck(reporter)
 
     install_signal_handlers()
@@ -194,10 +205,10 @@ def main(argv, reporter):
                 with get_repo(project) as buck_repo:
                     # If 'kill' is the second argument, shut down the buckd
                     # process
-                    if sys.argv[1:] == ["kill"]:
+                    if argv[1:] == ["kill"]:
                         buck_repo.kill_buckd()
                         return ExitCode.SUCCESS
-                    return buck_repo.launch_buck(build_id)
+                    return buck_repo.launch_buck(build_id, argv, java10_test_mode)
     finally:
         if tracing_dir:
             Tracing.write_to_dir(tracing_dir, build_id)

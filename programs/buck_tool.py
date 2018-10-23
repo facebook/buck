@@ -297,7 +297,7 @@ class BuckTool(object):
             argv = self._add_args(argv, ["-c", "cache.http_mode=readonly"])
         return argv
 
-    def _run_with_nailgun(self, argv, env):
+    def _run_with_nailgun(self, argv, env, java10_test_mode):
         """
         Run the command using nailgun.  If the daemon is busy, block until it becomes free.
         """
@@ -353,7 +353,7 @@ class BuckTool(object):
 
         return exit_code
 
-    def _run_without_nailgun(self, argv, env):
+    def _run_without_nailgun(self, argv, env, java10_test_mode):
         """
         Run the command by directly invoking `java` (rather than by sending a command via nailgun)
         """
@@ -365,7 +365,9 @@ class BuckTool(object):
             "-XX:+UseG1GC",
         ]
         command.extend(
-            self._get_java_args(self._get_buck_version_uid(), extra_default_options)
+            self._get_java_args(
+                self._get_buck_version_uid(), java10_test_mode, extra_default_options
+            )
         )
         command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
         command.append("com.facebook.buck.cli.Main")
@@ -378,7 +380,9 @@ class BuckTool(object):
                 command, cwd=self._buck_project.root, env=env, executable=java
             )
 
-    def _execute_command_and_maybe_run_target(self, run_fn, env):
+    def _execute_command_and_maybe_run_target(
+        self, run_fn, env, argv, java10_test_mode
+    ):
         """
         Run a buck command using the specified `run_fn`.  If the command is "run", get the path,
         args, etc. from the daemon, and raise an exception that tells __main__ to run that binary
@@ -406,14 +410,14 @@ class BuckTool(object):
                         handle, console_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING
                     )
 
-            argv = sys.argv[1:]
+            argv = argv[1:]
             if len(argv) == 0 or argv[0] != "run":
-                return run_fn(argv, env)
+                return run_fn(argv, env, java10_test_mode)
             else:
                 with tempfile.NamedTemporaryFile(dir=self._tmp_dir) as argsfile:
                     # Splice in location of command file to run outside buckd
                     argv = [argv[0]] + ["--command-args-file", argsfile.name] + argv[1:]
-                    exit_code = run_fn(argv, env)
+                    exit_code = run_fn(argv, env, java10_test_mode)
                     if exit_code != 0 or os.path.getsize(argsfile.name) == 0:
                         # Build failed, so there's nothing to run.  Exit normally.
                         return exit_code
@@ -427,7 +431,7 @@ class BuckTool(object):
                     cwd = cmd["cwd"].encode("utf8")
                     raise ExecuteTarget(path, argv, envp, cwd)
 
-    def launch_buck(self, build_id):
+    def launch_buck(self, build_id, argv, java10_test_mode):
         with Tracing("BuckTool.launch_buck"):
             with JvmCrashLogger(self, self._buck_project.root):
                 self._reporter.build_id = build_id
@@ -489,7 +493,9 @@ class BuckTool(object):
 
                     if need_start:
                         self.kill_buckd()
-                        if not self.launch_buckd(buck_version_uid=buck_version_uid):
+                        if not self.launch_buckd(
+                            java10_test_mode, buck_version_uid=buck_version_uid
+                        ):
                             use_buckd = False
                             self._reporter.no_buckd_reason = "daemon_failure"
                             logging.warning(
@@ -506,7 +512,9 @@ class BuckTool(object):
 
                 self._unpack_modules()
 
-                exit_code = self._execute_command_and_maybe_run_target(run_fn, env)
+                exit_code = self._execute_command_and_maybe_run_target(
+                    run_fn, env, argv, java10_test_mode
+                )
 
                 # Most shells return process termination with signal as
                 # 128 + N, where N is the signal. However Python's subprocess
@@ -517,7 +525,7 @@ class BuckTool(object):
                 return exit_code
 
 
-    def launch_buckd(self, buck_version_uid=None):
+    def launch_buckd(self, java10_test_mode, buck_version_uid=None):
         with Tracing("BuckTool.launch_buckd"):
             setup_watchman_watch()
             if buck_version_uid is None:
@@ -558,7 +566,11 @@ class BuckTool(object):
                 "-XX:MaxHeapFreeRatio=40",
             ]
 
-            command.extend(self._get_java_args(buck_version_uid, extra_default_options))
+            command.extend(
+                self._get_java_args(
+                    buck_version_uid, java10_test_mode, extra_default_options
+                )
+            )
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
             command.append("com.facebook.buck.cli.Main$DaemonBootstrap")
             command.append(self._buck_project.get_buckd_transport_address())
@@ -724,7 +736,7 @@ class BuckTool(object):
                     raise
             return True
 
-    def _get_java_args(self, version_uid, extra_default_options=None):
+    def _get_java_args(self, version_uid, java10_test_mode, extra_default_options=None):
         with Tracing("BuckTool._get_java_args"):
             java_args = [
                 "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
@@ -751,6 +763,14 @@ class BuckTool(object):
                     "-Djava.nio.file.spi.DefaultFileSystemProvider="
                     "com.facebook.buck.cli.bootstrapper.filesystem.BuckFileSystemProvider"
                 )
+
+                if java10_test_mode:
+                    # In Java 9+, DefaultFileSystemProvider is initialized at a time during which
+                    # the classes in the normal classpath are not visible to the system class
+                    # loader, so we add the Buck bootstrapper to Java's boot classpath here.
+                    java_args.append(
+                        "-Xbootclasspath/a:" + self._get_bootstrap_classpath()
+                    )
 
             resource_lock_path = self._get_resource_lock_path()
             if resource_lock_path is not None:
