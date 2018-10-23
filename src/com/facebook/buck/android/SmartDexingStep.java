@@ -55,6 +55,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -87,6 +88,7 @@ public class SmartDexingStep implements Step {
   private final AndroidPlatformTarget androidPlatformTarget;
   private final BuildContext buildContext;
   private final ProjectFilesystem filesystem;
+  private final boolean desugarIntefaceMethods;
   private final Supplier<Multimap<Path, Path>> outputToInputsSupplier;
   private final Optional<Path> secondaryOutputDir;
   private final DexInputHashesProvider dexInputHashesProvider;
@@ -123,10 +125,12 @@ public class SmartDexingStep implements Step {
       ListeningExecutorService executorService,
       OptionalInt xzCompressionLevel,
       Optional<String> dxMaxHeapSize,
-      String dexTool) {
+      String dexTool,
+      boolean desugarIntefaceMethods) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildContext = buildContext;
     this.filesystem = filesystem;
+    this.desugarIntefaceMethods = desugarIntefaceMethods;
     this.outputToInputsSupplier =
         MoreSuppliers.memoize(
             () -> {
@@ -318,7 +322,10 @@ public class SmartDexingStep implements Step {
                     dxOptions,
                     xzCompressionLevel,
                     dxMaxHeapSize,
-                    dexTool))
+                    dexTool,
+                    desugarIntefaceMethods
+                        ? subtractPaths(outputToInputs.values(), outputInputsPair.getValue())
+                        : null))
         .filter(dxPseudoRule -> !dxPseudoRule.checkIsCached())
         .map(
             dxPseudoRule -> {
@@ -326,6 +333,13 @@ public class SmartDexingStep implements Step {
               dxPseudoRule.buildInternal(steps);
               return steps.build();
             });
+  }
+
+  private static Collection<Path> subtractPaths(
+      Collection<Path> allJars, Collection<Path> subtract) {
+    HashSet<Path> filtered = new HashSet<>(allJars);
+    filtered.removeAll(subtract);
+    return filtered;
   }
 
   /**
@@ -352,6 +366,7 @@ public class SmartDexingStep implements Step {
     private final OptionalInt xzCompressionLevel;
     private final Optional<String> dxMaxHeapSize;
     private final String dexTool;
+    @Nullable private final Collection<Path> classpathFiles;
 
     public DxPseudoRule(
         AndroidPlatformTarget androidPlatformTarget,
@@ -364,7 +379,8 @@ public class SmartDexingStep implements Step {
         EnumSet<Option> dxOptions,
         OptionalInt xzCompressionLevel,
         Optional<String> dxMaxHeapSize,
-        String dexTool) {
+        String dexTool,
+        @Nullable Collection<Path> classpathFiles) {
       this.androidPlatformTarget = androidPlatformTarget;
       this.buildContext = buildContext;
       this.filesystem = filesystem;
@@ -376,6 +392,7 @@ public class SmartDexingStep implements Step {
       this.xzCompressionLevel = xzCompressionLevel;
       this.dxMaxHeapSize = dxMaxHeapSize;
       this.dexTool = dexTool;
+      this.classpathFiles = classpathFiles;
     }
 
     /**
@@ -426,7 +443,8 @@ public class SmartDexingStep implements Step {
           dxOptions,
           xzCompressionLevel,
           dxMaxHeapSize,
-          dexTool);
+          dexTool,
+          classpathFiles);
       steps.add(
           new WriteFileStep(filesystem, newInputsHash, outputHashPath, /* executable */ false));
     }
@@ -449,7 +467,8 @@ public class SmartDexingStep implements Step {
       EnumSet<Option> dxOptions,
       OptionalInt xzCompressionLevel,
       Optional<String> dxMaxHeapSize,
-      String dexTool) {
+      String dexTool,
+      Collection<Path> classpathFiles) {
 
     String output = outputPath.toString();
 
@@ -464,7 +483,8 @@ public class SmartDexingStep implements Step {
               dxOptions,
               dxMaxHeapSize,
               dexTool,
-              false));
+              false,
+              classpathFiles));
       // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
       // compression won't be effective.
       Path repackedJar = Paths.get(output.replaceAll("\\.xz$", ""));
@@ -504,7 +524,8 @@ public class SmartDexingStep implements Step {
               dxOptions,
               dxMaxHeapSize,
               dexTool,
-              false));
+              false,
+              classpathFiles));
       steps.add(
           new RepackZipEntriesStep(
               filesystem,
@@ -535,7 +556,8 @@ public class SmartDexingStep implements Step {
               dxOptions,
               dxMaxHeapSize,
               dexTool,
-              false));
+              false,
+              classpathFiles));
       if (DexStore.JAR.matchesPath(outputPath)) {
         steps.add(
             new DexJarAnalysisStep(

@@ -116,6 +116,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   @AddToRuleKey private final OptionalInt xzCompressionLevel;
   @AddToRuleKey private final boolean shouldSplitDex;
   @AddToRuleKey private final String dexTool;
+  private final boolean desugarIntefaceMethods;
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final ListeningExecutorService dxExecutorService;
@@ -173,7 +174,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       NonPredexedDexBuildableArgs args,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      String dexTool) {
+      String dexTool,
+      boolean desugarIntefaceMethods) {
     super(buildTarget, filesystem);
     this.androidPlatformTarget = androidPlatformTarget;
     this.additionalJarsForProguard = additionalJarsForProguard;
@@ -208,6 +210,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                 BuildableSupport.deriveDeps(this, ruleFinder)
                     .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     this.dexTool = dexTool;
+    this.desugarIntefaceMethods = desugarIntefaceMethods;
   }
 
   @VisibleForTesting
@@ -874,7 +877,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
             dxExecutorService,
             xzCompressionLevel,
             dxMaxHeapSize,
-            dexTool);
+            dexTool,
+            desugarIntefaceMethods);
     steps.add(smartDexingCommand);
 
     if (reorderClassesIntraDex) {

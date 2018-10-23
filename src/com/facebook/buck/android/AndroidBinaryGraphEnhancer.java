@@ -450,7 +450,8 @@ public class AndroidBinaryGraphEnhancer {
                   proguardConfigs,
                   packageableCollection,
                   classpathEntriesToDex,
-                  compileUberRDotJava));
+                  compileUberRDotJava,
+                  javaBuckConfig.shouldDesugarInterfaceMethods()));
     }
 
     return AndroidGraphEnhancementResult.builder()
@@ -779,7 +780,8 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableList<SourcePath> proguardConfigs,
       AndroidPackageableCollection packageableCollection,
       ImmutableSet<SourcePath> classpathEntriesToDex,
-      JavaLibrary compiledUberRDotJava) {
+      JavaLibrary compiledUberRDotJava,
+      boolean desugarIntefaceMethods) {
     ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap =
         apkModuleGraph.toOutgoingEdgesMap();
     APKModule rootAPKModule = apkModuleGraph.getRootAPKModule();
@@ -816,7 +818,8 @@ public class AndroidBinaryGraphEnhancer {
             nonPreDexedDexBuildableArgs,
             projectFilesystem,
             originalBuildTarget.withFlavors(NON_PREDEXED_DEX_BUILDABLE_FLAVOR),
-            dexTool);
+            dexTool,
+            desugarIntefaceMethods);
     graphBuilder.addToIndex(nonPreDexedDexBuildable);
 
     if (nonPreDexedDexBuildableArgs.getShouldProguard()) {
