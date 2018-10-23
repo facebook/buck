@@ -307,6 +307,8 @@ public class AndroidBinaryDescription
       return false;
     }
 
+    abstract Optional<CompressionAlgorithm> getAssetCompressionAlgorithm();
+
     @Value.Default
     boolean getRedex() {
       return false;
