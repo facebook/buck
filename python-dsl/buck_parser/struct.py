@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, with_statement
 import json
 from collections import OrderedDict
 from json.encoder import (
-    FLOAT_REPR,
     INFINITY,
     JSONEncoder,
     _make_iterencode,
@@ -40,17 +39,11 @@ class StructEncoder(JSONEncoder):
             _encoder = encode_basestring_ascii
         else:
             _encoder = encode_basestring
-        if self.encoding != "utf-8":
-
-            def _encoder(o, _orig_encoder=_encoder, _encoding=self.encoding):
-                if isinstance(o, str):
-                    o = o.decode(_encoding)
-                return _orig_encoder(o)
 
         def floatstr(
             o,
             allow_nan=self.allow_nan,
-            _repr=FLOAT_REPR,
+            _repr=float.__repr__,
             _inf=INFINITY,
             _neginf=-INFINITY,
         ):
