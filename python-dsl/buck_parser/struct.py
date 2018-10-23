@@ -11,7 +11,7 @@ from json.encoder import (
 )
 from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
-from typing import Type, Iterable
+from typing import Callable, Iterable, Type
 
 
 class StructEncoder(JSONEncoder):
@@ -120,6 +120,28 @@ def struct(**kwargs):
 _CLASS_CACHE = {}
 
 
+def _create_struct_repr(field_names):
+    # type: (Iterable[str]) -> Callable
+    """Creates a repr function that should be used for struct instances."""
+    repr_fmt = "(" + ", ".join(name + "=%r" for name in field_names) + ")"
+
+    def __repr__(self):
+        """Return a nicely formatted representation string"""
+        return self.__class__.__name__ + repr_fmt % self
+
+    return __repr__
+
+
+def _asdict(self):
+    """Return a new OrderedDict which maps field names to their values."""
+    return OrderedDict(zip(self._fields, self))
+
+
+def _to_json(self):
+    """Creates a JSON string representation of this struct instance."""
+    return json.dumps(self, cls=StructEncoder, separators=(",", ":"), sort_keys=True)
+
+
 def create_struct_class(field_names):
     # type: (Iterable[str]) -> Type
 
@@ -142,7 +164,6 @@ def create_struct_class(field_names):
             raise ValueError("Field names cannot start with a number: %r" % name)
 
     arg_list = repr(field_names).replace("'", "")[1:-1]
-    repr_fmt = "(" + ", ".join(name + "=%r" for name in field_names) + ")"
     tuple_new = tuple.__new__
 
     # Create all the named tuple methods to be added to the class namespace
@@ -156,22 +177,8 @@ def create_struct_class(field_names):
     )
     namespace = {"_tuple_new": tuple_new, "__name__": _TYPENAME}
     # Note: exec() has the side-effect of interning the field names
-    exec s in namespace
+    exec(s, namespace)
     __new__ = namespace["__new__"]
-
-    def __repr__(self):
-        """Return a nicely formatted representation string"""
-        return self.__class__.__name__ + repr_fmt % self
-
-    def _asdict(self):
-        """Return a new OrderedDict which maps field names to their values."""
-        return OrderedDict(zip(self._fields, self))
-
-    def to_json(self):
-        """Creates a JSON string representation of this struct instance."""
-        return json.dumps(
-            self, cls=StructEncoder, separators=(",", ":"), sort_keys=True
-        )
 
     # Build-up the class namespace dictionary
     # and use type() to build the result class
@@ -179,9 +186,9 @@ def create_struct_class(field_names):
         "__slots__": (),
         "_fields": field_names,
         "__new__": __new__,
-        "__repr__": __repr__,
+        "__repr__": _create_struct_repr(field_names),
         "_asdict": _asdict,
-        "to_json": to_json,
+        "to_json": _to_json,
     }
     cache = _nt_itemgetters
     for index, name in enumerate(field_names):
