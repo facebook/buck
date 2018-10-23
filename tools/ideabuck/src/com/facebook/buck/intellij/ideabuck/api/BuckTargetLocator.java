@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.api;
 
 import com.intellij.openapi.components.ProjectComponent;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import java.nio.file.Path;
@@ -24,6 +25,12 @@ import java.util.Optional;
 
 /** Resolves {@link BuckTarget} and {@link BuckTargetPattern} to their source files or elements. */
 public interface BuckTargetLocator extends ProjectComponent {
+
+  /** Returns a {@link BuckTargetLocator} for the given project. */
+  public static BuckTargetLocator getInstance(Project project) {
+    return project.getComponent(BuckTargetLocator.class);
+  }
+
   /**
    * Returns a {@link Path} to the Buck file in the given target's package.
    *

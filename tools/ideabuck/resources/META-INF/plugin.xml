@@ -360,5 +360,9 @@
       <interface-class>com.facebook.buck.intellij.ideabuck.api.BuckCellManager</interface-class>
       <implementation-class>com.facebook.buck.intellij.ideabuck.impl.BuckCellManagerImpl</implementation-class>
     </component>
+    <component>
+      <interface-class>com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator</interface-class>
+      <implementation-class>com.facebook.buck.intellij.ideabuck.impl.BuckTargetLocatorImpl</implementation-class>
+    </component>
   </project-components>
 </idea-plugin>
