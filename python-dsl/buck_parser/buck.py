@@ -34,6 +34,7 @@ from typing import (
 
 import pywatchman
 from pywatchman import WatchmanError
+from six import string_types
 
 # Python 2.6, 2.7, use iterator filter from Python 3
 from six.moves import builtins, filter
@@ -427,7 +428,7 @@ def add_rule(rule, build_env):
     if "name" not in rule:
         raise ValueError("rules must contain the field 'name'.  Found %s." % rule)
     rule_name = rule["name"]
-    if not isinstance(rule_name, basestring):
+    if not isinstance(rule_name, string_types):
         raise ValueError("rules 'name' field must be a string.  Found %s." % rule_name)
 
     if rule_name in build_env.rules:
@@ -451,10 +452,10 @@ def glob(
     ), "Cannot use `glob()` at the top-level of an included file."
     # Ensure the user passes lists of strings rather than just a string.
     assert not isinstance(
-        includes, basestring
+        includes, string_types
     ), "The first argument to glob() must be a list of strings."
     assert not isinstance(
-        excludes, basestring
+        excludes, string_types
     ), "The excludes argument must be a list of strings."
 
     if search_base is None:
