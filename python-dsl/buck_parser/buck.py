@@ -1739,7 +1739,8 @@ def main():
     # doesn't happen.  Actually dup2 the file handle so that writing
     # to file descriptor 1, os.system, and so on work as expected too.
 
-    to_parent = os.fdopen(os.dup(sys.stdout.fileno()), "ab")
+    # w instead of a mode is used because of https://bugs.python.org/issue27805
+    to_parent = os.fdopen(os.dup(sys.stdout.fileno()), "wb")
     os.dup2(sys.stderr.fileno(), sys.stdout.fileno())
 
     parser = optparse.OptionParser()
