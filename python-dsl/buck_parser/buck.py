@@ -34,7 +34,9 @@ from typing import (
 
 import pywatchman
 from pywatchman import WatchmanError
-from six.moves import builtins
+
+# Python 2.6, 2.7, use iterator filter from Python 3
+from six.moves import builtins, filter
 
 from .deterministic_set import DeterministicSet
 from .glob_internal import glob_internal
@@ -50,13 +52,6 @@ from .util import (
     is_in_dir,
     is_special,
 )
-
-try:
-    # Python 2.6, 2.7, use iterator filter from Python 3
-    from future_builtins import filter
-except ImportError:
-    # use standard filter (Python 3, Python < 2.6)
-    pass
 
 # When build files are executed, the functions in this file tagged with
 # @provide_for_build will be provided in the build file's local symbol table.
