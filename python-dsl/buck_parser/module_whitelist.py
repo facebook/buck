@@ -1,10 +1,11 @@
 from __future__ import absolute_import, division, print_function, with_statement
 
-import __builtin__
 import contextlib
 import imp
 import inspect
-from __builtin__ import __import__ as ORIGINAL_IMPORT
+
+from six.moves import builtins
+from six.moves.builtins import __import__ as ORIGINAL_IMPORT
 
 from . import util
 
@@ -35,17 +36,17 @@ class ImportWhitelistManager(object):
 
         # Override '__import__' function. It might have already been overridden if current file
         # was included by other build file, original '__import__' is stored in 'ORIGINAL_IMPORT'.
-        previous_import = __builtin__.__import__
+        previous_import = builtins.__import__
         if allow:
-            __builtin__.__import__ = ORIGINAL_IMPORT
+            builtins.__import__ = ORIGINAL_IMPORT
         else:
-            __builtin__.__import__ = self._custom_import
+            builtins.__import__ = self._custom_import
 
         try:
             yield
         finally:
-            # Restore previous '__builtin__.__import__'
-            __builtin__.__import__ = previous_import
+            # Restore previous 'builtins.__import__'
+            builtins.__import__ = previous_import
 
     def _custom_import(self, name, globals=None, locals=None, fromlist=(), level=-1):
         """Custom '__import__' function.
