@@ -5,6 +5,9 @@ java_library(
     srcs = glob([
         "*.java",
     ]),
+    tests = [
+        "//test/com/facebook/buck/parser/cache/impl:cache",
+    ],
     visibility = [
         "PUBLIC",
     ],

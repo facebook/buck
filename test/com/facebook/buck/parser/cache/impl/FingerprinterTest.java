@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.parser.cache;
+package com.facebook.buck.parser.cache.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
