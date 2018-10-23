@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function, with_statement
 
-import __builtin__
 import abc
 import collections
 import contextlib
@@ -35,6 +34,7 @@ from typing import (
 
 import pywatchman
 from pywatchman import WatchmanError
+from six.moves import builtins
 
 from .deterministic_set import DeterministicSet
 from .glob_internal import glob_internal
@@ -84,7 +84,7 @@ DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0  # type: float
 # Globals that should not be copied from one module into another
 _HIDDEN_GLOBALS = {"include_defs", "load"}  # type: Set[str]
 
-ORIGINAL_IMPORT = __builtin__.__import__
+ORIGINAL_IMPORT = builtins.__import__
 
 _LOAD_TARGET_PATH_RE = re.compile(
     r"^(?P<root>(?P<cell>@?[\w\-.]+)?//)?(?P<package>.*):(?P<target>.*)$"
@@ -1426,7 +1426,7 @@ class BuildFileProcessor(object):
         Wrap 'open' so that they it checks if accessed files are known dependencies.
         If 'wrap' is equal to False, restore original function instead.
         """
-        return self._wrap_fun_for_file_access(__builtin__, "open", wrap)
+        return self._wrap_fun_for_file_access(builtins, "open", wrap)
 
     @contextlib.contextmanager
     def _build_file_sandboxing(self):
@@ -1902,7 +1902,7 @@ def main():
     # Process the build files with the env var interceptors and builtins
     # installed.
     with build_file_processor.with_env_interceptors():
-        with build_file_processor.with_builtins(__builtin__.__dict__):
+        with build_file_processor.with_builtins(builtins.__dict__):
             processed_build_file = []
 
             profiler = None

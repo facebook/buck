@@ -30,6 +30,7 @@ RESOURCES = {
     "path_to_pathlib_py": "third-party/py/pathlib/pathlib.py",
     "path_to_pywatchman": "third-party/py/pywatchman",
     "path_to_typing": "third-party/py/typing/python2",
+    "path_to_six_py": "third-party/py/six/six.py",
     "path_to_python_dsl": "python-dsl",
 }
 

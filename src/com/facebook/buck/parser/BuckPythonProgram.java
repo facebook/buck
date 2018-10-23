@@ -63,6 +63,9 @@ class BuckPythonProgram implements AutoCloseable {
   private static final Path PATH_TO_TYPING =
       Paths.get(System.getProperty("buck.path_to_typing", "third-party/py/typing/python2"));
 
+  private static final Path PATH_TO_SIX_PY =
+      Paths.get(System.getProperty("buck.path_to_six_py", "third-party/py/six/six.py"));
+
   /**
    * Path to the python path containing the buck parser python code.
    *
@@ -142,6 +145,7 @@ class BuckPythonProgram implements AutoCloseable {
     String pathlibDir = PATH_TO_PATHLIB_PY.getParent().toString();
     String watchmanDir = PATH_TO_PYWATCHMAN.toString();
     String typingDir = PATH_TO_TYPING.toString();
+    String sixDir = PATH_TO_SIX_PY.getParent().toString();
     try (Writer out = Files.newBufferedWriter(generatedRoot.resolve("__main__.py"), UTF_8)) {
       out.write(
           Joiner.on("\n")
@@ -158,6 +162,9 @@ class BuckPythonProgram implements AutoCloseable {
                   "if PY2:",
                   "    sys.path.insert(0, "
                       + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(typingDir))
+                      + ")",
+                  "sys.path.insert(0, "
+                      + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(sixDir))
                       + ")",
                   // Path to the bundled python code.
                   "sys.path.insert(0, "

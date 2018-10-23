@@ -52,6 +52,7 @@ EXPORTED_RESOURCES = [
     Resource("path_to_pathlib_py", basename="pathlib.py"),
     Resource("path_to_pywatchman"),
     Resource("path_to_typing"),
+    Resource("path_to_six_py", basename="six.py"),
     Resource("path_to_sh_binary_template"),
     Resource("path_to_isolated_trampoline"),
     Resource("jacoco_agent_jar"),
