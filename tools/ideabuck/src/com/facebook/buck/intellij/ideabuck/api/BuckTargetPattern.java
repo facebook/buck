@@ -16,10 +16,10 @@
 
 package com.facebook.buck.intellij.ideabuck.api;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -225,10 +225,10 @@ public class BuckTargetPattern {
    * <p>Usage note: the other pattern will be treated as a *relative* pattern to this pattern.
    */
   public boolean matches(BuckTargetPattern other) {
-    if (!Objects.equals(this.cellName, other.cellName)) {
+    if (!Objects.equal(this.cellName, other.cellName)) {
       return false;
     }
-    if (Objects.equals(this.cellPath, other.cellPath)) {
+    if (Objects.equal(this.cellPath, other.cellPath)) {
       if (this.isRecursivePackageMatching()) {
         return true;
       } else if (other.isRecursivePackageMatching()) {
@@ -238,7 +238,7 @@ public class BuckTargetPattern {
       } else if (other.isPackageMatching()) {
         return false;
       } else {
-        return Objects.equals(this.ruleName, other.ruleName);
+        return Objects.equal(this.ruleName, other.ruleName);
       }
     } else if (this.cellPath == null || other.cellPath == null) {
       return false;
@@ -272,6 +272,26 @@ public class BuckTargetPattern {
    */
   public boolean isRecursivePackageMatching() {
     return "/...".equals(suffix);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    BuckTargetPattern that = (BuckTargetPattern) o;
+    return Objects.equal(cellName, that.cellName)
+        && Objects.equal(cellPath, that.cellPath)
+        && Objects.equal(suffix, that.suffix)
+        && Objects.equal(ruleName, that.ruleName);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(cellName, cellPath, suffix, ruleName);
   }
 
   @Override

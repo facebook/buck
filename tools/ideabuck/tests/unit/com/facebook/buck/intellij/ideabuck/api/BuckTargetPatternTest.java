@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
+import com.google.common.testing.EqualsTester;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -628,5 +629,29 @@ public class BuckTargetPatternTest {
     checkMatches("cell//foo:", "cell//foo", true);
     checkMatches("cell//foo:", "cell//foo/...", false);
     checkMatches("cell//foo:", "cell//foo/bar:baz", false);
+  }
+
+  @Test
+  public void equalsAndHashCode() {
+    EqualsTester equalsTester = new EqualsTester();
+    for (String s :
+        new String[] {
+          "foo//bar",
+          "foo//bar:",
+          "foo//bar:baz",
+          "foo//bar/...",
+          "//bar",
+          "//bar:",
+          "//bar:baz",
+          "//bar/...",
+          ":baz",
+          "//:",
+          ":",
+        }) {
+      BuckTargetPattern one = assertCanParse(s);
+      BuckTargetPattern two = assertCanParse(s);
+      equalsTester.addEqualityGroup(one, two);
+    }
+    equalsTester.testEquals();
   }
 }
