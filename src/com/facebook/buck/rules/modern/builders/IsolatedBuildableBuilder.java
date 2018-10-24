@@ -77,6 +77,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -278,6 +279,7 @@ public abstract class IsolatedBuildableBuilder {
 
   /** Deserializes the BuildableAndTarget corresponding to hash and builds it. */
   public void build(HashCode hash) throws IOException, StepFailedException, InterruptedException {
+    final Instant start = Instant.now();
     Deserializer deserializer =
         new Deserializer(
             filesystemFunction,
@@ -308,10 +310,12 @@ public abstract class IsolatedBuildableBuilder {
                 }
               }));
 
+      final Instant deserializationComplete = Instant.now();
       LOG.info(
           String.format(
-              "Finished deserializing the rule at [%s]. Running the build now.",
-              new java.util.Date()));
+              "Finished deserializing the rule at [%s], took %d ms. Running the build now.",
+              new java.util.Date(),
+              deserializationComplete.minusMillis(start.toEpochMilli()).toEpochMilli()));
 
       for (Step step :
           ModernBuildRule.stepsForBuildable(
@@ -322,7 +326,9 @@ public abstract class IsolatedBuildableBuilder {
 
       LOG.info(
           String.format(
-              "Finished running the build at [%s]. Exiting buck now.", new java.util.Date()));
+              "Finished running the build at [%s], took %d ms. Exiting buck now.",
+              new java.util.Date(),
+              Instant.now().minusMillis(deserializationComplete.toEpochMilli()).toEpochMilli()));
     }
   }
 
