@@ -106,4 +106,8 @@ abstract class AbstractIjProjectConfig {
   public abstract Optional<Path> getExtraCompilerOutputModulesPath();
 
   public abstract Optional<String> getMinAndroidSdkVersion();
+
+  public abstract ImmutableSet<String> getIncludeTestPatterns();
+
+  public abstract ImmutableSet<String> getExcludeTestPatterns();
 }

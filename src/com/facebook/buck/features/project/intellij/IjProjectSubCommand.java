@@ -21,16 +21,21 @@ import com.facebook.buck.cli.BuildCommand;
 import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.cli.ProjectSubCommand;
+import com.facebook.buck.cli.StringSetOptionHandler;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.CmdLineException;
@@ -128,6 +133,22 @@ public class IjProjectSubCommand extends ProjectSubCommand {
   private String outputDir = null;
 
   @Option(
+      name = "--include-tests",
+      usage = "If using --with-tests, only tests that match any of these patterns will be included",
+      handler = StringSetOptionHandler.class)
+  @SuppressFieldNotInitialized
+  @VisibleForTesting
+  Supplier<ImmutableSet<String>> includeTests = Suppliers.ofInstance(ImmutableSet.of());
+
+  @Option(
+      name = "--exclude-tests",
+      usage = "If using --with-tests, only tests that fit none of these patterns will be included",
+      handler = StringSetOptionHandler.class)
+  @SuppressFieldNotInitialized
+  @VisibleForTesting
+  Supplier<ImmutableSet<String>> excludeTests = Suppliers.ofInstance(ImmutableSet.of());
+
+  @Option(
       name = "--keep-module-files-in-module-dirs",
       usage = "Write module iml files to each modules working directory, instead of .idea/modules.")
   private boolean keepModuleFilesInModuleDirs = false;
@@ -163,7 +184,9 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             excludeArtifacts,
             includeTransitiveDependencies,
             skipBuild || !build,
-            keepModuleFilesInModuleDirs);
+            keepModuleFilesInModuleDirs,
+            includeTests.get(),
+            excludeTests.get());
 
     IjProjectCommandHelper projectCommandHelper =
         new IjProjectCommandHelper(

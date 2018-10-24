@@ -20,6 +20,7 @@ import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -46,7 +47,9 @@ public class IjProjectBuckConfig {
       boolean excludeArtifacts,
       boolean includeTransitiveDependencies,
       boolean skipBuild,
-      boolean keepModuleFilesInModuleDirsEnabled) {
+      boolean keepModuleFilesInModuleDirsEnabled,
+      ImmutableSet<String> includeTestPatterns,
+      ImmutableSet<String> excludeTestPatterns) {
     Optional<String> excludedResourcePathsOption =
         buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "excluded_resource_paths");
 
@@ -92,6 +95,8 @@ public class IjProjectBuckConfig {
         .setIncludeTransitiveDependency(
             isIncludingTransitiveDependencyEnabled(includeTransitiveDependencies, buckConfig))
         .setModuleGroupName(getModuleGroupName(moduleGroupName, buckConfig))
+        .setIncludeTestPatterns(includeTestPatterns)
+        .setExcludeTestPatterns(excludeTestPatterns)
         .build();
   }
 
