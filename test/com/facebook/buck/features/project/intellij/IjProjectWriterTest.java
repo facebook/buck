@@ -47,10 +47,9 @@ public class IjProjectWriterTest {
 
   private final long TIMESTAMP_A = 12111;
   private final long TIMESTAMP_B = 22122;
-  private final Path PROJECT_ROOT = Paths.get("projectRoot");
-  private final Path MODULES_XML = PROJECT_ROOT.resolve(".idea/modules.xml");
-  private final Path WORKSPACE_XML = PROJECT_ROOT.resolve(".idea/workspace.xml");
-  private final Path TARGET_MODULES_JSON = PROJECT_ROOT.resolve(".idea/target-modules.json");
+  private final Path MODULES_XML = Paths.get(".idea/modules.xml");
+  private final Path WORKSPACE_XML = Paths.get(".idea/workspace.xml");
+  private final Path TARGET_MODULES_JSON = Paths.get(".idea/target-modules.json");
 
   @Test
   public void testModuleChangeOverwrite() throws IOException {
@@ -181,21 +180,13 @@ public class IjProjectWriterTest {
   }
 
   private IjProjectConfig projectConfig() {
-    return IjProjectBuckConfig.create(
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of("intellij", ImmutableMap.of("generate_target_module_map", "true")))
-            .build(),
-        null,
-        null,
-        PROJECT_ROOT.toString(),
-        "modules",
-        false,
-        false,
-        true,
-        false,
-        true,
-        false);
+    return IjTestProjectConfig.createBuilder(
+            FakeBuckConfig.builder()
+                .setSections(
+                    ImmutableMap.of(
+                        "intellij", ImmutableMap.of("generate_target_module_map", "true")))
+                .build())
+        .build();
   }
 
   // Mutable FakeClock, to provide distinct timestamps to a single FakeProjectFileSystem

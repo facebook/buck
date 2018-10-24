@@ -647,8 +647,10 @@ public class IjModuleGraphTest {
         };
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     IjProjectConfig projectConfig =
-        IjProjectBuckConfig.create(
-            buckConfig, aggregationMode, null, "", "", false, false, false, false, true, false);
+        IjTestProjectConfig.createBuilder(buckConfig)
+            .setAggregationMode(aggregationMode)
+            .setExcludeArtifactsEnabled(false)
+            .build();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     JavaPackageFinder packageFinder =
         (buckConfig == null)

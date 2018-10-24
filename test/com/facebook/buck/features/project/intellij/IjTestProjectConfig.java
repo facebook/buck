@@ -18,16 +18,27 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 
 public class IjTestProjectConfig {
 
   public static IjProjectConfig create() {
-    return create(FakeBuckConfig.builder().build());
+    return createBuilder(FakeBuckConfig.builder().build()).build();
   }
 
-  public static IjProjectConfig create(BuckConfig buckConfig) {
-    return IjProjectBuckConfig.create(
-        buckConfig, null, null, "", "modules", false, false, true, false, true, true);
+  public static IjProjectConfig.Builder createBuilder(BuckConfig buckConfig) {
+    String projectRoot = "";
+    return IjProjectBuckConfig.createBuilder(buckConfig)
+        .setAggregationMode(AggregationMode.AUTO)
+        .setModuleGroupName("modules")
+        .setCleanerEnabled(false)
+        .setRemovingUnusedLibrariesEnabled(false)
+        .setExcludeArtifactsEnabled(true)
+        .setIncludeTransitiveDependency(false)
+        .setSkipBuildEnabled(true)
+        .setKeepModuleFilesInModuleDirsEnabled(true)
+        .setProjectRoot(projectRoot)
+        .setProjectPaths(new IjProjectPaths(projectRoot, true));
   }
 }
