@@ -1603,8 +1603,7 @@ def encode_result(values, diagnostics, profile):
     # type: (List[Dict[str, object]], List[Diagnostic], Optional[str]) -> str
     result = {
         "values": [
-            dict((k, v) for k, v in iteritems(value) if v is not None)
-            for value in values
+            {k: v for k, v in iteritems(value) if v is not None} for value in values
         ]
     }
     json_encoder = BuckJSONEncoder()
@@ -1837,10 +1836,10 @@ def main():
     # relative path.
     options.project_root = cygwin_adjusted_path(options.project_root)
     project_root = os.path.abspath(options.project_root)
-    cell_roots = dict(
-        (k, os.path.abspath(cygwin_adjusted_path(v)))
-        for (k, v) in iteritems(options.cell_roots)
-    )
+    cell_roots = {
+        k: os.path.abspath(cygwin_adjusted_path(v))
+        for k, v in iteritems(options.cell_roots)
+    }
 
     watchman_client = None
     if options.use_watchman_glob:
