@@ -421,7 +421,8 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
           .append(directories)
           .filter(
               input -> {
-                if (input.equals(Paths.get(""))) {
+                if (input.equals(Paths.get(""))
+                    || (input.isAbsolute() && input.getParent() == null)) {
                   return false;
                 }
                 return MorePaths.getParentOrEmpty(input).equals(pathRelativeToProjectRoot);
