@@ -222,6 +222,40 @@ public class ConfigTest {
   }
 
   @Test
+  public void configListWithMultipleSpaces() {
+    Config config =
+        new Config(
+            RawConfig.builder()
+                .put("section", "field1", "hello $(config section.field2) world")
+                .build());
+    assertThat(
+        config.getListWithoutComments("section", "field1", ' '),
+        Matchers.equalTo(ImmutableList.of("hello", "world")));
+  }
+
+  @Test
+  public void configListWithConfigMacroWithEmptyString() {
+    Config config =
+        new Config(
+            RawConfig.builder()
+                .put("section", "field1", "hello $(config section.field2) world")
+                .put("section", "field2", "\"\"")
+                .build());
+    assertThat(
+        config.getListWithoutComments("section", "field1", ' '),
+        Matchers.equalTo(ImmutableList.of("hello", "", "world")));
+  }
+
+  @Test
+  public void configListWithEmptyArg() {
+    Config config =
+        new Config(RawConfig.builder().put("section", "field1", "hello   \"\"   world").build());
+    assertThat(
+        config.getListWithoutComments("section", "field1", ' '),
+        Matchers.equalTo(ImmutableList.of("hello", "", "world")));
+  }
+
+  @Test
   public void configReferenceAtStart() {
     Config config =
         new Config(
