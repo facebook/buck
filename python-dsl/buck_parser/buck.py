@@ -370,9 +370,9 @@ def get_mismatched_args(func, actual_args, actual_kwargs):
             required_args.add(arg)
         all_acceptable_args.append(arg)
 
-    extra_kwargs = set(actual_kwargs.keys()) - set(all_acceptable_args)
+    extra_kwargs = set(actual_kwargs) - set(all_acceptable_args)
 
-    for k in set(actual_kwargs.keys()) - extra_kwargs:
+    for k in set(actual_kwargs) - extra_kwargs:
         all_acceptable_args.remove(k)
 
     not_supplied_args = all_acceptable_args[len(actual_args) :]
@@ -906,8 +906,8 @@ class BuildFileProcessor(object):
         """
         return collections.namedtuple(
             "native",
-            global_functions.keys()
-            + native_functions.keys()
+            list(global_functions)
+            + list(native_functions)
             + ["glob", "host_info", "read_config"],
         )
 
