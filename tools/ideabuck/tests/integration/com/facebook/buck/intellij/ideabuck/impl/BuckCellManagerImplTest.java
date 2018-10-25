@@ -19,7 +19,6 @@ package com.facebook.buck.intellij.ideabuck.impl;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
 import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.impl.BuckCellManagerImpl.CellImpl;
-import com.facebook.buck.intellij.ideabuck.util.BuckCellFinder;
 import com.intellij.openapi.components.PathMacroManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -40,7 +39,6 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
   private VirtualFileManager virtualFileManager;
   private PathMacroManager pathMacroManager;
   private BuckProjectSettingsProvider buckProjectSettingsProvider;
-  private BuckCellFinder buckCellFinder;
 
   @Override
   public void setUp() throws Exception {
