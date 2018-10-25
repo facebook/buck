@@ -19,7 +19,6 @@ public class Broken {
   private Broken() {}
 
   public static void main(String[] args) {
-    x + 5;  // This won't compile.
+    String = x + 5; // This won't compile.
   }
-
 }
