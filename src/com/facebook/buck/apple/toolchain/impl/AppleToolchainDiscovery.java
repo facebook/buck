@@ -24,6 +24,7 @@ import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -73,7 +74,7 @@ public class AppleToolchainDiscovery {
 
       try (DirectoryStream<Path> toolchainStream =
           Files.newDirectoryStream(toolchains, "*.xctoolchain")) {
-        for (Path toolchainPath : toolchainStream) {
+        for (Path toolchainPath : ImmutableSortedSet.copyOf(toolchainStream)) {
           LOG.debug("Getting identifier for for Xcode toolchain under %s", toolchainPath);
           addIdentifierForToolchain(toolchainPath, toolchainIdentifiersToToolchainsBuilder);
         }
@@ -126,7 +127,16 @@ public class AppleToolchainDiscovery {
       LOG.error(e, "Failed to parse %s: %s, ignoring", plistName, toolchainInfoPlistPath);
       return Optional.empty();
     }
-    NSObject identifierObject = parsedToolchainInfoPlist.objectForKey("Identifier");
+
+    NSObject identifierObject = null;
+    String[] potentialIdentifierKeys = {"Identifier", "CFBundleIdentifier"};
+    for (String identifierKey : potentialIdentifierKeys) {
+      identifierObject = parsedToolchainInfoPlist.objectForKey(identifierKey);
+      if (identifierObject != null) {
+        break;
+      }
+    }
+
     if (identifierObject == null) {
       LOG.error("Identifier not found for toolchain path %s, ignoring", toolchainDir);
       return Optional.empty();
