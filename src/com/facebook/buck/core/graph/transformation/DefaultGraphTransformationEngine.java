@@ -82,7 +82,7 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
   public DefaultGraphTransformationEngine(
       GraphTransformer<ComputeKey, ComputeResult> transformer,
       int estimatedNumOps,
-      DepsAwareExecutor<ComputeResult, ?> executor) {
+      DepsAwareExecutor<? super ComputeResult, ?> executor) {
     this(
         transformer,
         estimatedNumOps,
@@ -114,12 +114,15 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
    * @param cache the cache to store the computed results
    * @param executor the custom {@link DepsAwareExecutor} the engine uses to execute tasks
    */
+  @SuppressWarnings("unchecked")
   public DefaultGraphTransformationEngine(
       GraphTransformer<ComputeKey, ComputeResult> transformer,
       int estimatedNumOps,
       GraphEngineCache<ComputeKey, ComputeResult> cache,
-      DepsAwareExecutor<ComputeResult, ?> executor) {
-    this.impl = new GraphTransformationEngineImpl<>(transformer, estimatedNumOps, cache, executor);
+      DepsAwareExecutor<? super ComputeResult, ?> executor) {
+    this.impl =
+        new GraphTransformationEngineImpl<>(
+            transformer, estimatedNumOps, cache, (DepsAwareExecutor<ComputeResult, ?>) executor);
   }
 
   @Override
