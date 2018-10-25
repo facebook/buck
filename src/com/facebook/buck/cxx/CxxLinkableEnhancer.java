@@ -40,8 +40,8 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -361,7 +361,7 @@ public class CxxLinkableEnhancer {
   }
 
   private static class FrameworkLinkerArgs extends FrameworkPathArg {
-    @AddToRuleKey final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathToSearchPath;
+    @AddToRuleKey final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath;
 
     public FrameworkLinkerArgs(
         ImmutableSortedSet<FrameworkPath> allFrameworks,
@@ -423,7 +423,7 @@ public class CxxLinkableEnhancer {
   }
 
   private static class SharedLibraryLinkArgs extends FrameworkPathArg {
-    @AddToRuleKey final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathToSearchPath;
+    @AddToRuleKey final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath;
 
     public SharedLibraryLinkArgs(
         ImmutableSortedSet<FrameworkPath> allLibraries,

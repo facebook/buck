@@ -30,7 +30,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -50,7 +49,7 @@ import com.facebook.buck.cxx.toolchain.GccPreprocessor;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -99,16 +98,11 @@ public class CxxPreprocessAndCompileTest {
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
   private static final PathSourcePath DEFAULT_WORKING_DIR =
       FakeSourcePath.of(System.getProperty("user.dir"));
-  private static final RuleKeyAppendableFunction<FrameworkPath, Path>
-      DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION =
-          new DefaultFramworkPathSearchPathAppendableFunction();
+  private static final AddsToRuleKeyFunction<FrameworkPath, Path>
+      DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION = new DefaultFramworkPathSearchPathFunction();
 
-  private static class DefaultFramworkPathSearchPathAppendableFunction
-      implements RuleKeyAppendableFunction<FrameworkPath, Path> {
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      // Do nothing.
-    }
+  private static class DefaultFramworkPathSearchPathFunction
+      implements AddsToRuleKeyFunction<FrameworkPath, Path> {
 
     @Override
     public Path apply(FrameworkPath input) {

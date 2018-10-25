@@ -30,7 +30,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -299,7 +299,7 @@ public abstract class AbstractValueVisitorTest {
   public static class WithAddsToRuleKey implements FakeBuildable {
     @AddToRuleKey final NestedAppendable nested = new NestedAppendable();
 
-    @AddToRuleKey @Nullable final RuleKeyAppendableFunction<String, String> function = null;
+    @AddToRuleKey @Nullable final AddsToRuleKeyFunction<String, String> function = null;
 
     @AddToRuleKey
     private final ImmutableList<AddsToRuleKey> list =

@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -39,7 +38,7 @@ import com.facebook.buck.cxx.toolchain.GccPreprocessor;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResults;
@@ -64,20 +63,15 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
   private CxxInferCapture createCaptureRule(
       BuildTarget buildTarget, ProjectFilesystem filesystem, InferBuckConfig inferBuckConfig) {
-    class FrameworkPathAppendableFunction
-        implements RuleKeyAppendableFunction<FrameworkPath, Path> {
-      @Override
-      public void appendToRuleKey(RuleKeyObjectSink sink) {
-        // Do nothing.
-      }
+    class FrameworkPathFunction implements AddsToRuleKeyFunction<FrameworkPath, Path> {
 
       @Override
       public Path apply(FrameworkPath input) {
         return Paths.get("test", "framework", "path", input.toString());
       }
     }
-    RuleKeyAppendableFunction<FrameworkPath, Path> defaultFrameworkPathSearchPathFunction =
-        new FrameworkPathAppendableFunction();
+    AddsToRuleKeyFunction<FrameworkPath, Path> defaultFrameworkPathSearchPathFunction =
+        new FrameworkPathFunction();
 
     SourcePath preprocessor = FakeSourcePath.of(filesystem, "preprocessor");
     Tool preprocessorTool = new CommandTool.Builder().addInput(preprocessor).build();

@@ -35,8 +35,8 @@ import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.modern.CustomClassSerialization;
@@ -69,7 +69,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
   @AddToRuleKey private final Preprocessor preprocessor;
 
   @AddToRuleKey
-  private final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
+  private final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
 
   @AddToRuleKey private final HeaderVerification headerVerification;
 
@@ -102,7 +102,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
       PathSourcePath workingDir,
       Preprocessor preprocessor,
       PreprocessorFlags preprocessorFlags,
-      RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
+      AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
       Optional<CxxIncludePaths> leadingIncludePaths,
       Optional<BuildRule> aggregatedDeps,
       ImmutableSortedSet<String> conflictingHeaderBasenameWhitelist) {
@@ -395,10 +395,10 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
   static class SerializationBehavior implements CustomClassSerialization<PreprocessorDelegate> {
     static final ValueTypeInfo<Preprocessor> PREPROCESSOR_TYPE_INFO =
         ValueTypeInfoFactory.forTypeToken(new TypeToken<Preprocessor>() {});
-    static final ValueTypeInfo<RuleKeyAppendableFunction<FrameworkPath, Path>>
+    static final ValueTypeInfo<AddsToRuleKeyFunction<FrameworkPath, Path>>
         FRAMEWORK_PATH_FUNCTION_TYPE_INFO =
             ValueTypeInfoFactory.forTypeToken(
-                new TypeToken<RuleKeyAppendableFunction<FrameworkPath, Path>>() {});
+                new TypeToken<AddsToRuleKeyFunction<FrameworkPath, Path>>() {});
     static final ValueTypeInfo<HeaderVerification> HEADER_VERIFICATION_TYPE_INFO =
         ValueTypeInfoFactory.forTypeToken(new TypeToken<HeaderVerification>() {});
     static final ValueTypeInfo<PreprocessorFlags> PREPROCESSOR_FLAGS_TYPE_INFO =
@@ -423,7 +423,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
     public <E extends Exception> PreprocessorDelegate deserialize(ValueCreator<E> deserializer)
         throws E {
       Preprocessor preprocessor = PREPROCESSOR_TYPE_INFO.createNotNull(deserializer);
-      RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction =
+      AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathSearchPathFunction =
           FRAMEWORK_PATH_FUNCTION_TYPE_INFO.createNotNull(deserializer);
       HeaderVerification headerVerification =
           HEADER_VERIFICATION_TYPE_INFO.createNotNull(deserializer);
