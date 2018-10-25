@@ -22,6 +22,7 @@ java_test(
     ),
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
         "//third-party/java/junit:junit",
     ],
 )
@@ -32,6 +33,7 @@ java_test(
     vm_args = ["-Xss500k"],  #explicitly set a small stack for testing stack use
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
         "//third-party/java/junit:junit",
     ],
 )

@@ -18,18 +18,19 @@ package com.facebook.buck.core.graph.transformation;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.util.concurrent.Futures;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.LongAdder;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -39,13 +40,16 @@ import org.junit.rules.Timeout;
 /** Test and demonstration of {@link DefaultGraphTransformationEngine} */
 public class DefaultGraphTransformationEngineTest {
 
-  @Rule public Timeout timeout = Timeout.seconds(10);
+  @Rule public Timeout timeout = Timeout.seconds(10000);
 
   private MutableGraph<Long> graph;
   private TrackingCache cache;
+  private DepsAwareExecutor executor;
 
   @Before
   public void setUp() {
+    executor = DefaultDepsAwareExecutor.from(new ForkJoinPool(4));
+
     graph = GraphBuilder.directed().build();
 
     /**
@@ -74,6 +78,11 @@ public class DefaultGraphTransformationEngineTest {
     graph.putEdge(2L, 3L);
 
     cache = new TrackingCache();
+  }
+
+  @After
+  public void cleanUp() {
+    executor.shutdownNow();
   }
 
   /**
@@ -111,35 +120,32 @@ public class DefaultGraphTransformationEngineTest {
   public void requestOnLeafResultsSameValue() {
     ChildrenAdder transformer = new ChildrenAdder(graph);
     DefaultGraphTransformationEngine<Long, Long> engine =
-        new DefaultGraphTransformationEngine<>(
-            transformer, graph.nodes().size(), ForkJoinPool.commonPool());
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), executor);
     assertEquals((Long) 3L, engine.computeUnchecked(3L));
 
-    assertComputationIndexBecomesEmpty(engine.computationIndex);
+    assertComputationIndexBecomesEmpty(engine.impl.computationIndex);
   }
 
   @Test
   public void requestOnRootCorrectValue() {
     ChildrenAdder transformer = new ChildrenAdder(graph);
     DefaultGraphTransformationEngine<Long, Long> engine =
-        new DefaultGraphTransformationEngine<>(
-            transformer, graph.nodes().size(), ForkJoinPool.commonPool());
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), executor);
     assertEquals((Long) 19L, engine.computeUnchecked(1L));
 
-    assertComputationIndexBecomesEmpty(engine.computationIndex);
+    assertComputationIndexBecomesEmpty(engine.impl.computationIndex);
   }
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   @Test
   public void requestOnRootCorrectValueWithCustomExecutor() {
     ChildrenAdder transformer = new ChildrenAdder(graph);
-    ExecutorService executor = Executors.newFixedThreadPool(3);
     DefaultGraphTransformationEngine<Long, Long> engine =
         new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), executor);
     assertEquals((Long) 19L, engine.computeUnchecked(1L));
-    assertComputationIndexBecomesEmpty(engine.computationIndex);
+    assertComputationIndexBecomesEmpty(engine.impl.computationIndex);
 
-    executor.shutdown();
+    executor.shutdownNow();
 
     DefaultGraphTransformationEngine<Long, Long> engine2 =
         new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), executor);
@@ -157,8 +163,7 @@ public class DefaultGraphTransformationEngineTest {
     ChildrenAdder transformer = new ChildrenAdder(graph);
 
     DefaultGraphTransformationEngine<Long, Long> engine =
-        new DefaultGraphTransformationEngine<>(
-            transformer, graph.nodes().size(), cache, ForkJoinPool.commonPool());
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), cache, executor);
     Long result = engine.computeUnchecked(3L);
 
     assertEquals((Long) 3L, result);
@@ -173,14 +178,13 @@ public class DefaultGraphTransformationEngineTest {
         };
 
     engine =
-        new DefaultGraphTransformationEngine<>(
-            transformer, graph.nodes().size(), cache, ForkJoinPool.commonPool());
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), cache, executor);
     Long newResult = engine.computeUnchecked(3L);
 
     assertEquals(result, newResult);
 
     // all Futures should be removed
-    assertComputationIndexBecomesEmpty(engine.computationIndex);
+    assertComputationIndexBecomesEmpty(engine.impl.computationIndex);
     assertEquals(1, cache.getSize());
     assertEquals(1, cache.hitStats.get(3L).intValue());
   }
@@ -189,8 +193,7 @@ public class DefaultGraphTransformationEngineTest {
   public void canReusePartiallyCachedResult() {
     ChildrenAdder transformer = new ChildrenAdder(graph);
     DefaultGraphTransformationEngine<Long, Long> engine =
-        new DefaultGraphTransformationEngine<>(
-            transformer, graph.nodes().size(), cache, ForkJoinPool.commonPool());
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), cache, executor);
 
     assertEquals((Long) 9L, engine.computeUnchecked(5L));
     assertEquals((Long) 3L, engine.computeUnchecked(3L));
@@ -219,14 +222,13 @@ public class DefaultGraphTransformationEngineTest {
           }
         };
     engine =
-        new DefaultGraphTransformationEngine<>(
-            transformer, graph.nodes().size(), cache, ForkJoinPool.commonPool());
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), cache, executor);
 
     // reuse the cache
     assertEquals((Long) 19L, engine.computeUnchecked(1L));
 
     // all Futures should be removed
-    assertComputationIndexBecomesEmpty(engine.computationIndex);
+    assertComputationIndexBecomesEmpty(engine.impl.computationIndex);
     assertEquals(5, cache.getSize());
     assertEquals(0, cache.hitStats.get(1L).intValue());
     assertEquals(0, cache.hitStats.get(2L).intValue());
@@ -242,11 +244,12 @@ public class DefaultGraphTransformationEngineTest {
    * @param computationIndex the computationIndex of the engine
    */
   private static void assertComputationIndexBecomesEmpty(
-      ConcurrentHashMap<Long, CompletableFuture<Long>> computationIndex) {
-    // wait for all futures to complete in the computation.
+      ConcurrentHashMap<Long, ? extends DepsAwareTask<?, ?>> computationIndex) {
+    // wait for all tasks to complete in the computation.
     // we can have situation where the computation was completed by using the cache.
-    Futures.getUnchecked(
-        CompletableFuture.allOf(computationIndex.values().toArray(new CompletableFuture[] {})));
+    for (DepsAwareTask<?, ?> task : computationIndex.values()) {
+      Futures.getUnchecked(task.getResultFuture());
+    }
 
     assertEquals(0, computationIndex.size());
   }

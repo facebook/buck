@@ -7,6 +7,7 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/graph/transformation/executor:executor",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",

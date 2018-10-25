@@ -18,8 +18,10 @@ package com.facebook.buck.core.graph.transformation;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
+import java.util.concurrent.ForkJoinPool;
 import org.junit.Test;
 
 public class DefaultGraphTransformationEngineStackUseTest {
@@ -39,7 +41,10 @@ public class DefaultGraphTransformationEngineStackUseTest {
     assertEquals(
         (Long) 18003000L, // arithmetic series from 1 to 6000
         // https://www.wolframalpha.com/input/?i=sum+from+1+to+6000
-        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size())
+        new DefaultGraphTransformationEngine<>(
+                transformer,
+                graph.nodes().size(),
+                DefaultDepsAwareExecutor.from(new ForkJoinPool(1)))
             .computeUnchecked(1L));
   }
 }
