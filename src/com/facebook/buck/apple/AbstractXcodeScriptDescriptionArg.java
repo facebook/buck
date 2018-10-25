@@ -26,6 +26,9 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface AbstractXcodeScriptDescriptionArg extends CommonDescriptionArg, HasSrcs {
   @Value.NaturalOrder
+  ImmutableSortedSet<String> getInputs();
+
+  @Value.NaturalOrder
   ImmutableSortedSet<String> getOutputs();
 
   String getCmd();

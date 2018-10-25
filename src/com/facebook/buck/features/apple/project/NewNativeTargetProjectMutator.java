@@ -701,6 +701,7 @@ class NewNativeTargetProjectMutator {
                     .map(pathRelativizer::outputDirToRootRelative)
                     .map(Object::toString)
                     .collect(Collectors.toSet()));
+        shellScriptBuildPhase.getInputPaths().addAll(arg.getInputs());
         shellScriptBuildPhase.getOutputPaths().addAll(arg.getOutputs());
         shellScriptBuildPhase.setShellScript(arg.getCmd());
       } else if (node.getDescription() instanceof JsBundleOutputsDescription) {
