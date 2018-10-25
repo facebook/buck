@@ -97,7 +97,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     BuckProjectSettingsProvider projectSettingsProvider =
         EasyMock.createMock(BuckProjectSettingsProvider.class);
     EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(Stream.of(thisCell, thatCell))
+        .andAnswer(() -> Stream.of(thisCell, thatCell))
         .anyTimes();
     EasyMock.replay(project, projectSettingsProvider);
     BuckCellFinder finder = new BuckCellFinder(project, projectSettingsProvider, s -> s);
@@ -133,7 +133,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     BuckProjectSettingsProvider projectSettingsProvider =
         EasyMock.createMock(BuckProjectSettingsProvider.class);
     EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(Stream.of(cell, otherCell))
+        .andAnswer(() -> Stream.of(cell, otherCell))
         .anyTimes();
     EasyMock.replay(project, projectSettingsProvider);
 
@@ -156,7 +156,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     BuckProjectSettingsProvider projectSettingsProvider =
         EasyMock.createMock(BuckProjectSettingsProvider.class);
     EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(Stream.of(outerCell, innerCell, otherCell))
+        .andAnswer(() -> Stream.of(outerCell, innerCell, otherCell))
         .anyTimes();
     EasyMock.replay(project, projectSettingsProvider);
 
@@ -194,7 +194,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     Project project = EasyMock.createMock(Project.class);
     BuckProjectSettingsProvider projectSettingsProvider =
         EasyMock.createMock(BuckProjectSettingsProvider.class);
-    EasyMock.expect(projectSettingsProvider.getCells()).andReturn(Stream.of(cell)).anyTimes();
+    EasyMock.expect(projectSettingsProvider.getCells()).andAnswer(() -> Stream.of(cell)).anyTimes();
     EasyMock.replay(project, projectSettingsProvider);
 
     Path level1BuckFile = makeTmpFile(cellRoot.resolve("one/BINGO"));
@@ -222,7 +222,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     BuckProjectSettingsProvider projectSettingsProvider =
         EasyMock.createMock(BuckProjectSettingsProvider.class);
     EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(Stream.of(outerCell, innerCell, otherCell))
+        .andAnswer(() -> Stream.of(outerCell, innerCell, otherCell))
         .anyTimes();
     EasyMock.replay(project, projectSettingsProvider);
 
@@ -263,7 +263,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     BuckProjectSettingsProvider projectSettingsProvider =
         EasyMock.createMock(BuckProjectSettingsProvider.class);
     EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(Stream.of(fromCell, toCell))
+        .andAnswer(() -> Stream.of(fromCell, toCell))
         .anyTimes();
     EasyMock.replay(project, projectSettingsProvider);
 
@@ -320,7 +320,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     BuckProjectSettingsProvider projectSettingsProvider =
         EasyMock.createMock(BuckProjectSettingsProvider.class);
     EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(Stream.of(fromCell, toCell))
+        .andAnswer(() -> Stream.of(fromCell, toCell))
         .anyTimes();
     EasyMock.replay(project, projectSettingsProvider);
 
@@ -382,7 +382,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     BuckProjectSettingsProvider projectSettingsProvider =
         EasyMock.createMock(BuckProjectSettingsProvider.class);
     EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(Stream.of(projectCell, internalCall, externalCall))
+        .andAnswer(() -> Stream.of(projectCell, internalCall, externalCall))
         .anyTimes();
     EasyMock.replay(project, projectSettingsProvider);
     BuckCellFinder finder =
