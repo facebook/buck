@@ -302,9 +302,10 @@ public class BuildCommand extends AbstractCommand {
       return false;
     }
 
+    useDistributedBuild = true;
+
     Objects.requireNonNull(getDistBuildCommandDelegate()).tryConvertingToStampede(config);
 
-    useDistributedBuild = true;
     return true;
   }
 
