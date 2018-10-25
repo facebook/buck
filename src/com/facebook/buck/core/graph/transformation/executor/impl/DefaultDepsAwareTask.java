@@ -17,8 +17,10 @@
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableSet;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -42,7 +44,8 @@ class DefaultDepsAwareTask<T> extends DepsAwareTask<T, DefaultDepsAwareTask<T>> 
   private final AtomicReference<TaskStatus> status = new AtomicReference<>(TaskStatus.NOT_STARTED);
 
   private DefaultDepsAwareTask(
-      Callable<T> callable, Supplier<ImmutableSet<DefaultDepsAwareTask<T>>> depsSupplier) {
+      Callable<T> callable,
+      ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<T>>, Exception> depsSupplier) {
     super(callable, depsSupplier);
   }
 
@@ -54,10 +57,20 @@ class DefaultDepsAwareTask<T> extends DepsAwareTask<T, DefaultDepsAwareTask<T>> 
   /** @return a new Task to be ran */
   static <U> DefaultDepsAwareTask<U> of(
       Callable<U> callable, Supplier<ImmutableSet<DefaultDepsAwareTask<U>>> depsSupplier) {
+    return ofThrowing(callable, ThrowingSupplier.fromSupplier(depsSupplier));
+  }
+
+  /**
+   * constructs a task from a callable with the specified dependencies, where dependency discovery
+   * could throw
+   */
+  public static <U> DefaultDepsAwareTask<U> ofThrowing(
+      Callable<U> callable,
+      ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<U>>, Exception> depsSupplier) {
     return new DefaultDepsAwareTask<>(callable, depsSupplier);
   }
 
-  ImmutableSet<DefaultDepsAwareTask<T>> getDependencies() {
+  ImmutableSet<DefaultDepsAwareTask<T>> getDependencies() throws Exception {
     return getDepsSupplier().get();
   }
 
@@ -75,5 +88,9 @@ class DefaultDepsAwareTask<T> extends DepsAwareTask<T, DefaultDepsAwareTask<T>> 
 
   boolean compareAndSetStatus(TaskStatus expect, TaskStatus update) {
     return status.compareAndSet(expect, update);
+  }
+
+  CompletableFuture<T> getFuture() {
+    return result;
   }
 }

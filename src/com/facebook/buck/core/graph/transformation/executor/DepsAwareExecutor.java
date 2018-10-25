@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.graph.transformation.executor;
 
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.List;
@@ -53,6 +54,11 @@ public interface DepsAwareExecutor<
 
   /** @return a new {@link DepsAwareTask} that can be executed in this executor */
   TaskType createTask(Callable<ResultType> callable, Supplier<ImmutableSet<TaskType>> depsSupplier);
+
+  /** @see #createTask(Callable, Supplier) */
+  TaskType createTask(
+      Callable<ResultType> callable,
+      ThrowingSupplier<ImmutableSet<TaskType>, Exception> depsSupplier);
 
   /** @see #createTask(Callable, Supplier) */
   TaskType createTask(Callable<ResultType> callable);

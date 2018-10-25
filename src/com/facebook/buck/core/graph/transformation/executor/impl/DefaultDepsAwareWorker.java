@@ -18,6 +18,9 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareTask.TaskStatus;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
@@ -59,8 +62,17 @@ class DefaultDepsAwareWorker {
       return false;
     }
 
+    ImmutableSet<? extends DefaultDepsAwareTask<?>> deps;
+    try {
+      deps = task.getDependencies();
+    } catch (Exception e) {
+      task.getFuture().completeExceptionally(e);
+      Preconditions.checkState(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
+      return true;
+    }
+
     boolean depsDone = true;
-    for (DefaultDepsAwareTask<?> dep : task.getDependencies()) {
+    for (DefaultDepsAwareTask<?> dep : deps) {
       if (dep.getStatus() != TaskStatus.DONE) {
         depsDone = false;
         if (dep.getStatus() == TaskStatus.STARTED) {
@@ -69,7 +81,11 @@ class DefaultDepsAwareWorker {
           sharedQueue.putFirst(dep);
         }
       }
+      if (propagateException(task, dep)) {
+        return true;
+      }
     }
+
     if (!depsDone) {
       Preconditions.checkState(
           task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.NOT_STARTED));
@@ -78,6 +94,21 @@ class DefaultDepsAwareWorker {
     }
     task.call();
     Preconditions.checkState(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
+    return true;
+  }
+
+  private boolean propagateException(DefaultDepsAwareTask<?> task, DefaultDepsAwareTask<?> dep)
+      throws InterruptedException {
+    CompletableFuture<?> depResult = dep.getFuture();
+    if (!depResult.isCompletedExceptionally()) {
+      return false;
+    }
+    try {
+      depResult.get();
+      Preconditions.checkState(false, "Should have completed exceptionally");
+    } catch (ExecutionException e) {
+      task.getFuture().completeExceptionally(e.getCause());
+    }
     return true;
   }
 }

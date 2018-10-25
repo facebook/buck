@@ -16,11 +16,11 @@
 
 package com.facebook.buck.core.graph.transformation.executor;
 
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-import java.util.function.Supplier;
 
 /**
  * Task to be ran in a {@link DepsAwareExecutor}. This task will offer dependency discovery to the
@@ -33,9 +33,10 @@ public abstract class DepsAwareTask<T, Impl extends DepsAwareTask<T, Impl>> {
 
   protected final CompletableFuture<T> result = new CompletableFuture<>();
   private final Callable<T> callable;
-  private final Supplier<ImmutableSet<Impl>> depsSupplier;
+  private final ThrowingSupplier<ImmutableSet<Impl>, Exception> depsSupplier;
 
-  protected DepsAwareTask(Callable<T> callable, Supplier<ImmutableSet<Impl>> depsSupplier) {
+  protected DepsAwareTask(
+      Callable<T> callable, ThrowingSupplier<ImmutableSet<Impl>, Exception> depsSupplier) {
     this.callable = callable;
     this.depsSupplier = depsSupplier;
   }
@@ -46,7 +47,7 @@ public abstract class DepsAwareTask<T, Impl extends DepsAwareTask<T, Impl>> {
   }
 
   /** @return a function to generate the dependencies */
-  public Supplier<ImmutableSet<Impl>> getDepsSupplier() {
+  public ThrowingSupplier<ImmutableSet<Impl>, Exception> getDepsSupplier() {
     return depsSupplier;
   }
 

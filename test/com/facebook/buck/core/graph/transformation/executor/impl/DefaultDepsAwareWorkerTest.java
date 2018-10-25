@@ -20,15 +20,21 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class DefaultDepsAwareWorkerTest {
 
+  @Rule public ExpectedException expectedException = ExpectedException.none();
   private LinkedBlockingDeque<DefaultDepsAwareTask<?>> workQueue;
+
   private DefaultDepsAwareWorker worker1;
   private DefaultDepsAwareWorker worker2;
 
@@ -100,6 +106,72 @@ public class DefaultDepsAwareWorkerTest {
   }
 
   @Test(timeout = 5000)
+  public void workerHandlesExceptionDuringGetDeps()
+      throws InterruptedException, ExecutionException {
+    Exception ex = new Exception();
+
+    expectedException.expectCause(Matchers.sameInstance(ex));
+
+    DefaultDepsAwareTask<?> depsAwareTask =
+        DefaultDepsAwareTask.ofThrowing(
+            () -> null,
+            () -> {
+              throw ex;
+            });
+
+    workQueue.put(depsAwareTask);
+
+    Thread testThread =
+        new Thread(
+            () -> {
+              try {
+                worker1.loopForever();
+              } catch (InterruptedException e) {
+                return;
+              }
+            });
+    testThread.start();
+
+    depsAwareTask.getResultFuture().get();
+    testThread.interrupt();
+  }
+
+  @Test(timeout = 5000)
+  public void workerPropagatesExceptionDuringGetDepsToParent()
+      throws InterruptedException, ExecutionException {
+    Exception ex = new Exception();
+
+    expectedException.expectCause(Matchers.sameInstance(ex));
+
+    DefaultDepsAwareTask<?> depsAwareTask1 =
+        DefaultDepsAwareTask.ofThrowing(
+            () -> null,
+            () -> {
+              throw ex;
+            });
+
+    workQueue.put(depsAwareTask1);
+
+    Thread testThread =
+        new Thread(
+            () -> {
+              try {
+                worker1.loopForever();
+              } catch (InterruptedException e) {
+                return;
+              }
+            });
+    testThread.start();
+
+    DefaultDepsAwareTask<?> depsAwareTask2 =
+        DefaultDepsAwareTask.of(() -> null, () -> ImmutableSet.of(depsAwareTask1));
+    workQueue.put(depsAwareTask2);
+
+    depsAwareTask2.getResultFuture().get();
+    testThread.interrupt();
+  }
+
+  @Test(timeout = 50000000)
   public void workCanBeExecutedInMultipleThreadSharingQueue() throws InterruptedException {
     // This tests that if we schedule multiple works, and one worker is occupied, the other worker
     // will pick start the other tasks

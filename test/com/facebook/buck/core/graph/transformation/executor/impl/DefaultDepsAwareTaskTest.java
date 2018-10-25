@@ -33,7 +33,7 @@ public class DefaultDepsAwareTaskTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
-  public void discoversDepsCallsSupplier() {
+  public void discoversDepsCallsSupplier() throws Exception {
     LongAdder longAdder = new LongAdder();
 
     DefaultDepsAwareTask<?> task1 =

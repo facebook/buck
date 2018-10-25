@@ -19,6 +19,7 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
@@ -89,6 +90,13 @@ public class DefaultDepsAwareExecutor<T> implements DepsAwareExecutor<T, Default
   public DefaultDepsAwareTask<T> createTask(
       Callable<T> callable, Supplier<ImmutableSet<DefaultDepsAwareTask<T>>> depsSupplier) {
     return DefaultDepsAwareTask.of(callable, depsSupplier);
+  }
+
+  @Override
+  public DefaultDepsAwareTask<T> createTask(
+      Callable<T> callable,
+      ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<T>>, Exception> depsSupplier) {
+    return DefaultDepsAwareTask.ofThrowing(callable, depsSupplier);
   }
 
   @Override
