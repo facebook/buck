@@ -19,12 +19,11 @@ package com.facebook.buck.core.graph.transformation;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
@@ -229,13 +228,14 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
                 ImmutableMap.builder();
             return executor.createTask(
                 () -> computeForKey(key, collectDeps(depResults.build())),
-                Suppliers.memoize(
-                    () -> computeDepsForKey(transformer.discoverDeps(key), depResults)));
+                MoreSuppliers.memoize(
+                    () -> computeDepsForKey(transformer.discoverDeps(key), depResults),
+                    Exception.class));
           });
     }
 
     private ComputeResult computeForKey(
-        ComputeKey key, ImmutableMap<ComputeKey, ComputeResult> depResults) {
+        ComputeKey key, ImmutableMap<ComputeKey, ComputeResult> depResults) throws Exception {
       ComputeResult result =
           transformer.transform(key, new DefaultTransformationEnvironment<>(depResults));
 
@@ -245,7 +245,8 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
     }
 
     private ImmutableSet<TaskType> computeDepsForKey(
-        Set<ComputeKey> depKeys, Builder<ComputeKey, Future<ComputeResult>> depResults) {
+        Set<ComputeKey> depKeys,
+        ImmutableMap.Builder<ComputeKey, Future<ComputeResult>> depResults) {
       ImmutableSet.Builder<TaskType> depWorkBuilder =
           ImmutableSet.builderWithExpectedSize(depKeys.size());
       for (ComputeKey depKey : depKeys) {

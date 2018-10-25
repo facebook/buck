@@ -41,11 +41,11 @@ public interface GraphTransformer<Key, Result> {
    *     #discoverDeps(Object)}
    * @return a future of the result requested
    */
-  Result transform(Key key, TransformationEnvironment<Key, Result> env);
+  Result transform(Key key, TransformationEnvironment<Key, Result> env) throws Exception;
 
   /**
    * @param key the current key to transform
    * @return a set of keys that the transformation of the current key depends on
    */
-  Set<Key> discoverDeps(Key key);
+  Set<Key> discoverDeps(Key key) throws Exception;
 }

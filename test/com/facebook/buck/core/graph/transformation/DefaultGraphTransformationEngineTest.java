@@ -22,25 +22,31 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.util.concurrent.Futures;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.LongAdder;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.Timeout;
 
 /** Test and demonstration of {@link DefaultGraphTransformationEngine} */
 public class DefaultGraphTransformationEngineTest {
 
   @Rule public Timeout timeout = Timeout.seconds(10000);
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private MutableGraph<Long> graph;
   private TrackingCache cache;
@@ -235,6 +241,59 @@ public class DefaultGraphTransformationEngineTest {
     assertEquals(1, cache.hitStats.get(5L).intValue());
     assertEquals(1, cache.hitStats.get(3L).intValue());
     assertEquals(1, cache.hitStats.get(4L).intValue());
+  }
+
+  @Test
+  public void handlesTransformerThatThrowsInTransform()
+      throws ExecutionException, InterruptedException {
+
+    Exception exception = new Exception();
+    expectedException.expectCause(Matchers.sameInstance(exception));
+
+    GraphTransformer<Long, Long> transformer =
+        new GraphTransformer<Long, Long>() {
+          @Override
+          public Long transform(Long aLong, TransformationEnvironment<Long, Long> env)
+              throws Exception {
+            throw exception;
+          }
+
+          @Override
+          public Set<Long> discoverDeps(Long aLong) {
+            return ImmutableSet.of();
+          }
+        };
+
+    DefaultGraphTransformationEngine<Long, Long> engine =
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), cache, executor);
+
+    engine.compute(1L).get();
+  }
+
+  @Test
+  public void handlesTransformerThatThrowsInDiscoverDeps()
+      throws ExecutionException, InterruptedException {
+
+    Exception exception = new Exception();
+    expectedException.expectCause(Matchers.sameInstance(exception));
+
+    GraphTransformer<Long, Long> transformer =
+        new GraphTransformer<Long, Long>() {
+          @Override
+          public Long transform(Long aLong, TransformationEnvironment<Long, Long> env) {
+            return 1L;
+          }
+
+          @Override
+          public Set<Long> discoverDeps(Long aLong) throws Exception {
+            throw exception;
+          }
+        };
+
+    DefaultGraphTransformationEngine<Long, Long> engine =
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), cache, executor);
+
+    engine.compute(1L).get();
   }
 
   /**
