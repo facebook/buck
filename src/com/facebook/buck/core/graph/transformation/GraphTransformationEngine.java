@@ -17,6 +17,7 @@
 package com.facebook.buck.core.graph.transformation;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 /**
@@ -55,7 +56,7 @@ public interface GraphTransformationEngine<ComputeKey, ComputeResult> {
    * @param keys iterable of keys to compute on the graph
    * @return a map of futures of the result for each of the keys supplied
    */
-  ImmutableMap<ComputeKey, Future<ComputeResult>> computeAll(Iterable<ComputeKey> keys);
+  ImmutableMap<ComputeKey, Future<ComputeResult>> computeAll(Set<ComputeKey> keys);
 
   /**
    * Synchronously computes the result for multiple keys
@@ -63,5 +64,5 @@ public interface GraphTransformationEngine<ComputeKey, ComputeResult> {
    * @param keys iterable of the keys to compute on the graph
    * @return a map of the results for each of the keys supplied
    */
-  ImmutableMap<ComputeKey, ComputeResult> computeAllUnchecked(Iterable<ComputeKey> keys);
+  ImmutableMap<ComputeKey, ComputeResult> computeAllUnchecked(Set<ComputeKey> keys);
 }

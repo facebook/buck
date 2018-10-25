@@ -138,8 +138,7 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
   }
 
   @Override
-  public final ImmutableMap<ComputeKey, Future<ComputeResult>> computeAll(
-      Iterable<ComputeKey> keys) {
+  public final ImmutableMap<ComputeKey, Future<ComputeResult>> computeAll(Set<ComputeKey> keys) {
     return RichStream.from(keys)
         .parallel()
         .map(key -> Maps.immutableEntry(key, compute(key)))
@@ -147,8 +146,7 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
   }
 
   @Override
-  public final ImmutableMap<ComputeKey, ComputeResult> computeAllUnchecked(
-      Iterable<ComputeKey> keys) {
+  public final ImmutableMap<ComputeKey, ComputeResult> computeAllUnchecked(Set<ComputeKey> keys) {
     return ImmutableMap.copyOf(Maps.transformValues(computeAll(keys), Futures::getUnchecked));
   }
 
