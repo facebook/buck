@@ -17,7 +17,7 @@
 package com.facebook.buck.core.graph.transformation;
 
 import com.google.common.graph.MutableGraph;
-import java.util.concurrent.CompletionStage;
+import java.util.Set;
 
 /**
  * Demonstration of usage of {@link GraphTransformer}.
@@ -34,11 +34,12 @@ class ChildrenAdder implements GraphTransformer<Long, Long> {
   }
 
   @Override
-  public CompletionStage<Long> transform(Long key, TransformationEnvironment<Long, Long> env) {
-    Iterable<Long> children = input.successors(key);
+  public Long transform(Long key, TransformationEnvironment<Long, Long> env) {
+    return key + env.getDeps().values().stream().mapToLong(Long::new).sum();
+  }
 
-    return env.evaluateAll(
-        children,
-        childValues -> key + childValues.values().parallelStream().mapToLong(Long::new).sum());
+  @Override
+  public Set<Long> discoverDeps(Long key) {
+    return input.successors(key);
   }
 }

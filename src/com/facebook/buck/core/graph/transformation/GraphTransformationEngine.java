@@ -18,7 +18,6 @@ package com.facebook.buck.core.graph.transformation;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 /**
  * Transformation engine that transforms supplied ComputeKey into ComputeResult via {@link
@@ -27,10 +26,7 @@ import java.util.function.Function;
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
  * request dependent results of other transformations through {@link
- * TransformationEnvironment#evaluate(Object, Function)}.
- *
- * <p>Implementations should have all methods of this class as tail recursive and non-blocking when
- * working together with {@link TransformationEnvironment} and {@link GraphTransformer}.
+ * GraphTransformer#discoverDeps(Object)}
  */
 public interface GraphTransformationEngine<ComputeKey, ComputeResult> {
 

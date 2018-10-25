@@ -20,27 +20,30 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
-import java.util.function.Function;
 
 /**
  * Transformation engine that transforms supplied ComputeKey into ComputeResult via {@link
  * GraphTransformer}. This engine is able to asynchronously run graph based computation, reusing
- * results when possible. Note that the computation graph must be an acyclic graph.
+ * results when possible. Note that the computation dependency graph must be an acyclic graph.
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
  * request dependent results of other transformations through {@link
- * TransformationEnvironment#evaluate(Object, Function)} or {@link
- * TransformationEnvironment#evaluateAll(Iterable, Function)}.
+ * GraphTransformer#discoverDeps(Object)}. The engine guarantees that all dependencies are completed
+ * before performing the transformation.
+ *
+ * <p>Transformations also should never block waiting for each other in any manner. If required to
+ * wait, the transformation must declare it through {@link GraphTransformer#discoverDeps(Object)}
  *
  * <p>The transformation is incremental, so cached portions of the transformation will be used
  * whenever possible based on {@code ComputeKey.equals()}. Therefore, {@link ComputeKey} should be
@@ -52,35 +55,23 @@ import java.util.function.Function;
  * <p>Transformations will be applied asynchronously, so independent transformations can be executed
  * in parallel. It is therefore important that transformations are thread safe.
  *
- * <p>Transformations also should never block waiting for Futures. Hence, Transformations can only
- * access the Future results through {@link CompletionStage} as opposed to {@link
- * java.util.concurrent.Future}, which only has async methods exposed. It is strongly suggested to
- * use the async versions of all methods on the {@link CompletionStage} to allow Java to perform the
- * transformation in any executor.
- *
- * <p>By using all callback based operations and being tail recursive, this engine will also reduce
- * stack usage, eliminating stack overflow for large graph computations. The {@link
- * TransformationEnvironment} has every method implemented as non-blocking, and returns a Future of
- * the dependency calculation such that if Transformer is implemented to be tail recursive, the
- * whole graph computation will be tail recursive, eliminating stack use.
- *
- * <p>Currently, we only use the engine for {@link
- * com.facebook.buck.core.model.targetgraph.TargetGraph} to {@link
- * com.facebook.buck.core.model.actiongraph.ActionGraph}, but theoretically this can be extended to
- * work with any computation.
+ * <p>By using all callback based operations and queue based operations, this engine will also
+ * reduce stack usage, eliminating stack overflow for large graph computations, provided that the
+ * {@link GraphTransformer} itself does not stack overflow within its {@link
+ * GraphTransformer#discoverDeps(Object)} and {@link GraphTransformer#transform(Object,
+ * TransformationEnvironment)} methods.
  */
 public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
     implements GraphTransformationEngine<ComputeKey, ComputeResult> {
 
   /**
-   * Internally, on the first request, Transformation schedules the requested key to be completed
-   * via a Future, and stores the Future in a map with key of ComputeKey. Subsequent requests for
-   * the same ComputeKey will reuse the stored Future, where async operations are then added to the
-   * scheduled Future.
+   * Internally, on the first request, Transformation schedules the requested key to be completed,
+   * and stores the pending computation in a map with key of ComputeKey. Subsequent requests for the
+   * same ComputeKey will reuse the stored pending computation.
    *
-   * <p>Due to memory overhead of the Future, upon Future completion, the future is deleted from the
-   * stored map to allow it to be garbage collected. The raw result will be put into the result
-   * cache. Subsequent requests will reuse the raw result from the cache directly.
+   * <p>Due to memory overhead of the pending work, upon completion, the pending work is deleted
+   * from the stored map to allow it to be garbage collected. The raw result will be put into the
+   * result cache. Subsequent requests will reuse the raw result from the cache directly.
    */
   private static final Logger LOG = Logger.get(DefaultGraphTransformationEngine.class);
 
@@ -164,7 +155,7 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
 
   @Override
   public final CompletableFuture<ComputeResult> compute(ComputeKey key) {
-    return computeWithEnvironment(key, new DefaultTransformationEnvironment<>(this, executor));
+    return computeInternal(key);
   }
 
   @Override
@@ -187,8 +178,7 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
     return Futures.getUnchecked(collectFutures(computeAll(keys)));
   }
 
-  private CompletableFuture<ComputeResult> computeWithEnvironment(
-      ComputeKey key, TransformationEnvironment<ComputeKey, ComputeResult> env) {
+  private CompletableFuture<ComputeResult> computeInternal(ComputeKey key) {
     LOG.verbose("Attempting to load from cache for key: %s", key);
     Optional<ComputeResult> result = resultCache.get(key);
     if (result.isPresent()) {
@@ -208,7 +198,12 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
 
               LOG.verbose("Result cache miss. Computing transformation for requested key: %s", key);
               return CompletableFuture.supplyAsync(() -> mapKey, executor)
-                  .thenComposeAsync(computeKey -> transformer.transform(computeKey, env), executor)
+                  .thenComposeAsync(computeKey -> computeDeps(computeKey))
+                  .thenApplyAsync(
+                      deps ->
+                          transformer.transform(
+                              mapKey, new DefaultTransformationEnvironment<>(deps)),
+                      executor)
                   .thenApplyAsync(
                       computedResult -> {
                         resultCache.put(mapKey, computedResult);
@@ -224,6 +219,28 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
               return computedResult;
             },
             executor);
+  }
+
+  private CompletableFuture<ImmutableMap<ComputeKey, ComputeResult>> computeDeps(ComputeKey key) {
+    Set<ComputeKey> depKeys = transformer.discoverDeps(key);
+    ImmutableMap.Builder<ComputeKey, ComputeResult> deps =
+        ImmutableMap.builderWithExpectedSize(depKeys.size());
+    ImmutableSet.Builder<ComputeKey> missingDepKeys =
+        ImmutableSet.builderWithExpectedSize(depKeys.size());
+    for (ComputeKey depkey : depKeys) {
+      Optional<ComputeResult> depResult = resultCache.get(depkey);
+      if (depResult.isPresent()) {
+        deps.put(depkey, depResult.get());
+      } else {
+        missingDepKeys.add(depkey);
+      }
+    }
+    return collectFutures(computeAll(missingDepKeys.build()))
+        .thenApplyAsync(
+            computedResult -> {
+              deps.putAll(computedResult);
+              return deps.build();
+            });
   }
 
   final <K, V> CompletableFuture<ImmutableMap<K, V>> collectFutures(

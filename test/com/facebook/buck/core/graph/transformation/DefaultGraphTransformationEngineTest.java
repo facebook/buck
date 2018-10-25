@@ -18,26 +18,18 @@ package com.facebook.buck.core.graph.transformation;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.graph.transformation.TransformationEnvironment.AsyncSink;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.util.concurrent.Futures;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -174,8 +166,7 @@ public class DefaultGraphTransformationEngineTest {
     transformer =
         new ChildrenAdder(graph) {
           @Override
-          public CompletionStage<Long> transform(
-              Long node, TransformationEnvironment<Long, Long> env) {
+          public Long transform(Long node, TransformationEnvironment<Long, Long> env) {
             Assert.fail("Did not expect call as cache should be used");
             return super.transform(node, env);
           }
@@ -220,8 +211,7 @@ public class DefaultGraphTransformationEngineTest {
     transformer =
         new ChildrenAdder(graph) {
           @Override
-          public CompletionStage<Long> transform(
-              Long node, TransformationEnvironment<Long, Long> env) {
+          public Long transform(Long node, TransformationEnvironment<Long, Long> env) {
             if (node == 5L || node == 4L || node == 3L) {
               Assert.fail("Did not expect call as cache should be used");
             }
@@ -243,51 +233,6 @@ public class DefaultGraphTransformationEngineTest {
     assertEquals(1, cache.hitStats.get(5L).intValue());
     assertEquals(1, cache.hitStats.get(3L).intValue());
     assertEquals(1, cache.hitStats.get(4L).intValue());
-  }
-
-  @Test
-  public void environmentCanEvaluateAllAndCollect() {
-    final int maxValue = 20;
-    GraphTransformer<Integer, ConcurrentHashMap<Integer, Set<Integer>>> transformer =
-        (integer, env) -> {
-          if (integer < maxValue) {
-            return env.evaluateAllAndCollectAsync(
-                IntStream.rangeClosed(integer + 1, Math.min(integer + integer + 1, maxValue))
-                    .boxed()
-                    .collect(Collectors.toList()),
-                new AsyncSink<Integer, ConcurrentHashMap<Integer, Set<Integer>>>() {
-                  private final ConcurrentHashMap<Integer, Set<Integer>> collect =
-                      new ConcurrentHashMap<>();
-
-                  @Override
-                  public void sink(Integer key, ConcurrentHashMap<Integer, Set<Integer>> result) {
-                    Set<Integer> set =
-                        result.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
-                    set.add(key);
-                    collect.put(key, set);
-                    collect.putAll(result);
-                  }
-
-                  @Override
-                  public ConcurrentHashMap<Integer, Set<Integer>> collect() {
-                    return collect;
-                  }
-                });
-          }
-          return CompletableFuture.completedFuture(
-              new ConcurrentHashMap<>(ImmutableMap.of(maxValue, ImmutableSet.of(maxValue))));
-        };
-    DefaultGraphTransformationEngine<Integer, ConcurrentHashMap<Integer, Set<Integer>>> engine =
-        new DefaultGraphTransformationEngine<>(transformer, maxValue);
-
-    Map<Integer, Set<Integer>> result = engine.computeUnchecked(0);
-    assertEquals(
-        IntStream.range(1, maxValue + 1).boxed().collect(Collectors.toSet()), result.keySet());
-    for (Entry<Integer, Set<Integer>> entry : result.entrySet()) {
-      assertEquals(
-          IntStream.range(entry.getKey(), maxValue + 1).boxed().collect(Collectors.toSet()),
-          entry.getValue());
-    }
   }
 
   /**
