@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import java.nio.CharBuffer;
 import org.junit.Test;
 
@@ -32,18 +33,18 @@ public class SimpleProcessListenerTest {
 
   @Test
   public void echoTextReceivedOnStdout() throws Exception {
-    ListeningProcessExecutor executor = new ListeningProcessExecutor();
+    ProcessExecutorParams params = ProcessExecutorParams.ofCommand("echo", "Hello");
+    FakeListeningProcessExecutor executor =
+        new FakeListeningProcessExecutor(
+            ImmutableMultimap.of(
+                params, FakeListeningProcessState.ofStdout("Hello"),
+                params, FakeListeningProcessState.ofExit(0)));
     SimpleProcessListener listener = new SimpleProcessListener();
-    ProcessExecutorParams params;
-    if (Platform.detect() == Platform.WINDOWS) {
-      params = ProcessExecutorParams.ofCommand("cmd.exe", "/c", "echo", "Hello");
-    } else {
-      params = ProcessExecutorParams.ofCommand("echo", "Hello");
-    }
+
     ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
     int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
-    assertThat(listener.getStdout(), equalTo(String.format("Hello%n")));
+    assertThat(listener.getStdout(), equalTo("Hello"));
     assertThat(listener.getStderr(), is(emptyString()));
   }
 
