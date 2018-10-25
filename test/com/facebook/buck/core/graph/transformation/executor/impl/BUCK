@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_test(
+    name = "impl",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
