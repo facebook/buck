@@ -40,6 +40,17 @@ These exit codes are returned from a Buck command to the shell when the
 command exits.
 </p>
 
+<p>
+These exit codes are Buck's <em>binary protocol</em> for interacting
+with other software such as shell scripts.
+</p>
+
+<p>
+Note that in the case of some fatal errors&mdash;such 
+as <code>FATAL_OOM</code>, <code>FATAL_IO</code>, or <code>FATAL_DISK_FULL</code>&mdash;Buck 
+itself might not be able to <em>reliably</em> detect the source of the failure. If
+this occurs, Buck falls back to reporting <code>FATAL_GENERIC</code>.
+</p>
 
 <table class="exit-codes">
 
