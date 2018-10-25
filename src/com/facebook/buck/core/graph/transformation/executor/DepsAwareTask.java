@@ -23,8 +23,8 @@ import java.util.concurrent.Future;
 import java.util.function.Supplier;
 
 /**
- * Task to be ran in a DepsAwareExecutor. This task will offer dependency discovery to the executor
- * so that the executor can perform better scheduling.
+ * Task to be ran in a {@link DepsAwareExecutor}. This task will offer dependency discovery to the
+ * executor so that the executor can perform better scheduling.
  *
  * @param <T> the result type of the task
  * @param <Impl> The implementation type of
