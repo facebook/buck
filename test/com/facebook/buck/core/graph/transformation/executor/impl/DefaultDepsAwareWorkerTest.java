@@ -234,10 +234,16 @@ public class DefaultDepsAwareWorkerTest {
   public void interruptThreadStopsWorker() throws InterruptedException {
 
     Semaphore workerStarted = new Semaphore(0);
+    Object interruptWaiter = new Object();
     DefaultDepsAwareTask<?> firstTask =
         DefaultDepsAwareTask.of(
             () -> {
               workerStarted.release();
+              try {
+                interruptWaiter.wait();
+              } catch (InterruptedException e) {
+                return null;
+              }
               return null;
             });
 
