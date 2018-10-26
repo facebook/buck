@@ -22,15 +22,11 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,13 +36,11 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -64,7 +58,7 @@ import java.util.stream.StreamSupport;
  *
  * <p>This is implemented using the {@link ForkJoinPool}
  */
-public class ParallelVersionedTargetGraphBuilder implements VersionedTargetGraphBuilder {
+public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTargetGraphBuilder {
 
   private static final long TIMEOUT = 20;
   private static final TimeUnit UNIT = TimeUnit.SECONDS;
@@ -73,8 +67,6 @@ public class ParallelVersionedTargetGraphBuilder implements VersionedTargetGraph
 
   private final ForkJoinPool pool;
   private final VersionSelector versionSelector;
-  private final TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets;
-  private final TypeCoercerFactory typeCoercerFactory;
 
   /** The resolved version graph being built. */
   private final VersionedTargetGraph.Builder targetGraphBuilder = VersionedTargetGraph.builder();
@@ -97,10 +89,9 @@ public class ParallelVersionedTargetGraphBuilder implements VersionedTargetGraph
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
       TypeCoercerFactory typeCoercerFactory) {
 
+    super(typeCoercerFactory, unversionedTargetGraphAndBuildTargets);
     this.pool = pool;
     this.versionSelector = versionSelector;
-    this.unversionedTargetGraphAndBuildTargets = unversionedTargetGraphAndBuildTargets;
-    this.typeCoercerFactory = typeCoercerFactory;
 
     this.index =
         new ConcurrentHashMap<>(
@@ -119,20 +110,12 @@ public class ParallelVersionedTargetGraphBuilder implements VersionedTargetGraph
             pool.getParallelism());
   }
 
-  private TargetNode<?> getNode(BuildTarget target) {
-    return unversionedTargetGraphAndBuildTargets.getTargetGraph().get(target);
-  }
-
-  private Optional<TargetNode<?>> getNodeOptional(BuildTarget target) {
-    return unversionedTargetGraphAndBuildTargets.getTargetGraph().getOptional(target);
-  }
-
   private TargetNode<?> indexPutIfAbsent(TargetNode<?> node) {
     return index.putIfAbsent(node.getBuildTarget(), node);
   }
 
-  /** Get/cache the transitive version info for this node. */
-  private VersionInfo getVersionInfo(TargetNode<?> node) {
+  @Override
+  protected VersionInfo getVersionInfo(TargetNode<?> node) {
     VersionInfo info = this.versionInfo.get(node.getBuildTarget());
     if (info != null) {
       return info;
@@ -193,50 +176,6 @@ public class ParallelVersionedTargetGraphBuilder implements VersionedTargetGraph
       hasher.putString(ent.getValue().getName(), Charsets.UTF_8);
     }
     return InternalFlavor.of("v" + hasher.hash().toString().substring(0, 7));
-  }
-
-  private TargetNode<?> resolveVersions(
-      TargetNode<?> node, ImmutableMap<BuildTarget, Version> selectedVersions) {
-    Optional<TargetNode<VersionedAliasDescriptionArg>> versionedNode =
-        TargetNodes.castArg(node, VersionedAliasDescriptionArg.class);
-    if (versionedNode.isPresent()) {
-      node =
-          getNode(
-              Preconditions.checkNotNull(
-                  versionedNode
-                      .get()
-                      .getConstructorArg()
-                      .getVersions()
-                      .get(selectedVersions.get(node.getBuildTarget()))));
-    }
-    return node;
-  }
-
-  /**
-   * @return the {@link BuildTarget} to use in the resolved target graph, formed by adding a flavor
-   *     generated from the given version selections.
-   */
-  private Optional<BuildTarget> getTranslateBuildTarget(
-      TargetNode<?> node, ImmutableMap<BuildTarget, Version> selectedVersions) {
-
-    BuildTarget originalTarget = node.getBuildTarget();
-    node = resolveVersions(node, selectedVersions);
-    BuildTarget newTarget = node.getBuildTarget();
-
-    if (TargetGraphVersionTransformations.isVersionPropagator(node)) {
-      VersionInfo info = getVersionInfo(node);
-      Collection<BuildTarget> versionedDeps = info.getVersionDomain().keySet();
-      TreeMap<BuildTarget, Version> versions = new TreeMap<>();
-      for (BuildTarget depTarget : versionedDeps) {
-        versions.put(depTarget, selectedVersions.get(depTarget));
-      }
-      if (!versions.isEmpty()) {
-        Flavor versionedFlavor = getVersionedFlavor(versions);
-        newTarget = node.getBuildTarget().withAppendedFlavors(versionedFlavor);
-      }
-    }
-
-    return newTarget.equals(originalTarget) ? Optional.empty() : Optional.of(newTarget);
   }
 
   @Override
@@ -458,50 +397,7 @@ public class ParallelVersionedTargetGraphBuilder implements VersionedTargetGraph
       // Select the versions to use for this sub-graph.
       ImmutableMap<BuildTarget, Version> selectedVersions =
           versionSelector.resolve(root.getBuildTarget(), versionInfo.getVersionDomain());
-
-      // Build a target translator object to translate build targets.
-      ImmutableList<TargetTranslator<?>> translators =
-          ImmutableList.of(new QueryTargetTranslator());
-      TargetNodeTranslator targetTranslator =
-          new TargetNodeTranslator(typeCoercerFactory, translators) {
-
-            private final LoadingCache<BuildTarget, Optional<BuildTarget>> cache =
-                CacheBuilder.newBuilder()
-                    .build(
-                        CacheLoader.from(
-                            target -> {
-
-                              // If we're handling the root node, there's nothing to translate.
-                              if (root.getBuildTarget().equals(target)) {
-                                return Optional.empty();
-                              }
-
-                              // If this target isn't in the target graph, which can be the case
-                              // of build targets in the `tests` parameter, don't do any
-                              // translation.
-                              Optional<TargetNode<?>> node = getNodeOptional(target);
-                              if (!node.isPresent()) {
-                                return Optional.empty();
-                              }
-
-                              return getTranslateBuildTarget(getNode(target), selectedVersions);
-                            }));
-
-            @Override
-            public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
-              return cache.getUnchecked(target);
-            }
-
-            @Override
-            public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
-                BuildTarget target) {
-              ImmutableMap.Builder<BuildTarget, Version> builder = ImmutableMap.builder();
-              for (BuildTarget dep : getVersionInfo(getNode(target)).getVersionDomain().keySet()) {
-                builder.put(dep, selectedVersions.get(dep));
-              }
-              return Optional.of(builder.build());
-            }
-          };
+      TargetNodeTranslator targetTranslator = getTargetNodeTranslator(root, selectedVersions);
 
       return processVersionSubGraphNode(root, selectedVersions, targetTranslator);
     }
