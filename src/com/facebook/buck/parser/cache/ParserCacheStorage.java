@@ -20,7 +20,7 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.google.common.hash.HashCode;
 
 /** This is the main interface for interacting with the cache. */
-public interface ParserCache {
+public interface ParserCacheStorage {
 
   /**
    * Stores a {@link BuildFileManifest} object to the cache.
@@ -43,7 +43,7 @@ public interface ParserCache {
    * @return an {@link BuildFileManifest} object status operation if the operation is successful. In
    *     case of failure an appropriate exception is thrown.
    * @throws ParserCacheException thrown when there is an error constructing the {@link
-   *     BuildFileManifest} from the {@link ParserCache}.
+   *     BuildFileManifest} from the {@link ParserCacheStorage}.
    */
   BuildFileManifest getBuildFileManifest(HashCode weakFingerprint, HashCode strongFingerprint)
       throws ParserCacheException;

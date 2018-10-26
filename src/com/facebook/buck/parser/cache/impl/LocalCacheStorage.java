@@ -19,8 +19,8 @@ package com.facebook.buck.parser.cache.impl;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.cache.ParserCache;
 import com.facebook.buck.parser.cache.ParserCacheException;
+import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -31,14 +31,14 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
-/** A local filesystem backed implementation for the {@link ParserCache} interface. */
-public class LocalCache implements ParserCache {
-  private static final Logger LOG = Logger.get(LocalCache.class);
+/** An local filesystem backed implementation for the {@link ParserCacheStorage} interface. */
+public class LocalCacheStorage implements ParserCacheStorage {
+  private static final Logger LOG = Logger.get(LocalCacheStorage.class);
 
   private final Path localCachePath;
   private final ProjectFilesystem filesystem;
 
-  private LocalCache(Path localCachePath, ProjectFilesystem filesystem) {
+  private LocalCacheStorage(Path localCachePath, ProjectFilesystem filesystem) {
     this.filesystem = filesystem;
     this.localCachePath = localCachePath;
   }
@@ -64,20 +64,20 @@ public class LocalCache implements ParserCache {
   }
 
   /**
-   * Static factory for creating {@link LocalCache} objects.
+   * Static factory for creating {@link LocalCacheStorage} objects.
    *
    * @param parserCacheConfig the {@code parserCacheConfig} object to be used for this parsing.
    * @return a new instance of fully instantiated local cache object.
-   * @throws ParserCacheException when the {@link LocalCache} object cannot be constructed.
+   * @throws ParserCacheException when the {@link LocalCacheStorage} object cannot be constructed.
    */
-  public static LocalCache newInstance(
+  public static LocalCacheStorage newInstance(
       AbstractParserCacheConfig parserCacheConfig, ProjectFilesystem filesystem)
       throws ParserCacheException {
     Preconditions.checkState(
         parserCacheConfig.isDirParserCacheEnabled(),
-        "Invalid state: LocalCache should not be instantiated if the cache is disabled.");
+        "Invalid state: LocalCacheStorage should not be instantiated if the cache is disabled.");
     Path localCachePath = createLocalCachePathFromConfig(parserCacheConfig, filesystem);
-    return new LocalCache(localCachePath, filesystem);
+    return new LocalCacheStorage(localCachePath, filesystem);
   }
 
   @Override

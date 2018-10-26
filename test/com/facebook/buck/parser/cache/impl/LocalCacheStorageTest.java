@@ -56,7 +56,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class LocalCacheTest {
+public class LocalCacheStorageTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
   @Rule public TemporaryPaths tempDir = new TemporaryPaths();
 
@@ -113,7 +113,7 @@ public class LocalCacheTest {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/");
     localHandler = new LocalHandler();
-    Logger.get(LocalCache.class).addHandler(localHandler);
+    Logger.get(LocalCacheStorage.class).addHandler(localHandler);
   }
 
   @Test
@@ -122,13 +122,14 @@ public class LocalCacheTest {
     expectedException.expect(ParserCacheException.class);
     expectedException.expectMessage("Failed to create local cache directory - /foo/bar");
     filesystem.createNewFile(Paths.get("/foo"));
-    LocalCache.newInstance(getParserCacheConfig(true, filesystem.getPath("/foo/bar")), filesystem);
+    LocalCacheStorage.newInstance(
+        getParserCacheConfig(true, filesystem.getPath("/foo/bar")), filesystem);
   }
 
   @Test
   public void createLocalCacheWithAbsolutePath() throws ParserCacheException {
     Path absPath = filesystem.getBuckPaths().getBuckOut().resolve("/foo/bar").toAbsolutePath();
-    LocalCache.newInstance(getParserCacheConfig(true, absPath), filesystem);
+    LocalCacheStorage.newInstance(getParserCacheConfig(true, absPath), filesystem);
     List<LogRecord> events = localHandler.messages;
     assertEquals(1, events.size());
     LogRecord event = events.get(0);
@@ -139,7 +140,7 @@ public class LocalCacheTest {
   @Test
   public void createLocalCacheWithRelativePath() throws ParserCacheException {
     Path path = filesystem.getPath("foo/bar");
-    LocalCache.newInstance(getParserCacheConfig(true, path), filesystem);
+    LocalCacheStorage.newInstance(getParserCacheConfig(true, path), filesystem);
     List<LogRecord> events = localHandler.messages;
     assertEquals(1, events.size());
     LogRecord event = events.get(0);
@@ -153,15 +154,15 @@ public class LocalCacheTest {
   public void createLocalCacheWhenCachingDisabled() throws ParserCacheException {
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage(
-        "Invalid state: LocalCache should not be instantiated if the cache is disabled.");
-    LocalCache.newInstance(
+        "Invalid state: LocalCacheStorage should not be instantiated if the cache is disabled.");
+    LocalCacheStorage.newInstance(
         getParserCacheConfig(false, filesystem.getPath(tempDir.getRoot().toString())), filesystem);
   }
 
   @Test
   public void createLocalCacheWhenCacheDefaultDirectory() throws ParserCacheException {
     Path emptyPathForDefaultCacheLocation = filesystem.getPath("\"\"");
-    LocalCache.newInstance(
+    LocalCacheStorage.newInstance(
         getParserCacheConfig(true, emptyPathForDefaultCacheLocation), filesystem);
     List<LogRecord> events = localHandler.messages;
     assertEquals(1, events.size());
@@ -172,8 +173,8 @@ public class LocalCacheTest {
 
   @Test
   public void createLocalCacheWFPDirectoryNonExisting() throws IOException, ParserCacheException {
-    LocalCache localCache =
-        LocalCache.newInstance(
+    LocalCacheStorage localCacheStorage =
+        LocalCacheStorage.newInstance(
             getParserCacheConfig(
                 true,
                 filesystem.getPath(tempDir.getRoot().toString() + File.separator + FOO_BAR_PATH)),
@@ -181,7 +182,7 @@ public class LocalCacheTest {
     Path buildPath = filesystem.getPath(FOO_BAR_PATH);
     HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildPath, getConfig().getConfig());
     HashCode strongFingerprint = Fingerprinter.getStrongFingerprint(filesystem, ImmutableList.of());
-    localCache.storeBuildFileManifest(weakFingerprint, strongFingerprint, null);
+    localCacheStorage.storeBuildFileManifest(weakFingerprint, strongFingerprint, null);
     Path localCachePath = tempDir.getRoot().resolve(FOO_BAR_PATH);
     assertNotNull(localCachePath);
     Path weakFingerprintPath =
@@ -193,8 +194,8 @@ public class LocalCacheTest {
   @Test
   public void createLocalCacheWFPDirectoryExistingAndKeepIt()
       throws IOException, ParserCacheException {
-    LocalCache localCache =
-        LocalCache.newInstance(
+    LocalCacheStorage localCacheStorage =
+        LocalCacheStorage.newInstance(
             getParserCacheConfig(
                 true,
                 filesystem.getPath(tempDir.getRoot().toString() + File.separator + FOO_BAR_PATH)),
@@ -211,7 +212,7 @@ public class LocalCacheTest {
     assertTrue(filesystem.exists(newFilePath));
     HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildPath, getConfig().getConfig());
     HashCode strongFingerprint = Fingerprinter.getStrongFingerprint(filesystem, ImmutableList.of());
-    localCache.storeBuildFileManifest(weakFingerprint, strongFingerprint, null);
+    localCacheStorage.storeBuildFileManifest(weakFingerprint, strongFingerprint, null);
     assertNotNull(localCachePath);
     assertTrue(filesystem.exists(wfpPath));
     assertTrue(filesystem.exists(newFilePath));
@@ -220,8 +221,8 @@ public class LocalCacheTest {
   @Test
   public void stroreInLocalCacheAndGetFromLocalCacheAndVerifyMatch()
       throws IOException, ParserCacheException {
-    LocalCache localCache =
-        LocalCache.newInstance(
+    LocalCacheStorage localCacheStorage =
+        LocalCacheStorage.newInstance(
             getParserCacheConfig(
                 true,
                 filesystem.getPath(tempDir.getRoot().toString() + File.separator + FOO_BAR_PATH)),
@@ -295,7 +296,8 @@ public class LocalCacheTest {
     HashCode strongFingerprinter = Fingerprinter.getStrongFingerprint(filesystem, includes);
 
     // Store in local cache
-    localCache.storeBuildFileManifest(weakFingerprinter, strongFingerprinter, buildFileManifest);
+    localCacheStorage.storeBuildFileManifest(
+        weakFingerprinter, strongFingerprinter, buildFileManifest);
 
     Path serializedDataFile =
         localCachePath
@@ -305,7 +307,7 @@ public class LocalCacheTest {
 
     // Get from local cache
     BuildFileManifest buildFileManifestResult =
-        localCache.getBuildFileManifest(weakFingerprinter, strongFingerprinter);
+        localCacheStorage.getBuildFileManifest(weakFingerprinter, strongFingerprinter);
     assertEquals(buildFileManifest, buildFileManifestResult);
   }
 

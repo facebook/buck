@@ -16,7 +16,10 @@
 
 package com.facebook.buck.parser.cache;
 
-/** This exception is thrown when there are failures while doing {@link ParserCache} operations. */
+/**
+ * This exception is thrown when there are failures while doing {@link ParserCacheStorage}
+ * operations.
+ */
 public class ParserCacheException extends Exception {
 
   /**
