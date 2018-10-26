@@ -45,7 +45,7 @@ public class VersionedTargetGraphCache {
       ForkJoinPool pool,
       TypeCoercerFactory typeCoercerFactory)
       throws VersionException, TimeoutException, InterruptedException {
-    return VersionedTargetGraphBuilder.transform(
+    return ParallelVersionedTargetGraphBuilder.transform(
         new VersionUniverseVersionSelector(
             targetGraphAndBuildTargets.getTargetGraph(), versionUniverses),
         targetGraphAndBuildTargets,

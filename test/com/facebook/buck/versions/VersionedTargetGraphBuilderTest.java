@@ -43,7 +43,7 @@ public class VersionedTargetGraphBuilderTest {
   private static String getVersionedTarget(
       BuildTarget target, ImmutableSortedMap<BuildTarget, Version> versions) {
     return target
-        .withAppendedFlavors(VersionedTargetGraphBuilder.getVersionedFlavor(versions))
+        .withAppendedFlavors(ParallelVersionedTargetGraphBuilder.getVersionedFlavor(versions))
         .toString();
   }
 
@@ -96,7 +96,7 @@ public class VersionedTargetGraphBuilderTest {
     TargetNode<?> root = new VersionRootBuilder("//:root").build();
     TargetGraph graph = TargetGraphFactory.newInstanceExact(root);
     VersionedTargetGraphBuilder builder =
-        new VersionedTargetGraphBuilder(
+        new ParallelVersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(root.getBuildTarget())),
@@ -112,7 +112,7 @@ public class VersionedTargetGraphBuilderTest {
             new VersionRootBuilder("//:root2").build(),
             new VersionRootBuilder("//:root1").setDeps("//:root2").build());
     VersionedTargetGraphBuilder builder =
-        new VersionedTargetGraphBuilder(
+        new ParallelVersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -133,7 +133,7 @@ public class VersionedTargetGraphBuilderTest {
             new VersionedAliasBuilder("//:versioned").setVersions("1.0", "//:dep").build(),
             new VersionRootBuilder("//:root").setDeps("//:versioned").build());
     VersionedTargetGraphBuilder builder =
-        new VersionedTargetGraphBuilder(
+        new ParallelVersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -156,7 +156,7 @@ public class VersionedTargetGraphBuilderTest {
             new VersionedAliasBuilder("//:versioned").setVersions("1.0", "//:dep").build(),
             new VersionRootBuilder("//:root").setDeps("//:versioned").build());
     VersionedTargetGraphBuilder builder =
-        new VersionedTargetGraphBuilder(
+        new ParallelVersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -182,7 +182,7 @@ public class VersionedTargetGraphBuilderTest {
             new VersionedAliasBuilder("//:versioned1").setVersions("1.0", "//:dep1").build(),
             new VersionRootBuilder("//:root1").setDeps("//:versioned1").build());
     VersionedTargetGraphBuilder builder =
-        new VersionedTargetGraphBuilder(
+        new ParallelVersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -207,7 +207,7 @@ public class VersionedTargetGraphBuilderTest {
             new VersionPropagatorBuilder("//:a").setDeps("//:versioned").build(),
             new VersionRootBuilder("//:root").setDeps("//:a").build());
     VersionedTargetGraphBuilder builder =
-        new VersionedTargetGraphBuilder(
+        new ParallelVersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -246,7 +246,7 @@ public class VersionedTargetGraphBuilderTest {
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     BuildTarget dep = BuildTargetFactory.newInstance("//:dep");
     VersionedTargetGraphBuilder builder =
-        new VersionedTargetGraphBuilder(
+        new ParallelVersionedTargetGraphBuilder(
             POOL,
             new FixedVersionSelector(
                 ImmutableMap.of(
@@ -288,7 +288,7 @@ public class VersionedTargetGraphBuilderTest {
             new VersionedAliasBuilder("//:versioned").setVersions("1.0", "//:dep").build(),
             new VersionPropagatorBuilder("//:root").setDeps("//:versioned").build());
     VersionedTargetGraphBuilder builder =
-        new VersionedTargetGraphBuilder(
+        new ParallelVersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -311,7 +311,7 @@ public class VersionedTargetGraphBuilderTest {
                 .build(),
             new VersionRootBuilder("//:root1").setDeps("//:root2").build());
     VersionedTargetGraphBuilder builder =
-        new VersionedTargetGraphBuilder(
+        new ParallelVersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
