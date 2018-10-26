@@ -18,12 +18,9 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /** Contains base logic for {@link CellPathResolver}. */
 public abstract class AbstractCellPathResolver implements CellPathResolver {
@@ -40,29 +37,7 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
   @Override
   public Path getCellPathOrThrow(Optional<String> cellName) {
     return getCellPath(cellName)
-        .orElseThrow(
-            () ->
-                new AssertionError(
-                    cellName
-                        .map(
-                            name -> {
-                              List<String> suggestions =
-                                  MoreStrings.getSpellingSuggestions(
-                                      name, getCellPaths().keySet(), 2);
-                              if (suggestions.isEmpty()) {
-                                suggestions =
-                                    getCellPaths()
-                                        .keySet()
-                                        .stream()
-                                        .sorted()
-                                        .collect(Collectors.toList());
-                              }
-                              return String.format(
-                                  "Unknown cell: %s. Did you mean one of %s instead?",
-                                  name,
-                                  suggestions.isEmpty() ? getCellPaths().keySet() : suggestions);
-                            })
-                        .orElse("Cannot determine path of the root cell")));
+        .orElseThrow(() -> new UnknownCellException(cellName, getCellPaths().keySet()));
   }
 
   @Override

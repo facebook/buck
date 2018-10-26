@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.UnknownCellException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -110,7 +111,13 @@ public class BuildTargetParser {
     baseName = baseName.replace('\\', '/');
     checkBaseName(baseName, buildTargetName);
 
-    Path cellPath = cellNames.getCellPathOrThrow(givenCellName);
+    Path cellPath;
+    try {
+      cellPath = cellNames.getCellPathOrThrow(givenCellName);
+    } catch (UnknownCellException e) {
+      throw new BuildTargetParseException(
+          String.format("when parsing %s: %s", buildTargetName, e.getHumanReadableErrorMessage()));
+    }
 
     ImmutableUnflavoredBuildTarget.Builder unflavoredBuilder =
         ImmutableUnflavoredBuildTarget.builder()
