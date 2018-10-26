@@ -31,6 +31,7 @@ import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.parser.AbstractParserConfig.ApplyDefaultFlavorsMode;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -64,18 +65,18 @@ import javax.annotation.Nullable;
  * <p>Computed targets are cached but are automatically invalidated if Watchman reports any
  * filesystem changes that may affect computed results.
  */
-public class DefaultParser implements Parser {
+class DefaultParser implements Parser {
 
   private static final Logger LOG = Logger.get(Parser.class);
 
-  private final PerBuildStateFactory perBuildStateFactory;
-  private final DaemonicParserState permState;
-  private final TargetSpecResolver targetSpecResolver;
-  private final Watchman watchman;
-  private final BuckEventBus eventBus;
-  private final Supplier<ImmutableList<String>> targetPlatforms;
+  protected final PerBuildStateFactory perBuildStateFactory;
+  protected final DaemonicParserState permState;
+  protected final TargetSpecResolver targetSpecResolver;
+  protected final Watchman watchman;
+  protected final BuckEventBus eventBus;
+  protected final Supplier<ImmutableList<String>> targetPlatforms;
 
-  public DefaultParser(
+  DefaultParser(
       DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
       TargetSpecResolver targetSpecResolver,
@@ -312,6 +313,7 @@ public class DefaultParser implements Parser {
         enableProfiling,
         executor,
         targetNodeSpecs,
+        false,
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
   }
 
@@ -325,6 +327,7 @@ public class DefaultParser implements Parser {
       boolean enableProfiling,
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      boolean excludeUnsupportedTargets,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, IOException, InterruptedException {
 
@@ -339,26 +342,38 @@ public class DefaultParser implements Parser {
             processedBytes,
             SpeculativeParsing.ENABLED)) {
 
-      TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
-          createTargetNodeProviderForSpecResolver(state);
-
       ImmutableSet<BuildTarget> buildTargets =
-          ImmutableSet.copyOf(
-              Iterables.concat(
-                  targetSpecResolver.resolveTargetSpecs(
-                      eventBus,
-                      rootCell,
-                      watchman,
-                      targetNodeSpecs,
-                      (buildTarget, targetNode, targetType) ->
-                          applyDefaultFlavors(
-                              buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
-                      targetNodeProvider,
-                      (spec, nodes) -> spec.filter(nodes))));
+          collectBuildTargetsFromTargetNodeSpecs(
+              rootCell, state, targetNodeSpecs, excludeUnsupportedTargets, applyDefaultFlavorsMode);
       TargetGraph graph = buildTargetGraph(state, buildTargets, processedBytes);
 
       return TargetGraphAndBuildTargets.of(graph, buildTargets);
     }
+  }
+
+  @SuppressWarnings("unused")
+  protected ImmutableSet<BuildTarget> collectBuildTargetsFromTargetNodeSpecs(
+      Cell rootCell,
+      PerBuildState state,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      boolean excludeUnsupportedTargets,
+      ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      throws IOException, InterruptedException {
+    TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
+        createTargetNodeProviderForSpecResolver(state);
+
+    return ImmutableSet.copyOf(
+        Iterables.concat(
+            targetSpecResolver.resolveTargetSpecs(
+                eventBus,
+                rootCell,
+                watchman,
+                targetNodeSpecs,
+                (buildTarget, targetNode, targetType) ->
+                    applyDefaultFlavors(
+                        buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
+                targetNodeProvider,
+                (spec, nodes) -> spec.filter(nodes))));
   }
 
   static TargetNodeProviderForSpecResolver<TargetNode<?>> createTargetNodeProviderForSpecResolver(

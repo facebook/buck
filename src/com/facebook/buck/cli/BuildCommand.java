@@ -667,6 +667,7 @@ public class BuildCommand extends AbstractCommand {
               executor,
               parseArgumentsAsTargetNodeSpecs(
                   params.getCell().getCellPathResolver(), params.getBuckConfig(), getArguments()),
+              getExcludeIncompatibleTargets(),
               parserConfig.getDefaultFlavorsMode());
     } catch (BuildTargetException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));

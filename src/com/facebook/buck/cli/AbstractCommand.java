@@ -159,6 +159,12 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
               + "log and trace.")
   private boolean enableParserProfiling = false;
 
+  @Option(
+      name = GlobalCliOptions.EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG,
+      usage =
+          "Exclude targets that are not compatible with the given target platform. (experimental)")
+  private boolean excludeIncompatibleTargets = false;
+
   @Option(name = GlobalCliOptions.HELP_LONG_ARG, usage = "Prints the available options and exits.")
   private boolean help = false;
 
@@ -391,6 +397,10 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   @Override
   public ImmutableList<String> getTargetPlatforms() {
     return ImmutableList.copyOf(targetPlatforms);
+  }
+
+  public boolean getExcludeIncompatibleTargets() {
+    return excludeIncompatibleTargets;
   }
 
   /**

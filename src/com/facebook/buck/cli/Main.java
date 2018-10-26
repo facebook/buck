@@ -108,11 +108,10 @@ import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DaemonicParserState;
-import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
-import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.remoteexecution.RemoteExecutionConsoleLineProvider;
 import com.facebook.buck.remoteexecution.RemoteExecutionEventListener;
@@ -1437,16 +1436,13 @@ public final class Main {
       }
       TypeCoercerFactory typeCoercerFactory = daemon.getTypeCoercerFactory();
       Parser parser =
-          new DefaultParser(
+          ParserFactory.create(
+              typeCoercerFactory,
+              new ConstructorArgMarshaller(typeCoercerFactory),
+              knownRuleTypesProvider,
+              new ParserPythonInterpreterProvider(parserConfig, executableFinder),
+              rootCell.getBuckConfig(),
               daemon.getDaemonicParserState(),
-              PerBuildStateFactory.createFactory(
-                  typeCoercerFactory,
-                  new ConstructorArgMarshaller(typeCoercerFactory),
-                  knownRuleTypesProvider,
-                  new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-                  rootCell.getBuckConfig(),
-                  watchman,
-                  buildEventBus),
               new TargetSpecResolver(),
               watchman,
               buildEventBus,
@@ -1471,16 +1467,13 @@ public final class Main {
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
       parserAndCaches =
           ParserAndCaches.of(
-              new DefaultParser(
+              ParserFactory.create(
+                  typeCoercerFactory,
+                  new ConstructorArgMarshaller(typeCoercerFactory),
+                  knownRuleTypesProvider,
+                  new ParserPythonInterpreterProvider(parserConfig, executableFinder),
+                  rootCell.getBuckConfig(),
                   new DaemonicParserState(typeCoercerFactory, parserConfig.getNumParsingThreads()),
-                  PerBuildStateFactory.createFactory(
-                      typeCoercerFactory,
-                      new ConstructorArgMarshaller(typeCoercerFactory),
-                      knownRuleTypesProvider,
-                      new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-                      rootCell.getBuckConfig(),
-                      watchman,
-                      buildEventBus),
                   new TargetSpecResolver(),
                   watchman,
                   buildEventBus,

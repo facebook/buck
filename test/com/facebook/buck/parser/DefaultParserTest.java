@@ -2065,6 +2065,7 @@ public class DefaultParserTest {
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
+                false,
                 ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
 
@@ -2111,6 +2112,7 @@ public class DefaultParserTest {
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
+                false,
                 ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
 
@@ -2161,6 +2163,7 @@ public class DefaultParserTest {
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
+                false,
                 ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
 
@@ -2201,6 +2204,7 @@ public class DefaultParserTest {
         executorService,
         ImmutableList.of(
             AbstractBuildTargetSpec.from(BuildTargetFactory.newInstance(cellRoot, "//lib", "gen"))),
+        false,
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
 
     // The read bytes are dependent on the serialization format of the parser, and the absolute path
@@ -2218,6 +2222,7 @@ public class DefaultParserTest {
         executorService,
         ImmutableList.of(
             AbstractBuildTargetSpec.from(BuildTargetFactory.newInstance(cellRoot, "//lib", "gen"))),
+        false,
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }

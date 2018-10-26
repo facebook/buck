@@ -322,4 +322,35 @@ public class BuildCommandIntegrationTest {
         Matchers.containsString(
             "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html"));
   }
+
+  @Test
+  public void testTargetsInFileFilteredByTargetPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand(
+            "build",
+            "--target-platforms",
+            "//config:osx_x86-64",
+            "--exclude-incompatible-targets",
+            "//:")
+        .assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:cat_on_osx");
+    workspace.getBuildLog().assertTargetIsAbsent("//:cat_on_linux");
+
+    workspace
+        .runBuckCommand(
+            "build",
+            "--target-platforms",
+            "//config:linux_x86-64",
+            "--exclude-incompatible-targets",
+            "//:")
+        .assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:cat_on_linux");
+    workspace.getBuildLog().assertTargetIsAbsent("//:cat_on_osx");
+  }
 }

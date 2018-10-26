@@ -88,6 +88,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
                   pool.getListeningExecutorService(),
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell().getCellPathResolver(), params.getBuckConfig(), targetSpecs),
+                  getExcludeIncompatibleTargets(),
                   params.getBuckConfig().getView(ParserConfig.class).getDefaultFlavorsMode());
       TargetGraphAndBuildTargets targetGraphAndBuildTargets =
           params.getBuckConfig().getBuildVersions()

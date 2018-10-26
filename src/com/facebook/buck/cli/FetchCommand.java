@@ -89,6 +89,7 @@ public class FetchCommand extends BuildCommand {
                         params.getCell().getCellPathResolver(),
                         params.getBuckConfig(),
                         getArguments()),
+                    getExcludeIncompatibleTargets(),
                     parserConfig.getDefaultFlavorsMode());
         if (params.getBuckConfig().getBuildVersions()) {
           result = toVersionedTargetGraph(params, result);

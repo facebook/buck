@@ -83,7 +83,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
   }
 
   @Override
-  protected PerBuildState create(
+  protected PerBuildStateWithConfigurableAttributes create(
       DaemonicParserState daemonicParserState,
       ListeningExecutorService executorService,
       Cell rootCell,
@@ -218,7 +218,12 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
 
     cellManager.register(rootCell);
 
-    return new PerBuildState(cellManager, buildFileRawNodeParsePipeline, targetNodeParsePipeline);
+    return new PerBuildStateWithConfigurableAttributes(
+        cellManager,
+        buildFileRawNodeParsePipeline,
+        targetNodeParsePipeline,
+        constraintResolver,
+        targetPlatform);
   }
 
   @SuppressWarnings("PMD.AvoidThreadGroup")

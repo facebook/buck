@@ -492,6 +492,7 @@ public class TestCommand extends BuildCommand {
                                   BuildFileSpec.fromRecursivePath(
                                       Paths.get(""), params.getCell().getRoot()))
                               .withOnlyTests(true)),
+                      getExcludeIncompatibleTargets(),
                       parserConfig.getDefaultFlavorsMode());
           targetGraphAndBuildTargets =
               targetGraphAndBuildTargets.withBuildTargets(ImmutableSet.of());
@@ -511,6 +512,7 @@ public class TestCommand extends BuildCommand {
                           params.getCell().getCellPathResolver(),
                           params.getBuckConfig(),
                           getArguments()),
+                      getExcludeIncompatibleTargets(),
                       parserConfig.getDefaultFlavorsMode());
 
           LOG.debug("Got explicit build targets %s", targetGraphAndBuildTargets.getBuildTargets());

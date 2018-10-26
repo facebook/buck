@@ -522,6 +522,7 @@ public class TargetsCommand extends AbstractCommand {
                       TargetNodePredicateSpec.of(
                           BuildFileSpec.fromRecursivePath(
                               Paths.get(""), params.getCell().getRoot()))),
+                  getExcludeIncompatibleTargets(),
                   parserConfig.getDefaultFlavorsMode());
       SortedMap<String, TargetNode<?>> matchingNodes =
           getMatchingNodes(params, completeTargetGraphAndBuildTargets, descriptionClasses);
@@ -646,6 +647,7 @@ public class TargetsCommand extends AbstractCommand {
                           TargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
                                   Paths.get(""), params.getCell().getRoot()))),
+                      getExcludeIncompatibleTargets(),
                       parserConfig.getDefaultFlavorsMode())
                   .getTargetGraph(),
               ImmutableSet.of());
@@ -661,6 +663,7 @@ public class TargetsCommand extends AbstractCommand {
                       params.getCell().getCellPathResolver(),
                       params.getBuckConfig(),
                       getArguments()),
+                  getExcludeIncompatibleTargets(),
                   parserConfig.getDefaultFlavorsMode());
     }
     return params.getBuckConfig().getTargetsVersions()

@@ -97,6 +97,7 @@ public interface Parser {
       boolean enableProfiling,
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      boolean excludeUnsupportedTargets,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, IOException, InterruptedException;
 
