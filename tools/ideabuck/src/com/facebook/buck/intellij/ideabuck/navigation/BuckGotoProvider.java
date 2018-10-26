@@ -16,11 +16,13 @@
 
 package com.facebook.buck.intellij.ideabuck.navigation;
 
+import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
+import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
+import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
-import com.facebook.buck.intellij.ideabuck.util.BuckCellFinder;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandlerBase;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
@@ -36,56 +38,71 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
 
   @Nullable
   @Override
-  public PsiElement getGotoDeclarationTarget(@Nullable PsiElement source, Editor editor) {
-    if (source == null || !(source.getLanguage() instanceof BuckLanguage)) {
+  public PsiElement getGotoDeclarationTarget(@Nullable PsiElement element, Editor editor) {
+    Project project = editor.getProject();
+    if (project == null || project.isDefault()) {
       return null;
     }
-    String target = BuckPsiUtils.getStringValueFromBuckString(source);
-    if (target == null) {
+    if (element == null || !(element.getLanguage() instanceof BuckLanguage)) {
+      return null;
+    }
+    String elementAsString = BuckPsiUtils.getStringValueFromBuckString(element);
+    if (elementAsString == null) {
+      return null;
+    }
+    BuckTargetPattern relativePattern = BuckTargetPattern.parse(elementAsString).orElse(null);
+    if (relativePattern == null) {
       return null;
     }
 
-    final Project project = editor.getProject();
-    if (project == null) {
-      return null;
-    }
-
-    PsiFile sourcePsiFile = source.getContainingFile();
-    BuckCellFinder buckCellFinder = BuckCellFinder.getInstance(project);
-    PsiManager psiManager = PsiManager.getInstance(project);
-
-    PsiElement psiTarget = null;
-    if (PsiTreeUtil.getParentOfType(source, BuckLoadTargetArgument.class) != null) {
-      psiTarget =
-          buckCellFinder
-              .findExtensionFile(sourcePsiFile.getVirtualFile(), target)
-              .filter(VirtualFile::exists)
-              .map(psiManager::findFile)
-              .orElse(null);
+    BuckTargetPattern pattern;
+    if (relativePattern.isAbsolute()) {
+      pattern = relativePattern;
     } else {
-      if (target.startsWith(":")) {
-        // ':' prefix means this is a target in the same BUCK file
-        psiTarget = BuckPsiUtils.findTargetInPsiTree(sourcePsiFile, target.substring(1));
-      } else if (target.contains(":")) {
-        // If it contains the ':' character, it's a target in a different BUCK file
-        @Nullable
-        PsiFile psiFile =
-            buckCellFinder
-                .findBuckTargetFile(sourcePsiFile.getVirtualFile(), target)
-                .filter(VirtualFile::exists)
-                .map(psiManager::findFile)
+      pattern =
+          Optional.of(element.getContainingFile())
+              .map(PsiFile::getVirtualFile)
+              .flatMap(vf -> BuckTargetLocator.getInstance(project).resolve(vf, relativePattern))
+              .orElse(relativePattern);
+    }
+    BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
+    PsiElement psiTarget = null;
+    BuckTarget target = pattern.asBuckTarget().orElse(null);
+    if (target != null
+        && PsiTreeUtil.getParentOfType(element, BuckLoadTargetArgument.class) != null) {
+      // BuckLoadTargetArguments can only be targets, not patterns
+      psiTarget =
+          buckTargetLocator
+              .findVirtualFileForExtensionFile(target)
+              .filter(VirtualFile::exists)
+              .map(PsiManager.getInstance(project)::findFile)
+              .orElse(null);
+    } else if (target != null) {
+      // If it is a target, try to navigate to the element where the rule is defined...
+      psiTarget = buckTargetLocator.findElementForTarget(target).orElse(null);
+      if (psiTarget == null) {
+        // ...otherwise just navigate to the file.
+        psiTarget =
+            buckTargetLocator
+                .findVirtualFileForTarget(target)
+                .map(file -> (PsiElement) PsiManager.getInstance(project).findFile(file))
                 .orElse(null);
-        if (psiFile != null) {
-          String targetName = target.substring(target.lastIndexOf(':') + 1);
-          psiTarget = BuckPsiUtils.findTargetInPsiTree(psiFile, targetName);
-          if (psiTarget == null) {
-            psiTarget = psiFile;
-          }
-        }
-      } else {
-        // If there's no ':' character, try to find file relative to the current file
-        psiTarget = findLocalFile(source, target).map(psiManager::findFile).orElse(null);
       }
+    }
+    if (psiTarget == null) {
+      // If we couldn't resolve as target, try resolving it as pattern
+      psiTarget =
+          buckTargetLocator
+              .findVirtualFileForTargetPattern(pattern)
+              .map(
+                  vf -> {
+                    if (vf.isDirectory()) {
+                      return PsiManager.getInstance(project).findDirectory(vf);
+                    } else {
+                      return PsiManager.getInstance(project).findFile(vf);
+                    }
+                  })
+              .orElse(null);
     }
     if (psiTarget != null) {
       project
@@ -94,22 +111,5 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
           .consume(this.getClass().toString());
     }
     return psiTarget;
-  }
-
-  private static String unwrapString(String target) {
-    if (target.length() >= 2 && target.startsWith("\"") && target.endsWith("\"")) {
-      target = target.substring(1, target.length() - 1);
-    } else if (target.length() >= 2 && target.startsWith("'") && target.endsWith("'")) {
-      target = target.substring(1, target.length() - 1);
-    }
-    return target;
-  }
-
-  private static Optional<VirtualFile> findLocalFile(PsiElement sourceElement, String target) {
-    return Optional.of(sourceElement)
-        .map(PsiElement::getContainingFile)
-        .map(PsiFile::getVirtualFile)
-        .map(VirtualFile::getParent)
-        .map(parent -> parent.findFileByRelativePath(unwrapString(target)));
   }
 }
