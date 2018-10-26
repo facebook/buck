@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.autodeps;
 
+import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.google.common.annotations.VisibleForTesting;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
@@ -91,7 +92,11 @@ public class BuckDeps {
   @VisibleForTesting
   static String maybeAddDepToTarget(
       String buckContents, String dependencyString, String targetString) {
-    BuckTarget target = BuckTarget.parse(targetString);
+    BuckTarget target = BuckTarget.parse(targetString).orElse(null);
+    BuckTarget dependency = BuckTarget.parse(dependencyString).orElse(null);
+    if (target == null || dependency == null) {
+      return buckContents;
+    }
 
     int[] targetOffset = findRuleInBuckFileContents(buckContents, target.getRuleName());
     if (targetOffset == null) {
@@ -107,11 +112,12 @@ public class BuckDeps {
       return buckContents;
     }
 
-    BuckTarget dependency = target.parseRelative(dependencyString);
+    BuckTarget relativeDependency = target.relativize(dependency);
+
     Matcher exportedDepsMatcher = exportedDepsPattern.matcher(targetDef);
     if (exportedDepsMatcher.find()) {
       String exportedDeps = exportedDepsMatcher.group(1);
-      if (exportedDeps.contains(dependency.relativeTo(target))) {
+      if (exportedDeps.contains(relativeDependency.toString())) {
         // If it already appears in the exported_deps section, nothing to do
         return buckContents;
       }
@@ -126,14 +132,14 @@ public class BuckDeps {
               + target);
       return buckContents;
     }
-    if (depsMatcher.group(1).contains(dependency.relativeTo(target))) {
+    if (depsMatcher.group(1).contains(relativeDependency.toString())) {
       // already have dep in the deps section
       return buckContents;
     }
     int offset = targetOffset[0] + depsMatcher.start(1);
     return buckContents.substring(0, offset)
         + "\n\t\t\""
-        + dependency.relativeTo(target)
+        + relativeDependency.toString()
         + "\","
         + buckContents.substring(offset);
   }
@@ -141,11 +147,14 @@ public class BuckDeps {
   @VisibleForTesting
   static String maybeAddVisibilityToTarget(
       String buckContents, String visibilityString, String targetString) {
-    BuckTarget target = BuckTarget.parse(targetString);
-    BuckTarget visibility = target.parseRelative(visibilityString);
+    BuckTarget target = BuckTarget.parse(targetString).orElse(null);
+    BuckTarget visibility = BuckTarget.parse(visibilityString).orElse(null);
+    if (target == null || visibility == null) {
+      return buckContents;
+    }
 
     if (target.getCellName().equals(visibility.getCellName())
-        && target.getRelativePath().equals(visibility.getRelativePath())) {
+        && target.getCellPath().equals(visibility.getCellPath())) {
       // No need to add visibility for target within same file.
       return buckContents;
     }
@@ -170,17 +179,17 @@ public class BuckDeps {
       return buckContents;
     }
 
-    if (visibilityMatcher.group(1).contains(visibility.relativeTo(target))) {
-      return buckContents; // already visibile to this caller
-    }
-    if (visibilityMatcher.group(1).contains("PUBLIC")) {
-      return buckContents; // already visible everywhere
+    String visibilityList = visibilityMatcher.group(1);
+    if (visibilityList.contains("PUBLIC")
+        || visibilityList.contains(visibility.toString())
+        || visibilityList.contains(target.relativize(visibility).toString())) {
+      return buckContents; // already visibile
     }
     int offset = targetOffset[0] + visibilityMatcher.start(1);
     buckContents =
         buckContents.substring(0, offset)
             + "\n\t\t\""
-            + visibility.relativeTo(target)
+            + target.relativize(visibility).toString()
             + "\","
             + buckContents.substring(offset);
     return buckContents;
