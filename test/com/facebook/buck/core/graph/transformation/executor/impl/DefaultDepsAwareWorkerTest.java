@@ -234,14 +234,14 @@ public class DefaultDepsAwareWorkerTest {
   public void interruptThreadStopsWorker() throws InterruptedException {
 
     Semaphore workerStarted = new Semaphore(0);
-    DefaultDepsAwareTask<?> firstWork =
+    DefaultDepsAwareTask<?> firstTask =
         DefaultDepsAwareTask.of(
             () -> {
               workerStarted.release();
               return null;
             });
 
-    workQueue.put(firstWork);
+    workQueue.put(firstTask);
 
     Thread testThread =
         new Thread(
@@ -258,17 +258,17 @@ public class DefaultDepsAwareWorkerTest {
 
     testThread.interrupt();
 
-    AtomicBoolean workDone = new AtomicBoolean();
-    DefaultDepsAwareTask workAfterInterrupt =
+    AtomicBoolean taskDone = new AtomicBoolean();
+    DefaultDepsAwareTask taskAfterInterrupt =
         DefaultDepsAwareTask.of(
             () -> {
-              workDone.set(true);
+              taskDone.set(true);
               return null;
             });
 
-    workQueue.put(workAfterInterrupt);
+    workQueue.put(taskAfterInterrupt);
 
     testThread.join();
-    assertFalse(workDone.get());
+    assertFalse(taskDone.get());
   }
 }
