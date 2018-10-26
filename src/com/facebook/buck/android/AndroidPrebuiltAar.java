@@ -97,7 +97,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         UnusedDependenciesAction.IGNORE,
         Optional.empty(),
         null,
-        true,
+        false,
         false);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
