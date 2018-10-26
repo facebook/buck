@@ -59,4 +59,10 @@ public class VersionBuckConfig {
     }
     return universes.build();
   }
+
+  public VersionTargetGraphMode getVersionTargetGraphMode() {
+    return delegate
+        .getEnum("build", "async_version_tg_builder", VersionTargetGraphMode.class)
+        .orElse(VersionTargetGraphMode.DEFAULT);
+  }
 }

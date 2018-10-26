@@ -57,6 +57,7 @@ public class InstrumentedVersionedTargetGraphCache {
         targetGraphAndBuildTargets,
         versionUniverses,
         pool,
+        VersionTargetGraphMode.DISABLED,
         statsTracker);
   }
 
@@ -77,6 +78,7 @@ public class InstrumentedVersionedTargetGraphCache {
             targetGraphAndBuildTargets,
             new VersionBuckConfig(buckConfig).getVersionUniverses(),
             new ForkJoinPool(buckConfig.getNumThreads()),
+            new VersionBuckConfig(buckConfig).getVersionTargetGraphMode(),
             statsTracker)
         .getTargetGraphAndBuildTargets();
   }
