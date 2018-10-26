@@ -351,7 +351,7 @@ public class BuckTargetPatternTest {
   // Tests for #resolve(Pattern)
 
   @Test
-  public void resolveWhenOtherIsFullyQualified() {
+  public void resolvePatternWhenOtherIsFullyQualified() {
     BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
     BuckTargetPattern other = assertCanParse("foo//bar/baz:qux");
     BuckTargetPattern resolved = base.resolve(other);
@@ -359,7 +359,7 @@ public class BuckTargetPatternTest {
   }
 
   @Test
-  public void resolveWhenOtherIsFullyQualifiedWithImpliedTarget() {
+  public void resolvePatternWhenOtherIsFullyQualifiedWithImpliedTarget() {
     BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
     BuckTargetPattern other = assertCanParse("foo//bar/baz");
     BuckTargetPattern resolved = base.resolve(other);
@@ -367,7 +367,7 @@ public class BuckTargetPatternTest {
   }
 
   @Test
-  public void resolveWhenOtherIsFullyQualifiedWithAllTargetsInPackageSuffix() {
+  public void resolvePatternWhenOtherIsFullyQualifiedWithAllTargetsInPackageSuffix() {
     BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
     BuckTargetPattern other = assertCanParse("foo//bar/baz:");
     BuckTargetPattern resolved = base.resolve(other);
@@ -375,7 +375,7 @@ public class BuckTargetPatternTest {
   }
 
   @Test
-  public void resolveWhenOtherIsFullyQualifiedWithRecursiveTargetsSuffix() {
+  public void resolvePatternWhenOtherIsFullyQualifiedWithRecursiveTargetsSuffix() {
     BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
     BuckTargetPattern other = assertCanParse("foo//bar/baz/...");
     BuckTargetPattern resolved = base.resolve(other);
@@ -383,7 +383,7 @@ public class BuckTargetPatternTest {
   }
 
   @Test
-  public void resolveWhenOtherHasNoCell() {
+  public void resolvePatternWhenOtherHasNoCell() {
     BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
     BuckTargetPattern other = assertCanParse("//bar/baz:qux");
     BuckTargetPattern resolved = base.resolve(other);
@@ -391,7 +391,7 @@ public class BuckTargetPatternTest {
   }
 
   @Test
-  public void resolveWhenOtherHasNoCellWithImpliedTarget() {
+  public void resolvePatternWhenOtherHasNoCellWithImpliedTarget() {
     BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
     BuckTargetPattern other = assertCanParse("//bar/baz");
     BuckTargetPattern resolved = base.resolve(other);
@@ -399,7 +399,7 @@ public class BuckTargetPatternTest {
   }
 
   @Test
-  public void resolveWhenOtherHasNoCellWithAllTargetsInPackageSuffix() {
+  public void resolvePatternWhenOtherHasNoCellWithAllTargetsInPackageSuffix() {
     BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
     BuckTargetPattern other = assertCanParse("//bar/baz:");
     BuckTargetPattern resolved = base.resolve(other);
@@ -407,7 +407,7 @@ public class BuckTargetPatternTest {
   }
 
   @Test
-  public void resolveWhenOtherHasNoCellWithRecursiveTargetsSuffix() {
+  public void resolvePatternWhenOtherHasNoCellWithRecursiveTargetsSuffix() {
     BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
     BuckTargetPattern other = assertCanParse("//bar/baz/...");
     BuckTargetPattern resolved = base.resolve(other);
@@ -415,7 +415,7 @@ public class BuckTargetPatternTest {
   }
 
   @Test
-  public void resolveWhenOtherHasNoCellAndNoPath() {
+  public void resolvePatternWhenOtherHasNoCellAndNoPath() {
     BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
     BuckTargetPattern other = assertCanParse(":qux");
     BuckTargetPattern resolved = base.resolve(other);
@@ -423,7 +423,7 @@ public class BuckTargetPatternTest {
   }
 
   @Test
-  public void resolveWhenOtherHasNoCellAndNoPathWithAllTargetsInPackageSuffix() {
+  public void resolvePatternWhenOtherHasNoCellAndNoPathWithAllTargetsInPackageSuffix() {
     BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
     BuckTargetPattern other = assertCanParse(":");
     BuckTargetPattern resolved = base.resolve(other);
@@ -431,9 +431,34 @@ public class BuckTargetPatternTest {
   }
 
   @Test
-  public void resolveReturnsNullWhenOtherIsNotATarget() {
+  public void resolvePatternReturnsNullWhenOtherIsNotATarget() {
     BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
     assertOptionalEquals(null, base.resolve("not-a-target"));
+  }
+
+  // Tests for #resolve(Target)
+
+  @Test
+  public void resolveTargetWhenTargetIsFullyQualified() {
+    BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
+    BuckTarget other = BuckTarget.parse("foo//bar:baz").get();
+    assertEquals(other, base.resolve(other));
+  }
+
+  @Test
+  public void resolveTargetWhenTargetHasNoCellNme() {
+    BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
+    BuckTarget other = BuckTarget.parse("//bar:baz").get();
+    BuckTarget expected = BuckTarget.parse("cell//bar:baz").get();
+    assertEquals(expected, base.resolve(other));
+  }
+
+  @Test
+  public void resolveTargetWhenTargetHasNoPath() {
+    BuckTargetPattern base = assertCanParse("cell//path/to/module:rule");
+    BuckTarget other = BuckTarget.parse(":baz").get();
+    BuckTarget expected = BuckTarget.parse("cell//path/to/module:baz").get();
+    assertEquals(expected, base.resolve(other));
   }
 
   // Tests for #relativize(Pattern)

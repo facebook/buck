@@ -157,7 +157,7 @@ public class BuckTargetPattern {
   }
 
   /**
-   * Resolve the given buck target against this buck target.
+   * Resolve the given buck target pattern against this buck target pattern.
    *
    * <p>Returns {@link Optional#empty()} if the "other" is not parsable as a relative target using
    * {@link #parse(String)}.
@@ -169,10 +169,25 @@ public class BuckTargetPattern {
   }
 
   /**
-   * Resolve the given buck target against this target.
+   * Resolve the given buck target against this buck target pattern.
    *
-   * <p>If this target is fully-qualified, the resulting target is also guaranteed to be fully
-   * qualified.
+   * <p>If this target pattern is fully-qualified, the resulting target is also guaranteed to be
+   * fully qualified.
+   *
+   * <p>This is semantically similar to {@link java.nio.file.Path#resolve(Path)}.
+   */
+  public BuckTarget resolve(BuckTarget other) {
+    return new BuckTarget(
+        other.getCellName().orElse(cellName),
+        other.getCellPath().orElse(cellPath),
+        other.getRuleName());
+  }
+
+  /**
+   * Resolve the given buck target pattern against this target pattern.
+   *
+   * <p>If this target pattern is fully-qualified, the resulting target pattern is also guaranteed
+   * to be fully qualified.
    *
    * <p>This is semantically similar to {@link java.nio.file.Path#resolve(Path)}.
    */

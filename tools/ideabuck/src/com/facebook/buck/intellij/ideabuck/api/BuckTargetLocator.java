@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.api;
 
+import com.facebook.buck.intellij.ideabuck.api.BuckCellManager.Cell;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -69,4 +70,53 @@ public interface BuckTargetLocator extends ProjectComponent {
 
   /** Returns the element in the PsiTree where the given target is defined, if it can be found. */
   Optional<? extends PsiElement> findElementForTarget(BuckTarget buckTarget);
+
+  /**
+   * Returns the Buck file associated with the given {@link VirtualFile}.
+   *
+   * <p>The Buck file is the nearest file named {@link Cell#getBuildfileName()} located in either
+   * the same-directory-as or the nearest-ancestor-of the given {@link VirtualFile}.
+   */
+  Optional<VirtualFile> findBuckFileForVirtualFile(VirtualFile file);
+
+  /**
+   * Returns the Buck file associated with the given {@link Path}.
+   *
+   * <p>The Buck file is the nearest file named {@link Cell#getBuildfileName()} located in either
+   * the same-directory-as or the nearest-ancestor-of the given {@link Path}.
+   */
+  Optional<Path> findBuckFileForPath(Path path);
+
+  /** Resolves the given target relative to the given file. */
+  Optional<BuckTarget> resolve(Path sourceFile, BuckTarget target);
+
+  /** Resolves the given target relative to the given file. */
+  Optional<BuckTarget> resolve(VirtualFile sourceFile, BuckTarget target);
+
+  /** Resolves the given target pattern relative to the given file. */
+  Optional<BuckTargetPattern> resolve(Path sourceFile, BuckTargetPattern pattern);
+
+  /** Resolves the given target pattern relative to the given file. */
+  Optional<BuckTargetPattern> resolve(VirtualFile sourceFile, BuckTargetPattern pattern);
+
+  /**
+   * Returns a target pattern for a given file.
+   *
+   * <p>If the file is:
+   *
+   * <ul>
+   *   <li>located in a Buck cell, and the file name is the {@link Cell#getBuildfileName()} for that
+   *       cell, returns a target pattern matching all targets in its package.
+   *   <li>located in a Buck cell, but is not a build file, returns a target suitable for loading it
+   *       as an extension file.
+   *   <li>not located in a cell, return {@link Optional#empty()}
+   * </ul>
+   */
+  Optional<BuckTargetPattern> findTargetPatternForVirtualFile(VirtualFile file);
+
+  /**
+   * Returns a target pattern for a file at a given path, as per {@link
+   * #findTargetPatternForVirtualFile(VirtualFile)}.
+   */
+  Optional<BuckTargetPattern> findTargetPatternForPath(Path path);
 }

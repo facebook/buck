@@ -23,10 +23,10 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiManager;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
@@ -158,5 +158,197 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
     return findVirtualFileForTarget(buckTarget)
         .map(mPsiManager::findFile)
         .map(psiFile -> BuckPsiUtils.findTargetInPsiTree(psiFile, buckTarget.getRuleName()));
+  }
+
+  @Override
+  public Optional<VirtualFile> findBuckFileForVirtualFile(VirtualFile file) {
+    return mBuckCellManager
+        .findCellByVirtualFile(file)
+        .flatMap(
+            cell ->
+                cell.getRootDirectory()
+                    .map(VirtualFile::getCanonicalPath)
+                    .map(
+                        cellRoot -> {
+                          VirtualFile packageDir = file.isDirectory() ? file : file.getParent();
+                          while (true) {
+                            if (packageDir == null) {
+                              return null;
+                            }
+                            VirtualFile buckFile = packageDir.findChild(cell.getBuildfileName());
+                            if (buckFile != null && buckFile.exists() && !buckFile.isDirectory()) {
+                              return buckFile;
+                            }
+                            String canonicalPackageDir = packageDir.getCanonicalPath();
+                            if (canonicalPackageDir == null
+                                || !canonicalPackageDir.startsWith(cellRoot)) {
+                              return null;
+                            }
+                            packageDir = packageDir.getParent();
+                          }
+                        }));
+  }
+
+  @Override
+  public Optional<Path> findBuckFileForPath(Path path) {
+    Path normalizedPath = path;
+    return mBuckCellManager
+        .findCellByPath(normalizedPath)
+        .map(
+            cell -> {
+              Path cellRoot = cell.getRootPath();
+              Path packageDir =
+                  normalizedPath.toFile().isDirectory()
+                      ? normalizedPath
+                      : normalizedPath.getParent();
+              while (true) {
+                if (packageDir == null) {
+                  return null;
+                }
+                Path buckPath = packageDir.resolve(cell.getBuildfileName());
+                File buckFile = buckPath.toFile();
+                if (buckFile.exists() && buckFile.isFile()) {
+                  return buckPath;
+                }
+                if (buckPath.getNameCount() <= cellRoot.getNameCount()) {
+                  return null;
+                }
+                packageDir = packageDir.getParent();
+              }
+            });
+  }
+
+  @Override
+  public Optional<BuckTarget> resolve(Path sourceFile, BuckTarget target) {
+    if (target.isAbsolute()) {
+      return Optional.of(target);
+    } else {
+      return findTargetPatternForPath(sourceFile).map(base -> base.resolve(target));
+    }
+  }
+
+  @Override
+  public Optional<BuckTarget> resolve(VirtualFile sourceFile, BuckTarget target) {
+    if (target.isAbsolute()) {
+      return Optional.of(target);
+    } else {
+      return findTargetPatternForVirtualFile(sourceFile).map(base -> base.resolve(target));
+    }
+  }
+
+  @Override
+  public Optional<BuckTargetPattern> resolve(Path sourceFile, BuckTargetPattern pattern) {
+    if (pattern.isAbsolute()) {
+      return Optional.of(pattern);
+    } else {
+      return findTargetPatternForPath(sourceFile).map(base -> base.resolve(pattern));
+    }
+  }
+
+  @Override
+  public Optional<BuckTargetPattern> resolve(VirtualFile sourceFile, BuckTargetPattern pattern) {
+    if (pattern.isAbsolute()) {
+      return Optional.of(pattern);
+    } else {
+      return findTargetPatternForVirtualFile(sourceFile).map(base -> base.resolve(pattern));
+    }
+  }
+
+  @Override
+  public Optional<BuckTargetPattern> findTargetPatternForVirtualFile(VirtualFile virtualFile) {
+    return mBuckCellManager
+        .findCellByVirtualFile(virtualFile)
+        .flatMap(
+            cell ->
+                cell.getRootDirectory()
+                    .map(
+                        cellRoot -> {
+                          if (virtualFile.equals(cellRoot)) {
+                            return null; // there is no target pattern for the cell root directory
+                          }
+                          String buildFileName = cell.getBuildfileName();
+                          String pathToPackage; // The part between "//" and ":" in the pattern
+                          String rulePiece; // The part after the ":" in the pattern
+                          VirtualFile packageDir =
+                              virtualFile.getParent(); // Eventually, where the nearest Buck file is
+                          // defined
+                          if (buildFileName.equals(virtualFile.getName())) {
+                            rulePiece = "";
+                          } else {
+                            rulePiece = virtualFile.getName();
+                            while (packageDir != null
+                                && !packageDir.equals(cellRoot)
+                                && packageDir.findChild(buildFileName) == null) {
+                              rulePiece = packageDir.getName() + "/" + rulePiece;
+                              packageDir = packageDir.getParent();
+                            }
+                          }
+                          if (packageDir == null) {
+                            return null;
+                          }
+                          if (packageDir.equals(cellRoot)) {
+                            pathToPackage = "";
+                          } else {
+                            pathToPackage = packageDir.getName();
+                            packageDir = packageDir.getParent();
+                            while (packageDir != null && !packageDir.equals(cellRoot)) {
+                              pathToPackage = packageDir.getName() + "/" + pathToPackage;
+                              packageDir = packageDir.getParent();
+                            }
+                          }
+                          if (packageDir == null) {
+                            return null;
+                          }
+                          return cell.getName().orElse("") + "//" + pathToPackage + ":" + rulePiece;
+                        }))
+        .flatMap(BuckTargetPattern::parse);
+  }
+
+  @Override
+  public Optional<BuckTargetPattern> findTargetPatternForPath(Path path) {
+    Path normalizedPath = path;
+    return mBuckCellManager
+        .findCellByPath(normalizedPath)
+        .map(
+            cell -> {
+              Path cellRoot = cell.getRootPath();
+              if (normalizedPath.equals(cellRoot)) {
+                return null; // there is no target pattern for the cell root directory
+              }
+              String buildFileName = cell.getBuildfileName();
+              String pathToPackage; // The part between "//" and ":" in the pattern
+              String rulePiece; // The part after the ":" in the pattern
+              Path packageDir =
+                  normalizedPath.getParent(); // Eventually, where the nearest Buck file is defined
+              if (buildFileName.equals(normalizedPath.getFileName().toString())) {
+                rulePiece = "";
+              } else {
+                rulePiece = normalizedPath.getFileName().toString();
+                while (packageDir != null
+                    && !packageDir.equals(cellRoot)
+                    && !packageDir.resolve(buildFileName).toFile().exists()) {
+                  rulePiece = packageDir.getFileName().toString() + "/" + rulePiece;
+                  packageDir = packageDir.getParent();
+                }
+              }
+              if (packageDir == null) {
+                return null;
+              }
+              if (packageDir.equals(cellRoot)) {
+                pathToPackage = "";
+              } else {
+                pathToPackage = packageDir.getFileName().toString();
+                packageDir = packageDir.getParent();
+                while (packageDir != null && !packageDir.equals(cellRoot)) {
+                  pathToPackage = packageDir.getFileName().toString() + "/" + pathToPackage;
+                  packageDir = packageDir.getParent();
+                }
+              }
+              if (packageDir == null) {
+                return null;
+              }
+              return cell.getName().orElse("") + "//" + pathToPackage + ":" + rulePiece;
+            })
+        .flatMap(BuckTargetPattern::parse);
   }
 }
