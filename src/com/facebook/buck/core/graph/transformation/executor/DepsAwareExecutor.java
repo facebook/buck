@@ -17,9 +17,9 @@
 package com.facebook.buck.core.graph.transformation.executor;
 
 import com.facebook.buck.util.function.ThrowingSupplier;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.function.Supplier;
@@ -70,5 +70,5 @@ public interface DepsAwareExecutor<
   Future<ResultType> submit(TaskType task);
 
   /** Same as {@link #submit(DepsAwareTask)} except for multiple tasks. */
-  List<Future<ResultType>> submitAll(Collection<TaskType> tasks);
+  ImmutableList<Future<ResultType>> submitAll(Collection<TaskType> tasks);
 }

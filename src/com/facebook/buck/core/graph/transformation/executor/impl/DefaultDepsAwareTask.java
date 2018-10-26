@@ -19,6 +19,7 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableSet;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -83,7 +84,7 @@ class DefaultDepsAwareTask<T> extends DepsAwareTask<T, DefaultDepsAwareTask<T>> 
   }
 
   TaskStatus getStatus() {
-    return status.get();
+    return Objects.requireNonNull(status.get());
   }
 
   boolean compareAndSetStatus(TaskStatus expect, TaskStatus update) {

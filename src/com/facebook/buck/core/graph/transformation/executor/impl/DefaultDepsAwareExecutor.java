@@ -23,7 +23,6 @@ import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -116,7 +115,7 @@ public class DefaultDepsAwareExecutor<T> implements DepsAwareExecutor<T, Default
   }
 
   @Override
-  public List<Future<T>> submitAll(Collection<DefaultDepsAwareTask<T>> tasks) {
+  public ImmutableList<Future<T>> submitAll(Collection<DefaultDepsAwareTask<T>> tasks) {
     ImmutableList.Builder<Future<T>> futures = ImmutableList.builderWithExpectedSize(tasks.size());
     for (DefaultDepsAwareTask<T> w : tasks) {
       futures.add(submit(w));
