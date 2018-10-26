@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTargetCompatibleWith;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -64,6 +65,7 @@ class ParserWithConfigurableAttributes extends DefaultParser {
       PerBuildState state,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       boolean excludeUnsupportedTargets,
+      boolean excludeConfigurationTargets,
       ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws IOException, InterruptedException {
     PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
@@ -74,6 +76,13 @@ class ParserWithConfigurableAttributes extends DefaultParser {
 
     TargetNodeFilterForSpecResolver<TargetNode<?>> targetNodeFilter =
         (spec, nodes) -> spec.filter(nodes);
+
+    if (excludeConfigurationTargets) {
+      targetNodeFilter =
+          new TargetNodeFilterForSpecResolverWithNodeFiltering<>(
+              targetNodeFilter, ParserWithConfigurableAttributes::filterOutNonBuildTargets);
+    }
+
     if (excludeUnsupportedTargets) {
       Platform targetPlatform = stateWithConfigurableAttributes.getTargetPlatform().get();
       ConstraintResolver constraintResolver =
@@ -96,6 +105,10 @@ class ParserWithConfigurableAttributes extends DefaultParser {
                         buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
                 targetNodeProvider,
                 targetNodeFilter)));
+  }
+
+  private static boolean filterOutNonBuildTargets(TargetNode<?> node) {
+    return node.getRuleType().getKind() == RuleType.Kind.BUILD;
   }
 
   private boolean targetNodeMatchesPlatform(

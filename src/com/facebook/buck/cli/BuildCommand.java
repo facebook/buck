@@ -661,7 +661,7 @@ public class BuildCommand extends AbstractCommand {
     try {
       return params
           .getParser()
-          .buildTargetGraphForTargetNodeSpecs(
+          .buildTargetGraphWithoutConfigurationTargets(
               params.getCell(),
               getEnableParserProfiling(),
               executor,

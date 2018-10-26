@@ -81,7 +81,7 @@ public class FetchCommand extends BuildCommand {
         TargetGraphAndBuildTargets result =
             params
                 .getParser()
-                .buildTargetGraphForTargetNodeSpecs(
+                .buildTargetGraphWithoutConfigurationTargets(
                     params.getCell(),
                     getEnableParserProfiling(),
                     pool.getListeningExecutorService(),

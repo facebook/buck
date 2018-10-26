@@ -314,20 +314,55 @@ class DefaultParser implements Parser {
         executor,
         targetNodeSpecs,
         false,
+        false,
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
   }
 
-  /**
-   * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
-   * @return the target graph containing the build targets and their related targets.
-   */
   @Override
-  public synchronized TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
+  public synchronized TargetGraphAndBuildTargets buildTargetGraphWithoutConfigurationTargets(
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       boolean excludeUnsupportedTargets,
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      throws BuildFileParseException, IOException, InterruptedException {
+    return buildTargetGraphForTargetNodeSpecs(
+        rootCell,
+        enableProfiling,
+        executor,
+        targetNodeSpecs,
+        excludeUnsupportedTargets,
+        true,
+        applyDefaultFlavorsMode);
+  }
+
+  @Override
+  public synchronized TargetGraphAndBuildTargets buildTargetGraphWithConfigurationTargets(
+      Cell rootCell,
+      boolean enableProfiling,
+      ListeningExecutorService executor,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      boolean excludeUnsupportedTargets,
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      throws BuildFileParseException, IOException, InterruptedException {
+    return buildTargetGraphForTargetNodeSpecs(
+        rootCell,
+        enableProfiling,
+        executor,
+        targetNodeSpecs,
+        excludeUnsupportedTargets,
+        false,
+        applyDefaultFlavorsMode);
+  }
+
+  private synchronized TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
+      Cell rootCell,
+      boolean enableProfiling,
+      ListeningExecutorService executor,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      boolean excludeUnsupportedTargets,
+      boolean excludeConfigurationTargets,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, IOException, InterruptedException {
 
@@ -344,7 +379,12 @@ class DefaultParser implements Parser {
 
       ImmutableSet<BuildTarget> buildTargets =
           collectBuildTargetsFromTargetNodeSpecs(
-              rootCell, state, targetNodeSpecs, excludeUnsupportedTargets, applyDefaultFlavorsMode);
+              rootCell,
+              state,
+              targetNodeSpecs,
+              excludeUnsupportedTargets,
+              excludeConfigurationTargets,
+              applyDefaultFlavorsMode);
       TargetGraph graph = buildTargetGraph(state, buildTargets, processedBytes);
 
       return TargetGraphAndBuildTargets.of(graph, buildTargets);
@@ -357,6 +397,7 @@ class DefaultParser implements Parser {
       PerBuildState state,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       boolean excludeUnsupportedTargets,
+      boolean excludeConfigurationTargets,
       ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws IOException, InterruptedException {
     TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =

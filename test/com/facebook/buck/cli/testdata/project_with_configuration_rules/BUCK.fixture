@@ -1,0 +1,9 @@
+constraint_setting(
+    name = "os",
+)
+
+genrule(
+    name = "echo",
+    out = "echo.txt",
+    cmd = "echo echo > $OUT",
+)

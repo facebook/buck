@@ -2058,7 +2058,7 @@ public class DefaultParserTest {
 
     ImmutableSet<BuildTarget> result =
         parser
-            .buildTargetGraphForTargetNodeSpecs(
+            .buildTargetGraphWithConfigurationTargets(
                 cell,
                 false,
                 executorService,
@@ -2105,7 +2105,7 @@ public class DefaultParserTest {
 
     ImmutableSet<BuildTarget> result =
         parser
-            .buildTargetGraphForTargetNodeSpecs(
+            .buildTargetGraphWithConfigurationTargets(
                 cell,
                 false,
                 executorService,
@@ -2156,7 +2156,7 @@ public class DefaultParserTest {
 
     ImmutableSet<BuildTarget> result =
         parser
-            .buildTargetGraphForTargetNodeSpecs(
+            .buildTargetGraphWithConfigurationTargets(
                 cell,
                 false,
                 executorService,
@@ -2198,7 +2198,7 @@ public class DefaultParserTest {
     EventListener eventListener = new EventListener();
     eventBus.register(eventListener);
 
-    parser.buildTargetGraphForTargetNodeSpecs(
+    parser.buildTargetGraphWithConfigurationTargets(
         cell,
         false,
         executorService,
@@ -2216,7 +2216,7 @@ public class DefaultParserTest {
 
     // The value should be cached, so no bytes are read when re-computing.
     events.clear();
-    parser.buildTargetGraphForTargetNodeSpecs(
+    parser.buildTargetGraphWithConfigurationTargets(
         cell,
         false,
         executorService,

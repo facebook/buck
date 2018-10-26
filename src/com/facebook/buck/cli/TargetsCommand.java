@@ -514,7 +514,7 @@ public class TargetsCommand extends AbstractCommand {
       TargetGraphAndBuildTargets completeTargetGraphAndBuildTargets =
           params
               .getParser()
-              .buildTargetGraphForTargetNodeSpecs(
+              .buildTargetGraphWithConfigurationTargets(
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,
@@ -639,7 +639,7 @@ public class TargetsCommand extends AbstractCommand {
           TargetGraphAndBuildTargets.of(
               params
                   .getParser()
-                  .buildTargetGraphForTargetNodeSpecs(
+                  .buildTargetGraphWithConfigurationTargets(
                       params.getCell(),
                       getEnableParserProfiling(),
                       executor,
@@ -655,7 +655,7 @@ public class TargetsCommand extends AbstractCommand {
       targetGraphAndBuildTargets =
           params
               .getParser()
-              .buildTargetGraphForTargetNodeSpecs(
+              .buildTargetGraphWithConfigurationTargets(
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,

@@ -483,7 +483,7 @@ public class TestCommand extends BuildCommand {
           targetGraphAndBuildTargets =
               params
                   .getParser()
-                  .buildTargetGraphForTargetNodeSpecs(
+                  .buildTargetGraphWithoutConfigurationTargets(
                       params.getCell(),
                       getEnableParserProfiling(),
                       pool.getListeningExecutorService(),
@@ -504,7 +504,7 @@ public class TestCommand extends BuildCommand {
           targetGraphAndBuildTargets =
               params
                   .getParser()
-                  .buildTargetGraphForTargetNodeSpecs(
+                  .buildTargetGraphWithoutConfigurationTargets(
                       params.getCell(),
                       getEnableParserProfiling(),
                       pool.getListeningExecutorService(),
