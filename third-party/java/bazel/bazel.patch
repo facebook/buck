@@ -1,24 +1,20 @@
-From 08f20551f8dc24290b6bddf22293e32bcc83f8cf Mon Sep 17 00:00:00 2001
-From: Taras Tsugrii <ttsugrii@fb.com>
-Date: Wed, 19 Sep 2018 16:33:59 -0700
-Subject: [PATCH] [Skylark] Create Skylark patch for Buck.
-
----
- src/main/java/com/google/devtools/build/lib/BUILD  |   50 +-
- .../devtools/build/lib/packages/Attribute.java     | 2414 +-------------------
- 2 files changed, 52 insertions(+), 2412 deletions(-)
-
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 7b64280829..a67cedc515 100644
+index 3904b0b171..161d06bb8c 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -327,16 +327,56 @@ java_library(
+@@ -346,16 +346,56 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
 -java_library(
+-    name = "skylark-lang",
+-    visibility = ["//visibility:public"],
+-    exports = [
+-        ":events",
+-        ":skylarkinterface",
+-        ":syntax",
 +java_binary(
-     name = "bazel-jar",
++    name = "bazel-jar",
 +    srcs = glob([
 +        "syntax/**/*.java",
 +    ]) + glob(["events/*.java"]) + glob(["vfs/inmemoryfs/*.java"]) + glob([
@@ -30,6 +26,7 @@ index 7b64280829..a67cedc515 100644
 +        "packages/Globber.java",
 +        "packages/Info.java",
 +        "packages/InfoInterface.java",
++        "packages/NativeInfo.java",
 +        "packages/NativeProvider.java",
 +        "packages/Provider.java",
 +        "packages/ProviderFromFunction.java",
@@ -40,11 +37,6 @@ index 7b64280829..a67cedc515 100644
 +        "packages/StructImpl.java",
 +        "packages/StructProvider.java",
 +    ],
-     visibility = ["//visibility:public"],
--    exports = [
--        "//src/main/java/com/google/devtools/build/lib:events",
--        "//src/main/java/com/google/devtools/build/lib:skylarkinterface",
--        "//src/main/java/com/google/devtools/build/lib:syntax",
 +    deps = [
 +        "//src/main/java/com/google/devtools/build/lib/cmdline",
          "//src/main/java/com/google/devtools/build/lib/vfs",
@@ -73,15 +65,15 @@ index 7b64280829..a67cedc515 100644
 +        "//third_party/protobuf:protobuf_java",
      ],
  )
- 
+
 diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-index ef6496c211..321c106326 100644
+index 2f89d968f6..321c106326 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-@@ -14,2333 +14,13 @@
- 
+@@ -14,2360 +14,13 @@
+
  package com.google.devtools.build.lib.packages;
- 
+
 -import static com.google.common.collect.Sets.newEnumSet;
 -
 -import com.google.common.annotations.VisibleForTesting;
@@ -318,9 +310,16 @@ index ef6496c211..321c106326 100644
 -    OUTPUT_LICENSES,
 -
 -    /**
--     * Has a function-based split transition.
+-     * Has a Starlark-defined configuration transition. Transitions for analysis testing are tracked
+-     * separately: see {@link #HAS_ANALYSIS_TEST_TRANSITION}.
 -     */
--    HAS_FUNCTION_TRANSITION,
+-    HAS_STARLARK_DEFINED_TRANSITION,
+-
+-    /**
+-     * Has a Starlark-defined configuration transition designed specifically for rules which
+-     * run analysis tests.
+-     */
+-    HAS_ANALYSIS_TEST_TRANSITION,
 -  }
 -
 -  // TODO(bazel-team): modify this interface to extend Predicate and have an extra error
@@ -666,11 +665,22 @@ index ef6496c211..321c106326 100644
 -    }
 -
 -    /**
--     * Indicate the attribute uses function-based split transition.
+-     * Indicate the attribute uses uses a starlark-defined (non-analysis-test) configuration
+-     * transition. Transitions for analysis testing are tracked separately: see
+-     * {@link #hasAnalysisTestTransition()}.
 -     */
--    public Builder<TYPE> hasFunctionTransition() {
--      return setPropertyFlag(PropertyFlag.HAS_FUNCTION_TRANSITION,
--          "function-based split transition");
+-    public Builder<TYPE> hasStarlarkDefinedTransition() {
+-      return setPropertyFlag(PropertyFlag.HAS_STARLARK_DEFINED_TRANSITION,
+-          "starlark-defined split transition");
+-    }
+-
+-    /**
+-     * Indicate the attribute uses uses a starlark-defined analysis-test configuration transition.
+-     * Such a configuration transition may only be applied on rules with {@code analysis_test=true}.
+-     */
+-    public Builder<TYPE> hasAnalysisTestTransition() {
+-      return setPropertyFlag(PropertyFlag.HAS_ANALYSIS_TEST_TRANSITION,
+-          "analysis-test split transition");
 -    }
 -
 -    /**
@@ -2178,11 +2188,20 @@ index ef6496c211..321c106326 100644
 -  }
 -
 -  /**
--   * Returns true if this attribute uses a function-based split transition provider.  See
--   * {@link FunctionSplitTransitionProvider}.
+-   * Returns true if this attribute uses a starlark-defined, non analysis-test configuration
+-   * transition. See {@link FunctionSplitTransitionProvider}. Starlark-defined analysis-test
+-   * configuration transitions are handled separately. See {@link #hasAnalysisTestTransition}.
 -   */
--  public boolean hasFunctionTransition() {
--    return getPropertyFlag(PropertyFlag.HAS_FUNCTION_TRANSITION);
+-  public boolean hasStarlarkDefinedTransition() {
+-    return getPropertyFlag(PropertyFlag.HAS_STARLARK_DEFINED_TRANSITION);
+-  }
+-
+-  /**
+-   * Returns true if this attributes uses Starlark-defined configuration transition designed
+-   * specifically for rules which run analysis tests.
+-   */
+-  public boolean hasAnalysisTestTransition() {
+-    return getPropertyFlag(PropertyFlag.HAS_ANALYSIS_TEST_TRANSITION);
 -  }
 -
 -  /**
@@ -2416,12 +2435,12 @@ index ef6496c211..321c106326 100644
 + * </code> may share many attributes in common).
 + */
 +public final class Attribute {
- 
+
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2351,14 +31,6 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2378,14 +31,6 @@ public final class Attribute implements Comparable<Attribute> {
    }
- 
+
    /**
 -   * Returns if this attribute is late-bound according to the naming policy that designates
 -   * late-bound attributes.
@@ -2434,7 +2453,7 @@ index ef6496c211..321c106326 100644
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
     */
-@@ -2382,76 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2409,76 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
    }
@@ -2511,6 +2530,16 @@ index ef6496c211..321c106326 100644
 -    return cloneBuilder(this.type);
 -  }
  }
--- 
-2.13.5
+diff --git a/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java b/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java
+index 5c1897645f..06c4a7580a 100644
+--- a/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java
++++ b/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java
+@@ -24,7 +24,7 @@ import java.util.Map;
 
+ /** Base class for native implementations of {@link StructImpl}. */
+ // todo(vladmos,dslomov): make abstract once DefaultInfo stops instantiating it.
+-public class NativeInfo extends StructImpl {
++public abstract class NativeInfo extends StructImpl {
+   protected final ImmutableMap<String, Object> values;
+
+   // Initialized lazily.
