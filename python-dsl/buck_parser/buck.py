@@ -1641,10 +1641,10 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent):
     watch_root = build_file_query.get("watchRoot")
     project_prefix = build_file_query.get("projectPrefix")
 
-    build_file = cygwin_adjusted_path(build_file).rstrip().encode("ascii")
-    watch_root = cygwin_adjusted_path(watch_root).rstrip().encode("ascii")
+    build_file = cygwin_adjusted_path(build_file)
+    watch_root = cygwin_adjusted_path(watch_root)
     if project_prefix is not None:
-        project_prefix = cygwin_adjusted_path(project_prefix).rstrip().encode("ascii")
+        project_prefix = cygwin_adjusted_path(project_prefix)
 
     diagnostics = []
     values = []
