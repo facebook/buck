@@ -32,6 +32,7 @@ public class BuckTargetPatternTest {
 
   // Helpers here...
 
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   private static <T> void assertOptionalEquals(@Nullable T expected, Optional<T> optionalActual) {
     assertEquals(expected, optionalActual.orElse(null));
   }
@@ -603,12 +604,13 @@ public class BuckTargetPatternTest {
     assertEquals(":qux", resolved.toString());
   }
 
-  // Tests for #matches(Pattern)
+  // Tests for #matches(Pattern) and #matches(Target)
 
   private void checkMatches(String patternString, String otherString, boolean expected) {
     BuckTargetPattern pattern = assertCanParse(patternString);
     BuckTargetPattern other = assertCanParse(otherString);
     assertEquals(expected, pattern.matches(other));
+    other.asBuckTarget().ifPresent(t -> assertEquals(expected, pattern.matches(t)));
   }
 
   @Test
