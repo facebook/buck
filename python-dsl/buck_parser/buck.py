@@ -1549,7 +1549,7 @@ class BuildFileProcessor(object):
         )
 
         # Initialize the output object to a map of the parsed rules.
-        values = build_env.rules.values()
+        values = list(itervalues(build_env.rules))
 
         # Add in tracked included files as a special meta rule.
         values.append({"__includes": [path] + sorted(build_env.includes)})
