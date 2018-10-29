@@ -487,11 +487,11 @@ def glob(
         )
         if results:
             # glob should consistently return paths of type str, but
-            # watchman client returns unicode instead.
+            # watchman client returns unicode in Python 2 instead.
             # Extra check is added to make this conversion resilient to
-            # wachman API changes.
+            # watchman API changes.
             results = [
-                res.encode("utf-8") if isinstance(res, unicode) else res
+                res.encode("utf-8") if not isinstance(res, str) else res
                 for res in results
             ]
 
