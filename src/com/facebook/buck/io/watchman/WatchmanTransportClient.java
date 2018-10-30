@@ -142,7 +142,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
 
   @SuppressWarnings("unchecked")
   private Optional<Map<String, Object>> sendWatchmanQuery(List<Object> query) throws IOException {
-    LOG.debug("Sending query: %s", query);
+    LOG.verbose("Sending query: %s", query);
     bserSerializer.serializeToStream(query, transport.getOutputStream());
     Object response = bserDeserializer.deserializeBserValue(transport.getInputStream());
     LOG.verbose("Got response: %s", response);
