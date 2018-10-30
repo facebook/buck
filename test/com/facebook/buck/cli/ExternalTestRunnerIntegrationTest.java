@@ -225,4 +225,18 @@ public class ExternalTestRunnerIntegrationTest {
     result.assertSuccess();
     assertThat(result.getStdout().trim(), is(equalTo("7")));
   }
+
+  @Test
+  public void numberOfJobsWithTestThreadsIsPassedToExternalRunner() throws IOException {
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_echo_jobs.py"),
+            "-c",
+            "test.threads=2",
+            "//:pass");
+    result.assertSuccess();
+    assertThat(result.getStdout().trim(), is(equalTo("2")));
+  }
 }

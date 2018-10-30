@@ -4491,6 +4491,15 @@ buck = .
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'test' /}
+  {param name: 'threads' /}
+  {param example_value: '5' /}
+  {param description}
+    Specify number of threads used when running test.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'thrift' /}
   {param description}

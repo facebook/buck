@@ -571,10 +571,20 @@ public class BuckConfig {
   }
 
   /**
-   * @return the number of threads Buck should use for testing. This will use the build
-   *     parallelization settings if not configured.
+   * @return the number of threads Buck should use for testing. This will use the test.threads
+   *     setting if it exists. Otherwise, this will use the build parallelization settings if not
+   *     configured.
    */
   public int getNumTestThreads() {
+    OptionalInt numTestThreads = config.getInteger("test", "threads");
+    if (numTestThreads.isPresent()) {
+      int num = numTestThreads.getAsInt();
+      if (num <= 0) {
+        throw new HumanReadableException(
+            "test.threads must be greater than zero (was " + num + ")");
+      }
+      return num;
+    }
     double ratio = config.getFloat(TEST_SECTION_HEADER, "thread_utilization_ratio").orElse(1.0F);
     if (ratio <= 0.0F) {
       throw new HumanReadableException(
