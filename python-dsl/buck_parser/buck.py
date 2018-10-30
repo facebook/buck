@@ -34,7 +34,7 @@ from typing import (
 
 import pywatchman
 from pywatchman import WatchmanError
-from six import iteritems, itervalues, string_types
+from six import PY3, iteritems, itervalues, string_types
 
 # Python 2.6, 2.7, use iterator filter from Python 3
 from six.moves import builtins, filter
@@ -1680,6 +1680,9 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent):
 def java_process_send_result(to_parent, values, diagnostics, profile_result):
     """Sends result to the Java process"""
     data = encode_result(values, diagnostics, profile_result)
+    if PY3:
+        # in Python 3 write expects bytes instead of string
+        data = data.encode("utf-8")
     to_parent.write(data)
     to_parent.flush()
 
