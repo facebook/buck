@@ -2366,6 +2366,22 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  public void testDeclaredPlatformsWithDefaultPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "declared_platforms", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckCommand("query", "-c", "cxx.declared_platforms=my-favorite-platform", "//:defaults")
+        .assertSuccess();
+
+    // Currently failing
+    workspace
+        .runBuckCommand(
+            "query", "-c", "cxx.declared_platforms=my-favorite-platform", "//:default_platform")
+        .assertFailure();
+  }
+
+  @Test
   public void targetsInPlatformSpecificFlagsDoNotBecomeDependencies() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
