@@ -31,14 +31,13 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.stringtemplate.v4.ST;
@@ -103,32 +102,38 @@ public class IjProjectWriter {
 
     if (projectConfig.isGeneratingTargetModuleMapEnabled()) {
       writeTargetModules(
-          updateTargetModules(new HashMap<>(), projectDataPreparer.getModulesToBeWritten()));
+          updateTargetModules(
+              ImmutableSortedMap.of(), projectDataPreparer.getModulesToBeWritten()));
     }
   }
 
-  private Map<String, String> readTargetModules() throws IOException {
+  private ImmutableSortedMap<String, String> readTargetModules() throws IOException {
     Path targetModulesPath = getIdeaConfigDir().resolve("target-modules.json");
     return outFilesystem.exists(targetModulesPath)
         ? ObjectMappers.createParser(outFilesystem.newFileInputStream(targetModulesPath))
-            .readValueAs(new TypeReference<Map<String, String>>() {})
-        : new HashMap<>();
+            .readValueAs(new TypeReference<ImmutableSortedMap<String, String>>() {})
+        : ImmutableSortedMap.of();
   }
 
-  private static Map<String, String> updateTargetModules(
-      Map<String, String> existingModules, Set<IjModule> newModules) {
+  private static ImmutableSortedMap<String, String> updateTargetModules(
+      ImmutableSortedMap<String, String> existingModules, Set<IjModule> newModules) {
+
+    ImmutableSortedMap.Builder<String, String> builder = ImmutableSortedMap.naturalOrder();
+    builder.putAll(existingModules);
     for (IjModule module : newModules) {
       for (BuildTarget target : module.getTargets()) {
-        existingModules.put(target.getFullyQualifiedName(), module.getName());
+        builder.put(target.getFullyQualifiedName(), module.getName());
       }
     }
-    return existingModules;
+    return builder.build();
   }
 
-  private void writeTargetModules(Map<String, String> targetModules) throws IOException {
+  private void writeTargetModules(ImmutableSortedMap<String, String> targetModules)
+      throws IOException {
     Path targetModulesPath = getIdeaConfigDir().resolve("target-modules.json");
     try (JsonGenerator generator =
-        ObjectMappers.createGenerator(outFilesystem.newFileOutputStream(targetModulesPath))) {
+        ObjectMappers.createGenerator(outFilesystem.newFileOutputStream(targetModulesPath))
+            .useDefaultPrettyPrinter()) {
       generator.writeObject(targetModules);
     }
   }
