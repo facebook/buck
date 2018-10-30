@@ -340,7 +340,9 @@ public class NewNativeTargetProjectMutatorTest {
         XcodePrebuildScriptBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:script"))
             .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("script/input.png")))
             .setInputs(ImmutableSortedSet.of("$(SRCROOT)/helloworld.md"))
+            .setInputFileLists(ImmutableSortedSet.of("$(SRCROOT)/foo-inputs.xcfilelist"))
             .setOutputs(ImmutableSortedSet.of("helloworld.txt"))
+            .setOutputFileLists(ImmutableSortedSet.of("$(SRCROOT)/foo-outputs.xcfilelist"))
             .setCmd("echo \"hello world!\"")
             .build();
 
@@ -357,9 +359,17 @@ public class NewNativeTargetProjectMutatorTest {
         phase.getInputPaths(),
         is(hasItems("../script/input.png", "$(SRCROOT)/helloworld.md")));
     assertThat(
+        "Should set input file list paths correctly",
+        Iterables.getOnlyElement(phase.getInputFileListPaths()),
+        is(equalTo("$(SRCROOT)/foo-inputs.xcfilelist")));
+    assertThat(
         "Should set output paths correctly",
         "helloworld.txt",
         is(equalTo(Iterables.getOnlyElement(phase.getOutputPaths()))));
+    assertThat(
+        "Should set output file list paths correctly",
+        Iterables.getOnlyElement(phase.getOutputFileListPaths()),
+        is(equalTo("$(SRCROOT)/foo-outputs.xcfilelist")));
     assertEquals("should set script correctly", "echo \"hello world!\"", phase.getShellScript());
   }
 

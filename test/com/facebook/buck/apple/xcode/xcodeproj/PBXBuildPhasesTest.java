@@ -16,10 +16,11 @@
 
 package com.facebook.buck.apple.project_generator;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
+import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSNumber;
 import com.dd.plist.NSString;
@@ -29,6 +30,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import java.util.Optional;
 import org.junit.Before;
@@ -70,8 +72,39 @@ public class PBXBuildPhasesTest {
     NSDictionary projPlist = serializer.toPlist();
     NSDictionary copyPhaseDict = getObjectForGID(copyPhase.getGlobalID(), projPlist);
 
-    assertTrue(copyPhaseDict.get("name").equals(new NSString(copyPhaseName)));
-    assertTrue(copyPhaseDict.get("runOnlyForDeploymentPostprocessing").equals(new NSNumber(1)));
+    assertEquals(new NSString(copyPhaseName), copyPhaseDict.get("name"));
+    assertEquals(new NSNumber(1), copyPhaseDict.get("runOnlyForDeploymentPostprocessing"));
+  }
+
+  @Test
+  public void testShellScriptBuildPhase() {
+    String phaseName = "Test Phase Name";
+    String input = "$(SRCROOT)/test.md";
+    String output = "$(SRCROOT)/test.html";
+    String inputFileList = "$(SRCROOT)/test-extra-inputs.xcfilelist";
+    String outputFileList = "$(SRCROOT)/test-extra-outputs.xcfilelist";
+    String script = "echo 'test'";
+
+    PBXShellScriptBuildPhase buildPhase = new PBXShellScriptBuildPhase();
+    buildPhase.setRunOnlyForDeploymentPostprocessing(Optional.of(Boolean.TRUE));
+    buildPhase.setName(Optional.of(phaseName));
+    buildPhase.getInputPaths().add(input);
+    buildPhase.getOutputPaths().add(output);
+    buildPhase.getInputFileListPaths().add(inputFileList);
+    buildPhase.getOutputFileListPaths().add(outputFileList);
+    buildPhase.setShellScript(script);
+    target.getBuildPhases().add(buildPhase);
+
+    NSDictionary projPlist = serializer.toPlist();
+    NSDictionary phaseDict = getObjectForGID(buildPhase.getGlobalID(), projPlist);
+
+    assertEquals(new NSString(phaseName), phaseDict.get("name"));
+    assertEquals(new NSNumber(1), phaseDict.get("runOnlyForDeploymentPostprocessing"));
+    assertEquals(new NSArray(new NSString(input)), phaseDict.get("inputPaths"));
+    assertEquals(new NSArray(new NSString(output)), phaseDict.get("outputPaths"));
+    assertEquals(new NSArray(new NSString(inputFileList)), phaseDict.get("inputFileListPaths"));
+    assertEquals(new NSArray(new NSString(outputFileList)), phaseDict.get("outputFileListPaths"));
+    assertEquals(new NSString(script), phaseDict.get("shellScript"));
   }
 
   private NSDictionary getObjectForGID(String gid, NSDictionary projPlist) {

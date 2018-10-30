@@ -29,7 +29,13 @@ interface AbstractXcodeScriptDescriptionArg extends CommonDescriptionArg, HasSrc
   ImmutableSortedSet<String> getInputs();
 
   @Value.NaturalOrder
+  ImmutableSortedSet<String> getInputFileLists();
+
+  @Value.NaturalOrder
   ImmutableSortedSet<String> getOutputs();
+
+  @Value.NaturalOrder
+  ImmutableSortedSet<String> getOutputFileLists();
 
   String getCmd();
 }
