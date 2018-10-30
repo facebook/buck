@@ -99,7 +99,8 @@ public class DefaultDepsAwareExecutorTest {
   }
 
   @Test
-  public void shutdownNowStopsWorkExecutionImmediately() throws InterruptedException {
+  public void shutdownNowStopsWorkExecutionImmediately()
+      throws InterruptedException, ExecutionException {
     Semaphore task1Sem = new Semaphore(0);
     DefaultDepsAwareTask<Object> task1 =
         DefaultDepsAwareTask.of(
@@ -133,6 +134,7 @@ public class DefaultDepsAwareExecutorTest {
     executor.shutdownNow();
     assertTrue(executor.isShutdown());
 
+    f1.get();
     assertTrue(f1.isDone());
     assertFalse(f2.isDone());
     assertFalse(f3.isDone());
