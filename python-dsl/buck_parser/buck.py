@@ -2006,8 +2006,7 @@ def report_profile(options, to_parent, processed_build_file, profiler):
             print(str(trace))
             raise
     else:
-        to_parent.write(encode_result([], [], None))
-        to_parent.flush()
+        java_process_send_result(to_parent, [], [], None)
 
 
 def make_glob(pat):
