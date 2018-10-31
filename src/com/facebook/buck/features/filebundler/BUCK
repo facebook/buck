@@ -15,6 +15,7 @@ buck_module(
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/unarchive:unarchive",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/filesystem:filesystem",
         "//src/com/facebook/buck/zip:zip",
     ],
     tests = [

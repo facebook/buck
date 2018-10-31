@@ -21,6 +21,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
@@ -32,9 +33,11 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 
 public class Zip {
   private static final Logger LOG = Logger.get(Zip.class);
@@ -70,21 +73,52 @@ public class Zip {
     }
   }
 
-  /** Walks the file tree rooted in baseDirectory to create zip entries */
+  /**
+   * Walks the file tree rooted in {@code baseDirectory} to create zip entries
+   *
+   * @param filesystem {@link ProjectFilesystem} the filesystem based in the current working
+   *     directory.
+   * @param entries The map of zip entries {@link ZipEntry} to append to while walking the file
+   *     directory.
+   * @param baseDir The directory from which the file walker starts from.
+   * @param paths The paths to include in {@code entries}.
+   * @param junkPaths If true, then remove any directories from the base directory to the file. i.e.
+   *     flattens the output.
+   * @param compressionLevel Compression level for the files in the final zip.
+   * @param checkRelativePathForSkip If true, then check if absolute path from {@paths}, or the
+   *     parent directory matches the relative path from the base directory.
+   */
   public static void walkBaseDirectoryToCreateEntries(
       ProjectFilesystem filesystem,
-      Map<String, Pair<CustomZipEntry, Optional<Path>>> entries,
+      ImmutableSortedMap.Builder<String, Pair<CustomZipEntry, Optional<Path>>> entries,
       Path baseDir,
       ImmutableSet<Path> paths,
       boolean junkPaths,
-      ZipCompressionLevel compressionLevel)
+      ZipCompressionLevel compressionLevel,
+      boolean checkRelativePathForSkip)
       throws IOException {
+
+    Predicate<Path> skipCheck;
+    if (checkRelativePathForSkip) {
+      skipCheck =
+          file -> {
+            for (Path path : paths) {
+              if (path.endsWith(file) || path.getParent().endsWith(file)) {
+                return false;
+              }
+            }
+            return true;
+          };
+    } else {
+      skipCheck = file -> !paths.isEmpty() && !paths.contains(file);
+    }
+
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
     // a tree map before writing them out.
     FileVisitor<Path> pathFileVisitor =
         new SimpleFileVisitor<Path>() {
           private boolean isSkipFile(Path file) {
-            return !paths.isEmpty() && !paths.contains(file);
+            return skipCheck.test(file);
           }
 
           private String getEntryName(Path path) {
@@ -147,11 +181,34 @@ public class Zip {
     filesystem.walkRelativeFileTree(baseDir, pathFileVisitor);
   }
 
-  /** Writes entries to zipOut stream. */
+  /** Creates a {@link CustomZipEntry} from {@link ZipArchiveEntry} */
+  public static CustomZipEntry getZipEntry(
+      ZipFile zip, ZipArchiveEntry entry, ZipCompressionLevel compressionLevel) throws IOException {
+    CustomZipEntry zipOutEntry = new CustomZipEntry(entry.getName());
+    zipOutEntry.setFakeTime();
+    zipOutEntry.setCompressionLevel(
+        entry.isDirectory() ? ZipCompressionLevel.NONE.getValue() : compressionLevel.getValue());
+
+    // If we're using STORED files, we must manually set the CRC, size, and compressed size.
+    if (zipOutEntry.getMethod() == ZipEntry.STORED && !entry.isDirectory()) {
+      zipOutEntry.setSize(entry.getSize());
+      entry.setCompressedSize(entry.getCompressedSize());
+      entry.setCrc(
+          new ByteSource() {
+            @Override
+            public InputStream openStream() throws IOException {
+              return zip.getInputStream(entry);
+            }
+          }.hash(Hashing.crc32()).padToLong());
+    }
+    return zipOutEntry;
+  }
+
+  /** Writes entries to {@code zipOut} stream */
   public static void writeEntriesToZip(
       ProjectFilesystem filesystem,
       CustomZipOutputStream zipOut,
-      Map<String, Pair<CustomZipEntry, Optional<Path>>> entries)
+      ImmutableSortedMap<String, Pair<CustomZipEntry, Optional<Path>>> entries)
       throws IOException {
     // Write the entries out using the iteration order of the tree map above.
     for (Pair<CustomZipEntry, Optional<Path>> entry : entries.values()) {

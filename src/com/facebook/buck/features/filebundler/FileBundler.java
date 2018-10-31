@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.filebundler;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -25,14 +24,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.PatternsMatcher;
+import com.facebook.buck.util.filesystem.SourcePathToPathResolver;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -46,63 +41,6 @@ public abstract class FileBundler {
 
   public FileBundler(Path basePath) {
     this.basePath = Objects.requireNonNull(basePath);
-  }
-
-  private static void findAndAddRelativePathToMap(
-      Path basePath,
-      Path absoluteFilePath,
-      Path relativeFilePath,
-      Path assumedAbsoluteBasePath,
-      Map<Path, Path> relativePathMap) {
-    Path pathRelativeToBaseDir;
-
-    if (relativeFilePath.startsWith(basePath) || basePath.equals(MorePaths.EMPTY_PATH)) {
-      pathRelativeToBaseDir = MorePaths.relativize(basePath, relativeFilePath);
-    } else {
-      pathRelativeToBaseDir = assumedAbsoluteBasePath.relativize(absoluteFilePath);
-    }
-
-    if (relativePathMap.containsKey(pathRelativeToBaseDir)) {
-      throw new HumanReadableException(
-          "The file '%s' appears twice in the hierarchy", pathRelativeToBaseDir.getFileName());
-    }
-    relativePathMap.put(pathRelativeToBaseDir, absoluteFilePath);
-  }
-
-  static ImmutableMap<Path, Path> createRelativeMap(
-      Path basePath,
-      ProjectFilesystem filesystem,
-      SourcePathResolver resolver,
-      ImmutableSortedSet<SourcePath> toCopy) {
-    Map<Path, Path> relativePathMap = new HashMap<>();
-
-    for (SourcePath sourcePath : toCopy) {
-      Path absoluteBasePath = resolver.getAbsolutePath(sourcePath);
-      try {
-        if (Files.isDirectory(absoluteBasePath)) {
-          ImmutableSet<Path> files = filesystem.getFilesUnderPath(absoluteBasePath);
-          Path absoluteBasePathParent = absoluteBasePath.getParent();
-
-          for (Path file : files) {
-            Path absoluteFilePath = filesystem.resolve(file);
-            findAndAddRelativePathToMap(
-                basePath, absoluteFilePath, file, absoluteBasePathParent, relativePathMap);
-          }
-        } else {
-          findAndAddRelativePathToMap(
-              basePath,
-              absoluteBasePath,
-              resolver.getRelativePath(sourcePath),
-              absoluteBasePath.getParent(),
-              relativePathMap);
-        }
-      } catch (IOException e) {
-        throw new RuntimeException(
-            String.format("Couldn't read directory [%s].", absoluteBasePath.toString()), e);
-      }
-    }
-
-    return ImmutableMap.copyOf(relativePathMap);
   }
 
   public void copy(
@@ -131,7 +69,8 @@ public abstract class FileBundler {
       SourcePathResolver pathResolver,
       PatternsMatcher entriesToExclude) {
 
-    Map<Path, Path> relativeMap = createRelativeMap(basePath, filesystem, pathResolver, toCopy);
+    Map<Path, Path> relativeMap =
+        SourcePathToPathResolver.createRelativeMap(basePath, filesystem, pathResolver, toCopy);
 
     for (Map.Entry<Path, Path> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();
