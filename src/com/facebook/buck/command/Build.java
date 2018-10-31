@@ -173,7 +173,7 @@ public class Build implements Closeable {
     }
     // Setup symlinks required when configuring the output path.
     createConfiguredBuckOutSymlinks();
-    createProjectRootSymlink();
+    createProjectRootFile();
     symlinksCreated = true;
   }
 
@@ -209,12 +209,13 @@ public class Build implements Closeable {
     }
   }
 
-  private void createProjectRootSymlink() throws IOException {
+  private void createProjectRootFile() throws IOException {
     for (Cell cell : rootCell.getAllCells()) {
       ProjectFilesystem filesystem = cell.getFilesystem();
       BuckPaths buckPaths = filesystem.getBuckPaths();
 
-      filesystem.createSymLink(buckPaths.getProjectRootDir(), filesystem.getRootPath(), true);
+      filesystem.writeContentsToPath(
+          filesystem.getRootPath().toString(), buckPaths.getProjectRootDir());
     }
   }
 

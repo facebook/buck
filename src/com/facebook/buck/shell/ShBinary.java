@@ -140,7 +140,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     // Configure the template output.
     ImmutableMap.Builder<String, Object> valuesBuilder = ImmutableMap.builder();
-    valuesBuilder.put("path_to_project_root", Escaper.escapeAsBashString(pathToProjectRoot));
+    valuesBuilder.put("path_to_project_root_file", Escaper.escapeAsBashString(pathToProjectRoot));
     valuesBuilder.put(
         "script_to_run",
         Escaper.escapeAsBashString(context.getSourcePathResolver().getRelativePath(main)));
