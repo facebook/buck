@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
@@ -113,8 +114,23 @@ class PlistProcessStep implements Step {
                 | SAXException e) {
               throw new IOException(additionalInputToMerge + ": " + e);
             }
-
-            dictionary.putAll(((NSDictionary) mergeInfoPlist).getHashMap());
+            HashMap<String, NSObject> infoPlistMap = dictionary.getHashMap();
+            ((NSDictionary) mergeInfoPlist)
+                .getHashMap()
+                .forEach(
+                    (mergeInfoPlistKey, mergeInfoPlistValue) ->
+                        infoPlistMap.merge(
+                            mergeInfoPlistKey,
+                            mergeInfoPlistValue,
+                            (oldInfoPlistValue, newInfoPlistValue) -> {
+                              if (oldInfoPlistValue instanceof NSDictionary
+                                  && newInfoPlistValue instanceof NSDictionary) {
+                                ((NSDictionary) oldInfoPlistValue)
+                                    .putAll(((NSDictionary) newInfoPlistValue).getHashMap());
+                                return oldInfoPlistValue;
+                              }
+                              return newInfoPlistValue;
+                            }));
           }
         }
 
