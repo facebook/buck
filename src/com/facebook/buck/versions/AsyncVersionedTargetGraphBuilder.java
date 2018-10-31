@@ -59,9 +59,6 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
  */
 public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGraphBuilder {
 
-  private static final long TIMEOUT = 20;
-  private static final TimeUnit UNIT = TimeUnit.SECONDS;
-
   private static final Logger LOG = Logger.get(AsyncVersionedTargetGraphBuilder.class);
 
   private final VersionedTargetGraphTransformer versionedTargetGraphTransformer;
@@ -77,8 +74,13 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
       DepsAwareExecutor<? super TargetNode<?>, ?> executor,
       VersionSelector versionSelector,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
-      TypeCoercerFactory typeCoercerFactory) {
-    super(typeCoercerFactory, unversionedTargetGraphAndBuildTargets);
+      TypeCoercerFactory typeCoercerFactory,
+      long timeoutSeconds) {
+    super(
+        typeCoercerFactory,
+        unversionedTargetGraphAndBuildTargets,
+        timeoutSeconds,
+        TimeUnit.SECONDS);
 
     this.versionedTargetGraphTransformer =
         new VersionedTargetGraphTransformer(
@@ -125,7 +127,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     // Wait for actions to complete.
     for (Future<TargetNode<?>> futures : results.values()) {
       try {
-        futures.get(TIMEOUT, UNIT);
+        futures.get(timeout, timeUnit);
       } catch (ExecutionException e) {
         Throwable rootCause = Throwables.getRootCause(e);
         Throwables.throwIfInstanceOf(rootCause, VersionException.class);
@@ -155,14 +157,16 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
       VersionSelector versionSelector,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
       DepsAwareExecutor<? super TargetNode<?>, ?> executor,
-      TypeCoercerFactory typeCoercerFactory)
+      TypeCoercerFactory typeCoercerFactory,
+      long timeoutSeconds)
       throws VersionException, TimeoutException, InterruptedException {
     return unversionedTargetGraphAndBuildTargets.withTargetGraph(
         new AsyncVersionedTargetGraphBuilder(
                 executor,
                 versionSelector,
                 unversionedTargetGraphAndBuildTargets,
-                typeCoercerFactory)
+                typeCoercerFactory,
+                timeoutSeconds)
             .build());
   }
 

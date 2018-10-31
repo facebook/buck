@@ -207,7 +207,8 @@ public class CxxGenruleDescriptionTest {
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
             POOL,
-            new DefaultTypeCoercerFactory());
+            new DefaultTypeCoercerFactory(),
+            20);
     CxxGenruleDescriptionArg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),
@@ -242,7 +243,8 @@ public class CxxGenruleDescriptionTest {
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
             POOL,
-            new DefaultTypeCoercerFactory());
+            new DefaultTypeCoercerFactory(),
+            20);
     CxxGenruleDescriptionArg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),

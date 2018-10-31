@@ -377,7 +377,8 @@ public class IncrementalActionGraphScenarioTest {
                 TargetGraphAndBuildTargets.of(
                     unversionedTargetGraph, ImmutableSet.of(binaryTarget, binaryTarget2)),
                 new ForkJoinPool(),
-                new DefaultTypeCoercerFactory())
+                new DefaultTypeCoercerFactory(),
+                20)
             .getTargetGraph();
     ActionGraphAndBuilder result = createActionGraph(versionedTargetGraph);
     queryTransitiveDeps(result);
@@ -548,7 +549,8 @@ public class IncrementalActionGraphScenarioTest {
                 TargetGraphAndBuildTargets.of(
                     unversionedTargetGraph, ImmutableSet.of(compilationDatabaseTarget)),
                 new ForkJoinPool(),
-                new DefaultTypeCoercerFactory())
+                new DefaultTypeCoercerFactory(),
+                20)
             .getTargetGraph();
 
     ActionGraphAndBuilder result = createActionGraph(versionedTargetGraph);
@@ -572,7 +574,8 @@ public class IncrementalActionGraphScenarioTest {
                 TargetGraphAndBuildTargets.of(
                     newUnversionedTargetGraph, ImmutableSet.of(binaryTarget)),
                 new ForkJoinPool(),
-                new DefaultTypeCoercerFactory())
+                new DefaultTypeCoercerFactory(),
+                20)
             .getTargetGraph();
 
     ActionGraphAndBuilder newResult = createActionGraph(newVersionedTargetGraph);

@@ -30,17 +30,24 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTargetGraphBuilder {
 
   protected final TypeCoercerFactory typeCoercerFactory;
   protected final TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets;
+  protected final long timeout;
+  protected final TimeUnit timeUnit;
 
   protected AbstractVersionedTargetGraphBuilder(
       TypeCoercerFactory typeCoercerFactory,
-      TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets) {
+      TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+      long timeout,
+      TimeUnit timeUnit) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.unversionedTargetGraphAndBuildTargets = unversionedTargetGraphAndBuildTargets;
+    this.timeout = timeout;
+    this.timeUnit = timeUnit;
   }
 
   protected TargetNode<?> getNode(BuildTarget target) {

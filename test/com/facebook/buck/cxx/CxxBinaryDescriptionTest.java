@@ -448,7 +448,8 @@ public class CxxBinaryDescriptionTest {
                 TargetGraphAndBuildTargets.of(
                     unversionedTargetGraph, ImmutableSet.of(builder.getTarget())),
                 new ForkJoinPool(),
-                new DefaultTypeCoercerFactory())
+                new DefaultTypeCoercerFactory(),
+                20)
             .getTargetGraph();
 
     assertThat(

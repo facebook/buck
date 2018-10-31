@@ -386,7 +386,8 @@ public class VersionedTargetGraphBuilderTest {
                     pool,
                     versionSelector,
                     unversionedTargetGraphAndBuildTargets,
-                    typeCoercerFactory)
+                    typeCoercerFactory,
+                    20)
       },
       new Object[] {
         (VersionedTargetGraphBuilderFactory)
@@ -399,7 +400,8 @@ public class VersionedTargetGraphBuilderTest {
                     executor,
                     versionSelector,
                     unversionedTargetGraphAndBuildTargets,
-                    typeCoercerFactory)
+                    typeCoercerFactory,
+                    20)
       }
     };
   }

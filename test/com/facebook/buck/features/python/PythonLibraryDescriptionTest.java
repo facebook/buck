@@ -207,7 +207,8 @@ public class PythonLibraryDescriptionTest {
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
                 new ForkJoinPool(),
-                new DefaultTypeCoercerFactory())
+                new DefaultTypeCoercerFactory(),
+                20)
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());
@@ -255,7 +256,8 @@ public class PythonLibraryDescriptionTest {
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
                 new ForkJoinPool(),
-                new DefaultTypeCoercerFactory())
+                new DefaultTypeCoercerFactory(),
+                20)
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());

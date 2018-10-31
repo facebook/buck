@@ -60,9 +60,6 @@ import java.util.stream.StreamSupport;
  */
 public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTargetGraphBuilder {
 
-  private static final long TIMEOUT = 20;
-  private static final TimeUnit UNIT = TimeUnit.SECONDS;
-
   private static final Logger LOG = Logger.get(ParallelVersionedTargetGraphBuilder.class);
 
   private final ForkJoinPool pool;
@@ -87,9 +84,14 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
       ForkJoinPool pool,
       VersionSelector versionSelector,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
-      TypeCoercerFactory typeCoercerFactory) {
+      TypeCoercerFactory typeCoercerFactory,
+      long timeoutSeconds) {
 
-    super(typeCoercerFactory, unversionedTargetGraphAndBuildTargets);
+    super(
+        typeCoercerFactory,
+        unversionedTargetGraphAndBuildTargets,
+        timeoutSeconds,
+        TimeUnit.SECONDS);
     this.pool = pool;
     this.versionSelector = versionSelector;
 
@@ -217,11 +219,16 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
       VersionSelector versionSelector,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
       ForkJoinPool pool,
-      TypeCoercerFactory typeCoercerFactory)
+      TypeCoercerFactory typeCoercerFactory,
+      long timeoutSeconds)
       throws VersionException, TimeoutException, InterruptedException {
     return unversionedTargetGraphAndBuildTargets.withTargetGraph(
         new ParallelVersionedTargetGraphBuilder(
-                pool, versionSelector, unversionedTargetGraphAndBuildTargets, typeCoercerFactory)
+                pool,
+                versionSelector,
+                unversionedTargetGraphAndBuildTargets,
+                typeCoercerFactory,
+                timeoutSeconds)
             .build());
   }
 
@@ -291,7 +298,7 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
       // Wait for any existing rootActions to finish.
       for (ForkJoinTask<?> action : rootNodes) {
         try {
-          action.get(TIMEOUT, UNIT);
+          action.get(timeout, timeUnit);
         } catch (ExecutionException e) {
           throw new RuntimeException(e);
         } catch (InterruptedException e) {
