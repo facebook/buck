@@ -29,6 +29,10 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
 
+/**
+ * NOTE: A Java8 copy of this file exists in ../java8/JavacTaskWrapper.java. Please make sure to
+ * update the other copy when modifying this file.
+ */
 abstract class JavacTaskWrapper extends JavacTask {
   protected final JavacTask inner;
 
@@ -94,5 +98,10 @@ abstract class JavacTaskWrapper extends JavacTask {
   @Override
   public Boolean call() {
     return inner.call();
+  }
+
+  @Override
+  public void addModules(Iterable<String> moduleNames) {
+    inner.addModules(moduleNames);
   }
 }

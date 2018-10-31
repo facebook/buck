@@ -36,6 +36,10 @@ import javax.lang.model.util.Types;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 
+/**
+ * NOTE: A Java8 copy of this file exists in ../java8/BuckJavacTaskProxyImpl.java. Please make sure
+ * to update the other copy when modifying this file.
+ */
 public class BuckJavacTaskProxyImpl implements BuckJavacTaskProxy {
   private final BuckJavacTask javacTask;
 
@@ -129,5 +133,10 @@ public class BuckJavacTaskProxyImpl implements BuckJavacTaskProxy {
   @Override
   public Boolean call() {
     return javacTask.call();
+  }
+
+  @Override
+  public void addModules(Iterable<String> moduleNames) {
+    javacTask.addModules(moduleNames);
   }
 }

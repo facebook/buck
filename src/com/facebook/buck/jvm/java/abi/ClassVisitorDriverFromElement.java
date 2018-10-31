@@ -89,32 +89,6 @@ class ClassVisitorDriverFromElement {
     visitor.visitEnd();
   }
 
-  /** Gets the class file version corresponding to the given source version constant. */
-  private static int sourceVersionToClassFileVersion(SourceVersion version) {
-    switch (version) {
-      case RELEASE_0:
-        return Opcodes.V1_1; // JVMS8 4.1: 1.0 and 1.1 both support version 45.3 (Opcodes.V1_1)
-      case RELEASE_1:
-        return Opcodes.V1_1;
-      case RELEASE_2:
-        return Opcodes.V1_2;
-      case RELEASE_3:
-        return Opcodes.V1_3;
-      case RELEASE_4:
-        return Opcodes.V1_4;
-      case RELEASE_5:
-        return Opcodes.V1_5;
-      case RELEASE_6:
-        return Opcodes.V1_6;
-      case RELEASE_7:
-        return Opcodes.V1_7;
-      case RELEASE_8:
-        return Opcodes.V1_8;
-      default:
-        throw new IllegalArgumentException(String.format("Unexpected source version: %s", version));
-    }
-  }
-
   private interface VisitorWithAnnotations {
     AnnotationVisitor visitAnnotation(String desc, boolean visible);
   }
@@ -125,7 +99,7 @@ class ClassVisitorDriverFromElement {
     @Override
     public Void visitPackage(PackageElement e, ClassVisitor classVisitor) {
       classVisitor.visit(
-          sourceVersionToClassFileVersion(targetVersion),
+          SourceVersionUtils.sourceVersionToClassFileVersion(targetVersion),
           Opcodes.ACC_SYNTHETIC | Opcodes.ACC_ABSTRACT | Opcodes.ACC_INTERFACE,
           e.getQualifiedName().toString().replace('.', '/') + "/package-info",
           null,
@@ -156,7 +130,7 @@ class ClassVisitorDriverFromElement {
         superclass = Objects.requireNonNull(elements.getTypeElement("java.lang.Object")).asType();
       }
 
-      int classFileVersion = sourceVersionToClassFileVersion(targetVersion);
+      int classFileVersion = SourceVersionUtils.sourceVersionToClassFileVersion(targetVersion);
       visitor.visit(
           classFileVersion,
           accessFlagsUtils.getAccessFlagsForClassNode(e),

@@ -93,15 +93,18 @@
     else="${ecj.compiler.path}">
     <istrue value="${error.prone}" />
   </condition>
+  <condition property="jdk10_or_higher">
+    <hasmethod classname="java.util.List" method="copyOf"/>
+  </condition>
 
   <!-- Javadoc in 1.8 became stricter about parsing the docs. This disables some of those checks -->
-  <available property="jdk1.8" classname="java.util.stream.Stream"/>
+  <available property="jdk8_or_higher" classname="java.util.stream.Stream"/>
   <condition
           property="javadoc.doclint"
           value="-Xdoclint:-reference"
           else="">
     <and>
-      <isset property="jdk1.8"/>
+      <isset property="jdk8_or_higher"/>
     </and>
   </condition>
 
@@ -390,7 +393,12 @@
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/PropagatesNullable.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/*.java" />
+        <include name="com/facebook/buck/jvm/java/abi/source/java8/*.java" />
+        <include name="com/facebook/buck/jvm/java/abi/source/java10/*.java" />
         <include name="com/facebook/buck/jvm/java/plugin/adapter/**/*.java" />
+        <!-- Conditional compilation so we can simultaneously build against Java 8 and 10. -->
+        <exclude name="com/facebook/buck/**/java8/*.java" if="jdk10_or_higher"/>
+        <exclude name="com/facebook/buck/**/java10/*.java" unless="jdk10_or_higher"/>
       </javac-params>
     </compiler>
     <jar destfile="${javac-plugin.jar}">
@@ -461,7 +469,7 @@
         <compilerarg value="-Xlint:unchecked" />
         <compilerarg value="-time" compiler="${ecj.compiler}" />
         <compilerclasspath>
-          <pathelement location="${buck.build.compiler.jar.path}" />
+            <pathelement location="${buck.build.compiler.jar.path}" />
         </compilerclasspath>
         <compilerarg value="-s" />
         <compilerarg value="@{gensrcdir}" />
@@ -517,6 +525,10 @@
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
+
+          <!-- Conditional compilation so we can simultaneously build against Java 8 and 10. -->
+          <exclude name="com/facebook/buck/jvm/java/abi/java8/**" if="jdk10_or_higher"/>
+          <exclude name="com/facebook/buck/jvm/java/abi/java10/**" unless="jdk10_or_higher"/>
         </patternset>
       </javac-params>
     </compiler>
@@ -1003,7 +1015,7 @@
         gensrcdir="@{module-gen-dir}">
         <javac-params>
           <compilerarg value="-processorpath" />
-          <compilerarg value="${module.processorpath}" />
+          <compilerarg value="${module.processorpath}" /> 
           <compilerarg value="${pf4j-annotation-processor-storage-config}" />
           <module-javac-params/>
         </javac-params>
@@ -1066,6 +1078,9 @@
         <fileset dir="${src.dir}">
           <include name="**/*.java" />
           <exclude name="com/facebook/buck/android/support/exopackage/**" />
+          <!-- Conditional compilation so we can simultaneously build against Java 8 and 10. -->
+          <exclude name="com/facebook/buck/**/java8/*.java" if="jdk10_or_higher"/>
+          <exclude name="com/facebook/buck/**/java10/*.java" unless="jdk10_or_higher"/>
         </fileset>
         <fileset dir="${gensrc.dir}" />
         <fileset dir="${buck.modules.classes.dir}/gen/" />

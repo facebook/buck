@@ -13,11 +13,17 @@
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/testdata" type="java-test-resource" relativeOutputPath="com/facebook/buck/cli/testdata" />
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/config/testdata" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/dx/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/java8" isTestSource="false" packagePrefix="com.facebook.buck.jvm.java.abi" />
+      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/source/java8" isTestSource="false" packagePrefix="com.facebook.buck.jvm.java.abi.source" />
+      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/plugin/adapter/java8" isTestSource="false" packagePrefix="com.facebook.buck.jvm.java.plugin.adapter" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/ant-out" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij" />
+      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/java10" />
+      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/source/java10" />
+      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/plugin/adapter/java10" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/agent/util/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/exopackage/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/testdata" />

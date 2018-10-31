@@ -234,6 +234,8 @@ class PostEnterCanonicalizer {
       case OTHER:
       case UNION:
       case INTERSECTION:
+        // Temporary. Remove once migration to Java 10/11 is complete.
+        // $CASES-OMITTED$
       default:
         throw new UnsupportedOperationException();
     }

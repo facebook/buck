@@ -1,6 +1,12 @@
 java_library(
     name = "adapter",
-    srcs = glob(["*.java"]),
+    # We use conditional compilation to support building against both Java 8 and 10, despite
+    # breaking interface changes in the JDK. We don't use separate deps, as we have circular
+    # dependencies between classes here.
+    srcs = glob(["*.java"]) + select({
+        "//tools/build/config:java_8": glob(["java8/*.java"]),
+        "//tools/build/config:java_10": glob(["java10/*.java"]),
+    }),
     provided_deps = [
         # Tools.jar is the compiler itself, and will already be present at runtime;
         # we compile against a stub.

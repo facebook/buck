@@ -41,6 +41,9 @@ import javax.lang.model.type.WildcardType;
  * implementation. Subclasses may require {@link javax.lang.model.element.Element}s and/or {@link
  * javax.lang.model.type.TypeMirror}s, but do not depend on any particular implementation of them
  * (beyond the spec).
+ *
+ * <p>NOTE: A Java10 copy of this file exists in ../java10/StandaloneTypeMirror.java. Please make
+ * sure to update the other copy when modifying this file.
  */
 abstract class StandaloneTypeMirror implements TypeMirror {
   private final TypeKind kind;

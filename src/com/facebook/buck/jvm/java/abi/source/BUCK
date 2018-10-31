@@ -31,5 +31,10 @@ java_library(
         "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
         "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
-    ],
+    ] + select({
+        # We use conditional compilation to support building against both Java 8 and 10, despite
+        # breaking interface changes in the JDK.
+        "//tools/build/config:java_8": ["//src/com/facebook/buck/jvm/java/abi/source/java8:java8"],
+        "//tools/build/config:java_10": ["//src/com/facebook/buck/jvm/java/abi/source/java10:java10"],
+    }),
 )

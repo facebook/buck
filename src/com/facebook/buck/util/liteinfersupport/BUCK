@@ -13,6 +13,8 @@ java_library(
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
+        "//src/com/facebook/buck/jvm/java/plugin/adapter/java10:adapter_java10",
+        "//src/com/facebook/buck/jvm/java/plugin/adapter/java8:adapter_java8",
         "//src/com/facebook/buck/jvm/java/plugin/api:api",
     ],
     deps = [

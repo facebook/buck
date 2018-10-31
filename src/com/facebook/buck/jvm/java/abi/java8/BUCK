@@ -1,0 +1,10 @@
+java_library(
+    name = "java8",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/jvm/java/abi:abi",
+    ],
+    deps = [
+        "//third-party/java/asm:asm",
+    ],
+)
