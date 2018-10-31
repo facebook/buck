@@ -795,6 +795,17 @@ class CachingBuildRuleBuilder {
 
   private ListenableFuture<Optional<BuildResult>> buildLocally(
       final CacheResult cacheResult, final ListeningExecutorService service) {
+    @SuppressWarnings("PMD.PrematureDeclaration")
+    long start = System.currentTimeMillis();
+
+    try {
+      onOutputsWillChange();
+    } catch (IOException e) {
+      throw new BuckUncheckedExecutionException(e);
+    }
+    buildRuleBuilderDelegate.onRuleAboutToBeBuilt(rule);
+    eventBus.post(BuildRuleEvent.willBuildLocally(rule));
+
     BuildRuleSteps<RulePipelineState> buildRuleSteps = new BuildRuleSteps<>(cacheResult, null);
     BuildExecutorRunner runner =
         new BuildExecutorRunner() {
@@ -817,7 +828,7 @@ class CachingBuildRuleBuilder {
             return buildRuleSteps.future;
           }
         };
-    long start = System.currentTimeMillis();
+
     ListenableFuture<Optional<BuildResult>> future;
     if (customBuildRuleStrategy.isPresent() && customBuildRuleStrategy.get().canBuild(rule)) {
       future = customBuildRuleStrategy.get().build(service, rule, runner);
@@ -1303,19 +1314,10 @@ class CachingBuildRuleBuilder {
      */
     private void executeCommandsNowThatDepsAreBuilt(BuildExecutor executor)
         throws InterruptedException, StepFailedException, IOException {
-      try {
-        onOutputsWillChange();
-      } catch (IOException e) {
-        throw new BuckUncheckedExecutionException(e);
-      }
-      buildRuleBuilderDelegate.onRuleAboutToBeBuilt(rule);
-
       LOG.debug("Building locally: %s", rule);
       // Attempt to get an approximation of how long it takes to actually run the command.
       @SuppressWarnings("PMD.PrematureDeclaration")
       long start = System.nanoTime();
-
-      eventBus.post(BuildRuleEvent.willBuildLocally(rule));
 
       ExecutionContext contextWithContextualExecutor =
           executionContext.withProcessExecutor(
