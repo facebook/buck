@@ -1966,7 +1966,7 @@ public class CachingBuildEngineTest {
       }
 
       interface Builder {
-        void build(
+        ListenableFuture<Optional<BuildResult>> build(
             ListeningExecutorService service, BuildRule rule, BuildExecutorRunner executorRunner);
       }
 
@@ -1976,10 +1976,10 @@ public class CachingBuildEngineTest {
         Optional<Builder> builder = Optional.empty();
 
         @Override
-        public void build(
+        public ListenableFuture<Optional<BuildResult>> build(
             ListeningExecutorService service, BuildRule rule, BuildExecutorRunner executorRunner) {
           Preconditions.checkState(builder.isPresent());
-          builder.get().build(service, rule, executorRunner);
+          return builder.get().build(service, rule, executorRunner);
         }
 
         @Override

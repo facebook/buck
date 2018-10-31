@@ -16,13 +16,16 @@
 
 package com.facebook.buck.core.build.engine;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import java.util.Optional;
+
 /**
  * Used for running a BuildExecutor within the context of the build engine such that the engine's
  * internal state/tracking is updated as expected. Provides ability to decide at runtime whether to
  * use custom BuildExecutor or just the default.
  */
 public interface BuildExecutorRunner {
-  void runWithDefaultExecutor();
+  ListenableFuture<Optional<BuildResult>> runWithDefaultExecutor();
 
-  void runWithExecutor(BuildExecutor buildExecutor);
+  ListenableFuture<Optional<BuildResult>> runWithExecutor(BuildExecutor buildExecutor);
 }

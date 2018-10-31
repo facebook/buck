@@ -795,34 +795,34 @@ class CachingBuildRuleBuilder {
 
   private ListenableFuture<Optional<BuildResult>> buildLocally(
       final CacheResult cacheResult, final ListeningExecutorService service) {
-    SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
     BuildRuleSteps<RulePipelineState> buildRuleSteps = new BuildRuleSteps<>(cacheResult, null);
     BuildExecutorRunner runner =
         new BuildExecutorRunner() {
           @Override
-          public void runWithDefaultExecutor() {
+          public ListenableFuture<Optional<BuildResult>> runWithDefaultExecutor() {
             if (SupportsPipelining.isSupported(rule)
                 && ((SupportsPipelining<?>) rule).useRulePipelining()) {
-              future.setFuture(
-                  pipelinesRunner.runPipelineStartingAt(
-                      buildRuleBuildContext, (SupportsPipelining<?>) rule, service));
+              return pipelinesRunner.runPipelineStartingAt(
+                  buildRuleBuildContext, (SupportsPipelining<?>) rule, service);
             } else {
-              future.setFuture(buildRuleSteps.future);
               buildRuleSteps.run();
+              return buildRuleSteps.future;
             }
           }
 
           @Override
-          public void runWithExecutor(BuildExecutor buildExecutor) {
-            future.setFuture(buildRuleSteps.future);
+          public ListenableFuture<Optional<BuildResult>> runWithExecutor(
+              BuildExecutor buildExecutor) {
             buildRuleSteps.runWithExecutor(buildExecutor);
+            return buildRuleSteps.future;
           }
         };
     long start = System.currentTimeMillis();
+    ListenableFuture<Optional<BuildResult>> future;
     if (customBuildRuleStrategy.isPresent() && customBuildRuleStrategy.get().canBuild(rule)) {
-      customBuildRuleStrategy.get().build(service, rule, runner);
+      future = customBuildRuleStrategy.get().build(service, rule, runner);
     } else {
-      service.execute(runner::runWithDefaultExecutor);
+      future = Futures.submitAsync(runner::runWithDefaultExecutor, service);
     }
     buildTimestampsMillis = new Pair<>(start, System.currentTimeMillis());
     return future;

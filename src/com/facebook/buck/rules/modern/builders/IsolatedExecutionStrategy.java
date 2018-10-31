@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.builders;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildExecutorRunner;
+import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
@@ -46,6 +47,8 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -164,19 +167,18 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
   }
 
   @Override
-  public void build(
+  public ListenableFuture<Optional<BuildResult>> build(
       ListeningExecutorService buildExecutorService,
       BuildRule rule,
       BuildExecutorRunner executorRunner) {
     Preconditions.checkState(rule instanceof ModernBuildRule);
-    executorService
-        .orElse(buildExecutorService)
-        .execute(
-            () ->
-                executorRunner.runWithExecutor(
-                    (executionContext, buildRuleBuildContext, buildableContext, stepRunner) -> {
-                      executeRule(rule, executionContext, buildRuleBuildContext, buildableContext);
-                    }));
+    return Futures.submitAsync(
+        () ->
+            executorRunner.runWithExecutor(
+                (executionContext, buildRuleBuildContext, buildableContext, stepRunner) -> {
+                  executeRule(rule, executionContext, buildRuleBuildContext, buildableContext);
+                }),
+        executorService.orElse(buildExecutorService));
   }
 
   private void executeRule(

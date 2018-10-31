@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.build.engine.BuildExecutorRunner;
+import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
@@ -33,6 +34,7 @@ import com.facebook.buck.rules.modern.Serializer.Delegate;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -90,11 +92,10 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
   }
 
   @Override
-  public void build(
+  public ListenableFuture<Optional<BuildResult>> build(
       ListeningExecutorService service, BuildRule rule, BuildExecutorRunner executorRunner) {
     Preconditions.checkState(rule instanceof ModernBuildRule);
-
-    executorRunner.runWithExecutor(
+    return executorRunner.runWithExecutor(
         (executionContext, buildRuleBuildContext, buildableContext, stepRunner) -> {
           ModernBuildRule<?> converted = (ModernBuildRule<?>) rule;
 

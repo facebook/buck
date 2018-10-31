@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.build.engine.BuildExecutorRunner;
+import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.rules.BuildRule;
@@ -33,6 +34,8 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -105,9 +108,9 @@ public class ModernBuildRuleBuilderFactory {
   public static BuildRuleStrategy createPassthrough() {
     return new AbstractModernBuildRuleStrategy() {
       @Override
-      public void build(
+      public ListenableFuture<Optional<BuildResult>> build(
           ListeningExecutorService service, BuildRule rule, BuildExecutorRunner executorRunner) {
-        service.execute(executorRunner::runWithDefaultExecutor);
+        return Futures.submitAsync(executorRunner::runWithDefaultExecutor, service);
       }
     };
   }
