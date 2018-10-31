@@ -71,7 +71,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     try {
       long startTimeNanos = clock.nanoTime();
       Optional<Map<String, Object>> result =
-          waitForQueryNotifyingUserIfSlow(future, timeoutNanos, POLL_TIME_NANOS, query);
+          waitForQueryNotifyingUserIfSlow(future, timeoutNanos, query);
       long elapsedNanos = clock.nanoTime() - startTimeNanos;
       LOG.debug("Query %s returned in %d ms", query, TimeUnit.NANOSECONDS.toMillis(elapsedNanos));
       return result;
@@ -108,14 +108,11 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   }
 
   private Optional<Map<String, Object>> waitForQueryNotifyingUserIfSlow(
-      ListenableFuture<Optional<Map<String, Object>>> future,
-      long timeoutNanos,
-      long pollTimeNanos,
-      List<Object> query)
+      ListenableFuture<Optional<Map<String, Object>>> future, long timeoutNanos, List<Object> query)
       throws InterruptedException, ExecutionException {
     long queryStartNanos = clock.nanoTime();
     try {
-      return future.get(Math.min(timeoutNanos, pollTimeNanos), TimeUnit.NANOSECONDS);
+      return future.get(Math.min(timeoutNanos, POLL_TIME_NANOS), TimeUnit.NANOSECONDS);
     } catch (TimeoutException e) {
       long remainingNanos = timeoutNanos - (clock.nanoTime() - queryStartNanos);
       if (remainingNanos > 0) {
