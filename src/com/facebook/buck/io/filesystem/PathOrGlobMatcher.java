@@ -124,6 +124,7 @@ public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMa
     return globPattern.get();
   }
 
+  @Override
   public String getPathOrGlob() {
     switch (type) {
       case PATH:

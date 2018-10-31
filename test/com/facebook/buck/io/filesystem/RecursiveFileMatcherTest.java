@@ -50,4 +50,10 @@ public class RecursiveFileMatcherTest {
         matcher.toWatchmanMatchQuery(EnumSet.noneOf(Capability.class)),
         ImmutableList.of("match", "path" + File.separator + "**", "wholename"));
   }
+
+  @Test
+  public void returnsAPathWhenAskedForPathOrGlob() {
+    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(Paths.get("path"));
+    assertEquals(matcher.getPathOrGlob(), "path");
+  }
 }
