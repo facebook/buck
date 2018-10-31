@@ -408,6 +408,7 @@ public class SwiftLibraryDescription
 
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
+        swiftBuckConfig,
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)),
         delegateArgsBuilder,
         args,
