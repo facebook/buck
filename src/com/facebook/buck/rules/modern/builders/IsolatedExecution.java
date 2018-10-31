@@ -27,12 +27,12 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Interface used to implement various isolated execution strategies. In these strategies,
@@ -59,7 +59,7 @@ public interface IsolatedExecution extends Closeable {
       CellPathResolver cellResolver,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher,
-      Optional<ExecutorService> executorService) {
+      Optional<ListeningExecutorService> executorService) {
     return new IsolatedExecutionStrategy(
         executionStrategy, ruleFinder, cellResolver, rootCell, fileHasher, executorService);
   }

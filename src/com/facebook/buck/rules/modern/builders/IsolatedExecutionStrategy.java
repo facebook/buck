@@ -18,8 +18,9 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.engine.BuildExecutorRunner;
 import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
+import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
@@ -47,7 +48,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.ByteArrayInputStream;
@@ -61,7 +61,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -83,7 +82,7 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final Set<Optional<String>> cellNames;
   private final Map<HashCode, Node> nodeMap;
   private final HashFunction hasher;
-  private final Optional<ExecutorService> executorService;
+  private final Optional<ListeningExecutorService> executorService;
 
   IsolatedExecutionStrategy(
       IsolatedExecution executionStrategy,
@@ -91,7 +90,7 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
       CellPathResolver cellResolver,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher,
-      Optional<ExecutorService> executorService) {
+      Optional<ListeningExecutorService> executorService) {
     this.executionStrategy = executionStrategy;
     this.cellResolver = cellResolver;
     this.rootCell = rootCell;
@@ -168,17 +167,22 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
 
   @Override
   public ListenableFuture<Optional<BuildResult>> build(
-      ListeningExecutorService buildExecutorService,
-      BuildRule rule,
-      BuildExecutorRunner executorRunner) {
+      BuildRule rule, BuildStrategyContext strategyContext) {
     Preconditions.checkState(rule instanceof ModernBuildRule);
-    return Futures.submitAsync(
-        () ->
-            executorRunner.runWithExecutor(
-                (executionContext, buildRuleBuildContext, buildableContext, stepRunner) -> {
-                  executeRule(rule, executionContext, buildRuleBuildContext, buildableContext);
-                }),
-        executorService.orElse(buildExecutorService));
+    return executorService
+        .orElse(strategyContext.getExecutorService())
+        .submit(
+            () -> {
+              try (Scope ignored = strategyContext.buildRuleScope()) {
+                executeRule(
+                    rule,
+                    strategyContext.getExecutionContext(),
+                    strategyContext.getBuildRuleBuildContext(),
+                    strategyContext.getBuildableContext());
+                return Optional.of(
+                    strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY));
+              }
+            });
   }
 
   private void executeRule(

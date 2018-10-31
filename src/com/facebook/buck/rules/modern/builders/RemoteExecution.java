@@ -50,6 +50,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -62,7 +63,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -96,7 +96,7 @@ public final class RemoteExecution implements IsolatedExecution {
   /** Creates a BuildRuleStrategy for a particular */
   static BuildRuleStrategy createRemoteExecutionStrategy(
       BuckEventBus eventBus,
-      Optional<ExecutorService> remoteExecutorService,
+      Optional<ListeningExecutorService> remoteExecutorService,
       RemoteExecutionClients clients,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
