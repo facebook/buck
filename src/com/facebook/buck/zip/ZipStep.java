@@ -31,12 +31,13 @@ import com.facebook.buck.util.zip.Zip;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 
 /** A {@link com.facebook.buck.step.Step} that creates a ZIP archive.. */
 @SuppressWarnings("PMD.AvoidUsingOctalValues")
@@ -90,8 +91,7 @@ public class ZipStep implements Step {
       return StepExecutionResults.ERROR;
     }
 
-    ImmutableSortedMap.Builder<String, Pair<CustomZipEntry, Optional<Path>>> entries =
-        ImmutableSortedMap.naturalOrder();
+    Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = new TreeMap<>();
 
     try (BufferedOutputStream baseOut =
             new BufferedOutputStream(filesystem.newFileOutputStream(pathToZipFile));
@@ -100,8 +100,8 @@ public class ZipStep implements Step {
        * If walking the file directory throws, then an empty jar file is still created.
        */
       Zip.walkBaseDirectoryToCreateEntries(
-          filesystem, entries, baseDir, paths, junkPaths, compressionLevel, false);
-      Zip.writeEntriesToZip(filesystem, out, entries.build());
+          filesystem, entries, baseDir, paths, junkPaths, compressionLevel);
+      Zip.writeEntriesToZip(filesystem, out, entries);
     }
     return StepExecutionResults.SUCCESS;
   }
