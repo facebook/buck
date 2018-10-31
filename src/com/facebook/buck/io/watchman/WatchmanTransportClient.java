@@ -92,10 +92,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   }
 
   private synchronized void showDisabledWarning(long timeoutNanos) {
-    if (disabledWarningShown) {
-      return;
-    }
-    if (console.getVerbosity().isSilent()) {
+    if (disabledWarningShown || console.getVerbosity().isSilent()) {
       return;
     }
     if (timeoutNanos < 0) {
