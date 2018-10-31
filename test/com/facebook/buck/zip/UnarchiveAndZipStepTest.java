@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -43,7 +42,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.facebook.buck.util.zip.OverwritingZipOutputStreamImpl;
-import com.facebook.buck.util.zip.Zip.OnDuplicateEntryAction;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableList;
@@ -67,13 +65,10 @@ import org.apache.commons.compress.archivers.zip.ZipUtil;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class UnarchiveAndZipStepTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
-
-  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private ProjectFilesystem filesystem;
   private DefaultSourcePathResolver pathResolver;
@@ -110,8 +105,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.DEFAULT);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -141,8 +135,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.DEFAULT);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -173,8 +166,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.DEFAULT);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -213,8 +205,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.DEFAULT);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -246,8 +237,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.DEFAULT);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -285,8 +275,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.DEFAULT);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -324,8 +313,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.DEFAULT);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -366,8 +354,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.DEFAULT);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -409,8 +396,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.NONE,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.NONE);
 
     assertEquals(0, step.execute(context).getExitCode());
     ImmutableList<String> entries1 = getEntries(filesystem, output);
@@ -434,8 +420,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.NONE,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.NONE);
 
     assertEquals(0, step.execute(context).getExitCode());
     ImmutableList<String> entries2 = getEntries(filesystem, output);
@@ -464,8 +449,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.DEFAULT);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -495,8 +479,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             new PatternsMatcher(ImmutableSet.of("subdir/2.bin")),
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.DEFAULT);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -533,8 +516,7 @@ public class UnarchiveAndZipStepTest {
             true,
             pathResolver,
             PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
+            ZipCompressionLevel.DEFAULT);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -543,158 +525,6 @@ public class UnarchiveAndZipStepTest {
           ImmutableSet.of("file1.txt", "file2.txt", "file3.txt", "1.bin", "subdir/2.bin"),
           zipArchive.getFileNames());
     }
-  }
-
-  @Test
-  public void testKeepDuplicates() throws InterruptedException, IOException {
-    Path parent = tmp.newFolder("ziptest");
-
-    Path input = parent.resolve("input.zip");
-    Path input2 = parent.resolve("input2.zip");
-    byte[] CONTENTS = "TEST2".getBytes();
-    try (ZipArchive zipArchive = new ZipArchive(input, true)) {
-      zipArchive.add("file.txt", DUMMY_FILE_CONTENTS);
-    }
-    try (ZipArchive zipArchive = new ZipArchive(input2, true)) {
-      zipArchive.add("file.txt", CONTENTS);
-    }
-    Path output = parent.resolve("output.zip");
-
-    UnarchiveAndZipStep step =
-        new UnarchiveAndZipStep(
-            filesystem,
-            filesystem.getRootPath().relativize(parent),
-            output,
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(
-                PathSourcePath.of(filesystem, Paths.get("ziptest/input.zip")),
-                PathSourcePath.of(filesystem, Paths.get("ziptest/input2.zip"))),
-            false,
-            true,
-            pathResolver,
-            PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.KEEP);
-
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
-
-    try (ZipArchive zipArchive = new ZipArchive(output, false)) {
-      assertEquals(ImmutableSet.of("file.txt", "file.txt"), zipArchive.getFileNames());
-    }
-  }
-
-  @Test
-  public void testIgnoreDuplicates() throws InterruptedException, IOException {
-    Path parent = tmp.newFolder("ziptest");
-
-    Path input = parent.resolve("input.zip");
-    Path input2 = parent.resolve("input2.zip");
-    byte[] CONTENTS = "TEST2".getBytes();
-    try (ZipArchive zipArchive = new ZipArchive(input, true)) {
-      zipArchive.add("file.txt", DUMMY_FILE_CONTENTS);
-    }
-    try (ZipArchive zipArchive = new ZipArchive(input2, true)) {
-      zipArchive.add("file.txt", CONTENTS);
-    }
-    Path output = parent.resolve("output.zip");
-
-    UnarchiveAndZipStep step =
-        new UnarchiveAndZipStep(
-            filesystem,
-            filesystem.getRootPath().relativize(parent),
-            output,
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(
-                PathSourcePath.of(filesystem, Paths.get("ziptest/input.zip")),
-                PathSourcePath.of(filesystem, Paths.get("ziptest/input2.zip"))),
-            false,
-            true,
-            pathResolver,
-            PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.IGNORE);
-
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
-
-    try (ZipArchive zipArchive = new ZipArchive(output, false)) {
-      assertEquals(ImmutableSet.of("file.txt"), zipArchive.getFileNames());
-      assertEquals(new String(zipArchive.readFully("file.txt")), new String(DUMMY_FILE_CONTENTS));
-    }
-  }
-
-  @Test
-  public void testOverwriteDuplicates() throws InterruptedException, IOException {
-    Path parent = tmp.newFolder("ziptest");
-
-    Path input = parent.resolve("input.zip");
-    Path input2 = parent.resolve("input2.zip");
-    byte[] CONTENTS = "TEST2".getBytes();
-    try (ZipArchive zipArchive = new ZipArchive(input, true)) {
-      zipArchive.add("file.txt", DUMMY_FILE_CONTENTS);
-    }
-    try (ZipArchive zipArchive = new ZipArchive(input2, true)) {
-      zipArchive.add("file.txt", CONTENTS);
-    }
-    Path output = parent.resolve("output.zip");
-
-    UnarchiveAndZipStep step =
-        new UnarchiveAndZipStep(
-            filesystem,
-            filesystem.getRootPath().relativize(parent),
-            output,
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(
-                PathSourcePath.of(filesystem, Paths.get("ziptest/input.zip")),
-                PathSourcePath.of(filesystem, Paths.get("ziptest/input2.zip"))),
-            false,
-            true,
-            pathResolver,
-            PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.OVERWRITE);
-
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
-
-    try (ZipArchive zipArchive = new ZipArchive(output, false)) {
-      assertEquals(ImmutableSet.of("file.txt"), zipArchive.getFileNames());
-      assertEquals(new String(zipArchive.readFully("file.txt")), new String(CONTENTS));
-    }
-  }
-
-  @Test
-  public void testThrowDuplicates() throws InterruptedException, IOException {
-    Path parent = tmp.newFolder("ziptest");
-
-    Path input = parent.resolve("input.zip");
-    Path input2 = parent.resolve("input2.zip");
-    byte[] CONTENTS = "TEST2".getBytes();
-    try (ZipArchive zipArchive = new ZipArchive(input, true)) {
-      zipArchive.add("file.txt", DUMMY_FILE_CONTENTS);
-    }
-    try (ZipArchive zipArchive = new ZipArchive(input2, true)) {
-      zipArchive.add("file.txt", CONTENTS);
-    }
-    Path output = parent.resolve("output.zip");
-
-    UnarchiveAndZipStep step =
-        new UnarchiveAndZipStep(
-            filesystem,
-            filesystem.getRootPath().relativize(parent),
-            output,
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(
-                PathSourcePath.of(filesystem, Paths.get("ziptest/input.zip")),
-                PathSourcePath.of(filesystem, Paths.get("ziptest/input2.zip"))),
-            false,
-            true,
-            pathResolver,
-            PatternsMatcher.EMPTY,
-            ZipCompressionLevel.DEFAULT,
-            OnDuplicateEntryAction.FAIL);
-
-    expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage("Duplicate entries for ");
-    step.execute(TestExecutionContext.newInstance()).getExitCode();
   }
 
   private ImmutableList<String> getEntries(ProjectFilesystem filesystem, Path zip)

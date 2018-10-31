@@ -30,7 +30,6 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.PatternsMatcher;
-import com.facebook.buck.util.zip.Zip.OnDuplicateEntryAction;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.UnarchiveAndZipStep;
 import com.google.common.collect.ImmutableList;
@@ -48,7 +47,6 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
   @AddToRuleKey private final boolean flatten;
   @AddToRuleKey private final Optional<Boolean> mergeSourceZips;
   @AddToRuleKey private final ImmutableSet<Pattern> entriesToExclude;
-  @AddToRuleKey private final OnDuplicateEntryAction onDuplicateEntryAction;
 
   public Zip(
       SourcePathRuleFinder ruleFinder,
@@ -59,8 +57,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       ImmutableSortedSet<SourcePath> zipSources,
       boolean flatten,
       Optional<Boolean> mergeSourceZips,
-      ImmutableSet<Pattern> entriesToExclude,
-      OnDuplicateEntryAction onDuplicateEntryAction) {
+      ImmutableSet<Pattern> entriesToExclude) {
     super(buildTarget, projectFilesystem, ruleFinder, Zip.class);
 
     this.name = outputName;
@@ -70,7 +67,6 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     this.flatten = flatten;
     this.mergeSourceZips = mergeSourceZips;
     this.entriesToExclude = entriesToExclude;
-    this.onDuplicateEntryAction = onDuplicateEntryAction;
   }
 
   @Override
@@ -84,7 +80,6 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     PatternsMatcher excludedEntriesMatcher = new PatternsMatcher(entriesToExclude);
-
     steps.add(
         new UnarchiveAndZipStep(
             filesystem,
@@ -96,8 +91,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
             (!mergeSourceZips.isPresent() || mergeSourceZips.get()),
             buildContext.getSourcePathResolver(),
             excludedEntriesMatcher,
-            ZipCompressionLevel.DEFAULT,
-            onDuplicateEntryAction));
+            ZipCompressionLevel.DEFAULT));
     return steps.build();
   }
 
