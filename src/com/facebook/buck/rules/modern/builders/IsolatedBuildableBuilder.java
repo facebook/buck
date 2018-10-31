@@ -252,6 +252,7 @@ public abstract class IsolatedBuildableBuilder {
 
               fs.mkdirs(configuredPaths.getTmpDir());
               fs.mkdirs(configuredPaths.getBuckOut());
+              fs.deleteFileAtPathIfExists(configuredPaths.getProjectRootDir());
               fs.writeContentsToPath(
                   fs.getRootPath().toString(), configuredPaths.getProjectRootDir());
 

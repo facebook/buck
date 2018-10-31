@@ -214,6 +214,8 @@ public class Build implements Closeable {
       ProjectFilesystem filesystem = cell.getFilesystem();
       BuckPaths buckPaths = filesystem.getBuckPaths();
 
+      filesystem.deleteFileAtPathIfExists(buckPaths.getProjectRootDir());
+
       filesystem.writeContentsToPath(
           filesystem.getRootPath().toString(), buckPaths.getProjectRootDir());
     }
