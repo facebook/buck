@@ -76,6 +76,12 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
+  public void simpleBinary64WithDebugFull() throws IOException {
+    ProcessResult runResult = workspace.runBuckCommand("build", "//app:pdb");
+    runResult.assertSuccess();
+  }
+
+  @Test
   public void simpleBinaryWithLib() throws IOException {
     ProcessResult runResult = workspace.runBuckCommand("run", "//app_lib:app_lib#windows-x86_64");
     runResult.assertSuccess();
