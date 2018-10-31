@@ -16,19 +16,16 @@
 
 package com.facebook.buck.util.filesystem;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 
 /** Utility to convert {@link SourcePath} to Relative Path */
 public class SourcePathToPathResolver {
@@ -39,7 +36,7 @@ public class SourcePathToPathResolver {
       Path absoluteFilePath,
       Path relativeFilePath,
       Path assumedAbsoluteBasePath,
-      Map<Path, Path> relativePathMap) {
+      ImmutableSortedMap.Builder<Path, Path> relativePathMap) {
     Path pathRelativeToBaseDir;
 
     if (relativeFilePath.startsWith(basePath) || basePath.equals(MorePaths.EMPTY_PATH)) {
@@ -47,22 +44,18 @@ public class SourcePathToPathResolver {
     } else {
       pathRelativeToBaseDir = assumedAbsoluteBasePath.relativize(absoluteFilePath);
     }
-
-    if (relativePathMap.containsKey(pathRelativeToBaseDir)) {
-      throw new HumanReadableException(
-          "The file '%s' appears twice in the hierarchy", pathRelativeToBaseDir.getFileName());
-    }
     relativePathMap.put(pathRelativeToBaseDir, absoluteFilePath);
   }
 
   /** Converts a set of {@link SourcePath} to relative paths from the {@code basePath} */
-  public static ImmutableMap<Path, Path> createRelativeMap(
+  public static ImmutableSortedMap<Path, Path> createRelativeMap(
       Path basePath,
       ProjectFilesystem filesystem,
       SourcePathResolver resolver,
       ImmutableSortedSet<SourcePath> sourcePaths) {
-    Map<Path, Path> relativePathMap = new HashMap<>();
-
+    ImmutableSortedMap.Builder<Path, Path> relativePathMapBuilder =
+        ImmutableSortedMap.naturalOrder();
+    ImmutableSortedMap<Path, Path> relativePathMap = ImmutableSortedMap.of();
     for (SourcePath sourcePath : sourcePaths) {
       Path absoluteBasePath = resolver.getAbsolutePath(sourcePath);
       try {
@@ -72,7 +65,7 @@ public class SourcePathToPathResolver {
           for (Path file : files) {
             Path absoluteFilePath = filesystem.resolve(file);
             findAndAddRelativePathToMap(
-                basePath, absoluteFilePath, file, absoluteBasePathParent, relativePathMap);
+                basePath, absoluteFilePath, file, absoluteBasePathParent, relativePathMapBuilder);
           }
         } else {
           findAndAddRelativePathToMap(
@@ -80,14 +73,15 @@ public class SourcePathToPathResolver {
               absoluteBasePath,
               resolver.getRelativePath(sourcePath),
               absoluteBasePath.getParent(),
-              relativePathMap);
+              relativePathMapBuilder);
         }
+        relativePathMap = relativePathMapBuilder.build();
       } catch (IOException e) {
         throw new RuntimeException(
             String.format("Couldn't read directory [%s].", absoluteBasePath.toString()), e);
       }
     }
 
-    return ImmutableMap.copyOf(relativePathMap);
+    return relativePathMap;
   }
 }

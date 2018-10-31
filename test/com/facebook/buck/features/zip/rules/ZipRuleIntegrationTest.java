@@ -17,6 +17,7 @@
 package com.facebook.buck.features.zip.rules;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -27,17 +28,22 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Enumeration;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class ZipRuleIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void shouldZipSources() throws IOException {
@@ -273,5 +279,62 @@ public class ZipRuleIntegrationTest {
       ZipInspector inspector = new ZipInspector(zip);
       inspector.assertFileDoesNotExist("cake.txt");
     }
+  }
+
+  @Test
+  public void shouldKeepDuplicates() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    Path zip = workspace.buildAndReturnOutput("//example:keep_duplicates");
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      Enumeration<ZipArchiveEntry> e = zipFile.getEntries();
+      int i = 0;
+      while (e.hasMoreElements()) {
+        if (e.nextElement().getName().equals("cake.txt")) {
+          i++;
+        }
+      }
+      assertEquals(i, 2);
+    }
+  }
+
+  @Test
+  public void shouldIgnoreDuplicates() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    Path zip = workspace.buildAndReturnOutput("//example:ignore_duplicates");
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      assertEquals(
+          new String(ByteStreams.toByteArray(zipFile.getInputStream(zipFile.getEntry("cake.txt")))),
+          "Guten Tag\n");
+    }
+  }
+
+  @Test
+  public void shouldOverwriteDuplicates() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    Path zip = workspace.buildAndReturnOutput("//example:overwrite_duplicates");
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      assertEquals(
+          new String(ByteStreams.toByteArray(zipFile.getInputStream(zipFile.getEntry("cake.txt")))),
+          "Cake :)");
+    }
+  }
+
+  @Test
+  public void shouldFailDuplicates() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    expectedException.expect(AssertionError.class);
+    workspace.buildAndReturnOutput("//example:fail_duplicates");
   }
 }

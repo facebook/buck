@@ -107,3 +107,54 @@ zip_file(
         ":ziptastic",
     ],
 )
+
+zip_file(
+    name = "zip1",
+    srcs = [
+        "cake.txt",
+    ],
+)
+
+zip_file(
+    name = "zip2",
+    srcs = [
+        "duplicates/cake.txt",
+    ],
+    flatten = True,
+)
+
+zip_file(
+    name = "keep_duplicates",
+    on_duplicate_entry_action = "keep",
+    zip_srcs = [
+        ":zip1",
+        ":zip2",
+    ],
+)
+
+zip_file(
+    name = "ignore_duplicates",
+    on_duplicate_entry_action = "ignore",
+    zip_srcs = [
+        ":zip1",
+        ":zip2",
+    ],
+)
+
+zip_file(
+    name = "overwrite_duplicates",
+    on_duplicate_entry_action = "overwrite",
+    zip_srcs = [
+        ":zip1",
+        ":zip2",
+    ],
+)
+
+zip_file(
+    name = "fail_duplicates",
+    on_duplicate_entry_action = "fail",
+    zip_srcs = [
+        ":zip1",
+        ":zip2",
+    ],
+)

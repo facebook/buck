@@ -16,12 +16,12 @@
 
 package com.facebook.buck.util.zip;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
@@ -38,11 +38,77 @@ import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.immutables.value.Value;
 
 public class Zip {
   private static final Logger LOG = Logger.get(Zip.class);
 
   private Zip() {}
+
+  /** Options to deal with duplicate files in zips */
+  public enum OnDuplicateEntryAction {
+    KEEP,
+    OVERWRITE,
+    IGNORE,
+    FAIL;
+  }
+
+  /**
+   * Create a {@link ZipEntryHolder} to hold information for files to be inserted into a zip.
+   *
+   * <p>The contents of {@link ZipEntryHolder} may hold information generated from a file in the
+   * file system or from an entry within an existing zip file.
+   *
+   * <p>An entry can write its contents to a {@link ZipOutputStreams}.
+   */
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractZipEntryHolder {
+
+    static ZipEntryHolder createZipEntryHolder(
+        CustomZipEntry customZipEntry,
+        Optional<Path> sourceFile,
+        Optional<ZipArchiveEntry> zipArchiveEntry) {
+      ZipEntryHolder.Builder builder = ZipEntryHolder.builder();
+      builder.setCustomZipEntry(customZipEntry);
+      builder.setSourceFile(sourceFile);
+      builder.setZipArchiveEntry(zipArchiveEntry);
+      return builder.build();
+    }
+
+    static ZipEntryHolder createFromDir(CustomZipEntry customZipEntry) {
+      return createZipEntryHolder(customZipEntry, Optional.empty(), Optional.empty());
+    }
+
+    static ZipEntryHolder createFromFile(CustomZipEntry customZipEntry, Optional<Path> sourceFile) {
+      return createZipEntryHolder(customZipEntry, sourceFile, Optional.empty());
+    }
+
+    public static ZipEntryHolder createFromZipArchiveEntry(
+        CustomZipEntry customZipEntry,
+        Optional<Path> sourceFile,
+        Optional<ZipArchiveEntry> zipArchiveEntry) {
+      return createZipEntryHolder(customZipEntry, sourceFile, zipArchiveEntry);
+    }
+
+    /** Writes entry to {@code zipOut} stream */
+    public void writeToZip(ProjectFilesystem filesystem, CustomZipOutputStream zipOut)
+        throws IOException {
+      zipOut.putNextEntry(getCustomZipEntry());
+      if (getSourceFile().isPresent()) {
+        try (InputStream input = filesystem.newFileInputStream(getSourceFile().get())) {
+          ByteStreams.copy(input, zipOut);
+        }
+      }
+      zipOut.closeEntry();
+    }
+
+    abstract CustomZipEntry getCustomZipEntry();
+
+    abstract Optional<Path> getSourceFile();
+
+    abstract Optional<ZipArchiveEntry> getZipArchiveEntry();
+  }
 
   /**
    * Takes a sequence of paths relative to the project root and writes a zip file to {@code out}
@@ -90,7 +156,7 @@ public class Zip {
    */
   public static void walkBaseDirectoryToCreateEntries(
       ProjectFilesystem filesystem,
-      ImmutableSortedMap.Builder<String, Pair<CustomZipEntry, Optional<Path>>> entries,
+      ImmutableListMultimap.Builder<String, ZipEntryHolder> entries,
       Path baseDir,
       ImmutableSet<Path> paths,
       boolean junkPaths,
@@ -163,7 +229,8 @@ public class Zip {
               throws IOException {
             if (!isSkipFile(file)) {
               CustomZipEntry entry = getZipEntry(getEntryName(file), file, attrs);
-              entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
+              ZipEntryHolder holder = ZipEntryHolder.createFromFile(entry, Optional.of(file));
+              entries.put(entry.getName(), holder);
             }
             return FileVisitResult.CONTINUE;
           }
@@ -173,7 +240,8 @@ public class Zip {
               throws IOException {
             if (!dir.equals(baseDir) && !isSkipFile(dir)) {
               CustomZipEntry entry = getZipEntry(getEntryName(dir), dir, attrs);
-              entries.put(entry.getName(), new Pair<>(entry, Optional.empty()));
+              ZipEntryHolder holder = ZipEntryHolder.createFromDir(entry);
+              entries.put(entry.getName(), holder);
             }
             return FileVisitResult.CONTINUE;
           }
@@ -206,19 +274,10 @@ public class Zip {
 
   /** Writes entries to {@code zipOut} stream */
   public static void writeEntriesToZip(
-      ProjectFilesystem filesystem,
-      CustomZipOutputStream zipOut,
-      ImmutableSortedMap<String, Pair<CustomZipEntry, Optional<Path>>> entries)
+      ProjectFilesystem filesystem, CustomZipOutputStream zipOut, Iterable<ZipEntryHolder> entries)
       throws IOException {
-    // Write the entries out using the iteration order of the tree map above.
-    for (Pair<CustomZipEntry, Optional<Path>> entry : entries.values()) {
-      zipOut.putNextEntry(entry.getFirst());
-      if (entry.getSecond().isPresent()) {
-        try (InputStream input = filesystem.newFileInputStream(entry.getSecond().get())) {
-          ByteStreams.copy(input, zipOut);
-        }
-      }
-      zipOut.closeEntry();
+    for (ZipEntryHolder entry : entries) {
+      entry.writeToZip(filesystem, zipOut);
     }
   }
 }

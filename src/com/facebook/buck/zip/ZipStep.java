@@ -24,18 +24,16 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.types.Pair;
-import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.Zip;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
+import com.facebook.buck.util.zip.ZipEntryHolder;
 import com.facebook.buck.util.zip.ZipOutputStreams;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.Set;
 
 /** A {@link com.facebook.buck.step.Step} that creates a ZIP archive.. */
@@ -90,8 +88,7 @@ public class ZipStep implements Step {
       return StepExecutionResults.ERROR;
     }
 
-    ImmutableSortedMap.Builder<String, Pair<CustomZipEntry, Optional<Path>>> entries =
-        ImmutableSortedMap.naturalOrder();
+    ImmutableListMultimap.Builder<String, ZipEntryHolder> entries = ImmutableListMultimap.builder();
 
     try (BufferedOutputStream baseOut =
             new BufferedOutputStream(filesystem.newFileOutputStream(pathToZipFile));
@@ -101,7 +98,7 @@ public class ZipStep implements Step {
        */
       Zip.walkBaseDirectoryToCreateEntries(
           filesystem, entries, baseDir, paths, junkPaths, compressionLevel, false);
-      Zip.writeEntriesToZip(filesystem, out, entries.build());
+      Zip.writeEntriesToZip(filesystem, out, entries.build().values());
     }
     return StepExecutionResults.SUCCESS;
   }

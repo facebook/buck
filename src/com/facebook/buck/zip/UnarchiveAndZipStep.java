@@ -18,6 +18,7 @@ package com.facebook.buck.zip;
 
 import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
@@ -34,14 +35,17 @@ import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.Zip;
+import com.facebook.buck.util.zip.Zip.OnDuplicateEntryAction;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
+import com.facebook.buck.util.zip.ZipEntryHolder;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -49,18 +53,17 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
+import java.util.zip.ZipException;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
 /** A {@link com.facebook.buck.step.Step} that creates a ZIP archive from source files and zips. */
 public class UnarchiveAndZipStep implements Step {
-
   private final ProjectFilesystem filesystem;
   private final Path basePath;
   private final Path pathToZipFile;
@@ -71,6 +74,7 @@ public class UnarchiveAndZipStep implements Step {
   private final Boolean mergeSourceZips;
   private final PatternsMatcher entriesToExclude;
   private final SourcePathResolver pathResolver;
+  private final OnDuplicateEntryAction onDuplicateEntryAction;
 
   /**
    * Create a {@link UnarchiveAndZipStep} to read from source files or zip files and write directly
@@ -107,7 +111,8 @@ public class UnarchiveAndZipStep implements Step {
       Boolean mergeSourceZips,
       SourcePathResolver pathResolver,
       PatternsMatcher entriesToExclude,
-      ZipCompressionLevel compressionLevel) {
+      ZipCompressionLevel compressionLevel,
+      OnDuplicateEntryAction onDuplicateEntryAction) {
     this.filesystem = filesystem;
     this.basePath = basePath;
     this.pathToZipFile = pathToZipFile;
@@ -118,6 +123,7 @@ public class UnarchiveAndZipStep implements Step {
     this.junkPaths = junkPaths;
     this.entriesToExclude = entriesToExclude;
     this.pathResolver = pathResolver;
+    this.onDuplicateEntryAction = onDuplicateEntryAction;
   }
 
   @Override
@@ -132,27 +138,25 @@ public class UnarchiveAndZipStep implements Step {
     ImmutableMap<Path, Path> relativeMapSources =
         SourcePathToPathResolver.createRelativeMap(basePath, filesystem, pathResolver, sources);
 
-    Map<Path, Path> relativeMapZipSources =
-        Maps.newHashMap(
-            SourcePathToPathResolver.createRelativeMap(
-                basePath, filesystem, pathResolver, zipSources));
+    ImmutableSortedMap.Builder<Path, Path> relativeMapZipSources =
+        ImmutableSortedMap.naturalOrder();
+    relativeMapZipSources.putAll(
+        SourcePathToPathResolver.createRelativeMap(basePath, filesystem, pathResolver, zipSources));
 
     ImmutableMap<Path, Pair<Boolean, List<Path>>> baseDirsToSearch = getBaseDirectoriesToSearch();
 
     populateBaseDirectorySearch(relativeMapSources, relativeMapZipSources, baseDirsToSearch);
 
-    ImmutableSortedMap.Builder<String, Pair<CustomZipEntry, Optional<Path>>> entries =
-        ImmutableSortedMap.naturalOrder();
+    ImmutableListMultimap.Builder<String, ZipEntryHolder> entries = ImmutableListMultimap.builder();
 
     walkTreeDirectoriesForFiles(entries, baseDirsToSearch);
 
     // Copy the files to the output zip.
     try (BufferedOutputStream baseOut =
             new BufferedOutputStream(filesystem.newFileOutputStream(pathToZipFile));
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(baseOut, APPEND_TO_ZIP)) {
-      ImmutableSortedMap<String, Pair<CustomZipEntry, Optional<Path>>> sourcesMap = entries.build();
-      Zip.writeEntriesToZip(filesystem, out, sourcesMap);
-      writeZipSourcesToZip(out, relativeMapZipSources, new HashSet<String>(sourcesMap.keySet()));
+        CustomZipOutputStream zipOut = ZipOutputStreams.newOutputStream(baseOut, APPEND_TO_ZIP)) {
+      readFromZipSources(relativeMapZipSources.build(), entries);
+      writeEntries(zipOut, entries.build());
     }
     return StepExecutionResults.SUCCESS;
   }
@@ -180,7 +184,7 @@ public class UnarchiveAndZipStep implements Step {
 
   private void populateBaseDirectorySearch(
       ImmutableMap<Path, Path> relativeMapSources,
-      Map<Path, Path> relativeMapZipSources,
+      ImmutableSortedMap.Builder<Path, Path> relativeMapZipSources,
       Map<Path, Pair<Boolean, List<Path>>> baseDirsToSearch) {
 
     // Build the set of relative file paths to the source files
@@ -214,7 +218,7 @@ public class UnarchiveAndZipStep implements Step {
    * Walks each base directory {@code baseDirsToSearch} if there are paths that are found in them
    */
   private void walkTreeDirectoriesForFiles(
-      ImmutableSortedMap.Builder<String, Pair<CustomZipEntry, Optional<Path>>> entries,
+      ImmutableListMultimap.Builder<String, ZipEntryHolder> entries,
       ImmutableMap<Path, Pair<Boolean, List<Path>>> baseDirsToSearch)
       throws IOException {
     for (Map.Entry<Path, Pair<Boolean, List<Path>>> entry : baseDirsToSearch.entrySet()) {
@@ -231,33 +235,92 @@ public class UnarchiveAndZipStep implements Step {
     }
   }
 
-  private void writeZipSourcesToZip(
-      CustomZipOutputStream zipOut,
+  private void readFromZipSources(
       Map<Path, Path> relativeMapZipSources,
-      Set<String> existingEntries)
+      ImmutableListMultimap.Builder<String, ZipEntryHolder> entries)
       throws IOException {
     for (Map.Entry<Path, Path> pathEntry : relativeMapZipSources.entrySet()) {
       Path archiveFile = Objects.requireNonNull(pathEntry.getValue());
       try (ZipFile zip = new ZipFile(archiveFile.toFile())) {
         for (Enumeration<ZipArchiveEntry> e = zip.getEntries(); e.hasMoreElements(); ) {
           ZipArchiveEntry entry = e.nextElement();
-
-          // Do not include entry if duplicate one is already written to disk
-          if (entriesToExclude.matchesAny(entry.getName())
-              || existingEntries.contains(entry.getName())) {
+          // Exclude file in zip if it matches exclusion matcher
+          if (entriesToExclude.matchesAny(entry.getName())) {
             continue;
           }
-          existingEntries.add(entry.getName());
 
           CustomZipEntry zipOutEntry = Zip.getZipEntry(zip, entry, compressionLevel);
-          zipOut.putNextEntry(zipOutEntry);
-          try (InputStream is = zip.getInputStream(entry)) {
-            ByteStreams.copy(is, zipOut);
-          }
+          ZipEntryHolder holder =
+              ZipEntryHolder.createFromZipArchiveEntry(
+                  zipOutEntry, Optional.of(archiveFile), Optional.of(entry));
+          entries.put(entry.getName(), holder);
         }
-        zipOut.closeEntry();
       }
     }
+  }
+
+  private List<ZipEntryHolder> chooseEntries(List<ZipEntryHolder> holders) throws ZipException {
+    if (holders.size() == 1) {
+      return holders;
+    }
+    switch (onDuplicateEntryAction) {
+      case OVERWRITE:
+        return Lists.newArrayList(holders.get(holders.size() - 1));
+      case IGNORE:
+        return Lists.newArrayList(holders.get(0));
+      case FAIL:
+        if (holders.size() > 1) {
+          throw new HumanReadableException(
+              "Duplicate entries for " + holders.get(0).getCustomZipEntry().getName());
+        }
+        // $FALL-THROUGH$
+      case KEEP:
+      default:
+        return holders;
+    }
+  }
+
+  private void writeZipSourcesToZip(
+      CustomZipOutputStream zipOut, Map<Path, List<ZipEntryHolder>> zipsToWriteFrom)
+      throws IOException {
+    for (Map.Entry<Path, List<ZipEntryHolder>> zipEntry : zipsToWriteFrom.entrySet()) {
+      try (ZipFile zip = new ZipFile(zipEntry.getKey().toFile())) {
+        for (ZipEntryHolder holder : zipEntry.getValue()) {
+          zipOut.putNextEntry(holder.getCustomZipEntry());
+          if (holder.getZipArchiveEntry().isPresent()) {
+            try (InputStream is = zip.getInputStream(holder.getZipArchiveEntry().get())) {
+              ByteStreams.copy(is, zipOut);
+            }
+            zipOut.closeEntry();
+          }
+        }
+      }
+    }
+  }
+
+  private void writeEntries(
+      CustomZipOutputStream zipOut, ImmutableListMultimap<String, ZipEntryHolder> entries)
+      throws IOException {
+    Map<Path, List<ZipEntryHolder>> zipsToWriteFrom = new HashMap<Path, List<ZipEntryHolder>>();
+
+    for (String fileName : entries.keySet()) {
+      List<ZipEntryHolder> filesToWrite = chooseEntries(entries.get(fileName));
+      for (ZipEntryHolder holder : filesToWrite) {
+        // If from zip then collate so input zip file only need to be opened once.
+        // If it's a source file then write to output.
+        if (holder.getZipArchiveEntry().isPresent() && holder.getSourceFile().isPresent()) {
+          Path sourceFile = holder.getSourceFile().get();
+          if (zipsToWriteFrom.get(sourceFile) != null) {
+            zipsToWriteFrom.get(sourceFile).add(holder);
+          } else {
+            zipsToWriteFrom.put(sourceFile, Lists.newArrayList(holder));
+          }
+        } else {
+          holder.writeToZip(filesystem, zipOut);
+        }
+      }
+    }
+    writeZipSourcesToZip(zipOut, zipsToWriteFrom);
   }
 
   @Override
