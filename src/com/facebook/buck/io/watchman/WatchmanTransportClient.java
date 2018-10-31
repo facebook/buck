@@ -142,7 +142,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     LOG.verbose("Got response: %s", response);
     Map<String, Object> responseMap = (Map<String, Object>) response;
     if (responseMap == null) {
-      LOG.error("Unrecognized Watchman response: %s", response);
+      LOG.error("Unrecognized Watchman response");
       return Optional.empty();
     }
     return Optional.of(responseMap);
