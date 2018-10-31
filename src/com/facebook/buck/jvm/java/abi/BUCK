@@ -5,7 +5,12 @@ java_library(
         exclude = [
             "ApiStubber.java",
         ],
-    ),
+    ) + select({
+        # We use conditional compilation to support building against both Java 8 and 10, despite
+        # breaking interface changes in the JDK.
+        "//tools/build/config:java_8": glob(["java8/*.java"]),
+        "//tools/build/config:java_10": glob(["java10/*.java"]),
+    }),
     tests = [
         "//test/com/facebook/buck/jvm/java/abi:abi",
     ],
@@ -36,12 +41,7 @@ java_library(
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jsr:jsr305",
-    ] + select({
-        # We use conditional compilation to support building against both Java 8 and 10, despite
-        # breaking interface changes in the JDK.
-        "//tools/build/config:java_8": ["//src/com/facebook/buck/jvm/java/abi/java8:java8"],
-        "//tools/build/config:java_10": ["//src/com/facebook/buck/jvm/java/abi/java10:java10"],
-    }),
+    ],
 )
 
 java_binary(

@@ -1,7 +1,0 @@
-java_library(
-    name = "java10",
-    srcs = glob(["*.java"]),
-    visibility = [
-        "//src/com/facebook/buck/jvm/java/abi/source:source",
-    ],
-)
