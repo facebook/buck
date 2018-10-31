@@ -139,6 +139,16 @@ public class GenruleDescriptionIntegrationTest {
   }
 
   @Test
+  public void testRdepsQuery() throws Exception {
+    expectGenruleOutput(":echo_with_rdeps", ImmutableList.of("//:app", "//:lib_a", "//:lib_d"));
+  }
+
+  @Test
+  public void testRdepsQueryWithDepth1() throws Exception {
+    expectGenruleOutput(":echo_with_rdeps_1", ImmutableList.of("//:lib_a", "//:lib_d"));
+  }
+
+  @Test
   public void testQueryResultsAreInvalidatedWhenDirectDepChanges() throws Exception {
     // Build once to warm cache
     workspace.runBuckCommand("build", "//:echo_deps_of_a").assertSuccess();

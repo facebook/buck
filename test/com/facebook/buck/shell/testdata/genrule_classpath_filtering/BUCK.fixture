@@ -62,6 +62,18 @@ genrule(
 )
 
 genrule(
+    name = "echo_with_rdeps",
+    out = "out",
+    cmd = "echo $(query_targets \"rdeps(:app, :lib_d)\") > $OUT",
+)
+
+genrule(
+    name = "echo_with_rdeps_1",
+    out = "out",
+    cmd = "echo $(query_targets \"rdeps(:app, :lib_d, 1)\") > $OUT",
+)
+
+genrule(
     name = "echo_with_deps_1",
     out = "out",
     cmd = "echo $(query_outputs \"deps(:app, 1)\") > $OUT",

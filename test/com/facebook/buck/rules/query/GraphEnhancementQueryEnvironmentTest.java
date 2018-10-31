@@ -193,6 +193,19 @@ public class GraphEnhancementQueryEnvironmentTest {
   }
 
   @Test
+  public void getRDeps() {
+    GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
+    // lib -> sublib
+    assertThat(
+        env.getReverseDeps(ImmutableSet.of(getQueryTarget("//:sublib"))),
+        Matchers.contains(getQueryTarget("//:lib")));
+    // sublib -> bottom
+    assertThat(
+        env.getReverseDeps(ImmutableSet.of(getQueryTarget("//:bottom"))),
+        Matchers.contains(getQueryTarget("//:sublib")));
+  }
+
+  @Test
   public void getClasspath() {
     GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
     ImmutableSet<QueryTarget> classpath =
