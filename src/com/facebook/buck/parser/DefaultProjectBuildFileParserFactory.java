@@ -27,6 +27,7 @@ import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.json.TargetCountVerificationParserDecorator;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.AbstractParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
@@ -43,6 +44,7 @@ import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.EventKind;
@@ -61,19 +63,26 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private final boolean enableProfiling;
   private final Optional<AtomicLong> processedBytes;
 
+  @SuppressWarnings(
+      "unused") // TODO: lubol This is removed in another diff on the stack when it is used.
+  private final ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
+      manifestServiceSupplier;
+
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       Console console,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       KnownRuleTypesProvider knownRuleTypesProvider,
       boolean enableProfiling,
-      Optional<AtomicLong> processedBytes) {
+      Optional<AtomicLong> processedBytes,
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.console = console;
     this.pythonInterpreterProvider = pythonInterpreterProvider;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.enableProfiling = enableProfiling;
     this.processedBytes = processedBytes;
+    this.manifestServiceSupplier = manifestServiceSupplier;
   }
 
   public DefaultProjectBuildFileParserFactory(
@@ -81,28 +90,32 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       boolean enableProfiling,
       Optional<AtomicLong> processedBytes,
-      KnownRuleTypesProvider knownRuleTypesProvider) {
+      KnownRuleTypesProvider knownRuleTypesProvider,
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
     this(
         typeCoercerFactory,
         Console.createNullConsole(),
         pythonInterpreterProvider,
         knownRuleTypesProvider,
         enableProfiling,
-        processedBytes);
+        processedBytes,
+        manifestServiceSupplier);
   }
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       Console console,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
-      KnownRuleTypesProvider knownRuleTypesProvider) {
+      KnownRuleTypesProvider knownRuleTypesProvider,
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
     this(
         typeCoercerFactory,
         console,
         pythonInterpreterProvider,
         knownRuleTypesProvider,
         false,
-        Optional.empty());
+        Optional.empty(),
+        manifestServiceSupplier);
   }
 
   /**

@@ -21,11 +21,14 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -47,7 +50,9 @@ class LegacyPerBuildStateFactory extends PerBuildStateFactory {
       KnownRuleTypesProvider knownRuleTypesProvider,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       Watchman watchman,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+    super(manifestServiceSupplier);
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
@@ -78,7 +83,8 @@ class LegacyPerBuildStateFactory extends PerBuildStateFactory {
             parserPythonInterpreterProvider,
             enableProfiling,
             parseProcessedBytes,
-            knownRuleTypesProvider);
+            knownRuleTypesProvider,
+            manifestServiceSupplier);
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.

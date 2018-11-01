@@ -19,9 +19,12 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.util.function.Supplier;
 
 /** Responsible for creating an instance of {@link Parser}. */
@@ -38,7 +41,8 @@ public class ParserFactory {
       TargetSpecResolver targetSpecResolver,
       Watchman watchman,
       BuckEventBus eventBus,
-      Supplier<ImmutableList<String>> targetPlatforms) {
+      Supplier<ImmutableList<String>> targetPlatforms,
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
     if (buckConfig.getView(ParserConfig.class).getEnableConfigurableAttributes()) {
       return new ParserWithConfigurableAttributes(
           daemonicParserState,
@@ -48,7 +52,8 @@ public class ParserFactory {
               knownRuleTypesProvider,
               parserPythonInterpreterProvider,
               watchman,
-              eventBus),
+              eventBus,
+              manifestServiceSupplier),
           targetSpecResolver,
           watchman,
           eventBus,
@@ -62,7 +67,8 @@ public class ParserFactory {
               knownRuleTypesProvider,
               parserPythonInterpreterProvider,
               watchman,
-              eventBus),
+              eventBus,
+              manifestServiceSupplier),
           targetSpecResolver,
           watchman,
           eventBus,

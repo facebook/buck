@@ -845,7 +845,8 @@ public class TargetsCommand extends AbstractCommand {
                     params.getCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getCell().getBuckConfig(),
                 params.getWatchman(),
-                params.getBuckEventBus())
+                params.getBuckEventBus(),
+                params.getManifestServiceSupplier())
             .create(
                 params.getParser().getPermState(),
                 executor,

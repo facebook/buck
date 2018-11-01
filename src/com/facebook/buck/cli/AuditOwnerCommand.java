@@ -71,7 +71,8 @@ public class AuditOwnerCommand extends AbstractCommand {
                         params.getCell().getBuckConfig(), params.getExecutableFinder()),
                     params.getCell().getBuckConfig(),
                     params.getWatchman(),
-                    params.getBuckEventBus())
+                    params.getBuckEventBus(),
+                    params.getManifestServiceSupplier())
                 .create(
                     params.getParser().getPermState(),
                     pool.getListeningExecutorService(),

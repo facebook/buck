@@ -45,7 +45,7 @@ class ParserWithConfigurableAttributes extends DefaultParser {
 
   ParserWithConfigurableAttributes(
       DaemonicParserState daemonicParserState,
-      PerBuildStateFactoryWithConfigurableAttributes perBuildStateFactory,
+      PerBuildStateFactory perBuildStateFactory,
       TargetSpecResolver targetSpecResolver,
       Watchman watchman,
       BuckEventBus eventBus,

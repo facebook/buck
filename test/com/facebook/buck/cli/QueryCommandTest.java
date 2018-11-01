@@ -30,6 +30,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
@@ -43,6 +44,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.concurrent.FakeListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
@@ -70,6 +72,11 @@ public class QueryCommandTest {
   private BuckQueryEnvironment env;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
+      getManifestSupplier() {
+    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
+  }
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -109,7 +116,8 @@ public class QueryCommandTest {
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
                 cell.getBuckConfig(),
                 WatchmanFactory.NULL_WATCHMAN,
-                eventBus)
+                eventBus,
+                getManifestSupplier())
             .create(
                 params.getParser().getPermState(),
                 executorService,

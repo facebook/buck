@@ -40,8 +40,10 @@ import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.log.GlobalStateManager;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -51,6 +53,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -73,7 +76,9 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
       KnownRuleTypesProvider knownRuleTypesProvider,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       Watchman watchman,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+    super(manifestServiceSupplier);
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
@@ -104,7 +109,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             parserPythonInterpreterProvider,
             enableProfiling,
             parseProcessedBytes,
-            knownRuleTypesProvider);
+            knownRuleTypesProvider,
+            manifestServiceSupplier);
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.

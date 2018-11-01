@@ -73,6 +73,7 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
@@ -87,6 +88,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -151,6 +153,11 @@ public class DefaultParserTest {
   private ListeningExecutorService executorService;
   private ExecutableFinder executableFinder;
 
+  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
+      getManifestSupplier() {
+    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
+  }
+
   public DefaultParserTest(int threads, boolean parallelParsing) {
     this.threads = threads;
     this.parallelParsing = parallelParsing;
@@ -193,7 +200,8 @@ public class DefaultParserTest {
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
                 cell.getBuckConfig(),
                 WatchmanFactory.NULL_WATCHMAN,
-                eventBus)
+                eventBus,
+                getManifestSupplier())
             .create(
                 parser.getPermState(),
                 executor,

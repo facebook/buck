@@ -108,6 +108,8 @@ import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.log.TraceInfoProvider;
+import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.manifestservice.ManifestServiceConfig;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DaemonicParserState;
@@ -153,6 +155,7 @@ import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.ThrowingCloseableWrapper;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
@@ -898,6 +901,15 @@ public final class Main {
               GlobalStateManager.singleton()
                   .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
+          ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier =
+              ThrowingCloseableMemoizedSupplier.of(
+                  () -> {
+                    ManifestServiceConfig manifestServiceConfig =
+                        new ManifestServiceConfig(buckConfig);
+                    return manifestServiceConfig.createManifestService(
+                        clock, buildEventBus, newDirectExecutorService());
+                  },
+                  ManifestService::close);
           ) {
 
         CommonThreadFactoryState commonThreadFactoryState =
@@ -1213,7 +1225,8 @@ public final class Main {
                   buildEventBus,
                   forkJoinPoolSupplier,
                   ruleKeyConfiguration,
-                  executableFinder);
+                  executableFinder,
+                  manifestServiceSupplier);
 
           // Because the Parser is potentially constructed before the CounterRegistry,
           // we need to manually register its counters after it's created.
@@ -1288,7 +1301,8 @@ public final class Main {
                         pluginManager,
                         moduleManager,
                         forkJoinPoolSupplier,
-                        traceInfoProvider));
+                        traceInfoProvider,
+                        manifestServiceSupplier));
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
             throw e;
@@ -1398,7 +1412,8 @@ public final class Main {
       BuckEventBus buildEventBus,
       CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier,
       RuleKeyConfiguration ruleKeyConfiguration,
-      ExecutableFinder executableFinder)
+      ExecutableFinder executableFinder,
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier)
       throws IOException, InterruptedException {
     WatchmanWatcher watchmanWatcher = null;
     if (daemonOptional.isPresent() && watchman.getTransportPath().isPresent()) {
@@ -1449,7 +1464,8 @@ public final class Main {
               new TargetSpecResolver(),
               watchman,
               buildEventBus,
-              targetPlatforms);
+              targetPlatforms,
+              manifestServiceSupplier);
       daemon.getFileEventBus().register(daemon.getDaemonicParserState());
 
       parserAndCaches =
@@ -1480,7 +1496,8 @@ public final class Main {
                   new TargetSpecResolver(),
                   watchman,
                   buildEventBus,
-                  targetPlatforms),
+                  targetPlatforms,
+                  manifestServiceSupplier),
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
