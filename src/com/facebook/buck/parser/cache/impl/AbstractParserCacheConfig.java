@@ -116,4 +116,14 @@ public abstract class AbstractParserCacheConfig implements ConfigView<BuckConfig
 
     return true;
   }
+
+  /** @returns the access mode for the local cache. */
+  public ParserCacheAccessMode getDirCacheAccessMode() {
+    AbstractParserDirCacheEntry parserDirCacheEntry = obtainDirEntry();
+    if (parserDirCacheEntry != null) {
+      return parserDirCacheEntry.getDirCacheMode();
+    }
+
+    return ParserCacheAccessMode.NONE;
+  }
 }

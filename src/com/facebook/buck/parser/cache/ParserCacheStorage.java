@@ -18,6 +18,7 @@ package com.facebook.buck.parser.cache;
 
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.google.common.hash.HashCode;
+import java.util.Optional;
 
 /** This is the main interface for interacting with the cache. */
 public interface ParserCacheStorage {
@@ -40,11 +41,11 @@ public interface ParserCacheStorage {
    *
    * @param weakFingerprint the weak fingerprint for the {@code buildFileManifest}.
    * @param strongFingerprint the strong fingerprint for the {@code buildFileManifest}.
-   * @return an {@link BuildFileManifest} object status operation if the operation is successful. In
-   *     case of failure an appropriate exception is thrown.
+   * @return a {@link Optional} of {@link BuildFileManifest} if the operation is successful. In case
+   *     of failure an appropriate exception is thrown.
    * @throws ParserCacheException thrown when there is an error constructing the {@link
    *     BuildFileManifest} from the {@link ParserCacheStorage}.
    */
-  BuildFileManifest getBuildFileManifest(HashCode weakFingerprint, HashCode strongFingerprint)
-      throws ParserCacheException;
+  Optional<BuildFileManifest> getBuildFileManifest(
+      HashCode weakFingerprint, HashCode strongFingerprint) throws ParserCacheException;
 }

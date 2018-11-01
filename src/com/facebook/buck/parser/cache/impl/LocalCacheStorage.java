@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.cache.impl;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -29,23 +30,31 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-/** An local filesystem backed implementation for the {@link ParserCacheStorage} interface. */
+/** A local filesystem backed implementation for the {@link ParserCacheStorage} interface. */
 public class LocalCacheStorage implements ParserCacheStorage {
   private static final Logger LOG = Logger.get(LocalCacheStorage.class);
 
   private final Path localCachePath;
   private final ProjectFilesystem filesystem;
+  private final ParserCacheAccessMode cacheAccessMode;
 
-  private LocalCacheStorage(Path localCachePath, ProjectFilesystem filesystem) {
+  private LocalCacheStorage(
+      Path localCachePath, ParserCacheAccessMode cacheAccessMode, ProjectFilesystem filesystem) {
     this.filesystem = filesystem;
     this.localCachePath = localCachePath;
+    this.cacheAccessMode = cacheAccessMode;
   }
 
-  private static Path createLocalCachePathFromConfig(
-      AbstractParserCacheConfig parserCacheConfig, ProjectFilesystem filesystem)
-      throws ParserCacheException {
+  private static ParserCacheAccessMode obtainLocalCacheStorageAccessModeFromConfig(
+      AbstractParserCacheConfig parserCacheConfig) {
+    return parserCacheConfig.getDirCacheAccessMode();
+  }
+
+  private static Path createLocalCacheStoragePathFromConfig(
+      AbstractParserCacheConfig parserCacheConfig, ProjectFilesystem filesystem) {
     // Set the local parser state - create directory structure etc.
     Preconditions.checkState(
         parserCacheConfig.getDirCacheLocation().isPresent(), "Dir cache location is not set!");
@@ -57,7 +66,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
       LOG.info("Created parser cache directory: %s.", cachePath);
     } catch (IOException t) {
       LOG.info(t, "Failed to create parser cache directory: %s.", cachePath);
-      throw new ParserCacheException(t, "Failed to create local cache directory - %s", cachePath);
+      throw new HumanReadableException(t, "Failed to create local cache directory - %s", cachePath);
     }
 
     return cachePath;
@@ -71,13 +80,18 @@ public class LocalCacheStorage implements ParserCacheStorage {
    * @throws ParserCacheException when the {@link LocalCacheStorage} object cannot be constructed.
    */
   public static LocalCacheStorage newInstance(
-      AbstractParserCacheConfig parserCacheConfig, ProjectFilesystem filesystem)
-      throws ParserCacheException {
+      AbstractParserCacheConfig parserCacheConfig, ProjectFilesystem filesystem) {
     Preconditions.checkState(
         parserCacheConfig.isDirParserCacheEnabled(),
         "Invalid state: LocalCacheStorage should not be instantiated if the cache is disabled.");
-    Path localCachePath = createLocalCachePathFromConfig(parserCacheConfig, filesystem);
-    return new LocalCacheStorage(localCachePath, filesystem);
+
+    Path localCachePath;
+
+    localCachePath = createLocalCacheStoragePathFromConfig(parserCacheConfig, filesystem);
+
+    ParserCacheAccessMode cacheAccessMode =
+        obtainLocalCacheStorageAccessModeFromConfig(parserCacheConfig);
+    return new LocalCacheStorage(localCachePath, cacheAccessMode, filesystem);
   }
 
   @Override
@@ -87,6 +101,10 @@ public class LocalCacheStorage implements ParserCacheStorage {
     Stopwatch timer = Stopwatch.createStarted();
 
     try {
+      if (!isWriteAllowed()) {
+        return;
+      }
+
       Path weakFingerprintCachePath = createWeakFingerprintFolder(weakFingerprint);
 
       byte[] serializedBuildFileManifest =
@@ -148,19 +166,25 @@ public class LocalCacheStorage implements ParserCacheStorage {
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(
+  public Optional<BuildFileManifest> getBuildFileManifest(
       HashCode weakFingerprint, HashCode strongFingerprint) throws ParserCacheException {
     Stopwatch timer = Stopwatch.createStarted();
+
     try {
+      if (!isReadAllowed()) {
+        return Optional.empty();
+      }
+
       Path weakFingerprintCachePath = getWeakFingerprintPath(weakFingerprint);
 
       byte[] deserializedBuildFileManifest =
           deserializeBuildFileManifest(strongFingerprint, weakFingerprintCachePath);
 
-      return getBuildFileManifestFromDesirealizedBytes(deserializedBuildFileManifest);
+      return Optional.of(getBuildFileManifestFromDesirealizedBytes(deserializedBuildFileManifest));
     } finally {
       LOG.debug(
-          "Time to complete getBuildFileManifest: %d.", timer.stop().elapsed(TimeUnit.NANOSECONDS));
+          "Time to complete storeBuildFileManifest: %d.",
+          timer.stop().elapsed(TimeUnit.NANOSECONDS));
     }
   }
 
@@ -204,5 +228,13 @@ public class LocalCacheStorage implements ParserCacheStorage {
           "Cannot find weakFingerprint directory: %s.", weakFingerprintCachePath);
     }
     return weakFingerprintCachePath;
+  }
+
+  private boolean isReadAllowed() {
+    return cacheAccessMode.isReadable();
+  }
+
+  private boolean isWriteAllowed() {
+    return cacheAccessMode.isWritable();
   }
 }

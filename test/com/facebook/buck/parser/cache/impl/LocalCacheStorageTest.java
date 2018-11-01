@@ -27,6 +27,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -45,7 +46,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -79,7 +79,7 @@ public class LocalCacheStorageTest {
     return builder;
   }
 
-  private AbstractParserCacheConfig getParserCacheConfig(boolean enabled, Path location) {
+  private ParserCacheConfig getParserCacheConfig(boolean enabled, Path location) {
     FakeBuckConfig.Builder builder = getBaseBuckConfigBuilder(location, true, enabled);
     return builder.build().getView(ParserCacheConfig.class);
   }
@@ -117,13 +117,12 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheWithAbsolutePathAndException()
-      throws IOException, ParserCacheException {
-    expectedException.expect(ParserCacheException.class);
+  public void createLocalCacheWithAbsolutePathAndException() throws IOException {
+    expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("Failed to create local cache directory - /foo/bar");
-    filesystem.createNewFile(Paths.get("/foo"));
-    LocalCacheStorage.newInstance(
-        getParserCacheConfig(true, filesystem.getPath("/foo/bar")), filesystem);
+    filesystem.createNewFile(filesystem.getPath("/foo"));
+    Path path = filesystem.getPath("/foo/bar");
+    LocalCacheStorage.newInstance(getParserCacheConfig(true, path), filesystem);
   }
 
   @Test
@@ -219,7 +218,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void stroreInLocalCacheAndGetFromLocalCacheAndVerifyMatch()
+  public void storeInLocalCacheStorageAndGetFromLocalCacheStorageAndVerifyMatch()
       throws IOException, ParserCacheException {
     LocalCacheStorage localCacheStorage =
         LocalCacheStorage.newInstance(
@@ -307,7 +306,7 @@ public class LocalCacheStorageTest {
 
     // Get from local cache
     BuildFileManifest buildFileManifestResult =
-        localCacheStorage.getBuildFileManifest(weakFingerprinter, strongFingerprinter);
+        localCacheStorage.getBuildFileManifest(weakFingerprinter, strongFingerprinter).get();
     assertEquals(buildFileManifest, buildFileManifestResult);
   }
 
