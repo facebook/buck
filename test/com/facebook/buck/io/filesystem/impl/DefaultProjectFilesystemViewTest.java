@@ -22,7 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.filesystem.GlobPatternMatcher;
+import com.facebook.buck.io.filesystem.ExactPathMatcher;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -302,7 +302,7 @@ public class DefaultProjectFilesystemViewTest {
         containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
 
     filesystemView =
-        filesystemView.withView(Paths.get("dir1"), ImmutableSet.of(GlobPatternMatcher.of("file2")));
+        filesystemView.withView(Paths.get("dir1"), ImmutableSet.of(ExactPathMatcher.of("file2")));
     assertThat(
         filesystemView.getFilesUnderPath(Paths.get(""), EnumSet.noneOf(FileVisitOption.class)),
         containsInAnyOrder(Paths.get("dir2/file3")));

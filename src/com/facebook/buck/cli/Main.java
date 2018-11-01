@@ -89,6 +89,7 @@ import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.ExactPathMatcher;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -323,28 +324,28 @@ public final class Main {
           FileExtensionMatcher.of("un~"),
           FileExtensionMatcher.of("netrhwist"),
           // Eclipse
-          GlobPatternMatcher.of(".idea"),
-          GlobPatternMatcher.of(".iml"),
+          ExactPathMatcher.of(".idea"),
+          ExactPathMatcher.of(".iml"),
           FileExtensionMatcher.of("pydevproject"),
-          GlobPatternMatcher.of(".project"),
-          GlobPatternMatcher.of(".metadata"),
+          ExactPathMatcher.of(".project"),
+          ExactPathMatcher.of(".metadata"),
           FileExtensionMatcher.of("tmp"),
           FileExtensionMatcher.of("bak"),
           FileExtensionMatcher.of("nib"),
-          GlobPatternMatcher.of(".classpath"),
-          GlobPatternMatcher.of(".settings"),
-          GlobPatternMatcher.of(".loadpath"),
-          GlobPatternMatcher.of(".externalToolBuilders"),
-          GlobPatternMatcher.of(".cproject"),
-          GlobPatternMatcher.of(".buildpath"),
+          ExactPathMatcher.of(".classpath"),
+          ExactPathMatcher.of(".settings"),
+          ExactPathMatcher.of(".loadpath"),
+          ExactPathMatcher.of(".externalToolBuilders"),
+          ExactPathMatcher.of(".cproject"),
+          ExactPathMatcher.of(".buildpath"),
           // Mac OS temp files
-          GlobPatternMatcher.of(".DS_Store"),
-          GlobPatternMatcher.of(".AppleDouble"),
-          GlobPatternMatcher.of(".LSOverride"),
-          GlobPatternMatcher.of(".Spotlight-V100"),
-          GlobPatternMatcher.of(".Trashes"),
+          ExactPathMatcher.of(".DS_Store"),
+          ExactPathMatcher.of(".AppleDouble"),
+          ExactPathMatcher.of(".LSOverride"),
+          ExactPathMatcher.of(".Spotlight-V100"),
+          ExactPathMatcher.of(".Trashes"),
           // Windows
-          GlobPatternMatcher.of("$RECYCLE.BIN"),
+          ExactPathMatcher.of("$RECYCLE.BIN"),
           // Sublime
           FileExtensionMatcher.of("sublime-workspace"));
 
