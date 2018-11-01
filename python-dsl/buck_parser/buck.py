@@ -1141,6 +1141,12 @@ class BuildFileProcessor(object):
         # Lookup the value and record it in this build file's context.
         key = section, field
         value = self._configs.get(key)
+        if value is not None and not isinstance(value, str):
+            # Python 2 returns unicode values from parsed JSON configs, but
+            # only str types should be exposed to clients
+            value = value.encode("utf-8")
+            # replace raw values to avoid decoding for frequently used configs
+            self._configs[key] = value
         build_env.used_configs[section][field] = value
 
         # If no config setting was found, return the default.
