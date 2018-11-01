@@ -285,6 +285,92 @@ over files earlier in that order.
 </p>
 
 
+<h2>Configuration files can include other files</h2>
+
+<p>
+Any of the configuration files that we've discussed so far can also
+include by reference other files that contain configuration information.
+These included files can contain complete <code>.buckconfig</code> sections 
+or they can contain a group of key name/value pairs that constitute part
+of a section. In this second use case, you'll need to ensure that 
+the <em>included</em> file is referenced beneath the appropriate section 
+in the <em>including</em> file. Because of this additional complexity, 
+we recommend that you include only files that contain complete sections.
+</p>
+
+<p>
+The syntax to include a file is
+<p>
+<pre>
+{literal}
+&lt;file:<em>path-to-included-file</em>>
+{/literal}
+</pre>
+</p>
+
+<p>
+where <em>path-to-included-file</em> is either a relative path from the
+including file (recommended) or an absolute path from the root of the
+file system.  
+</p>
+
+<p>
+You can also specify that the file should be included only if it exists
+by prefixing with a question mark (<code>?</code>). 
+</p>
+
+<p>
+<pre>
+{literal}
+&lt;?file:<em>path-to-included-file</em>>
+{/literal}
+</pre>
+</p>
+
+<p>
+If you use this prefix, it is not an error condition if the file does 
+not exist; Buck just silently continues to process the rest of the 
+configuration file.
+</p>
+
+<p>
+In the following example, the <code>.buckconfig</code> file includes
+the file <code>cxx-other-platform.include</code> which exists in the
+subdirectory <code>cxx-other-platform</code>. 
+The <code>.buckconfig</code> file will also include the 
+file <code>future-platform</code> from the directory <code>future-platform.include</code> if 
+that file exists.
+</p>
+
+<p>
+<pre>
+{literal}
+#
+# .buckconfig
+#
+[cxx]
+  cxxppflags="-D MYMACRO=\"Buck\""
+
+&lt;file:cxx-other-platform/cxx-other-platform.include>
+
+&lt;?file:future-platform/future-platform.include>
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+#
+# cxx-other-platform.include
+#
+[cxx#other_platform]
+  cxxppflags="-D MYMACRO=\"Watchman\""
+{/literal}
+</pre>
+</p>
+
+
 <h2>Sections</h2>
 
 <p>
