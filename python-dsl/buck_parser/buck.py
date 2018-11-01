@@ -2001,7 +2001,7 @@ def report_profile(options, to_parent, processed_build_file, profiler):
             extra_result += "\n\n"
             profile_result = extra_result + profile_result
             java_process_send_result(to_parent, [], [], profile_result)
-        except Exception as e:
+        except Exception:
             trace = traceback.format_exc()
             print(str(trace))
             raise
