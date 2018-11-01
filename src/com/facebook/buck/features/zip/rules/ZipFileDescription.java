@@ -67,7 +67,7 @@ public class ZipFileDescription
         args.getFlatten(),
         mergeSourceZips,
         args.getEntriesToExclude(),
-        args.getOnDuplicateEntryAction());
+        args.getOnDuplicateEntry());
   }
 
   @Override
@@ -96,7 +96,7 @@ public class ZipFileDescription
     ImmutableSortedSet<SourcePath> getZipSrcs();
 
     @Value.Default
-    default OnDuplicateEntryAction getOnDuplicateEntryAction() {
+    default OnDuplicateEntryAction getOnDuplicateEntry() {
       return OnDuplicateEntryAction.OVERWRITE;
     }
   }
