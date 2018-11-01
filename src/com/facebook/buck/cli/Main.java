@@ -89,7 +89,7 @@ import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
-import com.facebook.buck.io.filesystem.LegacyGlobMatcher;
+import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -307,45 +307,45 @@ public final class Main {
   // so we don't dump buckd caches on every command.
   private static final ImmutableSet<PathMatcher> DEFAULT_IGNORE_GLOBS =
       ImmutableSet.of(
-          new LegacyGlobMatcher("**/*.pbxproj"),
-          new LegacyGlobMatcher("**/*.xcscheme"),
-          new LegacyGlobMatcher("**/*.xcworkspacedata"),
+          GlobPatternMatcher.of("**/*.pbxproj"),
+          GlobPatternMatcher.of("**/*.xcscheme"),
+          GlobPatternMatcher.of("**/*.xcworkspacedata"),
           // Various editors' temporary files
-          new LegacyGlobMatcher("**/*~"),
+          GlobPatternMatcher.of("**/*~"),
           // Emacs
-          new LegacyGlobMatcher("**/#*#"),
-          new LegacyGlobMatcher("**/.#*"),
+          GlobPatternMatcher.of("**/#*#"),
+          GlobPatternMatcher.of("**/.#*"),
           // Vim
-          new LegacyGlobMatcher("**/*.swo"),
-          new LegacyGlobMatcher("**/*.swp"),
-          new LegacyGlobMatcher("**/*.swpx"),
-          new LegacyGlobMatcher("**/*.un~"),
-          new LegacyGlobMatcher("**/.netrhwist"),
+          GlobPatternMatcher.of("**/*.swo"),
+          GlobPatternMatcher.of("**/*.swp"),
+          GlobPatternMatcher.of("**/*.swpx"),
+          GlobPatternMatcher.of("**/*.un~"),
+          GlobPatternMatcher.of("**/.netrhwist"),
           // Eclipse
-          new LegacyGlobMatcher(".idea"),
-          new LegacyGlobMatcher(".iml"),
-          new LegacyGlobMatcher("**/*.pydevproject"),
-          new LegacyGlobMatcher(".project"),
-          new LegacyGlobMatcher(".metadata"),
-          new LegacyGlobMatcher("**/*.tmp"),
-          new LegacyGlobMatcher("**/*.bak"),
-          new LegacyGlobMatcher("**/*~.nib"),
-          new LegacyGlobMatcher(".classpath"),
-          new LegacyGlobMatcher(".settings"),
-          new LegacyGlobMatcher(".loadpath"),
-          new LegacyGlobMatcher(".externalToolBuilders"),
-          new LegacyGlobMatcher(".cproject"),
-          new LegacyGlobMatcher(".buildpath"),
+          GlobPatternMatcher.of(".idea"),
+          GlobPatternMatcher.of(".iml"),
+          GlobPatternMatcher.of("**/*.pydevproject"),
+          GlobPatternMatcher.of(".project"),
+          GlobPatternMatcher.of(".metadata"),
+          GlobPatternMatcher.of("**/*.tmp"),
+          GlobPatternMatcher.of("**/*.bak"),
+          GlobPatternMatcher.of("**/*~.nib"),
+          GlobPatternMatcher.of(".classpath"),
+          GlobPatternMatcher.of(".settings"),
+          GlobPatternMatcher.of(".loadpath"),
+          GlobPatternMatcher.of(".externalToolBuilders"),
+          GlobPatternMatcher.of(".cproject"),
+          GlobPatternMatcher.of(".buildpath"),
           // Mac OS temp files
-          new LegacyGlobMatcher(".DS_Store"),
-          new LegacyGlobMatcher(".AppleDouble"),
-          new LegacyGlobMatcher(".LSOverride"),
-          new LegacyGlobMatcher(".Spotlight-V100"),
-          new LegacyGlobMatcher(".Trashes"),
+          GlobPatternMatcher.of(".DS_Store"),
+          GlobPatternMatcher.of(".AppleDouble"),
+          GlobPatternMatcher.of(".LSOverride"),
+          GlobPatternMatcher.of(".Spotlight-V100"),
+          GlobPatternMatcher.of(".Trashes"),
           // Windows
-          new LegacyGlobMatcher("$RECYCLE.BIN"),
+          GlobPatternMatcher.of("$RECYCLE.BIN"),
           // Sublime
-          new LegacyGlobMatcher(".*.sublime-workspace"));
+          GlobPatternMatcher.of(".*.sublime-workspace"));
 
   private static final Logger LOG = Logger.get(Main.class);
 
