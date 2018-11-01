@@ -55,6 +55,25 @@
 <a href="{ROOT}files-and-dirs/buckconfig.html#{$section}"><code>[{$section}]</code></a>
 {/template}
 
+
+/**
+ * @param title Text for heading that appears in rendered content
+ * @param id    ID string that is used to link to the heading. See
+ *              .heading_link template.
+ */
+{template .section_concept_h2}
+  <h2 id="{$id}">{$title}&nbsp;<a class="inline-link" href="#{$id}">#</a></h2>
+{/template}
+
+/**
+ * @param id             ID string for the heading to link to. See .heading template.
+ * @param rendered_text  The rendered text for the link.
+ */
+{template .section_concept_link}
+  <a href="#{$id}"><strong>{$rendered_text}</strong></a><br>
+{/template}
+
+
 /***/
 {template .dx_threads}
 {call .entry_link}

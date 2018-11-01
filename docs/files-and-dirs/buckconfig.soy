@@ -225,9 +225,9 @@ the {sp}{call buck.concept_link}{param page: 'buckd' /}{param name: 'Buck Daemon
 <p>
 For a description of how Buck resolves collisions between settings in
 these configuration files, see the 
-section <strong>Precedence of Buck configuration specifications</strong> below.
+section {call buckconfig.section_concept_link}{param id:'config-precedence' /}{param rendered_text: 'Precedence of Buck configuration specifications' /}{/call}
+below.
 </p>
-
 
 <h2>Command-line control of configuration</h2>
 
@@ -253,7 +253,7 @@ rendered_text: '<strong>Common Parameters</strong>' /}{/call} topic.
 </p>
 
 
-<h2>Precedence of Buck configuration specifications</h2>
+{call buckconfig.section_concept_h2}{param id:'config-precedence' /}{param title:'Precedence of Buck configuration specifications' /}{/call}
 
 <p>
 The following list shows the order of precedence for how Buck interprets
