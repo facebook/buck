@@ -96,7 +96,8 @@ public class WorkerProcess implements Closeable {
               if (launchedProcess != null) {
                 executor.destroyLaunchedProcess(launchedProcess);
               }
-            });
+            },
+            () -> launchedProcess != null && launchedProcess.isAlive());
 
     LOG.debug("Handshaking with process %d", this.hashCode());
     protocol.handshake(currentMessageID.getAndIncrement());

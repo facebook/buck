@@ -33,11 +33,13 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 @SuppressWarnings("resource") // Closing alters the test data.
 public class WorkerProcessProtocolZeroTest {
 
   @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private ByteArrayOutputStream dummyOutputStream;
   private ByteArrayInputStream dummyInputStream;
@@ -61,7 +63,7 @@ public class WorkerProcessProtocolZeroTest {
     ByteArrayOutputStream jsonSentToWorkerProcess = new ByteArrayOutputStream();
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            jsonSentToWorkerProcess, dummyJsonReader, newTempFile(), () -> {});
+            jsonSentToWorkerProcess, dummyJsonReader, newTempFile(), () -> {}, () -> true);
 
     protocol.handshake(handshakeID);
     assertThat(jsonSentToWorkerProcess.toString(), Matchers.containsString(expectedJson));
@@ -71,7 +73,7 @@ public class WorkerProcessProtocolZeroTest {
   public void testSendCommand() throws IOException {
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, dummyInputStream, newTempFile(), () -> {});
+            dummyOutputStream, dummyInputStream, newTempFile(), () -> {}, () -> true);
 
     int messageID = 123;
     Path argsPath = Paths.get("args");
@@ -102,7 +104,7 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, jsonReader, newTempFile(), () -> {});
+            dummyOutputStream, jsonReader, newTempFile(), () -> {}, () -> true);
 
     protocol.handshake(handshakeID);
   }
@@ -194,7 +196,7 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, jsonReader, newTempFile(), () -> {});
+            dummyOutputStream, jsonReader, newTempFile(), () -> {}, () -> true);
 
     protocol.receiveCommandResponse(messageID);
   }
@@ -205,7 +207,7 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, inputStream(malformedJson), newTempFile(), () -> {});
+            dummyOutputStream, inputStream(malformedJson), newTempFile(), () -> {}, () -> true);
 
     try {
       protocol.receiveCommandResponse(123);
@@ -223,7 +225,7 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, jsonReader, newTempFile(), () -> {});
+            dummyOutputStream, jsonReader, newTempFile(), () -> {}, () -> true);
 
     try {
       protocol.receiveCommandResponse(messageID);
@@ -243,7 +245,7 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, jsonReader, newTempFile(), () -> {});
+            dummyOutputStream, jsonReader, newTempFile(), () -> {}, () -> true);
 
     try {
       protocol.receiveCommandResponse(messageID);
@@ -258,7 +260,11 @@ public class WorkerProcessProtocolZeroTest {
     AtomicBoolean cleanedUp = new AtomicBoolean(false);
     WorkerProcessProtocolZero.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, inputStream("[]"), newTempFile(), () -> cleanedUp.set(true));
+            dummyOutputStream,
+            inputStream("[]"),
+            newTempFile(),
+            () -> cleanedUp.set(true),
+            () -> true);
 
     // write an opening bracket now, so the writer doesn't throw due to invalid JSON when it goes
     // to write the closing bracket
@@ -302,7 +308,8 @@ public class WorkerProcessProtocolZeroTest {
             dummyOutputStream,
             inputStream("invalid JSON"),
             newTempFile(),
-            () -> cleanedUp.set(true));
+            () -> cleanedUp.set(true),
+            () -> true);
 
     // write an opening bracket now, so the writer doesn't throw due to invalid JSON when it goes
     // to write the closing bracket
@@ -315,6 +322,21 @@ public class WorkerProcessProtocolZeroTest {
       // assert that process was still destroyed despite the exception
       assertTrue(cleanedUp.get());
     }
+  }
+
+  @Test
+  public void closingStreamsThrowsWhenProcessIsKilledBeforeClose() throws IOException {
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("was already killed");
+
+    WorkerProcessProtocolZero.CommandSender protocol =
+        new WorkerProcessProtocolZero.CommandSender(
+            dummyOutputStream, inputStream(""), newTempFile(), () -> {}, () -> false);
+    // write an opening bracket now, so the writer doesn't throw due to invalid JSON when it goes
+    // to write the closing bracket
+    protocol.getProcessStdinWriter().beginArray();
+
+    protocol.close();
   }
 
   private Path newTempFile() throws IOException {
