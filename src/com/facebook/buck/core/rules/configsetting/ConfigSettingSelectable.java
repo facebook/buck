@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -39,12 +40,12 @@ public class ConfigSettingSelectable implements Selectable {
 
   private final BuildTarget buildTarget;
   private final ImmutableMap<String, String> values;
-  private final ImmutableList<BuildTarget> constraintValues;
+  private final ImmutableSet<BuildTarget> constraintValues;
 
   public ConfigSettingSelectable(
       BuildTarget buildTarget,
       ImmutableMap<String, String> values,
-      ImmutableList<BuildTarget> constraintValues) {
+      ImmutableSet<BuildTarget> constraintValues) {
     this.buildTarget = buildTarget;
     this.values = values;
     this.constraintValues = constraintValues;
@@ -81,7 +82,7 @@ public class ConfigSettingSelectable implements Selectable {
       BuckConfig buckConfig,
       ConstraintResolver constraintResolver,
       Platform targetPlatform,
-      ImmutableList<BuildTarget> constraintValuesTargets,
+      Collection<BuildTarget> constraintValuesTargets,
       ImmutableMap<String, String> values) {
     for (Map.Entry<String, String> entry : values.entrySet()) {
       if (!matches(buckConfig, entry.getKey(), entry.getValue())) {
