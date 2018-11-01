@@ -22,9 +22,6 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
-import com.facebook.buck.io.filesystem.ExactPathMatcher;
-import com.facebook.buck.io.filesystem.FileExtensionMatcher;
-import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
@@ -187,9 +184,12 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
             .append(ImmutableSet.of(buckPaths.getBuckOut()))
             .transform(RecursiveFileMatcher::of)
             .transform(matcher -> (PathMatcher) matcher)
-            .append(Iterables.filter(this.blackListedPaths, ExactPathMatcher.class))
-            .append(Iterables.filter(this.blackListedPaths, FileExtensionMatcher.class))
-            .append(Iterables.filter(this.blackListedPaths, GlobPatternMatcher.class))
+            .append(
+                // RecursiveFileMatcher instances are handled separately above because they all
+                // must be relative to the project root, but all other matchers are not relative
+                // to the root and do not require any special treatment.
+                Iterables.filter(
+                    this.blackListedPaths, matcher -> !(matcher instanceof RecursiveFileMatcher)))
             .toSet();
     this.tmpDir =
         MoreSuppliers.memoize(
