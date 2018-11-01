@@ -119,7 +119,7 @@ public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMa
     return pathPrefixMatcher.get().getPath();
   }
 
-  public String getGlob() {
+  private String getGlob() {
     Preconditions.checkState(type == Type.GLOB);
     return globPattern.get();
   }
