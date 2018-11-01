@@ -19,6 +19,7 @@ package com.facebook.buck.io.filesystem.impl;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.windowsfs.WindowsFS;
@@ -75,9 +76,9 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     return createProjectFilesystem(root, new Config());
   }
 
-  private static ImmutableSet<PathOrGlobMatcher> extractIgnorePaths(
+  private static ImmutableSet<PathMatcher> extractIgnorePaths(
       Path root, Config config, BuckPaths buckPaths) {
-    ImmutableSet.Builder<PathOrGlobMatcher> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<PathMatcher> builder = ImmutableSet.builder();
 
     builder.add(new PathOrGlobMatcher(Paths.get(".idea")));
 
@@ -115,7 +116,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   private static void addPathMatcherRelativeToRepo(
-      Path root, Builder<PathOrGlobMatcher> builder, Path pathToAdd) {
+      Path root, Builder<PathMatcher> builder, Path pathToAdd) {
     if (!pathToAdd.isAbsolute()
         || pathToAdd.normalize().startsWith(root.toAbsolutePath().normalize())) {
       if (pathToAdd.isAbsolute()) {

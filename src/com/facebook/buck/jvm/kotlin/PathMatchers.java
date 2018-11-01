@@ -16,11 +16,12 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 
 public class PathMatchers {
 
-  public static final PathOrGlobMatcher KOTLIN_PATH_MATCHER = new PathOrGlobMatcher("**.kt");
+  public static final PathMatcher KOTLIN_PATH_MATCHER = new PathOrGlobMatcher("**.kt");
 
-  public static final PathOrGlobMatcher JAVA_PATH_MATCHER = new PathOrGlobMatcher("**.java");
+  public static final PathMatcher JAVA_PATH_MATCHER = new PathOrGlobMatcher("**.java");
 }

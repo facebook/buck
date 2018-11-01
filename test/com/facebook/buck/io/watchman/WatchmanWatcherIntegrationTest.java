@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Ansi;
@@ -113,7 +114,7 @@ public class WatchmanWatcherIntegrationTest {
 
   // Create a watcher for the given ignore paths, clearing the initial overflow event before
   // returning it.
-  private WatchmanWatcher createWatchmanWatcher(PathOrGlobMatcher... ignorePaths)
+  private WatchmanWatcher createWatchmanWatcher(PathMatcher... ignorePaths)
       throws IOException, InterruptedException {
 
     WatchmanWatcher watcher =

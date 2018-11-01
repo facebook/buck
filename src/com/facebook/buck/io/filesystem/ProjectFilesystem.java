@@ -72,10 +72,10 @@ public interface ProjectFilesystem {
   Path relativize(Path path);
 
   /** @return a set of {@link PathOrGlobMatcher} objects ignored by {@link #isIgnored(Path)} */
-  ImmutableSet<PathOrGlobMatcher> getBlacklistedPaths();
+  ImmutableSet<PathMatcher> getBlacklistedPaths();
 
   /** @return A {@link ImmutableSet} of {@link PathOrGlobMatcher} objects to have buck ignore. */
-  ImmutableSet<PathOrGlobMatcher> getIgnorePaths();
+  ImmutableSet<PathMatcher> getIgnorePaths();
 
   Path getPathForRelativePath(Path pathRelativeToProjectRoot);
 

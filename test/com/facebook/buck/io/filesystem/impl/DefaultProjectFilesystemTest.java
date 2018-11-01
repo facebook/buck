@@ -599,6 +599,7 @@ public class DefaultProjectFilesystemTest {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(rootPath, config);
     ImmutableSet<Path> ignorePaths =
         FluentIterable.from(filesystem.getIgnorePaths())
+            .filter(PathOrGlobMatcher.class)
             .filter(input -> input.getType() == PathOrGlobMatcher.Type.PATH)
             .transform(PathOrGlobMatcher::getPath)
             .toSet();
@@ -627,6 +628,7 @@ public class DefaultProjectFilesystemTest {
     ImmutableSet<Path> ignorePaths =
         FluentIterable.from(
                 TestProjectFilesystems.createProjectFilesystem(rootPath, config).getIgnorePaths())
+            .filter(PathOrGlobMatcher.class)
             .filter(input -> input.getType() == PathOrGlobMatcher.Type.PATH)
             .transform(PathOrGlobMatcher::getPath)
             .toSet();

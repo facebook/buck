@@ -89,6 +89,7 @@ import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -304,7 +305,7 @@ public final class Main {
 
   // Ignore changes to generated Xcode project files and editors' backup files
   // so we don't dump buckd caches on every command.
-  private static final ImmutableSet<PathOrGlobMatcher> DEFAULT_IGNORE_GLOBS =
+  private static final ImmutableSet<PathMatcher> DEFAULT_IGNORE_GLOBS =
       ImmutableSet.of(
           new PathOrGlobMatcher("**/*.pbxproj"),
           new PathOrGlobMatcher("**/*.xcscheme"),
@@ -1405,7 +1406,7 @@ public final class Main {
             new WatchmanWatcher(
                 watchman,
                 daemon.getFileEventBus(),
-                ImmutableSet.<PathOrGlobMatcher>builder()
+                ImmutableSet.<PathMatcher>builder()
                     .addAll(filesystem.getIgnorePaths())
                     .addAll(DEFAULT_IGNORE_GLOBS)
                     .build(),
