@@ -15,9 +15,10 @@
  */
 package com.facebook.buck.intellij.ideabuck.actions.select;
 
-import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
+import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiAnnotation;
@@ -92,25 +93,26 @@ public class SelectedTestRunLineMarkerContributor extends RunLineMarkerContribut
    * @return {@code true} if the method has the junit Test annotation. {@code false} otherwise.
    */
   private boolean isTestMethod(PsiMethod method) {
-    if (method.getContext() == null) {
-      return false;
-    }
-    if (method.getContext().getContainingFile() == null) {
-      return false;
-    }
-    VirtualFile buckFile =
-        BuckFileUtil.getBuckFile(method.getContext().getContainingFile().getVirtualFile());
-    if (buckFile == null) {
-      return false;
-    }
     PsiAnnotation[] annotations = method.getModifierList().getAnnotations();
     for (PsiAnnotation annotation : annotations) {
       for (String testAnnotation : TEST_ANNOTATIONS) {
         if (testAnnotation.equals(annotation.getQualifiedName())) {
-          return true;
+          return isInBuckCell(method);
         }
       }
     }
     return false;
+  }
+
+  private boolean isInBuckCell(PsiMethod method) {
+    Project project = method.getProject();
+    if (project.isDefault()) {
+      return false;
+    }
+    VirtualFile file = method.getContainingFile().getVirtualFile();
+    if (file == null) {
+      return false;
+    }
+    return BuckCellManager.getInstance(project).findCellByVirtualFile(file).isPresent();
   }
 }

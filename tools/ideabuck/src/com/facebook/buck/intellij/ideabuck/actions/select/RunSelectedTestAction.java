@@ -20,7 +20,6 @@ import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckQueryCommandHandler;
 import com.facebook.buck.intellij.ideabuck.configurations.TestConfiguration;
 import com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType;
-import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.google.common.base.Function;
 import com.intellij.execution.Executor;
 import com.intellij.execution.ExecutorRegistry;
@@ -100,11 +99,6 @@ public class RunSelectedTestAction extends AnAction {
     final Document document = editor.getDocument();
     VirtualFile virtualFile = FileDocumentManager.getInstance().getFile(document);
 
-    VirtualFile buckFile = BuckFileUtil.getBuckFile(virtualFile);
-    if (buckFile == null) {
-      return;
-    }
-
     String name;
     Optional<String> testSelectors = Optional.empty();
     if (method != null) {
@@ -116,7 +110,7 @@ public class RunSelectedTestAction extends AnAction {
         testSelectors = Optional.of(psiClass.getQualifiedName());
       }
     }
-    createTestConfigurationFromContext(name, testSelectors, project, virtualFile, buckFile, debug);
+    createTestConfigurationFromContext(name, testSelectors, project, virtualFile, debug);
   }
 
   /**
@@ -127,7 +121,6 @@ public class RunSelectedTestAction extends AnAction {
    * @param project {@link Project} then intellij project corresponding the the file or module under
    *     test.
    * @param containingFile {@link VirtualFile} the file that containing the impacted tests.
-   * @param buckFile {@link VirtualFile} the file representing the buck File.
    * @param debug a {@link boolean} used to signify run or debug.
    */
   private void createTestConfigurationFromContext(
@@ -135,13 +128,11 @@ public class RunSelectedTestAction extends AnAction {
       final Optional<String> testSelectors,
       final Project project,
       VirtualFile containingFile,
-      VirtualFile buckFile,
       boolean debug) {
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
     BuckQueryCommandHandler handler =
         new BuckQueryCommandHandler(
             project,
-            buckFile.getParent(),
             BuckCommand.QUERY,
             new Function<List<String>, Void>() {
               @Nullable

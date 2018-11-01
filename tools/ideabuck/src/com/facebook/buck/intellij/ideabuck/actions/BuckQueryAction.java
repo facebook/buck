@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-/** Run buck targets command. */
+/** Run variations of the buck query command. */
 public class BuckQueryAction {
   public static final String ACTION_TITLE = "Run buck query";
   private static final Cache<String, List<String>> buckTargetCache =
@@ -40,7 +40,37 @@ public class BuckQueryAction {
 
   private BuckQueryAction() {}
 
+  /**
+   * @deprecated This method was never intended for general use and should only be used by the
+   *     {@link com.facebook.buck.intellij.ideabuck.actions.choosetargets.ChooseTargetContributor}.
+   */
+  @Deprecated
   public static synchronized List<String> execute(
+      final Project project,
+      final String target,
+      final Function<List<String>, Void> fillTextResults) {
+    return customExecuteForTargetCompletion(project, target, fillTextResults);
+  }
+
+  /**
+   * Returns a list of targets that are equivalent to the expansion of the given alias or target
+   * pattern.
+   *
+   * <p>Results are returned in exactly one of two ways:
+   *
+   * <ul>
+   *   <li>If the target has been recently queried and is still cached, a cached list of results is
+   *       returned immediately by this method, and the given callback is never invoked.
+   *   <li>If the target is not cached, an empty list is returned immediately, and the results are
+   *       returned in the given callback.
+   * </ul>
+   *
+   * and returns an empty list on the first call
+   *
+   * <p>Note: This method was never intended for general use and should only be used by the {@link
+   * com.facebook.buck.intellij.ideabuck.actions.choosetargets.ChooseTargetContributor}.
+   */
+  public static synchronized List<String> customExecuteForTargetCompletion(
       final Project project,
       final String target,
       final Function<List<String>, Void> fillTextResults) {
@@ -56,6 +86,7 @@ public class BuckQueryAction {
     ApplicationManager.getApplication()
         .executeOnPooledThread(
             new Runnable() {
+              @Override
               public void run() {
                 ongoingQuery.add(target);
                 BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
@@ -63,7 +94,6 @@ public class BuckQueryAction {
                 BuckCommandHandler handler =
                     new BuckQueryCommandHandler(
                         project,
-                        project.getBaseDir(),
                         BuckCommand.QUERY,
                         new Function<List<String>, Void>() {
                           @Nullable

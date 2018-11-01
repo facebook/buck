@@ -174,7 +174,7 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
     List<String> names = new ArrayList<>();
     names.add(getAllBuildTargetsInSameDirectory(buildDir));
     names.addAll(
-        BuckQueryAction.execute(
+        BuckQueryAction.customExecuteForTargetCompletion(
             project,
             "//" + buildDir + TARGET_NAME_SEPARATOR,
             new Function<List<String>, Void>() {
@@ -184,6 +184,7 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
                 ApplicationManager.getApplication()
                     .invokeLater(
                         new Runnable() {
+                          @Override
                           public void run() {
                             ChooseByNamePopup chooseByNamePopup =
                                 project.getUserData(

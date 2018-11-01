@@ -102,8 +102,7 @@ class TestExecutionState implements RunProfileState {
     buckModule.attach(target);
 
     final BuckBuildCommandHandler handler =
-        new BuckBuildCommandHandler(
-            mProject, mProject.getBaseDir(), BuckCommand.TEST, /* doStartNotify */ false) {
+        new BuckBuildCommandHandler(mProject, BuckCommand.TEST, /* doStartNotify */ false) {
           @Override
           protected void notifyLines(Key outputType, Iterable<String> lines) {
             super.notifyLines(outputType, lines);
