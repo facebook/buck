@@ -48,6 +48,14 @@ public class LocalCacheStorage implements ParserCacheStorage {
     this.cacheAccessMode = cacheAccessMode;
   }
 
+  private boolean isReadAllowed() {
+    return cacheAccessMode.isReadable();
+  }
+
+  private boolean isWriteAllowed() {
+    return cacheAccessMode.isWritable();
+  }
+
   private static ParserCacheAccessMode obtainLocalCacheStorageAccessModeFromConfig(
       AbstractParserCacheConfig parserCacheConfig) {
     return parserCacheConfig.getDirCacheAccessMode();
@@ -96,7 +104,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
 
   @Override
   public void storeBuildFileManifest(
-      HashCode weakFingerprint, HashCode strongFingerprint, BuildFileManifest buildFileManifest)
+      HashCode weakFingerprint, HashCode strongFingerprint, byte[] serializedBuildFileManifest)
       throws ParserCacheException {
     Stopwatch timer = Stopwatch.createStarted();
 
@@ -107,48 +115,25 @@ public class LocalCacheStorage implements ParserCacheStorage {
 
       Path weakFingerprintCachePath = createWeakFingerprintFolder(weakFingerprint);
 
-      byte[] serializedBuildFileManifest =
-          serializeBuildFileManifestToBytes(buildFileManifest, weakFingerprintCachePath);
+      Path cachedBuildFileManifestPath =
+          weakFingerprintCachePath.resolve(strongFingerprint.toString());
 
-      storeBuildFileManifestToCache(
-          strongFingerprint, weakFingerprintCachePath, serializedBuildFileManifest);
+      Path relativePathToRoot =
+          cachedBuildFileManifestPath.isAbsolute()
+              ? filesystem.getRootPath().relativize(cachedBuildFileManifestPath)
+              : cachedBuildFileManifestPath;
+
+      try (OutputStream fw = filesystem.newFileOutputStream(relativePathToRoot)) {
+        fw.write(serializedBuildFileManifest);
+      } catch (IOException t) {
+        throw new ParserCacheException(
+            t, "Failed to store BuildFileManifgest to file %s.", weakFingerprintCachePath);
+      }
     } finally {
       LOG.debug(
           "Time to complete storeBuildFileManifest: %d.",
           timer.stop().elapsed(TimeUnit.NANOSECONDS));
     }
-  }
-
-  private void storeBuildFileManifestToCache(
-      HashCode strongFingerprint, Path weakFingerprintCachePath, byte[] serializedBuildFileManifest)
-      throws ParserCacheException {
-    Path cachedBuildFileManifestPath =
-        weakFingerprintCachePath.resolve(strongFingerprint.toString());
-
-    Path relativePathToRoot =
-        cachedBuildFileManifestPath.isAbsolute()
-            ? filesystem.getRootPath().relativize(cachedBuildFileManifestPath)
-            : cachedBuildFileManifestPath;
-
-    try (OutputStream fw = filesystem.newFileOutputStream(relativePathToRoot)) {
-      fw.write(serializedBuildFileManifest);
-    } catch (IOException t) {
-      throw new ParserCacheException(
-          t, "Failed to store BuildFileManifgest to file %s.", weakFingerprintCachePath);
-    }
-  }
-
-  private byte[] serializeBuildFileManifestToBytes(
-      BuildFileManifest buildFileManifest, Path weakFingerprintCachePath)
-      throws ParserCacheException {
-    byte[] serializedBuildFileManifest;
-    try {
-      serializedBuildFileManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
-    } catch (IOException e) {
-      throw new ParserCacheException(
-          e, "Failed to serialize BuildFileManifgest - path %s.", weakFingerprintCachePath);
-    }
-    return serializedBuildFileManifest;
   }
 
   private Path createWeakFingerprintFolder(HashCode weakFingerprint) throws ParserCacheException {
@@ -185,6 +170,25 @@ public class LocalCacheStorage implements ParserCacheStorage {
       LOG.debug(
           "Time to complete storeBuildFileManifest: %d.",
           timer.stop().elapsed(TimeUnit.NANOSECONDS));
+    }
+  }
+
+  @Override
+  public void deleteCacheEntries(HashCode weakFingerprint, HashCode strongFingerprint)
+      throws ParserCacheException {
+    if (!isWriteAllowed()) {
+      return;
+    }
+
+    try {
+      Path weakFingerprintCachePath = localCachePath.resolve(weakFingerprint.toString());
+      filesystem.deleteRecursivelyIfExists(
+          weakFingerprintCachePath.isAbsolute()
+              ? filesystem.getRootPath().relativize(weakFingerprintCachePath)
+              : weakFingerprintCachePath);
+    } catch (IOException e) {
+      LOG.error(e, "Failed to delete cache entries from local cache");
+      throw new ParserCacheException(e, "Failed to delete cache entries from local cache");
     }
   }
 
@@ -228,13 +232,5 @@ public class LocalCacheStorage implements ParserCacheStorage {
           "Cannot find weakFingerprint directory: %s.", weakFingerprintCachePath);
     }
     return weakFingerprintCachePath;
-  }
-
-  private boolean isReadAllowed() {
-    return cacheAccessMode.isReadable();
-  }
-
-  private boolean isWriteAllowed() {
-    return cacheAccessMode.isWritable();
   }
 }

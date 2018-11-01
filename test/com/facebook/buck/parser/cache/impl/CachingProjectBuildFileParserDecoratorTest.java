@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -40,6 +42,11 @@ import org.junit.rules.ExpectedException;
 /** Tests for the {@link CachingProjectBuildFileParserDecorator} */
 public class CachingProjectBuildFileParserDecoratorTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
+
+  private BuckEventBus buckEventBus;
+  private ProjectFilesystem filesystem;
+  private ProjectBuildFileParser fakeParser;
+  private BuildFileManifest fakeParserManifest;
 
   /** Fake parser object with fake preset values */
   class FakeProjectBuildParser implements ProjectBuildFileParser {
@@ -89,15 +96,12 @@ public class CachingProjectBuildFileParserDecoratorTest {
     return builder.build();
   }
 
-  ProjectFilesystem filesystem;
-  ProjectBuildFileParser fakeParser;
-  BuildFileManifest fakeParserManifest;
-
   @Before
   public void setUp() throws IOException, InterruptedException {
     filesystem = FakeProjectFilesystem.createRealTempFilesystem();
     fakeParser = new FakeProjectBuildParser();
     fakeParserManifest = fakeParser.getBuildFileManifest(filesystem.resolve("BUCK"));
+    buckEventBus = BuckEventBusForTests.newInstance();
   }
 
   @Test

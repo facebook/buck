@@ -79,6 +79,18 @@ public class LocalCacheStorageTest {
     return builder;
   }
 
+  private byte[] serializeBuildFileManifestToBytes(BuildFileManifest buildFileManifest)
+      throws ParserCacheException {
+
+    byte[] serializedBuildFileManifest;
+    try {
+      serializedBuildFileManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
+    } catch (IOException e) {
+      throw new ParserCacheException(e, "Failed to serialize BuildFileManifgest to bytes.");
+    }
+    return serializedBuildFileManifest;
+  }
+
   private ParserCacheConfig getParserCacheConfig(boolean enabled, Path location) {
     FakeBuckConfig.Builder builder = getBaseBuckConfigBuilder(location, true, enabled);
     return builder.build().getView(ParserCacheConfig.class);
@@ -181,7 +193,8 @@ public class LocalCacheStorageTest {
     Path buildPath = filesystem.getPath(FOO_BAR_PATH);
     HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildPath, getConfig().getConfig());
     HashCode strongFingerprint = Fingerprinter.getStrongFingerprint(filesystem, ImmutableList.of());
-    localCacheStorage.storeBuildFileManifest(weakFingerprint, strongFingerprint, null);
+    localCacheStorage.storeBuildFileManifest(
+        weakFingerprint, strongFingerprint, new byte[] {0, 1, 2});
     Path localCachePath = tempDir.getRoot().resolve(FOO_BAR_PATH);
     assertNotNull(localCachePath);
     Path weakFingerprintPath =
@@ -211,7 +224,8 @@ public class LocalCacheStorageTest {
     assertTrue(filesystem.exists(newFilePath));
     HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildPath, getConfig().getConfig());
     HashCode strongFingerprint = Fingerprinter.getStrongFingerprint(filesystem, ImmutableList.of());
-    localCacheStorage.storeBuildFileManifest(weakFingerprint, strongFingerprint, null);
+    localCacheStorage.storeBuildFileManifest(
+        weakFingerprint, strongFingerprint, new byte[] {0, 1, 2});
     assertNotNull(localCachePath);
     assertTrue(filesystem.exists(wfpPath));
     assertTrue(filesystem.exists(newFilePath));
@@ -296,7 +310,9 @@ public class LocalCacheStorageTest {
 
     // Store in local cache
     localCacheStorage.storeBuildFileManifest(
-        weakFingerprinter, strongFingerprinter, buildFileManifest);
+        weakFingerprinter,
+        strongFingerprinter,
+        serializeBuildFileManifestToBytes(buildFileManifest));
 
     Path serializedDataFile =
         localCachePath

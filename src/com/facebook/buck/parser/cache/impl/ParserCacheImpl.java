@@ -24,6 +24,7 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.cache.ParserCache;
 import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
+import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.util.config.Config;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -88,6 +89,18 @@ public class ParserCacheImpl implements ParserCache {
     return Optional.empty();
   }
 
+  private byte[] serializeBuildFileManifestToBytes(
+      BuildFileManifest buildFileManifest, Path buildFile) throws ParserCacheException {
+    byte[] serializedBuildFileManifest;
+    try {
+      serializedBuildFileManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
+    } catch (IOException e) {
+      throw new ParserCacheException(
+          e, "Failed to serialize BuildFileManifgest - path %s.", buildFile);
+    }
+    return serializedBuildFileManifest;
+  }
+
   /**
    * Store a parsed entry in the cache.
    *
@@ -98,10 +111,11 @@ public class ParserCacheImpl implements ParserCache {
     final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
     final HashCode strongFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
     try {
+      byte[] serializedManifest = serializeBuildFileManifestToBytes(buildFileManifest, buildFile);
       localCacheStorage.storeBuildFileManifest(
-          weakFingerprint, strongFingerprint, buildFileManifest);
+          weakFingerprint, strongFingerprint, serializedManifest);
     } catch (ParserCacheException t) {
-      LOG.error(t, "Exception while storing parsed BuildFileAccessManifest.");
+      LOG.error(t, "Failure while storing parsed BuildFileAccessManifest.");
     }
   }
 
