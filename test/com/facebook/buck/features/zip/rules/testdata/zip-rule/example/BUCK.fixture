@@ -125,7 +125,7 @@ zip_file(
 
 zip_file(
     name = "keep_duplicates",
-    on_duplicate_entry = "keep",
+    on_duplicate_entry_action = "keep",
     zip_srcs = [
         ":zip1",
         ":zip2",
@@ -134,7 +134,7 @@ zip_file(
 
 zip_file(
     name = "ignore_duplicates",
-    on_duplicate_entry = "ignore",
+    on_duplicate_entry_action = "ignore",
     zip_srcs = [
         ":zip1",
         ":zip2",
@@ -143,7 +143,7 @@ zip_file(
 
 zip_file(
     name = "overwrite_duplicates",
-    on_duplicate_entry = "overwrite",
+    on_duplicate_entry_action = "overwrite",
     zip_srcs = [
         ":zip1",
         ":zip2",
@@ -152,7 +152,7 @@ zip_file(
 
 zip_file(
     name = "fail_duplicates",
-    on_duplicate_entry = "fail",
+    on_duplicate_entry_action = "fail",
     zip_srcs = [
         ":zip1",
         ":zip2",
