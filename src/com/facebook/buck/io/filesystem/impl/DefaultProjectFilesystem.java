@@ -259,7 +259,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     return blackListedPaths;
   }
 
-  /** @return A {@link ImmutableSet} of {@link LegacyGlobMatcher} objects to have buck ignore. */
+  /** @return A {@link ImmutableSet} of {@link PathMatcher} objects to have buck ignore. */
   @Override
   public ImmutableSet<PathMatcher> getIgnorePaths() {
     return blackListedDirectories;

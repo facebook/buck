@@ -65,8 +65,7 @@ public class GlobPatternMatcher implements PathMatcher {
     return globPatternMatcher.matches(path);
   }
 
-  // TODO(ttsugrii): make it private once PathOrGlobMatcher is gone
-  String getGlob() {
+  private String getGlob() {
     return globPattern;
   }
 
