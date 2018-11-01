@@ -22,7 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.WatchmanDiagnostic;
 import com.facebook.buck.io.watchman.WatchmanDiagnosticEvent;
@@ -159,7 +159,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                       options
                           .getIgnorePaths()
                           .stream()
-                          .map(PathOrGlobMatcher::getPathOrGlob)
+                          .map(PathMatcher::getPathOrGlob)
                           .collect(ImmutableList.toImmutableList()));
                 }
                 return ignorePathsJson1;
