@@ -104,7 +104,9 @@ public abstract class AbstractParserCacheConfig implements ConfigView<BuckConfig
     return Optional.empty();
   }
 
-  /** @returns whether the local cache is enabled. */
+  /**
+   * @returns {@code true} if the {@link LocalCacheStorage} is enabled, and {@code false} if not.
+   */
   @Value.Lazy
   public boolean isDirParserCacheEnabled() {
     AbstractParserDirCacheEntry parserDirCacheEntry = obtainDirEntry();
@@ -117,7 +119,7 @@ public abstract class AbstractParserCacheConfig implements ConfigView<BuckConfig
     return true;
   }
 
-  /** @returns the access mode for the local cache. */
+  /** @returns {@link ParserCacheAccessMode} associated with remote cache storage */
   public ParserCacheAccessMode getDirCacheAccessMode() {
     AbstractParserDirCacheEntry parserDirCacheEntry = obtainDirEntry();
     if (parserDirCacheEntry != null) {
