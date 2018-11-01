@@ -1267,7 +1267,8 @@ class BuildFileProcessor(object):
         build_env.includes.add(build_include.path)
         build_env.merge(inner_env)
 
-    def _provider(self, doc="", fields=None):
+    @staticmethod
+    def _provider(doc="", fields=None):
         # type: (str, Union[List[str], Dict[str, str]]) -> Callable
         """Creates a declared provider factory.
 
@@ -1305,7 +1306,8 @@ class BuildFileProcessor(object):
         cell_name, path = self._resolve_include(name)
         build_env.includes.add(path)
 
-    def _host_info(self):
+    @staticmethod
+    def _host_info():
         return _cached_host_info
 
     @contextlib.contextmanager
