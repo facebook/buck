@@ -21,11 +21,12 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.macros.MacroMatchResult;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
+import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -39,7 +40,7 @@ import java.util.function.Function;
  * StringWithMacrosConverter} instead.
  */
 @Deprecated
-public class MacroArg implements Arg, RuleKeyAppendable {
+public class MacroArg implements Arg, AddsToRuleKey {
 
   protected final MacroHandler expander;
   protected final BuildTarget target;
@@ -48,6 +49,7 @@ public class MacroArg implements Arg, RuleKeyAppendable {
   protected final String unexpanded;
 
   protected Map<MacroMatchResult, Object> precomputedWorkCache = new HashMap<>();
+  @AddToRuleKey private final ImmutableList<Object> ruleKeyList;
 
   public MacroArg(
       MacroHandler expander,
@@ -60,6 +62,7 @@ public class MacroArg implements Arg, RuleKeyAppendable {
     this.cellNames = cellNames;
     this.graphBuilder = graphBuilder;
     this.unexpanded = unexpanded;
+    this.ruleKeyList = appendToRuleKey();
   }
 
   @Override
@@ -71,14 +74,14 @@ public class MacroArg implements Arg, RuleKeyAppendable {
     }
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
+  private ImmutableList<Object> appendToRuleKey() {
     try {
-      sink.setReflectively("arg", unexpanded)
-          .setReflectively(
-              "macros",
-              expander.extractRuleKeyAppendables(
-                  target, cellNames, graphBuilder, unexpanded, precomputedWorkCache));
+      ImmutableList.Builder<Object> listBuilder = ImmutableList.builder();
+      listBuilder.add(unexpanded);
+      listBuilder.addAll(
+          expander.extractRuleKeyAppendables(
+              target, cellNames, graphBuilder, unexpanded, precomputedWorkCache));
+      return listBuilder.build();
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
