@@ -6,7 +6,7 @@
         <option name="ALLOW_USER_CONFIGURATION" value="false" />
         <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="/../buck-out/android/modules/gen" />
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="/../buck-out/android/modules/gen" />
-        <option name="RES_FOLDERS_RELATIVE_PATH" value="file://$MODULE_DIR$/android_res2/res;file://$MODULE_DIR$/android_res3/res" />
+        <option name="RES_FOLDERS_RELATIVE_PATH" value="/android_res3/res;/android_res2/res" />
         <option name="LIBRARY_PROJECT" value="true" />
         <option name="PROJECT_TYPE" value="1" />
         <option name="UPDATE_PROPERTY_FILES" value="false" />
