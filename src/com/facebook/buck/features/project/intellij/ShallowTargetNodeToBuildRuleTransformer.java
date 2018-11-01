@@ -17,6 +17,7 @@
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.android.AndroidInstrumentationApkDescription;
 import com.facebook.buck.android.AndroidInstrumentationTestDescription;
 import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
@@ -48,6 +49,7 @@ public class ShallowTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       UNUSED_BUILD_RULE_DESCRIPTION_CLASSES =
           ImmutableSet.of(
               AndroidBinaryDescription.class,
+              AndroidInstrumentationApkDescription.class,
               AndroidInstrumentationTestDescription.class,
               AndroidManifestDescription.class);
 
