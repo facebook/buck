@@ -20,9 +20,9 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache.NoopArtifactCacheFacto
 import com.facebook.buck.cli.BuildCommand;
 import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.CommandThreadManager;
+import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectSubCommand;
 import com.facebook.buck.cli.StringSetOptionHandler;
-import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;

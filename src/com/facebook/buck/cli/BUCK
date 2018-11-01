@@ -1,15 +1,9 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-CLI_EXCLUDES = glob(["parameter_extractors/*.*"])
-
 java_immutables_library(
     name = "cli",
-    srcs = glob(
-        ["*.java"],
-        exclude = CLI_EXCLUDES,
-    ),
+    srcs = glob(["*.java"]),
     exported_deps = [
-        "//src/com/facebook/buck/cli/parameter_extractors:parameter_extractors",
         "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
         "//src/com/facebook/buck/support/cli/args:args",
         "//third-party/java/pf4j:pf4j",

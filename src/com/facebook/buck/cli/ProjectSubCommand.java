@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.support.cli.args.PluginBasedSubCommand;
 import com.facebook.buck.util.ExitCode;
 import java.io.IOException;

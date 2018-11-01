@@ -18,8 +18,8 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.CommandThreadManager;
+import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectSubCommand;
-import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
