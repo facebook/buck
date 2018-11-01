@@ -1064,7 +1064,7 @@ class BuckTest(unittest.TestCase):
             )
             self.assertEqual(rules[0].get("name"), "pkg")
 
-    def test_native_package_name_in_extension_returns_build_file_package(self):
+    def test_top_level_native_package_name_in_extension_file_is_not_allowed(self):
         package_dir = os.path.join(self.project_root, "pkg")
         os.makedirs(package_dir)
         extension_file = ProjectFile(
