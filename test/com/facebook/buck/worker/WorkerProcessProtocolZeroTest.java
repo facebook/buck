@@ -18,6 +18,7 @@ package com.facebook.buck.worker;
 
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -111,22 +112,25 @@ public class WorkerProcessProtocolZeroTest {
 
   @Test
   public void testReceiveHandshakeWithMalformedJSON() throws IOException {
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("Error receiving handshake response");
+
     String malformedJson = "=^..^= meow";
 
     WorkerProcessProtocol.CommandReceiver protocol =
         new WorkerProcessProtocolZero.CommandReceiver(
             dummyOutputStream, inputStream(malformedJson));
 
-    try {
-      protocol.handshake(123);
-    } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), Matchers.containsString("Error receiving handshake response"));
-    }
+    protocol.handshake(123);
   }
 
   @Test
   public void testReceiveHandshakeWithIncorrectID() throws IOException {
     int handshakeID = 123;
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        String.format("Expected handshake response's \"id\" value to be \"%d\"", handshakeID));
+
     int differentHandshakeID = 456;
     InputStream jsonReader =
         createMockJsonReaderForReceiveHandshake(differentHandshakeID, "handshake", "0");
@@ -134,15 +138,7 @@ public class WorkerProcessProtocolZeroTest {
     WorkerProcessProtocol.CommandReceiver protocol =
         new WorkerProcessProtocolZero.CommandReceiver(dummyOutputStream, jsonReader);
 
-    try {
-      protocol.handshake(handshakeID);
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString(
-              String.format(
-                  "Expected handshake response's \"id\" value to be \"%d\"", handshakeID)));
-    }
+    protocol.handshake(handshakeID);
   }
 
   @Test
@@ -165,6 +161,10 @@ public class WorkerProcessProtocolZeroTest {
 
   @Test
   public void testReceiveHandshakeWithIncorrectProtocolVersion() throws IOException {
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        Matchers.containsString("Expected handshake response's \"protocol_version\" to be \"0\""));
+
     int handshakeID = 123;
     InputStream jsonReader =
         createMockJsonReaderForReceiveHandshake(handshakeID, "handshake", "BAD PROTOCOL VERSION");
@@ -172,14 +172,7 @@ public class WorkerProcessProtocolZeroTest {
     WorkerProcessProtocol.CommandReceiver protocol =
         new WorkerProcessProtocolZero.CommandReceiver(dummyOutputStream, jsonReader);
 
-    try {
-      protocol.handshake(handshakeID);
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString(
-              "Expected handshake response's \"protocol_version\" to be \"0\""));
-    }
+    protocol.handshake(handshakeID);
   }
 
   private InputStream createMockJsonReaderForReceiveCommandResponse(
@@ -203,22 +196,25 @@ public class WorkerProcessProtocolZeroTest {
 
   @Test
   public void testReceiveCommandResponseWithMalformedJSON() throws IOException {
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("Error receiving command response");
+
     String malformedJson = "><(((('> blub";
 
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
             dummyOutputStream, inputStream(malformedJson), newTempFile(), () -> {}, () -> true);
 
-    try {
-      protocol.receiveCommandResponse(123);
-    } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), Matchers.containsString("Error receiving command response"));
-    }
+    protocol.receiveCommandResponse(123);
   }
 
   @Test
   public void testReceiveCommandResponseWithIncorrectMessageID() throws IOException {
     int messageID = 123;
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        String.format("Expected response's \"id\" value to be \"%d\"", messageID));
+
     int differentMessageID = 456;
     InputStream jsonReader =
         createMockJsonReaderForReceiveCommandResponse(differentMessageID, "result", 0);
@@ -227,18 +223,14 @@ public class WorkerProcessProtocolZeroTest {
         new WorkerProcessProtocolZero.CommandSender(
             dummyOutputStream, jsonReader, newTempFile(), () -> {}, () -> true);
 
-    try {
-      protocol.receiveCommandResponse(messageID);
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString(
-              String.format("Expected response's \"id\" value to be \"%d\"", messageID)));
-    }
+    protocol.receiveCommandResponse(messageID);
   }
 
   @Test
   public void testReceiveCommandResponseWithInvalidType() throws IOException {
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("Expected response's \"type\" to be one of");
+
     int messageID = 123;
     InputStream jsonReader =
         createMockJsonReaderForReceiveCommandResponse(messageID, "INVALID RESPONSE TYPE", 0);
@@ -247,12 +239,7 @@ public class WorkerProcessProtocolZeroTest {
         new WorkerProcessProtocolZero.CommandSender(
             dummyOutputStream, jsonReader, newTempFile(), () -> {}, () -> true);
 
-    try {
-      protocol.receiveCommandResponse(messageID);
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(), Matchers.containsString("Expected response's \"type\" to be one of"));
-    }
+    protocol.receiveCommandResponse(messageID);
   }
 
   @Test
@@ -317,6 +304,7 @@ public class WorkerProcessProtocolZeroTest {
 
     try {
       protocol.close();
+      fail("Expected and IOException");
     } catch (IOException e) {
       assertThat(e.getMessage(), Matchers.containsString("malformed JSON"));
       // assert that process was still destroyed despite the exception
@@ -369,23 +357,25 @@ public class WorkerProcessProtocolZeroTest {
 
   @Test
   public void testReceiveCommandWithMalformedJSON() throws IOException {
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("Error receiving command from external process");
     String malformedJson = "><(((('> blub";
 
     WorkerProcessProtocol.CommandReceiver protocol =
         new WorkerProcessProtocolZero.CommandReceiver(
             dummyOutputStream, inputStream(malformedJson));
 
-    try {
-      protocol.receiveCommand(123);
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(), Matchers.containsString("Error receiving command from external process"));
-    }
+    protocol.receiveCommand(123);
   }
 
   @Test
   public void testReceiveCommandWithIncorrectMessageID() throws IOException {
     int messageID = 123;
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        String.format("Expected command's \"id\" value to be \"%d\"", messageID));
+
     int differentMessageID = 456;
     InputStream jsonReader =
         createMockJsonReaderForReceiveCommand(
@@ -394,18 +384,14 @@ public class WorkerProcessProtocolZeroTest {
     WorkerProcessProtocol.CommandReceiver protocol =
         new WorkerProcessProtocolZero.CommandReceiver(dummyOutputStream, jsonReader);
 
-    try {
-      protocol.receiveCommand(messageID);
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString(
-              String.format("Expected command's \"id\" value to be \"%d\"", messageID)));
-    }
+    protocol.receiveCommand(messageID);
   }
 
   @Test
   public void testReceiveCommandWithInvalidType() throws IOException {
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("Expected command's \"type\" to be \"command\"");
+
     int messageID = 123;
     InputStream jsonReader =
         createMockJsonReaderForReceiveCommand(
@@ -418,12 +404,7 @@ public class WorkerProcessProtocolZeroTest {
     WorkerProcessProtocol.CommandReceiver protocol =
         new WorkerProcessProtocolZero.CommandReceiver(dummyOutputStream, jsonReader);
 
-    try {
-      protocol.receiveCommand(messageID);
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(), Matchers.containsString("Expected command's \"type\" to be \"command\""));
-    }
+    protocol.receiveCommand(messageID);
   }
 
   private InputStream createMockJsonReaderForReceiveCommand(
@@ -455,14 +436,12 @@ public class WorkerProcessProtocolZeroTest {
 
   @Test
   public void testSendCommandResponseWithWrongType() throws IOException {
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("Expected response's \"type\" to be one of");
+
     WorkerProcessProtocol.CommandReceiver protocol =
         new WorkerProcessProtocolZero.CommandReceiver(dummyOutputStream, dummyInputStream);
-    try {
-      protocol.sendResponse(123, "WRONG_TYPE", 1);
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(), Matchers.containsString("Expected response's \"type\" to be one of"));
-    }
+    protocol.sendResponse(123, "WRONG_TYPE", 1);
   }
 
   private static ByteArrayInputStream inputStream(String string) {
