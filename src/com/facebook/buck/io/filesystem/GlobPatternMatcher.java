@@ -44,6 +44,9 @@ public class GlobPatternMatcher implements PathMatcher {
       return false;
     }
     GlobPatternMatcher that = (GlobPatternMatcher) other;
+    // We don't compare globPatternMatcher here, since
+    // sun.nio.fs.UnixFileSystem.getPathMatcher()
+    // returns an anonymous class which doesn't implement equals().
     return Objects.equals(globPattern, that.globPattern);
   }
 
@@ -62,7 +65,8 @@ public class GlobPatternMatcher implements PathMatcher {
     return globPatternMatcher.matches(path);
   }
 
-  private String getGlob() {
+  // TODO(ttsugrii): make it private once PathOrGlobMatcher is gone
+  String getGlob() {
     return globPattern;
   }
 
