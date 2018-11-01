@@ -370,7 +370,7 @@ public class DummyRDotJava extends AbstractBuildRule
     return BuildTargetPaths.getGenPath(filesystem, buildTarget, "__%s_dummyrdotjava_output__");
   }
 
-  private static Path getOutputJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  public static Path getOutputJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return getPathToOutputDir(buildTarget, filesystem)
         .resolve(String.format("%s.jar", buildTarget.getShortNameAndFlavorPostfix()));
   }

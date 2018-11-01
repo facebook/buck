@@ -293,7 +293,7 @@ public final class IjModuleGraphFactory {
       if (!module.getExtraClassPathDependencies().isEmpty()) {
         IjLibrary extraClassPathLibrary =
             IjLibrary.builder()
-                .setClassPaths(module.getExtraClassPathDependencies())
+                .setBinaryJars(module.getExtraClassPathDependencies())
                 .setTargets(ImmutableSet.of())
                 .setName("library_" + module.getName() + "_extra_classpath")
                 .build();

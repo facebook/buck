@@ -71,7 +71,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     if (dummyRDotJavaRule.isPresent()) {
       requiredBuildTargets.add(dummyRDotJavaTarget);
       return Optional.of(
-          DummyRDotJava.getRDotJavaBinFolder(dummyRDotJavaTarget, projectFilesystem));
+          DummyRDotJava.getOutputJarPath(dummyRDotJavaTarget, projectFilesystem));
     }
     return Optional.empty();
   }
