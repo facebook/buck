@@ -1289,7 +1289,6 @@ class BuckTest(unittest.TestCase):
             ),
         )
         self.write_file(build_file)
-        build_file_processor = self.create_build_file_processor()
         with with_envs(
             {"TEST1": "foo", "TEST2": None, "TEST3": None, "TEST4": "", "TEST5": None}
         ):
