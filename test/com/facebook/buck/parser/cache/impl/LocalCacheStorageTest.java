@@ -117,7 +117,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheWithAbsolutePathAndException() throws IOException {
+  public void createLocalCacheStorageWithAbsolutePathAndException() throws IOException {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("Failed to create local cache directory - /foo/bar");
     filesystem.createNewFile(filesystem.getPath("/foo"));
@@ -126,7 +126,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheWithAbsolutePath() throws ParserCacheException {
+  public void createLocalCacheStorageWithAbsolutePath() throws ParserCacheException {
     Path absPath = filesystem.getBuckPaths().getBuckOut().resolve("/foo/bar").toAbsolutePath();
     LocalCacheStorage.newInstance(getParserCacheConfig(true, absPath), filesystem);
     List<LogRecord> events = localHandler.messages;
@@ -137,7 +137,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheWithRelativePath() throws ParserCacheException {
+  public void createLocalCacheStorageWithRelativePath() throws ParserCacheException {
     Path path = filesystem.getPath("foo/bar");
     LocalCacheStorage.newInstance(getParserCacheConfig(true, path), filesystem);
     List<LogRecord> events = localHandler.messages;
@@ -150,7 +150,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheWhenCachingDisabled() throws ParserCacheException {
+  public void createLocalCacheStorageWhenCachingDisabled() throws ParserCacheException {
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage(
         "Invalid state: LocalCacheStorage should not be instantiated if the cache is disabled.");
@@ -159,7 +159,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheWhenCacheDefaultDirectory() throws ParserCacheException {
+  public void createLocalCacheStorageWhenCacheDefaultDirectory() throws ParserCacheException {
     Path emptyPathForDefaultCacheLocation = filesystem.getPath("\"\"");
     LocalCacheStorage.newInstance(
         getParserCacheConfig(true, emptyPathForDefaultCacheLocation), filesystem);
@@ -191,7 +191,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheWFPDirectoryExistingAndKeepIt()
+  public void createLocalCacheStorageWFPDirectoryExistingAndKeepIt()
       throws IOException, ParserCacheException {
     LocalCacheStorage localCacheStorage =
         LocalCacheStorage.newInstance(
