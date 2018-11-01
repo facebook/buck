@@ -625,7 +625,7 @@ public class DefaultIjModuleFactoryTest {
 
   @Test
   public void testAndroidPrebuiltAar() {
-    SourcePath androidSupportBinaryPath = FakeSourcePath.of("third_party/java/support/support.aar");
+    SourcePath androidSupportBinaryPath = FakeSourcePath.of("buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/classes.jar");
     Path androidSupportSourcesPath = Paths.get("third_party/java/support/support-sources.jar");
     String androidSupportJavadocUrl = "file:///support/docs";
     TargetNode<?> androidPrebuiltAar =

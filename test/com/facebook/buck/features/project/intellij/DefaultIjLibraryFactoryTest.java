@@ -81,7 +81,7 @@ public class DefaultIjLibraryFactoryTest {
             .addDep(guava.getBuildTarget())
             .build();
 
-    androidSupportBinaryJarPath = FakeSourcePath.of("buck_out/support.aar/classes.jar");
+    androidSupportBinaryJarPath = FakeSourcePath.of("buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/classes.jar");
     androidSupportResClassPath =
         FakeSourcePath.of("buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/res");
     baseOutputPath = FakeSourcePath.of("buck-out/base.jar");
