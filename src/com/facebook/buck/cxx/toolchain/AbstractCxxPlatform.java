@@ -70,6 +70,15 @@ interface AbstractCxxPlatform extends FlavorConvertible {
 
   List<String> getCudaflags();
 
+  // HIP is the compiler for AMD rocm tool chain
+  Optional<PreprocessorProvider> getHippp();
+
+  List<String> getHipppflags();
+
+  Optional<CompilerProvider> getHip();
+
+  List<String> getHipflags();
+
   Optional<PreprocessorProvider> getAsmpp();
 
   List<String> getAsmppflags();

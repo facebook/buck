@@ -99,6 +99,8 @@ public class CxxBuckConfig {
   private static final String CXXPPFLAGS = "cxxppflags";
   private static final String CUDAFLAGS = "cudaflags";
   private static final String CUDAPPFLAGS = "cudappflags";
+  private static final String HIPFLAGS = "hipflags";
+  private static final String HIPPPFLAGS = "hipppflags";
   private static final String ASMFLAGS = "asmflags";
   private static final String ASMPPFLAGS = "asmppflags";
   private static final String LDFLAGS = "ldflags";
@@ -118,6 +120,8 @@ public class CxxBuckConfig {
   private static final String CXXPP = "cxxpp";
   private static final String CUDA = "cuda";
   private static final String CUDAPP = "cudapp";
+  private static final String HIP = "hip";
+  private static final String HIPPP = "hippp";
   private static final String ASM = "asm";
   private static final String ASMPP = "asmpp";
   private static final String LD = "ld";
@@ -242,6 +246,14 @@ public class CxxBuckConfig {
     return getFlags(CUDAPPFLAGS);
   }
 
+  public Optional<ImmutableList<String>> getHipflags() {
+    return getFlags(HIPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getHipppflags() {
+    return getFlags(HIPPPFLAGS);
+  }
+
   public Optional<ImmutableList<String>> getAsmflags() {
     return getFlags(ASMFLAGS);
   }
@@ -350,6 +362,14 @@ public class CxxBuckConfig {
 
   public Optional<PreprocessorProvider> getCudapp() {
     return getPreprocessorProvider(CUDAPP);
+  }
+
+  public Optional<CompilerProvider> getHip() {
+    return getCompilerProvider(HIP);
+  }
+
+  public Optional<PreprocessorProvider> getHippp() {
+    return getPreprocessorProvider(HIPPP);
   }
 
   public Optional<CompilerProvider> getAsm() {

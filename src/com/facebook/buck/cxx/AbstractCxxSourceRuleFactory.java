@@ -339,7 +339,8 @@ abstract class AbstractCxxSourceRuleFactory {
         || type == CxxSource.Type.OBJC_CPP_OUTPUT
         || type == CxxSource.Type.CXX_CPP_OUTPUT
         || type == CxxSource.Type.OBJCXX_CPP_OUTPUT
-        || type == CxxSource.Type.CUDA_CPP_OUTPUT) {
+        || type == CxxSource.Type.CUDA_CPP_OUTPUT
+        || type == CxxSource.Type.HIP_CPP_OUTPUT) {
       args.addAll(sanitizedArgs(getCxxPlatform().getAsflags()));
     }
 
