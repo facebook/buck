@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Platform;
@@ -80,7 +81,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       Path root, Config config, BuckPaths buckPaths) {
     ImmutableSet.Builder<PathMatcher> builder = ImmutableSet.builder();
 
-    builder.add(new PathOrGlobMatcher(Paths.get(".idea")));
+    builder.add(RecursiveFileMatcher.of(Paths.get(".idea")));
 
     String projectKey = "project";
     String ignoreKey = "ignore";
@@ -122,7 +123,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       if (pathToAdd.isAbsolute()) {
         pathToAdd = root.relativize(pathToAdd);
       }
-      builder.add(new PathOrGlobMatcher(pathToAdd));
+      builder.add(RecursiveFileMatcher.of(pathToAdd));
     }
   }
 

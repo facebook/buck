@@ -33,6 +33,7 @@ import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -385,8 +386,8 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
             ImmutableSet.of(
-                new PathOrGlobMatcher(Paths.get("foo")),
-                new PathOrGlobMatcher(Paths.get("bar/baz"))),
+                RecursiveFileMatcher.of(Paths.get("foo")),
+                RecursiveFileMatcher.of(Paths.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
         WatchmanQuery.of(
@@ -412,8 +413,8 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
             ImmutableSet.of(
-                new PathOrGlobMatcher(Paths.get("foo")),
-                new PathOrGlobMatcher(Paths.get("bar/baz"))),
+                RecursiveFileMatcher.of(Paths.get("foo")),
+                RecursiveFileMatcher.of(Paths.get("bar/baz"))),
             ImmutableSet.of());
     assertEquals(
         WatchmanQuery.of(
@@ -442,8 +443,8 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of(watchRoot, Optional.empty()),
             ImmutableSet.of(
-                new PathOrGlobMatcher(Paths.get("foo")),
-                new PathOrGlobMatcher(Paths.get("bar/baz"))),
+                RecursiveFileMatcher.of(Paths.get("foo")),
+                RecursiveFileMatcher.of(Paths.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
         WatchmanQuery.of(

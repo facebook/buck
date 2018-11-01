@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -110,7 +111,7 @@ public class DefaultProjectFilesystemViewTest {
     assertFalse(filesystemView.isIgnored(Paths.get("foo")));
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(new PathOrGlobMatcher(Paths.get("foo"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(Paths.get("foo"))));
 
     // matcher was declared in view relative to ".", so should only match "foo", but not any
     // "bar/foo" etc
@@ -124,7 +125,7 @@ public class DefaultProjectFilesystemViewTest {
 
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(new PathOrGlobMatcher(Paths.get("a", "path"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(Paths.get("a", "path"))));
     filesystemView = filesystemView.withView(Paths.get("a"), ImmutableSet.of());
     assertTrue(filesystemView.isIgnored(Paths.get("path")));
     assertFalse(filesystemView.isIgnored(Paths.get("a", "path")));
@@ -182,7 +183,7 @@ public class DefaultProjectFilesystemViewTest {
 
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(new PathOrGlobMatcher(Paths.get("dir", "dir2"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(Paths.get("dir", "dir2"))));
     filesystemView.walkRelativeFileTree(
         Paths.get("dir"),
         EnumSet.noneOf(FileVisitOption.class),
@@ -213,7 +214,7 @@ public class DefaultProjectFilesystemViewTest {
     ImmutableList.Builder<Path> fileNames3 = ImmutableList.builder();
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(new PathOrGlobMatcher(Paths.get("dir"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(Paths.get("dir"))));
     filesystemView.walkRelativeFileTree(
         Paths.get(""),
         EnumSet.noneOf(FileVisitOption.class),
@@ -230,7 +231,7 @@ public class DefaultProjectFilesystemViewTest {
     ImmutableList.Builder<Path> fileNames4 = ImmutableList.builder();
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(new PathOrGlobMatcher(Paths.get("file.txt"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(Paths.get("file.txt"))));
     filesystemView.walkRelativeFileTree(
         Paths.get(""),
         EnumSet.noneOf(FileVisitOption.class),

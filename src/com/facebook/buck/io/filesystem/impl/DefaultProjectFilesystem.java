@@ -163,7 +163,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
                                     buckPaths)),
                             root))
                     .append(ImmutableSet.of(buckPaths.getTrashDir()))
-                    .transform(PathOrGlobMatcher::new))
+                    .transform(RecursiveFileMatcher::of))
             .toSet();
     this.buckPaths = buckPaths;
 
@@ -193,7 +193,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
             // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but
             // we really don't end up ignoring it in reality (see extractIgnorePaths).
             .append(ImmutableSet.of(buckPaths.getBuckOut()))
-            .transform(PathOrGlobMatcher::new)
+            .transform(RecursiveFileMatcher::of)
             .transform(matcher -> (PathMatcher) matcher)
             .append(
                 Iterables.filter(
