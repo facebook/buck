@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -77,7 +78,7 @@ public class WatchmanWatcherIntegrationTest {
 
   @Test
   public void ignoreDotFileInGlob() throws IOException, InterruptedException {
-    WatchmanWatcher watcher = createWatchmanWatcher(GlobPatternMatcher.of("**/*.swp"));
+    WatchmanWatcher watcher = createWatchmanWatcher(FileExtensionMatcher.of("swp"));
 
     // Create a dot-file which should be ignored by the above glob.
     Path path = tmp.getRoot().getFileSystem().getPath("foo/bar/.hello.swp");

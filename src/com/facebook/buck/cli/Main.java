@@ -89,6 +89,7 @@ import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -307,29 +308,29 @@ public final class Main {
   // so we don't dump buckd caches on every command.
   private static final ImmutableSet<PathMatcher> DEFAULT_IGNORE_GLOBS =
       ImmutableSet.of(
-          GlobPatternMatcher.of("**/*.pbxproj"),
-          GlobPatternMatcher.of("**/*.xcscheme"),
-          GlobPatternMatcher.of("**/*.xcworkspacedata"),
+          FileExtensionMatcher.of("pbxproj"),
+          FileExtensionMatcher.of("xcscheme"),
+          FileExtensionMatcher.of("xcworkspacedata"),
           // Various editors' temporary files
           GlobPatternMatcher.of("**/*~"),
           // Emacs
           GlobPatternMatcher.of("**/#*#"),
           GlobPatternMatcher.of("**/.#*"),
           // Vim
-          GlobPatternMatcher.of("**/*.swo"),
-          GlobPatternMatcher.of("**/*.swp"),
-          GlobPatternMatcher.of("**/*.swpx"),
-          GlobPatternMatcher.of("**/*.un~"),
-          GlobPatternMatcher.of("**/.netrhwist"),
+          FileExtensionMatcher.of("swo"),
+          FileExtensionMatcher.of("swp"),
+          FileExtensionMatcher.of("swpx"),
+          FileExtensionMatcher.of("un~"),
+          FileExtensionMatcher.of("netrhwist"),
           // Eclipse
           GlobPatternMatcher.of(".idea"),
           GlobPatternMatcher.of(".iml"),
-          GlobPatternMatcher.of("**/*.pydevproject"),
+          FileExtensionMatcher.of("pydevproject"),
           GlobPatternMatcher.of(".project"),
           GlobPatternMatcher.of(".metadata"),
-          GlobPatternMatcher.of("**/*.tmp"),
-          GlobPatternMatcher.of("**/*.bak"),
-          GlobPatternMatcher.of("**/*~.nib"),
+          FileExtensionMatcher.of("tmp"),
+          FileExtensionMatcher.of("bak"),
+          FileExtensionMatcher.of("nib"),
           GlobPatternMatcher.of(".classpath"),
           GlobPatternMatcher.of(".settings"),
           GlobPatternMatcher.of(".loadpath"),
@@ -345,7 +346,7 @@ public final class Main {
           // Windows
           GlobPatternMatcher.of("$RECYCLE.BIN"),
           // Sublime
-          GlobPatternMatcher.of(".*.sublime-workspace"));
+          FileExtensionMatcher.of("sublime-workspace"));
 
   private static final Logger LOG = Logger.get(Main.class);
 

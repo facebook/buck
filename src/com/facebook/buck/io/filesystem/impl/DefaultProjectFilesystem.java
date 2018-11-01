@@ -22,6 +22,7 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
+import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -185,6 +186,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
             .append(ImmutableSet.of(buckPaths.getBuckOut()))
             .transform(RecursiveFileMatcher::of)
             .transform(matcher -> (PathMatcher) matcher)
+            .append(Iterables.filter(this.blackListedPaths, FileExtensionMatcher.class))
             .append(Iterables.filter(this.blackListedPaths, GlobPatternMatcher.class))
             .toSet();
     this.tmpDir =

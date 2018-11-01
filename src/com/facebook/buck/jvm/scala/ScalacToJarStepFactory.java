@@ -24,7 +24,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.filesystem.GlobPatternMatcher;
+import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
@@ -45,8 +45,8 @@ import java.util.stream.Collectors;
 
 public class ScalacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
 
-  private static final PathMatcher JAVA_PATH_MATCHER = GlobPatternMatcher.of("**.java");
-  private static final PathMatcher SCALA_PATH_MATCHER = GlobPatternMatcher.of("**.scala");
+  private static final PathMatcher JAVA_PATH_MATCHER = FileExtensionMatcher.of("java");
+  private static final PathMatcher SCALA_PATH_MATCHER = FileExtensionMatcher.of("scala");
 
   @AddToRuleKey private final Tool scalac;
   @AddToRuleKey private final ImmutableList<String> configCompilerFlags;
