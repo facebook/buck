@@ -89,8 +89,8 @@ import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.LegacyGlobMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
@@ -307,45 +307,45 @@ public final class Main {
   // so we don't dump buckd caches on every command.
   private static final ImmutableSet<PathMatcher> DEFAULT_IGNORE_GLOBS =
       ImmutableSet.of(
-          new PathOrGlobMatcher("**/*.pbxproj"),
-          new PathOrGlobMatcher("**/*.xcscheme"),
-          new PathOrGlobMatcher("**/*.xcworkspacedata"),
+          new LegacyGlobMatcher("**/*.pbxproj"),
+          new LegacyGlobMatcher("**/*.xcscheme"),
+          new LegacyGlobMatcher("**/*.xcworkspacedata"),
           // Various editors' temporary files
-          new PathOrGlobMatcher("**/*~"),
+          new LegacyGlobMatcher("**/*~"),
           // Emacs
-          new PathOrGlobMatcher("**/#*#"),
-          new PathOrGlobMatcher("**/.#*"),
+          new LegacyGlobMatcher("**/#*#"),
+          new LegacyGlobMatcher("**/.#*"),
           // Vim
-          new PathOrGlobMatcher("**/*.swo"),
-          new PathOrGlobMatcher("**/*.swp"),
-          new PathOrGlobMatcher("**/*.swpx"),
-          new PathOrGlobMatcher("**/*.un~"),
-          new PathOrGlobMatcher("**/.netrhwist"),
+          new LegacyGlobMatcher("**/*.swo"),
+          new LegacyGlobMatcher("**/*.swp"),
+          new LegacyGlobMatcher("**/*.swpx"),
+          new LegacyGlobMatcher("**/*.un~"),
+          new LegacyGlobMatcher("**/.netrhwist"),
           // Eclipse
-          new PathOrGlobMatcher(".idea"),
-          new PathOrGlobMatcher(".iml"),
-          new PathOrGlobMatcher("**/*.pydevproject"),
-          new PathOrGlobMatcher(".project"),
-          new PathOrGlobMatcher(".metadata"),
-          new PathOrGlobMatcher("**/*.tmp"),
-          new PathOrGlobMatcher("**/*.bak"),
-          new PathOrGlobMatcher("**/*~.nib"),
-          new PathOrGlobMatcher(".classpath"),
-          new PathOrGlobMatcher(".settings"),
-          new PathOrGlobMatcher(".loadpath"),
-          new PathOrGlobMatcher(".externalToolBuilders"),
-          new PathOrGlobMatcher(".cproject"),
-          new PathOrGlobMatcher(".buildpath"),
+          new LegacyGlobMatcher(".idea"),
+          new LegacyGlobMatcher(".iml"),
+          new LegacyGlobMatcher("**/*.pydevproject"),
+          new LegacyGlobMatcher(".project"),
+          new LegacyGlobMatcher(".metadata"),
+          new LegacyGlobMatcher("**/*.tmp"),
+          new LegacyGlobMatcher("**/*.bak"),
+          new LegacyGlobMatcher("**/*~.nib"),
+          new LegacyGlobMatcher(".classpath"),
+          new LegacyGlobMatcher(".settings"),
+          new LegacyGlobMatcher(".loadpath"),
+          new LegacyGlobMatcher(".externalToolBuilders"),
+          new LegacyGlobMatcher(".cproject"),
+          new LegacyGlobMatcher(".buildpath"),
           // Mac OS temp files
-          new PathOrGlobMatcher(".DS_Store"),
-          new PathOrGlobMatcher(".AppleDouble"),
-          new PathOrGlobMatcher(".LSOverride"),
-          new PathOrGlobMatcher(".Spotlight-V100"),
-          new PathOrGlobMatcher(".Trashes"),
+          new LegacyGlobMatcher(".DS_Store"),
+          new LegacyGlobMatcher(".AppleDouble"),
+          new LegacyGlobMatcher(".LSOverride"),
+          new LegacyGlobMatcher(".Spotlight-V100"),
+          new LegacyGlobMatcher(".Trashes"),
           // Windows
-          new PathOrGlobMatcher("$RECYCLE.BIN"),
+          new LegacyGlobMatcher("$RECYCLE.BIN"),
           // Sublime
-          new PathOrGlobMatcher(".*.sublime-workspace"));
+          new LegacyGlobMatcher(".*.sublime-workspace"));
 
   private static final Logger LOG = Logger.get(Main.class);
 
@@ -818,7 +818,7 @@ public final class Main {
       // TODO(coneko, ruibm, agallagher): Determine whether we can use the existing filesystem
       // object that is in scope instead of creating a new rootCellProjectFilesystem. The primary
       // difference appears to be that filesystem is created with a Config that is used to produce
-      // ImmutableSet<PathOrGlobMatcher> and BuckPaths for the ProjectFilesystem, whereas this one
+      // ImmutableSet<LegacyGlobMatcher> and BuckPaths for the ProjectFilesystem, whereas this one
       // uses the defaults.
       ProjectFilesystem rootCellProjectFilesystem =
           projectFilesystemFactory.createOrThrow(rootCell.getFilesystem().getRootPath());

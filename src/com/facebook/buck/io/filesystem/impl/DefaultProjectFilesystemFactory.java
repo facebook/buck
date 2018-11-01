@@ -19,8 +19,8 @@ package com.facebook.buck.io.filesystem.impl;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
+import com.facebook.buck.io.filesystem.LegacyGlobMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
@@ -107,7 +107,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
               }
 
               if (GLOB_CHARS.matcher(input).find()) {
-                builder.add(new PathOrGlobMatcher(input));
+                builder.add(new LegacyGlobMatcher(input));
                 return;
               }
               addPathMatcherRelativeToRepo(root, builder, Paths.get(input));

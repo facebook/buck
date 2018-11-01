@@ -22,8 +22,8 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
+import com.facebook.buck.io.filesystem.LegacyGlobMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
@@ -169,20 +169,10 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
 
     this.blackListedDirectories =
         FluentIterable.from(this.blackListedPaths)
-            .filter(
-                matcher ->
-                    // TODO(buckteam): simplify this once PathOrGlobMatcher is replaced with
-                    // specialized matchers
-                    matcher instanceof PathOrGlobMatcher
-                            && ((PathOrGlobMatcher) matcher).getType()
-                                == PathOrGlobMatcher.Type.PATH
-                        || matcher instanceof RecursiveFileMatcher)
+            .filter(RecursiveFileMatcher.class)
             .transform(
                 matcher -> {
-                  Path path =
-                      matcher instanceof PathOrGlobMatcher
-                          ? ((PathOrGlobMatcher) matcher).getPath()
-                          : ((RecursiveFileMatcher) matcher).getPath();
+                  Path path = matcher.getPath();
                   ImmutableSet<Path> filtered =
                       MorePaths.filterForSubpaths(ImmutableSet.of(path), root);
                   if (filtered.isEmpty()) {
@@ -199,9 +189,9 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
                 Iterables.filter(
                     this.blackListedPaths,
                     input ->
-                        input instanceof PathOrGlobMatcher
-                            && ((PathOrGlobMatcher) input).getType()
-                                == PathOrGlobMatcher.Type.GLOB))
+                        input instanceof LegacyGlobMatcher
+                            && ((LegacyGlobMatcher) input).getType()
+                                == LegacyGlobMatcher.Type.GLOB))
             .toSet();
     this.tmpDir =
         MoreSuppliers.memoize(
@@ -275,7 +265,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     return blackListedPaths;
   }
 
-  /** @return A {@link ImmutableSet} of {@link PathOrGlobMatcher} objects to have buck ignore. */
+  /** @return A {@link ImmutableSet} of {@link LegacyGlobMatcher} objects to have buck ignore. */
   @Override
   public ImmutableSet<PathMatcher> getIgnorePaths() {
     return blackListedDirectories;

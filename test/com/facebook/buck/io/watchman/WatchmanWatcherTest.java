@@ -32,7 +32,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.LegacyGlobMatcher;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.timing.FakeClock;
@@ -469,7 +469,7 @@ public class WatchmanWatcherTest {
     WatchmanQuery query =
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
-            ImmutableSet.of(new PathOrGlobMatcher("*.pbxproj")),
+            ImmutableSet.of(new LegacyGlobMatcher("*.pbxproj")),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
         WatchmanQuery.of(

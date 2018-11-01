@@ -22,8 +22,8 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.io.filesystem.LegacyGlobMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -77,7 +77,7 @@ public class WatchmanWatcherIntegrationTest {
 
   @Test
   public void ignoreDotFileInGlob() throws IOException, InterruptedException {
-    WatchmanWatcher watcher = createWatchmanWatcher(new PathOrGlobMatcher("**/*.swp"));
+    WatchmanWatcher watcher = createWatchmanWatcher(new LegacyGlobMatcher("**/*.swp"));
 
     // Create a dot-file which should be ignored by the above glob.
     Path path = tmp.getRoot().getFileSystem().getPath("foo/bar/.hello.swp");
@@ -93,7 +93,7 @@ public class WatchmanWatcherIntegrationTest {
 
   @Test
   public void globMatchesWholeName() throws IOException, InterruptedException {
-    WatchmanWatcher watcher = createWatchmanWatcher(new PathOrGlobMatcher("*.txt"));
+    WatchmanWatcher watcher = createWatchmanWatcher(new LegacyGlobMatcher("*.txt"));
 
     // Create a dot-file which should be ignored by the above glob.
     Path path = tmp.getRoot().getFileSystem().getPath("foo/bar/hello.txt");
