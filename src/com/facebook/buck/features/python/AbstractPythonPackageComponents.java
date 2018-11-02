@@ -28,9 +28,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
@@ -47,15 +47,18 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
 
   // Python modules as map of their module name to location of the source.
   @Value.Parameter
-  public abstract Map<Path, SourcePath> getModules();
+  @Value.NaturalOrder
+  public abstract ImmutableSortedMap<Path, SourcePath> getModules();
 
   // Resources to include in the package.
   @Value.Parameter
-  public abstract Map<Path, SourcePath> getResources();
+  @Value.NaturalOrder
+  public abstract ImmutableSortedMap<Path, SourcePath> getResources();
 
   // Native libraries to include in the package.
   @Value.Parameter
-  public abstract Map<Path, SourcePath> getNativeLibraries();
+  @Value.NaturalOrder
+  public abstract ImmutableSortedMap<Path, SourcePath> getNativeLibraries();
 
   // Directories that pre-built python libraries are extracted to. Note that these
   // can refer to the same libraries that are in getPrebuiltLibraries, but these are
@@ -74,8 +77,8 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
     // TODO(agallagher): Change the types of these fields from Map to SortedMap so that we don't
     // have to do all this weird stuff to ensure the key is stable. Please update
     // getInputsToCompareToOutput() as well once this is fixed.
-    for (ImmutableMap.Entry<String, Map<Path, SourcePath>> part :
-        ImmutableMap.of(
+    for (ImmutableSortedMap.Entry<String, ImmutableSortedMap<Path, SourcePath>> part :
+        ImmutableSortedMap.of(
                 "module", getModules(),
                 "resource", getResources(),
                 "nativeLibraries", getNativeLibraries())
@@ -214,9 +217,9 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
 
     public PythonPackageComponents build() {
       return PythonPackageComponents.of(
-          ImmutableMap.copyOf(modules),
-          ImmutableMap.copyOf(resources),
-          ImmutableMap.copyOf(nativeLibraries),
+          ImmutableSortedMap.copyOf(modules),
+          ImmutableSortedMap.copyOf(resources),
+          ImmutableSortedMap.copyOf(nativeLibraries),
           ImmutableSetMultimap.copyOf(moduleDirs),
           zipSafe);
     }
