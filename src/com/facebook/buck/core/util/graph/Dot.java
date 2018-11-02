@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 public class Dot<T> {
 
-  private static Pattern VALID_ID_PATTERN = Pattern.compile("[a-zA-Z\200-\377_0-9]+");
+  private static final Pattern VALID_ID_PATTERN = Pattern.compile("[a-zA-Z\200-\377_0-9]+");
 
   private final DirectedAcyclicGraph<T> graph;
   private final String graphName;
