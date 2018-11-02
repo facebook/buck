@@ -108,7 +108,9 @@ public class IjProjectWriterTest {
         readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
     assertEquals(
         targetModuleMap,
-        ImmutableMap.of("//java/com/example/base2:base2", "java_com_example_base2"));
+        ImmutableMap.of(
+            "//java/com/example/base:base", "java_com_example_base",
+            "//java/com/example/base2:base2", "java_com_example_base2"));
   }
 
   @Test
@@ -154,11 +156,17 @@ public class IjProjectWriterTest {
   private IjModuleGraph moduleGraph2() {
     TargetNode<?> baseTargetNode =
         JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/example/base:base"))
+            .addSrc(Paths.get("java/com/example/base/BaseChanged.java"))
+            .build();
+
+    TargetNode<?> base2TargetNode =
+        JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base2:base2"))
             .addSrc(Paths.get("java/com/example/base/Base.java"))
             .build();
 
-    return IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode));
+    return IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode, base2TargetNode));
   }
 
   private IjProjectWriter writer(

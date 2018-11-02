@@ -31,15 +31,17 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import org.stringtemplate.v4.ST;
 
 /** Writes the serialized representations of IntelliJ project components to disk. */
@@ -101,35 +103,25 @@ public class IjProjectWriter {
     writeWorkspace();
 
     if (projectConfig.isGeneratingTargetModuleMapEnabled()) {
-      writeTargetModules(
-          updateTargetModules(
-              ImmutableSortedMap.of(), projectDataPreparer.getModulesToBeWritten()));
+      writeTargetModules(projectDataPreparer.getModulesToBeWritten(), false);
     }
   }
 
-  private ImmutableSortedMap<String, String> readTargetModules() throws IOException {
+  private Map<String, String> readTargetModules() throws IOException {
     Path targetModulesPath = getIdeaConfigDir().resolve("target-modules.json");
     return outFilesystem.exists(targetModulesPath)
         ? ObjectMappers.createParser(outFilesystem.newFileInputStream(targetModulesPath))
-            .readValueAs(new TypeReference<ImmutableSortedMap<String, String>>() {})
-        : ImmutableSortedMap.of();
+            .readValueAs(new TypeReference<TreeMap<String, String>>() {})
+        : Maps.newTreeMap();
   }
 
-  private static ImmutableSortedMap<String, String> updateTargetModules(
-      ImmutableSortedMap<String, String> existingModules, Set<IjModule> newModules) {
-
-    ImmutableSortedMap.Builder<String, String> builder = ImmutableSortedMap.naturalOrder();
-    builder.putAll(existingModules);
+  private void writeTargetModules(Set<IjModule> newModules, boolean update) throws IOException {
+    Map<String, String> targetModules = update ? readTargetModules() : Maps.newTreeMap();
     for (IjModule module : newModules) {
       for (BuildTarget target : module.getTargets()) {
-        builder.put(target.getFullyQualifiedName(), module.getName());
+        targetModules.put(target.getFullyQualifiedName(), module.getName());
       }
     }
-    return builder.build();
-  }
-
-  private void writeTargetModules(ImmutableSortedMap<String, String> targetModules)
-      throws IOException {
     Path targetModulesPath = getIdeaConfigDir().resolve("target-modules.json");
     try (JsonGenerator generator =
         ObjectMappers.createGenerator(outFilesystem.newFileOutputStream(targetModulesPath))
@@ -285,8 +277,7 @@ public class IjProjectWriter {
     updateModulesIndex(projectDataPreparer.getModulesToBeWritten());
 
     if (projectConfig.isGeneratingTargetModuleMapEnabled()) {
-      writeTargetModules(
-          updateTargetModules(readTargetModules(), projectDataPreparer.getModulesToBeWritten()));
+      writeTargetModules(projectDataPreparer.getModulesToBeWritten(), true);
     }
   }
 
