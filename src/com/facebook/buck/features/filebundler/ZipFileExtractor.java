@@ -26,7 +26,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
@@ -48,7 +47,7 @@ public class ZipFileExtractor {
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path destinationDir,
-      ImmutableSortedSet<SourcePath> toExtract,
+      Iterable<SourcePath> toExtract,
       SourcePathResolver pathResolver,
       PatternsMatcher entriesToExclude) {
 

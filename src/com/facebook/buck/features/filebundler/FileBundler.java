@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -73,8 +73,8 @@ public abstract class FileBundler {
       Path basePath,
       ProjectFilesystem filesystem,
       SourcePathResolver resolver,
-      ImmutableSortedSet<SourcePath> toCopy) {
-    Map<Path, Path> relativePathMap = new HashMap<>();
+      Iterable<SourcePath> toCopy) {
+    Map<Path, Path> relativePathMap = new LinkedHashMap<>();
 
     for (SourcePath sourcePath : toCopy) {
       Path absoluteBasePath = resolver.getAbsolutePath(sourcePath);

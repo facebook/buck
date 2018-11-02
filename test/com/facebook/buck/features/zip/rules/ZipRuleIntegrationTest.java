@@ -29,6 +29,7 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.hamcrest.Matchers;
@@ -286,6 +287,32 @@ public class ZipRuleIntegrationTest {
     try (ZipFile zipFile = new ZipFile(zip.toFile())) {
       ZipInspector inspector = new ZipInspector(zip);
       inspector.assertFileExists("copy_out/cake.txt");
+    }
+  }
+
+  @Test
+  public void shouldOverwriteDuplicates() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    Path zip = workspace.buildAndReturnOutput("//example:overwrite_duplicates");
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      ZipInspector inspector = new ZipInspector(zip);
+      inspector.assertFileContents(Paths.get("cake.txt"), "Cake :)");
+    }
+  }
+
+  @Test
+  public void testOrderInZipSrcsAffectsResults() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    Path zip = workspace.buildAndReturnOutput("//example:overwrite_duplicates_in_different_order");
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      ZipInspector inspector = new ZipInspector(zip);
+      inspector.assertFileContents(Paths.get("cake.txt"), "Guten Tag");
     }
   }
 }
