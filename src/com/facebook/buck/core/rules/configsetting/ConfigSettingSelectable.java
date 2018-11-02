@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 
 /**
@@ -63,14 +62,39 @@ public class ConfigSettingSelectable implements Selectable {
         values);
   }
 
+  /**
+   * A {@link ConfigSettingSelectable} refines another {@link ConfigSettingSelectable} when {@link
+   * #values} or {@link #constraintValues} or both are strict supersets of corresponding sets of the
+   * other selectable.
+   *
+   * @return {@code true} for given {@code this} selectable and {@code other} selectable when one of
+   *     this conditions is true:
+   *     <ul>
+   *       <li>{@code this.values} is a strict superset of {@code other.values} and {@code
+   *           this.constraintValues} is a strict superset of {@code other.constraintValues}
+   *       <li>{@code this.values} is equal to {@code other.values} and {@code
+   *           this.constraintValues} is a strict superset of {@code other.constraintValues}
+   *       <li>{@code this.values} is a strict superset of {@code other.values} and {@code
+   *           this.constraintValues} is equal to {@code other.constraintValues}
+   *     </ul>
+   */
   @Override
   public boolean refines(Selectable other) {
     Preconditions.checkState(other instanceof ConfigSettingSelectable);
-    ImmutableSet<Entry<String, String>> settings = values.entrySet();
-    ImmutableSet<Entry<String, String>> otherSettings =
-        ((ConfigSettingSelectable) other).values.entrySet();
+    ConfigSettingSelectable otherSelectable = (ConfigSettingSelectable) other;
 
-    return settings.containsAll(otherSettings) && settings.size() > otherSettings.size();
+    if (values.equals(otherSelectable.values)) {
+      return refines(constraintValues, otherSelectable.constraintValues);
+    } else if (constraintValues.equals(otherSelectable.constraintValues)) {
+      return refines(values.entrySet(), otherSelectable.values.entrySet());
+    } else {
+      return refines(values.entrySet(), otherSelectable.values.entrySet())
+          && refines(constraintValues, otherSelectable.constraintValues);
+    }
+  }
+
+  private <T> boolean refines(ImmutableSet<T> values, ImmutableSet<T> otherValues) {
+    return (values.size() > otherValues.size() && values.containsAll(otherValues));
   }
 
   @Override

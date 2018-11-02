@@ -63,6 +63,37 @@ config_setting(
 )
 
 config_setting(
+    name = "osx_x86-64_config",
+    constraint_values = [
+        ":osx",
+        ":x86-64",
+    ],
+)
+
+config_setting(
+    name = "osx_x86-64_config_with_a",
+    constraint_values = [
+        ":osx",
+        ":x86-64",
+    ],
+    values = {
+        "cat.file": "a",
+    },
+)
+
+config_setting(
+    name = "osx_x86-64_config_with_ab",
+    constraint_values = [
+        ":osx",
+        ":x86-64",
+    ],
+    values = {
+        "cat.file": "a",
+        "cat.file2": "b",
+    },
+)
+
+config_setting(
     name = "linux_aarch64_config",
     constraint_values = [
         ":linux",
@@ -106,6 +137,26 @@ genrule(
     srcs = select({
         ":a_on_osx": ["a.txt"],
         ":b_on_linux_aarch64": ["b.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+)
+
+genrule(
+    name = "cat_with_specialized_constraints",
+    srcs = select({
+        ":osx_config": ["a.txt"],
+        ":osx_x86-64_config": ["b.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+)
+
+genrule(
+    name = "cat_with_specialized_config",
+    srcs = select({
+        ":osx_x86-64_config_with_a": ["a.txt"],
+        ":osx_x86-64_config_with_ab": ["b.txt"],
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",

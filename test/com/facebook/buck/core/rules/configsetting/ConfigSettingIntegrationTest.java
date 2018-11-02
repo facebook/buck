@@ -197,4 +197,36 @@ public class ConfigSettingIntegrationTest {
                 + " //:osx_config\n"
                 + " //:linux_aarch64_config"));
   }
+
+  @Test
+  public void testConfigSettingUsesMoreSpecializedConstraints() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_constraints", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput(
+            "--target-platforms", "//:osx_x86-64", ":cat_with_specialized_constraints");
+    assertEquals("b", Files.readAllLines(output).get(0));
+  }
+
+  @Test
+  public void testConfigSettingUsesMoreSpecializedConfig() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_constraints", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput(
+            "-c",
+            "cat.file=a",
+            "-c",
+            "cat.file2=b",
+            "--target-platforms",
+            "//:osx_x86-64",
+            ":cat_with_specialized_config");
+    assertEquals("b", Files.readAllLines(output).get(0));
+  }
 }
