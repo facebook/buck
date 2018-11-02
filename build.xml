@@ -119,7 +119,7 @@
     <include name="jackson/jackson-datatype-jdk8-2.7.8.jar" />
     <include name="jackson/jackson-datatype-guava-2.7.8.jar" />
     <include name="android/sdklib-25.3.0.jar" />
-    <include name="nailgun/nailgun-server-1.0.0-SNAPSHOT.jar" />
+    <include name="nailgun/nailgun-server-1.0.0.jar" />
     <include name="jna/jna-4.5.1.jar" />
     <include name="jna/jna-platform-4.5.1.jar" />
     <include name="sqlite/sqlite-jdbc-3.20.0.jar" />
