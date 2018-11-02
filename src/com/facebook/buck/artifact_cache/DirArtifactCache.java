@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -69,6 +70,7 @@ public class DirArtifactCache implements ArtifactCache {
   private final Path cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
   private final CacheReadMode cacheReadMode;
+  private final ListeningExecutorService storeExecutorService;
   private long bytesSinceLastDeleteOldFiles;
 
   public DirArtifactCache(
@@ -76,13 +78,15 @@ public class DirArtifactCache implements ArtifactCache {
       ProjectFilesystem filesystem,
       Path cacheDir,
       CacheReadMode cacheReadMode,
-      Optional<Long> maxCacheSizeBytes)
+      Optional<Long> maxCacheSizeBytes,
+      ListeningExecutorService storeExecutorService)
       throws IOException {
     this.name = name;
     this.filesystem = filesystem;
     this.cacheDir = cacheDir;
     this.maxCacheSizeBytes = maxCacheSizeBytes;
     this.cacheReadMode = cacheReadMode;
+    this.storeExecutorService = storeExecutorService;
     this.bytesSinceLastDeleteOldFiles = 0L;
 
     // Check first, as mkdirs will fail if the path is a symlink.
@@ -149,6 +153,14 @@ public class DirArtifactCache implements ArtifactCache {
       return Futures.immediateFuture(null);
     }
 
+    return storeExecutorService.submit(
+        () -> {
+          storeSynchronously(info, output);
+          return null;
+        });
+  }
+
+  private void storeSynchronously(ArtifactInfo info, BorrowablePath output) {
     try {
       Optional<Path> borrowedAndStoredArtifactPath = Optional.empty();
       for (RuleKey ruleKey : info.getRuleKeys()) {
@@ -205,8 +217,6 @@ public class DirArtifactCache implements ArtifactCache {
       bytesSinceLastDeleteOldFiles = 0L;
       deleteOldFiles();
     }
-
-    return Futures.immediateFuture(null);
   }
 
   @Override

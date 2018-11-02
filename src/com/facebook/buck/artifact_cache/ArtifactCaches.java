@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -437,7 +438,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
               projectFilesystem,
               cacheDir,
               dirCacheConfig.getCacheReadMode(),
-              dirCacheConfig.getMaxSizeBytes());
+              dirCacheConfig.getMaxSizeBytes(),
+              MoreExecutors.newDirectExecutorService());
 
       if (!buckEventBus.isPresent()) {
         return dirArtifactCache;

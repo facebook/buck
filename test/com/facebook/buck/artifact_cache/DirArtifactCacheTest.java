@@ -54,6 +54,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -941,6 +942,11 @@ public class DirArtifactCacheTest {
   private DirArtifactCache newDirArtifactCache(
       Optional<Long> maxCacheSizeBytes, CacheReadMode cacheReadMode) throws IOException {
     return new DirArtifactCache(
-        "dir", projectFilesystem, cacheDir, cacheReadMode, maxCacheSizeBytes);
+        "dir",
+        projectFilesystem,
+        cacheDir,
+        cacheReadMode,
+        maxCacheSizeBytes,
+        MoreExecutors.newDirectExecutorService());
   }
 }
