@@ -274,4 +274,18 @@ public class ZipRuleIntegrationTest {
       inspector.assertFileDoesNotExist("cake.txt");
     }
   }
+
+  @Test
+  public void shouldCopyFromGenruleOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    Path zip = workspace.buildAndReturnOutput("//example:copy_zip");
+
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      ZipInspector inspector = new ZipInspector(zip);
+      inspector.assertFileExists("copy_out/cake.txt");
+    }
+  }
 }
