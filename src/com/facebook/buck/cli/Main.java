@@ -1035,6 +1035,7 @@ public final class Main {
                     httpWriteExecutorService.get(),
                     httpFetchExecutorService.get(),
                     stampedeSyncBuildHttpFetchExecutorService.get(),
+                    newDirectExecutorService(),
                     managerScope,
                     getArtifactProducerId(executionEnvironment),
                     executionEnvironment.getHostname(),

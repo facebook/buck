@@ -425,6 +425,7 @@ public class ArtifactCachesIntegrationTest {
         MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),
+        MoreExecutors.newDirectExecutorService(),
         managerScope,
         "test://",
         "myhostname",

@@ -279,6 +279,7 @@ public class ArtifactCachesTest {
         MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),
+        MoreExecutors.newDirectExecutorService(),
         managerScope,
         "test://",
         "hostname",
