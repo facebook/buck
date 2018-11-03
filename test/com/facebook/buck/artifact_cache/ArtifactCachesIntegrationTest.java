@@ -75,7 +75,7 @@ public class ArtifactCachesIntegrationTest {
    * -out server.crt openssl pkcs8 -inform PEM -outform PEM -in server.key -out server.key.pkcs8
    * -nocrypt -topk8
    */
-  private String sampleClientCert =
+  private static final String SAMPLE_CLIENT_CERT =
       "-----BEGIN CERTIFICATE-----\n"
           + "MIIDEjCCAfoCAQEwDQYJKoZIhvcNAQEFBQAwTTELMAkGA1UEBhMCVVMxEzARBgNV\n"
           + "BAgMCldhc2hpbmd0b24xEDAOBgNVBAcMB1NlYXR0bGUxFzAVBgNVBAMMDmNhLmV4\n"
@@ -96,7 +96,7 @@ public class ArtifactCachesIntegrationTest {
           + "hpHC7IcvLgJPOTV0HbyaHmCxhBU8IQ==\n"
           + "-----END CERTIFICATE-----";
 
-  private String sampleClientKey =
+  private static final String SAMPLE_CLIENT_KEY =
       "-----BEGIN PRIVATE KEY-----\n"
           + "MIIEugIBADANBgkqhkiG9w0BAQEFAASCBKQwggSgAgEAAoIBAQDcsl1A/hUsyAm7\n"
           + "9iRe2dF58fR1TtbGRYyZZkw5J7f58kcNcrDmTDtSxO1orduJOmpqgGYY3HnoZj2S\n"
@@ -126,7 +126,7 @@ public class ArtifactCachesIntegrationTest {
           + "9kGk/IHTW2kCBLs+mVA=\n"
           + "-----END PRIVATE KEY-----";
 
-  private String sampleServerCert =
+  private static final String SAMPLE_SERVER_CERT =
       "-----BEGIN CERTIFICATE-----\n"
           + "MIIDEjCCAfoCAQIwDQYJKoZIhvcNAQEFBQAwTTELMAkGA1UEBhMCVVMxEzARBgNV\n"
           + "BAgMCldhc2hpbmd0b24xEDAOBgNVBAcMB1NlYXR0bGUxFzAVBgNVBAMMDmNhLmV4\n"
@@ -147,7 +147,7 @@ public class ArtifactCachesIntegrationTest {
           + "MUcHV2A4aEJMpR+W74/BRmKAPMwUCw==\n"
           + "-----END CERTIFICATE-----";
 
-  private String sampleServerKey =
+  private static final String SAMPLE_SERVER_KEY =
       "-----BEGIN PRIVATE KEY-----\n"
           + "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDEZFLc9qmJryds\n"
           + "Vm1TR2xjqBIpw6sV2O+PZBFX/bMBgwrW3ajZrgdz/NQqBFptztWZyAX4A+oTcwvW\n"
@@ -177,7 +177,7 @@ public class ArtifactCachesIntegrationTest {
           + "9lVGHblMKOFQ22R+E4yI7G8=\n"
           + "-----END PRIVATE KEY-----";
 
-  private String sampleCaCert =
+  private static final String SAMPLE_CA_CERT =
       "-----BEGIN CERTIFICATE-----\n"
           + "MIIDFjCCAf4CCQCFJYJEzO/NoTANBgkqhkiG9w0BAQsFADBNMQswCQYDVQQGEwJV\n"
           + "UzETMBEGA1UECAwKV2FzaGluZ3RvbjEQMA4GA1UEBwwHU2VhdHRsZTEXMBUGA1UE\n"
@@ -211,6 +211,7 @@ public class ArtifactCachesIntegrationTest {
   private Path serverCertPath;
   private Path serverKeyPath;
   private Path caCertPath;
+  private ClientCertificateHandler clientCertificateHandler;
 
   @Before
   public void setUp() throws IOException {
@@ -223,11 +224,13 @@ public class ArtifactCachesIntegrationTest {
     serverKeyPath = tempDir.newFile("server.key");
     caCertPath = tempDir.newFile("ca.crt");
 
-    Files.write(clientCertPath, sampleClientCert.getBytes(Charsets.UTF_8));
-    Files.write(clientKeyPath, sampleClientKey.getBytes(Charsets.UTF_8));
-    Files.write(serverCertPath, sampleServerCert.getBytes(Charsets.UTF_8));
-    Files.write(serverKeyPath, sampleServerKey.getBytes(Charsets.UTF_8));
-    Files.write(caCertPath, sampleCaCert.getBytes(Charsets.UTF_8));
+    Files.write(clientCertPath, SAMPLE_CLIENT_CERT.getBytes(Charsets.UTF_8));
+    Files.write(clientKeyPath, SAMPLE_CLIENT_KEY.getBytes(Charsets.UTF_8));
+    Files.write(serverCertPath, SAMPLE_SERVER_CERT.getBytes(Charsets.UTF_8));
+    Files.write(serverKeyPath, SAMPLE_SERVER_KEY.getBytes(Charsets.UTF_8));
+    Files.write(caCertPath, SAMPLE_CA_CERT.getBytes(Charsets.UTF_8));
+    clientCertificateHandler =
+        createClientCertificateHandler(clientKeyPath, clientCertPath, caCertPath);
   }
 
   @After
@@ -238,8 +241,6 @@ public class ArtifactCachesIntegrationTest {
 
   @Test
   public void testUsesClientTlsCertsForHttpsFetch() throws Exception {
-    ClientCertificateHandler clientCertificateHandler =
-        createClientCertificateHandler(clientKeyPath, clientCertPath, caCertPath);
     NotFoundHandler handler = new NotFoundHandler(false, false);
 
     X509KeyManager keyManager = clientCertificateHandler.getHandshakeCertificates().keyManager();
@@ -263,18 +264,7 @@ public class ArtifactCachesIntegrationTest {
 
       CacheResult result;
       try (ArtifactCache artifactCache =
-          new ArtifactCaches(
-                  cacheConfig,
-                  buckEventBus,
-                  projectFilesystem,
-                  Optional.empty(),
-                  MoreExecutors.newDirectExecutorService(),
-                  MoreExecutors.newDirectExecutorService(),
-                  MoreExecutors.newDirectExecutorService(),
-                  managerScope,
-                  "test://",
-                  "myhostname",
-                  Optional.of(clientCertificateHandler))
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
               .remoteOnlyInstance(false, false)) {
 
         result =
@@ -295,8 +285,6 @@ public class ArtifactCachesIntegrationTest {
 
   @Test
   public void testUsesClientTlsCertsForThriftFetch() throws Exception {
-    ClientCertificateHandler clientCertificateHandler =
-        createClientCertificateHandler(clientKeyPath, clientCertPath, caCertPath);
     NotFoundHandler handler = new NotFoundHandler(true, false);
 
     X509KeyManager keyManager = clientCertificateHandler.getHandshakeCertificates().keyManager();
@@ -321,18 +309,7 @@ public class ArtifactCachesIntegrationTest {
 
       CacheResult result;
       try (ArtifactCache artifactCache =
-          new ArtifactCaches(
-                  cacheConfig,
-                  buckEventBus,
-                  projectFilesystem,
-                  Optional.empty(),
-                  MoreExecutors.newDirectExecutorService(),
-                  MoreExecutors.newDirectExecutorService(),
-                  MoreExecutors.newDirectExecutorService(),
-                  managerScope,
-                  "test://",
-                  "myhostname",
-                  Optional.of(clientCertificateHandler))
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
               .remoteOnlyInstance(false, false)) {
 
         result =
@@ -353,8 +330,6 @@ public class ArtifactCachesIntegrationTest {
 
   @Test
   public void testUsesClientTlsCertsForHttpsStore() throws Exception {
-    ClientCertificateHandler clientCertificateHandler =
-        createClientCertificateHandler(clientKeyPath, clientCertPath, caCertPath);
     NotFoundHandler handler = new NotFoundHandler(false, true);
 
     X509KeyManager keyManager = clientCertificateHandler.getHandshakeCertificates().keyManager();
@@ -379,18 +354,7 @@ public class ArtifactCachesIntegrationTest {
               "http_client_tls_cert = " + clientCertPath.toString());
 
       try (ArtifactCache artifactCache =
-          new ArtifactCaches(
-                  cacheConfig,
-                  buckEventBus,
-                  projectFilesystem,
-                  Optional.empty(),
-                  MoreExecutors.newDirectExecutorService(),
-                  MoreExecutors.newDirectExecutorService(),
-                  MoreExecutors.newDirectExecutorService(),
-                  managerScope,
-                  "test://",
-                  "myhostname",
-                  Optional.of(clientCertificateHandler))
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
               .remoteOnlyInstance(false, false)) {
 
         artifactCache
@@ -408,8 +372,6 @@ public class ArtifactCachesIntegrationTest {
 
   @Test
   public void testUsesClientTlsCertsForThriftStore() throws Exception {
-    ClientCertificateHandler clientCertificateHandler =
-        createClientCertificateHandler(clientKeyPath, clientCertPath, caCertPath);
     NotFoundHandler handler = new NotFoundHandler(true, true);
 
     X509KeyManager keyManager = clientCertificateHandler.getHandshakeCertificates().keyManager();
@@ -435,18 +397,7 @@ public class ArtifactCachesIntegrationTest {
               "http_client_tls_cert = " + clientCertPath.toString());
 
       try (ArtifactCache artifactCache =
-          new ArtifactCaches(
-                  cacheConfig,
-                  buckEventBus,
-                  projectFilesystem,
-                  Optional.empty(),
-                  MoreExecutors.newDirectExecutorService(),
-                  MoreExecutors.newDirectExecutorService(),
-                  MoreExecutors.newDirectExecutorService(),
-                  managerScope,
-                  "test://",
-                  "myhostname",
-                  Optional.of(clientCertificateHandler))
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
               .remoteOnlyInstance(false, false)) {
 
         artifactCache
@@ -460,6 +411,24 @@ public class ArtifactCachesIntegrationTest {
       Assert.assertEquals(1, handler.peerCertificates.get(0).length);
       Assert.assertEquals(clientCert, handler.peerCertificates.get(0)[0]);
     }
+  }
+
+  private ArtifactCaches newArtifactCache(
+      BuckEventBus buckEventBus,
+      ProjectFilesystem projectFilesystem,
+      ArtifactCacheBuckConfig cacheConfig) {
+    return new ArtifactCaches(
+        cacheConfig,
+        buckEventBus,
+        projectFilesystem,
+        Optional.empty(),
+        MoreExecutors.newDirectExecutorService(),
+        MoreExecutors.newDirectExecutorService(),
+        MoreExecutors.newDirectExecutorService(),
+        managerScope,
+        "test://",
+        "myhostname",
+        Optional.of(clientCertificateHandler));
   }
 
   /**
