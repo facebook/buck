@@ -179,12 +179,12 @@ public class DaemonIntegrationTest {
                 System.nanoTime(),
                 ImmutableList.copyOf(args));
         assertEquals("Unexpected exit code.", expectedExitCode, exitCode);
-      } catch (IOException e) {
-        fail("Should not throw exception.");
-        Throwables.throwIfUnchecked(e);
       } catch (InterruptedException e) {
         fail("Should not throw exception.");
         Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        fail("Should not throw exception.");
+        Throwables.throwIfUnchecked(e);
       }
     };
   }

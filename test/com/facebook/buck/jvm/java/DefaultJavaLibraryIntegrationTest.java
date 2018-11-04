@@ -1151,14 +1151,13 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     assertThat(
         result.getStderr(),
         Matchers.stringContainsInOrder(
-            "Build failed:",
             "The annotation processor com.example.buck.AnnotationProcessor has crashed.",
             "java.lang.RuntimeException: java.lang.IllegalArgumentException: Test crash!   |\n|  at com.example.buck.AnnotationProcessor.process(AnnotationProcessor.java:22) |\n|  ...", // Buck frames have been stripped properly
             "Caused by: java.lang.IllegalArgumentException: Test crash!", // Without then stripping
             // out the caused
             // exception!
-            "    When running <javac>.",
-            "    When building rule //:main."));
+            "When running <javac>.",
+            "When building rule //:main."));
   }
 
   @Test

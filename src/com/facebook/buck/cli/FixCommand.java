@@ -20,7 +20,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,8 +33,7 @@ import java.util.Optional;
 public class FixCommand extends AbstractCommand {
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     String scriptPath = System.getProperty("buck.fix_script");
 
     ProcessExecutor processExecutor =

@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleC
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.CleanBuildShutdownException;
 import com.facebook.buck.util.ExitCode;
-import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -90,15 +89,16 @@ public class LocalBuildRunner {
               remoteBuildRuleCompletionWaiter,
               initializeBuildLatch,
               buildReference);
-
-    } catch (IOException e) {
-      LOG.error(e, String.format("Stampede local %s build failed with exception.", localBuildType));
-      throw new RuntimeException(e);
     } catch (InterruptedException e) {
       LOG.error(
           e, String.format("Stampede local %s build thread was interrupted.", localBuildType));
       Thread.currentThread().interrupt();
       return;
+    } catch (Exception e) {
+      LOG.error(e, String.format("Stampede local %s build failed with exception.", localBuildType));
+      // Have to rethrow as unchecked exception to conform to Function interface
+      // The better solution is to use throwing lambda instead
+      throw new RuntimeException(e);
     } finally {
       localBuildExitCode = Optional.of(exitCode);
       String finishedMessage =

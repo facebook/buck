@@ -25,7 +25,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.base.Stopwatch;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
 
@@ -43,8 +42,7 @@ public class DistBuildKillCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     Console console = params.getConsole();
     PrintStream stdout = console.getStdOut();
     StampedeId stampedeId = getStampedeId();

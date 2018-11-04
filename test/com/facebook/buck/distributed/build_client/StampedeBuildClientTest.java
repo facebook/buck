@@ -134,7 +134,7 @@ public class StampedeBuildClientTest {
               RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
               CountDownLatch initializeBuildLatch,
               AtomicReference<Build> buildReference)
-              throws IOException, InterruptedException {
+              throws Exception {
 
             // First simulate initializing the build
             boolean wasFirstBuild = isFirstBuild.compareAndSet(true, false);
@@ -211,7 +211,7 @@ public class StampedeBuildClientTest {
 
   @Test
   public void synchronizedBuildCompletesAfterDistBuildFailsForSinglePhaseBuildWithFallback()
-      throws InterruptedException, IOException, ExecutionException {
+      throws Exception {
     // Summary:
     // One phase. Fallback enabled. Racing build is skipped.
     // Distributed build fails, and then falls back to synchronized local build which completes
@@ -246,8 +246,7 @@ public class StampedeBuildClientTest {
   }
 
   @Test
-  public void synchronizedBuildCompletesAfterDistBuildCompletesForSinglePhase()
-      throws InterruptedException, IOException, ExecutionException {
+  public void synchronizedBuildCompletesAfterDistBuildCompletesForSinglePhase() throws Exception {
     // Summary:
     // One phase. Fallback enabled. Racing build is skipped.
     // Distributed build completes, and then synchronized local build completes
@@ -280,7 +279,7 @@ public class StampedeBuildClientTest {
   @Test
   public void
       racerBuildKilledWhenMostBuildRulesFinishedThenFallsBackToSynchronizedBuildWhenDistBuildFails()
-          throws InterruptedException, IOException, ExecutionException {
+          throws Exception {
     // Summary:
     // Two phases enabled. Fallback enabled.
     // During local racing build phase a 'most build rules finished' event is received.
@@ -329,7 +328,7 @@ public class StampedeBuildClientTest {
   @Test
   public void
       racerBuildKilledWhenMostBuildRulesFinishedThenSynchronizedBuildKilledWhenDistBuildFails()
-          throws InterruptedException, IOException, ExecutionException {
+          throws Exception {
     // Summary:
     // Two phases enabled. No fallback.
     // During local racing build phase a 'most build rules finished' event is received.
@@ -380,7 +379,7 @@ public class StampedeBuildClientTest {
   @Test
   public void
       racerBuildKilledWhenMostBuildRulesFinishedThenDistBuildKilledWhenSynchronizedBuildWins()
-          throws InterruptedException, IOException, ExecutionException {
+          throws Exception {
     // Summary:
     // Two phases enabled. No fallback.
     // During local racing build phase a 'most build rules finished' event is received.
@@ -424,7 +423,7 @@ public class StampedeBuildClientTest {
   @Test
   public void
       racerBuildKilledWhenMostBuildRulesFinishedThenWaitsForSynchronizedBuildWhenDistBuildCompletes()
-          throws InterruptedException, IOException, ExecutionException {
+          throws Exception {
     // Summary:
     // Two phases enabled. No fallback. 'Most build rules finished' event received during racing.
     // Racing build is cancelled, and build moves to local synchronized phase.
@@ -467,8 +466,7 @@ public class StampedeBuildClientTest {
   }
 
   @Test
-  public void racerBuildWinsAndThenDistributedBuildKilled()
-      throws InterruptedException, IOException, ExecutionException {
+  public void racerBuildWinsAndThenDistributedBuildKilled() throws Exception {
     // Summary:
     // Two phases enabled. No fallback. Local racing build finishes before anything else.
     // Distributed build is still pending, so it's killed, and racing build exit code returned.
@@ -519,8 +517,7 @@ public class StampedeBuildClientTest {
   }
 
   @Test
-  public void remoteBuildFailsAndThenRacingBuildKilledAsNoLocalFallback()
-      throws InterruptedException, IOException, ExecutionException {
+  public void remoteBuildFailsAndThenRacingBuildKilledAsNoLocalFallback() throws Exception {
     // Summary:
     // Two phases. No fallback. Remote build fails during racing build phase.
     // Local fallback *is not* enabled, so build client kills the racing build and returns.
@@ -553,7 +550,7 @@ public class StampedeBuildClientTest {
 
   @Test
   public void remoteBuildFailsAndThenWaitsForRacingBuildToCompleteAsFallbackEnabled()
-      throws InterruptedException, IOException, ExecutionException {
+      throws Exception {
     // Summary:
     // Remote build fails during racing build phase, before racing build has finished.
     // Local fallback *is* enabled, so racing build keeps going until completion.
@@ -587,8 +584,7 @@ public class StampedeBuildClientTest {
   }
 
   @Test
-  public void mostBuildRulesFailAndThenRacingBuildKilledAsNoLocalFallback()
-      throws InterruptedException, IOException, ExecutionException {
+  public void mostBuildRulesFailAndThenRacingBuildKilledAsNoLocalFallback() throws Exception {
     // Summary:
     // Two phases. No fallback.
     // Remote build fails during racing build phase, but exit code has not been set yet.
@@ -622,7 +618,7 @@ public class StampedeBuildClientTest {
 
   @Test
   public void mostBuildRulesFailAndThenWaitsForRacingBuildToCompleteAsFallbackEnabled()
-      throws InterruptedException, IOException, ExecutionException {
+      throws Exception {
     // Summary:
     // Two phases. Fallback enabled.
     // Remote build fails during racing build phase, but exit code has not been set yet.
@@ -656,8 +652,7 @@ public class StampedeBuildClientTest {
     return stampedeId;
   }
 
-  private void expectMockLocalBuildExecutorReturnsWithCode(ExitCode code)
-      throws IOException, InterruptedException {
+  private void expectMockLocalBuildExecutorReturnsWithCode(ExitCode code) throws Exception {
     expect(
             mockLocalBuildExecutorInvoker.executeLocalBuild(
                 anyBoolean(),

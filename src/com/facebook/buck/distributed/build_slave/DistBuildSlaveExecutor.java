@@ -87,7 +87,7 @@ public class DistBuildSlaveExecutor {
     }
   }
 
-  public ExitCode buildAndReturnExitCode() throws IOException, InterruptedException {
+  public ExitCode buildAndReturnExitCode() throws Exception {
     if (args.getRemoteCommand() == RemoteCommand.RULE_KEY_DIVERGENCE_CHECK) {
       return setPreparationCallbackAndRun(
           RuleKeyDivergenceRunnerFactory.createRunner(
@@ -241,8 +241,7 @@ public class DistBuildSlaveExecutor {
     }
   }
 
-  private ExitCode setPreparationCallbackAndRun(DistBuildModeRunner runner)
-      throws IOException, InterruptedException {
+  private ExitCode setPreparationCallbackAndRun(DistBuildModeRunner runner) throws Exception {
     runner
         .getAsyncPrepFuture()
         .addListener(

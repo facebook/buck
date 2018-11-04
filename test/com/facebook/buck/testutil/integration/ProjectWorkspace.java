@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil.integration;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -34,6 +35,7 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -58,6 +60,8 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ErrorLogger;
+import com.facebook.buck.util.ErrorLogger.LogImpl;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -445,10 +449,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
       Optional<NGContext> context,
       ImmutableMap<String, String> environmentOverrides,
       CapturingPrintStream stderr,
-      String... args)
-      throws IOException {
-    // TODO(cjhopman): This needs to be updated to actually get the correct error-handling from Main
-    // (which will require refactoring there).
+      String... args) {
     try {
       assertTrue("setUp() must be run before this method is invoked", isSetUp);
       CapturingPrintStream stdout = new CapturingPrintStream();
@@ -495,6 +496,33 @@ public class ProjectWorkspace extends AbstractWorkspace {
               ? new Main(stdout, stderr, stdin, context)
               : new Main(stdout, stderr, stdin, knownRuleTypesFactoryFactory, context);
       ExitCode exitCode;
+
+      // TODO (buck_team): this code repeats the one in Main and thus wants generalization
+      HumanReadableExceptionAugmentor augmentor =
+          new HumanReadableExceptionAugmentor(ImmutableMap.of());
+      StringBuilder errorMessage = new StringBuilder();
+      ErrorLogger logger =
+          new ErrorLogger(
+              new LogImpl() {
+                @Override
+                public void logUserVisible(String message) {
+                  errorMessage.append("\n");
+                  errorMessage.append(message);
+                }
+
+                @Override
+                public void logUserVisibleInternalError(String message) {
+                  errorMessage.append("\n");
+                  errorMessage.append(linesToText("Buck encountered an internal error", message));
+                }
+
+                @Override
+                public void logVerbose(Throwable e) {
+                  // yes, do nothing
+                }
+              },
+              augmentor);
+
       try {
         exitCode =
             main.runMainWithExitCode(
@@ -515,15 +543,15 @@ public class ProjectWorkspace extends AbstractWorkspace {
       } catch (BuildFileParseException e) {
         stderr.println(e.getHumanReadableErrorMessage());
         exitCode = ExitCode.PARSE_ERROR;
-      } catch (Exception e) {
-        e.printStackTrace(stderr);
-        exitCode = ExceptionHandlerRegistryFactory.create().handleException(e);
+      } catch (Throwable t) {
+        logger.logException(t);
+        exitCode = ExceptionHandlerRegistryFactory.create().handleException(t);
       }
 
       return new ProcessResult(
           exitCode,
           stdout.getContentsAsString(Charsets.UTF_8),
-          stderr.getContentsAsString(Charsets.UTF_8));
+          stderr.getContentsAsString(Charsets.UTF_8) + errorMessage.toString());
     } finally {
       // javac has a global cache of zip/jar file content listings. It determines the validity of
       // a given cache entry based on the modification time of the zip file in question. In normal

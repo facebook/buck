@@ -52,15 +52,13 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 
 public class FetchCommand extends BuildCommand {
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
 
     if (getArguments().isEmpty()) {
       throw new CommandLineException("must specify at least one build target");

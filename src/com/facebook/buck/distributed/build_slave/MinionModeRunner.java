@@ -272,7 +272,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
         });
   }
 
-  private void performBuildOfWorkUnits(String minionId) throws IOException {
+  private void performBuildOfWorkUnits(String minionId) throws Exception {
     List<String> targetsToBuild = buildTracker.getTargetsToBuild();
 
     if (targetsToBuild.isEmpty()) {

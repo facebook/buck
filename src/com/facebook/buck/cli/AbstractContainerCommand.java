@@ -26,7 +26,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -74,7 +73,7 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
   }
 
   @Override
-  public ExitCode run(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode run(CommandRunnerParams params) throws Exception {
     Optional<Command> subcommand = getSubcommand();
     if (subcommand.isPresent()) {
       return subcommand.get().run(params);

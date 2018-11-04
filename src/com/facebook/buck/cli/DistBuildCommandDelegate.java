@@ -321,7 +321,7 @@ public class DistBuildCommandDelegate {
                 RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
                 CountDownLatch initializeBuildLatch,
                 AtomicReference<Build> buildReference)
-                throws IOException, InterruptedException {
+                throws Exception {
               return buildCommand.executeLocalBuild(
                   params,
                   graphsAndBuildTargets,

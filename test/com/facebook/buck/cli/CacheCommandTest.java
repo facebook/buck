@@ -47,7 +47,6 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -132,8 +131,7 @@ public class CacheCommandTest {
   }
 
   @Test
-  public void testRunCommandAndFetchArtifactsUnsuccessfully()
-      throws IOException, InterruptedException {
+  public void testRunCommandAndFetchArtifactsUnsuccessfully() throws Exception {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
     ArtifactCache cache = new FakeArtifactCache(new RuleKey(ruleKeyHash), CacheResult.miss());
@@ -153,8 +151,7 @@ public class CacheCommandTest {
   }
 
   @Test
-  public void testRunCommandAndFetchArtifactsSuccessfullyAndSuperConsole()
-      throws IOException, InterruptedException {
+  public void testRunCommandAndFetchArtifactsSuccessfullyAndSuperConsole() throws Exception {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
     ArtifactCache cache =

@@ -98,8 +98,7 @@ public class GoProjectCommandHelper {
     this.projectGeneratorParameters = projectGeneratorParameters;
   }
 
-  public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments)
-      throws IOException, InterruptedException {
+  public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments) throws Exception {
     List<String> targets = arguments;
     if (targets.isEmpty()) {
       targets = ImmutableList.of("//...");
@@ -191,8 +190,7 @@ public class GoProjectCommandHelper {
    * or to the "vendor" folder of a project. This method identifies code generation targets, builds
    * them, and copy the generated code from buck-out to vendor, so that they are accessible by IDEs.
    */
-  private ExitCode initGoWorkspace(TargetGraphAndTargets targetGraphAndTargets)
-      throws IOException, InterruptedException {
+  private ExitCode initGoWorkspace(TargetGraphAndTargets targetGraphAndTargets) throws Exception {
     Map<BuildTargetSourcePath, Path> generatedPackages =
         findCodeGenerationTargets(targetGraphAndTargets);
     if (generatedPackages.isEmpty()) {
@@ -374,8 +372,7 @@ public class GoProjectCommandHelper {
     return TargetGraphAndTargets.getExplicitTestTargets(nodes.iterator());
   }
 
-  private ExitCode runBuild(ImmutableSet<BuildTarget> targets)
-      throws IOException, InterruptedException {
+  private ExitCode runBuild(ImmutableSet<BuildTarget> targets) throws Exception {
     BuildCommand buildCommand =
         new BuildCommand(
             targets.stream().map(Object::toString).collect(ImmutableList.toImmutableList()));

@@ -225,7 +225,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   @Override
-  public final ExitCode run(CommandRunnerParams params) throws IOException, InterruptedException {
+  public final ExitCode run(CommandRunnerParams params) throws Exception {
     if (help) {
       printUsage(params.getConsole().getStdOut());
       return ExitCode.SUCCESS;
@@ -252,8 +252,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     };
   }
 
-  public abstract ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException;
+  public abstract ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception;
 
   protected CommandLineBuildTargetNormalizer getCommandLineBuildTargetNormalizer(
       BuckConfig buckConfig) {

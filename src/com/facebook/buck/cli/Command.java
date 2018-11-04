@@ -25,7 +25,6 @@ import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Map;
@@ -36,7 +35,7 @@ import org.pf4j.PluginManager;
 public interface Command {
 
   /** @return the appropriate exit code for the command */
-  ExitCode run(CommandRunnerParams params) throws IOException, InterruptedException;
+  ExitCode run(CommandRunnerParams params) throws Exception;
 
   /**
    * If the current command is a help command, run the action to print out the appropriate help

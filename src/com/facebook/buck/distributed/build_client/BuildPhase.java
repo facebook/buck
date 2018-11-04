@@ -293,8 +293,13 @@ public class BuildPhase {
           try {
             coordinator.runWithHeartbeatServiceAndReturnExitCode(distBuildConfig);
           } catch (IOException | InterruptedException e) {
+            // This special case of processing IOException and InterruptedException is only to
+            // maintain backwards compatibility
+            // TODO (buck_team): process exceptions in a good structured way
             LOG.error(e, "Coordinator failed with Exception.");
             // throwing inside an executor won't help.
+          } catch (Exception e) {
+            throw new RuntimeException(e);
           }
         });
   }

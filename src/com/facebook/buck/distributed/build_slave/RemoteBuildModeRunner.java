@@ -62,8 +62,7 @@ public class RemoteBuildModeRunner extends AbstractDistBuildModeRunner {
   }
 
   @Override
-  public ExitCode runAndReturnExitCode(HeartbeatService heartbeatService)
-      throws IOException, InterruptedException {
+  public ExitCode runAndReturnExitCode(HeartbeatService heartbeatService) throws Exception {
     try (Closeable healthCheck =
         heartbeatService.addCallback(
             "RemoteBuilderIsAlive",

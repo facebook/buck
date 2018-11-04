@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeFalse;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
@@ -292,13 +293,12 @@ public class ModernBuildRuleStrategyIntegrationTest {
         return ImmutableList.of(
             new AbstractExecutionStep("throwing_step") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context)
-                  throws IOException, InterruptedException {
-                throw new RuntimeException(FAILING_STEP_MESSAGE);
+              public StepExecutionResult execute(ExecutionContext context) {
+                throw new HumanReadableException(FAILING_STEP_MESSAGE);
               }
             });
       }
-      throw new RuntimeException(FAILING_RULE_MESSAGE);
+      throw new HumanReadableException(FAILING_RULE_MESSAGE);
     }
   }
 

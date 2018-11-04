@@ -320,8 +320,7 @@ public class BuildCommand extends AbstractCommand {
       SettableFuture.create();
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     assertArguments(params);
 
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
@@ -363,7 +362,7 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params,
       CommandThreadManager commandThreadManager,
       ImmutableSet<String> additionalTargets)
-      throws IOException, InterruptedException {
+      throws Exception {
     if (!additionalTargets.isEmpty()) {
       this.arguments.addAll(additionalTargets);
     }
@@ -440,8 +439,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private BuildRunResult executeBuildAndProcessResult(
-      CommandRunnerParams params, CommandThreadManager commandThreadManager)
-      throws IOException, InterruptedException, ActionGraphCreationException {
+      CommandRunnerParams params, CommandThreadManager commandThreadManager) throws Exception {
     ExitCode exitCode = ExitCode.SUCCESS;
     GraphsAndBuildTargets graphsAndBuildTargets;
     if (isUsingDistributedBuild()) {
@@ -724,7 +722,7 @@ public class BuildCommand extends AbstractCommand {
       Optional<CountDownLatch> initializeBuildLatch,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope,
       AtomicReference<Build> buildReference)
-      throws IOException, InterruptedException {
+      throws Exception {
 
     ActionGraphAndBuilder actionGraphAndBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder();
@@ -743,23 +741,27 @@ public class BuildCommand extends AbstractCommand {
             ruleKeyLogger,
             remoteBuildRuleCompletionWaiter,
             params.getTraceInfoProvider());
-    buildReference.set(builder.getBuild());
-    // TODO(alisdair): ensure that all Stampede local builds re-use same calculator
-    localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
 
-    if (initializeBuildLatch.isPresent()) {
-      // Signal to other threads that lastBuild has now been set.
-      initializeBuildLatch.get().countDown();
+    // TODO(buck_team): use try-with-resources instead
+    try {
+      buildReference.set(builder.getBuild());
+      // TODO(alisdair): ensure that all Stampede local builds re-use same calculator
+      localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
+
+      if (initializeBuildLatch.isPresent()) {
+        // Signal to other threads that lastBuild has now been set.
+        initializeBuildLatch.get().countDown();
+      }
+
+      Iterable<BuildTarget> targets =
+          FluentIterable.concat(
+              graphsAndBuildTargets.getBuildTargets(),
+              getAdditionalTargetsToBuild(graphsAndBuildTargets));
+
+      return builder.buildTargets(targets, getPathToBuildReport(params.getBuckConfig()));
+    } finally {
+      builder.shutdown();
     }
-
-    Iterable<BuildTarget> targets =
-        FluentIterable.concat(
-            graphsAndBuildTargets.getBuildTargets(),
-            getAdditionalTargetsToBuild(graphsAndBuildTargets));
-
-    ExitCode code = builder.buildTargets(targets, getPathToBuildReport(params.getBuckConfig()));
-    builder.shutdown();
-    return code;
   }
 
   RuleKeyCacheScope<RuleKey> getDefaultRuleKeyCacheScope(

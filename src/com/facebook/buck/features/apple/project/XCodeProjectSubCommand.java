@@ -124,7 +124,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
             arguments -> {
               try {
                 return runBuild(params, arguments);
-              } catch (IOException | InterruptedException e) {
+              } catch (Exception e) {
                 throw new RuntimeException("Cannot run a build", e);
               }
             });
@@ -132,7 +132,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
   }
 
   private ExitCode runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
-      throws IOException, InterruptedException {
+      throws Exception {
     BuildCommand buildCommand = new BuildCommand(arguments);
     return buildCommand.run(params);
   }

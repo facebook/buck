@@ -196,7 +196,8 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     }
     Files.write(jarPath, bytes);
 
-    ProcessResult result = workspace.runBuckBuild("//:wrapper_01").assertFailure();
+    ProcessResult result =
+        workspace.runBuckBuild("//:wrapper_01").assertExitCode(null, ExitCode.FATAL_IO);
     // Should show the rule that failed.
     assertThat(result.getStderr(), containsString("//:simple-lib"));
     // Should show the jar we were operating on.

@@ -92,8 +92,7 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     Optional<StampedeId> stampedeId = getStampedeIdOptional();
     if (stampedeId.isPresent()) {
       runUsingStampedeId(params, stampedeId.get());

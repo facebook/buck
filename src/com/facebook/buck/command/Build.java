@@ -25,8 +25,6 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
-import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -43,10 +41,8 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.CleanBuildShutdownException;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.Platform;
@@ -86,7 +82,6 @@ public class Build implements Closeable {
   private final JavaPackageFinder javaPackageFinder;
   private final Clock clock;
   private final BuildEngineBuildContext buildContext;
-  private final HumanReadableExceptionAugmentor errorAugmentor;
   private boolean symlinksCreated = false;
 
   public Build(
@@ -106,9 +101,6 @@ public class Build implements Closeable {
     this.javaPackageFinder = javaPackageFinder;
     this.clock = clock;
     this.buildContext = createBuildContext(isKeepGoing);
-    this.errorAugmentor =
-        new HumanReadableExceptionAugmentor(
-            this.rootCell.getBuckConfig().getErrorMessageAugmentations());
   }
 
   private BuildEngineBuildContext createBuildContext(boolean isKeepGoing) {
@@ -144,20 +136,13 @@ public class Build implements Closeable {
       Iterable<BuildTarget> targetsish,
       BuckEventBus eventBus,
       Console console,
-      Optional<Path> pathToBuildReport) {
-    ExitCode exitCode;
-    try {
-      ImmutableList<BuildRule> rulesToBuild = getRulesToBuild(targetsish);
-      List<BuildEngineResult> resultFutures = initializeBuild(rulesToBuild);
-      exitCode =
-          waitForBuildToFinishAndPrintFailuresToEventBus(
-              rulesToBuild, resultFutures, eventBus, console, pathToBuildReport);
-    } catch (Exception e) {
-      reportExceptionToUser(eventBus, e);
-      exitCode = ExitCode.BUILD_ERROR;
-    }
+      Optional<Path> pathToBuildReport)
+      throws Exception {
 
-    return exitCode;
+    ImmutableList<BuildRule> rulesToBuild = getRulesToBuild(targetsish);
+    List<BuildEngineResult> resultFutures = initializeBuild(rulesToBuild);
+    return waitForBuildToFinishAndPrintFailuresToEventBus(
+        rulesToBuild, resultFutures, eventBus, console, pathToBuildReport);
   }
 
   public void terminateBuildWithFailure(Throwable failure) {
@@ -426,7 +411,8 @@ public class Build implements Closeable {
       List<BuildEngineResult> resultFutures,
       BuckEventBus eventBus,
       Console console,
-      Optional<Path> pathToBuildReport) {
+      Optional<Path> pathToBuildReport)
+      throws Exception {
 
     ExitCode exitCode = ExitCode.BUILD_ERROR;
 
@@ -441,48 +427,12 @@ public class Build implements Closeable {
       exitCode = ExitCode.map(code);
     } catch (CleanBuildShutdownException e) {
       LOG.warn(e, "Build shutdown cleanly.");
-    } catch (Exception e) {
-      if (e instanceof BuildExecutionException) {
-        pathToBuildReport.ifPresent(
-            path -> writePartialBuildReport(eventBus, path, (BuildExecutionException) e));
-      } else if (e instanceof InterruptedException) {
-        // TODO(buck_team): we should rather propagate exception otherwise command status is
-        // recorded to event bus as completed, not interrupted
-        exitCode = ExitCode.SIGNAL_INTERRUPT;
-      }
-      reportExceptionToUser(eventBus, e);
+    } catch (BuildExecutionException e) {
+      pathToBuildReport.ifPresent(path -> writePartialBuildReport(eventBus, path, e));
+      throw e;
     }
 
     return exitCode;
-  }
-
-  private void reportExceptionToUser(BuckEventBus eventBus, Exception e) {
-    if (e instanceof RuntimeException) {
-      e = rootCauseOfBuildException(e);
-    }
-    new ErrorLogger(
-            eventBus, "Build failed: ", "Got an exception during the build.", this.errorAugmentor)
-        .logException(e);
-  }
-
-  /**
-   * Returns a root cause of the build exception {@code e}.
-   *
-   * @param e The build exception.
-   * @return The root cause exception for why the build failed.
-   */
-  private Exception rootCauseOfBuildException(Exception e) {
-    Throwable cause = e.getCause();
-    if (!(cause instanceof Exception)) {
-      return e;
-    }
-    if (cause instanceof IOException
-        || cause instanceof StepFailedException
-        || cause instanceof InterruptedException
-        || cause instanceof ExceptionWithHumanReadableMessage) {
-      return (Exception) cause;
-    }
-    return e;
   }
 
   /**

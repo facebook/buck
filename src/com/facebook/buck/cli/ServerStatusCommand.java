@@ -22,7 +22,6 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 import org.kohsuke.args4j.Option;
@@ -54,8 +53,7 @@ public class ServerStatusCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
 
     if (isShowHttpserverPort()) {

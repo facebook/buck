@@ -215,8 +215,14 @@ public class IjProjectSubCommand extends ProjectSubCommand {
         new BuildCommand(
             targets.stream().map(Object::toString).collect(ImmutableList.toImmutableList()));
     buildCommand.setKeepGoing(true);
-    return buildCommand.run(
-        disableCaching ? params.withArtifactCacheFactory(new NoopArtifactCacheFactory()) : params);
+    try {
+      return buildCommand.run(
+          disableCaching
+              ? params.withArtifactCacheFactory(new NoopArtifactCacheFactory())
+              : params);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static class AggregationModeOptionHandler extends OptionHandler<AggregationMode> {

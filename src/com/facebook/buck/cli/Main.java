@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.AnsiEnvironmentChecking.NAILGUN_STDERR_ISTTY_ENV;
 import static com.facebook.buck.util.AnsiEnvironmentChecking.NAILGUN_STDOUT_ISTTY_ENV;
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 
@@ -480,7 +481,7 @@ public final class Main {
 
                 @Override
                 public void logUserVisibleInternalError(String message) {
-                  console.printFailure(message);
+                  console.printFailure(linesToText("Buck encountered an internal error", message));
                 }
 
                 @Override
@@ -596,7 +597,7 @@ public final class Main {
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
       long initTimestamp,
       ImmutableList<String> unexpandedCommandLineArgs)
-      throws IOException, InterruptedException {
+      throws Exception {
 
     // Set initial exitCode value to FATAL. This will eventually get reassigned unless an exception
     // happens
@@ -1307,12 +1308,13 @@ public final class Main {
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
             throw e;
+          } finally {
+            buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
+            buildEventBus.post(
+                new CacheStatsEvent(
+                    "versioned_target_graph_cache",
+                    parserAndCaches.getVersionedTargetGraphCache().getCacheStats()));
           }
-          buildEventBus.post(
-              new CacheStatsEvent(
-                  "versioned_target_graph_cache",
-                  parserAndCaches.getVersionedTargetGraphCache().getCacheStats()));
-          buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
         } finally {
           // signal nailgun that we are not interested in client disconnect events anymore
           context.ifPresent(c -> c.removeAllClientListeners());

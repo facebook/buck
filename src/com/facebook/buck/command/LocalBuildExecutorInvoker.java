@@ -17,7 +17,6 @@ package com.facebook.buck.command;
 
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.util.ExitCode;
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -34,5 +33,5 @@ public interface LocalBuildExecutorInvoker {
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       CountDownLatch initializeBuildLatch,
       AtomicReference<Build> buildReference)
-      throws IOException, InterruptedException;
+      throws Exception;
 }

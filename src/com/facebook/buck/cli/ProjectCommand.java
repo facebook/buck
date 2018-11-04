@@ -94,8 +94,7 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     String projectIde =
         ide == null
             ? getIdeFromBuckConfig(params.getBuckConfig()).map(String::toLowerCase).orElse(null)

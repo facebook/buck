@@ -26,7 +26,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.List;
@@ -47,8 +46,7 @@ public class DistBuildLogsCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     Console console = params.getConsole();
     PrintStream stdout = console.getStdOut();
     StampedeId stampedeId = getStampedeId();

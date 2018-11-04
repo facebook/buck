@@ -130,7 +130,7 @@ public class LocalBuildExecutor implements BuildExecutor {
 
   @Override
   public ExitCode buildLocallyAndReturnExitCode(
-      Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport) {
+      Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport) throws Exception {
     return buildTargets(
         FluentIterable.from(targetsToBuild)
             .transform(
@@ -142,7 +142,7 @@ public class LocalBuildExecutor implements BuildExecutor {
 
   @Override
   public ExitCode buildTargets(
-      Iterable<BuildTarget> targetsToBuild, Optional<Path> pathToBuildReport) {
+      Iterable<BuildTarget> targetsToBuild, Optional<Path> pathToBuildReport) throws Exception {
     Preconditions.checkArgument(!isShutdown);
     try {
       return build.executeAndPrintFailuresToEventBus(
@@ -166,7 +166,8 @@ public class LocalBuildExecutor implements BuildExecutor {
   public ExitCode waitForBuildToFinish(
       Iterable<String> targetsToBuild,
       List<BuildEngineResult> resultFutures,
-      Optional<Path> pathToBuildReport) {
+      Optional<Path> pathToBuildReport)
+      throws Exception {
     Preconditions.checkArgument(!isShutdown);
     return build.waitForBuildToFinishAndPrintFailuresToEventBus(
         getRulesToBuild(targetsToBuild),

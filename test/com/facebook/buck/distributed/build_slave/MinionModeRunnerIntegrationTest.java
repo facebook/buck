@@ -166,8 +166,7 @@ public class MinionModeRunnerIntegrationTest {
   }
 
   @Test
-  public void testUnexpectedCacheMissesAreRecorded()
-      throws NoSuchBuildTargetException, InterruptedException, IOException {
+  public void testUnexpectedCacheMissesAreRecorded() throws Exception {
     // Graph structure:
     //                      +-- (miss target 2)
     //                      | /     |

@@ -20,7 +20,6 @@ import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.ExitCode;
-import java.io.IOException;
 import java.util.Map;
 import org.kohsuke.args4j.Option;
 
@@ -35,8 +34,7 @@ public class AuditAliasCommand extends AbstractCommand {
   private boolean listAliasesMap = false;
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     AliasConfig aliasConfig = AliasConfig.from(params.getBuckConfig());
     if (listAliasesMap) {
       for (Map.Entry<String, BuildTarget> entry : aliasConfig.getAliases().entries()) {

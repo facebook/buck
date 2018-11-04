@@ -30,7 +30,6 @@ import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +39,7 @@ import org.junit.Test;
 
 public class CacheDeleteCommandTest {
   @Test(expected = CommandLineException.class)
-  public void testRunCommandWithNoArguments() throws IOException, InterruptedException {
+  public void testRunCommandWithNoArguments() throws Exception {
     TestConsole console = new TestConsole();
     CommandRunnerParams commandRunnerParams =
         CommandRunnerParamsForTesting.builder().setConsole(console).build();
@@ -50,8 +49,7 @@ public class CacheDeleteCommandTest {
   }
 
   @Test
-  public void testRunCommandAndDeleteArtifactsSuccessfully()
-      throws IOException, InterruptedException {
+  public void testRunCommandAndDeleteArtifactsSuccessfully() throws Exception {
     String[] ruleKeyHashes = {
       "b64009ae3762a42a1651c139ec452f0d18f48e21", "9837098ab8745dabcb64009ae3762a42a16545a2",
     };
@@ -77,8 +75,7 @@ public class CacheDeleteCommandTest {
   }
 
   @Test
-  public void testRunCommandAndDeleteArtifactsUnsuccessfully()
-      throws IOException, InterruptedException {
+  public void testRunCommandAndDeleteArtifactsUnsuccessfully() throws Exception {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
     ArtifactCache cache =
