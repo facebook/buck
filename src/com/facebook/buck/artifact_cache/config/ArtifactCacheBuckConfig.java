@@ -389,7 +389,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
    * <p>Both the key and certificate must be set for client TLS certificates to be used
    */
   public Optional<Path> getClientTlsCertificate() {
-    return buckConfig.getValue("cache", "http_client_tls_cert").map(Paths::get);
+    return buckConfig.getValue(CACHE_SECTION_NAME, "http_client_tls_cert").map(Paths::get);
   }
 
   /**
@@ -400,7 +400,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
    * <p>Both the key and certificate must be set for client TLS certificates to be used
    */
   public Optional<Path> getClientTlsKey() {
-    return buckConfig.getValue("cache", "http_client_tls_key").map(Paths::get);
+    return buckConfig.getValue(CACHE_SECTION_NAME, "http_client_tls_key").map(Paths::get);
   }
 
   /** Thread pools that are available for task execution. */
