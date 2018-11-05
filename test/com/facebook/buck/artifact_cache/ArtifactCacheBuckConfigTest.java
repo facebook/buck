@@ -216,18 +216,19 @@ public class ArtifactCacheBuckConfigTest {
     assertThat(othernameDirCche.getMaxSizeBytes(), Matchers.equalTo(Optional.of(800L)));
   }
 
-  @Test(expected = HumanReadableException.class)
+  @Test
   public void testMalformedHttpUrl() throws IOException {
     ArtifactCacheBuckConfig config = createFromText("[cache]", "http_url = notaurl");
-
-    config.getCacheEntries().getHttpCacheEntries();
+    expectedException.expect(HumanReadableException.class);
+    config.getCacheEntries();
   }
 
-  @Test(expected = HumanReadableException.class)
+  @Test
   public void testMalformedMode() throws IOException {
     ArtifactCacheBuckConfig config = createFromText("[cache]", "dir_mode = notamode");
 
-    config.getCacheEntries().getDirCacheEntries();
+    expectedException.expect(HumanReadableException.class);
+    config.getCacheEntries();
   }
 
   @Test
