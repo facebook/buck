@@ -105,13 +105,19 @@ public class ParserCache {
    */
   public void storeBuildFileManifest(Path buildFile, BuildFileManifest buildFileManifest) {
     final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
-    final HashCode strongFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
+
     try {
+      final HashCode strongFingerprint =
+          Fingerprinter.getStrongFingerprint(filesystem, buildFileManifest.getIncludes());
       byte[] serializedManifest = serializeBuildFileManifestToBytes(buildFileManifest, buildFile);
       parserCacheStorage.storeBuildFileManifest(
           weakFingerprint, strongFingerprint, serializedManifest);
-    } catch (ParserCacheException t) {
-      LOG.error(t, "Failure while storing parsed BuildFileAccessManifest.");
+    } catch (ParserCacheException e) {
+      LOG.error(e, "Failure while storing parsed BuildFileAccessManifest.");
+    } catch (IOException e) {
+      LOG.error(
+          e,
+          "Failure while calculating strong fingerprint when storing parsed BuildFileAccessManifest.");
     }
   }
 
