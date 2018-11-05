@@ -16,9 +16,11 @@
 
 package com.facebook.buck.artifact_cache;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig.Executor;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
@@ -328,6 +330,25 @@ public class ArtifactCacheBuckConfigTest {
     ImmutableSet<HttpCacheEntry> httpCacheEntries = config.getCacheEntries().getHttpCacheEntries();
     HttpCacheEntry cache = Iterables.getOnlyElement(httpCacheEntries);
     assertThat(cache.getErrorMessageFormat(), Matchers.equalTo(testText));
+  }
+
+  @Test
+  public void directExecutorIsUsedByDefaultForDirCacheStores() throws Exception {
+    ArtifactCacheBuckConfig config = createFromText();
+    assertEquals(Executor.DIRECT, config.getDirCacheStoreExecutor());
+  }
+
+  @Test
+  public void directExecutorIsUsedForDirCacheStoresWhenRequested() throws Exception {
+    ArtifactCacheBuckConfig config = createFromText("[cache]", "dir_cache_store_executor = direct");
+    assertEquals(Executor.DIRECT, config.getDirCacheStoreExecutor());
+  }
+
+  @Test
+  public void diskIOExecutorIsUsedForDirCacheStoresWhenRequested() throws Exception {
+    ArtifactCacheBuckConfig config =
+        createFromText("[cache]", "dir_cache_store_executor = disk_io");
+    assertEquals(Executor.DISK_IO, config.getDirCacheStoreExecutor());
   }
 
   public static ArtifactCacheBuckConfig createFromText(String... lines) throws IOException {

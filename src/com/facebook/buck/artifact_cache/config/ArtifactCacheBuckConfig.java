@@ -403,6 +403,21 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return buckConfig.getValue("cache", "http_client_tls_key").map(Paths::get);
   }
 
+  /** Thread pools that are available for task execution. */
+  public enum Executor {
+    /** @see com.google.common.util.concurrent.MoreExecutors#directExecutor() */
+    DIRECT,
+    /** an executor responsible for carrying out only disk-related operations */
+    DISK_IO, //
+  }
+
+  /** @return The thread pool dir cache store operations should be executed on. */
+  public Executor getDirCacheStoreExecutor() {
+    return buckConfig
+        .getEnum(CACHE_SECTION_NAME, "dir_cache_store_executor", Executor.class)
+        .orElse(Executor.DIRECT);
+  }
+
   private boolean getServingLocalCacheEnabled() {
     return buckConfig.getBooleanValue(CACHE_SECTION_NAME, SERVED_CACHE_ENABLED_FIELD_NAME, false);
   }

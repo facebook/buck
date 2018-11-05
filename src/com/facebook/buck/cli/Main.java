@@ -25,6 +25,7 @@ import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorS
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.ClientCertificateHandler;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig.Executor;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
@@ -1036,7 +1037,7 @@ public final class Main {
                     httpWriteExecutorService.get(),
                     httpFetchExecutorService.get(),
                     stampedeSyncBuildHttpFetchExecutorService.get(),
-                    newDirectExecutorService(),
+                    getDirCacheStoreExecutor(cacheBuckConfig, diskIoExecutorService),
                     managerScope,
                     getArtifactProducerId(executionEnvironment),
                     executionEnvironment.getHostname(),
@@ -1348,6 +1349,21 @@ public final class Main {
       }
     }
     return exitCode;
+  }
+
+  private ListeningExecutorService getDirCacheStoreExecutor(
+      ArtifactCacheBuckConfig cacheBuckConfig,
+      ThrowingCloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService) {
+    Executor dirCacheStoreExecutor = cacheBuckConfig.getDirCacheStoreExecutor();
+    switch (dirCacheStoreExecutor) {
+      case DISK_IO:
+        return listeningDecorator(diskIoExecutorService.get());
+      case DIRECT:
+        return newDirectExecutorService();
+      default:
+        throw new IllegalStateException(
+            "Executor service for " + dirCacheStoreExecutor + " is not configured.");
+    }
   }
 
   private boolean isRemoteExecutionBuild(BuckCommand command, BuckConfig config) {
