@@ -41,7 +41,7 @@ public class CoordinatorAndMinionInfoSetterTest {
   private DistBuildService service;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     service = EasyMock.createMock(DistBuildService.class);
   }
 

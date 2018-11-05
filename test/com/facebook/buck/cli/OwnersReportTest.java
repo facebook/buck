@@ -109,7 +109,7 @@ public class OwnersReportTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   }
 

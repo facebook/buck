@@ -95,7 +95,7 @@ public class WindowsClangCxxIntegrationTest {
   }
 
   @Test
-  public void testThinArchives() throws IOException, InterruptedException {
+  public void testThinArchives() throws IOException {
     workspace.enableDirCache();
     workspace.runBuckCommand("clean");
     workspace

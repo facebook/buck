@@ -223,7 +223,7 @@ public class SourcePathResolverTest {
   }
 
   @Test
-  public void getSourcePathNameOnDefaultBuildTargetSourcePath() throws Exception {
+  public void getSourcePathNameOnDefaultBuildTargetSourcePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -257,7 +257,7 @@ public class SourcePathResolverTest {
   }
 
   @Test
-  public void getSourcePathNameOnExplicitBuildTargetSourcePath() throws Exception {
+  public void getSourcePathNameOnExplicitBuildTargetSourcePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -305,7 +305,7 @@ public class SourcePathResolverTest {
   }
 
   @Test
-  public void getSourcePathNameOnForwardingBuildTargetSourcePath() throws Exception {
+  public void getSourcePathNameOnForwardingBuildTargetSourcePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -349,7 +349,7 @@ public class SourcePathResolverTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void getSourcePathNameOnArchiveMemberSourcePath() throws Exception {
+  public void getSourcePathNameOnArchiveMemberSourcePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));

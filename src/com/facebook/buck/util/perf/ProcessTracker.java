@@ -140,13 +140,13 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   }
 
   @Override
-  protected void startUp() throws Exception {
+  protected void startUp() {
     LOG.debug("startUp");
     registerThisProcess();
   }
 
   @Override
-  protected void runOneIteration() throws Exception {
+  protected void runOneIteration() {
     GlobalStateManager.singleton()
         .getThreadToCommandRegister()
         .register(Thread.currentThread().getId(), invocationInfo.getCommandId());
@@ -154,7 +154,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   }
 
   @Override
-  protected void shutDown() throws Exception {
+  protected void shutDown() {
     LOG.debug("shutDown");
     refreshProcessesInfo(/* isShuttingDown */ true);
   }

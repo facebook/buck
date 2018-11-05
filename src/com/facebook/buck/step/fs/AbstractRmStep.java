@@ -48,8 +48,7 @@ abstract class AbstractRmStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Path absolutePath =
         context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot());
     if (isRecursive()) {

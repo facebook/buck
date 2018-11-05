@@ -62,7 +62,7 @@ public class DaemonicCellStateTest {
   }
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Files.createDirectories(filesystem.resolve("../xplat"));
     Files.createFile(filesystem.resolve("../xplat/.buckconfig"));

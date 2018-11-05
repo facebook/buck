@@ -64,7 +64,7 @@ public class RecordingFileHashLoaderTest {
   private ProjectFilesystem projectFilesystem;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath().toRealPath());
   }

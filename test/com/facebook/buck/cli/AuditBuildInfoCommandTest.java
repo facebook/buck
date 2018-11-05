@@ -38,7 +38,7 @@ public class AuditBuildInfoCommandTest {
   private TestConsole console;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     console = new TestConsole();
 
     System.setProperty("buck.binary_hash", BUCK_BINARY_HASH);

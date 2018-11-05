@@ -478,7 +478,7 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testPackageStringsDependsOnResourcesFilter() throws Exception {
+  public void testPackageStringsDependsOnResourcesFilter() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     // set it up.
@@ -560,7 +560,7 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testResourceRulesDependOnRulesBehindResourceSourcePaths() throws Exception {
+  public void testResourceRulesDependOnRulesBehindResourceSourcePaths() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 

@@ -120,8 +120,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       ImmutableSet.Builder<String> allReferencedResourcesBuilder = ImmutableSet.builder();
       for (DexProducedFromJavaLibrary preDexRule : allPreDexRules) {
         Optional<ImmutableList<String>> referencedResources = preDexRule.getReferencedResources();

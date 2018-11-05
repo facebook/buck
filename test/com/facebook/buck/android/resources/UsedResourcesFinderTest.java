@@ -41,7 +41,7 @@ public class UsedResourcesFinderTest {
   private Path apkPath;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     filesystem =
         TestProjectFilesystems.createProjectFilesystem(
             TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));

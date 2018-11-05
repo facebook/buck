@@ -69,7 +69,7 @@ public class DelegateAndGraphsInitializer {
                 () -> {
                   try {
                     return createDelegateAndGraphs();
-                  } catch (InterruptedException | IOException e) {
+                  } catch (InterruptedException e) {
                     LOG.error(
                         e, "Critical failure while creating the build engine delegate and graphs.");
                     throw new RuntimeException(e);
@@ -86,7 +86,7 @@ public class DelegateAndGraphsInitializer {
         delegateAndGraphs, x -> x.getActionGraphAndBuilder(), MoreExecutors.directExecutor());
   }
 
-  private DelegateAndGraphs createDelegateAndGraphs() throws IOException, InterruptedException {
+  private DelegateAndGraphs createDelegateAndGraphs() throws InterruptedException {
     LOG.info("Starting to preload source files.");
     StackedFileHashCaches stackedCaches = createStackedFileHashesAndPreload();
     LOG.info("Finished pre-loading source files.");

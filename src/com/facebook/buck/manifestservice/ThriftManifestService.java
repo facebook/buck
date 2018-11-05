@@ -112,7 +112,7 @@ public class ThriftManifestService implements ManifestService {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     executor.shutdown();
     try {
       executor.awaitTermination(1000, TimeUnit.MILLISECONDS);

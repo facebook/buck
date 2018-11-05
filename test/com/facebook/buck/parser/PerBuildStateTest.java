@@ -83,7 +83,7 @@ public class PerBuildStateTest {
   }
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     // Create a temp directory with some build files.
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tempDir.getRoot());

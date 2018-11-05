@@ -50,7 +50,7 @@ import org.junit.Test;
 public class JavaBinaryDescriptionTest {
 
   @Test
-  public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromDepsBecomeFirstOrderDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     FakeJavaLibrary transitiveLibrary =

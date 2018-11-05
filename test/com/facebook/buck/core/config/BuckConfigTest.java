@@ -55,7 +55,7 @@ public class BuckConfigTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
-  public void testConstructorWithNonExistentBasePath() throws InterruptedException, IOException {
+  public void testConstructorWithNonExistentBasePath() throws IOException {
     Reader reader =
         new StringReader(Joiner.on('\n').join("[alias]", "katana = //java/com/example:fb4a"));
 
@@ -65,7 +65,7 @@ public class BuckConfigTest {
 
   @Test
   public void testGetBuildTargetListResolvesAliases()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
+      throws IOException, NoSuchBuildTargetException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')
@@ -88,7 +88,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testExcludedLabels() throws InterruptedException, IOException {
+  public void testExcludedLabels() throws IOException {
     Reader reader =
         new StringReader(Joiner.on('\n').join("[test]", "excluded_labels = windows, linux"));
     BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
@@ -141,7 +141,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testGetDefaultTestTimeoutMillis() throws InterruptedException, IOException {
+  public void testGetDefaultTestTimeoutMillis() throws IOException {
     assertEquals(0L, FakeBuckConfig.builder().build().getDefaultTestTimeoutMillis());
 
     Reader reader = new StringReader(Joiner.on('\n').join("[test]", "timeout = 54321"));

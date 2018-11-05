@@ -46,7 +46,7 @@ public class InstallCommandOptionsTest {
   }
 
   private AdbOptions getAdbOptions(boolean multiInstallModeConfig, String... args)
-      throws CmdLineException, InterruptedException, IOException {
+      throws CmdLineException, IOException {
     Reader reader =
         new StringReader(
             Joiner.on('\n').join("[adb]", "multi_install_mode = " + multiInstallModeConfig));

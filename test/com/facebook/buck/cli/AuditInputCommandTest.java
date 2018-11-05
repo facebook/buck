@@ -59,7 +59,7 @@ public class AuditInputCommandTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     console = new TestConsole();
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.touch(Paths.get("src/com/facebook/AndroidLibraryTwo.java"));

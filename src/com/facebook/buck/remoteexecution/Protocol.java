@@ -137,8 +137,7 @@ public interface Protocol {
       Path output,
       Digest digest,
       boolean isExecutable,
-      ThrowingSupplier<InputStream, IOException> dataSupplier)
-      throws IOException;
+      ThrowingSupplier<InputStream, IOException> dataSupplier);
 
   FileNode newFileNode(Digest digest, String name, boolean isExecutable);
 
@@ -165,7 +164,7 @@ public interface Protocol {
 
   byte[] toByteArray(Action action);
 
-  Digest computeDigest(Directory directory) throws IOException;
+  Digest computeDigest(Directory directory);
 
   Digest computeDigest(byte[] data);
 

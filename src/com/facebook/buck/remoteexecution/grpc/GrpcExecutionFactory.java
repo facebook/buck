@@ -75,8 +75,7 @@ public class GrpcExecutionFactory {
       String casHost,
       int casPort,
       Optional<TraceInfoProvider> traceInfoProvider,
-      BuckEventBus buckEventBus)
-      throws IOException {
+      BuckEventBus buckEventBus) {
     ManagedChannel executionEngineChannel =
         ManagedChannelBuilder.forAddress(executionEngineHost, executionEnginePort)
             .usePlaintext(true)

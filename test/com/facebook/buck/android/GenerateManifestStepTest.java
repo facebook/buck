@@ -43,7 +43,7 @@ public class GenerateManifestStepTest {
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "create_manifest", tmpFolder).setUp();
   }
 

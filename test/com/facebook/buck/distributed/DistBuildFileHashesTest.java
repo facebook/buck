@@ -103,7 +103,7 @@ public class DistBuildFileHashesTest {
     protected final DistBuildFileHashes distributedBuildFileHashes;
 
     public Fixture(ProjectFilesystem first, ProjectFilesystem second)
-        throws InterruptedException, IOException, NoSuchBuildTargetException {
+        throws IOException, NoSuchBuildTargetException {
       projectFilesystem = first;
       javaFs = projectFilesystem.getRootPath().getFileSystem();
 

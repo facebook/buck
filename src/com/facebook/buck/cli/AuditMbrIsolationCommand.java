@@ -66,7 +66,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
     try {
       // Create a TargetGraph that is composed of the transitive closure of all of the dependent
       // BuildRules for the specified BuildTargetPaths.

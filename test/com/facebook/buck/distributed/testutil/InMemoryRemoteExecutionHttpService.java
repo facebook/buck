@@ -220,7 +220,7 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
             }
 
             @Override
-            public InputStream getPayloadStream(int index) throws IOException {
+            public InputStream getPayloadStream(int index) {
               Digest digest =
                   frontendResponse
                       .getRemoteExecutionFetchResponse()
@@ -243,7 +243,7 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
         }
 
         @Override
-        public long contentLength() throws IOException {
+        public long contentLength() {
           return responseBody.length;
         }
 
@@ -258,7 +258,7 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
         }
 
         @Override
-        public void close() throws IOException {}
+        public void close() {}
       };
     }
   }

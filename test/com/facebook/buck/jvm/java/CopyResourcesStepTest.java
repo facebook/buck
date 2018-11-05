@@ -43,8 +43,7 @@ import org.junit.Test;
 
 public class CopyResourcesStepTest {
   @Test
-  public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory()
-      throws InterruptedException {
+  public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Files:

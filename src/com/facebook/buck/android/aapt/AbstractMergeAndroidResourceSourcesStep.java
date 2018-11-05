@@ -33,7 +33,6 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -70,8 +69,7 @@ abstract class AbstractMergeAndroidResourceSourcesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) {
     ResourceMerger merger = new ResourceMerger(1);
     try {
       for (Path resPath : getResPaths()) {

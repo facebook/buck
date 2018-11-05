@@ -88,8 +88,7 @@ public class RepackZipEntriesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Path inputFile = filesystem.getPathForRelativePath(inputPath);
     Path outputFile = filesystem.getPathForRelativePath(outputPath);
     try (ZipInputStream in =

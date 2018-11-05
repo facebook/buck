@@ -46,7 +46,7 @@ public class AndroidSdkLocationFactoryTest {
   private ProjectFilesystem projectFilesystem;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     projectFilesystem = TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
   }
 

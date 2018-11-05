@@ -40,7 +40,6 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -49,7 +48,7 @@ public class QueryCacheTest {
   private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
 
   @Test
-  public void cacheQueryResults() throws ExecutionException, QueryException {
+  public void cacheQueryResults() throws QueryException {
     Query q1 = Query.of("deps(:a) union deps(:c) except (deps(:a) intersect classpath(deps(:f)))");
     Query q2 = Query.of("deps(:a) ^ classpath(deps(:f))");
     Query q3 = Query.of("kind(binary, deps(:a))");
@@ -137,7 +136,7 @@ public class QueryCacheTest {
   }
 
   @Test
-  public void dynamicDeps() throws ExecutionException, QueryException {
+  public void dynamicDeps() throws QueryException {
     Query declared = Query.of("$declared_deps");
 
     BuildTarget fooTarget = BuildTargetFactory.newInstance("//:foo");

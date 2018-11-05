@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.X509KeyManager;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import okhttp3.tls.HandshakeCertificates;
@@ -468,7 +467,7 @@ public class ArtifactCachesIntegrationTest {
         Request request,
         HttpServletRequest httpServletRequest,
         HttpServletResponse httpServletResponse)
-        throws IOException, ServletException {
+        throws IOException {
 
       X509Certificate[] certs =
           (X509Certificate[])

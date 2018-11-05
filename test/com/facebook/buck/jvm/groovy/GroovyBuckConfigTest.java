@@ -38,8 +38,7 @@ public class GroovyBuckConfigTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
-  public void refuseToContinueWhenInsufficientInformationToFindGroovycIsProvided()
-      throws InterruptedException {
+  public void refuseToContinueWhenInsufficientInformationToFindGroovycIsProvided() {
     thrown.expectMessage(
         allOf(
             containsString("Unable to locate groovy compiler"),
@@ -53,8 +52,7 @@ public class GroovyBuckConfigTest {
   }
 
   @Test
-  public void refuseToContinueWhenInformationResultsInANonExistentGroovycPath()
-      throws InterruptedException {
+  public void refuseToContinueWhenInformationResultsInANonExistentGroovycPath() {
     String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
     Path invalidDir = Paths.get(invalidPath);
     Path invalidGroovyc = invalidDir.resolve(MorePaths.pathWithPlatformSeparators("bin/groovyc"));
@@ -68,7 +66,7 @@ public class GroovyBuckConfigTest {
   }
 
   @Test
-  public void byDefaultFindGroovycFromGroovyHome() throws InterruptedException {
+  public void byDefaultFindGroovycFromGroovyHome() {
     String systemGroovyHome = System.getenv("GROOVY_HOME");
     assumeTrue(systemGroovyHome != null);
 
@@ -81,7 +79,7 @@ public class GroovyBuckConfigTest {
   }
 
   @Test
-  public void explicitConfigurationOverridesTheEnvironment() throws InterruptedException {
+  public void explicitConfigurationOverridesTheEnvironment() {
     String systemGroovyHome = System.getenv("GROOVY_HOME");
     assumeTrue(systemGroovyHome != null);
 

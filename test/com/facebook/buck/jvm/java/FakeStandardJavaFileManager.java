@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
@@ -168,7 +167,7 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     throw new UnsupportedOperationException();
   }
 

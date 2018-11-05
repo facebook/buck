@@ -253,8 +253,7 @@ public class CleanCommandTest {
   }
 
   private CommandRunnerParams createCommandRunnerParams(
-      AbstractCommand command, boolean enableCacheSection)
-      throws InterruptedException, IOException {
+      AbstractCommand command, boolean enableCacheSection) {
     FakeBuckConfig.Builder buckConfigBuilder = FakeBuckConfig.builder();
 
     if (enableCacheSection) {

@@ -105,7 +105,7 @@ public class CxxPrecompiledHeaderRuleTest {
   private CxxPlatform platformNotSupportingPch;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
 
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());

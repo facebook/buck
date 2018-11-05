@@ -84,7 +84,7 @@ public class BuildSlaveLogsMaterializerTest {
   private DistBuildService mockService;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
     mockService = EasyMock.createMock(DistBuildService.class);

@@ -150,7 +150,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
     closeChannel(executionEngineChannel);
   }
 
-  private static void closeChannel(ManagedChannel channel) throws IOException {
+  private static void closeChannel(ManagedChannel channel) {
     channel.shutdown();
     try {
       channel.awaitTermination(3, TimeUnit.SECONDS);

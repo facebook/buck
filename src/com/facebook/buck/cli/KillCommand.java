@@ -20,7 +20,7 @@ import com.facebook.buck.util.ExitCode;
 
 public class KillCommand extends AbstractCommand {
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
     throw new IllegalStateException(
         "buck kill should be handled by python wrapper;"
             + " kill subcommand exists here only for buck help");

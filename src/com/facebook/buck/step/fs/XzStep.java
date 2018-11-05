@@ -132,8 +132,7 @@ public class XzStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     boolean deleteSource = false;
     try (InputStream in = filesystem.newFileInputStream(sourceFile);
         OutputStream out = filesystem.newFileOutputStream(destinationFile);

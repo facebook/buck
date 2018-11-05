@@ -69,7 +69,7 @@ public class AppleBuildRulesTest {
   private XCodeDescriptions xcodeDescriptions;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
 
     xcodeDescriptions =

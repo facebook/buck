@@ -39,7 +39,7 @@ public class GoTestIntegrationTest {
   public ProjectWorkspace workspace;
 
   @Before
-  public void ensureGoIsAvailable() throws IOException, InterruptedException {
+  public void ensureGoIsAvailable() throws IOException {
     GoAssumptions.assumeGoCompilerAvailable();
   }
 

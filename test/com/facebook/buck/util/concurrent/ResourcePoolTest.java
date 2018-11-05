@@ -165,7 +165,7 @@ public class ResourcePoolTest {
     }
 
     @Override
-    public void close() throws Exception {}
+    public void close() {}
   }
 
   private static class TestException extends RuntimeException {}

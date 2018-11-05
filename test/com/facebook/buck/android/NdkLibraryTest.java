@@ -52,7 +52,7 @@ public class NdkLibraryTest {
   private ProjectFilesystem projectFilesystem;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
 
@@ -60,7 +60,7 @@ public class NdkLibraryTest {
   }
 
   @Test
-  public void testSimpleNdkLibraryRule() throws Exception {
+  public void testSimpleNdkLibraryRule() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildContext context = FakeBuildContext.NOOP_CONTEXT;
 

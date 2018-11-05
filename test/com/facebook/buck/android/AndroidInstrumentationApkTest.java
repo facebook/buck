@@ -48,7 +48,7 @@ import org.junit.Test;
 public class AndroidInstrumentationApkTest {
 
   @Test
-  public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() throws Exception {
+  public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));

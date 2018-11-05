@@ -130,12 +130,8 @@ public abstract class IsolatedBuildableBuilder {
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
 
     // Root filesystemCell doesn't require embedded buck-out info.
-    ProjectFilesystem filesystem;
-    try {
-      filesystem = projectFilesystemFactory.createProjectFilesystem(canonicalProjectRoot, config);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    ProjectFilesystem filesystem =
+        projectFilesystemFactory.createProjectFilesystem(canonicalProjectRoot, config);
 
     Architecture architecture = Architecture.detect();
     Platform platform = Platform.detect();

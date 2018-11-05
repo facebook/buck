@@ -141,8 +141,7 @@ public class FilterResourcesSteps {
 
   private class CopyStep implements Step {
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       LOG.info(
           "FilterResourcesSteps: canDownscale: %s. imageScalar non-null: %s.",
           canDownscale(context), imageScaler != null);

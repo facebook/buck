@@ -22,7 +22,6 @@ import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -35,7 +34,7 @@ public class AndroidBuckConfigTest {
   }
 
   @Test
-  public void testNdkAppPlatformForCpuAbi() throws IOException {
+  public void testNdkAppPlatformForCpuAbi() {
     ImmutableMap<String, String> ndkSection =
         new ImmutableMap.Builder<String, String>()
             .put("app_platform_per_cpu_abi", "i386 => foo, arm64 => bar")
@@ -55,7 +54,7 @@ public class AndroidBuckConfigTest {
   }
 
   @Test
-  public void testNdkAppPlatformUnset() throws IOException {
+  public void testNdkAppPlatformUnset() {
     ImmutableMap<String, String> ndkSection = new ImmutableMap.Builder<String, String>().build();
     AndroidBuckConfig androidBuckConfig = makeAndroidBuckConfig(ndkSection);
 
@@ -67,7 +66,7 @@ public class AndroidBuckConfigTest {
   }
 
   @Test
-  public void testNdkAppPlatformPriority() throws IOException {
+  public void testNdkAppPlatformPriority() {
     ImmutableMap<String, String> ndkSection =
         new ImmutableMap.Builder<String, String>()
             .put("app_platform", "fallback")

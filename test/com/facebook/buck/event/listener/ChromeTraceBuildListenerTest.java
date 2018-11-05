@@ -116,7 +116,7 @@ public class ChromeTraceBuildListenerTest {
   private TaskManagerScope managerScope;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() {
     invocationInfo =
         InvocationInfo.builder()
             .setTimestampMillis(CURRENT_TIME_MILLIS)

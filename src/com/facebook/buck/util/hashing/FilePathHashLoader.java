@@ -94,7 +94,7 @@ public class FilePathHashLoader implements FileHashLoader {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+  public HashCode get(ArchiveMemberPath archiveMemberPath) {
     throw new UnsupportedOperationException("Not implemented");
   }
 

@@ -165,8 +165,7 @@ public class SplitZipStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Set<Path> inputJarPaths =
         inputPathsToSplit.stream().map(filesystem::resolve).collect(ImmutableSet.toImmutableSet());
     Supplier<ImmutableList<ClassNode>> classes =

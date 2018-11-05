@@ -145,7 +145,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() throws Exception {
+  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
 
@@ -198,7 +198,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void testThatBuildTargetsFromNativeLinkableDepsContributeToActualDeps() throws Exception {
+  public void testThatBuildTargetsFromNativeLinkableDepsContributeToActualDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -253,7 +253,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void createCxxLinkableBuildRuleExecutableVsShared() throws Exception {
+  public void createCxxLinkableBuildRuleExecutableVsShared() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -348,7 +348,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void createCxxLinkableBuildRuleStaticVsSharedDeps() throws Exception {
+  public void createCxxLinkableBuildRuleStaticVsSharedDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -509,7 +509,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void machOBundleWithBundleLoaderHasExpectedArgs() throws Exception {
+  public void machOBundleWithBundleLoaderHasExpectedArgs() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -549,7 +549,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void machOBundleSourcePathIsInDepsOfRule() throws Exception {
+  public void machOBundleSourcePathIsInDepsOfRule() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 

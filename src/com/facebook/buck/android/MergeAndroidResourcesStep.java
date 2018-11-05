@@ -186,8 +186,7 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     try {
       // In order to convert a symbols file to R.java, all resources of the same type are grouped
       // into a static class of that name. The static class contains static values that correspond

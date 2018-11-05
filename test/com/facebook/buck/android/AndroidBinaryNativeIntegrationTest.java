@@ -379,7 +379,7 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
     assertThat(syms.global, not(hasItem("x86_only_function")));
   }
 
-  private SymbolGetter getSymbolGetter() throws IOException, InterruptedException {
+  private SymbolGetter getSymbolGetter() throws IOException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));

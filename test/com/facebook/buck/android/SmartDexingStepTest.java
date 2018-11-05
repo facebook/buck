@@ -100,7 +100,7 @@ public class SmartDexingStepTest {
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithXzOutput() throws Exception {
+  public void testCreateDxStepForDxPseudoRuleWithXzOutput() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -143,7 +143,7 @@ public class SmartDexingStepTest {
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithXzOutputNonDefaultCompression() throws Exception {
+  public void testCreateDxStepForDxPseudoRuleWithXzOutputNonDefaultCompression() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -185,7 +185,7 @@ public class SmartDexingStepTest {
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithDexOutput() throws Exception {
+  public void testCreateDxStepForDxPseudoRuleWithDexOutput() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -221,7 +221,7 @@ public class SmartDexingStepTest {
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithDexJarOutput() throws Exception {
+  public void testCreateDxStepForDxPseudoRuleWithDexJarOutput() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -261,7 +261,7 @@ public class SmartDexingStepTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testCreateDxStepForDxPseudoRuleWithUnrecognizedOutput() throws Exception {
+  public void testCreateDxStepForDxPseudoRuleWithUnrecognizedOutput() {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 

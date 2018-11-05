@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
@@ -53,7 +52,7 @@ public class ResourcesXmlTest {
   private Path apkPath;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() {
     filesystem =
         TestProjectFilesystems.createProjectFilesystem(
             TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));

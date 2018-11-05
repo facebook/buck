@@ -56,7 +56,7 @@ public class GraphEnhancementQueryEnvironmentTest {
   private static final Path ROOT = Paths.get("/fake/cell/root");
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     cellRoots = DefaultCellPathResolver.of(ROOT, ImmutableMap.of());
   }
 

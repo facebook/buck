@@ -96,7 +96,7 @@ public class DefaultProjectFilesystemTest {
   private DefaultProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
@@ -592,7 +592,7 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
-  public void testExtractIgnorePaths() throws InterruptedException {
+  public void testExtractIgnorePaths() {
     Config config =
         ConfigBuilder.createFromText("[project]", "ignore = .git, foo, bar/, baz//, a/b/c");
     Path rootPath = tmp.getRoot();
@@ -621,7 +621,7 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
-  public void testExtractIgnorePathsWithCacheDir() throws InterruptedException {
+  public void testExtractIgnorePathsWithCacheDir() {
     Config config = ConfigBuilder.createFromText("[cache]", "dir = cache_dir");
     Path rootPath = tmp.getRoot();
     ImmutableSet<Path> ignorePaths =
@@ -637,8 +637,7 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
-  public void ignoredPathsShouldBeIgnoredWhenWalkingTheFilesystem()
-      throws InterruptedException, IOException {
+  public void ignoredPathsShouldBeIgnoredWhenWalkingTheFilesystem() throws IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = **/*.orig");
 
     ProjectFilesystem filesystem =
@@ -676,7 +675,7 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
-  public void getPathReturnsPathWithCorrectFilesystem() throws InterruptedException, IOException {
+  public void getPathReturnsPathWithCorrectFilesystem() throws IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     Path root = vfs.getPath("/root");
     Files.createDirectories(root);

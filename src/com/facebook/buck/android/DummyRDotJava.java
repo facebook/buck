@@ -319,8 +319,7 @@ public class DummyRDotJava extends AbstractBuildRule
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       try (ZipFile jar = new ZipFile(getProjectFilesystem().resolve(outputJar).toFile())) {
         for (ZipEntry zipEntry : Collections.list(jar.entries())) {
           if (zipEntry.getName().endsWith(".class")) {

@@ -51,7 +51,7 @@ import org.junit.runners.Parameterized;
 public class CxxSharedLibraryInterfaceIntegrationTest {
 
   @Parameterized.Parameters(name = "type={0},platform={1}")
-  public static Collection<Object[]> data() throws InterruptedException {
+  public static Collection<Object[]> data() {
     List<Flavor> platforms = new ArrayList<>();
 
     // Test the system platform.

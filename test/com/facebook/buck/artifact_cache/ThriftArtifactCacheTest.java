@@ -76,7 +76,7 @@ public class ThriftArtifactCacheTest {
   @Rule public TemporaryPaths tempPaths = new TemporaryPaths();
 
   @Test
-  public void testFetchResponseWithoutPayloadInfo() throws IOException, InterruptedException {
+  public void testFetchResponseWithoutPayloadInfo() throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     metadata.addToRuleKeys(new RuleKey().setHashString("012345"));
     testWithMetadataAndPayloadInfo(metadata, false);
@@ -106,8 +106,7 @@ public class ThriftArtifactCacheTest {
     testWithMetadata(null);
   }
 
-  private void testWithMetadata(@Nullable ArtifactMetadata artifactMetadata)
-      throws IOException, InterruptedException {
+  private void testWithMetadata(@Nullable ArtifactMetadata artifactMetadata) throws IOException {
     testWithMetadataAndPayloadInfo(artifactMetadata, true);
   }
 
@@ -231,7 +230,7 @@ public class ThriftArtifactCacheTest {
     }
 
     @Override
-    public void close() throws IOException {}
+    public void close() {}
   }
 
   @Test
@@ -450,7 +449,7 @@ public class ThriftArtifactCacheTest {
   }
 
   @Test
-  public void testDelete() throws Exception {
+  public void testDelete() {
     HttpService storeClient = new TestHttpService(this::makeSuccessfulDeleteResponse);
     TestHttpService fetchClient = new TestHttpService();
     ProjectFilesystem filesystem =

@@ -59,7 +59,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import org.junit.Before;
@@ -173,7 +172,7 @@ public class RemoteManifestServiceCacheStorageTest {
     }
 
     @Override
-    public void close() throws IOException {}
+    public void close() {}
   }
 
   @Before
@@ -210,7 +209,7 @@ public class RemoteManifestServiceCacheStorageTest {
 
   @Test
   public void storeInRemoteCacheAndGetFromRemoteCacheAndVerifyMatch()
-      throws IOException, ExecutionException, InterruptedException, ParserCacheException {
+      throws IOException, ParserCacheException {
     BuckConfig buckConfig = getConfig("readwrite");
     ManifestService manifestService = createManifestService(buckConfig);
     ParserCacheStorage remoteCache =

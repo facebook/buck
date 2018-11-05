@@ -106,7 +106,7 @@ public class TargetsCommandTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     console = new TestConsole();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "target_command", tmp);
     workspace.setUp();

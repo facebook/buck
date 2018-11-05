@@ -175,7 +175,7 @@ public class DistBuildSlaveEventBusListener
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     stopScheduledUpdates();
   }
 

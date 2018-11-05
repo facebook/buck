@@ -59,7 +59,7 @@ public class DefaultMultiBuildCapacityTrackerTest {
   }
 
   @Test
-  public void testCommitObtainsCapacity() throws IOException {
+  public void testCommitObtainsCapacity() {
     mockService.obtainCapacity(CAPACITY);
     EasyMock.expectLastCall().once();
     EasyMock.replay(mockService);

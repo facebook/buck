@@ -43,7 +43,7 @@ import org.junit.Test;
 public class ShTestDescriptionTest {
 
   @Test
-  public void argsWithLocationMacro() throws Exception {
+  public void argsWithLocationMacro() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -66,7 +66,7 @@ public class ShTestDescriptionTest {
   }
 
   @Test
-  public void envWithLocationMacro() throws Exception {
+  public void envWithLocationMacro() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));

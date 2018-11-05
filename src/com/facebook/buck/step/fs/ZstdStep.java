@@ -54,8 +54,7 @@ public class ZstdStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     try (InputStream in = filesystem.newFileInputStream(sourceFile);
         OutputStream out = filesystem.newFileOutputStream(outputPath);
         ZstdCompressorOutputStream zstdOut =

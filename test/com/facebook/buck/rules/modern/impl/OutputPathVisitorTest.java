@@ -68,74 +68,74 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void pattern() throws Exception {
+  public void pattern() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithPattern()));
   }
 
   @Override
   @Test
-  public void anEnum() throws Exception {
+  public void anEnum() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithEnum()));
   }
 
   @Override
   @Test
-  public void nonHashableSourcePathContainer() throws Exception {
+  public void nonHashableSourcePathContainer() {
     MoreAsserts.assertIterablesEquals(
         ImmutableList.of(), getOutputs(new WithNonHashableSourcePathContainer()));
   }
 
   @Override
   @Test
-  public void map() throws Exception {
+  public void map() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithMap()));
   }
 
   @Override
   @Test
-  public void sortedMap() throws Exception {
+  public void sortedMap() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithSortedMap()));
   }
 
   @Override
   @Test
-  public void supplier() throws Exception {
+  public void supplier() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithSupplier()));
   }
 
   @Override
   @Test
-  public void nullable() throws Exception {
+  public void nullable() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithNullable()));
   }
 
   @Override
   @Test
-  public void either() throws Exception {
+  public void either() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithEither()));
   }
 
   @Override
   @Test
-  public void excluded() throws Exception {
+  public void excluded() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithExcluded()));
   }
 
   @Override
   @Test
-  public void immutables() throws Exception {
+  public void immutables() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithImmutables()));
   }
 
   @Override
   @Test
-  public void stringified() throws Exception {
+  public void stringified() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithStringified()));
   }
 
   @Override
   @Test
-  public void wildcards() throws Exception {
+  public void wildcards() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithWildcards()));
   }
 

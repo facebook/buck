@@ -114,7 +114,7 @@ public class WorkspaceAndProjectGeneratorTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     xcodeDescriptions =
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());

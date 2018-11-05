@@ -86,7 +86,7 @@ final class ReconnectingEdenClient implements EdenClient {
 
   @Override
   public List<SHA1Result> getSHA1(String mountPoint, List<String> paths)
-      throws EdenError, IOException, TException {
+      throws IOException, TException {
     try {
       return attemptGetSHA1(mountPoint, paths);
     } catch (TException e) {
@@ -104,7 +104,7 @@ final class ReconnectingEdenClient implements EdenClient {
   }
 
   @Override
-  public List<String> getBindMounts(String mountPoint) throws EdenError, IOException, TException {
+  public List<String> getBindMounts(String mountPoint) throws IOException, TException {
     try {
       return attemptGetBindMounts(mountPoint);
     } catch (TException e) {

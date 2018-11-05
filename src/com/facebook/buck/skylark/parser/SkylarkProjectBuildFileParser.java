@@ -591,7 +591,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public void close() throws BuildFileParseException, InterruptedException, IOException {
+  public void close() throws BuildFileParseException {
     // nothing to do
   }
 

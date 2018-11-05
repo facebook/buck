@@ -66,7 +66,7 @@ public class DaemonIntegrationTest {
   @Rule public TestWithBuckd testWithBuckd = new TestWithBuckd(tmp);
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     executorService = Executors.newScheduledThreadPool(5);
   }
 

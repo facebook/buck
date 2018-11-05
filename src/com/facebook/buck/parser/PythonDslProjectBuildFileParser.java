@@ -684,7 +684,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   private static void handleWatchmanDiagnostic(
-      Path buildFile, String level, String message, BuckEventBus buckEventBus) throws IOException {
+      Path buildFile, String level, String message, BuckEventBus buckEventBus) {
     WatchmanDiagnostic.Level watchmanDiagnosticLevel;
     switch (level) {
         // Watchman itself doesn't issue debug or info, but in case
@@ -731,8 +731,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   @Override
   public boolean globResultsMatchCurrentState(
-      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
-      throws IOException, InterruptedException {
+      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
     throw new UnsupportedOperationException("Not yet implemented!");
   }
 

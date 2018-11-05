@@ -60,7 +60,7 @@ public class HaskellLibraryIntegrationTest {
   }
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
 
     // We don't currently support windows.
     assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));

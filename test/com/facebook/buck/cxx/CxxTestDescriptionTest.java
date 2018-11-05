@@ -265,7 +265,7 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void linkerFlagsLocationMacro() throws Exception {
+  public void linkerFlagsLocationMacro() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));

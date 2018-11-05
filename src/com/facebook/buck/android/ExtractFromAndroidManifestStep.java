@@ -39,8 +39,7 @@ public class ExtractFromAndroidManifestStep extends AbstractExecutionStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     AndroidManifestReader androidManifestReader =
         DefaultAndroidManifestReader.forPath(filesystem.resolve(manifest));
 

@@ -303,7 +303,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
   }
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     // MBR strategies use a ContentAddressedStorage that doesn't work correctly on Windows.
     assumeFalse(Platform.detect().equals(Platform.WINDOWS));
     workspace =
@@ -432,8 +432,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
             }
 
             @Override
-            public StepExecutionResult execute(ExecutionContext context)
-                throws IOException, InterruptedException {
+            public StepExecutionResult execute(ExecutionContext context) throws IOException {
               writeOutput(output1);
               writeOutput(output2);
               return StepExecutionResults.SUCCESS;

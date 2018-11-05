@@ -215,7 +215,7 @@ public class DefaultParserTest {
   }
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     tempDir.newFolder("java", "com", "facebook");
 
     defaultIncludeFile = tempDir.newFile("java/com/facebook/defaultIncludeFile").toRealPath();
@@ -642,7 +642,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfBuildFileAddThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -682,7 +682,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfBuildFileChangeThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -721,7 +721,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfBuildFileDeleteThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -760,7 +760,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfIncludeFileAddThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -799,7 +799,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfIncludeFileChangeThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -840,7 +840,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfIncludeFileDeleteThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -879,7 +879,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOf2ndOrderIncludeFileAddThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -918,7 +918,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOf2ndOrderIncludeFileChangeThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -957,7 +957,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOf2ndOrderIncludeFileDeleteThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -996,7 +996,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfDefaultIncludeFileAddThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -1035,7 +1035,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfDefaultIncludeFileChangeThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -1074,7 +1074,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfDefaultIncludeFileDeleteThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, IOException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -1114,7 +1114,7 @@ public class DefaultParserTest {
   @Test
   // TODO(simons): avoid invalidation when arbitrary contained (possibly backup) files are added.
   public void whenNotifiedOfContainedFileAddThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, InterruptedException {
+      throws BuildFileParseException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -1206,7 +1206,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfContainedFileChangeThenCacheRulesAreNotInvalidated()
-      throws BuildFileParseException, InterruptedException {
+      throws BuildFileParseException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -1246,7 +1246,7 @@ public class DefaultParserTest {
   @Test
   // TODO(simons): avoid invalidation when arbitrary contained (possibly backup) files are deleted.
   public void whenNotifiedOfContainedFileDeleteThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, InterruptedException {
+      throws BuildFileParseException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -1285,7 +1285,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfContainedTempFileAddThenCachedRulesAreNotInvalidated()
-      throws BuildFileParseException, InterruptedException {
+      throws BuildFileParseException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -1324,7 +1324,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfContainedTempFileChangeThenCachedRulesAreNotInvalidated()
-      throws BuildFileParseException, InterruptedException {
+      throws BuildFileParseException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -1363,7 +1363,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfContainedTempFileDeleteThenCachedRulesAreNotInvalidated()
-      throws BuildFileParseException, InterruptedException {
+      throws BuildFileParseException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -1402,7 +1402,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfUnrelatedFileAddThenCacheRulesAreNotInvalidated()
-      throws BuildFileParseException, InterruptedException {
+      throws BuildFileParseException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -1441,7 +1441,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfUnrelatedFileChangeThenCacheRulesAreNotInvalidated()
-      throws BuildFileParseException, InterruptedException {
+      throws BuildFileParseException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
@@ -1480,7 +1480,7 @@ public class DefaultParserTest {
 
   @Test
   public void whenNotifiedOfUnrelatedFileDeleteThenCacheRulesAreNotInvalidated()
-      throws BuildFileParseException, InterruptedException {
+      throws BuildFileParseException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,

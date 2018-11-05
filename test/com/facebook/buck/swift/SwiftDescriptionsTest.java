@@ -39,7 +39,7 @@ import org.junit.Test;
 public class SwiftDescriptionsTest {
 
   @Test
-  public void testPopulateSwiftLibraryDescriptionArg() throws Exception {
+  public void testPopulateSwiftLibraryDescriptionArg() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));

@@ -54,7 +54,7 @@ public class RemoteExecutionActionEventTest {
   }
 
   @Test
-  public void testSendEventAlsoSendsLeafEvents() throws IOException {
+  public void testSendEventAlsoSendsLeafEvents() {
     int totalEvents = 0;
     for (State state : State.values()) {
       if (RemoteExecutionActionEvent.isTerminalState(state)) {

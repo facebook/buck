@@ -66,7 +66,7 @@ public class PostBuildPhaseTest {
   private ConsoleEventsDispatcher consoleEventsDispatcher;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     mockDistBuildService = EasyMock.createMock(DistBuildService.class);
     mockLogStateTracker = EasyMock.createMock(LogStateTracker.class);
     scheduler = Executors.newSingleThreadScheduledExecutor();

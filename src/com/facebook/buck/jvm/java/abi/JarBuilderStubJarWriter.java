@@ -40,5 +40,5 @@ public class JarBuilderStubJarWriter implements StubJarWriter {
   }
 
   @Override
-  public void close() throws IOException {}
+  public void close() {}
 }

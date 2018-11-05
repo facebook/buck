@@ -59,7 +59,7 @@ public class GlobTest {
   private EventCollector eventHandler;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
     root = fileSystem.getPath(projectFilesystem.getRootPath().toString());

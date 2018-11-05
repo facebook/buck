@@ -190,8 +190,7 @@ public class DirectHeaderMapTest {
   }
 
   @Test
-  public void testRuleKeyDoesNotChangeIfLinkTargetsChange()
-      throws InterruptedException, IOException {
+  public void testRuleKeyDoesNotChangeIfLinkTargetsChange() throws IOException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(buildRule);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);

@@ -81,8 +81,7 @@ class PlistProcessStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     try (InputStream stream = filesystem.newFileInputStream(input);
         BufferedInputStream bufferedStream = new BufferedInputStream(stream)) {
       NSObject infoPlist;

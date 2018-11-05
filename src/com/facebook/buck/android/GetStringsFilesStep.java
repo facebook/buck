@@ -54,8 +54,7 @@ public class GetStringsFilesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Predicate<Path> filter =
         pathRelativeToProjectRoot -> {
           String filePath = MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);

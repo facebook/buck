@@ -108,8 +108,7 @@ public class DiagnosticPrettyPrinterTest {
    * @param column The column within {@code row}, also 1-indexed.
    */
   private Diagnostic<? extends JavaFileObject> createDiagnostic(
-      String message, String pathToSource, String sourceContents, long row, long column)
-      throws Exception {
+      String message, String pathToSource, String sourceContents, long row, long column) {
     JavaFileObject fileObject = new StringJavaFileObject(pathToSource, sourceContents);
 
     // Calculate the position, because we're all bad at counting things

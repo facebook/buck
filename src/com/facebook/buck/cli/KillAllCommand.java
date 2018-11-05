@@ -21,7 +21,7 @@ import com.facebook.buck.util.ExitCode;
 /** Buck subcommand to kill all buck processes. */
 public class KillAllCommand extends AbstractCommand {
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
     throw new IllegalStateException(
         "buck killall should be handled by python wrapper;"
             + " killall subcommand exists here only for buck help");

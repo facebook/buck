@@ -90,7 +90,7 @@ public class BuckQueryEnvironmentTest {
   }
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     eventBus = BuckEventBusForTests.newInstance();
     capturingConsoleEventListener = new CapturingConsoleEventListener();
     eventBus.register(capturingConsoleEventListener);
@@ -188,7 +188,7 @@ public class BuckQueryEnvironmentTest {
   }
 
   @Test
-  public void whenNonExistentFileIsQueriedAWarningIsIssued() throws QueryException {
+  public void whenNonExistentFileIsQueriedAWarningIsIssued() {
     ImmutableList<String> expectedTargets = ImmutableList.of("/foo/bar");
     buckQueryEnvironment.getFileOwners(expectedTargets);
     String expectedWarning = "File /foo/bar does not exist";

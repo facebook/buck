@@ -71,7 +71,7 @@ class StubJarClassEntry extends StubJarEntry {
   }
 
   @Override
-  public void write(StubJarWriter writer) throws IOException {
+  public void write(StubJarWriter writer) {
     writer.writeEntry(path, this::openInputStream);
   }
 

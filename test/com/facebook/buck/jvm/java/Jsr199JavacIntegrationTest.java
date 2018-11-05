@@ -364,7 +364,7 @@ public class Jsr199JavacIntegrationTest {
 
   @Test
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  public void jdkNotFound() throws Exception {
+  public void jdkNotFound() {
     Jsr199Javac javac = new JdkNotFoundJavac();
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext =

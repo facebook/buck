@@ -80,7 +80,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws Exception {
+  public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -109,7 +109,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void shouldSetOutToNameParamValueIfSrcIsSet() throws Exception {
+  public void shouldSetOutToNameParamValueIfSrcIsSet() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -139,7 +139,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void shouldSetOutAndSrcAndNameParametersSeparately() throws Exception {
+  public void shouldSetOutAndSrcAndNameParametersSeparately() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -263,7 +263,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void referenceModeUsesUnderlyingSourcePath() throws Exception {
+  public void referenceModeUsesUnderlyingSourcePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -279,7 +279,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void referenceModeRequiresSameFilesystem() throws Exception {
+  public void referenceModeRequiresSameFilesystem() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     ProjectFilesystem differentFilesystem = new FakeProjectFilesystem();
     SourcePath src = FakeSourcePath.of(differentFilesystem, "source");
@@ -292,7 +292,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void referenceModeDoesNotAcceptOutParameter() throws Exception {
+  public void referenceModeDoesNotAcceptOutParameter() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("must not set `out`"));

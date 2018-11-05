@@ -894,7 +894,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
           }
 
           @Override
-          public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+          public FileVisitResult visitFileFailed(Path file, IOException exc) {
             return FileVisitResult.CONTINUE;
           }
 

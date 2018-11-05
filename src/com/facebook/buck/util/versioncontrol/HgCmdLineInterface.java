@@ -100,8 +100,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
   @Override
   public VersionControlSupplier<InputStream> diffBetweenRevisions(
-      String baseRevision, String tipRevision)
-      throws VersionControlCommandFailedException, InterruptedException {
+      String baseRevision, String tipRevision) throws VersionControlCommandFailedException {
     validateRevisionId(baseRevision);
     validateRevisionId(tipRevision);
 

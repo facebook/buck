@@ -77,8 +77,7 @@ public class AccumulateClassNamesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     ImmutableSortedMap<String, HashCode> classNames;
     if (pathToJarOrClassesDirectory.isPresent()) {
       Optional<ImmutableSortedMap<String, HashCode>> classNamesOptional =

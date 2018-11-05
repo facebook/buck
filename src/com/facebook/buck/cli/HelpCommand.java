@@ -38,7 +38,7 @@ public class HelpCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
     return run(params.getConsole().getStdErr());
   }
 

@@ -258,8 +258,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
             symlinkPath.toAbsolutePath()));
   }
 
-  private synchronized void record(ArchiveMemberPath relPath, Optional<HashCode> hashCode)
-      throws IOException {
+  private synchronized void record(ArchiveMemberPath relPath, Optional<HashCode> hashCode) {
     if (!remoteFileHashes.containsAndAddPath(relPath)) {
       record(
           relPath.getArchivePath(),

@@ -83,8 +83,7 @@ public class ZipStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     if (filesystem.exists(pathToZipFile)) {
       context.postEvent(
           ConsoleEvent.severe("Attempting to overwrite an existing zip: %s", pathToZipFile));

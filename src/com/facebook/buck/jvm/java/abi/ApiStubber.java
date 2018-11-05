@@ -27,7 +27,7 @@ public class ApiStubber {
     // Command line utility.
   }
 
-  public static void main(String[] args) throws InterruptedException, IOException {
+  public static void main(String[] args) throws IOException {
     Path source = Paths.get(args[0]);
     Path destination = Paths.get(args[1]);
 

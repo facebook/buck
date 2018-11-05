@@ -41,7 +41,7 @@ public class GoBinaryIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void ensureGoIsAvailable() throws IOException, InterruptedException {
+  public void ensureGoIsAvailable() throws IOException {
     GoAssumptions.assumeGoCompilerAvailable();
   }
 
@@ -256,7 +256,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void buildConstraints() throws IOException, InterruptedException {
+  public void buildConstraints() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "build_constraints", tmp);
     workspace.setUp();

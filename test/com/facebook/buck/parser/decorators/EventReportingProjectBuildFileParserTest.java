@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -91,15 +90,13 @@ public class EventReportingProjectBuildFileParserTest {
     }
 
     @Override
-    public ImmutableList<String> getIncludedFiles(Path buildFile)
-        throws BuildFileParseException, InterruptedException, IOException {
+    public ImmutableList<String> getIncludedFiles(Path buildFile) throws BuildFileParseException {
       return ImmutableList.of();
     }
 
     @Override
     public boolean globResultsMatchCurrentState(
-        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
-        throws IOException, InterruptedException {
+        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
       return false;
     }
 
@@ -114,7 +111,7 @@ public class EventReportingProjectBuildFileParserTest {
   }
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     delegate = new TestProjectBuildFileParser();
     listener = new ProjectBuildFileParseEventListener();

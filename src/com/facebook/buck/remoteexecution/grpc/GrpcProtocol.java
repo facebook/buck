@@ -311,7 +311,7 @@ public class GrpcProtocol implements Protocol {
   }
 
   @Override
-  public Digest computeDigest(Directory directory) throws IOException {
+  public Digest computeDigest(Directory directory) {
     return computeDigest(toByteArray(directory));
   }
 
@@ -417,8 +417,7 @@ public class GrpcProtocol implements Protocol {
       Path output,
       Digest digest,
       boolean isExecutable,
-      ThrowingSupplier<InputStream, IOException> dataSupplier)
-      throws IOException {
+      ThrowingSupplier<InputStream, IOException> dataSupplier) {
     Builder builder = build.bazel.remote.execution.v2.OutputFile.newBuilder();
     builder.setPath(output.toString());
     builder.setDigest(get(digest));

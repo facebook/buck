@@ -46,8 +46,7 @@ public class GenerateBundleConfigStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Path path = projectFilesystem.resolve(this.output);
     try (OutputStream outputFile = projectFilesystem.newFileOutputStream(path)) {
       createDefaultBundleConfig().writeTo(outputFile);

@@ -40,7 +40,7 @@ public class NativeGlobberTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
     root = fileSystem.getPath(projectFilesystem.getRootPath().toString());

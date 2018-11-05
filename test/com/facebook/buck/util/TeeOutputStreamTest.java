@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FilterOutputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import org.junit.Test;
@@ -57,7 +56,7 @@ public class TeeOutputStreamTest {
     private boolean isClosed = false;
 
     @Override
-    public void close() throws IOException {
+    public void close() {
       isClosed = true;
     }
 

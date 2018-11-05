@@ -719,11 +719,7 @@ public class ExopackageInstallerIntegrationTest {
       zf.write(apkContent.getBytes(Charsets.US_ASCII), 0, apkContent.length());
       zf.closeEntry();
     }
-    try {
-      ZipScrubberStep.of(filesystem.resolve(apkPath)).execute(executionContext);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    ZipScrubberStep.of(filesystem.resolve(apkPath)).execute(executionContext);
   }
 
   private String createFakeManifest(String manifestContent) {

@@ -289,7 +289,7 @@ public class MinionModeRunnerIntegrationTest {
     Assert.assertEquals(ROOT_TARGET, buildExecutor.getBuildTargets().get(4));
   }
 
-  private ThriftCoordinatorServer createServer() throws NoSuchBuildTargetException, IOException {
+  private ThriftCoordinatorServer createServer() throws NoSuchBuildTargetException {
     BuildTargetsQueue queue =
         ReverseDepBuildTargetsQueueTest.createDiamondDependencyQueueWithChainFromLeaf();
     return ThriftCoordinatorServerIntegrationTest.createServerOnRandomPort(queue);

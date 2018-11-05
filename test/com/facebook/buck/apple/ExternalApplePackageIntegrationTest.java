@@ -32,7 +32,7 @@ public class ExternalApplePackageIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
   }

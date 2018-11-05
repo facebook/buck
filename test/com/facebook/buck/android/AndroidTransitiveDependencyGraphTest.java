@@ -30,7 +30,7 @@ import org.junit.Test;
 public class AndroidTransitiveDependencyGraphTest {
 
   @Test
-  public void findManifestFilesWithTransitiveDeps() throws Exception {
+  public void findManifestFilesWithTransitiveDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule dep3 =
         AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep3"))

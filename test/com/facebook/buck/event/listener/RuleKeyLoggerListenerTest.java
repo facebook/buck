@@ -56,7 +56,7 @@ public class RuleKeyLoggerListenerTest {
   private TaskManagerScope managerScope;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     TemporaryFolder tempDirectory = new TemporaryFolder();
     tempDirectory.create();
     projectFilesystem =
@@ -79,7 +79,7 @@ public class RuleKeyLoggerListenerTest {
   }
 
   @Test
-  public void testFileIsNotCreatedWithoutEvents() throws InterruptedException {
+  public void testFileIsNotCreatedWithoutEvents() {
     RuleKeyLoggerListener listener = newInstance(managerScope, 1);
     listener.close();
     managerScope.close();
@@ -87,7 +87,7 @@ public class RuleKeyLoggerListenerTest {
   }
 
   @Test
-  public void testSendingHttpCacheEvent() throws InterruptedException, IOException {
+  public void testSendingHttpCacheEvent() throws IOException {
     RuleKeyLoggerListener listener = newInstance(managerScope, 1);
     listener.onArtifactCacheEvent(createArtifactCacheEvent(CacheResultType.MISS));
     listener.close();
@@ -97,7 +97,7 @@ public class RuleKeyLoggerListenerTest {
   }
 
   @Test
-  public void testSendingInvalidHttpCacheEvent() throws InterruptedException {
+  public void testSendingInvalidHttpCacheEvent() {
     RuleKeyLoggerListener listener = newInstance(managerScope, 1);
     listener.onArtifactCacheEvent(createArtifactCacheEvent(CacheResultType.HIT));
     listener.close();
@@ -106,7 +106,7 @@ public class RuleKeyLoggerListenerTest {
   }
 
   @Test
-  public void testSendingBuildEvent() throws InterruptedException, IOException {
+  public void testSendingBuildEvent() throws IOException {
     RuleKeyLoggerListener listener = newInstance(managerScope, 1);
     listener.onBuildRuleEvent(createBuildEvent());
     listener.close();

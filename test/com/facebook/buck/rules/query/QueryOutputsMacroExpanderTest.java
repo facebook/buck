@@ -70,7 +70,7 @@ public class QueryOutputsMacroExpanderTest {
   private BuildRule noopRule;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     cache = new HashMapWithStats<>();
     expander = new QueryOutputsMacroExpander(Optional.empty());
     handler = new MacroHandler(ImmutableMap.of("query_outputs", expander));

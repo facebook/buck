@@ -288,7 +288,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public void set(Path relativePath, HashCode hashCode) throws IOException {
+  public void set(Path relativePath, HashCode hashCode) {
     Preconditions.checkArgument(!relativePath.isAbsolute());
     checkNotIgnored(relativePath);
 

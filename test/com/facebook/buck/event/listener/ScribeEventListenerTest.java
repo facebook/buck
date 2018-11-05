@@ -135,7 +135,7 @@ public class ScribeEventListenerTest {
   }
 
   @Test
-  public void testIsEnabledEvent() throws IOException {
+  public void testIsEnabledEvent() {
     assertTrue(listener.isEnabledEvent(finishedEvent(BuildRuleStatus.FAIL)));
     assertFalse(listener.isEnabledEvent(finishedEvent(BuildRuleStatus.SUCCESS)));
   }

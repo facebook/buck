@@ -50,7 +50,7 @@ public class DefaultSelectorListResolverTest {
   private SelectableConfigurationContext configurationContext;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     configurationContext = new SelectableConfigurationContext() {};
   }
 

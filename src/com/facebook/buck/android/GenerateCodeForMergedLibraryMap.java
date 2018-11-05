@@ -123,8 +123,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
 
   private class WriteMapDataStep implements Step {
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       ProjectFilesystem projectFilesystem = getProjectFilesystem();
       try (Writer out =
           new BufferedWriter(
@@ -153,8 +152,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
 
   private class WriteTargetsFileStep implements Step {
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       ProjectFilesystem projectFilesystem = getProjectFilesystem();
       try (Writer out =
           new BufferedWriter(

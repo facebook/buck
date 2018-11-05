@@ -54,7 +54,7 @@ public class AndroidBinaryFilesInfoTest {
   private FakePreDexMerge preDexMerge;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     EnumSet<ExopackageMode> exopackageModes = EnumSet.of(ExopackageMode.MODULES);
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//app:app");
     APKModuleGraph apkModuleGraph =

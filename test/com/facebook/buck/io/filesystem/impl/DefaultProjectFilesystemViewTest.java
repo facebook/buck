@@ -52,7 +52,7 @@ public class DefaultProjectFilesystemViewTest {
   private DefaultProjectFilesystemView filesystemView;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     filesystemView =
         new DefaultProjectFilesystemView(

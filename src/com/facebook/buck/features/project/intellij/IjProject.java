@@ -172,7 +172,7 @@ public class IjProject {
    * Run the cleaner after a successful call to write(). This removes stale project files from
    * previous runs.
    */
-  private void clean() throws IOException {
+  private void clean() {
     cleaner.clean(
         projectConfig.getBuckConfig(),
         projectConfig.getProjectPaths().getIdeaConfigDir(),

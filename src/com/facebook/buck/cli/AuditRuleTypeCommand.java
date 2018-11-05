@@ -36,7 +36,7 @@ public class AuditRuleTypeCommand extends AbstractCommand {
   private static final String INDENT = "    ";
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
     KnownRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
     RuleType buildRuleType = knownRuleTypes.getRuleType(ruleName);
     BaseDescription<?> description = knownRuleTypes.getDescription(buildRuleType);

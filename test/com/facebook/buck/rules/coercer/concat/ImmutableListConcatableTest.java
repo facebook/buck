@@ -30,7 +30,7 @@ public class ImmutableListConcatableTest {
   private ImmutableListConcatable<String> concatable;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     concatable = new ImmutableListConcatable<>();
   }
 

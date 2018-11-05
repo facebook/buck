@@ -352,7 +352,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class OtherTests extends CommonFixture {
-    public OtherTests(MetadataStorage metadataStorage) throws IOException {
+    public OtherTests(MetadataStorage metadataStorage) {
       super(metadataStorage);
     }
 
@@ -1597,7 +1597,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class InputBasedRuleKeyTests extends CommonFixture {
-    public InputBasedRuleKeyTests(MetadataStorage metadataStorage) throws IOException {
+    public InputBasedRuleKeyTests(MetadataStorage metadataStorage) {
       super(metadataStorage);
     }
 
@@ -1962,7 +1962,7 @@ public class CachingBuildEngineTest {
       private BuildRule rule;
       private FakeStrategy strategy;
 
-      public CustomStrategyTests(MetadataStorage metadataStorage) throws IOException {
+      public CustomStrategyTests(MetadataStorage metadataStorage) {
         super(metadataStorage);
       }
 
@@ -1989,7 +1989,7 @@ public class CachingBuildEngineTest {
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
           Preconditions.checkState(!closed);
           closed = true;
         }
@@ -2186,7 +2186,7 @@ public class CachingBuildEngineTest {
 
     private DefaultDependencyFileRuleKeyFactory depFileFactory;
 
-    public DepFileTests(MetadataStorage metadataStorage) throws IOException {
+    public DepFileTests(MetadataStorage metadataStorage) {
       super(metadataStorage);
     }
 
@@ -2732,7 +2732,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class ManifestTests extends CommonFixture {
-    public ManifestTests(MetadataStorage metadataStorage) throws IOException {
+    public ManifestTests(MetadataStorage metadataStorage) {
       super(metadataStorage);
     }
 
@@ -3360,7 +3360,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class UncachableRuleTests extends CommonFixture {
-    public UncachableRuleTests(MetadataStorage metadataStorage) throws IOException {
+    public UncachableRuleTests(MetadataStorage metadataStorage) {
       super(metadataStorage);
     }
 
@@ -3432,7 +3432,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class ScheduleOverrideTests extends CommonFixture {
-    public ScheduleOverrideTests(MetadataStorage metadataStorage) throws IOException {
+    public ScheduleOverrideTests(MetadataStorage metadataStorage) {
       super(metadataStorage);
     }
 
@@ -3548,7 +3548,7 @@ public class CachingBuildEngineTest {
     // the build engine issues begin and end rule events on different threads.
     private static final ListeningExecutorService SERVICE = new NewThreadExecutorService();
 
-    public BuildRuleEventTests(MetadataStorage metadataStorage) throws IOException {
+    public BuildRuleEventTests(MetadataStorage metadataStorage) {
       super(metadataStorage);
     }
 
@@ -3905,7 +3905,7 @@ public class CachingBuildEngineTest {
       }
     }
 
-    public InitializableFromDiskTests(MetadataStorage storageType) throws IOException {
+    public InitializableFromDiskTests(MetadataStorage storageType) {
       super(storageType);
     }
 
@@ -4690,8 +4690,7 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
       Thread.sleep(millis);
       return StepExecutionResults.SUCCESS;
     }
@@ -4704,8 +4703,7 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) {
       return StepExecutionResults.ERROR;
     }
   }

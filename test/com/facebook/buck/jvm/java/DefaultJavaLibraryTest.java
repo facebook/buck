@@ -119,7 +119,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   private JavaBuckConfig testJavaBuckConfig;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
 
     testJavaBuckConfig = getJavaBuckConfigWithCompilationMode();

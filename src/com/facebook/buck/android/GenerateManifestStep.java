@@ -62,8 +62,7 @@ public class GenerateManifestStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
 
     if (skeletonManifestPath.getNameCount() == 0) {
       throw new HumanReadableException("Skeleton manifest filepath is missing");

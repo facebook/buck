@@ -159,7 +159,7 @@ public class HybridThriftOverHttpServiceImpl<
   private static InputStream nonCloseableStream(InputStream streamToWrap) {
     return new FilterInputStream(streamToWrap) {
       @Override
-      public void close() throws IOException {
+      public void close() {
         // Do not close the underlying stream.
       }
     };
@@ -174,7 +174,7 @@ public class HybridThriftOverHttpServiceImpl<
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     args.getExecutor().shutdown();
     try {
       args.getExecutor().awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);

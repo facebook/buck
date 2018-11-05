@@ -216,7 +216,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void missingSharedLibsAreNotAutoBuiltForHeaderOnlyRules() throws Exception {
+  public void missingSharedLibsAreNotAutoBuiltForHeaderOnlyRules() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -235,7 +235,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void addsLibsToAndroidPackageableCollector() throws Exception {
+  public void addsLibsToAndroidPackageableCollector() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =

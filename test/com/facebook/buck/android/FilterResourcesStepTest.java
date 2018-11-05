@@ -122,7 +122,7 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testWhitelistFilter() throws IOException, InterruptedException {
+  public void testWhitelistFilter() throws IOException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
             true,
@@ -139,7 +139,7 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testFilterLocales() throws IOException, InterruptedException {
+  public void testFilterLocales() throws IOException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
             false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"), Optional.empty());
@@ -156,8 +156,7 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testFilterLocalesWithLocalizedStringFileName()
-      throws IOException, InterruptedException {
+  public void testFilterLocalesWithLocalizedStringFileName() throws IOException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
             false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"), Optional.of("localized.xml"));
@@ -174,7 +173,7 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testUsingWhitelistIgnoresLocaleFilter() throws IOException, InterruptedException {
+  public void testUsingWhitelistIgnoresLocaleFilter() throws IOException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
             true,

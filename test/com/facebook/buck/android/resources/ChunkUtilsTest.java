@@ -24,7 +24,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.zip.ZipFile;
@@ -40,7 +39,7 @@ public class ChunkUtilsTest {
   private Path apkPath;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() {
     filesystem =
         TestProjectFilesystems.createProjectFilesystem(
             TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));

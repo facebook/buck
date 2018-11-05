@@ -913,7 +913,7 @@ class CachingBuildRuleBuilder {
                 }));
   }
 
-  private ListenableFuture<BuildResult> buildOrFetchFromCache() throws IOException {
+  private ListenableFuture<BuildResult> buildOrFetchFromCache() {
     // If we've already seen a failure, exit early.
     if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
       return Futures.immediateFuture(canceled(buildRuleBuilderDelegate.getFirstFailure()));

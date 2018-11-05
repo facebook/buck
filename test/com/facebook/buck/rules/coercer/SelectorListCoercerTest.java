@@ -47,7 +47,7 @@ public class SelectorListCoercerTest {
   private SelectorListFactory selectorListFactory;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
     cellPathResolver = TestCellPathResolver.get(projectFilesystem);
     selectorListFactory =

@@ -164,8 +164,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     this(templateDir, targetFolder, true);
   }
 
-  private ProjectFilesystemAndConfig getProjectFilesystemAndConfig()
-      throws InterruptedException, IOException {
+  private ProjectFilesystemAndConfig getProjectFilesystemAndConfig() throws IOException {
     if (projectFilesystemAndConfig == null) {
       Config config = Configs.createDefaultConfig(destPath);
       projectFilesystemAndConfig =

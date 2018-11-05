@@ -44,7 +44,7 @@ import org.junit.Test;
 public class PrebuiltCxxLibraryGroupDescriptionTest {
 
   @Test
-  public void exportedPreprocessorFlags() throws Exception {
+  public void exportedPreprocessorFlags() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     CxxPreprocessorDep lib =
@@ -59,7 +59,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   }
 
   @Test
-  public void includeDirs() throws Exception {
+  public void includeDirs() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     SourcePath includes = FakeSourcePath.of("include");
@@ -76,7 +76,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   }
 
   @Test
-  public void staticLink() throws Exception {
+  public void staticLink() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     SourcePath path = FakeSourcePath.of("include");
@@ -99,7 +99,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   }
 
   @Test
-  public void staticPicLink() throws Exception {
+  public void staticPicLink() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     SourcePath path = FakeSourcePath.of("include");
@@ -122,7 +122,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   }
 
   @Test
-  public void sharedLink() throws Exception {
+  public void sharedLink() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     SourcePath lib1 = FakeSourcePath.of("dir/lib1.so");
@@ -149,7 +149,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   }
 
   @Test
-  public void exportedDeps() throws Exception {
+  public void exportedDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     CxxLibrary dep =
@@ -167,7 +167,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   }
 
   @Test
-  public void providedSharedLibs() throws Exception {
+  public void providedSharedLibs() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     SourcePath lib1 = FakeSourcePath.of("dir/lib1.so");
@@ -192,7 +192,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   }
 
   @Test
-  public void preferredLinkage() throws Exception {
+  public void preferredLinkage() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     NativeLinkable any =
@@ -248,7 +248,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   }
 
   @Test
-  public void supportedPlatforms() throws Exception {
+  public void supportedPlatforms() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     CxxLibrary dep1 =
         (CxxLibrary)

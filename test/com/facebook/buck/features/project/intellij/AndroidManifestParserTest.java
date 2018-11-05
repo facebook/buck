@@ -34,7 +34,7 @@ public class AndroidManifestParserTest {
   private AndroidManifestParser androidManifestParser;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     androidManifestParser = new AndroidManifestParser(new FakeProjectFilesystem());
   }
 

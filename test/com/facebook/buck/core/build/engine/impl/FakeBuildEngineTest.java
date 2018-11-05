@@ -62,7 +62,7 @@ public class FakeBuildEngineTest {
   }
 
   @Test
-  public void buildRuleResultIsPresent() throws Exception {
+  public void buildRuleResultIsPresent() {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget);
     BuildResult fakeBuildResult =
@@ -73,7 +73,7 @@ public class FakeBuildEngineTest {
   }
 
   @Test
-  public void buildRuleIsBuilt() throws Exception {
+  public void buildRuleIsBuilt() {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget);
     BuildResult fakeBuildResult =
@@ -84,7 +84,7 @@ public class FakeBuildEngineTest {
   }
 
   @Test
-  public void unbuiltRuleIsNotBuilt() throws Exception {
+  public void unbuiltRuleIsNotBuilt() {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget);
     BuildResult fakeBuildResult =

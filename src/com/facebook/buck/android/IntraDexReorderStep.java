@@ -35,7 +35,6 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -85,8 +84,7 @@ public class IntraDexReorderStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try {
       DefaultStepRunner stepRunner = new DefaultStepRunner();
       List<Step> dxSteps = generateReorderCommands();

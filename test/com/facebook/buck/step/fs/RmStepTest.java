@@ -43,7 +43,7 @@ public class RmStepTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     context = TestExecutionContext.newInstance().withBuildCellRootPath(filesystem.getRootPath());
   }

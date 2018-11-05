@@ -266,7 +266,7 @@ public class ManifestRuleKeyManager {
 
   // Fetch an artifact from the cache using manifest-based caching.
   public ListenableFuture<ManifestFetchResult> performManifestBasedCacheFetch(
-      RuleKeyAndInputs originalRuleKeyAndInputs) throws IOException {
+      RuleKeyAndInputs originalRuleKeyAndInputs) {
     Preconditions.checkArgument(useManifestCaching());
 
     // Explicitly drop the input list from the caller, as holding this in the closure below until

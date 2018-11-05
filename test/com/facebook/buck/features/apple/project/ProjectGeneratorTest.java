@@ -191,7 +191,7 @@ public class ProjectGeneratorTest {
   private Path rootPath;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     clock = SettableFakeClock.DO_NOT_CARE;
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
@@ -321,7 +321,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testPlatformSourcesAndHeaders() throws IOException {
+  public void testPlatformSourcesAndHeaders() {
     SourceWithFlags androidSource =
         SourceWithFlags.builder().setSourcePath(FakeSourcePath.of("androidFile.cpp")).build();
     SourceWithFlags iOSAndSimulatorSource =

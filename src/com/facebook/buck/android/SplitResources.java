@@ -148,8 +148,7 @@ public class SplitResources extends AbstractBuildRule {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       ExoResourcesRewriter.rewrite(
           absolutePathToAaptResources,
           absolutePathToOriginalRDotTxt,

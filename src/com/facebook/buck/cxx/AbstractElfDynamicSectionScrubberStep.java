@@ -66,8 +66,7 @@ abstract class AbstractElfDynamicSectionScrubberStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     try (FileChannel channel =
         FileChannel.open(
             getFilesystem().resolve(getPath()),

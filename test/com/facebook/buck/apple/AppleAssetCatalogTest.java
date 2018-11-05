@@ -47,7 +47,7 @@ public class AppleAssetCatalogTest {
   @Rule public final ExpectedException exception = ExpectedException.none();
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
   }

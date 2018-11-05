@@ -116,8 +116,7 @@ public class TargetNodeTest {
   }
 
   @Test
-  public void targetsWithTheSameRelativePathButNotTheSameCellMightNotBeAbleToSeeEachOther()
-      throws Exception {
+  public void targetsWithTheSameRelativePathButNotTheSameCellMightNotBeAbleToSeeEachOther() {
 
     ProjectFilesystem rootOne = FakeProjectFilesystem.createJavaOnlyFilesystem("/one");
     BuildTarget buildTargetOne = BuildTargetFactory.newInstance(rootOne.getRootPath(), "//foo:bar");

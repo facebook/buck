@@ -181,8 +181,7 @@ public class MergeAssets extends AbstractBuildRule {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       try (ResourcesZipBuilder output = new ResourcesZipBuilder(pathToMergedAssets)) {
         if (pathToBaseApk.isPresent()) {
           try (ZipFile base = new ZipFile(pathToBaseApk.get().toFile())) {

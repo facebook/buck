@@ -22,31 +22,29 @@ import java.io.InputStream;
 /** * This is used if the project being built doesn't use a supported VCS. */
 public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   @Override
-  public boolean isSupportedVersionControlSystem() throws InterruptedException {
+  public boolean isSupportedVersionControlSystem() {
     return false;
   }
 
-  public String currentRevisionId()
-      throws VersionControlCommandFailedException, InterruptedException {
+  public String currentRevisionId() throws VersionControlCommandFailedException {
     throw new VersionControlCommandFailedException("");
   }
 
   @Override
   public VersionControlSupplier<InputStream> diffBetweenRevisions(
-      String baseRevision, String tipRevision)
-      throws VersionControlCommandFailedException, InterruptedException {
+      String baseRevision, String tipRevision) throws VersionControlCommandFailedException {
     throw new VersionControlCommandFailedException("");
   }
 
   @Override
   public ImmutableSet<String> changedFiles(String fromRevisionId)
-      throws VersionControlCommandFailedException, InterruptedException {
+      throws VersionControlCommandFailedException {
     throw new VersionControlCommandFailedException("");
   }
 
   @Override
   public FastVersionControlStats fastVersionControlStats()
-      throws InterruptedException, VersionControlCommandFailedException {
+      throws VersionControlCommandFailedException {
     throw new VersionControlCommandFailedException("");
   }
 }

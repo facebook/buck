@@ -153,7 +153,7 @@ public class ServerContentsProviderTest {
   @Test
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void testFutureIsSetOnRemoteCallException()
-      throws IOException, InterruptedException, ExecutionException, TimeoutException {
+      throws IOException, InterruptedException, TimeoutException {
     initProvider(1, 100);
 
     ImmutableMap.Builder<String, byte[]> result1 = new ImmutableMap.Builder<>();

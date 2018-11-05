@@ -52,8 +52,7 @@ public class ReplaceManifestPlaceholdersStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     String content =
         new String(
             Files.readAllBytes(projectFilesystem.resolve(androidManifest)), StandardCharsets.UTF_8);

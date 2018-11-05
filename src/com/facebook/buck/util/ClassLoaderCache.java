@@ -114,7 +114,7 @@ public final class ClassLoaderCache implements AutoCloseable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
       // Do nothing; only the cache can close this ClassLoader
     }
 

@@ -42,8 +42,7 @@ public class ProvisioningProfileStoreTest {
   }
 
   private static ProvisioningProfileMetadata makeTestMetadata(
-      String appID, Date expirationDate, String uuid, ImmutableMap<String, NSObject> entitlements)
-      throws Exception {
+      String appID, Date expirationDate, String uuid, ImmutableMap<String, NSObject> entitlements) {
     return makeTestMetadata(appID, expirationDate, uuid, entitlements, ImmutableSet.of());
   }
 
@@ -222,7 +221,7 @@ public class ProvisioningProfileStoreTest {
   }
 
   @Test
-  public void testOnlyProfilesContainingValidFingerprintsAreMatched() throws Exception {
+  public void testOnlyProfilesContainingValidFingerprintsAreMatched() {
     CodeSignIdentity validIdentity =
         CodeSignIdentity.builder()
             .setFingerprint(

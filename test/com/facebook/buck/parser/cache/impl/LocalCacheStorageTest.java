@@ -138,7 +138,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheStorageWithAbsolutePath() throws ParserCacheException {
+  public void createLocalCacheStorageWithAbsolutePath() {
     Path absPath = filesystem.getBuckPaths().getBuckOut().resolve("/foo/bar").toAbsolutePath();
     LocalCacheStorage.of(getParserCacheConfig(true, absPath), filesystem);
     List<LogRecord> events = localHandler.messages;
@@ -149,7 +149,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheStorageWithRelativePath() throws ParserCacheException {
+  public void createLocalCacheStorageWithRelativePath() {
     Path path = filesystem.getPath("foo/bar");
     LocalCacheStorage.of(getParserCacheConfig(true, path), filesystem);
     List<LogRecord> events = localHandler.messages;
@@ -162,7 +162,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheStorageWhenCachingDisabled() throws ParserCacheException {
+  public void createLocalCacheStorageWhenCachingDisabled() {
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage(
         "Invalid state: LocalCacheStorage should not be instantiated if the cache is disabled.");
@@ -171,7 +171,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheStorageWhenCacheDefaultDirectory() throws ParserCacheException {
+  public void createLocalCacheStorageWhenCacheDefaultDirectory() {
     Path emptyPathForDefaultCacheLocation = filesystem.getPath("\"\"");
     LocalCacheStorage.of(getParserCacheConfig(true, emptyPathForDefaultCacheLocation), filesystem);
     List<LogRecord> events = localHandler.messages;

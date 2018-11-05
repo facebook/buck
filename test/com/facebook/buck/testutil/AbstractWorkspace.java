@@ -214,7 +214,7 @@ public abstract class AbstractWorkspace {
     }
   }
 
-  private void ensureNoLocalBuckConfig(Path templatePath) throws IOException {
+  private void ensureNoLocalBuckConfig(Path templatePath) {
     if (Files.exists(templatePath.resolve(".buckconfig.local"))) {
       throw new IllegalStateException(
           "Found a .buckconfig.local in the Workspace template, which is illegal."

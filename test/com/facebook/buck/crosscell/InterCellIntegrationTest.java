@@ -200,7 +200,7 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void xCellCxxLibraryBuildsShouldBeHermetic() throws InterruptedException, IOException {
+  public void xCellCxxLibraryBuildsShouldBeHermetic() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =

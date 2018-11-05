@@ -108,7 +108,7 @@ public class JavaTestRuleTest {
   }
 
   @Test
-  public void transitiveLibraryDependenciesAreRuntimeDeps() throws Exception {
+  public void transitiveLibraryDependenciesAreRuntimeDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 

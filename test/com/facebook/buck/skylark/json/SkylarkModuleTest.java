@@ -30,7 +30,7 @@ public class SkylarkModuleTest {
   private ObjectMapper mapper;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     mapper = new ObjectMapper();
     mapper.registerModule(new SkylarkModule());
   }

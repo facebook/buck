@@ -20,7 +20,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -34,7 +33,7 @@ public class CxxPrecompiledHeaderRuleDisabledTest {
   private ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() {
     CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
   }
 

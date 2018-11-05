@@ -54,7 +54,7 @@ public class SkylarkNativeModuleTest {
   private ImmutableMap<String, ImmutableMap<String, String>> rawConfig;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
     root = fileSystem.getPath(projectFilesystem.getRootPath().toString());

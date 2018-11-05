@@ -143,7 +143,7 @@ public class CxxPreprocessAndCompileTest {
                       PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/compiler")))));
 
   @Test
-  public void inputChangesCauseRuleKeyChangesForCompilation() throws Exception {
+  public void inputChangesCauseRuleKeyChangesForCompilation() {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -324,8 +324,7 @@ public class CxxPreprocessAndCompileTest {
   }
 
   @Test
-  public void preprocessorFlagsRuleKeyChangesCauseRuleKeyChangesForPreprocessing()
-      throws Exception {
+  public void preprocessorFlagsRuleKeyChangesCauseRuleKeyChangesForPreprocessing() {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");

@@ -116,7 +116,7 @@ public class DistBuildServiceTest {
   private static final List<String> BUILD_TARGETS = Lists.newArrayList();
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     frontendService = EasyMock.createStrictMock(FrontendService.class);
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     distBuildService = new DistBuildService(frontendService, USERNAME);

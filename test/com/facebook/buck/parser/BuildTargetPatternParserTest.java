@@ -44,7 +44,7 @@ public class BuildTargetPatternParserTest {
   @Rule public ExpectedException exception = ExpectedException.none();
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     vfs = filesystem.getRootPath().getFileSystem();
   }

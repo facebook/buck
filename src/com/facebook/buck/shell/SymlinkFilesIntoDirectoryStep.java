@@ -54,8 +54,7 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     // Note that because these paths are resolved to absolute paths, the symlinks will be absolute
     // paths, as well.
     Path outDir = filesystem.resolve(this.outDir);

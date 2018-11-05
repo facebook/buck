@@ -26,7 +26,6 @@ import java.io.PrintWriter; // NOPMD required by API
 import java.io.StringWriter;
 import java.net.URL;
 import javax.annotation.Nullable;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.easymock.EasyMockSupport;
@@ -36,7 +35,7 @@ import org.junit.Test;
 public class TemplateHandlerTest extends EasyMockSupport {
 
   @Test
-  public void testHandleSimpleRequest() throws IOException, ServletException {
+  public void testHandleSimpleRequest() throws IOException {
     TemplateHandlerDelegate delegate =
         new TemplateHandlerDelegate() {
           @Override
@@ -78,7 +77,7 @@ public class TemplateHandlerTest extends EasyMockSupport {
   }
 
   @Test
-  public void testHandleMalformedRequest() throws IOException, ServletException {
+  public void testHandleMalformedRequest() throws IOException {
     TemplateHandlerDelegate delegate =
         new TemplateHandlerDelegate() {
           @Override

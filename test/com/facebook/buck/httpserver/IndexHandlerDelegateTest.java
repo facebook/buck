@@ -19,7 +19,6 @@ package com.facebook.buck.httpserver;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.Map;
 import org.easymock.EasyMock;
 import org.eclipse.jetty.server.Request;
@@ -28,7 +27,7 @@ import org.junit.Test;
 public class IndexHandlerDelegateTest {
 
   @Test
-  public void testIndexHandlerReturnsCorrectTemplateAndData() throws IOException {
+  public void testIndexHandlerReturnsCorrectTemplateAndData() {
     Request baseRequest = EasyMock.createMock(Request.class);
     EasyMock.replay(baseRequest);
 

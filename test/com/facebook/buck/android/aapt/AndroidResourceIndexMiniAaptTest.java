@@ -62,7 +62,7 @@ public class AndroidResourceIndexMiniAaptTest {
   private MiniAapt aapt;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();

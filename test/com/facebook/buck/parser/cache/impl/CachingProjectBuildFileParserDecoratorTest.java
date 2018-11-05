@@ -52,8 +52,7 @@ public class CachingProjectBuildFileParserDecoratorTest {
   class FakeProjectBuildParser implements ProjectBuildFileParser {
 
     @Override
-    public BuildFileManifest getBuildFileManifest(Path buildFile)
-        throws BuildFileParseException, InterruptedException, IOException {
+    public BuildFileManifest getBuildFileManifest(Path buildFile) throws BuildFileParseException {
       ImmutableMap<String, Object> targetMap = ImmutableMap.of("foo", "foo", "bar", "bar");
 
       return BuildFileManifest.of(
@@ -65,23 +64,21 @@ public class CachingProjectBuildFileParserDecoratorTest {
     }
 
     @Override
-    public void reportProfile() throws IOException {}
+    public void reportProfile() {}
 
     @Override
-    public ImmutableList<String> getIncludedFiles(Path buildFile)
-        throws BuildFileParseException, InterruptedException, IOException {
+    public ImmutableList<String> getIncludedFiles(Path buildFile) throws BuildFileParseException {
       return ImmutableList.of();
     }
 
     @Override
     public boolean globResultsMatchCurrentState(
-        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
-        throws IOException, InterruptedException {
+        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
       return false;
     }
 
     @Override
-    public void close() throws BuildFileParseException, InterruptedException, IOException {}
+    public void close() throws BuildFileParseException {}
   }
 
   private BuckConfig getConfig(ProjectFilesystem fileSystem, String accessMode) {

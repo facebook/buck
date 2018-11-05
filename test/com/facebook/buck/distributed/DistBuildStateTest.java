@@ -452,8 +452,7 @@ public class DistBuildStateTest {
         JavaLibraryBuilder.createBuilder(target, cellTwoFilesystem).build());
   }
 
-  public static ProjectFilesystem createJavaOnlyFilesystem(String rootPath)
-      throws InterruptedException, IOException {
+  public static ProjectFilesystem createJavaOnlyFilesystem(String rootPath) throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(rootPath);
     filesystem.mkdirs(filesystem.getBuckPaths().getBuckOut());
     return filesystem;

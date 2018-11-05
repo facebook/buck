@@ -410,7 +410,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testGenruleWithWorkerMacroUsesSpecialShellStep() throws Exception {
+  public void testGenruleWithWorkerMacroUsesSpecialShellStep() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -439,7 +439,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testIsWorkerGenruleReturnsTrue() throws Exception {
+  public void testIsWorkerGenruleReturnsTrue() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Genrule genrule = createGenruleBuilderThatUsesWorkerMacro(graphBuilder).build(graphBuilder);
     assertTrue(genrule.isWorkerGenrule());
@@ -458,7 +458,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testConstructingGenruleWithBadWorkerMacroThrows() throws Exception {
+  public void testConstructingGenruleWithBadWorkerMacroThrows() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     GenruleBuilder genruleBuilder = createGenruleBuilderThatUsesWorkerMacro(graphBuilder);
     try {
@@ -509,7 +509,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() throws Exception {
+  public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -570,7 +570,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testShouldIncludeAndroidSpecificEnvInEnvironmentIfPresent() throws Exception {
+  public void testShouldIncludeAndroidSpecificEnvInEnvironmentIfPresent() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -617,7 +617,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() throws Exception {
+  public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));

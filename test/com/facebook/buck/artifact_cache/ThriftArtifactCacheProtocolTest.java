@@ -29,7 +29,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import org.apache.thrift.TException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -107,7 +106,7 @@ public class ThriftArtifactCacheProtocolTest {
   }
 
   @Test
-  public void testReceivingDataWithPayload() throws IOException, TException {
+  public void testReceivingDataWithPayload() throws IOException {
     byte[] expectedPayload = createBuffer(21);
     String expectedErrorMessage = "My Super cool error message";
     BuckCacheResponse expectedResponse;
@@ -135,7 +134,7 @@ public class ThriftArtifactCacheProtocolTest {
   }
 
   @Test(expected = IOException.class)
-  public void testReceivingCorruptedData() throws IOException, TException {
+  public void testReceivingCorruptedData() throws IOException {
     byte[] expectedPayload = createBuffer(21);
     byte[] responseRawData;
     try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {

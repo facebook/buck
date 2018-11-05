@@ -64,8 +64,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
   }
 
   @Test
-  public void testDiamondGraphRun()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
+  public void testDiamondGraphRun() throws IOException, NoSuchBuildTargetException {
 
     Path logDirectoryPath = tempDir.getRoot().toPath();
 

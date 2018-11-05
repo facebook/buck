@@ -37,7 +37,7 @@ public class ResourcesConfigTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
-  public void testGettingResourceAmountsPerRuleType() throws InterruptedException, IOException {
+  public void testGettingResourceAmountsPerRuleType() throws IOException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')
@@ -53,7 +53,7 @@ public class ResourcesConfigTest {
   }
 
   @Test
-  public void testInvalidResourceAmountsConfiguration() throws InterruptedException, IOException {
+  public void testInvalidResourceAmountsConfiguration() throws IOException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')

@@ -102,8 +102,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
   }
 
   @Test
-  public void testStepWritesNoCellTokenInFileWhenCellIsAbsent()
-      throws IOException, InterruptedException {
+  public void testStepWritesNoCellTokenInFileWhenCellIsAbsent() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     ProjectFilesystem filesystem = createFakeFilesystem("/Users/user/src");
@@ -136,7 +135,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
   }
 
   @Test
-  public void testStepWritesSingleCellTokenInFile() throws IOException, InterruptedException {
+  public void testStepWritesSingleCellTokenInFile() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     ProjectFilesystem filesystem = createFakeFilesystem("/Users/user/src");

@@ -167,7 +167,7 @@ public class CommandRunnerParamsForTesting {
     private Optional<WebServer> webServer = Optional.empty();
     @Nullable private ToolchainProvider toolchainProvider = null;
 
-    public CommandRunnerParams build() throws IOException, InterruptedException {
+    public CommandRunnerParams build() {
       TestCellBuilder cellBuilder = new TestCellBuilder();
       if (toolchainProvider != null) {
         cellBuilder.setToolchainProvider(toolchainProvider);

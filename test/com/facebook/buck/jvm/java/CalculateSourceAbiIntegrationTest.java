@@ -51,7 +51,7 @@ public class CalculateSourceAbiIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "source_abi", tmp);
     workspace.setUp();
 

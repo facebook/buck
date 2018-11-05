@@ -189,8 +189,7 @@ public class MiniAapt implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
 
     try {

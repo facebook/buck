@@ -84,7 +84,7 @@ public class SkylarkProjectBuildFileParserTest {
   private Cell cell;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();

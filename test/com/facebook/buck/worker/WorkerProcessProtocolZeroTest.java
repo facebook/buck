@@ -46,7 +46,7 @@ public class WorkerProcessProtocolZeroTest {
   private ByteArrayInputStream dummyInputStream;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() {
     dummyOutputStream = new ByteArrayOutputStream();
     dummyInputStream = inputStream("");
   }

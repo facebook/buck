@@ -108,8 +108,7 @@ public class CxxPlatformUtils {
     return DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(buckConfig));
   }
 
-  public static HeaderMode getHeaderModeForDefaultPlatform(Path root)
-      throws InterruptedException, IOException {
+  public static HeaderMode getHeaderModeForDefaultPlatform(Path root) throws IOException {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     CxxPlatform defaultPlatform = getDefaultPlatform(root);
     return defaultPlatform.getCpp().resolve(ruleResolver).supportsHeaderMaps()

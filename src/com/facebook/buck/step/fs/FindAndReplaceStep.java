@@ -45,8 +45,7 @@ public class FindAndReplaceStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     try (BufferedReader reader =
             new BufferedReader(new InputStreamReader(filesystem.newFileInputStream(input)));
         BufferedWriter writer =

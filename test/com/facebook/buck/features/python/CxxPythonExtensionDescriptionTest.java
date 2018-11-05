@@ -315,7 +315,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void nativeLinkTargetMode() throws Exception {
+  public void nativeLinkTargetMode() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     CxxPythonExtensionBuilder builder =
         new CxxPythonExtensionBuilder(
@@ -331,7 +331,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void nativeLinkTargetDeps() throws Exception {
+  public void nativeLinkTargetDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     CxxLibrary dep =
         (CxxLibrary)
@@ -398,7 +398,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void platformDeps() throws Exception {
+  public void platformDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     CxxLibrary dep =
         (CxxLibrary)
@@ -506,7 +506,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void moduleName() throws Exception {
+  public void moduleName() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     CxxPythonExtension cxxPythonExtension =
         new CxxPythonExtensionBuilder(

@@ -43,7 +43,7 @@ public class BuildFileManifestObjectConverterTest {
   private static final BuildFileManifest FAKE_MANIFEST = createFakeManifest();
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     // JimFS has issues with absolute and relative Windows paths.
     assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
   }

@@ -46,7 +46,7 @@ public class SourcePathArgTest {
   }
 
   @Test
-  public void getDeps() throws Exception {
+  public void getDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     Genrule rule =

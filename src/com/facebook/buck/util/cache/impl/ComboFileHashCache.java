@@ -77,7 +77,7 @@ class ComboFileHashCache implements FileHashCacheEngine {
   }
 
   @Override
-  public HashCode get(Path path) throws IOException {
+  public HashCode get(Path path) {
     List<HashCode> hashes =
         fileHashCacheEngines
             .stream()
@@ -98,7 +98,7 @@ class ComboFileHashCache implements FileHashCacheEngine {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+  public HashCode get(ArchiveMemberPath archiveMemberPath) {
     List<HashCode> hashes =
         fileHashCacheEngines
             .stream()
@@ -147,7 +147,7 @@ class ComboFileHashCache implements FileHashCacheEngine {
   }
 
   @Override
-  public long getSize(Path relativePath) throws IOException {
+  public long getSize(Path relativePath) {
     List<Long> sizes =
         fileHashCacheEngines
             .stream()

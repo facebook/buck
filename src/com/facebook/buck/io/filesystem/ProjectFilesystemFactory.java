@@ -22,12 +22,11 @@ import java.util.Optional;
 
 public interface ProjectFilesystemFactory {
   ProjectFilesystem createProjectFilesystem(
-      Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo)
-      throws InterruptedException;
+      Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo);
 
-  ProjectFilesystem createProjectFilesystem(Path root, Config config) throws InterruptedException;
+  ProjectFilesystem createProjectFilesystem(Path root, Config config);
 
-  ProjectFilesystem createProjectFilesystem(Path root) throws InterruptedException;
+  ProjectFilesystem createProjectFilesystem(Path root);
 
-  ProjectFilesystem createOrThrow(Path path) throws InterruptedException;
+  ProjectFilesystem createOrThrow(Path path);
 }

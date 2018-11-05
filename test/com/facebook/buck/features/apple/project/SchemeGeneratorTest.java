@@ -61,7 +61,7 @@ public class SchemeGeneratorTest {
   private ProjectFilesystem projectFilesystem;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() {
     clock = SettableFakeClock.DO_NOT_CARE;
     projectFilesystem = new FakeProjectFilesystem(clock);
   }

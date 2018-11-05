@@ -51,8 +51,7 @@ abstract class AbstractZipScrubberStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     ZipScrubber.scrubZip(getZipAbsolutePath());
     return StepExecutionResults.SUCCESS;
   }

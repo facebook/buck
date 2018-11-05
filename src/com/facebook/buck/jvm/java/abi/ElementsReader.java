@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.abi;
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.util.MoreSuppliers;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -87,7 +86,7 @@ class ElementsReader implements LibraryReader {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     // Nothing
   }
 

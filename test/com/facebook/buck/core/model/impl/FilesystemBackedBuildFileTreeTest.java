@@ -118,7 +118,7 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void respectsIgnorePaths() throws InterruptedException, IOException {
+  public void respectsIgnorePaths() throws IOException {
     Path tempDir = tmp.getRoot();
     Path fooBuck = tempDir.resolve("foo/BUCK");
     Path fooBarBuck = tempDir.resolve("foo/bar/BUCK");
@@ -169,8 +169,7 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void shouldIgnoreBuckOutputDirectoriesByDefault()
-      throws InterruptedException, IOException {
+  public void shouldIgnoreBuckOutputDirectoriesByDefault() throws IOException {
     Path root = tmp.getRoot();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(root, new Config());
@@ -191,7 +190,7 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void shouldIgnoreBuckCacheDirectoriesByDefault() throws InterruptedException, IOException {
+  public void shouldIgnoreBuckCacheDirectoriesByDefault() throws IOException {
     Path root = tmp.getRoot();
 
     Path cacheDir = root.resolve("buck-out/cache");

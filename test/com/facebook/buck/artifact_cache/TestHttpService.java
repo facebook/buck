@@ -18,7 +18,6 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import okhttp3.Request.Builder;
@@ -37,7 +36,7 @@ public class TestHttpService implements HttpService {
   }
 
   @Override
-  public HttpResponse makeRequest(String path, Builder request) throws IOException {
+  public HttpResponse makeRequest(String path, Builder request) {
     callsCount.incrementAndGet();
     return httpResponseSupplier.get();
   }

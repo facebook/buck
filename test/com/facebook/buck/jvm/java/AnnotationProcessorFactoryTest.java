@@ -28,14 +28,12 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.ClassLoaderCache;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import javax.tools.ToolProvider;
 import org.junit.Test;
 
 public class AnnotationProcessorFactoryTest {
   @Test
-  public void testAnnotationProcessorClassloadersNotReusedIfMarkedUnsafe()
-      throws MalformedURLException {
+  public void testAnnotationProcessorClassloadersNotReusedIfMarkedUnsafe() {
     assertFalse(
         isAnnotationProcessorClassLoaderReused(
             "some.Processor", // processor
@@ -43,7 +41,7 @@ public class AnnotationProcessorFactoryTest {
   }
 
   @Test
-  public void testAnnotationProcessorClassloadersReusedIfMarkedSafe() throws MalformedURLException {
+  public void testAnnotationProcessorClassloadersReusedIfMarkedSafe() {
     assertTrue(
         isAnnotationProcessorClassLoaderReused(
             "some.Processor", // processor

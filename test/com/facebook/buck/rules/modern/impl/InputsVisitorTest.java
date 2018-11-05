@@ -86,19 +86,19 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void pattern() throws Exception {
+  public void pattern() {
     apply(new WithPattern());
   }
 
   @Override
   @Test
-  public void anEnum() throws Exception {
+  public void anEnum() {
     apply(new WithEnum());
   }
 
   @Override
   @Test
-  public void nonHashableSourcePathContainer() throws Exception {
+  public void nonHashableSourcePathContainer() {
     WithNonHashableSourcePathContainer value = new WithNonHashableSourcePathContainer();
     inputsConsumer.accept(value.container.getSourcePath());
     apply(value);
@@ -106,7 +106,7 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void map() throws Exception {
+  public void map() {
     inputsConsumer.accept(anyObject());
     expectLastCall().times(2);
     apply(new WithMap());
@@ -114,7 +114,7 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void sortedMap() throws Exception {
+  public void sortedMap() {
     inputsConsumer.accept(anyObject());
     expectLastCall().times(2);
     apply(new WithSortedMap());
@@ -122,34 +122,34 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void supplier() throws Exception {
+  public void supplier() {
     inputsConsumer.accept(anyObject());
     apply(new WithSupplier());
   }
 
   @Override
   @Test
-  public void nullable() throws Exception {
+  public void nullable() {
     inputsConsumer.accept(anyObject());
     apply(new WithNullable());
   }
 
   @Override
   @Test
-  public void either() throws Exception {
+  public void either() {
     inputsConsumer.accept(anyObject());
     apply(new WithEither());
   }
 
   @Override
   @Test
-  public void excluded() throws Exception {
+  public void excluded() {
     apply(new WithExcluded());
   }
 
   @Override
   @Test
-  public void immutables() throws Exception {
+  public void immutables() {
     inputsConsumer.accept(anyObject());
     expectLastCall().times(4);
     apply(new WithImmutables());
@@ -157,13 +157,13 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void stringified() throws Exception {
+  public void stringified() {
     apply(new WithStringified());
   }
 
   @Override
   @Test
-  public void wildcards() throws Exception {
+  public void wildcards() {
     inputsConsumer.accept(anyObject());
     apply(new WithWildcards());
   }

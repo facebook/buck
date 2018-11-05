@@ -34,7 +34,7 @@ public class AuditAliasCommand extends AbstractCommand {
   private boolean listAliasesMap = false;
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
     AliasConfig aliasConfig = AliasConfig.from(params.getBuckConfig());
     if (listAliasesMap) {
       for (Map.Entry<String, BuildTarget> entry : aliasConfig.getAliases().entries()) {

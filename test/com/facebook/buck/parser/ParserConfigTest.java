@@ -51,7 +51,7 @@ public class ParserConfigTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void testGetAllowEmptyGlobs() throws InterruptedException, IOException {
+  public void testGetAllowEmptyGlobs() throws IOException {
     assertTrue(FakeBuckConfig.builder().build().getView(ParserConfig.class).getAllowEmptyGlobs());
     Reader reader = new StringReader(Joiner.on('\n').join("[build]", "allow_empty_globs = false"));
     ParserConfig config =
@@ -61,7 +61,7 @@ public class ParserConfigTest {
   }
 
   @Test
-  public void testGetGlobHandler() throws InterruptedException, IOException {
+  public void testGetGlobHandler() throws IOException {
     assertThat(
         FakeBuckConfig.builder().build().getView(ParserConfig.class).getGlobHandler(),
         equalTo(ParserConfig.GlobHandler.PYTHON));
@@ -77,7 +77,7 @@ public class ParserConfigTest {
   }
 
   @Test
-  public void testGetWatchCells() throws InterruptedException, IOException {
+  public void testGetWatchCells() throws IOException {
     assertTrue(
         "watch_cells defaults to true",
         FakeBuckConfig.builder().build().getView(ParserConfig.class).getWatchCells());
@@ -96,7 +96,7 @@ public class ParserConfigTest {
   }
 
   @Test
-  public void testGetWatchmanCursor() throws InterruptedException, IOException {
+  public void testGetWatchmanCursor() throws IOException {
     assertEquals(
         "watchman_cursor defaults to clock_id",
         CursorType.CLOCK_ID,
@@ -182,7 +182,7 @@ public class ParserConfigTest {
   }
 
   @Test
-  public void testGetBuildFileImportWhitelist() throws InterruptedException, IOException {
+  public void testGetBuildFileImportWhitelist() throws IOException {
     assertTrue(
         FakeBuckConfig.builder()
             .build()

@@ -57,8 +57,7 @@ public class GenerateBuildConfigStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     String java =
         BuildConfigs.generateBuildConfigDotJava(
             source, javaPackage, useConstantExpressions, fields.get());

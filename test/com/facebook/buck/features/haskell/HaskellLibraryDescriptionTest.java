@@ -76,7 +76,7 @@ public class HaskellLibraryDescriptionTest {
   }
 
   @Test
-  public void targetsAndOutputsAreDifferentBetweenLinkStyles() throws Exception {
+  public void targetsAndOutputsAreDifferentBetweenLinkStyles() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(TargetGraphFactory.newInstance());
     BuildTarget baseTarget = BuildTargetFactory.newInstance("//:rule");
 
@@ -161,7 +161,7 @@ public class HaskellLibraryDescriptionTest {
   }
 
   @Test
-  public void preferredLinkage() throws Exception {
+  public void preferredLinkage() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(TargetGraphFactory.newInstance());
 
     // Test default value.

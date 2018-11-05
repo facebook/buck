@@ -104,7 +104,7 @@ public class RuleKeyTest {
 
   /** Ensure that build rules with the same inputs but different deps have unique RuleKeys. */
   @Test
-  public void testRuleKeyDependsOnDeps() throws Exception {
+  public void testRuleKeyDependsOnDeps() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache hashCache =
         new StackedFileHashCache(

@@ -184,7 +184,7 @@ public class ArchiveTest {
   }
 
   @Test
-  public void flagsArePropagated() throws Exception {
+  public void flagsArePropagated() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -221,7 +221,7 @@ public class ArchiveTest {
   }
 
   @Test
-  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() throws Exception {
+  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();

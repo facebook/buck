@@ -49,7 +49,7 @@ public class GenerateStringResourcesIntegrationTest {
       "//apps/sample:app_with_string_resources_and_aapt2";
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();

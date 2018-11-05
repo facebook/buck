@@ -53,12 +53,12 @@ public class NdkLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
   }
 
   @Test
-  public void cxxLibraryDep() throws InterruptedException, IOException {
+  public void cxxLibraryDep() throws IOException {
     ProjectWorkspace workspace1 =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(this, "cxx_deps", tmp1);
     workspace1.setUp();
@@ -78,7 +78,7 @@ public class NdkLibraryIntegrationTest {
   }
 
   @Test
-  public void sourceFilesChangeTargetHash() throws InterruptedException, IOException {
+  public void sourceFilesChangeTargetHash() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp1);
     workspace.setUp();
@@ -107,7 +107,7 @@ public class NdkLibraryIntegrationTest {
   }
 
   @Test
-  public void ndkLibraryOwnsItsSources() throws InterruptedException, IOException {
+  public void ndkLibraryOwnsItsSources() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp1);
     workspace.setUp();
@@ -179,7 +179,7 @@ public class NdkLibraryIntegrationTest {
   }
 
   private SymbolGetter getSymbolGetter(ProjectFilesystem filesystem, TemporaryPaths tempLocation)
-      throws IOException, InterruptedException {
+      throws IOException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));

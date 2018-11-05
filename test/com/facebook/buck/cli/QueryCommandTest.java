@@ -79,7 +79,7 @@ public class QueryCommandTest {
   }
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     TestConsole console = new TestConsole();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);

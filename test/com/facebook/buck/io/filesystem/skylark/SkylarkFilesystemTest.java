@@ -30,7 +30,7 @@ public class SkylarkFilesystemTest {
   private SkylarkFilesystem skylarkFilesystem;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem);
   }

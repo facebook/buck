@@ -1872,7 +1872,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void ndkCxxPlatforms() throws InterruptedException, IOException {
+  public void ndkCxxPlatforms() throws IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
