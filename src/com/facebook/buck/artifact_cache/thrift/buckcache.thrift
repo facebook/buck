@@ -45,6 +45,8 @@ struct ArtifactMetadata {
   10: optional i64 buildTimeMs;
   // Hostname of a machine that produced the artifact
   11: optional string producerHostname;
+  // Size of the content in bytes
+  12: optional i64 sizeBytes;
 }
 
 enum ContainsResultType {

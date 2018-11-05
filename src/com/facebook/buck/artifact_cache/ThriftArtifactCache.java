@@ -662,7 +662,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             scheduleType,
             distributedBuildModeEnabled,
             producerId,
-            producerHostname);
+            producerHostname,
+            artifact.size());
     storeRequest.setMetadata(artifactMetadata);
     PayloadInfo payloadInfo = new PayloadInfo();
     long artifactSizeBytes = artifact.size();
@@ -736,7 +737,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       String scheduleType,
       boolean distributedBuildModeEnabled,
       String producerId,
-      String producerHostname)
+      String producerHostname,
+      long artifactSize)
       throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     if (info.getBuildTarget().isPresent()) {
@@ -762,6 +764,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     metadata.setProducerId(producerId);
     metadata.setProducerHostname(producerHostname);
     metadata.setBuildTimeMs(info.getBuildTimeMs());
+    metadata.setSizeBytes(artifactSize);
 
     return metadata;
   }
