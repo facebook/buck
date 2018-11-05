@@ -187,7 +187,7 @@ public class HybridCacheStorageTest {
     ParserCacheConfig parserCacheConfig = buckConfig.getView(ParserCacheConfig.class);
     ParserCacheStorage remoteCache =
         RemoteManifestServiceCacheStorage.of(manifestService, parserCacheConfig);
-    ParserCacheStorage localCache = LocalCacheStorage.newInstance(parserCacheConfig, filesystem);
+    ParserCacheStorage localCache = LocalCacheStorage.of(parserCacheConfig, filesystem);
     ParserCacheStorage hybridCache = HybridCacheStorage.of(localCache, remoteCache);
     Path buildPath = filesystem.getPath("Foo/Bar");
 

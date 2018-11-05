@@ -134,13 +134,13 @@ public class LocalCacheStorageTest {
     expectedException.expectMessage("Failed to create local cache directory - /foo/bar");
     filesystem.createNewFile(filesystem.getPath("/foo"));
     Path path = filesystem.getPath("/foo/bar");
-    LocalCacheStorage.newInstance(getParserCacheConfig(true, path), filesystem);
+    LocalCacheStorage.of(getParserCacheConfig(true, path), filesystem);
   }
 
   @Test
   public void createLocalCacheStorageWithAbsolutePath() throws ParserCacheException {
     Path absPath = filesystem.getBuckPaths().getBuckOut().resolve("/foo/bar").toAbsolutePath();
-    LocalCacheStorage.newInstance(getParserCacheConfig(true, absPath), filesystem);
+    LocalCacheStorage.of(getParserCacheConfig(true, absPath), filesystem);
     List<LogRecord> events = localHandler.messages;
     assertEquals(1, events.size());
     LogRecord event = events.get(0);
@@ -151,7 +151,7 @@ public class LocalCacheStorageTest {
   @Test
   public void createLocalCacheStorageWithRelativePath() throws ParserCacheException {
     Path path = filesystem.getPath("foo/bar");
-    LocalCacheStorage.newInstance(getParserCacheConfig(true, path), filesystem);
+    LocalCacheStorage.of(getParserCacheConfig(true, path), filesystem);
     List<LogRecord> events = localHandler.messages;
     assertEquals(1, events.size());
     LogRecord event = events.get(0);
@@ -166,15 +166,14 @@ public class LocalCacheStorageTest {
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage(
         "Invalid state: LocalCacheStorage should not be instantiated if the cache is disabled.");
-    LocalCacheStorage.newInstance(
+    LocalCacheStorage.of(
         getParserCacheConfig(false, filesystem.getPath(tempDir.getRoot().toString())), filesystem);
   }
 
   @Test
   public void createLocalCacheStorageWhenCacheDefaultDirectory() throws ParserCacheException {
     Path emptyPathForDefaultCacheLocation = filesystem.getPath("\"\"");
-    LocalCacheStorage.newInstance(
-        getParserCacheConfig(true, emptyPathForDefaultCacheLocation), filesystem);
+    LocalCacheStorage.of(getParserCacheConfig(true, emptyPathForDefaultCacheLocation), filesystem);
     List<LogRecord> events = localHandler.messages;
     assertEquals(1, events.size());
     LogRecord event = events.get(0);
@@ -185,7 +184,7 @@ public class LocalCacheStorageTest {
   @Test
   public void createLocalCacheWFPDirectoryNonExisting() throws IOException, ParserCacheException {
     LocalCacheStorage localCacheStorage =
-        LocalCacheStorage.newInstance(
+        LocalCacheStorage.of(
             getParserCacheConfig(
                 true,
                 filesystem.getPath(tempDir.getRoot().toString() + File.separator + FOO_BAR_PATH)),
@@ -207,7 +206,7 @@ public class LocalCacheStorageTest {
   public void createLocalCacheStorageWFPDirectoryExistingAndKeepIt()
       throws IOException, ParserCacheException {
     LocalCacheStorage localCacheStorage =
-        LocalCacheStorage.newInstance(
+        LocalCacheStorage.of(
             getParserCacheConfig(
                 true,
                 filesystem.getPath(tempDir.getRoot().toString() + File.separator + FOO_BAR_PATH)),
@@ -235,7 +234,7 @@ public class LocalCacheStorageTest {
   public void storeInLocalCacheStorageAndGetFromLocalCacheStorageAndVerifyMatch()
       throws IOException, ParserCacheException {
     LocalCacheStorage localCacheStorage =
-        LocalCacheStorage.newInstance(
+        LocalCacheStorage.of(
             getParserCacheConfig(
                 true,
                 filesystem.getPath(tempDir.getRoot().toString() + File.separator + FOO_BAR_PATH)),

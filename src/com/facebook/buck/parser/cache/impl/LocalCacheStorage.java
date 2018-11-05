@@ -87,7 +87,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
    * @return a new instance of fully instantiated local cache object.
    * @throws ParserCacheException when the {@link LocalCacheStorage} object cannot be constructed.
    */
-  public static LocalCacheStorage newInstance(
+  public static LocalCacheStorage of(
       AbstractParserCacheConfig parserCacheConfig, ProjectFilesystem filesystem) {
     Preconditions.checkState(
         parserCacheConfig.isDirParserCacheEnabled(),

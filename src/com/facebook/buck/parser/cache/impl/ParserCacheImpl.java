@@ -48,7 +48,7 @@ public class ParserCacheImpl implements ParserCache {
 
   private ParserCacheStorage createLocalParserStorage() {
     Preconditions.checkState(parserCacheConfig.isDirParserCacheEnabled());
-    return LocalCacheStorage.newInstance(parserCacheConfig, filesystem);
+    return LocalCacheStorage.of(parserCacheConfig, filesystem);
   }
 
   private ParserCacheImpl(BuckConfig buckConfig, ProjectFilesystem filesystem) {
