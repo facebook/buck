@@ -439,8 +439,9 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   private ImmutableMap<String, String> getCacheHeaders(String section, String fieldName) {
-    ImmutableMap.Builder<String, String> headerBuilder = ImmutableMap.builder();
     ImmutableList<String> rawHeaders = buckConfig.getListWithoutComments(section, fieldName, ';');
+    ImmutableMap.Builder<String, String> headerBuilder =
+        ImmutableMap.builderWithExpectedSize(rawHeaders.size());
     for (String rawHeader : rawHeaders) {
       List<String> splitHeader =
           Splitter.on(':').omitEmptyStrings().trimResults().splitToList(rawHeader);
