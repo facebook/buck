@@ -30,7 +30,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 
-public class ParserCacheImplTest {
+public class ParserCacheTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private static final String FOO_BAR_PATH = "Foo" + File.separator + "Bar";

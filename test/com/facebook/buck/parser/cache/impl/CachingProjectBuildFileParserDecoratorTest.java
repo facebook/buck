@@ -20,14 +20,14 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -43,10 +43,15 @@ import org.junit.rules.ExpectedException;
 public class CachingProjectBuildFileParserDecoratorTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  private BuckEventBus buckEventBus;
   private ProjectFilesystem filesystem;
   private ProjectBuildFileParser fakeParser;
   private BuildFileManifest fakeParserManifest;
+
+  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
+      getManifestSupplier() {
+    return ThrowingCloseableMemoizedSupplier.of(
+        () -> new FakeManifestService(), ManifestService::close);
+  }
 
   /** Fake parser object with fake preset values */
   class FakeProjectBuildParser implements ProjectBuildFileParser {
@@ -98,7 +103,6 @@ public class CachingProjectBuildFileParserDecoratorTest {
     filesystem = FakeProjectFilesystem.createRealTempFilesystem();
     fakeParser = new FakeProjectBuildParser();
     fakeParserManifest = fakeParser.getBuildFileManifest(filesystem.resolve("BUCK"));
-    buckEventBus = BuckEventBusForTests.newInstance();
   }
 
   @Test
@@ -106,7 +110,7 @@ public class CachingProjectBuildFileParserDecoratorTest {
     BuckConfig buckConfig = getConfig(filesystem, "readwrite");
     ProjectBuildFileParser cachingParser =
         CachingProjectBuildFileParserDecorator.of(
-            ParserCacheImpl.of(buckConfig, filesystem), fakeParser);
+            ParserCache.of(buckConfig, filesystem, getManifestSupplier()), fakeParser);
 
     BuildFileManifest cachingParserManifest =
         cachingParser.getBuildFileManifest(filesystem.resolve("BUCK"));
@@ -119,7 +123,7 @@ public class CachingProjectBuildFileParserDecoratorTest {
     expectedException.expect(IllegalStateException.class);
     BuckConfig emptyBuckConfig = FakeBuckConfig.builder().build();
     CachingProjectBuildFileParserDecorator.of(
-        ParserCacheImpl.of(emptyBuckConfig, filesystem), fakeParser);
+        ParserCache.of(emptyBuckConfig, filesystem, getManifestSupplier()), fakeParser);
   }
 
   @Test
@@ -128,7 +132,7 @@ public class CachingProjectBuildFileParserDecoratorTest {
     BuckConfig buckConfig = getConfig(filesystem, "readonly");
     ProjectBuildFileParser cachingParser =
         CachingProjectBuildFileParserDecorator.of(
-            ParserCacheImpl.of(buckConfig, filesystem), fakeParser);
+            ParserCache.of(buckConfig, filesystem, getManifestSupplier()), fakeParser);
 
     BuildFileManifest cachingParserManifest =
         cachingParser.getBuildFileManifest(filesystem.resolve("BUCK"));
@@ -142,7 +146,7 @@ public class CachingProjectBuildFileParserDecoratorTest {
     BuckConfig buckConfig = getConfig(filesystem, "writeonly");
     ProjectBuildFileParser cachingParser =
         CachingProjectBuildFileParserDecorator.of(
-            ParserCacheImpl.of(buckConfig, filesystem), fakeParser);
+            ParserCache.of(buckConfig, filesystem, getManifestSupplier()), fakeParser);
 
     BuildFileManifest cachingParserManifest =
         cachingParser.getBuildFileManifest(filesystem.resolve("BUCK"));

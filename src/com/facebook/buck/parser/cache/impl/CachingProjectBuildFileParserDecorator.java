@@ -19,7 +19,6 @@ package com.facebook.buck.parser.cache.impl;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
-import com.facebook.buck.parser.cache.ParserCache;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import java.io.IOException;
 import java.nio.file.Path;

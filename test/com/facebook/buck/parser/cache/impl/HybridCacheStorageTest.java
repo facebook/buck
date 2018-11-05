@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.artifact_cache.thrift.Manifest;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
@@ -30,7 +29,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.manifestservice.ManifestServiceConfig;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
@@ -38,25 +36,18 @@ import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.AbstractFakeClock;
 import com.facebook.buck.util.timing.Clock;
-import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,19 +56,8 @@ import org.junit.rules.ExpectedException;
 public class HybridCacheStorageTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  final Optional<String> BUCKD_LAUNCH_TIME_NANOS =
-      Optional.ofNullable(System.getProperty("buck.buckd_launch_time_nanos"));
-
   private ProjectFilesystem filesystem;
   private BuckEventBus eventBus;
-
-  private ParserConfig getParserConfig(String accessMode) {
-    return FakeBuckConfig.builder()
-        .setSections("[parser]", "remote_parser_caching_access_mode = " + accessMode)
-        .setFilesystem(filesystem)
-        .build()
-        .getView(ParserConfig.class);
-  }
 
   private BuckConfig getConfig(String accessMode, Path path) {
     return FakeBuckConfig.builder()
@@ -100,64 +80,6 @@ public class HybridCacheStorageTest {
         .build();
   }
 
-  /** Operation over a Manifest. */
-  class ManifestServiceImpl implements ManifestService {
-    private final Map<String, ArrayList<ByteBuffer>> fingerprints = new HashMap<>();
-
-    /** Appends one more entry to the manifest. Creates a new one if it does not already exist. */
-    @Override
-    public ListenableFuture<Void> appendToManifest(Manifest manifest) {
-      return addToManifestBackingCollection(manifest);
-    }
-
-    /**
-     * Fetch the current value of the Manifest. An empty list is returned if no value is present.
-     */
-    @Override
-    public ListenableFuture<Manifest> fetchManifest(String manifestKey) {
-      Manifest manifest = new Manifest();
-      manifest.setKey(manifestKey);
-
-      List<ByteBuffer> storedValues = fingerprints.get(manifestKey);
-      if (storedValues == null) {
-        storedValues = ImmutableList.of();
-      }
-      manifest.setValues(storedValues);
-      return Futures.immediateFuture(manifest);
-    }
-
-    /** Deletes an existing Manifest. */
-    @Override
-    public ListenableFuture<Void> deleteManifest(String manifestKey) {
-      fingerprints.remove(manifestKey);
-      return Futures.immediateFuture(null);
-    }
-
-    /** Sets the Manifest for key. Overwrites existing one if it already exists. */
-    @Override
-    public ListenableFuture<Void> setManifest(Manifest manifest) {
-      return addToManifestBackingCollection(manifest);
-    }
-
-    private ListenableFuture<Void> addToManifestBackingCollection(Manifest manifest) {
-      String key = manifest.key;
-      ArrayList fingerprintsForKey = fingerprints.get(key);
-      if (fingerprintsForKey == null) {
-        fingerprintsForKey = new ArrayList();
-        fingerprints.put(key, fingerprintsForKey);
-      }
-
-      for (ByteBuffer bytes : manifest.values) {
-        fingerprintsForKey.add(bytes);
-      }
-
-      return Futures.immediateFuture(null);
-    }
-
-    @Override
-    public void close() throws IOException {}
-  }
-
   @Before
   public void setUp() {
     // JimFS is not working on Windows with absolute and relative paths properly.
@@ -167,21 +89,17 @@ public class HybridCacheStorageTest {
   }
 
   ManifestService createManifestService(BuckConfig buckConfig) {
-    Clock fakeClock =
-        FakeClock.builder()
-            .currentTimeMillis(System.currentTimeMillis())
-            .nanoTime(System.nanoTime())
-            .build();
+    Clock fakeClock = AbstractFakeClock.doNotCare();
     ManifestServiceConfig config = new ManifestServiceConfig(buckConfig);
     // Make sure we can create the real manifest service.
     config.createManifestService(fakeClock, eventBus, MoreExecutors.newDirectExecutorService());
     // Use a fake service for the tests, though.
-    return new ManifestServiceImpl();
+    return new FakeManifestService();
   }
 
   @Test
   public void storeInRemoteCacheAndGetFromRemoteCacheAndVerifyMatch()
-      throws IOException, ExecutionException, InterruptedException, ParserCacheException {
+      throws IOException, ParserCacheException {
     BuckConfig buckConfig = getConfig("readwrite", filesystem.getPath("foobar"));
     ManifestService manifestService = createManifestService(buckConfig);
     ParserCacheConfig parserCacheConfig = buckConfig.getView(ParserCacheConfig.class);
@@ -215,9 +133,9 @@ public class HybridCacheStorageTest {
     filesystem.createNewFile(filesystem.getPath("Includes1"));
     filesystem.createNewFile(filesystem.getPath("includes2"));
     ImmutableList<String> includes = ImmutableList.of("/Includes1", "/includes2");
-    ImmutableMap target1 = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
-    ImmutableMap target2 = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
-    ImmutableMap targets = ImmutableMap.of("tar1", target1, "tar2", target2);
+    Map<String, Object> target1 = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
+    Map<String, Object> target2 = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
+    Map<String, Map<String, Object>> targets = ImmutableMap.of("tar1", target1, "tar2", target2);
 
     BuildFileManifest buildFileManifest =
         BuildFileManifest.of(targets, includes, configs, Optional.of(ImmutableMap.of()), globSpecs);

@@ -19,53 +19,50 @@ package com.facebook.buck.parser.cache.impl;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
-import com.facebook.buck.parser.cache.ParserCache;
 import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.config.Config;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/** This class implements the parser cache behavior for parsing build specs. */
-public class ParserCacheImpl implements ParserCache {
-  private static final Logger LOG = Logger.get(ParserCacheImpl.class);
+/** This class implements the caching behavior for parsing build specs. */
+public class ParserCache {
+  private static final Logger LOG = Logger.get(ParserCache.class);
 
   private final ParserCacheStorage parserCacheStorage;
   private final ProjectFilesystem filesystem;
   private final Config config;
-  private final AbstractParserCacheConfig parserCacheConfig;
 
-  private AbstractParserCacheConfig obtainParserCacheConfig(BuckConfig buckConfig) {
-    return buckConfig.getView(ParserCacheConfig.class);
-  }
-
-  private ParserCacheStorage createLocalParserStorage() {
-    Preconditions.checkState(parserCacheConfig.isDirParserCacheEnabled());
-    return LocalCacheStorage.of(parserCacheConfig, filesystem);
-  }
-
-  private ParserCacheImpl(BuckConfig buckConfig, ProjectFilesystem filesystem) {
+  private ParserCache(
+      Config config, ProjectFilesystem filesystem, ParserCacheStorage parserCacheStorage) {
     this.filesystem = filesystem;
-    this.config = buckConfig.getConfig();
-    this.parserCacheConfig = obtainParserCacheConfig(buckConfig);
-    this.parserCacheStorage = createLocalParserStorage();
+    this.config = config;
+    this.parserCacheStorage = parserCacheStorage;
   }
 
   /**
-   * Creates a {@link ParserCacheImpl} object.
+   * Creates a {@link ParserCache} object.
    *
    * @param filesystem the {link ProjectFilesystem} to use for locating the local cache.
    * @return a new instance of a caching parser.
    */
-  public static ParserCache of(BuckConfig buckConfig, ProjectFilesystem filesystem) {
-    return new ParserCacheImpl(buckConfig, filesystem);
+  public static ParserCache of(
+      BuckConfig buckConfig,
+      ProjectFilesystem filesystem,
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+    return new ParserCache(
+        buckConfig.getConfig(),
+        filesystem,
+        ParserCacheStorageFactory.createParserCacheStorage(
+            buckConfig, filesystem, manifestServiceSupplier));
   }
 
   /**
@@ -106,7 +103,6 @@ public class ParserCacheImpl implements ParserCache {
    *
    * @param buildFileManifest the {@code BuildFileManifest} to store.
    */
-  @Override
   public void storeBuildFileManifest(Path buildFile, BuildFileManifest buildFileManifest) {
     final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
     final HashCode strongFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
@@ -119,7 +115,6 @@ public class ParserCacheImpl implements ParserCache {
     }
   }
 
-  @Override
   public Optional<BuildFileManifest> getBuildFileManifest(
       Path buildFile, ProjectBuildFileParser parser) {
 
