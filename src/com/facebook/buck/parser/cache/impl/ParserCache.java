@@ -27,6 +27,7 @@ import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.config.Config;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
@@ -63,6 +64,11 @@ public class ParserCache {
         filesystem,
         ParserCacheStorageFactory.createParserCacheStorage(
             buckConfig, filesystem, manifestServiceSupplier));
+  }
+
+  @VisibleForTesting
+  ParserCacheStorage getParserCacheStorage() {
+    return parserCacheStorage;
   }
 
   /**
