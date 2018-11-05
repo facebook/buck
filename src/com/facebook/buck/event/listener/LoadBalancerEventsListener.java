@@ -100,6 +100,9 @@ public class LoadBalancerEventsListener implements BuckEventListener {
     if (data.getRequestSizeBytes().isPresent()) {
       counters.getRequestSizeBytes().addSample(data.getRequestSizeBytes().get());
     }
+    if (data.getLatencyMicros().isPresent()) {
+      counters.getLatencyMicros().addSample(data.getLatencyMicros().get());
+    }
     if (data.getResponseSizeBytes().isPresent()) {
       counters.getResponseSizeBytes().addSample(data.getResponseSizeBytes().get());
     }
@@ -149,6 +152,7 @@ public class LoadBalancerEventsListener implements BuckEventListener {
     private final IntegerCounter isBestServerCount;
 
     private final SamplingCounter requestSizeBytes;
+    private final SamplingCounter latencyMicros;
     private final SamplingCounter responseSizeBytes;
     private final IntegerCounter requestCount;
     private final IntegerCounter requestErrorCount;
@@ -177,6 +181,8 @@ public class LoadBalancerEventsListener implements BuckEventListener {
       this.requestSizeBytes =
           registry.newSamplingCounter(
               PER_SERVER_CATEGORY, "request_size_bytes", getTagsForServer(server));
+      this.latencyMicros =
+          registry.newSamplingCounter(PER_SERVER_CATEGORY, "latency_us", getTagsForServer(server));
       this.responseSizeBytes =
           registry.newSamplingCounter(
               PER_SERVER_CATEGORY, "response_size_bytes", getTagsForServer(server));
@@ -217,6 +223,10 @@ public class LoadBalancerEventsListener implements BuckEventListener {
 
     public SamplingCounter getRequestSizeBytes() {
       return requestSizeBytes;
+    }
+
+    public SamplingCounter getLatencyMicros() {
+      return latencyMicros;
     }
 
     public SamplingCounter getResponseSizeBytes() {

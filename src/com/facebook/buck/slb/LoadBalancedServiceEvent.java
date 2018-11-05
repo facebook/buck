@@ -54,6 +54,8 @@ public class LoadBalancedServiceEvent extends AbstractBuckEvent {
 
     Optional<Long> getRequestSizeBytes();
 
+    Optional<Long> getLatencyMicros();
+
     Optional<Long> getResponseSizeBytes();
   }
 }

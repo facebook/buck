@@ -41,6 +41,7 @@ public class LoadBalancedService implements HttpService {
   @Override
   public HttpResponse makeRequest(String path, Request.Builder requestBuilder) throws IOException {
     URI server = slb.getBestServer();
+    long startRequestNanos = System.nanoTime();
     LoadBalancedServiceEventData.Builder data =
         LoadBalancedServiceEventData.builder().setServer(server);
     URL fullUrl = SingleUriService.getFullUrl(server, path);
@@ -62,6 +63,7 @@ public class LoadBalancedService implements HttpService {
       data.setException(e);
       throw new IOException(e);
     } finally {
+      data.setLatencyMicros((System.nanoTime() - startRequestNanos) / 1000);
       eventBus.post(new LoadBalancedServiceEvent(data.build()));
     }
   }
