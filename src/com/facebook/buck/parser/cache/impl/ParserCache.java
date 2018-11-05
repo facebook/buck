@@ -111,7 +111,6 @@ public class ParserCache {
    */
   public void storeBuildFileManifest(Path buildFile, BuildFileManifest buildFileManifest) {
     final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
-
     try {
       final HashCode strongFingerprint =
           Fingerprinter.getStrongFingerprint(filesystem, buildFileManifest.getIncludes());

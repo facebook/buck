@@ -182,4 +182,15 @@ public abstract class AbstractParserCacheConfig implements ConfigView<BuckConfig
 
     return ParserCacheAccessMode.NONE;
   }
+
+  /**
+   * @returns {@code true} if there is a cache storage that is enabled. Otherwise, {@code false}.
+   */
+  public boolean isParserCacheEnabled() {
+    if (isDirParserCacheEnabled() || isRemoteParserCacheEnabled()) {
+      return true;
+    }
+
+    return false;
+  }
 }

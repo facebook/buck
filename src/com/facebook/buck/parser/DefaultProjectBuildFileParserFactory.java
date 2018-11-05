@@ -17,11 +17,13 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.io.watchman.Watchman;
@@ -31,6 +33,10 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.AbstractParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
+import com.facebook.buck.parser.cache.impl.AbstractParserCacheConfig;
+import com.facebook.buck.parser.cache.impl.CachingProjectBuildFileParserDecorator;
+import com.facebook.buck.parser.cache.impl.ParserCache;
+import com.facebook.buck.parser.cache.impl.ParserCacheConfig;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -63,8 +69,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private final boolean enableProfiling;
   private final Optional<AtomicLong> processedBytes;
 
-  @SuppressWarnings(
-      "unused") // TODO: lubol This is removed in another diff on the stack when it is used.
   private final ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
       manifestServiceSupplier;
 
@@ -172,6 +176,19 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     return new TargetCountVerificationParserDecorator(aggregate, targetCountThreshold, eventBus);
   }
 
+  private ProjectBuildFileParser addCachingDecoratorIfEnabled(
+      BuckConfig buckConfig,
+      SkylarkProjectBuildFileParser skylarkParser,
+      ProjectFilesystem filesystem) {
+    AbstractParserCacheConfig parserCacheConfig = buckConfig.getView(ParserCacheConfig.class);
+    if (parserCacheConfig.isParserCacheEnabled()) {
+      ParserCache parserCache = ParserCache.of(buckConfig, filesystem, manifestServiceSupplier);
+      return CachingProjectBuildFileParserDecorator.of(parserCache, skylarkParser);
+    }
+
+    return skylarkParser;
+  }
+
   /** Creates a project build file parser based on Buck configuration settings. */
   private ProjectBuildFileParser createProjectBuildFileParser(
       Cell cell,
@@ -190,23 +207,29 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                   newPythonParser(
                       cell, typeCoercerFactory, console, eventBus, buildFileParserOptions),
                   Syntax.SKYLARK,
-                  newSkylarkParser(
-                      cell,
-                      typeCoercerFactory,
-                      eventBus,
-                      buildFileParserOptions,
-                      parserConfig.getSkylarkGlobHandler())),
+                  addCachingDecoratorIfEnabled(
+                      cell.getBuckConfig(),
+                      newSkylarkParser(
+                          cell,
+                          typeCoercerFactory,
+                          eventBus,
+                          buildFileParserOptions,
+                          parserConfig.getSkylarkGlobHandler()),
+                      cell.getFilesystem())),
               defaultBuildFileSyntax);
     } else {
       switch (defaultBuildFileSyntax) {
         case SKYLARK:
           parser =
-              newSkylarkParser(
-                  cell,
-                  typeCoercerFactory,
-                  eventBus,
-                  buildFileParserOptions,
-                  parserConfig.getSkylarkGlobHandler());
+              addCachingDecoratorIfEnabled(
+                  cell.getBuckConfig(),
+                  newSkylarkParser(
+                      cell,
+                      typeCoercerFactory,
+                      eventBus,
+                      buildFileParserOptions,
+                      parserConfig.getSkylarkGlobHandler()),
+                  cell.getFilesystem());
           break;
         case PYTHON_DSL:
           parser =
