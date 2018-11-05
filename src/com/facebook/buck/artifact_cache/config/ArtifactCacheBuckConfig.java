@@ -408,7 +408,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     /** @see com.google.common.util.concurrent.MoreExecutors#directExecutor() */
     DIRECT,
     /** an executor responsible for carrying out only disk-related operations */
-    DISK_IO, //
+    DISK_IO,
   }
 
   /** @return The thread pool dir cache store operations should be executed on. */
