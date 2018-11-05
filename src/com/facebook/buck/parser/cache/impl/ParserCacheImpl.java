@@ -37,7 +37,7 @@ import java.util.Optional;
 public class ParserCacheImpl implements ParserCache {
   private static final Logger LOG = Logger.get(ParserCacheImpl.class);
 
-  private final ParserCacheStorage localCacheStorage;
+  private final ParserCacheStorage parserCacheStorage;
   private final ProjectFilesystem filesystem;
   private final Config config;
   private final AbstractParserCacheConfig parserCacheConfig;
@@ -55,7 +55,7 @@ public class ParserCacheImpl implements ParserCache {
     this.filesystem = filesystem;
     this.config = buckConfig.getConfig();
     this.parserCacheConfig = obtainParserCacheConfig(buckConfig);
-    this.localCacheStorage = createLocalParserStorage();
+    this.parserCacheStorage = createLocalParserStorage();
   }
 
   /**
@@ -81,7 +81,7 @@ public class ParserCacheImpl implements ParserCache {
     final HashCode strongFingerprint =
         Fingerprinter.getStrongFingerprint(filesystem, includeBuildFiles);
     try {
-      return localCacheStorage.getBuildFileManifest(weakFingerprint, strongFingerprint);
+      return parserCacheStorage.getBuildFileManifest(weakFingerprint, strongFingerprint);
     } catch (ParserCacheException t) {
       LOG.error(t, "Exception getting BuildFileManifest from cache.");
     }
@@ -112,7 +112,7 @@ public class ParserCacheImpl implements ParserCache {
     final HashCode strongFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
     try {
       byte[] serializedManifest = serializeBuildFileManifestToBytes(buildFileManifest, buildFile);
-      localCacheStorage.storeBuildFileManifest(
+      parserCacheStorage.storeBuildFileManifest(
           weakFingerprint, strongFingerprint, serializedManifest);
     } catch (ParserCacheException t) {
       LOG.error(t, "Failure while storing parsed BuildFileAccessManifest.");

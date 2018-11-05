@@ -21,7 +21,6 @@ package com.facebook.buck.parser.cache;
  * operations.
  */
 public class ParserCacheException extends Exception {
-
   /**
    * Constructs a {@code ParserCacheException} object
    *
