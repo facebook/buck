@@ -182,8 +182,7 @@ public class DistBuildPostBuildAnalysisTest {
           expected.getRuleKeys().getInputRuleKey().map(rk -> rk.toString()).orElse(""));
       Assert.assertEquals(result.getRuleType().get(), expected.getBuildRule().getType());
       Assert.assertEquals(
-          result.getWallMillisDuration().longValue(),
-          expected.getDuration().getWallMillisDuration());
+          result.getWallMillisDuration(), expected.getDuration().getWallMillisDuration());
       Assert.assertEquals(result.getBuildRuleStatus().get(), expected.getStatus());
       Assert.assertEquals(result.getCacheResultType().get(), expected.getCacheResult().getType());
       Assert.assertEquals(
