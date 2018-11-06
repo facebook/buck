@@ -16,13 +16,19 @@
 
 package com.facebook.buck.rules.coercer;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -66,5 +72,41 @@ public class OptionalTypeCoercerTest {
     exception.expect(IllegalArgumentException.class);
     exception.expectMessage("Nested optional fields are ambiguous.");
     new OptionalTypeCoercer<>(new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Void.class)));
+  }
+
+  @Test
+  public void testConcatOfAbsentElementsIsAbsent() {
+    OptionalTypeCoercer<String> coercer =
+        new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(String.class));
+
+    assertFalse(coercer.concat(Arrays.asList(Optional.empty(), Optional.empty())).isPresent());
+  }
+
+  @Test
+  public void testConcatOfPresentNonConcatableElementsIsAbsent() {
+    PairTypeCoercer<String, String> pairTypeCoercer =
+        new PairTypeCoercer<>(
+            new IdentityTypeCoercer<>(String.class), new IdentityTypeCoercer<>(String.class));
+    OptionalTypeCoercer<Pair<String, String>> coercer = new OptionalTypeCoercer<>(pairTypeCoercer);
+
+    assertNull(
+        coercer.concat(
+            Arrays.asList(Optional.of(new Pair<>("a", "b")), Optional.of(new Pair<>("b", "c")))));
+  }
+
+  @Test
+  public void testConcatOfPresentConcatableElementsReturnsAggregatedResult() {
+    ListTypeCoercer<String> listTypeCoercer =
+        new ListTypeCoercer<>(new IdentityTypeCoercer<>(String.class));
+    OptionalTypeCoercer<ImmutableList<String>> coercer = new OptionalTypeCoercer<>(listTypeCoercer);
+
+    assertEquals(
+        ImmutableList.of("b", "a", "a", "c"),
+        coercer
+            .concat(
+                Arrays.asList(
+                    Optional.of(ImmutableList.of("b", "a")),
+                    Optional.of(ImmutableList.of("a", "c"))))
+            .get());
   }
 }

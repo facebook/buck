@@ -89,3 +89,30 @@ genrule(
     }) + "c",
     cmd = "echo a > $OUT",
 )
+
+config_setting(
+    name = "java_version_7",
+    values = {
+        "java.version": "7",
+    },
+)
+
+config_setting(
+    name = "java_version_8",
+    values = {
+        "java.version": "8",
+    },
+)
+
+java_library(
+    name = "java_library_with_target_version",
+    srcs = ["JavaClassWithVersion8Syntax.java"],
+    source = "1." + select({
+        "//:java_version_7": "7",
+        "//:java_version_8": "8",
+    }),
+    target = "1." + select({
+        "//:java_version_7": "7",
+        "//:java_version_8": "8",
+    }),
+)

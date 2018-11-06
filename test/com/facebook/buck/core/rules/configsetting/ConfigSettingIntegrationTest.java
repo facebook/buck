@@ -243,4 +243,19 @@ public class ConfigSettingIntegrationTest {
     output = workspace.buildAndReturnOutput("-c", "cat.file=b", ":echo_with_concatenation_in_out");
     assertEquals("abc", output.getFileName().toString());
   }
+
+  @Test
+  public void testOptionalAttributeCanBeConcatenatedUsingSelects() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    workspace
+        .runBuckBuild("-c", "java.version=7", ":java_library_with_target_version")
+        .assertFailure();
+
+    workspace
+        .runBuckBuild("-c", "java.version=8", ":java_library_with_target_version")
+        .assertSuccess();
+  }
 }
