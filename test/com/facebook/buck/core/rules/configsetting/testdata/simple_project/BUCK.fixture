@@ -116,3 +116,12 @@ java_library(
         "//:java_version_8": "8",
     }),
 )
+
+genrule(
+    name = "echo_with_concatenation_in_cmd",
+    out = "echo_out.txt",
+    cmd = "echo " + select({
+        "//:a": "a",
+        "//:b": "b",
+    }) + " > $OUT",
+)

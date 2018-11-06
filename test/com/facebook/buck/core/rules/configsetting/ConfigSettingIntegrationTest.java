@@ -258,4 +258,18 @@ public class ConfigSettingIntegrationTest {
         .runBuckBuild("-c", "java.version=8", ":java_library_with_target_version")
         .assertSuccess();
   }
+
+  @Test
+  public void testStringWithMacrosAttributeCanBeConcatenatedUsingSelects() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput("-c", "cat.file=a", ":echo_with_concatenation_in_cmd");
+    assertEquals("a", Files.readAllLines(output).get(0).trim());
+
+    output = workspace.buildAndReturnOutput("-c", "cat.file=b", ":echo_with_concatenation_in_cmd");
+    assertEquals("b", Files.readAllLines(output).get(0).trim());
+  }
 }
