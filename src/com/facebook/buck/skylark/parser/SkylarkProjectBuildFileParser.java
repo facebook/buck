@@ -25,7 +25,6 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.Globber;
@@ -48,10 +47,8 @@ import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.Environment.Extension;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkImport;
 import com.google.devtools.build.lib.syntax.SkylarkSemantics;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
@@ -251,14 +248,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     SkylarkUtils.setPhase(env, Phase.LOADING);
 
     parseContext.setup(env);
-    Runtime.setupModuleGlobals(env, SkylarkNativeModule.class);
-    for (String nativeFunction :
-        FuncallExpression.getMethodNames(
-            SkylarkSemantics.DEFAULT_SEMANTICS, SkylarkNativeModule.class)) {
-      env.setup(
-          nativeFunction,
-          FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));
-    }
 
     return EnvironmentData.of(env, toLoadedPaths(buildFilePath, dependencies));
   }

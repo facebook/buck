@@ -65,6 +65,14 @@ abstract class AbstractBuckGlobals {
     if (!getDisableImplicitNativeRules()) {
       builder.putAll(getBuckRuleFunctions());
     }
+    Runtime.setupSkylarkLibrary(builder, SkylarkNativeModule.NATIVE_MODULE);
+    for (String nativeFunction :
+        FuncallExpression.getMethodNames(
+            SkylarkSemantics.DEFAULT_SEMANTICS, SkylarkNativeModule.class)) {
+      builder.put(
+          nativeFunction,
+          FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));
+    }
     return GlobalFrame.createForBuiltins(builder.build());
   }
 
