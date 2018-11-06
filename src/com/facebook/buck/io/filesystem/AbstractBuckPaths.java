@@ -48,7 +48,7 @@ abstract class AbstractBuckPaths {
   /** The version the buck output directory was created for */
   @Value.Derived
   public Path getCurrentVersionFile() {
-    return getBuckOut().resolve(".currentversion");
+    return getConfiguredBuckOut().resolve(".currentversion");
   }
 
   @Value.Derived

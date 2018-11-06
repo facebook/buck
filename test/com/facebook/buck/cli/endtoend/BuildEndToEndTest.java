@@ -28,6 +28,9 @@ import com.facebook.buck.testutil.endtoend.Environment;
 import com.facebook.buck.testutil.endtoend.EnvironmentFor;
 import com.facebook.buck.testutil.endtoend.ToggleState;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 import org.junit.Assert;
 import org.junit.Test;
@@ -65,6 +68,13 @@ public class BuildEndToEndTest {
     return getBaseEnvironment()
         .addTemplates("missing_dep")
         .withTargets("//:a")
+        .withBuckdToggled(ToggleState.ON);
+  }
+
+  @EnvironmentFor(testNames = {"changingVersionShouldClearBuckOutWithConfiguredBuckOutDir"})
+  public static EndToEndEnvironment setTargetPathWithBinaryBuiltFromGenrule() {
+    return getBaseEnvironment()
+        .addTemplates("cxx_dependent_on_py")
         .withBuckdToggled(ToggleState.ON);
   }
 
@@ -130,5 +140,56 @@ public class BuildEndToEndTest {
             "No build file at missing/BUCK when resolving target //missing:dep.\n"
                 + "\n"
                 + "This error happened while trying to get dependency '//missing:dep' of target '//:a'"));
+  }
+
+  @Test
+  public void changingVersionShouldClearBuckOutWithConfiguredBuckOutDir(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Throwable {
+
+    for (String template : test.getTemplateSet()) {
+      workspace.addPremadeTemplate(template);
+    }
+
+    ProcessResult result = workspace.runBuckCommand("run", "@mode/opt", "//main_bin:main_bin");
+    result.assertSuccess();
+
+    result = workspace.runBuckCommand("run", "@mode/dev", "//main_bin:main_bin");
+    result.assertSuccess();
+
+    Path optVersion =
+        workspace.getDestPath().resolve(Paths.get("buck-out", "opt", ".currentversion"));
+    Path devVersion =
+        workspace.getDestPath().resolve(Paths.get("buck-out", "dev", ".currentversion"));
+    Path optBin =
+        workspace
+            .getDestPath()
+            .resolve(Paths.get("buck-out", "opt", "gen", "main_bin", "main_bin"));
+    Path devBin =
+        workspace
+            .getDestPath()
+            .resolve(Paths.get("buck-out", "dev", "gen", "main_bin", "main_bin"));
+
+    Assert.assertTrue(Files.exists(optVersion));
+    Assert.assertTrue(Files.exists(devVersion));
+    Assert.assertTrue(Files.exists(optBin));
+    Assert.assertTrue(Files.exists(devBin));
+
+    Files.delete(optBin);
+    Files.delete(devBin);
+
+    result = workspace.runBuckCommand("run", "@mode/opt", "//main_bin:main_bin");
+    result.assertFailure();
+
+    result = workspace.runBuckCommand("run", "@mode/dev", "//main_bin:main_bin");
+    result.assertFailure();
+
+    Files.delete(optVersion);
+    Files.delete(devVersion);
+
+    result = workspace.runBuckCommand("run", "@mode/dev", "//main_bin:main_bin");
+    result.assertSuccess();
+
+    result = workspace.runBuckCommand("run", "@mode/opt", "//main_bin:main_bin");
+    result.assertSuccess();
   }
 }
