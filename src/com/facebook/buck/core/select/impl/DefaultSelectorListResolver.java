@@ -48,6 +48,7 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
     this.selectableResolver = selectableResolver;
   }
 
+  @Nullable
   @Override
   public <T> T resolveList(
       SelectableConfigurationContext configurationContext,
@@ -61,6 +62,7 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
         resolvedList.add(selectorValue);
       }
     }
+
     return resolvedList.size() == 1
         ? resolvedList.get(0)
         : selectorList.getConcatable().concat(resolvedList);

@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.concat.Concatable;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 /**
  * Class defining an interpretation of some dynamically typed Java object as a specific class.
@@ -59,6 +60,7 @@ public interface TypeCoercer<T> extends Concatable<T> {
    * Implementation of concatenation for this type. <code>null</code> indicates that concatenation
    * isn't supported by the type.
    */
+  @Nullable
   @Override
   default T concat(Iterable<T> elements) {
     return null;
