@@ -294,17 +294,21 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     }
 
     try {
+      // TODO(ttsugrii): consider using a less verbose event handler. Also fancy handler can be
+      // configured for terminals that support it.
+      ConsoleEventHandler eventHandler =
+          new ConsoleEventHandler(
+              eventBus,
+              EventKind.ALL_EVENTS,
+              ImmutableSet.copyOf(buckGlobals.getNativeModule().getFieldNames()),
+              augmentor);
       SkylarkProjectBuildFileParser skylarkParser =
           SkylarkProjectBuildFileParser.using(
               buildFileParserOptions,
               eventBus,
               SkylarkFilesystem.using(cell.getFilesystem()),
               buckGlobals,
-              new ConsoleEventHandler(
-                  eventBus,
-                  EventKind.ALL_EVENTS,
-                  ImmutableSet.copyOf(buckGlobals.getNativeModule().getFieldNames()),
-                  augmentor),
+              eventHandler,
               globberFactory);
 
       // All built-ins should have already been discovered. Freezing improves performance by

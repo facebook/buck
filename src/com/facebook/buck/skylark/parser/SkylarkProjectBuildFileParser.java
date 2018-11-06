@@ -168,7 +168,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       parseResult = parseBuildRules(buildFile);
       rules = parseResult.getRawRules();
     } finally {
-      // TODO(ttsugrii): think about reporting processed bytes and profiling support
       buckEventBus.post(
           ParseBuckFileEvent.finished(startEvent, rules.size(), 0L, Optional.empty()));
     }
@@ -178,8 +177,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   /** @return The parsed build rules defined in {@code buildFile}. */
   private ParseResult parseBuildRules(Path buildFile)
       throws IOException, BuildFileParseException, InterruptedException {
-    // TODO(ttsugrii): consider using a less verbose event handler. Also fancy handler can be
-    // configured for terminals that support it.
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(buildFile.toString());
 
     BuildFileAST buildFileAst =
@@ -544,7 +541,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
   @Override
   public void reportProfile() {
-    // TODO(ttsugrii): implement
+    // this method is a noop since Skylark profiling is completely orthogonal to parsing and is
+    // controlled by com.google.devtools.build.lib.profiler.Profiler
   }
 
   @Override
