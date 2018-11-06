@@ -51,8 +51,7 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void nonNullIsPresent() throws CoerceFailedException {
-    OptionalTypeCoercer<String> coercer =
-        new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(String.class));
+    OptionalTypeCoercer<String> coercer = new OptionalTypeCoercer<>(new StringTypeCoercer());
     Optional<String> result =
         coercer.coerce(
             TestCellBuilder.createCellRoots(FILESYSTEM),

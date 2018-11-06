@@ -92,7 +92,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   public DefaultTypeCoercerFactory(
       PathTypeCoercer.PathExistenceVerificationMode pathExistenceVerificationMode) {
     this.pathExistenceVerificationMode = pathExistenceVerificationMode;
-    TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
+    TypeCoercer<String> stringTypeCoercer = new StringTypeCoercer();
     TypeCoercer<Flavor> flavorTypeCoercer = new FlavorTypeCoercer();
     // This has no implementation, but is here so that constructor succeeds so that it can be
     // queried. This is only used for the visibility field, which is not actually handled by the

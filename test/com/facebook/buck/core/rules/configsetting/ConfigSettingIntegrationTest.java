@@ -229,4 +229,18 @@ public class ConfigSettingIntegrationTest {
             ":cat_with_specialized_config");
     assertEquals("b", Files.readAllLines(output).get(0));
   }
+
+  @Test
+  public void testStringAttributeCanBeConcatenatedUsingSelects() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput("-c", "cat.file=a", ":echo_with_concatenation_in_out");
+    assertEquals("aac", output.getFileName().toString());
+
+    output = workspace.buildAndReturnOutput("-c", "cat.file=b", ":echo_with_concatenation_in_out");
+    assertEquals("abc", output.getFileName().toString());
+  }
 }

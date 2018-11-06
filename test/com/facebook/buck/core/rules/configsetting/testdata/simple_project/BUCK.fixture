@@ -80,3 +80,12 @@ genrule(
         "//:c": "echo c > $OUT",
     }),
 )
+
+genrule(
+    name = "echo_with_concatenation_in_out",
+    out = "a" + select({
+        "//:a": "a",
+        "//:b": "b",
+    }) + "c",
+    cmd = "echo a > $OUT",
+)

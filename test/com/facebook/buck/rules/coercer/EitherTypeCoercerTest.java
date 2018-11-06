@@ -32,7 +32,7 @@ public class EitherTypeCoercerTest {
 
   private final Path basePath = Paths.get("java/com/facebook/buck/example");
   private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final IdentityTypeCoercer<String> id = new IdentityTypeCoercer<>(String.class);
+  private final StringTypeCoercer id = new StringTypeCoercer();
 
   @Test
   public void canCoercePairWrappedInEither() throws CoerceFailedException {
