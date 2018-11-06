@@ -22,13 +22,15 @@ import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.packages.BazelLibrary;
 import com.google.devtools.build.lib.packages.StructProvider;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.Environment.GlobalFrame;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
+import com.google.devtools.build.lib.syntax.MethodLibrary;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkSemantics;
@@ -119,19 +121,14 @@ abstract class AbstractBuckGlobals {
    * @param disableImplicitNativeRules If true, do not export native rules into the provided context
    */
   private Environment.GlobalFrame getBuckGlobals(boolean disableImplicitNativeRules) {
-    try (Mutability mutability = Mutability.create("global")) {
-      Environment globalEnv =
-          Environment.builder(mutability)
-              .setGlobals(BazelLibrary.GLOBALS)
-              .useDefaultSemantics()
-              .build();
-
-      if (!disableImplicitNativeRules) {
-        for (BuiltinFunction buckRuleFunction : getBuckRuleFunctions()) {
-          globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
-        }
+    Builder<String, Object> builder = ImmutableMap.builder();
+    Runtime.addConstantsToBuilder(builder);
+    MethodLibrary.addBindingsToBuilder(builder);
+    if (!disableImplicitNativeRules) {
+      for (BuiltinFunction buckRuleFunction : getBuckRuleFunctions()) {
+        builder.put(buckRuleFunction.getName(), buckRuleFunction);
       }
-      return globalEnv.getGlobals();
     }
+    return GlobalFrame.createForBuiltins(builder.build());
   }
 }
