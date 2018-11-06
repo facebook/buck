@@ -50,7 +50,7 @@ abstract class AbstractBuckGlobals {
   @Lazy
   Environment.GlobalFrame getBuckLoadContextGlobals() {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
-    addBuckGlobals(builder, true);
+    addBuckGlobals(builder);
     builder.put("native", getNativeModule());
     builder.put("struct", StructProvider.STRUCT);
     Runtime.setupSkylarkLibrary(builder, new SkylarkRuleFunctions());
@@ -61,7 +61,10 @@ abstract class AbstractBuckGlobals {
   @Lazy
   Environment.GlobalFrame getBuckBuildFileContextGlobals() {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
-    addBuckGlobals(builder, getDisableImplicitNativeRules());
+    addBuckGlobals(builder);
+    if (!getDisableImplicitNativeRules()) {
+      builder.putAll(getBuckRuleFunctions());
+    }
     return GlobalFrame.createForBuiltins(builder.build());
   }
 
@@ -107,17 +110,9 @@ abstract class AbstractBuckGlobals {
     return StructProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
   }
 
-  /**
-   * Adds all buck globals to the provided {@code builder}.
-   *
-   * @param disableImplicitNativeRules If true, do not export native rules into the provided context
-   */
-  private void addBuckGlobals(
-      ImmutableMap.Builder<String, Object> builder, boolean disableImplicitNativeRules) {
+  /** Adds all buck globals to the provided {@code builder}. */
+  private void addBuckGlobals(ImmutableMap.Builder<String, Object> builder) {
     Runtime.addConstantsToBuilder(builder);
     MethodLibrary.addBindingsToBuilder(builder);
-    if (!disableImplicitNativeRules) {
-      builder.putAll(getBuckRuleFunctions());
-    }
   }
 }
