@@ -90,9 +90,9 @@ public final class Fingerprinter {
   /**
    * Calculates a strong fingerprint.
    *
-   * @param fs the {@Link ProjectFilesystem} that we use to calculate the strong fingerprint.
+   * @param fs the {@link ProjectFilesystem} that we use to calculate the strong fingerprint.
    * @param includes the list of included build files for which we calculate the strong fingerprint.
-   * @return a strong fingerprint - {@Link HashCode} that represent a unique hash value.
+   * @return a strong fingerprint - {@link HashCode} that represent a unique hash value.
    * @throws IOException can throw if there is a problem getting the content of the main BUCK build
    *     spec or an included file.
    */
