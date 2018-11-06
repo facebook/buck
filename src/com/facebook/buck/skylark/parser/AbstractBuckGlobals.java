@@ -31,6 +31,7 @@ import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.SkylarkSemantics;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Lazy;
 
@@ -102,7 +103,9 @@ abstract class AbstractBuckGlobals {
     for (BuiltinFunction ruleFunction : getBuckRuleFunctions()) {
       builder.put(ruleFunction.getName(), ruleFunction);
     }
-    for (String nativeFunction : FuncallExpression.getMethodNames(SkylarkNativeModule.class)) {
+    for (String nativeFunction :
+        FuncallExpression.getMethodNames(
+            SkylarkSemantics.DEFAULT_SEMANTICS, SkylarkNativeModule.class)) {
       builder.put(
           nativeFunction,
           FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));

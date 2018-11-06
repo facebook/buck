@@ -254,7 +254,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
     parseContext.setup(env);
     Runtime.setupModuleGlobals(env, SkylarkNativeModule.class);
-    for (String nativeFunction : FuncallExpression.getMethodNames(SkylarkNativeModule.class)) {
+    for (String nativeFunction :
+        FuncallExpression.getMethodNames(
+            SkylarkSemantics.DEFAULT_SEMANTICS, SkylarkNativeModule.class)) {
       env.setup(
           nativeFunction,
           FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));
