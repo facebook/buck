@@ -80,8 +80,6 @@ import org.immutables.value.Value;
 public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
   private static final Logger LOG = Logger.get(SkylarkProjectBuildFileParser.class);
-  private static final SkylarkSemantics SKYLARK_SEMANTICS =
-      SkylarkSemantics.builderWithDefaults().incompatibleRangeType(true).build();
 
   private final FileSystem fileSystem;
 
@@ -247,7 +245,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
             .setGlobals(buckGlobals.getBuckBuildFileContextGlobals())
-            .setSemantics(SKYLARK_SEMANTICS)
+            .setSemantics(SkylarkSemantics.DEFAULT_SEMANTICS)
             .setEventHandler(eventHandler)
             .build();
     SkylarkUtils.setPhase(env, Phase.LOADING);
@@ -478,7 +476,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         dependencies = loadExtensions(label, extensionAst.getImports());
         envBuilder.setImportedExtensions(toImportMap(dependencies));
       }
-      Environment extensionEnv = envBuilder.setSemantics(SKYLARK_SEMANTICS).build();
+      Environment extensionEnv =
+          envBuilder.setSemantics(SkylarkSemantics.DEFAULT_SEMANTICS).build();
       boolean success = extensionAst.exec(extensionEnv, eventHandler);
       if (!success) {
         throw BuildFileParseException.createForUnknownParseError(
