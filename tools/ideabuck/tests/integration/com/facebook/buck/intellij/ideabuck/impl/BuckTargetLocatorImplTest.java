@@ -40,6 +40,7 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
 
   private Project project;
   private BuckProjectSettingsProvider buckProjectSettingsProvider;
+  private BuckCell defaultCell;
   private BuckTargetLocator buckTargetLocator;
   private VirtualFile tempDir;
 
@@ -49,6 +50,7 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
     tempDir = getTempDir().createTempVDir();
     project = getProject();
     buckProjectSettingsProvider = BuckProjectSettingsProvider.getInstance(project);
+    defaultCell = setDefaultCell(null, null, null);
     buckTargetLocator = BuckTargetLocator.getInstance(project);
   }
 
@@ -66,13 +68,13 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
   }
 
   public BuckCell createCell(
-      @Nullable String name, @Nullable String projectRelativePath, @Nullable String buildfileName) {
+      @Nullable String name, @Nullable String tempRelativePath, @Nullable String buildfileName) {
     BuckCell cell = new BuckCell();
     if (name != null) {
       cell = cell.withName(name);
     }
-    if (projectRelativePath != null) {
-      cell = cell.withRoot(Paths.get(tempDir.getPath()).resolve(projectRelativePath).toString());
+    if (tempRelativePath != null) {
+      cell = cell.withRoot(Paths.get(tempDir.getPath()).resolve(tempRelativePath).toString());
     }
     if (buildfileName != null) {
       cell = cell.withBuildFileName(buildfileName);
@@ -80,23 +82,27 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
     return cell;
   }
 
-  public void setUpCell(
-      @Nullable String name, @Nullable String projectRelativePath, String buildfileName) {
-    BuckCell cell = createCell(name, projectRelativePath, buildfileName);
+  public BuckCell setDefaultCell(
+      @Nullable String name, @Nullable String tempRelativePath, String buildfileName) {
+    BuckCell cell = createCell(name, tempRelativePath, buildfileName);
     buckProjectSettingsProvider.setCells(Collections.singletonList(cell));
+    return cell;
   }
 
-  public void addCell(String name, String projectRelativePath, String buildfileName) {
-    BuckCell cell = createCell(name, projectRelativePath, buildfileName);
+  public BuckCell addCell(String name, String tempRelativePath, String buildfileName) {
+    BuckCell cell = createCell(name, tempRelativePath, buildfileName);
     List<BuckCell> cells = new ArrayList<>();
     buckProjectSettingsProvider.getCells().forEach(cells::add);
     cells.add(cell);
     buckProjectSettingsProvider.setCells(cells);
+    return cell;
   }
 
-  private Path createFile(String projectRelativePath) {
+  private Path createFile(BuckCell cell, String cellRelativePath) {
     try {
-      Path path = Paths.get(tempDir.getPath()).resolve(projectRelativePath);
+      String basePath = project.getBasePath();
+      String root = cell.getRoot().replace("$PROJECT_DIR$", basePath);
+      Path path = Paths.get(root).resolve(cellRelativePath);
       path.getParent().toFile().mkdirs();
       try (FileWriter writer = new FileWriter(path.toFile())) {
         writer.write("Test:" + getName());
@@ -106,6 +112,10 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
       fail("Failed to create test file: " + e.getMessage());
       throw new RuntimeException("Failed");
     }
+  }
+
+  private Path createFileInDefaultCell(String defaultCellRelativePath) {
+    return createFile(defaultCell, defaultCellRelativePath);
   }
 
   private VirtualFile asVirtualFile(Path expectedPath) {
@@ -124,13 +134,17 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
   }
 
   public void testFindTargetInDefaultCell() {
-    setUpCell(null, null, "BUILD");
-    checkFindTarget("//foo/bar:baz", createFile("foo/bar/BUILD"));
+    checkFindTarget("//foo/bar:baz", createFileInDefaultCell("foo/bar/BUCK"));
+  }
+
+  public void testFindTargetInDefaultCellWhenBuildFileNameSpecified() {
+    defaultCell = setDefaultCell(null, null, "BUILD");
+    checkFindTarget("//foo/bar:baz", createFileInDefaultCell("foo/bar/BUILD"));
   }
 
   public void testFindTargetInNamedCell() throws IOException {
-    setUpCell("foo", "x", "FOOBUCK");
-    checkFindTarget("foo//bar/baz:qux", createFile("x/bar/baz/FOOBUCK"));
+    BuckCell cell = addCell("foo", "x", "FOOBUCK");
+    checkFindTarget("foo//bar/baz:qux", createFile(cell, "bar/baz/FOOBUCK"));
   }
 
   // Test findPathForExtensionFile and findVirtualFileForExtensionFile together
@@ -143,13 +157,12 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
   }
 
   public void testFindExtensionFileInDefaultCell() throws IOException {
-    setUpCell(null, null, "BUILD");
-    checkFindExtensionFile("//foo/bar:baz.bzl", createFile("foo/bar/baz.bzl"));
+    checkFindExtensionFile("//foo/bar:baz.bzl", createFileInDefaultCell("foo/bar/baz.bzl"));
   }
 
   public void testFindExtensionFileInNamedCell() throws IOException {
-    setUpCell("foo", "x", null);
-    checkFindExtensionFile("foo//bar:baz.bzl", createFile("x/bar/baz.bzl"));
+    BuckCell cell = addCell("foo", "x", null);
+    checkFindExtensionFile("foo//bar:baz.bzl", createFile(cell, "bar/baz.bzl"));
   }
 
   // Test findPathForTargetPattern and findVirtualFileForTargetPattern together
@@ -162,8 +175,16 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
   }
 
   public void testFindForTargetPatternInDefaultCell() throws IOException {
-    setUpCell(null, null, "BUILD");
-    Path buildFile = createFile("foo/bar/BUILD");
+    Path buildFile = createFileInDefaultCell("foo/bar/BUCK");
+    checkFindForTargetPattern("//foo/bar", buildFile);
+    checkFindForTargetPattern("//foo/bar:", buildFile);
+    checkFindForTargetPattern("//foo/bar:baz", buildFile);
+    checkFindForTargetPattern("//foo/bar/...", buildFile.getParent());
+  }
+
+  public void testFindForTargetPatternInDefaultCellWithNamedBuildfile() throws IOException {
+    defaultCell = setDefaultCell(null, null, "BUILD");
+    Path buildFile = createFileInDefaultCell("foo/bar/BUILD");
     checkFindForTargetPattern("//foo/bar", buildFile);
     checkFindForTargetPattern("//foo/bar:", buildFile);
     checkFindForTargetPattern("//foo/bar:baz", buildFile);
@@ -171,8 +192,9 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
   }
 
   public void testFindForTargetPatternInNamedCell() throws IOException {
-    setUpCell("foo", "x", "FOOBUCK");
-    Path buildFile = createFile("x/bar/baz/FOOBUCK");
+    BuckCell cell = addCell("foo", "x", "FOOBUCK");
+
+    Path buildFile = createFile(cell, "bar/baz/FOOBUCK");
     checkFindForTargetPattern("foo//bar/baz", buildFile);
     checkFindForTargetPattern("foo//bar/baz:", buildFile);
     checkFindForTargetPattern("foo//bar/baz:qux", buildFile);
@@ -189,30 +211,38 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
   }
 
   public void testFindTargetPatternFromFileInDefaultCell() {
-    setUpCell(null, null, "FOO");
-
-    Path buildFileOne = createFile("one/FOO");
-    Path buildFileTwo = createFile("one/two/FOO");
+    Path buildFileOne = createFileInDefaultCell("one/BUCK");
+    Path buildFileTwo = createFileInDefaultCell("one/two/BUCK");
 
     checkFindTargetPatternFrom(buildFileOne, "//one:");
     checkFindTargetPatternFrom(buildFileTwo, "//one/two:");
 
-    checkFindTargetPatternFrom(createFile("a.bzl"), "//:a.bzl");
-    checkFindTargetPatternFrom(createFile("one/a.bzl"), "//one:a.bzl");
-    checkFindTargetPatternFrom(createFile("one/two/a.bzl"), "//one/two:a.bzl");
+    checkFindTargetPatternFrom(createFileInDefaultCell("a.bzl"), "//:a.bzl");
+    checkFindTargetPatternFrom(createFileInDefaultCell("one/a.bzl"), "//one:a.bzl");
+    checkFindTargetPatternFrom(createFileInDefaultCell("one/two/a.bzl"), "//one/two:a.bzl");
   }
 
-  public void testFindTargetPatternForVirtualFile() {
-    setUpCell("foo", "x", "FOO");
+  public void testFindTargetPatternFromFileInDefaultCellWithNamedBuildfile() {
+    defaultCell = setDefaultCell(null, null, "BUILD");
 
-    Path buildFileOne = createFile("x/one/FOO");
-    Path buildFileTwo = createFile("x/one/two/FOO");
+    Path buildFileOne = createFileInDefaultCell("one/BUILD");
+    Path buildFileTwo = createFileInDefaultCell("one/two/BUILD");
+
+    checkFindTargetPatternFrom(buildFileOne, "//one:");
+    checkFindTargetPatternFrom(buildFileTwo, "//one/two:");
+  }
+
+  public void testFindTargetPatternFromFileInNamedCell() {
+    BuckCell cell = addCell("foo", "x", "FOO");
+
+    Path buildFileOne = createFile(cell, "one/FOO");
+    Path buildFileTwo = createFile(cell, "one/two/FOO");
 
     checkFindTargetPatternFrom(buildFileOne, "foo//one:");
     checkFindTargetPatternFrom(buildFileTwo, "foo//one/two:");
 
-    checkFindTargetPatternFrom(createFile("x/a.bzl"), "foo//:a.bzl");
-    checkFindTargetPatternFrom(createFile("x/one/a.bzl"), "foo//one:a.bzl");
-    checkFindTargetPatternFrom(createFile("x/one/two/a.bzl"), "foo//one/two:a.bzl");
+    checkFindTargetPatternFrom(createFile(cell, "a.bzl"), "foo//:a.bzl");
+    checkFindTargetPatternFrom(createFile(cell, "one/a.bzl"), "foo//one:a.bzl");
+    checkFindTargetPatternFrom(createFile(cell, "one/two/a.bzl"), "foo//one/two:a.bzl");
   }
 }
