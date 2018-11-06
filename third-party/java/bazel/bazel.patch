@@ -1,8 +1,8 @@
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 3904b0b171..161d06bb8c 100644
+index 943dee6176..70a9030f92 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -346,16 +346,56 @@ java_library(
+@@ -348,16 +348,56 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
@@ -65,15 +65,15 @@ index 3904b0b171..161d06bb8c 100644
 +        "//third_party/protobuf:protobuf_java",
      ],
  )
-
+ 
 diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 index 2f89d968f6..321c106326 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 @@ -14,2360 +14,13 @@
-
+ 
  package com.google.devtools.build.lib.packages;
-
+ 
 -import static com.google.common.collect.Sets.newEnumSet;
 -
 -import com.google.common.annotations.VisibleForTesting;
@@ -2435,12 +2435,12 @@ index 2f89d968f6..321c106326 100644
 + * </code> may share many attributes in common).
 + */
 +public final class Attribute {
-
+ 
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
 @@ -2378,14 +31,6 @@ public final class Attribute implements Comparable<Attribute> {
    }
-
+ 
    /**
 -   * Returns if this attribute is late-bound according to the naming policy that designates
 -   * late-bound attributes.
@@ -2531,15 +2531,15 @@ index 2f89d968f6..321c106326 100644
 -  }
  }
 diff --git a/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java b/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java
-index 5c1897645f..06c4a7580a 100644
+index 8e05e0e91f..69e73439f8 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java
-@@ -24,7 +24,7 @@ import java.util.Map;
-
+@@ -25,7 +25,7 @@ import java.util.Map;
+ 
  /** Base class for native implementations of {@link StructImpl}. */
  // todo(vladmos,dslomov): make abstract once DefaultInfo stops instantiating it.
 -public class NativeInfo extends StructImpl {
 +public abstract class NativeInfo extends StructImpl {
-   protected final ImmutableMap<String, Object> values;
-
+   protected final ImmutableSortedMap<String, Object> values;
+ 
    // Initialized lazily.
