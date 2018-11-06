@@ -20,11 +20,11 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.packages.StructProvider;
+import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
@@ -86,11 +86,11 @@ abstract class AbstractBuckGlobals {
    * @return The list of functions supporting all native Buck functions like {@code java_library}.
    */
   @Lazy
-  ImmutableList<BuiltinFunction> getBuckRuleFunctions() {
+  ImmutableMap<String, BuiltinFunction> getBuckRuleFunctions() {
     return getDescriptions()
         .stream()
         .map(getRuleFunctionFactory()::create)
-        .collect(ImmutableList.toImmutableList());
+        .collect(ImmutableMap.toImmutableMap(BaseFunction::getName, r -> r));
   }
 
   /**
@@ -102,9 +102,7 @@ abstract class AbstractBuckGlobals {
   @Lazy
   ClassObject getNativeModule() {
     ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
-    for (BuiltinFunction ruleFunction : getBuckRuleFunctions()) {
-      builder.put(ruleFunction.getName(), ruleFunction);
-    }
+    builder.putAll(getBuckRuleFunctions());
     for (String nativeFunction :
         FuncallExpression.getMethodNames(
             SkylarkSemantics.DEFAULT_SEMANTICS, SkylarkNativeModule.class)) {
@@ -125,9 +123,7 @@ abstract class AbstractBuckGlobals {
     Runtime.addConstantsToBuilder(builder);
     MethodLibrary.addBindingsToBuilder(builder);
     if (!disableImplicitNativeRules) {
-      for (BuiltinFunction buckRuleFunction : getBuckRuleFunctions()) {
-        builder.put(buckRuleFunction.getName(), buckRuleFunction);
-      }
+      builder.putAll(getBuckRuleFunctions());
     }
     return GlobalFrame.createForBuiltins(builder.build());
   }
