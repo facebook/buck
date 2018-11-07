@@ -66,13 +66,7 @@ abstract class AbstractBuckGlobals {
       builder.putAll(getBuckRuleFunctions());
     }
     Runtime.setupSkylarkLibrary(builder, SkylarkNativeModule.NATIVE_MODULE);
-    for (String nativeFunction :
-        FuncallExpression.getMethodNames(
-            SkylarkSemantics.DEFAULT_SEMANTICS, SkylarkNativeModule.class)) {
-      builder.put(
-          nativeFunction,
-          FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));
-    }
+    addNativeModuleFunctions(builder);
     return GlobalFrame.createForBuiltins(builder.build());
   }
 
@@ -108,6 +102,12 @@ abstract class AbstractBuckGlobals {
   ClassObject getNativeModule() {
     ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
     builder.putAll(getBuckRuleFunctions());
+    addNativeModuleFunctions(builder);
+    return StructProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
+  }
+
+  /** Puts all native module functions into provided {@code builder}. */
+  private void addNativeModuleFunctions(ImmutableMap.Builder<String, Object> builder) {
     for (String nativeFunction :
         FuncallExpression.getMethodNames(
             SkylarkSemantics.DEFAULT_SEMANTICS, SkylarkNativeModule.class)) {
@@ -115,7 +115,6 @@ abstract class AbstractBuckGlobals {
           nativeFunction,
           FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));
     }
-    return StructProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
   }
 
   /** Adds all buck globals to the provided {@code builder}. */
