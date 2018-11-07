@@ -127,7 +127,7 @@ public class ParserCache {
   }
 
   public Optional<BuildFileManifest> getBuildFileManifest(
-      Path buildFile, ProjectBuildFileParser parser) {
+      Path buildFile, ProjectBuildFileParser parser) throws InterruptedException {
 
     // Get from local cache.
     try {
@@ -141,7 +141,7 @@ public class ParserCache {
         // results.
         return cachedManifest;
       }
-    } catch (IOException | InterruptedException e) {
+    } catch (IOException e) {
       LOG.error(e, "Exception while getting BuildFileAccessManifest from cache storage.");
     }
 
