@@ -485,7 +485,7 @@ public class IjModuleGraphTest {
         FluentIterable.from(moduleGraph.getNodes()).filter(IjLibrary.class).first().get();
 
     assertEquals(ImmutableSet.of(rDotJavaClassPath), productModule.getExtraClassPathDependencies());
-    assertEquals(ImmutableSet.of(rDotJavaClassPath), rDotJavaLibrary.getBinaryJars());
+    assertEquals(ImmutableSet.of(rDotJavaClassPath), rDotJavaLibrary.getClassPaths());
     assertEquals(
         moduleGraph.getDependentLibrariesFor(productModule),
         ImmutableMap.of(rDotJavaLibrary, DependencyType.PROD));
