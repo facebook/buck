@@ -125,3 +125,31 @@ genrule(
         "//:b": "b",
     }) + " > $OUT",
 )
+
+java_test(
+    name = "java_test_with_select_in_env",
+    srcs = ["JavaEnvTest.java"],
+    env = {
+        "VARC": "c",
+    } + select({
+        "//:a": {"VARA": "a"},
+        "//:b": {"VARB": "b"},
+    }),
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)
+
+java_test(
+    name = "java_test_with_duplicate_keys_in_select_in_env",
+    srcs = ["JavaEnvTest.java"],
+    env = {
+        "VARA": "a",
+    } + select({
+        "//:a": {"VARA": "a"},
+        "//:b": {"VARB": "b"},
+    }),
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)

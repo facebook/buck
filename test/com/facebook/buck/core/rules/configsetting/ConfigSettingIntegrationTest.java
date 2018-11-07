@@ -272,4 +272,31 @@ public class ConfigSettingIntegrationTest {
     output = workspace.buildAndReturnOutput("-c", "cat.file=b", ":echo_with_concatenation_in_cmd");
     assertEquals("b", Files.readAllLines(output).get(0).trim());
   }
+
+  @Test
+  public void testMapAttributeCanBeConcatenatedUsingSelects() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand("test", "-c", "cat.file=a", ":java_test_with_select_in_env")
+        .assertSuccess();
+
+    workspace
+        .runBuckBuild("test", "-c", "cat.file=b", ":java_test_with_select_in_env")
+        .assertFailure();
+  }
+
+  @Test
+  public void testFailureWithDuplicateMapAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand(
+            "test", "-c", "cat.file=a", ":java_test_with_duplicate_keys_in_select_in_env")
+        .assertFailure("Duplicate keys found when trying to concatenate attributes: VARA");
+  }
 }

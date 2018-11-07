@@ -17,10 +17,14 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   private final TypeCoercer<K> keyTypeCoercer;
@@ -74,5 +78,22 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
     } else {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
+  }
+
+  @Nullable
+  @Override
+  public ImmutableMap<K, V> concat(Iterable<ImmutableMap<K, V>> elements) {
+    LinkedHashMap<K, V> result = Maps.newLinkedHashMap();
+    for (ImmutableMap<K, V> map : elements) {
+      for (Map.Entry<K, V> entry : map.entrySet()) {
+        V previousObject = result.putIfAbsent(entry.getKey(), entry.getValue());
+        if (previousObject != null) {
+          throw new HumanReadableException(
+              "Duplicate key found when trying to concatenate a map attribute: %s", entry.getKey());
+        }
+      }
+    }
+
+    return ImmutableMap.copyOf(result);
   }
 }
