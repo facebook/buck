@@ -1063,4 +1063,160 @@ public class QueryCommandIntegrationTest {
 
     assertEquals(expectedNode, jsonNode);
   }
+
+  @Test
+  public void testListValuesFromConfigurableAttributesAreConcatenated() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_configurable_attributes", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=a",
+            "//:genrule_with_select_in_srcs",
+            "--output-attributes",
+            "srcs");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:genrule_with_select_in_srcs\" : {\n"
+                    + "    \"srcs\" : [ \":c\", \":a\" ]\n"
+                    + "  }\n"
+                    + "}\n")));
+  }
+
+  @Test
+  public void testStringValuesFromConfigurableAttributesAreConcatenated() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_configurable_attributes", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=a",
+            "//:genrule_with_select_in_cmd",
+            "--output-attributes",
+            "cmd");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:genrule_with_select_in_cmd\" : {\n"
+                    + "    \"cmd\" : \"echo $(location :a) > $OUT\"\n"
+                    + "  }\n"
+                    + "}\n")));
+  }
+
+  @Test
+  public void testIntegerValuesFromConfigurableAttributesAreConcatenated() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_configurable_attributes", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=a",
+            "//:java_test_with_select_in_timeout",
+            "--output-attributes",
+            "test_case_timeout_ms");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:java_test_with_select_in_timeout\" : {\n"
+                    + "    \"test_case_timeout_ms\" : 13\n"
+                    + "  }\n"
+                    + "}\n")));
+
+    result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=b",
+            "//:java_test_with_select_in_timeout",
+            "--output-attributes",
+            "test_case_timeout_ms");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:java_test_with_select_in_timeout\" : {\n"
+                    + "    \"test_case_timeout_ms\" : 14\n"
+                    + "  }\n"
+                    + "}\n")));
+  }
+
+  @Test
+  public void testMapValuesFromConfigurableAttributesAreConcatenated() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_configurable_attributes", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=a",
+            "//:java_test_with_select_in_env",
+            "--output-attributes",
+            "env");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:java_test_with_select_in_env\" : {\n"
+                    + "    \"env\" : {\n"
+                    + "      \"var1\" : \"val1\",\n"
+                    + "      \"var2\" : \"val2\",\n"
+                    + "      \"vara\" : \"vala\"\n"
+                    + "    }\n"
+                    + "  }\n"
+                    + "}\n")));
+
+    result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=b",
+            "//:java_test_with_select_in_env",
+            "--output-attributes",
+            "env");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:java_test_with_select_in_env\" : {\n"
+                    + "    \"env\" : {\n"
+                    + "      \"var1\" : \"val1\",\n"
+                    + "      \"var2\" : \"val2\",\n"
+                    + "      \"varb\" : \"valb\"\n"
+                    + "    }\n"
+                    + "  }\n"
+                    + "}\n")));
+  }
 }

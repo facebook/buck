@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.select.SelectorListResolver;
 import java.util.function.Supplier;
 
 /**
@@ -27,6 +28,7 @@ import java.util.function.Supplier;
 class PerBuildStateWithConfigurableAttributes extends PerBuildState {
 
   private final ConstraintResolver constraintResolver;
+  private final SelectorListResolver selectorListResolver;
   private final Supplier<Platform> targetPlatform;
 
   PerBuildStateWithConfigurableAttributes(
@@ -34,14 +36,20 @@ class PerBuildStateWithConfigurableAttributes extends PerBuildState {
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
       ParsePipeline<TargetNode<?>> targetNodeParsePipeline,
       ConstraintResolver constraintResolver,
+      SelectorListResolver selectorListResolver,
       Supplier<Platform> targetPlatform) {
     super(cellManager, buildFileRawNodeParsePipeline, targetNodeParsePipeline);
     this.constraintResolver = constraintResolver;
+    this.selectorListResolver = selectorListResolver;
     this.targetPlatform = targetPlatform;
   }
 
   public ConstraintResolver getConstraintResolver() {
     return constraintResolver;
+  }
+
+  public SelectorListResolver getSelectorListResolver() {
+    return selectorListResolver;
   }
 
   public Supplier<Platform> getTargetPlatform() {

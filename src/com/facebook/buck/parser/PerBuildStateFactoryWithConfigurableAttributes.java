@@ -229,6 +229,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         buildFileRawNodeParsePipeline,
         targetNodeParsePipeline,
         constraintResolver,
+        selectorListResolver,
         targetPlatform);
   }
 
