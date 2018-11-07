@@ -20,7 +20,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.collect.nestedset.NestedSetBuilder;
+import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,5 +43,11 @@ public class SkylarkModuleTest {
         SkylarkNestedSet.of(
             String.class, NestedSetBuilder.<String>stableOrder().add("foo").add("bar").build());
     assertThat(mapper.writeValueAsString(depset), equalTo("[\"foo\",\"bar\"]"));
+  }
+
+  @Test
+  public void canSerializeSkylarkList() throws Exception {
+    SkylarkList<String> list = SkylarkList.createImmutable(ImmutableList.of("foo"));
+    assertThat(mapper.writeValueAsString(list), equalTo("[\"foo\"]"));
   }
 }
