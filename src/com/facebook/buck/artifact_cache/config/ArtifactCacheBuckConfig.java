@@ -133,6 +133,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String DEFAULT_SCHEDULE_TYPE = "none";
   public static final String MULTI_FETCH = "multi_fetch";
   private static final String MULTI_FETCH_LIMIT = "multi_fetch_limit";
+  public static final String MULTI_CHECK = "multi_check";
   private static final int DEFAULT_MULTI_FETCH_LIMIT = 100;
 
   private static final String DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS =
@@ -155,6 +156,10 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return buckConfig
         .getEnum(CACHE_SECTION_NAME, MULTI_FETCH, MultiFetchType.class)
         .orElse(MultiFetchType.DEFAULT);
+  }
+
+  public boolean getMultiCheckEnabled() {
+    return buckConfig.getBooleanValue(CACHE_SECTION_NAME, MULTI_CHECK, false);
   }
 
   @Override

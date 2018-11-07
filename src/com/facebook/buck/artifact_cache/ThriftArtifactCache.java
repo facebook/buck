@@ -80,6 +80,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   private final BuildId buildId;
   private final int multiFetchLimit;
   private final int concurrencyLevel;
+  private final boolean multiCheckEnabled;
   private final String producerId;
   private final String producerHostname;
 
@@ -90,12 +91,14 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       BuildId buildId,
       int multiFetchLimit,
       int concurrencyLevel,
+      boolean multiCheckEnabled,
       String producerId,
       String producerHostname) {
     super(args);
     this.buildId = buildId;
     this.multiFetchLimit = multiFetchLimit;
     this.concurrencyLevel = concurrencyLevel;
+    this.multiCheckEnabled = multiCheckEnabled;
     this.hybridThriftEndpoint = hybridThriftEndpoint;
     this.distributedBuildModeEnabled = distributedBuildModeEnabled;
     this.producerId = producerId;
@@ -380,6 +383,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     if (concurrencyLevel > 0)
       return Math.min(multiFetchLimit, 1 + pendingRequestsSize / concurrencyLevel);
     return 0;
+  }
+
+  @Override
+  protected boolean isMultiCheckEnabled() {
+    return multiCheckEnabled;
   }
 
   @Override

@@ -348,6 +348,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                       buckEventBus.getBuildId(),
                       getMultiFetchLimit(buckConfig, buckEventBus),
                       buckConfig.getHttpFetchConcurrency(),
+                      buckConfig.getMultiCheckEnabled(),
                       producerId,
                       producerHostname),
               mode,

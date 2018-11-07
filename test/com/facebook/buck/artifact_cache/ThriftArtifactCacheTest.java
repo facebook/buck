@@ -144,6 +144,7 @@ public class ThriftArtifactCacheTest {
             new BuildId("aabb"),
             0,
             0,
+            false,
             "test://",
             "hostname")) {
       Path artifactPath = tempPaths.newFile().toAbsolutePath();
@@ -339,6 +340,7 @@ public class ThriftArtifactCacheTest {
             new BuildId("aabb"),
             0,
             0,
+            false,
             "test://",
             "hostname")) {
       MultiFetchResult result = cache.multiFetchImpl(requests);
@@ -423,6 +425,7 @@ public class ThriftArtifactCacheTest {
             new BuildId("aabb"),
             1,
             1,
+            false,
             "test://",
             "hostname")) {
       MultiContainsResult result = cache.multiContainsImpl(ruleKeys);
@@ -480,6 +483,7 @@ public class ThriftArtifactCacheTest {
             new BuildId("aabb"),
             0,
             0,
+            false,
             "test://",
             "hostname")) {
       CacheDeleteResult result =
