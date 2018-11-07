@@ -1130,10 +1130,10 @@ public final class Main {
                   rootCell.getBuckConfig(),
                   webServer,
                   clock,
-                  consoleListener,
                   counterRegistry,
                   commandEventListeners,
                   managerScope);
+          buildEventBus.register(consoleListener);
 
           if (buckConfig.isBuckConfigLocalWarningEnabled() && !console.getVerbosity().isSilent()) {
             ImmutableList<Path> localConfigFiles =
@@ -1844,14 +1844,11 @@ public final class Main {
       BuckConfig buckConfig,
       Optional<WebServer> webServer,
       Clock clock,
-      AbstractConsoleEventBusListener consoleEventBusListener,
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners,
       TaskManagerScope managerScope) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
-        ImmutableList.<BuckEventListener>builder()
-            .add(consoleEventBusListener)
-            .add(new LoggingBuildListener());
+        ImmutableList.<BuckEventListener>builder().add(new LoggingBuildListener());
 
     if (buckConfig.getBooleanValue("log", "jul_build_log", false)) {
       eventListenersBuilder.add(new JavaUtilsLoggingBuildListener(projectFilesystem));
