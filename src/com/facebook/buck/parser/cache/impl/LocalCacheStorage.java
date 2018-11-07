@@ -93,9 +93,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
         parserCacheConfig.isDirParserCacheEnabled(),
         "Invalid state: LocalCacheStorage should not be instantiated if the cache is disabled.");
 
-    Path localCachePath;
-
-    localCachePath = createLocalCacheStoragePathFromConfig(parserCacheConfig, filesystem);
+    Path localCachePath = createLocalCacheStoragePathFromConfig(parserCacheConfig, filesystem);
 
     ParserCacheAccessMode cacheAccessMode =
         obtainLocalCacheStorageAccessModeFromConfig(parserCacheConfig);
@@ -106,14 +104,17 @@ public class LocalCacheStorage implements ParserCacheStorage {
   public void storeBuildFileManifest(
       HashCode weakFingerprint, HashCode strongFingerprint, byte[] serializedBuildFileManifest)
       throws ParserCacheException {
-    Stopwatch timer = Stopwatch.createStarted();
+    Stopwatch timer = null;
+    if (LOG.isDebugEnabled()) {
+      timer = Stopwatch.createStarted();
+    }
 
     try {
       if (!isWriteAllowed()) {
         return;
       }
 
-      Path weakFingerprintCachePath = createWeakFingerprintFolder(weakFingerprint);
+      Path weakFingerprintCachePath = getOrCreateWeakFingerprintFolder(weakFingerprint);
 
       Path cachedBuildFileManifestPath =
           weakFingerprintCachePath.resolve(strongFingerprint.toString());
@@ -130,13 +131,17 @@ public class LocalCacheStorage implements ParserCacheStorage {
             t, "Failed to store BuildFileManifgest to file %s.", weakFingerprintCachePath);
       }
     } finally {
-      LOG.debug(
-          "Time to complete storeBuildFileManifest: %d.",
-          timer.stop().elapsed(TimeUnit.NANOSECONDS));
+      if (timer != null) {
+        LOG.debug(
+            "Time to complete storeBuildFileManifest: %d ns.",
+            timer.stop().elapsed(TimeUnit.NANOSECONDS));
+      }
     }
   }
 
-  private Path createWeakFingerprintFolder(HashCode weakFingerprint) throws ParserCacheException {
+  /** @return Path to a weak fingerprint folder, creating one if it does not exist */
+  private Path getOrCreateWeakFingerprintFolder(HashCode weakFingerprint)
+      throws ParserCacheException {
     Path weakFingerprintCachePath = localCachePath.resolve(weakFingerprint.toString());
 
     if (!filesystem.exists(weakFingerprintCachePath)) {
