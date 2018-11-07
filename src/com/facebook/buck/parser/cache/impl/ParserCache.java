@@ -126,6 +126,14 @@ public class ParserCache {
     }
   }
 
+  /**
+   * Get build file manifest for the appropriate build file from cache, ignoring errors
+   *
+   * @param buildFile BUCK file to be parsed
+   * @param parser Parser to retrieve meta information, like includes and globs, from build file
+   * @return {@link BuildFileManifest} if found in cache, {@link Optional#empty() if not found or if
+   *     there was an error accessing the cache}
+   */
   public Optional<BuildFileManifest> getBuildFileManifest(
       Path buildFile, ProjectBuildFileParser parser) throws InterruptedException {
 
@@ -142,7 +150,7 @@ public class ParserCache {
         return cachedManifest;
       }
     } catch (IOException e) {
-      LOG.error(e, "Exception while getting BuildFileAccessManifest from cache storage.");
+      LOG.error(e, "Error getting BuildFileManifest from cache, will reparse BUCK file");
     }
 
     return Optional.empty();
