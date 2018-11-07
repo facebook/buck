@@ -25,6 +25,7 @@ java_immutables_library(
         "DefaultProjectBuildFileParserFactory.java",
         "DefaultRawTargetNodeFactory.java",
         "HybridProjectBuildFileParser.java",
+        "InternalTargetAttributeNames.java",
         "LegacyPerBuildStateFactory.java",
         "MetaRules.java",
         "NonResolvingRawTargetNodeToTargetNodeFactory.java",

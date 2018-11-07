@@ -159,7 +159,7 @@ class DefaultParser implements Parser {
     SortedMap<String, Object> attributes =
         new TreeMap<>(buildFileManifest.getTargets().get(shortName));
     attributes.put(
-        "buck.direct_dependencies",
+        InternalTargetAttributeNames.DIRECT_DEPENDENCIES,
         targetNode
             .getParseDeps()
             .stream()

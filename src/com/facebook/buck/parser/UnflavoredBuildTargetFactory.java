@@ -36,7 +36,7 @@ public class UnflavoredBuildTargetFactory {
    */
   public static UnflavoredBuildTarget createFromRawNode(
       Path cellRoot, Optional<String> cellName, Map<String, Object> map, Path rulePathForDebug) {
-    @Nullable String basePath = (String) map.get("buck.base_path");
+    @Nullable String basePath = (String) map.get(InternalTargetAttributeNames.BASE_PATH);
     @Nullable String name = (String) map.get("name");
     if (basePath == null || name == null) {
       throw new IllegalStateException(
