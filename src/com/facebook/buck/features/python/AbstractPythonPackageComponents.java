@@ -18,20 +18,20 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.util.MoreMaps;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import java.nio.file.Path;
@@ -43,22 +43,37 @@ import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, singleton = true)
 @BuckStyleImmutable
-abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
+abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
 
   // Python modules as map of their module name to location of the source.
   @Value.Parameter
   @Value.NaturalOrder
   public abstract ImmutableSortedMap<Path, SourcePath> getModules();
 
+  @AddToRuleKey
+  public final ImmutableSortedMap<String, SourcePath> getModulesRuleKey() {
+    return MoreMaps.transformKeysAndSort(getModules(), Path::toString);
+  }
+
   // Resources to include in the package.
   @Value.Parameter
   @Value.NaturalOrder
   public abstract ImmutableSortedMap<Path, SourcePath> getResources();
 
+  @AddToRuleKey
+  public final ImmutableSortedMap<String, SourcePath> getResourcesRuleKey() {
+    return MoreMaps.transformKeysAndSort(getResources(), Path::toString);
+  }
+
   // Native libraries to include in the package.
   @Value.Parameter
   @Value.NaturalOrder
   public abstract ImmutableSortedMap<Path, SourcePath> getNativeLibraries();
+
+  @AddToRuleKey
+  public final ImmutableSortedMap<String, SourcePath> getNativeLibrariesRuleKey() {
+    return MoreMaps.transformKeysAndSort(getNativeLibraries(), Path::toString);
+  }
 
   // Directories that pre-built python libraries are extracted to. Note that these
   // can refer to the same libraries that are in getPrebuiltLibraries, but these are
@@ -69,25 +84,6 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
 
   @Value.Parameter
   public abstract Optional<Boolean> isZipSafe();
-
-  @Override
-  public final void appendToRuleKey(RuleKeyObjectSink sink) {
-    // Hash all the input components here so we can detect changes in both input file content
-    // and module name mappings.
-    // TODO(agallagher): Change the types of these fields from Map to SortedMap so that we don't
-    // have to do all this weird stuff to ensure the key is stable. Please update
-    // getInputsToCompareToOutput() as well once this is fixed.
-    for (ImmutableSortedMap.Entry<String, ImmutableSortedMap<Path, SourcePath>> part :
-        ImmutableSortedMap.of(
-                "module", getModules(),
-                "resource", getResources(),
-                "nativeLibraries", getNativeLibraries())
-            .entrySet()) {
-      for (Path name : ImmutableSortedSet.copyOf(part.getValue().keySet())) {
-        sink.setReflectively(part.getKey() + ":" + name, part.getValue().get(name));
-      }
-    }
-  }
 
   /** @return whether there are any native libraries included in these components. */
   public boolean hasNativeCode(CxxPlatform cxxPlatform) {
