@@ -153,23 +153,32 @@ public class LocalCacheStorage implements ParserCacheStorage {
   @Override
   public Optional<BuildFileManifest> getBuildFileManifest(
       HashCode weakFingerprint, HashCode strongFingerprint) throws ParserCacheException {
-    Stopwatch timer = Stopwatch.createStarted();
+    Stopwatch timer = null;
+    if (LOG.isDebugEnabled()) {
+      timer = Stopwatch.createStarted();
+    }
 
     try {
       if (!isReadAllowed()) {
         return Optional.empty();
       }
 
-      Path weakFingerprintCachePath = getWeakFingerprintPath(weakFingerprint);
+      Path weakFingerprintCachePath = localCachePath.resolve(weakFingerprint.toString());
+
+      if (!filesystem.exists(weakFingerprintCachePath)) {
+        return Optional.empty();
+      }
 
       byte[] deserializedBuildFileManifest =
           deserializeBuildFileManifest(strongFingerprint, weakFingerprintCachePath);
 
       return Optional.of(getBuildFileManifestFromDesirealizedBytes(deserializedBuildFileManifest));
     } finally {
-      LOG.debug(
-          "Time to complete storeBuildFileManifest: %d.",
-          timer.stop().elapsed(TimeUnit.NANOSECONDS));
+      if (timer != null) {
+        LOG.debug(
+            "Time to complete getBuildFileManifest: %d ns.",
+            timer.stop().elapsed(TimeUnit.NANOSECONDS));
+      }
     }
   }
 
@@ -222,15 +231,5 @@ public class LocalCacheStorage implements ParserCacheStorage {
           weakFingerprintCachePath);
     }
     return deserializedBuildFileManifest;
-  }
-
-  private Path getWeakFingerprintPath(HashCode weakFingerprint) throws ParserCacheException {
-    Path weakFingerprintCachePath = localCachePath.resolve(weakFingerprint.toString());
-
-    if (!filesystem.exists(weakFingerprintCachePath)) {
-      throw new ParserCacheException(
-          "Cannot find weakFingerprint directory: %s.", weakFingerprintCachePath);
-    }
-    return weakFingerprintCachePath;
   }
 }
