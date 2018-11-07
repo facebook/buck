@@ -34,6 +34,7 @@ import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.Type;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -50,6 +51,9 @@ import javax.annotation.Nullable;
             + "All native rules appear as functions in this module, e.g. "
             + "<code>native.cxx_library</code>.")
 public class SkylarkNativeModule {
+
+  // Matches any of "**/", "*/**/" globs
+  private static final Pattern TOP_LEVEL_GLOB_PATTERN = Pattern.compile("(\\*/)*\\*\\*/.*");
 
   @SkylarkCallable(
       name = "package_name",
@@ -155,8 +159,7 @@ public class SkylarkNativeModule {
       return SkylarkList.MutableList.empty();
     }
     if (parseContext.getPackageContext().getPackageIdentifier().getRunfilesPath().isEmpty()
-        && include.stream().anyMatch(str -> str.matches("(\\*\\/)*\\*\\*\\/.*"))) {
-      // Matches any of "**/", "*/**/" globs
+        && include.stream().anyMatch(str -> TOP_LEVEL_GLOB_PATTERN.matcher(str).matches())) {
       throw new EvalException(
           ast.getLocation(), "Recursive globs are prohibited at top-level directory");
     }

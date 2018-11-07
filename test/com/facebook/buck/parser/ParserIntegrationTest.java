@@ -576,6 +576,18 @@ public class ParserIntegrationTest {
   }
 
   @Test
+  public void skylarkParseErrorIfTopLevelRecursiveGlob() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "top_level_recursive_glob", temporaryFolder);
+    workspace.setUp();
+    assertParseFailedWithSubstrings(
+        workspace.runBuckCommand(
+            "build", "//:glob", "-c", "parser.default_build_file_syntax=skylark"),
+        "Recursive globs are prohibited at top-level directory");
+  }
+
+  @Test
   public void parseAllFromRootCellShouldIgnoreSubcells() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "subcell_ignored", temporaryFolder);
