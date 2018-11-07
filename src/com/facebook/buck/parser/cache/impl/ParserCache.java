@@ -78,7 +78,7 @@ public class ParserCache {
    * @return a constructed result object based on the cache found data or {@code Optional.empty()}
    *     if no cache info is found.
    */
-  private Optional<BuildFileManifest> getManifestFromLocalCache(
+  private Optional<BuildFileManifest> getManifestFromStorage(
       Path buildFile, ImmutableList<String> includeBuildFiles) throws IOException {
     final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
     final HashCode strongFingerprint =
@@ -99,7 +99,7 @@ public class ParserCache {
       serializedBuildFileManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
     } catch (IOException e) {
       throw new ParserCacheException(
-          e, "Failed to serialize BuildFileManifgest - path %s.", buildFile);
+          e, "Failed to serialize BuildFileManifest - path %s.", buildFile);
     }
     return serializedBuildFileManifest;
   }
@@ -118,11 +118,10 @@ public class ParserCache {
       parserCacheStorage.storeBuildFileManifest(
           weakFingerprint, strongFingerprint, serializedManifest);
     } catch (ParserCacheException e) {
-      LOG.error(e, "Failure while storing parsed BuildFileAccessManifest.");
+      LOG.error(e, "Failure while storing parsed BuildFileManifest.");
     } catch (IOException e) {
       LOG.error(
-          e,
-          "Failure while calculating strong fingerprint when storing parsed BuildFileAccessManifest.");
+          e, "Failure while calculating strong fingerprint when storing parsed BuildFileManifest.");
     }
   }
 
@@ -141,7 +140,7 @@ public class ParserCache {
     try {
       ImmutableList<String> includeFilesForBuildFile = parser.getIncludedFiles(buildFile);
       Optional<BuildFileManifest> cachedManifest =
-          getManifestFromLocalCache(buildFile, includeFilesForBuildFile);
+          getManifestFromStorage(buildFile, includeFilesForBuildFile);
       if (cachedManifest.isPresent()
           && parser.globResultsMatchCurrentState(
               buildFile, cachedManifest.get().getGlobManifest())) {
