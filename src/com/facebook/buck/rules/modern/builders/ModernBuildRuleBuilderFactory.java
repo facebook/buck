@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.core.build.engine.BuildExecutorRunner;
 import com.facebook.buck.core.build.engine.BuildResult;
-import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.rules.BuildRule;
@@ -40,6 +40,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Constructs various BuildRuleStrategies for ModernBuildRules based on the
@@ -56,7 +57,7 @@ public class ModernBuildRuleBuilderFactory {
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
       Console console,
-      ListeningExecutorService remoteExecutorService,
+      ExecutorService remoteExecutorService,
       Optional<TraceInfoProvider> traceInfoProvider) {
     try {
       RemoteExecutionClientsFactory remoteExecutionFactory =
@@ -108,9 +109,8 @@ public class ModernBuildRuleBuilderFactory {
     return new AbstractModernBuildRuleStrategy() {
       @Override
       public ListenableFuture<Optional<BuildResult>> build(
-          BuildRule rule, BuildStrategyContext strategyContext) {
-        return Futures.submitAsync(
-            strategyContext::runWithDefaultBehavior, strategyContext.getExecutorService());
+          ListeningExecutorService service, BuildRule rule, BuildExecutorRunner executorRunner) {
+        return Futures.submitAsync(executorRunner::runWithDefaultExecutor, service);
       }
     };
   }

@@ -19,28 +19,24 @@ package com.facebook.buck.core.build.engine;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Scope;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import java.util.Optional;
+import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.StepRunner;
+import java.io.IOException;
 
 /**
- * Used for running a BuildExecutor within the context of the build engine such that the engine's
- * internal state/tracking is updated as expected. Provides ability to decide at runtime whether to
- * use custom BuildExecutor or just the default.
+ * Interface used by a BuildExecutorRunner to build a rule. Should be approximately equivalent to:
+ *
+ * <pre>{@code
+ * for (Step step : rule.getBuildSteps(buildRuleBuildContext, buildableContext)) {
+ *   stepRunner.runStepForBuildTarget(executionContext, step, Optional.of(rule.getBuildTarget()));
+ * }
+ * }</pre>
  */
-public interface BuildStrategyContext {
-  ListenableFuture<Optional<BuildResult>> runWithDefaultBehavior();
-
-  ListeningExecutorService getExecutorService();
-
-  BuildResult createBuildResult(BuildRuleSuccessType successType);
-
-  ExecutionContext getExecutionContext();
-
-  Scope buildRuleScope();
-
-  BuildContext getBuildRuleBuildContext();
-
-  BuildableContext getBuildableContext();
+public interface BuildExecutor {
+  void executeCommands(
+      ExecutionContext executionContext,
+      BuildContext buildRuleBuildContext,
+      BuildableContext buildableContext,
+      StepRunner stepRunner)
+      throws StepFailedException, InterruptedException, IOException;
 }

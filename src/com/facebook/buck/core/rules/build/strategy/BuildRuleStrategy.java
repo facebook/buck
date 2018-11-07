@@ -16,10 +16,11 @@
 
 package com.facebook.buck.core.rules.build.strategy;
 
+import com.facebook.buck.core.build.engine.BuildExecutorRunner;
 import com.facebook.buck.core.build.engine.BuildResult;
-import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.rules.BuildRule;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
@@ -29,9 +30,9 @@ public interface BuildRuleStrategy extends Closeable {
   @Override
   void close() throws IOException;
 
-  /** Builds the rule. */
+  /** This must call executorRunner.runWithExecutor() or executorRunner.runWithDefaultExecutor(). */
   ListenableFuture<Optional<BuildResult>> build(
-      BuildRule rule, BuildStrategyContext strategyContext);
+      ListeningExecutorService service, BuildRule rule, BuildExecutorRunner executorRunner);
 
   /** A rule will be built by the custom strategy only if canBuild() returns true. */
   boolean canBuild(BuildRule instance);
