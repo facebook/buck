@@ -136,7 +136,7 @@ public class ParserCache {
   public Optional<BuildFileManifest> getBuildFileManifest(
       Path buildFile, ProjectBuildFileParser parser) throws InterruptedException {
 
-    // Get from local cache.
+    // Try to retrieve a cached build file manifest
     try {
       ImmutableList<String> includeFilesForBuildFile = parser.getIncludedFiles(buildFile);
       Optional<BuildFileManifest> cachedManifest =
