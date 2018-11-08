@@ -74,6 +74,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -176,6 +177,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   /** Commands that should print out the build details, if provided */
   protected final ImmutableSet<String> buildDetailsCommands =
       ImmutableSet.of("build", "test", "install");
+
+  private final AtomicBoolean topSlowestRulesLogged = new AtomicBoolean(false);
 
   public AbstractConsoleEventBusListener(
       Console console,
@@ -934,10 +937,16 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       }
     }
     ImmutableList<String> slowRulesLogs = slowRulesLogsBuilder.build();
-    LOG.info(String.join(System.lineSeparator(), slowRulesLogs));
+    logTopSlowBuildRulesIfNotLogged(slowRulesLogs);
 
     if (showSlowRulesInConsole) {
       lines.addAll(slowRulesLogs);
+    }
+  }
+
+  private void logTopSlowBuildRulesIfNotLogged(ImmutableList<String> slowRulesLogs) {
+    if (topSlowestRulesLogged.compareAndSet(false, true)) {
+      LOG.info(String.join(System.lineSeparator(), slowRulesLogs));
     }
   }
 
