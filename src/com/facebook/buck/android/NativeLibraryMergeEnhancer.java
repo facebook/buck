@@ -63,6 +63,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -406,7 +407,9 @@ class NativeLibraryMergeEnhancer {
       }
 
       StringBuilder cycleString = new StringBuilder().append("[ ");
+      StringBuilder depString = new StringBuilder();
       boolean foundStart = false;
+      MergedNativeLibraryConstituents prevMember = null;
       for (MergedNativeLibraryConstituents member : partialCycle) {
         if (member == item) {
           foundStart = true;
@@ -415,17 +418,79 @@ class NativeLibraryMergeEnhancer {
           cycleString.append(member);
           cycleString.append(" -> ");
         }
+        if (prevMember != null) {
+          Set<Pair<String, String>> depEdges =
+              getRuleDependencies(ruleResolver, linkableMembership, prevMember, member);
+          depString.append(formatRuleDependencies(depEdges, prevMember, member));
+        }
+        prevMember = member;
       }
       cycleString.append(item);
       cycleString.append(" ]");
+
+      Set<Pair<String, String>> depEdges =
+          getRuleDependencies(
+              ruleResolver, linkableMembership, Objects.requireNonNull(prevMember), item);
+      depString.append(formatRuleDependencies(depEdges, Objects.requireNonNull(prevMember), item));
+
       throw new HumanReadableException(
           "Error: Dependency cycle detected when merging native libs for "
               + buildTarget
               + ": "
-              + cycleString);
+              + cycleString
+              + "\n"
+              + depString);
     }
 
     return TopologicalSort.sort(graph);
+  }
+
+  /**
+   * Calculates the actual target dependency edges between two merged libraries. Returns them as
+   * strings for printing.
+   */
+  private static Set<Pair<String, String>> getRuleDependencies(
+      BuildRuleResolver ruleResolver,
+      Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership,
+      MergedNativeLibraryConstituents from,
+      MergedNativeLibraryConstituents to) {
+
+    // We do this work again because we want to avoid storing extraneous information on the
+    // normal path. We know we're iterating over a cycle, so we can afford to do some work to
+    // figure out the actual targets causing it.
+    Set<Pair<String, String>> buildTargets = new LinkedHashSet<>();
+    for (NativeLinkable sourceLinkable : from.getLinkables()) {
+      for (NativeLinkable targetLinkable :
+          Iterables.concat(
+              sourceLinkable.getNativeLinkableDeps(ruleResolver),
+              sourceLinkable.getNativeLinkableExportedDeps(ruleResolver))) {
+        if (linkableMembership.get(targetLinkable) == to) {
+          // Normalize to string names for printing.
+          buildTargets.add(
+              new Pair<>(
+                  sourceLinkable.getBuildTarget().toString(),
+                  targetLinkable.getBuildTarget().toString()));
+        }
+      }
+    }
+    return buildTargets;
+  }
+
+  private static String formatRuleDependencies(
+      Set<Pair<String, String>> edges,
+      MergedNativeLibraryConstituents from,
+      MergedNativeLibraryConstituents to) {
+    StringBuilder depString = new StringBuilder();
+    depString.append("Dependencies between ").append(from).append(" and ").append(to).append(":\n");
+    for (Pair<String, String> ruleEdge : edges) {
+      depString
+          .append("  ")
+          .append(ruleEdge.getFirst())
+          .append(" -> ")
+          .append(ruleEdge.getSecond())
+          .append("\n");
+    }
+    return depString.toString();
   }
 
   /** Create the final Linkables that will be passed to the later stages of graph enhancement. */

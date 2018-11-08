@@ -218,7 +218,20 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
     ProcessResult processResult =
         workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs");
     processResult.assertFailure();
-    assertThat(processResult.getStderr(), containsString("Error: Dependency cycle detected"));
+    String stderr = processResult.getStderr();
+    assertThat(stderr, containsString("Error: Dependency cycle detected"));
+    assertThat(
+        stderr,
+        containsString(
+            "Dependencies between merge:libbroken.so and no-merge://native/merge:D:\n"
+                + "  //native/merge:C -> //native/merge:D\n"));
+    // We need to split the assertion because the order in which
+    // these occur in the output is not deterministic.
+    assertThat(
+        stderr,
+        containsString(
+            "Dependencies between no-merge://native/merge:D and merge:libbroken.so:\n"
+                + "  //native/merge:D -> //native/merge:F"));
   }
 
   @Test
