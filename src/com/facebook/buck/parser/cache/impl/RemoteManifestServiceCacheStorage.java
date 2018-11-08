@@ -146,9 +146,16 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
                 manifestService
                     .fetchManifest(strongFingerprintFromRemoteCache)
                     .get(TIMEOUT, TimeUnit.MILLISECONDS);
-            return Optional.of(
-                BuildFileManifestSerializer.deserialize(
-                    strongFingerprintManifest.getValues().get(0).array()));
+
+            // If the store failed to add entries to the values list (it happened couple of times
+            // while testing because of hitting a timeout),
+            // do not try to extract bytes from it.
+            if (strongFingerprintManifest.getValuesSize() > 0) {
+
+              return Optional.of(
+                  BuildFileManifestSerializer.deserialize(
+                      strongFingerprintManifest.getValues().get(0).array()));
+            }
           } catch (InterruptedException | ExecutionException | IOException | TimeoutException e) {
             LOG.error(e, "Failed to get the StrongFingerprint value from remote cache");
             throw new ParserCacheException(
