@@ -16,8 +16,8 @@
 package com.facebook.buck.intellij.ideabuck.actions.select;
 
 import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -75,13 +75,13 @@ public class SelectedTestRunLineMarkerContributor extends RunLineMarkerContribut
         new RunSelectedTestAction(
             "Run " + name + " with Buck",
             "Run " + name + " with Buck",
-            AllIcons.RunConfigurations.TestState.Run,
+            BuckIcons.RUN_BUCK_TEST,
             false,
             parent),
         new RunSelectedTestAction(
             "Debug " + name + " with Buck",
             "Debug " + name + " with Buck",
-            IconLoader.getIcon("/icons/actions/Debug.png"),
+            BuckIcons.DEBUG_BUCK_TEST,
             true,
             parent));
   }
