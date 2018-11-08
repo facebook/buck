@@ -86,7 +86,7 @@ public class ParserCache {
     try {
       return parserCacheStorage.getBuildFileManifest(weakFingerprint, strongFingerprint);
     } catch (ParserCacheException t) {
-      LOG.error(t, "Exception getting BuildFileManifest from cache.");
+      LOG.debug(t, "Could not get BuildFileManifest from cache.");
     }
 
     return Optional.empty();
@@ -149,7 +149,7 @@ public class ParserCache {
         return cachedManifest;
       }
     } catch (IOException e) {
-      LOG.error(e, "Error getting BuildFileManifest from cache, will reparse BUCK file");
+      LOG.debug(e, "Could not get BuildFileManifest from cache, will reparse BUCK file");
     }
 
     return Optional.empty();
