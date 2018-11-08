@@ -76,6 +76,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   private final ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage;
+  private final ImmutableSet<SourcePath> additionalCoverageTargets;
 
   private PythonTest(
       BuildTarget buildTarget,
@@ -88,6 +89,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       PythonBinary binary,
       ImmutableSet<String> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
+      ImmutableSet<SourcePath> additionalCoverageTargets,
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
     super(buildTarget, projectFilesystem, params);
@@ -98,6 +100,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.binary = binary;
     this.labels = labels;
     this.neededCoverage = neededCoverage;
+    this.additionalCoverageTargets = additionalCoverageTargets;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.contacts = contacts;
   }
@@ -111,6 +114,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       PythonBinary binary,
       ImmutableSet<String> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
+      ImmutableSet<SourcePath> additionalCoverageTargets,
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
 
@@ -125,6 +129,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         binary,
         labels,
         neededCoverage,
+        additionalCoverageTargets,
         testRuleTimeoutMs,
         contacts);
   }
@@ -249,6 +254,10 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return binary;
   }
 
+  protected ImmutableSet<SourcePath> getAdditionalCoverageTargets() {
+    return additionalCoverageTargets;
+  }
+
   @Override
   public Tool getExecutableCommand() {
     return binary.getExecutableCommand();
@@ -268,6 +277,10 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .putAllEnv(getMergedEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
+        .addAllAdditionalCoverageTargets(
+            buildContext
+                .getSourcePathResolver()
+                .getAllAbsolutePaths(getAdditionalCoverageTargets()))
         .build();
   }
 

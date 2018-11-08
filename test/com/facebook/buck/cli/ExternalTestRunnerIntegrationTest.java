@@ -76,6 +76,18 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
+  public void runPythonCxxAdditionalCoverage() throws IOException {
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_additional_coverage.py"),
+            "//dir:python-cxx-additional-coverage");
+    result.assertSuccess();
+    assertTrue(result.getStdout().trim().endsWith("/buck-out/gen/dir/cpp_binary"));
+  }
+
+  @Test
   public void runAdditionalCoverage() throws IOException {
     ProcessResult result =
         workspace.runBuckCommand(
