@@ -105,6 +105,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription.CommonArg;
@@ -430,6 +431,7 @@ public class ProjectGenerator {
             PerfEventId.of("xcode_project_generation"),
             ImmutableMap.of("Path", getProjectPath()))) {
       for (TargetNode<?> targetNode : targetGraph.getNodes()) {
+
         if (isBuiltByCurrentProject(targetNode.getBuildTarget())) {
           LOG.debug("Including rule %s in project", targetNode);
           // Trigger the loading cache to call the generateProjectTarget function.
@@ -516,6 +518,10 @@ public class ProjectGenerator {
     Preconditions.checkState(
         isBuiltByCurrentProject(targetNode.getBuildTarget()),
         "should not generate rule if it shouldn't be built by current project");
+
+    if (shouldExcludeLibraryFromProject(targetNode)) {
+      return Optional.empty();
+    }
 
     BuildTarget targetWithoutAppleCxxFlavors =
         targetNode.getBuildTarget().withoutFlavors(appleCxxFlavors);
@@ -3686,6 +3692,15 @@ public class ProjectGenerator {
       CxxLibraryDescription.CommonArg arg = target.getConstructorArg();
       return arg.getLinkWhole().orElse(false);
     }
+  }
+
+  private boolean shouldExcludeLibraryFromProject(TargetNode<?> targetNode) {
+    // targets with flavor #compilation-database are not meant to be built by Xcode, they are used
+    // only to generate the compile commands for a library during buck build
+    return targetNode
+        .getBuildTarget()
+        .getFlavors()
+        .contains(CxxCompilationDatabase.COMPILATION_DATABASE);
   }
 
   private boolean isLibraryBuiltByCurrentProject(TargetNode<?> targetNode) {
