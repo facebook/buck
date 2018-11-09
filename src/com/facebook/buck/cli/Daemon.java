@@ -116,8 +116,7 @@ final class Daemon implements Closeable {
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
-    this.daemonicParserState =
-        new DaemonicParserState(typeCoercerFactory, parserConfig.getNumParsingThreads());
+    this.daemonicParserState = new DaemonicParserState(parserConfig.getNumParsingThreads());
 
     // Build the the rule key cache recycler.
     this.defaultRuleKeyFactoryCacheRecycler =

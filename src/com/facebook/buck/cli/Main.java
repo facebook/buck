@@ -1511,7 +1511,7 @@ public final class Main {
                   knownRuleTypesProvider,
                   new ParserPythonInterpreterProvider(parserConfig, executableFinder),
                   rootCell.getBuckConfig(),
-                  new DaemonicParserState(typeCoercerFactory, parserConfig.getNumParsingThreads()),
+                  new DaemonicParserState(parserConfig.getNumParsingThreads()),
                   new TargetSpecResolver(),
                   watchman,
                   buildEventBus,

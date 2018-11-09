@@ -33,7 +33,6 @@ import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteLock;
 import com.google.common.base.Preconditions;
@@ -234,7 +233,6 @@ public class DaemonicParserState {
     }
   }
 
-  private final TypeCoercerFactory typeCoercerFactory;
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
   private final IntegerCounter cacheInvalidatedByDefaultIncludesChangeCounter;
   private final IntegerCounter cacheInvalidatedByWatchOverflowCounter;
@@ -269,9 +267,8 @@ public class DaemonicParserState {
   private final AutoCloseableReadWriteLock cachedStateLock;
   private final AutoCloseableReadWriteLock cellStateLock;
 
-  public DaemonicParserState(TypeCoercerFactory typeCoercerFactory, int parsingThreads) {
+  public DaemonicParserState(int parsingThreads) {
     this.parsingThreads = parsingThreads;
-    this.typeCoercerFactory = typeCoercerFactory;
     this.cacheInvalidatedByEnvironmentVariableChangeCounter =
         new TagSetCounter(
             COUNTER_CATEGORY, INVALIDATED_BY_ENV_VARS_COUNTER_NAME, ImmutableMap.of());
@@ -312,10 +309,6 @@ public class DaemonicParserState {
 
     this.cachedStateLock = new AutoCloseableReadWriteLock();
     this.cellStateLock = new AutoCloseableReadWriteLock();
-  }
-
-  TypeCoercerFactory getTypeCoercerFactory() {
-    return typeCoercerFactory;
   }
 
   LoadingCache<Cell, BuildFileTree> getBuildFileTrees() {
