@@ -174,12 +174,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       throws IOException, BuildFileParseException, InterruptedException {
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(buildFile.toString());
 
-    BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(createInputSource(buildFilePath), eventHandler);
-    if (buildFileAst.containsErrors()) {
-      throw BuildFileParseException.createForUnknownParseError(
-          "Cannot parse build file " + buildFile);
-    }
+    BuildFileAST buildFileAst = parseBuildFile(buildFile, buildFilePath);
     String basePath = getBasePath(buildFile);
     CachingGlobber globber = newGlobber(buildFile);
     PackageContext packageContext = createPackageContext(basePath, globber);
@@ -212,6 +207,17 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           parseContext.getAccessedConfigurationOptions(),
           globber.createGlobManifest());
     }
+  }
+
+  private BuildFileAST parseBuildFile(
+      Path buildFile, com.google.devtools.build.lib.vfs.Path buildFilePath) throws IOException {
+    BuildFileAST buildFileAst =
+        BuildFileAST.parseBuildFile(createInputSource(buildFilePath), eventHandler);
+    if (buildFileAst.containsErrors()) {
+      throw BuildFileParseException.createForUnknownParseError(
+          "Cannot parse build file " + buildFile);
+    }
+    return buildFileAst;
   }
 
   /** Creates a globber for the package defined by the provided build file path. */
@@ -543,19 +549,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   public ImmutableList<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(buildFile.toString());
-
-    // TODO: lubol For now we need to see errors when trying to extract imports only.
-    // TODO: Lubol It is expected to have the same errors as when the file is fully parsed.
-    BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(createInputSource(buildFilePath), eventHandler);
-    if (buildFileAst.containsErrors()) {
-      throw BuildFileParseException.createForUnknownParseError(
-          "Cannot parse build file " + buildFile);
-    }
+    BuildFileAST buildFileAst = parseBuildFile(buildFile, buildFilePath);
 
     String basePath = getBasePath(buildFile);
     Label containingLabel = createContainingLabel(basePath);
-
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, buildFileAst.getImports());
 
