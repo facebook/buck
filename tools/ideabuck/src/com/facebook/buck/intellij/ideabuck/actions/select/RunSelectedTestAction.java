@@ -155,7 +155,7 @@ public class RunSelectedTestAction extends AnAction {
                             name, type.getConfigurationFactories()[0]);
                 TestConfiguration testConfiguration =
                     (TestConfiguration) runnerAndConfigurationSettings.getConfiguration();
-                testConfiguration.data.target = strings.get(0);
+                testConfiguration.data.targets = strings.get(0);
                 testConfiguration.data.testSelectors = testSelectors.orElse("");
                 runnerAndConfigurationSettingsResult = runnerAndConfigurationSettings;
                 runManager.addConfiguration(runnerAndConfigurationSettings, false);

@@ -27,7 +27,7 @@ import javax.swing.JPanel;
 import org.jetbrains.annotations.NotNull;
 
 public class TestConfigurationEditor extends SettingsEditor<TestConfiguration> {
-  private final JBTextField mTarget;
+  private final JBTextField mTargets;
   private final JBTextField mAdditionalParams;
   private final JBTextField mTestSelectors;
   private final JPanel root;
@@ -35,16 +35,16 @@ public class TestConfigurationEditor extends SettingsEditor<TestConfiguration> {
   public TestConfigurationEditor() {
     root = new JPanel(new GridBagLayout());
     final JBLabel targetLabel = new JBLabel();
-    targetLabel.setText("Target");
-    mTarget = new JBTextField();
-    mTarget.getEmptyText().setText("Leave empty to run all tests");
+    targetLabel.setText("Targets");
+    mTargets = new JBTextField();
+    mTargets.getEmptyText().setText("Specify buck targets to test");
 
     final JBLabel testSelectorLabel = new JBLabel();
     testSelectorLabel.setText("Test selectors (--test-selectors)");
     mTestSelectors = new JBTextField();
     mTestSelectors
         .getEmptyText()
-        .setText("Select tests to run using <class>,#<method> or " + "<class>#<method>.");
+        .setText("Select tests to run using <class>, <#method> or <class#method>.");
 
     final JBLabel additionalParamsLabel = new JBLabel();
     additionalParamsLabel.setText("Additional params");
@@ -70,7 +70,7 @@ public class TestConfigurationEditor extends SettingsEditor<TestConfiguration> {
     constraints.gridy = 0;
     constraints.weightx = 1;
     constraints.fill = GridBagConstraints.HORIZONTAL;
-    root.add(mTarget, constraints);
+    root.add(mTargets, constraints);
 
     constraints.gridx = 0;
     constraints.gridy = 1;
@@ -99,14 +99,14 @@ public class TestConfigurationEditor extends SettingsEditor<TestConfiguration> {
 
   @Override
   protected void resetEditorFrom(@NotNull TestConfiguration configuration) {
-    mTarget.setText(configuration.data.target);
+    mTargets.setText(configuration.data.targets);
     mAdditionalParams.setText(configuration.data.additionalParams);
     mTestSelectors.setText(configuration.data.testSelectors);
   }
 
   @Override
   protected void applyEditorTo(@NotNull TestConfiguration configuration) {
-    configuration.data.target = mTarget.getText().trim();
+    configuration.data.targets = mTargets.getText().trim();
     configuration.data.additionalParams = mAdditionalParams.getText().trim();
     configuration.data.testSelectors = mTestSelectors.getText().trim();
   }

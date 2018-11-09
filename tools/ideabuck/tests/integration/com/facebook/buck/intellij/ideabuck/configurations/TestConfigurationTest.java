@@ -30,7 +30,7 @@ public class TestConfigurationTest extends BuckTestCase {
         TestConfigurationType.getInstance().getConfigurationFactories()[0];
     final TestConfiguration cfg =
         new TestConfiguration(getProject(), factory, "test serialization");
-    cfg.data.target = "//src/com/facebook/buck:test";
+    cfg.data.targets = "//src/com/facebook/buck:test";
     cfg.data.testSelectors = "com.facebook.buck.Test";
     cfg.data.additionalParams = "--num-threads 239";
     final Element testElement = new Element("test_element");
@@ -39,7 +39,7 @@ public class TestConfigurationTest extends BuckTestCase {
     final TestConfiguration cfg2 =
         new TestConfiguration(getProject(), factory, "test serialization");
     cfg2.readExternal(testElement);
-    Assert.assertEquals("//src/com/facebook/buck:test", cfg2.data.target);
+    Assert.assertEquals("//src/com/facebook/buck:test", cfg2.data.targets);
     Assert.assertEquals("com.facebook.buck.Test", cfg2.data.testSelectors);
     Assert.assertEquals("--num-threads 239", cfg2.data.additionalParams);
   }
