@@ -181,9 +181,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           "Cannot parse build file " + buildFile);
     }
     String basePath = getBasePath(buildFile);
-    CachingGlobber globber =
-        CachingGlobber.of(
-            globberFactory.create(fileSystem.getPath(buildFile.getParent().toString())));
+    CachingGlobber globber = newGlobber(buildFile);
     PackageContext packageContext = createPackageContext(basePath, globber);
     ParseContext parseContext = new ParseContext(packageContext);
     try (Mutability mutability = Mutability.create("parsing " + buildFile)) {
@@ -214,6 +212,12 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           parseContext.getAccessedConfigurationOptions(),
           globber.createGlobManifest());
     }
+  }
+
+  /** Creates a globber for the package defined by the provided build file path. */
+  private CachingGlobber newGlobber(Path buildFile) {
+    return CachingGlobber.of(
+        globberFactory.create(fileSystem.getPath(buildFile.getParent().toString())));
   }
 
   /** Creates an instance of {@link ParserInputSource} for a file at {@code buildFilePath}. */
@@ -562,9 +566,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   public boolean globResultsMatchCurrentState(
       Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
       throws IOException, InterruptedException {
-    CachingGlobber globber =
-        CachingGlobber.of(
-            globberFactory.create(fileSystem.getPath(buildFile.getParent().toString())));
+    CachingGlobber globber = newGlobber(buildFile);
     for (GlobSpecWithResult globSpecWithResult : existingGlobsWithResults) {
       final GlobSpec globSpec = globSpecWithResult.getGlobSpec();
       Set<String> globResult =
