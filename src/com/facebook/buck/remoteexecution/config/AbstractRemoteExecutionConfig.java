@@ -45,10 +45,6 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     return getDelegate().getInteger(SECTION, "max_number_of_remote_workers").orElse(80);
   }
 
-  public boolean useClientPool() {
-    return getDelegate().getBooleanValue(SECTION, "enable_client_pool", true);
-  }
-
   public boolean useWorkerThreadPool() {
     return getDelegate().getBooleanValue(SECTION, "enable_worker_thread_pool", true);
   }
