@@ -28,8 +28,11 @@ import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
@@ -191,6 +194,16 @@ public class VersionedTargetGraphCache {
         } catch (TimeoutException e) {
           eventBus.post(VersionedTargetGraphEvent.timeout());
           LOG.warn("Timed out building versioned target graph.");
+          Map<Thread, StackTraceElement[]> stackTraces = Thread.getAllStackTraces();
+          StringBuilder traces = new StringBuilder(stackTraces.size());
+          for (Entry<Thread, StackTraceElement[]> trace : stackTraces.entrySet()) {
+            traces.append("Thread [");
+            traces.append(trace.getKey().getName());
+            traces.append("],stack:[");
+            Joiner.on(", ").appendTo(traces, trace.getValue());
+            traces.append("],");
+          }
+          LOG.info(traces.toString());
           if (attempt < ATTEMPTS) continue;
           throw new RuntimeException(e);
         }
