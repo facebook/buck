@@ -207,15 +207,19 @@ public abstract class BuckCommandHandler {
     }
     handler.addProcessListener(
         new ProcessListener() {
+          @Override
           public void startNotified(final ProcessEvent event) {}
 
+          @Override
           public void processTerminated(final ProcessEvent event) {
-            BuckCommandHandler.this.processTerminated();
+            BuckCommandHandler.this.processTerminated(event);
           }
 
+          @Override
           public void processWillTerminate(
               final ProcessEvent event, final boolean willBeDestroyed) {}
 
+          @Override
           public void onTextAvailable(final ProcessEvent event, final Key outputType) {
             BuckCommandHandler.this.onTextAvailable(event.getText(), outputType);
           }
@@ -294,7 +298,7 @@ public abstract class BuckCommandHandler {
     }
   }
 
-  protected void processTerminated() {
+  protected void processTerminated(ProcessEvent event) {
     if (stderrLine.length() != 0) {
       onTextAvailable("\n", ProcessOutputTypes.STDERR);
     }
