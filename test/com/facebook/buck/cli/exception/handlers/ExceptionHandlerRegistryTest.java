@@ -90,6 +90,11 @@ public class ExceptionHandlerRegistryTest {
   }
 
   @Test
+  public void handlesFatalIOExceptionWithNullMessage() {
+    assertThat(registry.handleException(new IOException()), is(ExitCode.FATAL_IO));
+  }
+
+  @Test
   public void testWithCommandLineException() {
     assertThat(
         registry.handleException(new CommandLineException("command line exception")),
