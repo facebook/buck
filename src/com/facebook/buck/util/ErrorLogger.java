@@ -187,6 +187,7 @@ public class ErrorLogger {
 
     public boolean isNoSpaceOnDevice() {
       return rootCause instanceof IOException
+          && rootCause.getMessage() != null
           && rootCause.getMessage().startsWith("No space left on device");
     }
 

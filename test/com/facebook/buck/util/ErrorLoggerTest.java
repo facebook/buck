@@ -184,6 +184,12 @@ public class ErrorLoggerTest {
   }
 
   @Test
+  public void handlesIOExceptionWithNoMessage() {
+    LoggedErrors errors = logException(new BuckUncheckedExecutionException(new IOException()));
+    assertNull(errors.userVisible);
+  }
+
+  @Test
   public void testBuckIsDying() {
     LoggedErrors errors =
         logException(
