@@ -334,6 +334,13 @@
       <action class="com.facebook.buck.intellij.ideabuck.actions.ClearTreeViewPanelAction" id="buck.Clear" />
       <add-to-group anchor="last" group-id="MainToolBar"/>
     </group>
+
+    <group>
+      <action class="com.facebook.buck.intellij.ideabuck.actions.select.BuckTestAtCursorAction$Run" id="buck.RunTestAtCursor"/>
+      <action class="com.facebook.buck.intellij.ideabuck.actions.select.BuckTestAtCursorAction$Debug" id="buck.DebugTestAtCursor"/>
+      <add-to-group anchor="last" group-id="RunContextGroup"/>
+    </group>
+
   </actions>
 
   <project-components>

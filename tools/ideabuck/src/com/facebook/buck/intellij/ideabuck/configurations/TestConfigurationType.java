@@ -38,6 +38,7 @@ public class TestConfigurationType implements ConfigurationType {
   public TestConfigurationType() {
     myFactory =
         new ConfigurationFactoryEx(this) {
+          @Override
           @NotNull
           public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
             return new TestConfiguration(project, this, "");
