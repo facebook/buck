@@ -68,18 +68,17 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
@@ -285,16 +284,16 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     // behavior of this test is consistent across versions. (It also lets
     // us write tests which explicitly test iterating over entries in
     // different orders.)
-    fileContents = Collections.synchronizedMap(new LinkedHashMap<>());
-    fileLastModifiedTimes = Collections.synchronizedMap(new LinkedHashMap<>());
+    fileContents = new ConcurrentHashMap<>();
+    fileLastModifiedTimes = new ConcurrentHashMap<>();
     FileTime modifiedTime = FileTime.fromMillis(clock.currentTimeMillis());
     for (Path file : files) {
       fileContents.put(file, new byte[0]);
       fileLastModifiedTimes.put(file, modifiedTime);
     }
-    fileAttributes = Collections.synchronizedMap(new LinkedHashMap<>());
-    symLinks = Collections.synchronizedMap(new LinkedHashMap<>());
-    directories = Collections.synchronizedSet(new LinkedHashSet<>());
+    fileAttributes = new ConcurrentHashMap<>();
+    symLinks = new ConcurrentHashMap<>();
+    directories = new ConcurrentSkipListSet<>();
     directories.add(Paths.get(""));
     for (Path file : files) {
       Path dir = file.getParent();
