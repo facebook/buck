@@ -18,9 +18,14 @@ package com.facebook.buck.distributed.build_client;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.ThrowableCauseIterable;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.CleanBuildShutdownException;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -96,9 +101,32 @@ public class LocalBuildRunner {
       return;
     } catch (Exception e) {
       LOG.error(e, String.format("Stampede local %s build failed with exception.", localBuildType));
-      // Have to rethrow as unchecked exception to conform to Function interface
-      // The better solution is to use throwing lambda instead
-      throw new RuntimeException(e);
+
+      // Below a nasty hack goes. It may happen that Exception thrown here is user failure and we
+      // want to emit BUILD_FAILURE instead of FATAL_GENERIC. Ideally, we should propagate
+      // exception all the way up the stack and let generic handler in Main to deal with
+      // inferring a proper exit code. However, it is currently designed the way that
+      // waitUntilFinished() method intercepts all exceptions and the calling code up the stack
+      // does not expect the method to throw.
+      // So, we'll do somewhat similar to what Main() does - check if HumanReadableException is
+      // in the exception cause chain and change exit code to build failure. It will never be as
+      // complete and supported as generic error handling in Main.
+
+      // TODO(buck_team): Propagate exceptions all the way up the stack to Main()
+      // TODO(buck_team): Remove excessive logging
+
+      Iterator<Throwable> causeIterator = ThrowableCauseIterable.of(e).iterator();
+      while (causeIterator.hasNext()) {
+        Throwable cur = causeIterator.next();
+        if (cur instanceof HumanReadableException || cur instanceof StepFailedException) {
+          exitCode = ExitCode.BUILD_ERROR;
+          break;
+        }
+      }
+      if (e instanceof RuntimeException) {
+        throw (RuntimeException) e;
+      }
+      throw new BuckUncheckedExecutionException(e, "When executing Stampede local build");
     } finally {
       localBuildExitCode = Optional.of(exitCode);
       String finishedMessage =
