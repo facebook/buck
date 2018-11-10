@@ -415,19 +415,17 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   @Override
   public final ImmutableCollection<Path> getDirectoryContents(Path pathRelativeToProjectRoot) {
     Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
-    synchronized (fileContents) {
-      return FluentIterable.from(fileContents.keySet())
-          .append(directories)
-          .filter(
-              input -> {
-                if (input.equals(Paths.get(""))
-                    || (input.isAbsolute() && input.getParent() == null)) {
-                  return false;
-                }
-                return MorePaths.getParentOrEmpty(input).equals(pathRelativeToProjectRoot);
-              })
-          .toSortedList(Comparator.naturalOrder());
-    }
+    return FluentIterable.from(fileContents.keySet())
+        .append(directories)
+        .filter(
+            input -> {
+              if (input.equals(Paths.get(""))
+                  || (input.isAbsolute() && input.getParent() == null)) {
+                return false;
+              }
+              return MorePaths.getParentOrEmpty(input).equals(pathRelativeToProjectRoot);
+            })
+        .toSortedList(Comparator.naturalOrder());
   }
 
   @Override
@@ -436,27 +434,25 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
     PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + globPattern);
 
-    synchronized (fileContents) {
-      return fileContents
-          .keySet()
-          .stream()
-          .filter(
-              i ->
-                  i.getParent().equals(pathRelativeToProjectRoot)
-                      && pathMatcher.matches(i.getFileName()))
-          // Sort them in reverse order.
-          .sorted(
-              (f0, f1) -> {
-                try {
-                  return getLastModifiedTimeFetcher()
-                      .getLastModifiedTime(f1)
-                      .compareTo(getLastModifiedTimeFetcher().getLastModifiedTime(f0));
-                } catch (IOException e) {
-                  throw new RuntimeException(e);
-                }
-              })
-          .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-    }
+    return fileContents
+        .keySet()
+        .stream()
+        .filter(
+            i ->
+                i.getParent().equals(pathRelativeToProjectRoot)
+                    && pathMatcher.matches(i.getFileName()))
+        // Sort them in reverse order.
+        .sorted(
+            (f0, f1) -> {
+              try {
+                return getLastModifiedTimeFetcher()
+                    .getLastModifiedTime(f1)
+                    .compareTo(getLastModifiedTimeFetcher().getLastModifiedTime(f0));
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            })
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
@@ -486,22 +482,18 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   @Override
   public void deleteRecursivelyIfExists(Path path) {
     Path normalizedPath = MorePaths.normalize(path);
-    synchronized (fileContents) {
-      for (Iterator<Path> iterator = fileContents.keySet().iterator(); iterator.hasNext(); ) {
-        Path subPath = iterator.next();
-        if (subPath.startsWith(normalizedPath)) {
-          fileAttributes.remove(MorePaths.normalize(subPath));
-          fileLastModifiedTimes.remove(MorePaths.normalize(subPath));
-          iterator.remove();
-        }
+    for (Iterator<Path> iterator = fileContents.keySet().iterator(); iterator.hasNext(); ) {
+      Path subPath = iterator.next();
+      if (subPath.startsWith(normalizedPath)) {
+        fileAttributes.remove(MorePaths.normalize(subPath));
+        fileLastModifiedTimes.remove(MorePaths.normalize(subPath));
+        iterator.remove();
       }
     }
-    synchronized (symLinks) {
-      for (Iterator<Path> iterator = symLinks.keySet().iterator(); iterator.hasNext(); ) {
-        Path subPath = iterator.next();
-        if (subPath.startsWith(normalizedPath)) {
-          iterator.remove();
-        }
+    for (Iterator<Path> iterator = symLinks.keySet().iterator(); iterator.hasNext(); ) {
+      Path subPath = iterator.next();
+      if (subPath.startsWith(normalizedPath)) {
+        iterator.remove();
       }
     }
     fileLastModifiedTimes.remove(path);
