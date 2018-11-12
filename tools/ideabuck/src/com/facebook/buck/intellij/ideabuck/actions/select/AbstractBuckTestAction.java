@@ -23,9 +23,6 @@ import com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.notification.BuckNotification;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Iterators;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.intellij.execution.Executor;
 import com.intellij.execution.ExecutorRegistry;
 import com.intellij.execution.ProgramRunnerUtil;
@@ -40,7 +37,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
-import java.util.Optional;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.jetbrains.annotations.Nullable;
 
@@ -116,21 +114,11 @@ public abstract class AbstractBuckTestAction extends AnAction {
         new BuckJsonCommandHandler(
             project,
             BuckCommand.QUERY,
-            new BuckJsonCommandHandler.Callback() {
+            new BuckJsonCommandHandler.Callback<Map<String, List<String>>>() {
               @Override
-              public void onSuccess(JsonElement result, String stderr) {
-                String owners =
-                    Optional.of(result)
-                        .filter(JsonElement::isJsonObject)
-                        .map(JsonElement::getAsJsonObject)
-                        .map(o -> o.get(containingFilePath))
-                        .filter(JsonElement::isJsonArray)
-                        .map(JsonElement::getAsJsonArray)
-                        .map(JsonArray::iterator)
-                        .map(iterator -> Iterators.transform(iterator, JsonElement::getAsString))
-                        .map(Joiner.on(" ")::join)
-                        .orElse(null);
-                if (owners == null) {
+              public void onSuccess(Map<String, List<String>> result, String stderr) {
+                List<String> ownersList = result.get(containingFilePath);
+                if (ownersList == null || ownersList.isEmpty()) {
                   BuckNotification.getInstance(project)
                       .showWarningBalloon(
                           "No test targets found that are owners of " + containingFilePath);
@@ -144,7 +132,7 @@ public abstract class AbstractBuckTestAction extends AnAction {
                                 name, type.getConfigurationFactories()[0]);
                     TestConfiguration testConfiguration =
                         (TestConfiguration) runnerAndConfigurationSettings.getConfiguration();
-                    testConfiguration.data.targets = owners;
+                    testConfiguration.data.targets = Joiner.on(" ").join(ownersList);
                     testConfiguration.data.testSelectors = testSelectors;
                     settingsReference.set(runnerAndConfigurationSettings);
                     runManager.addConfiguration(runnerAndConfigurationSettings, false);
