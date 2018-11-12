@@ -173,7 +173,7 @@ public class WorkerProcessProtocolZero {
     }
 
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
       Preconditions.checkArgument(
           !isClosed,
           "%s (%d) has been already closed",
