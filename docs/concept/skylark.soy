@@ -57,11 +57,18 @@
 <pre>
 {literal}
 [parser]
-  polyglot_parsing_enabled = true
   default_build_file_syntax = SKYLARK
 {/literal}
 </pre>
 </p>
+
+      <p>
+        In case your project includes build files that rely on legacy Python
+        DSL features, you can enable multi-language support by setting
+        {sp}{call buckconfig.parser_polyglot_parsing_enabled /}{sp}
+        to <code>true</code> in {call buck.buckconfig_link /} file and use
+        parser directives described below.
+      </p>
 
       <p>
         We recommend Skylark for new projects and it will become the default in the future. 
@@ -147,8 +154,9 @@ default_build_file_syntax = PYTHON_DSL
       </p>
 
       <p>
-        <b>Note:</b> All of the options above require you to enable
-        support for multi-language (polyglot) parsing:
+        <b>Note:</b> <code># BUILD FILE SYNTAX: </code> parser directive is
+        taken into account only if support for multi-language (polyglot)
+        parsing is enabled:
       </p>
 <p>
 <pre>
