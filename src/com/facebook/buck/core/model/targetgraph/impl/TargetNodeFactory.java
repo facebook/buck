@@ -33,6 +33,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.PathTypeCoercer.PathExistenceVerificationMode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
@@ -43,10 +44,18 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class TargetNodeFactory implements NodeCopier {
+
   private final TypeCoercerFactory typeCoercerFactory;
+  private final PathExistenceVerificationMode pathsVerificationMode;
 
   public TargetNodeFactory(TypeCoercerFactory typeCoercerFactory) {
+    this(typeCoercerFactory, PathExistenceVerificationMode.VERIFY);
+  }
+
+  public TargetNodeFactory(
+      TypeCoercerFactory typeCoercerFactory, PathExistenceVerificationMode pathsVerificationMode) {
     this.typeCoercerFactory = typeCoercerFactory;
+    this.pathsVerificationMode = pathsVerificationMode;
   }
 
   /**
@@ -132,6 +141,11 @@ public class TargetNodeFactory implements NodeCopier {
                   buildTarget.getUnflavoredBuildTarget(), constructorArg));
     }
 
+    ImmutableSet<Path> paths = pathsBuilder.build();
+    if (pathsVerificationMode == PathExistenceVerificationMode.VERIFY) {
+      requirePathsExist(filesystem, buildTarget, pathsBuilder.build());
+    }
+
     // This method uses the TargetNodeFactory, rather than just calling withBuildTarget,
     // because
     // ImplicitDepsInferringDescriptions may give different results for deps based on flavors.
@@ -144,7 +158,7 @@ public class TargetNodeFactory implements NodeCopier {
         description,
         constructorArg,
         filesystem,
-        pathsBuilder.build(),
+        paths,
         declaredDeps,
         extraDepsBuilder.build(),
         targetGraphOnlyDepsBuilder.build(),
@@ -152,6 +166,16 @@ public class TargetNodeFactory implements NodeCopier {
         visibilityPatterns,
         withinViewPatterns,
         Optional.empty());
+  }
+
+  private static void requirePathsExist(
+      ProjectFilesystem projectFilesystem, BuildTarget buildTarget, ImmutableSet<Path> paths) {
+    for (Path path : paths) {
+      if (!projectFilesystem.exists(path)) {
+        throw new HumanReadableException(
+            "%s references non-existing file or directory '%s'", buildTarget, path);
+      }
+    }
   }
 
   private static void detectBuildTargetsAndPathsForConstructorArg(

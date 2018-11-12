@@ -153,3 +153,13 @@ java_test(
         "buck//third-party/java/junit:junit",
     ],
 )
+
+genrule(
+    name = "genrule_with_non_existent_src",
+    srcs = select({
+        ":a": ["a.txt"],
+        ":b": ["d.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+)
