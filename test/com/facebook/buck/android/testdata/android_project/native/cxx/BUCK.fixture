@@ -103,3 +103,28 @@ cxx_library(
         "PUBLIC",
     ],
 )
+
+cxx_precompiled_header(
+    name = "test_pch",
+    src = "test.pch",
+)
+
+cxx_library(
+    name = "libtest1",
+    srcs = glob(["lib1.cpp"]),
+    compiler_flags = ["-fexceptions"],
+    precompiled_header = ":test_pch",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+cxx_library(
+    name = "libtest2",
+    srcs = glob(["lib2.cpp"]),
+    compiler_flags = ["-fexceptions"],
+    precompiled_header = ":test_pch",
+    visibility = [
+        "PUBLIC",
+    ],
+)

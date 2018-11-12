@@ -392,6 +392,14 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
     assertThat(syms.global, not(hasItem("x86_only_function")));
   }
 
+  @Test
+  public void canBuildNativeMergedLibraryWithPrecompiledHeader()
+      throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProcessResult result = workspace.runBuckBuild("//apps/sample:native_merge_lib_with_pch");
+    result.assertSuccess();
+  }
+
   private SymbolGetter getSymbolGetter() throws IOException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
     SourcePathResolver pathResolver =
