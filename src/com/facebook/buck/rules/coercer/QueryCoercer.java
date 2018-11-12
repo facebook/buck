@@ -34,14 +34,18 @@ import java.util.stream.Stream;
 /** Coercer for {@link Query}s. */
 public class QueryCoercer implements TypeCoercer<Query> {
 
-  private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
+  private final TypeCoercerFactory typeCoercerFactory;
+
+  public QueryCoercer(TypeCoercerFactory typeCoercerFactory) {
+    this.typeCoercerFactory = typeCoercerFactory;
+  }
 
   private Stream<BuildTarget> extractBuildTargets(CellPathResolver cellPathResolver, Query query) {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.empty(),
             Optional.empty(),
-            TYPE_COERCER_FACTORY,
+            typeCoercerFactory,
             cellPathResolver,
             query
                 .getBaseName()

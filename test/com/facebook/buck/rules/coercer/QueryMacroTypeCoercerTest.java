@@ -37,7 +37,10 @@ public class QueryMacroTypeCoercerTest {
     Path basePath = Paths.get("java/com/facebook/buck/example");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     QueryMacroTypeCoercer<QueryMacro> coercer =
-        new QueryMacroTypeCoercer<>(new QueryCoercer(), QueryMacro.class, QueryOutputsMacro::of);
+        new QueryMacroTypeCoercer<>(
+            new QueryCoercer(new DefaultTypeCoercerFactory()),
+            QueryMacro.class,
+            QueryOutputsMacro::of);
     QueryMacro queryMacro =
         coercer.coerce(
             createCellRoots(filesystem), filesystem, basePath, ImmutableList.of("some query"));

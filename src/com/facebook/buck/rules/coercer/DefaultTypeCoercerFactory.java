@@ -125,7 +125,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
             intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
-    TypeCoercer<Query> queryTypeCoercer = new QueryCoercer();
+    TypeCoercer<Query> queryTypeCoercer = new QueryCoercer(this);
     TypeCoercer<ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
         new ListTypeCoercer<>(buildTargetTypeCoercer);
     nonParameterizedTypeCoercers =
