@@ -1,0 +1,17 @@
+{"outputFilePath":"@/buck-out/gen/js/fruit-with-extras#dependencies.deps","command":"dependencies","entryPoints":["yoghurt","banana","apple"],"libraries":["@/buck-out/gen/js/extras.jslib","@/buck-out/gen/js/fruit.jslib"],"release":false,"rootPath":"@","flavors":["dependencies"]}
+{"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/extras.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_.jslib","flavors":[]}
+{"command":"library-files","release":false,"rootPath":"@","outputFilePath":"@/buck-out/gen/js/extras#_files_.jslib","sourceFilePaths":["@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile"],"flavors":[]}
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","sourceJsFilePath":"@/js/extras/choclate-chips.js","sourceJsFileName":"js/extras/choclate-chips.js","extraData":{"arbitrary":"extra","json":1},"flavors":[]}
+var choclateChips;
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile","sourceJsFilePath":"@/js/extras/yoghurt.js","sourceJsFileName":"js/extras/yoghurt.js","extraData":{"arbitrary":"extra","json":1},"flavors":[]}
+var yoghurt;
+{"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/fruit.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_.jslib","flavors":[]}
+{"command":"library-files","release":false,"rootPath":"@","outputFilePath":"@/buck-out/gen/js/fruit#_files_.jslib","sourceFilePaths":["@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","@/buck-out/gen/js/fruit#file-banana.js-b5d5d641eb.jsfile","@/buck-out/gen/js/fruit#file-pear.js-b84041fd03.jsfile"],"flavors":[]}
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","sourceJsFilePath":"@/js/apple.js","sourceJsFileName":"js/apple.js","flavors":[]}
+var apple;
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-banana.js-b5d5d641eb.jsfile","sourceJsFilePath":"@/js/banana.js","sourceJsFileName":"js/banana.js","flavors":[]}
+var banana;
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-pear.js-b84041fd03.jsfile","sourceJsFilePath":"@/js/pear.js","sourceJsFileName":"js/pear.js","flavors":[]}
+var pear;
+
+postprocessed

@@ -376,6 +376,12 @@ public class JsRulesIntegrationTest {
     workspace.verify(Paths.get("misc_genrule.expected"), genPath);
   }
 
+  @Test
+  public void genruleAllowsToRewriteDepsFile() throws IOException {
+    workspace.runBuckBuild("//js:deps-file-genrule#dependencies").assertSuccess();
+    workspace.verify(Paths.get("deps_file_genrule.expected"), genPath);
+  }
+
   private Path getGenPath(String filename) {
     return projectFilesystem
         .getPathForRelativePath(projectFilesystem.getBuckPaths().getGenDir())

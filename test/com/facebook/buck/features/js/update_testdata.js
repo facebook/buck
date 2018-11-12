@@ -2,7 +2,7 @@
  * Automate updating 'snapshots' for JS rules integration tests. You can run
  * it like:
  *
- *     buck test //test/com/facebook/buck/js:js 2>&1 | node test/com/facebook/buck/js/update_testdata.js
+ *     buck test //test/com/facebook/buck/features/js:js 2>&1 | node test/com/facebook/buck/js/update_testdata.js
  *
  * Several passes may be necessary until it say there are no more failures.
  */
