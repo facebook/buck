@@ -34,7 +34,6 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.manifestservice.ManifestServiceConfig;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.skylark.io.GlobSpec;
@@ -209,7 +208,7 @@ public class RemoteManifestServiceCacheStorageTest {
 
   @Test
   public void storeInRemoteCacheAndGetFromRemoteCacheAndVerifyMatch()
-      throws IOException, ParserCacheException {
+      throws IOException, InterruptedException {
     BuckConfig buckConfig = getConfig("readwrite");
     ManifestService manifestService = createManifestService(buckConfig);
     ParserCacheStorage remoteCache =
@@ -285,7 +284,8 @@ public class RemoteManifestServiceCacheStorageTest {
   }
 
   @Test
-  public void readFromRemoteCacheWhenRemoteCacheReadDisabled() throws ParserCacheException {
+  public void readFromRemoteCacheWhenRemoteCacheReadDisabled()
+      throws IOException, InterruptedException {
     BuckConfig buckConfig = getConfig("readonly");
     ManifestService manifestService = createManifestService(buckConfig);
     ParserCacheStorage remoteCache =
@@ -297,7 +297,8 @@ public class RemoteManifestServiceCacheStorageTest {
   }
 
   @Test
-  public void storeToRemoteCacheWhenRemoteCacheStoreDisabled() throws ParserCacheException {
+  public void storeToRemoteCacheWhenRemoteCacheStoreDisabled()
+      throws IOException, InterruptedException {
     BuckConfig buckConfig = getConfig("readonly");
     ManifestService manifestService = createManifestService(buckConfig);
     ParserCacheConfig parserCacheConfig = buckConfig.getView(ParserCacheConfig.class);
@@ -321,7 +322,7 @@ public class RemoteManifestServiceCacheStorageTest {
   }
 
   @Test
-  public void readFromRemoteCacheWhenNotInRemote() throws ParserCacheException {
+  public void readFromRemoteCacheWhenNotInRemote() throws IOException, InterruptedException {
     BuckConfig buckConfig = getConfig("readwrite");
     ManifestService manifestService = createManifestService(buckConfig);
     ParserCacheStorage remoteCache =

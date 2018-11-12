@@ -16,13 +16,13 @@
 
 package com.facebook.buck.parser.cache.impl;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.hash.HashCode;
@@ -46,6 +46,19 @@ public class LocalCacheStorage implements ParserCacheStorage {
     this.filesystem = filesystem;
     this.localCachePath = localCachePath;
     this.cacheAccessMode = cacheAccessMode;
+
+    // create local cache folde if it does not exist
+    if ((cacheAccessMode == ParserCacheAccessMode.WRITEONLY
+            || cacheAccessMode == ParserCacheAccessMode.READWRITE)
+        && !filesystem.exists(localCachePath)) {
+      try {
+        filesystem.mkdirs(localCachePath);
+      } catch (IOException ex) {
+        // TODO(buck_team): make checked exception propagate
+        throw new BuckUncheckedExecutionException(
+            ex, "When creating local cache directory %s.", localCachePath);
+      }
+    }
   }
 
   private boolean isReadAllowed() {
@@ -61,25 +74,6 @@ public class LocalCacheStorage implements ParserCacheStorage {
     return parserCacheConfig.getDirCacheAccessMode();
   }
 
-  private static Path createLocalCacheStoragePathFromConfig(
-      AbstractParserCacheConfig parserCacheConfig, ProjectFilesystem filesystem) {
-    // Set the local parser state - create directory structure etc.
-    Preconditions.checkState(
-        parserCacheConfig.getDirCacheLocation().isPresent(), "Dir cache location is not set!");
-
-    Path cachePath = parserCacheConfig.getDirCacheLocation().get();
-
-    try {
-      filesystem.createParentDirs(cachePath);
-      LOG.info("Created parser cache directory: %s.", cachePath);
-    } catch (IOException t) {
-      LOG.info(t, "Failed to create parser cache directory: %s.", cachePath);
-      throw new HumanReadableException(t, "Failed to create local cache directory - %s", cachePath);
-    }
-
-    return cachePath;
-  }
-
   /**
    * Static factory for creating {@link LocalCacheStorage} objects.
    *
@@ -93,7 +87,10 @@ public class LocalCacheStorage implements ParserCacheStorage {
         parserCacheConfig.isDirParserCacheEnabled(),
         "Invalid state: LocalCacheStorage should not be instantiated if the cache is disabled.");
 
-    Path localCachePath = createLocalCacheStoragePathFromConfig(parserCacheConfig, filesystem);
+    Preconditions.checkState(
+        parserCacheConfig.getDirCacheLocation().isPresent(), "Dir cache location is not set!");
+
+    Path localCachePath = parserCacheConfig.getDirCacheLocation().get();
 
     ParserCacheAccessMode cacheAccessMode =
         obtainLocalCacheStorageAccessModeFromConfig(parserCacheConfig);
@@ -103,7 +100,8 @@ public class LocalCacheStorage implements ParserCacheStorage {
   @Override
   public void storeBuildFileManifest(
       HashCode weakFingerprint, HashCode strongFingerprint, byte[] serializedBuildFileManifest)
-      throws ParserCacheException {
+      throws IOException {
+
     Stopwatch timer = null;
     if (LOG.isDebugEnabled()) {
       timer = Stopwatch.createStarted();
@@ -126,9 +124,6 @@ public class LocalCacheStorage implements ParserCacheStorage {
 
       try (OutputStream fw = filesystem.newFileOutputStream(relativePathToRoot)) {
         fw.write(serializedBuildFileManifest);
-      } catch (IOException t) {
-        throw new ParserCacheException(
-            t, "Failed to store BuildFileManifgest to file %s.", weakFingerprintCachePath);
       }
     } finally {
       if (timer != null) {
@@ -140,24 +135,18 @@ public class LocalCacheStorage implements ParserCacheStorage {
   }
 
   /** @return Path to a weak fingerprint folder, creating one if it does not exist */
-  private Path getOrCreateWeakFingerprintFolder(HashCode weakFingerprint)
-      throws ParserCacheException {
+  private Path getOrCreateWeakFingerprintFolder(HashCode weakFingerprint) throws IOException {
     Path weakFingerprintCachePath = localCachePath.resolve(weakFingerprint.toString());
 
     if (!filesystem.exists(weakFingerprintCachePath)) {
-      try {
-        filesystem.mkdirs(weakFingerprintCachePath);
-      } catch (IOException t) {
-        throw new ParserCacheException(
-            t, "Cannot create WeakFingerPrintFolder: %s.", weakFingerprintCachePath);
-      }
+      filesystem.mkdirs(weakFingerprintCachePath);
     }
     return weakFingerprintCachePath;
   }
 
   @Override
   public Optional<BuildFileManifest> getBuildFileManifest(
-      HashCode weakFingerprint, HashCode strongFingerprint) throws ParserCacheException {
+      HashCode weakFingerprint, HashCode strongFingerprint) throws IOException {
     Stopwatch timer = null;
     if (LOG.isDebugEnabled()) {
       timer = Stopwatch.createStarted();
@@ -177,7 +166,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
       byte[] deserializedBuildFileManifest =
           deserializeBuildFileManifest(strongFingerprint, weakFingerprintCachePath);
 
-      return Optional.of(getBuildFileManifestFromDesirealizedBytes(deserializedBuildFileManifest));
+      return Optional.of(BuildFileManifestSerializer.deserialize(deserializedBuildFileManifest));
     } finally {
       if (timer != null) {
         LOG.debug(
@@ -189,39 +178,19 @@ public class LocalCacheStorage implements ParserCacheStorage {
 
   @Override
   public void deleteCacheEntries(HashCode weakFingerprint, HashCode strongFingerprint)
-      throws ParserCacheException {
+      throws IOException {
     if (!isWriteAllowed()) {
       return;
     }
-
-    try {
-      Path weakFingerprintCachePath = localCachePath.resolve(weakFingerprint.toString());
-      filesystem.deleteRecursivelyIfExists(
-          weakFingerprintCachePath.isAbsolute()
-              ? filesystem.getRootPath().relativize(weakFingerprintCachePath)
-              : weakFingerprintCachePath);
-    } catch (IOException e) {
-      LOG.error(e, "Failed to delete cache entries from local cache");
-      throw new ParserCacheException(e, "Failed to delete cache entries from local cache");
-    }
-  }
-
-  private BuildFileManifest getBuildFileManifestFromDesirealizedBytes(
-      byte[] deserializedBuildFileManifest) throws ParserCacheException {
-    BuildFileManifest buildFileManifest;
-    try {
-      buildFileManifest = BuildFileManifestSerializer.deserialize(deserializedBuildFileManifest);
-    } catch (IOException t) {
-      throw new ParserCacheException(
-          t,
-          "Failed to deserialize manifest for BuildFileManifgest from file %s.",
-          deserializedBuildFileManifest);
-    }
-    return buildFileManifest;
+    Path weakFingerprintCachePath = localCachePath.resolve(weakFingerprint.toString());
+    filesystem.deleteRecursivelyIfExists(
+        weakFingerprintCachePath.isAbsolute()
+            ? filesystem.getRootPath().relativize(weakFingerprintCachePath)
+            : weakFingerprintCachePath);
   }
 
   private byte[] deserializeBuildFileManifest(
-      HashCode strongFingerprint, Path weakFingerprintCachePath) throws ParserCacheException {
+      HashCode strongFingerprint, Path weakFingerprintCachePath) throws IOException {
     byte[] deserializedBuildFileManifest;
     Path cachedBuildFileManifestPath =
         weakFingerprintCachePath.resolve(strongFingerprint.toString());
@@ -229,11 +198,6 @@ public class LocalCacheStorage implements ParserCacheStorage {
       deserializedBuildFileManifest =
           new byte[(int) filesystem.getFileSize(cachedBuildFileManifestPath)];
       fis.read(deserializedBuildFileManifest);
-    } catch (IOException t) {
-      throw new ParserCacheException(
-          t,
-          "Failed to deserialize weak fingerprint file for BuildFileManifgest from file %s.",
-          weakFingerprintCachePath);
     }
     return deserializedBuildFileManifest;
   }

@@ -18,6 +18,7 @@ package com.facebook.buck.parser.cache;
 
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.google.common.hash.HashCode;
+import java.io.IOException;
 import java.util.Optional;
 
 /** This is the main interface for interacting with the cache. */
@@ -30,12 +31,11 @@ public interface ParserCacheStorage {
    * @param strongFingerprint the strong fingerprint for the {@code buildFileManifest}.
    * @param serializedBuildFileManifest the serialized {@link BuildFileManifest} to store in the
    *     cache.
-   * @throws ParserCacheException thrown when there is an error storing the {@link
-   *     BuildFileManifest}
+   * @throws IOException thrown when there is an error storing the {@link BuildFileManifest}
    */
   void storeBuildFileManifest(
       HashCode weakFingerprint, HashCode strongFingerprint, byte[] serializedBuildFileManifest)
-      throws ParserCacheException;
+      throws IOException, InterruptedException;
 
   /**
    * Gets a cached {@link BuildFileManifest} if one is available, based on passed in parameters.
@@ -44,11 +44,12 @@ public interface ParserCacheStorage {
    * @param strongFingerprint the strong fingerprint for the {@code buildFileManifest}.
    * @return a {@link Optional} of {@link BuildFileManifest} if manifest exists in a storage,
    *     otherwise {@link Optional#empty()}.
-   * @throws ParserCacheException thrown when there is an error constructing the {@link
-   *     BuildFileManifest} from the {@link ParserCacheStorage}.
+   * @throws IOException thrown when there is an error constructing the {@link BuildFileManifest}
+   *     from the {@link ParserCacheStorage}.
    */
   Optional<BuildFileManifest> getBuildFileManifest(
-      HashCode weakFingerprint, HashCode strongFingerprint) throws ParserCacheException;
+      HashCode weakFingerprint, HashCode strongFingerprint)
+      throws IOException, InterruptedException;
 
   /**
    * Deletes the cache entries associated with {@code weakFingerprint} and {@code strongFingerprint}
@@ -59,5 +60,5 @@ public interface ParserCacheStorage {
    *     records.
    */
   void deleteCacheEntries(HashCode weakFingerprint, HashCode strongFingerprint)
-      throws ParserCacheException;
+      throws IOException, InterruptedException;
 }

@@ -63,7 +63,7 @@ public class HybridCacheStorage implements ParserCacheStorage {
   @Override
   public void storeBuildFileManifest(
       HashCode weakFingerprint, HashCode strongFingerprint, byte[] serializedBuildFileManifest)
-      throws ParserCacheException {
+      throws IOException, InterruptedException {
     Stopwatch timer = null;
     if (LOG.isLoggable(Level.FINE)) {
       timer = Stopwatch.createStarted();
@@ -76,19 +76,19 @@ public class HybridCacheStorage implements ParserCacheStorage {
     // happen only once and the reads will be dominant.
     // Measure the effect of the store and optimize if needed.
     try {
-      ParserCacheException firstException = null;
+      IOException firstException = null;
       try {
         localCacheStorage.storeBuildFileManifest(
             weakFingerprint, strongFingerprint, serializedBuildFileManifest);
-      } catch (ParserCacheException e) {
+      } catch (IOException e) {
         firstException = e;
       }
 
-      ParserCacheException secondException = null;
+      IOException secondException = null;
       try {
         remoteCacheStorage.storeBuildFileManifest(
             weakFingerprint, strongFingerprint, serializedBuildFileManifest);
-      } catch (ParserCacheException e) {
+      } catch (IOException e) {
         secondException = e;
       }
 
@@ -124,7 +124,8 @@ public class HybridCacheStorage implements ParserCacheStorage {
    */
   @Override
   public Optional<BuildFileManifest> getBuildFileManifest(
-      HashCode weakFingerprint, HashCode strongFingerprint) throws ParserCacheException {
+      HashCode weakFingerprint, HashCode strongFingerprint)
+      throws IOException, InterruptedException {
     Stopwatch timer = null;
     if (LOG.isLoggable(Level.FINE)) {
       timer = Stopwatch.createStarted();
@@ -158,7 +159,7 @@ public class HybridCacheStorage implements ParserCacheStorage {
         localCacheStorage.storeBuildFileManifest(
             weakFingerprint,
             strongFingerprint,
-            serializeBuildFileManifestToBytes(remoteBuildFileManifest.get()));
+            BuildFileManifestSerializer.serialize(remoteBuildFileManifest.get()));
         return remoteBuildFileManifest;
       }
 
@@ -170,17 +171,6 @@ public class HybridCacheStorage implements ParserCacheStorage {
             timer.stop().elapsed(TimeUnit.NANOSECONDS));
       }
     }
-  }
-
-  private byte[] serializeBuildFileManifestToBytes(BuildFileManifest buildFileManifest)
-      throws ParserCacheException {
-    byte[] serializedBuildFileManifest;
-    try {
-      serializedBuildFileManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
-    } catch (IOException e) {
-      throw new ParserCacheException(e, "Failed to serialize BuildFileManifest.");
-    }
-    return serializedBuildFileManifest;
   }
 
   /**
@@ -195,18 +185,18 @@ public class HybridCacheStorage implements ParserCacheStorage {
    */
   @Override
   public void deleteCacheEntries(HashCode weakFingerprint, HashCode strongFingerprint)
-      throws ParserCacheException {
+      throws IOException, InterruptedException {
 
-    ParserCacheException firstException = null;
+    IOException firstException = null;
     try {
       localCacheStorage.deleteCacheEntries(weakFingerprint, strongFingerprint);
-    } catch (ParserCacheException e) {
+    } catch (IOException e) {
       firstException = e;
     }
 
     try {
       remoteCacheStorage.deleteCacheEntries(weakFingerprint, strongFingerprint);
-    } catch (ParserCacheException e) {
+    } catch (IOException e) {
       if (firstException != null) {
         firstException.addSuppressed(e);
         throw firstException;

@@ -30,7 +30,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.manifestservice.ManifestServiceConfig;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.skylark.io.GlobSpec;
@@ -99,7 +98,7 @@ public class HybridCacheStorageTest {
 
   @Test
   public void storeInRemoteCacheAndGetFromRemoteCacheAndVerifyMatch()
-      throws IOException, ParserCacheException {
+      throws IOException, InterruptedException {
     BuckConfig buckConfig = getConfig("readwrite", filesystem.getPath("foobar"));
     ManifestService manifestService = createManifestService(buckConfig);
     ParserCacheConfig parserCacheConfig = buckConfig.getView(ParserCacheConfig.class);

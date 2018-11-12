@@ -27,7 +27,6 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -38,6 +37,7 @@ import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -130,8 +130,8 @@ public class LocalCacheStorageTest {
 
   @Test
   public void createLocalCacheStorageWithAbsolutePathAndException() throws IOException {
-    expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage("Failed to create local cache directory - /foo/bar");
+    expectedException.expect(BuckUncheckedExecutionException.class);
+    expectedException.expectMessage("NoSuchFileException");
     filesystem.createNewFile(filesystem.getPath("/foo"));
     Path path = filesystem.getPath("/foo/bar");
     LocalCacheStorage.of(getParserCacheConfig(true, path), filesystem);
@@ -141,24 +141,15 @@ public class LocalCacheStorageTest {
   public void createLocalCacheStorageWithAbsolutePath() {
     Path absPath = filesystem.getBuckPaths().getBuckOut().resolve("/foo/bar").toAbsolutePath();
     LocalCacheStorage.of(getParserCacheConfig(true, absPath), filesystem);
-    List<LogRecord> events = localHandler.messages;
-    assertEquals(1, events.size());
-    LogRecord event = events.get(0);
-    assertThat(event.getMessage(), allOf(containsString("Created parser cache directory: %s.")));
-    assertThat(event.getParameters()[0].toString(), allOf(containsString(absPath.toString())));
+    assertTrue(filesystem.exists(filesystem.getPath("/foo/bar")));
   }
 
   @Test
   public void createLocalCacheStorageWithRelativePath() {
-    Path path = filesystem.getPath("foo/bar");
+    String relPath = "foo/bar";
+    Path path = filesystem.getPath(relPath);
     LocalCacheStorage.of(getParserCacheConfig(true, path), filesystem);
-    List<LogRecord> events = localHandler.messages;
-    assertEquals(1, events.size());
-    LogRecord event = events.get(0);
-    assertThat(event.getMessage(), allOf(containsString("Created parser cache directory: %s.")));
-    assertThat(
-        event.getParameters()[0].toString(),
-        allOf(containsString("buck-out" + File.separator + path.toString())));
+    assertTrue(filesystem.exists(filesystem.getPath("buck-out/" + relPath)));
   }
 
   @Test
@@ -174,15 +165,11 @@ public class LocalCacheStorageTest {
   public void createLocalCacheStorageWhenCacheDefaultDirectory() {
     Path emptyPathForDefaultCacheLocation = filesystem.getPath("\"\"");
     LocalCacheStorage.of(getParserCacheConfig(true, emptyPathForDefaultCacheLocation), filesystem);
-    List<LogRecord> events = localHandler.messages;
-    assertEquals(1, events.size());
-    LogRecord event = events.get(0);
-    assertThat(event.getMessage(), allOf(containsString("Created parser cache directory: %s.")));
-    assertThat(event.getParameters()[0].toString(), allOf(containsString("buck-out")));
+    assertTrue(filesystem.exists(filesystem.getPath("buck-out")));
   }
 
   @Test
-  public void createLocalCacheWFPDirectoryNonExisting() throws IOException, ParserCacheException {
+  public void createLocalCacheWFPDirectoryNonExisting() throws IOException {
     LocalCacheStorage localCacheStorage =
         LocalCacheStorage.of(
             getParserCacheConfig(
@@ -203,8 +190,7 @@ public class LocalCacheStorageTest {
   }
 
   @Test
-  public void createLocalCacheStorageWFPDirectoryExistingAndKeepIt()
-      throws IOException, ParserCacheException {
+  public void createLocalCacheStorageWFPDirectoryExistingAndKeepIt() throws IOException {
     LocalCacheStorage localCacheStorage =
         LocalCacheStorage.of(
             getParserCacheConfig(

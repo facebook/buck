@@ -57,7 +57,8 @@ public class CachingProjectBuildFileParserDecorator
    * @param buildFileManifest the {@code BuildFileManifest} to store.
    * @return the result of the store in cache operation.
    */
-  private void storeManifestInCache(Path buildFile, BuildFileManifest buildFileManifest) {
+  private void storeManifestInCache(Path buildFile, BuildFileManifest buildFileManifest)
+      throws InterruptedException {
     parserCache.storeBuildFileManifest(buildFile, buildFileManifest);
   }
 

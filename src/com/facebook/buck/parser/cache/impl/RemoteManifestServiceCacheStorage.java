@@ -20,7 +20,6 @@ import com.facebook.buck.artifact_cache.thrift.Manifest;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.google.common.base.Preconditions;
@@ -74,7 +73,7 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
   @Override
   public void storeBuildFileManifest(
       HashCode weakFingerprint, HashCode strongFingerprint, byte[] serializedBuildFileManifest)
-      throws ParserCacheException {
+      throws IOException, InterruptedException {
     Stopwatch timer = Stopwatch.createStarted();
     try {
       if (!isWriteAllowed()) {
@@ -90,10 +89,8 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
         manifestService
             .appendToManifest(weakFingerprintManifest)
             .get(TIMEOUT, TimeUnit.MILLISECONDS);
-      } catch (InterruptedException | TimeoutException | ExecutionException e) {
-        LOG.error(e, "Failed to append to WeekFingerprint list in the remote cache.");
-        throw new ParserCacheException(
-            e, "Failed to append to WeekFingerprint list in the remote cache.");
+      } catch (TimeoutException | ExecutionException e) {
+        rethrow(e);
       }
 
       Manifest strongFingerprintManifest = new Manifest();
@@ -102,10 +99,8 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
           ImmutableList.of(ByteBuffer.wrap(serializedBuildFileManifest)));
       try {
         manifestService.setManifest(strongFingerprintManifest).get(TIMEOUT, TimeUnit.MILLISECONDS);
-      } catch (InterruptedException | TimeoutException | ExecutionException e) {
-        LOG.error(e, "Failed to set to StrongFingerprint list in the remote cache.");
-        throw new ParserCacheException(
-            e, "Failed to set to StrongFingerprint list in the remote cache.");
+      } catch (TimeoutException | ExecutionException e) {
+        rethrow(e);
       }
     } finally {
       timer.stop();
@@ -117,7 +112,8 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
 
   @Override
   public Optional<BuildFileManifest> getBuildFileManifest(
-      HashCode weakFingerprint, HashCode strongFingerprint) throws ParserCacheException {
+      HashCode weakFingerprint, HashCode strongFingerprint)
+      throws IOException, InterruptedException {
     Stopwatch timer = Stopwatch.createStarted();
     try {
       if (!isReadAllowed()) {
@@ -131,10 +127,8 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
             manifestService
                 .fetchManifest(weakFingerprint.toString())
                 .get(TIMEOUT, TimeUnit.MILLISECONDS);
-      } catch (InterruptedException | TimeoutException | ExecutionException e) {
-        LOG.error(e, "Failed to fetch WeekFingerprint list from remote cache.");
-        throw new ParserCacheException(
-            e, "Failed to fetch WeekFingerprint list from remote cache.");
+      } catch (TimeoutException | ExecutionException e) {
+        rethrow(e);
       }
 
       for (ByteBuffer bytes : weakFingerprintManifest.getValues()) {
@@ -146,20 +140,16 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
                 manifestService
                     .fetchManifest(strongFingerprintFromRemoteCache)
                     .get(TIMEOUT, TimeUnit.MILLISECONDS);
-
             // If the store failed to add entries to the values list (it happened couple of times
             // while testing because of hitting a timeout),
             // do not try to extract bytes from it.
             if (strongFingerprintManifest.getValuesSize() > 0) {
-
               return Optional.of(
                   BuildFileManifestSerializer.deserialize(
                       strongFingerprintManifest.getValues().get(0).array()));
             }
-          } catch (InterruptedException | ExecutionException | IOException | TimeoutException e) {
-            LOG.error(e, "Failed to get the StrongFingerprint value from remote cache");
-            throw new ParserCacheException(
-                e, "Failed to get the StrongFingerprint value from remote cache");
+          } catch (ExecutionException | TimeoutException e) {
+            rethrow(e);
           }
         }
       }
@@ -173,9 +163,20 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
     }
   }
 
+  /** Rethrows exception gotten from future as IOException */
+  private void rethrow(Exception e) throws IOException {
+    Throwable cause = e.getCause();
+    cause = cause == null ? e : cause;
+    // Actually, manifest service can only throw IOException, but future does not know
+    if (cause instanceof IOException) {
+      throw (IOException) cause;
+    }
+    throw new IOException(cause);
+  }
+
   @Override
   public void deleteCacheEntries(HashCode weakFingerprint, HashCode strongFingerprint)
-      throws ParserCacheException {
+      throws IOException, InterruptedException {
     if (!isWriteAllowed()) {
       return;
     }
@@ -183,33 +184,28 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
     Exception firstException = null;
     try {
       manifestService.deleteManifest(weakFingerprint.toString()).get();
-    } catch (InterruptedException | ExecutionException e) {
-      LOG.error(e, "Failed to delete cache entries from remote cache");
+    } catch (ExecutionException e) {
       firstException = e;
     }
 
     Exception secondException = null;
     try {
       manifestService.deleteManifest(strongFingerprint.toString()).get();
-    } catch (InterruptedException | ExecutionException e) {
-      LOG.error(e, "Failed to delete cache entries from remote cache");
+    } catch (ExecutionException e) {
       secondException = e;
     }
 
     if (firstException != null && secondException != null) {
-      ParserCacheException throwException =
-          new ParserCacheException(
-              secondException, "Failed to delete cache entries from remote cache");
+      IOException throwException =
+          new IOException("Failed to delete cache entries from remote cache", secondException);
       throwException.addSuppressed(firstException);
       throw throwException;
     }
 
     if (firstException != null) {
-      throw new ParserCacheException(
-          firstException, "Failed to delete cache entries from remote cache");
+      throw new IOException("Failed to delete cache entries from remote cache", firstException);
     } else if (secondException != null) {
-      throw new ParserCacheException(
-          secondException, "Failed to delete cache entries from remote cache");
+      throw new IOException("Failed to delete cache entries from remote cache", secondException);
     }
   }
 }

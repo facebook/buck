@@ -22,7 +22,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
-import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
@@ -79,49 +78,31 @@ public class ParserCache {
    *     if no cache info is found.
    */
   private Optional<BuildFileManifest> getManifestFromStorage(
-      Path buildFile, ImmutableList<String> includeBuildFiles) throws IOException {
+      Path buildFile, ImmutableList<String> includeBuildFiles)
+      throws IOException, InterruptedException {
     final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
     final HashCode strongFingerprint =
         Fingerprinter.getStrongFingerprint(filesystem, includeBuildFiles);
-    try {
-      return parserCacheStorage.getBuildFileManifest(weakFingerprint, strongFingerprint);
-    } catch (ParserCacheException t) {
-      LOG.debug(t, "Could not get BuildFileManifest from cache.");
-    }
 
-    return Optional.empty();
-  }
-
-  private byte[] serializeBuildFileManifestToBytes(
-      BuildFileManifest buildFileManifest, Path buildFile) throws ParserCacheException {
-    byte[] serializedBuildFileManifest;
-    try {
-      serializedBuildFileManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
-    } catch (IOException e) {
-      throw new ParserCacheException(
-          e, "Failed to serialize BuildFileManifest - path %s.", buildFile);
-    }
-    return serializedBuildFileManifest;
+    return parserCacheStorage.getBuildFileManifest(weakFingerprint, strongFingerprint);
   }
 
   /**
-   * Store a parsed entry in the cache.
+   * Store a parsed entry in the cache, ignoring errors
    *
    * @param buildFileManifest the {@code BuildFileManifest} to store.
    */
-  public void storeBuildFileManifest(Path buildFile, BuildFileManifest buildFileManifest) {
+  public void storeBuildFileManifest(Path buildFile, BuildFileManifest buildFileManifest)
+      throws InterruptedException {
     final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
     try {
       final HashCode strongFingerprint =
           Fingerprinter.getStrongFingerprint(filesystem, buildFileManifest.getIncludes());
-      byte[] serializedManifest = serializeBuildFileManifestToBytes(buildFileManifest, buildFile);
+      byte[] serializedManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
       parserCacheStorage.storeBuildFileManifest(
           weakFingerprint, strongFingerprint, serializedManifest);
-    } catch (ParserCacheException e) {
-      LOG.error(e, "Failure while storing parsed BuildFileManifest.");
     } catch (IOException e) {
-      LOG.error(
-          e, "Failure while calculating strong fingerprint when storing parsed BuildFileManifest.");
+      LOG.error(e, "Failure storing parsed BuildFileManifest.");
     }
   }
 
