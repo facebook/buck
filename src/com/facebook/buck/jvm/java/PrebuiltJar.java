@@ -156,6 +156,16 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public boolean isDesugarEnabled() {
+    return true;
+  }
+
+  @Override
+  public boolean isInterfaceMethodsDesugarEnabled() {
+    return false;
+  }
+
+  @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
     return buildOutputInitializer.getBuildOutput().getClassNamesToHashes();
   }

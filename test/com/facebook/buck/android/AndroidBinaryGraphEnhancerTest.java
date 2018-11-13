@@ -17,10 +17,13 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA8_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -31,6 +34,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -53,14 +57,18 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.jvm.java.FakeJavac;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavacFactoryHelper;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -81,6 +89,401 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class AndroidBinaryGraphEnhancerTest {
+
+  /**
+   * This test verifies that AndroidBinaryGraphEnhancer correctly populates D8 desugar dependencies
+   * for java libraries.
+   */
+  @Test
+  public void testD8PreDexingWithInterfaceMethods() {
+
+    JavaBuckConfig javaBuckConfig =
+        getJavaBuckConfigWithInterfaceMethodsDexing(/* desugarInterfaceMethods */ true);
+
+    // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1, dep1: depends :dep2.
+    BuildTarget javaDep1BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep1");
+
+    BuildTarget javaDep2BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep2");
+    TargetNode<?> javaDep2Node =
+        JavaLibraryBuilder.createBuilder(javaDep2BuildTarget, javaBuckConfig)
+            .addSrc(Paths.get("java/com/example/Dep2.java"))
+            .build();
+
+    TargetNode<?> javaDep1Node =
+        JavaLibraryBuilder.createBuilder(javaDep1BuildTarget, javaBuckConfig)
+            .addSrc(Paths.get("java/com/example/Dep1.java"))
+            .addDep(javaDep2Node.getBuildTarget())
+            .build();
+
+    BuildTarget javaLibBuildTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
+    TargetNode<?> javaLibNode =
+        JavaLibraryBuilder.createBuilder(javaLibBuildTarget, javaBuckConfig)
+            .addSrc(Paths.get("java/com/example/Lib.java"))
+            .addDep(javaDep1Node.getBuildTarget())
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(javaDep1Node, javaDep2Node, javaLibNode);
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(targetGraph, createToolchainProviderForAndroidWithJava8());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+
+    BuildRule javaDep1 = graphBuilder.requireRule(javaDep1BuildTarget);
+    BuildRule javaDep2 = graphBuilder.requireRule(javaDep2BuildTarget);
+    BuildRule javaLib = graphBuilder.requireRule(javaLibBuildTarget);
+
+    ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
+    BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleParams originalParams =
+        new BuildRuleParams(
+            Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
+    AndroidBinaryGraphEnhancer graphEnhancer =
+        new AndroidBinaryGraphEnhancer(
+            createToolchainProviderForAndroidWithJava8(),
+            TestCellPathResolver.get(filesystem),
+            apkTarget,
+            filesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            originalParams,
+            graphBuilder,
+            AaptMode.AAPT1,
+            ResourcesFilter.ResourceCompressionMode.DISABLED,
+            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
+            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
+            Optional.empty(),
+            Optional.empty(),
+            /* locales */ ImmutableSet.of(),
+            /* localizedStringFileName */ null,
+            Optional.of(PathSourcePath.of(filesystem, Paths.get("AndroidManifest.xml"))),
+            Optional.empty(),
+            Optional.empty(),
+            PackageType.DEBUG,
+            /* cpuFilters */ ImmutableSet.of(),
+            /* shouldBuildStringSourceMap */ false,
+            /* shouldPreDex */ true,
+            DexSplitMode.NO_SPLIT,
+            /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
+            /* resourcesToExclude */ ImmutableSet.of(),
+            /* skipCrunchPngs */ false,
+            /* includesVectorDrawables */ false,
+            /* noAutoVersionResources */ false,
+            /* noVersionTransitionsResources */ false,
+            /* noAutoAddOverlayResources */ false,
+            DEFAULT_JAVA_CONFIG,
+            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
+            ANDROID_JAVAC_OPTIONS,
+            EnumSet.noneOf(ExopackageMode.class),
+            /* buildConfigValues */ BuildConfigFields.of(),
+            /* buildConfigValuesFile */ Optional.empty(),
+            /* xzCompressionLevel */ OptionalInt.empty(),
+            /* trimResourceIds */ false,
+            /* keepResourcePattern */ Optional.empty(),
+            false,
+            /* nativeLibraryMergeMap */ Optional.empty(),
+            /* nativeLibraryMergeGlue */ Optional.empty(),
+            /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
+            /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
+            Optional.empty(),
+            RelinkerMode.DISABLED,
+            ImmutableList.of(),
+            MoreExecutors.newDirectExecutorService(),
+            /* manifestEntries */ ManifestEntries.empty(),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
+            new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.D8,
+            Optional.empty(),
+            defaultNonPredexedArgs(),
+            ImmutableSortedSet.of(),
+            false);
+
+    BuildTarget aaptPackageResourcesTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
+    AaptPackageResources aaptPackageResources =
+        new AaptPackageResources(
+            aaptPackageResourcesTarget,
+            filesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            ruleFinder,
+            graphBuilder,
+            /* manifest */ FakeSourcePath.of("java/src/com/facebook/base/AndroidManifest.xml"),
+            ImmutableList.of(),
+            new IdentityResourcesProvider(ImmutableList.of()),
+            ImmutableList.of(),
+            /* skipCrunchPngs */ false,
+            /* includesVectorDrawables */ false,
+            /* manifestEntries */ ManifestEntries.empty());
+    graphBuilder.addToIndex(aaptPackageResources);
+
+    AndroidPackageableCollection collection =
+        new AndroidPackageableCollector(
+                /* collectionRoot */ apkTarget,
+                /* buildTargetsToExcludeFromDex */ ImmutableSet.of(),
+                /* resourcesToExclude */ ImmutableSet.of(),
+                new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
+            .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
+            .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
+            .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
+            .build();
+
+    graphEnhancer.createPreDexMergeRule(
+        graphEnhancer.createPreDexRulesForLibraries(
+            /* additionalJavaLibrariesToDex */
+            ImmutableList.of(), collection));
+
+    BuildRule javaDep1Abi =
+        graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep1#class-abi"));
+
+    BuildRule javaDep2Abi =
+        graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep2#class-abi"));
+
+    // dep2 should have no desugar dependencies
+    DexProducedFromJavaLibrary javaDep2DexRule =
+        (DexProducedFromJavaLibrary)
+            graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep2#d8"));
+    assertNotNull(javaDep2DexRule);
+    assertThat(javaDep2DexRule.getDesugarDeps(), Matchers.empty());
+    assertThat(
+        javaDep2DexRule.getBuildDeps(),
+        Matchers.allOf(
+            Matchers.not(Matchers.hasItem(javaDep2Abi)),
+            Matchers.not(Matchers.hasItem(javaDep1Abi))));
+
+    // dep1 should have only dep1 abi dependency
+    DexProducedFromJavaLibrary javaDep1DexRule =
+        (DexProducedFromJavaLibrary)
+            graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep1#d8"));
+    assertNotNull(javaDep1DexRule);
+    assertThat(javaDep1DexRule.getDesugarDeps(), Matchers.hasSize(1));
+    assertThat(
+        javaDep1DexRule.getDesugarDeps(), Matchers.hasItem(javaDep2Abi.getSourcePathToOutput()));
+    assertThat(
+        javaDep1DexRule.getBuildDeps(),
+        Matchers.allOf(Matchers.hasItem(javaDep2Abi), Matchers.not(Matchers.hasItem(javaDep1Abi))));
+
+    // lib should have both dep1 and dep2 abi dependencies
+    DexProducedFromJavaLibrary javaLibDexRule =
+        (DexProducedFromJavaLibrary)
+            graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:lib#d8"));
+    assertNotNull(javaLibDexRule);
+    assertThat(javaLibDexRule.getDesugarDeps(), Matchers.hasSize(2));
+    assertThat(
+        javaLibDexRule.getDesugarDeps(),
+        Matchers.hasItems(
+            javaDep1Abi.getSourcePathToOutput(), javaDep2Abi.getSourcePathToOutput()));
+    assertThat(javaLibDexRule.getBuildDeps(), Matchers.hasItems(javaDep1Abi, javaDep2Abi));
+  }
+
+  /**
+   * This test verifies that AndroidBinaryGraphEnhancer skips D8 desugar dependencies for java
+   * libraries when Interface Methods desugar is disabled.
+   */
+  @Test
+  public void testD8PreDexingWithoutInterfaceMethods() {
+
+    JavaBuckConfig javaBuckConfig =
+        getJavaBuckConfigWithInterfaceMethodsDexing(/* desugarInterfaceMethods */ false);
+
+    // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1, dep1: depends :dep2.
+    BuildTarget javaDep1BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep1");
+
+    BuildTarget javaDep2BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep2");
+    TargetNode<?> javaDep2Node =
+        JavaLibraryBuilder.createBuilder(javaDep2BuildTarget, javaBuckConfig)
+            .addSrc(Paths.get("java/com/example/Dep2.java"))
+            .build();
+
+    TargetNode<?> javaDep1Node =
+        JavaLibraryBuilder.createBuilder(javaDep1BuildTarget, javaBuckConfig)
+            .addSrc(Paths.get("java/com/example/Dep1.java"))
+            .addDep(javaDep2Node.getBuildTarget())
+            .build();
+
+    BuildTarget javaLibBuildTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
+    TargetNode<?> javaLibNode =
+        JavaLibraryBuilder.createBuilder(javaLibBuildTarget, javaBuckConfig)
+            .addSrc(Paths.get("java/com/example/Lib.java"))
+            .addDep(javaDep1Node.getBuildTarget())
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(javaDep1Node, javaDep2Node, javaLibNode);
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(targetGraph, createToolchainProviderForAndroidWithJava8());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+
+    BuildRule javaDep1 = graphBuilder.requireRule(javaDep1BuildTarget);
+    BuildRule javaDep2 = graphBuilder.requireRule(javaDep2BuildTarget);
+    BuildRule javaLib = graphBuilder.requireRule(javaLibBuildTarget);
+
+    ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
+    BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleParams originalParams =
+        new BuildRuleParams(
+            Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
+    AndroidBinaryGraphEnhancer graphEnhancer =
+        new AndroidBinaryGraphEnhancer(
+            createToolchainProviderForAndroidWithJava8(),
+            TestCellPathResolver.get(filesystem),
+            apkTarget,
+            filesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            originalParams,
+            graphBuilder,
+            AaptMode.AAPT1,
+            ResourcesFilter.ResourceCompressionMode.DISABLED,
+            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
+            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
+            Optional.empty(),
+            Optional.empty(),
+            /* locales */ ImmutableSet.of(),
+            /* localizedStringFileName */ null,
+            Optional.of(PathSourcePath.of(filesystem, Paths.get("AndroidManifest.xml"))),
+            Optional.empty(),
+            Optional.empty(),
+            PackageType.DEBUG,
+            /* cpuFilters */ ImmutableSet.of(),
+            /* shouldBuildStringSourceMap */ false,
+            /* shouldPreDex */ true,
+            DexSplitMode.NO_SPLIT,
+            /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
+            /* resourcesToExclude */ ImmutableSet.of(),
+            /* skipCrunchPngs */ false,
+            /* includesVectorDrawables */ false,
+            /* noAutoVersionResources */ false,
+            /* noVersionTransitionsResources */ false,
+            /* noAutoAddOverlayResources */ false,
+            DEFAULT_JAVA_CONFIG,
+            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
+            ANDROID_JAVAC_OPTIONS,
+            EnumSet.noneOf(ExopackageMode.class),
+            /* buildConfigValues */ BuildConfigFields.of(),
+            /* buildConfigValuesFile */ Optional.empty(),
+            /* xzCompressionLevel */ OptionalInt.empty(),
+            /* trimResourceIds */ false,
+            /* keepResourcePattern */ Optional.empty(),
+            false,
+            /* nativeLibraryMergeMap */ Optional.empty(),
+            /* nativeLibraryMergeGlue */ Optional.empty(),
+            /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
+            /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
+            Optional.empty(),
+            RelinkerMode.DISABLED,
+            ImmutableList.of(),
+            MoreExecutors.newDirectExecutorService(),
+            /* manifestEntries */ ManifestEntries.empty(),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
+            new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.D8,
+            Optional.empty(),
+            defaultNonPredexedArgs(),
+            ImmutableSortedSet.of(),
+            false);
+
+    BuildTarget aaptPackageResourcesTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
+    AaptPackageResources aaptPackageResources =
+        new AaptPackageResources(
+            aaptPackageResourcesTarget,
+            filesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            ruleFinder,
+            graphBuilder,
+            /* manifest */ FakeSourcePath.of("java/src/com/facebook/base/AndroidManifest.xml"),
+            ImmutableList.of(),
+            new IdentityResourcesProvider(ImmutableList.of()),
+            ImmutableList.of(),
+            /* skipCrunchPngs */ false,
+            /* includesVectorDrawables */ false,
+            /* manifestEntries */ ManifestEntries.empty());
+    graphBuilder.addToIndex(aaptPackageResources);
+
+    AndroidPackageableCollection collection =
+        new AndroidPackageableCollector(
+                /* collectionRoot */ apkTarget,
+                /* buildTargetsToExcludeFromDex */ ImmutableSet.of(),
+                /* resourcesToExclude */ ImmutableSet.of(),
+                new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
+            .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
+            .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
+            .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
+            .build();
+
+    graphEnhancer.createPreDexMergeRule(
+        graphEnhancer.createPreDexRulesForLibraries(
+            /* additionalJavaLibrariesToDex */
+            ImmutableList.of(), collection));
+
+    BuildRule javaDep1Abi =
+        graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep1#class-abi"));
+
+    BuildRule javaDep2Abi =
+        graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep2#class-abi"));
+
+    // dep2 should have no desugar dependencies
+    DexProducedFromJavaLibrary javaDep2DexRule =
+        (DexProducedFromJavaLibrary)
+            graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep2#d8"));
+    assertNotNull(javaDep2DexRule);
+    assertThat(javaDep2DexRule.getDesugarDeps(), Matchers.nullValue());
+    assertThat(
+        javaDep2DexRule.getBuildDeps(),
+        Matchers.allOf(
+            Matchers.not(Matchers.hasItem(javaDep2Abi)),
+            Matchers.not(Matchers.hasItem(javaDep1Abi))));
+
+    // dep1 should have only dep1 abi dependency
+    DexProducedFromJavaLibrary javaDep1DexRule =
+        (DexProducedFromJavaLibrary)
+            graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep1#d8"));
+    assertNotNull(javaDep1DexRule);
+    assertThat(javaDep1DexRule.getDesugarDeps(), Matchers.nullValue());
+    assertThat(
+        javaDep1DexRule.getBuildDeps(),
+        Matchers.allOf(
+            Matchers.not(Matchers.hasItem(javaDep2Abi)),
+            Matchers.not(Matchers.hasItem(javaDep1Abi))));
+
+    // lib should have both dep1 and dep2 abi dependencies
+    DexProducedFromJavaLibrary javaLibDexRule =
+        (DexProducedFromJavaLibrary)
+            graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:lib#d8"));
+    assertNotNull(javaLibDexRule);
+    assertThat(javaLibDexRule.getDesugarDeps(), Matchers.nullValue());
+    assertThat(
+        javaLibDexRule.getBuildDeps(),
+        Matchers.allOf(
+            Matchers.not(Matchers.hasItem(javaDep2Abi)),
+            Matchers.not(Matchers.hasItem(javaDep1Abi))));
+  }
+
+  public static ToolchainProvider createToolchainProviderForAndroidWithJava8() {
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(ImmutableMap.of()))
+        .withToolchain(
+            JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(DEFAULT_JAVA8_JAVAC_OPTIONS))
+        .withToolchain(
+            AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+        .withToolchain(
+            JavaOptionsProvider.DEFAULT_NAME,
+            JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+        .build();
+  }
+
+  protected JavaBuckConfig getJavaBuckConfigWithInterfaceMethodsDexing(
+      boolean desugarInterfaceMethods) {
+    return JavaBuckConfig.of(
+        FakeBuckConfig.builder()
+            .setSections(
+                "[" + JavaBuckConfig.SECTION + "]",
+                "desugar_interface_methods = "
+                    + Boolean.toString(desugarInterfaceMethods).toLowerCase())
+            .build());
+  }
 
   @Test
   public void testCreateDepsForPreDexing() {

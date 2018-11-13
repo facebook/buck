@@ -44,6 +44,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -77,6 +78,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.SortedSet;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -447,7 +449,8 @@ public class AndroidBinaryGraphEnhancer {
                   proguardConfigs,
                   packageableCollection,
                   classpathEntriesToDex,
-                  compileUberRDotJava));
+                  compileUberRDotJava,
+                  javaBuckConfig.shouldDesugarInterfaceMethods()));
     }
 
     return AndroidGraphEnhancementResult.builder()
@@ -727,20 +730,49 @@ public class AndroidBinaryGraphEnhancer {
           graphBuilder.computeIfAbsent(
               javaLibrary.getBuildTarget().withAppendedFlavors(getDexFlavor(dexTool)),
               preDexTarget -> {
+                ImmutableSortedSet<BuildRule> desugarDeps =
+                    dexTool.equals(DxStep.D8)
+                            && javaLibrary.isDesugarEnabled()
+                            && javaLibrary.isInterfaceMethodsDesugarEnabled()
+                        ? getDesugarDeps(javaLibrary, graphBuilder::getRule)
+                        : null;
                 BuildRuleParams paramsForPreDex =
                     buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(javaLibrary));
+
                 return new DexProducedFromJavaLibrary(
                     preDexTarget,
                     javaLibrary.getProjectFilesystem(),
                     androidPlatformTarget,
                     paramsForPreDex,
                     javaLibrary,
-                    dexTool);
+                    dexTool,
+                    1,
+                    desugarDeps);
               });
       preDexDeps.put(
           apkModuleGraph.findModuleForTarget(buildTarget), (DexProducedFromJavaLibrary) preDexRule);
     }
     return preDexDeps.build();
+  }
+
+  /**
+   * Provides {@see BuildRule} set of abi dependencies that have desugar enabled on them.
+   *
+   * <p>These are the deps that are required for full desugaring of default and static interface
+   * methods
+   */
+  private static ImmutableSortedSet<BuildRule> getDesugarDeps(
+      JavaLibrary javaLibrary, Function<BuildTarget, BuildRule> targetToRule) {
+    ImmutableSortedSet.Builder<BuildRule> resultBuilder = ImmutableSortedSet.naturalOrder();
+    for (JavaLibrary library :
+        JavaLibraryClasspathProvider.getTransitiveClasspathDeps(javaLibrary)) {
+      if (javaLibrary != library && library.isDesugarEnabled()) {
+        library
+            .getAbiJar()
+            .ifPresent(buildTarget -> resultBuilder.add(targetToRule.apply(buildTarget)));
+      }
+    }
+    return resultBuilder.build();
   }
 
   private NonPreDexedDexBuildable createNonPredexedDexBuildable(
@@ -750,7 +782,8 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableList<SourcePath> proguardConfigs,
       AndroidPackageableCollection packageableCollection,
       ImmutableSet<SourcePath> classpathEntriesToDex,
-      JavaLibrary compiledUberRDotJava) {
+      JavaLibrary compiledUberRDotJava,
+      boolean desugarInterfaceMethods) {
     ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap =
         apkModuleGraph.toOutgoingEdgesMap();
     APKModule rootAPKModule = apkModuleGraph.getRootAPKModule();
@@ -787,7 +820,8 @@ public class AndroidBinaryGraphEnhancer {
             nonPreDexedDexBuildableArgs,
             projectFilesystem,
             originalBuildTarget.withFlavors(NON_PREDEXED_DEX_BUILDABLE_FLAVOR),
-            dexTool);
+            dexTool,
+            desugarInterfaceMethods);
     graphBuilder.addToIndex(nonPreDexedDexBuildable);
 
     if (nonPreDexedDexBuildableArgs.getShouldProguard()) {

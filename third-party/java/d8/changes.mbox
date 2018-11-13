@@ -1,18 +1,15 @@
 From 315dbe04373a3ce2346980104e67bfb5ef4506bd Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
 Date: Tue, 21 Nov 2017 22:52:39 -0800
-Subject: [PATCH] Compute referenced resources in D8 and bypass default
- interface method desugaring
+Subject: [PATCH] Compute referenced resources in D8
 
 - Computing referenced resources is used to trim the Uber R.java.
-- Default interface method desugaring requires classpaths available during dexing which is not possible with buck currently.
 - Set default min sdk for D8 to Api level J
 - Fix Lambda Descriptor name handling to be compatible with buck's predexing
 ---
  .../java/com/android/tools/r8/D8Command.java     |  8 +++++++-
  .../android/tools/r8/graph/DexItemFactory.java   | 14 ++++++++++++++
  .../tools/r8/ir/conversion/IRConverter.java      |  2 +-
- .../tools/r8/ir/desugar/ClassProcessor.java      | 16 ++++------------
  .../tools/r8/ir/desugar/LambdaDescriptor.java    |  7 +------
  .../android/tools/r8/utils/AndroidApiLevel.java  |  3 ++-
  6 files changed, 29 insertions(+), 21 deletions(-)
@@ -86,33 +83,6 @@ index e188f2989..c25902180 100644
    }
  
    private boolean enableTryWithResourcesDesugaring() {
-diff --git a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-index 0ca4f1640..f5f7374e1 100644
---- a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-+++ b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-@@ -174,18 +174,10 @@ final class ClassProcessor {
-         if (superClass != null) {
-           current = superClass;
-         } else {
--          String message = "Default method desugaring of `" + clazz.toSourceString() + "` failed";
--          if (current == clazz) {
--            message += " because its super class `" +
--                clazz.superType.toSourceString() + "` is missing";
--          } else {
--            message +=
--                " because it's hierarchy is incomplete. The class `"
--                    + current.superType.toSourceString()
--                    + "` is missing and it is the declared super class of `"
--                    + current.toSourceString() + "`";
--          }
--          throw new CompilationError(message);
-+          // If we cannot find the superClass, just break since we dont want to actually desugar
-+          // default interface methods as it requires classpath to be passed in to D8 and hurts
-+          // build performance
-+          break;
-         }
-       }
-     }
 diff --git a/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java b/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java
 index 6836ad33c..6296bbd4b 100644
 --- a/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java

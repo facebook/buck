@@ -96,7 +96,9 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         /* requiredForSourceAbi */ requiredForSourceAbi,
         UnusedDependenciesAction.IGNORE,
         Optional.empty(),
-        null);
+        null,
+        false,
+        false);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;

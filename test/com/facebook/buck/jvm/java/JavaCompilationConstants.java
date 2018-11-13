@@ -29,6 +29,9 @@ public class JavaCompilationConstants {
 
   public static final JavaOptions DEFAULT_JAVA_OPTIONS = JavaBuckConfig.DEFAULT_JAVA_OPTIONS;
 
+  public static final JavacOptions DEFAULT_JAVA8_JAVAC_OPTIONS =
+      JavacOptions.builderForUseInJavaBuckConfig().setSourceLevel("8").setTargetLevel("8").build();
+
   public static final JavacOptions DEFAULT_JAVAC_OPTIONS =
       JavacOptions.builderForUseInJavaBuckConfig().setSourceLevel("7").setTargetLevel("7").build();
 

@@ -119,6 +119,8 @@ public class DefaultJavaLibrary
   private final JavaAbiInfo javaAbiInfo;
 
   @Nullable private CalculateSourceAbi sourceAbi;
+  private final boolean isDesugarEnabled;
+  private final boolean isInterfaceMethodsDesugarEnabled;
   private SourcePathRuleFinder ruleFinder;
   private final Optional<SourcePath> sourcePathForOutputJar;
 
@@ -166,7 +168,9 @@ public class DefaultJavaLibrary
       boolean requiredForSourceOnlyAbi,
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
-      @Nullable CalculateSourceAbi sourceAbi) {
+      @Nullable CalculateSourceAbi sourceAbi,
+      boolean isDesugarEnabled,
+      boolean isInterfaceMethodsDesugarEnabled) {
     super(
         buildTarget,
         projectFilesystem,
@@ -184,6 +188,8 @@ public class DefaultJavaLibrary
             jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget(), getProjectFilesystem()));
 
     this.sourceAbi = sourceAbi;
+    this.isDesugarEnabled = isDesugarEnabled;
+    this.isInterfaceMethodsDesugarEnabled = isInterfaceMethodsDesugarEnabled;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -244,6 +250,16 @@ public class DefaultJavaLibrary
                 + "must be a type of java library.");
       }
     }
+  }
+
+  @Override
+  public boolean isDesugarEnabled() {
+    return isDesugarEnabled;
+  }
+
+  @Override
+  public boolean isInterfaceMethodsDesugarEnabled() {
+    return isInterfaceMethodsDesugarEnabled;
   }
 
   @Override
