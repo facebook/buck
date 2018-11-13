@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.util.MoreStringsForTests;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -68,7 +69,7 @@ public class ZipInspector {
   public void assertFileContents(String pathRelativeToRoot, String expected) throws IOException {
     assertThat(
         new String(getFileContents(pathRelativeToRoot), Charsets.UTF_8),
-        Matchers.equalTo(expected));
+        MoreStringsForTests.equalToIgnoringPlatformNewlines(expected));
   }
 
   public void assertFileContents(Path pathRelativeToRoot, String expected) throws IOException {

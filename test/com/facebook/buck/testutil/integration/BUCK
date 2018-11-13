@@ -245,6 +245,7 @@ java_library(
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/jvm/java:javac-env",
         "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/util:testutil",
         "//third-party/java/aether:aether-api",
         "//third-party/java/android:ddmlib",
         "//third-party/java/android:tools-sdk-common",
