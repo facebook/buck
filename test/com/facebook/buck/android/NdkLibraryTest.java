@@ -53,6 +53,8 @@ public class NdkLibraryTest {
 
   @Before
   public void setUp() {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+
     projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
 
