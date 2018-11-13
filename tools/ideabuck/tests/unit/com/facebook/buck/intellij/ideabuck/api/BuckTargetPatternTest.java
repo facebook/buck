@@ -681,4 +681,34 @@ public class BuckTargetPatternTest {
     }
     equalsTester.testEquals();
   }
+
+  @Test
+  public void forCellName() {
+    assertEquals(assertCanParse("//..."), BuckTargetPattern.forCellName(null));
+    assertEquals(assertCanParse("foo//..."), BuckTargetPattern.forCellName("foo"));
+  }
+
+  @Test
+  public void asPackageMatchingPatternForFullyQualified() {
+    BuckTargetPattern base = assertCanParse("cell//foo:bar");
+    assertEquals(assertCanParse("cell//foo:"), base.asPackageMatchingPattern());
+  }
+
+  @Test
+  public void asPackageMatchingPatternInDefaultCell() {
+    BuckTargetPattern base = assertCanParse("//foo:bar");
+    assertEquals(assertCanParse("//foo:"), base.asPackageMatchingPattern());
+  }
+
+  @Test
+  public void asRecursivePackageMatchingPatternForFullyQualified() {
+    BuckTargetPattern base = assertCanParse("cell//foo:bar");
+    assertEquals(assertCanParse("cell//foo/..."), base.asRecursivePackageMatchingPattern());
+  }
+
+  @Test
+  public void asRecursivePackageMatchingPatternInDefaultCell() {
+    BuckTargetPattern base = assertCanParse("//foo:bar");
+    assertEquals(assertCanParse("//foo/..."), base.asRecursivePackageMatchingPattern());
+  }
 }

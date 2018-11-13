@@ -103,6 +103,14 @@ public class BuckTargetPattern {
     }
   }
 
+  /**
+   * Returns a base BuckTargetPattern for a cell with the given name, suitable for use in referring
+   * to all the targets in that cell or for resolving cell-relative targets.
+   */
+  public static BuckTargetPattern forCellName(@Nullable String cellName) {
+    return new BuckTargetPattern(cellName, "", "/...");
+  }
+
   /** Returns the name of the cell, or {@link Optional#empty()} if none was specified. */
   public Optional<String> getCellName() {
     return Optional.ofNullable(cellName);
@@ -281,12 +289,25 @@ public class BuckTargetPattern {
     return ":".equals(suffix);
   }
 
+  /** Returns a pattern like this pattern, but matching all targets in the given package. */
+  public BuckTargetPattern asPackageMatchingPattern() {
+    return new BuckTargetPattern(cellName, cellPath, ":");
+  }
+
   /**
    * Returns true if this pattern is a wildcard that matches all targets in both a package and its
    * recursive subpackages (i.e., a pattern ending in {@code "/..."}).
    */
   public boolean isRecursivePackageMatching() {
     return "/...".equals(suffix);
+  }
+
+  /**
+   * Returns a pattern like this pattern, but matching all targets in the given package and its
+   * recursive subpackages.
+   */
+  public BuckTargetPattern asRecursivePackageMatchingPattern() {
+    return new BuckTargetPattern(cellName, cellPath, "/...");
   }
 
   @Override
