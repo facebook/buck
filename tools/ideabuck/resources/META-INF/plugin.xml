@@ -22,6 +22,11 @@
   <change-notes><![CDATA[
 <h3>3.5.4</h3>
 <ul>
+  <li>Don't expand visibility in "autodeps" quick fix, but provide an error message
+      with hyperlinks to make it easier for the user to do so.</li>
+  <li>Moved the link for running tests with buck into the same hierarchical menu as
+      the other test-running actions.</li>
+  <li>Support for running JUnit3-style tests from the gutter.</li>
 </ul>
 <h3>3.5.3</h3>
 <ul>
