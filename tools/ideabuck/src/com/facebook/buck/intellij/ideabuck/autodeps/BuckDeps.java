@@ -90,7 +90,7 @@ public class BuckDeps {
    * the given target.
    */
   @VisibleForTesting
-  static String maybeAddDepToTarget(
+  static String tryToAddDepsToTarget(
       String buckContents, String dependencyString, String targetString) {
     BuckTarget target = BuckTarget.parse(targetString).orElse(null);
     BuckTarget dependency = BuckTarget.parse(dependencyString).orElse(null);
@@ -203,16 +203,19 @@ public class BuckDeps {
    * @param target The fully qualified target to be modified.
    * @param dependency The fully qualified dependency required by the target.
    */
-  static void modifyTargetToAddDependency(VirtualFile buckFile, String target, String dependency) {
+  static boolean modifyTargetToAddDependency(
+      VirtualFile buckFile, String target, String dependency) {
     try {
       File file = new File(buckFile.getPath());
       String oldContents = FileUtil.loadFile(file);
-      String newContents = maybeAddDepToTarget(oldContents, dependency, target);
-      if (!oldContents.equals(newContents)) {
-        LOG.info("Updating " + file.getPath());
-        FileUtil.writeToFile(file, newContents);
-        buckFile.refresh(false, false);
+      String newContents = tryToAddDepsToTarget(oldContents, dependency, target);
+      if (oldContents.equals(newContents)) {
+        return false;
       }
+      LOG.info("Updating " + file.getPath());
+      FileUtil.writeToFile(file, newContents);
+      buckFile.refresh(false, false);
+      return true;
     } catch (IOException e) {
       LOG.error(
           "Failed to update "
@@ -222,6 +225,7 @@ public class BuckDeps {
               + " to include "
               + dependency,
           e);
+      return false;
     }
   }
 

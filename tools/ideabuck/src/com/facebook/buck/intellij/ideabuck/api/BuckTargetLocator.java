@@ -87,11 +87,17 @@ public interface BuckTargetLocator extends ProjectComponent {
    */
   Optional<Path> findBuckFileForPath(Path path);
 
+  /** Resolves the given target relative to the root of the default cell. */
+  BuckTarget resolve(BuckTarget target);
+
   /** Resolves the given target relative to the given file. */
   Optional<BuckTarget> resolve(Path sourceFile, BuckTarget target);
 
   /** Resolves the given target relative to the given file. */
   Optional<BuckTarget> resolve(VirtualFile sourceFile, BuckTarget target);
+
+  /** Resolves the given target pattern relative to the root of the default cell. */
+  BuckTargetPattern resolve(BuckTargetPattern target);
 
   /** Resolves the given target pattern relative to the given file. */
   Optional<BuckTargetPattern> resolve(Path sourceFile, BuckTargetPattern pattern);

@@ -219,6 +219,16 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
   }
 
   @Override
+  public BuckTarget resolve(BuckTarget target) {
+    if (target.isAbsolute()) {
+      return target;
+    }
+    @Nullable
+    String defaultCellName = mBuckCellManager.getDefaultCell().flatMap(Cell::getName).orElse(null);
+    return BuckTargetPattern.forCellName(defaultCellName).resolve(target);
+  }
+
+  @Override
   public Optional<BuckTarget> resolve(Path sourceFile, BuckTarget target) {
     if (target.isAbsolute()) {
       return Optional.of(target);
@@ -234,6 +244,16 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
     } else {
       return findTargetPatternForVirtualFile(sourceFile).map(base -> base.resolve(target));
     }
+  }
+
+  @Override
+  public BuckTargetPattern resolve(BuckTargetPattern pattern) {
+    if (pattern.isAbsolute()) {
+      return pattern;
+    }
+    @Nullable
+    String defaultCellName = mBuckCellManager.getDefaultCell().flatMap(Cell::getName).orElse(null);
+    return BuckTargetPattern.forCellName(defaultCellName).resolve(pattern);
   }
 
   @Override
