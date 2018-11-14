@@ -24,6 +24,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -98,14 +99,21 @@ public class FingerprinterTest {
     BuildFileManifest buildFileManifest =
         BuildFileManifest.of(
             ImmutableMap.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());
-    HashCode strongFingerprintHash = Fingerprinter.getStrongFingerprint(fs, includes);
+    FakeFileHashCache fileHashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                fs.getPath("/foo/bar/FooBar.bzl"), HashCode.fromBytes(new byte[] {1}),
+                fs.getPath("/foo/bar/BUCK"), HashCode.fromBytes(new byte[] {2}),
+                fs.getPath("/foo/bar/BarFoo.bzl"), HashCode.fromBytes(new byte[] {3})));
+    HashCode strongFingerprintHash =
+        Fingerprinter.getStrongFingerprint(fs, includes, fileHashCache);
     ImmutableSortedSet<String> sortedIncludes =
         ImmutableSortedSet.copyOf(buildFileManifest.getIncludes());
     Hasher hasher = Hashing.sha256().newHasher();
     for (String value : sortedIncludes) {
       Path includePath = fs.getPath(value);
       hasher.putString(fs.relativize(includePath).toString(), StandardCharsets.UTF_8);
-      addContentHash(includePath, fs, hasher);
+      hasher.putBytes(fileHashCache.get(includePath).asBytes());
     }
 
     HashCode expectedHash = hasher.hash();
@@ -126,6 +134,12 @@ public class FingerprinterTest {
         BuildFileManifest.of(
             ImmutableMap.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());
 
-    Fingerprinter.getStrongFingerprint(fs, buildFileManifest.getIncludes());
+    Fingerprinter.getStrongFingerprint(
+        fs,
+        buildFileManifest.getIncludes(),
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                fs.getPath("/foo/bar/FooBar.bzl"), HashCode.fromBytes(new byte[] {1}),
+                fs.getPath("/foo/bar/BarFoo.bzl"), HashCode.fromBytes(new byte[] {3}))));
   }
 }

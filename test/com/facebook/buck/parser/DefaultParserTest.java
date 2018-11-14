@@ -82,6 +82,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.GenruleDescriptionArg;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -201,7 +202,9 @@ public class DefaultParserTest {
                 cell.getBuckConfig(),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
-                getManifestSupplier())
+                getManifestSupplier(),
+                new FakeFileHashCache(
+                    ImmutableMap.of(buildFile, HashCode.fromBytes(new byte[] {1}))))
             .create(
                 parser.getPermState(),
                 executor,

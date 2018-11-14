@@ -84,7 +84,8 @@ public class AuditTestsCommand extends AbstractCommand {
                     params.getCell().getBuckConfig(),
                     params.getWatchman(),
                     params.getBuckEventBus(),
-                    params.getManifestServiceSupplier())
+                    params.getManifestServiceSupplier(),
+                    params.getFileHashCache())
                 .create(
                     params.getParser().getPermState(),
                     pool.getListeningExecutorService(),

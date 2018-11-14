@@ -38,6 +38,7 @@ import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.FakeClock;
@@ -237,8 +238,8 @@ public class RemoteManifestServiceCacheStorageTest {
     ImmutableList<GlobSpecWithResult> globSpecs = globSpecsBuilder.build();
 
     ImmutableMap configs = ImmutableMap.of("confKey1", "confVal1", "confKey2", "confVal2");
-    filesystem.createNewFile(filesystem.getPath("Includes1"));
-    filesystem.createNewFile(filesystem.getPath("includes2"));
+    Path include1 = filesystem.createNewFile(filesystem.getPath("Includes1"));
+    Path include2 = filesystem.createNewFile(filesystem.getPath("includes2"));
     ImmutableList<String> includes = ImmutableList.of("/Includes1", "/includes2");
     ImmutableMap target1 = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
     ImmutableMap target2 = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
@@ -270,7 +271,14 @@ public class RemoteManifestServiceCacheStorageTest {
 
     HashCode weakFingerprint =
         Fingerprinter.getWeakFingerprint(buildPath, getConfig("readwrite").getConfig());
-    HashCode strongFingerprint = Fingerprinter.getStrongFingerprint(filesystem, includes);
+    HashCode strongFingerprint =
+        Fingerprinter.getStrongFingerprint(
+            filesystem,
+            includes,
+            new FakeFileHashCache(
+                ImmutableMap.of(
+                    include1, HashCode.fromBytes(new byte[] {1}),
+                    include2, HashCode.fromBytes(new byte[] {2}))));
 
     // Store in local cache
     remoteCache.storeBuildFileManifest(weakFingerprint, strongFingerprint, serializedManifest);

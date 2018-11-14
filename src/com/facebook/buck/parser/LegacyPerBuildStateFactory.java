@@ -25,6 +25,7 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -51,8 +52,9 @@ class LegacyPerBuildStateFactory extends PerBuildStateFactory {
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       Watchman watchman,
       BuckEventBus eventBus,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
-    super(manifestServiceSupplier);
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
+      FileHashCache fileHashCache) {
+    super(manifestServiceSupplier, fileHashCache);
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
@@ -84,7 +86,8 @@ class LegacyPerBuildStateFactory extends PerBuildStateFactory {
             enableProfiling,
             parseProcessedBytes,
             knownRuleTypesProvider,
-            manifestServiceSupplier);
+            manifestServiceSupplier,
+            fileHashCache);
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.

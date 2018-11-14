@@ -25,6 +25,7 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -35,10 +36,13 @@ public abstract class PerBuildStateFactory {
 
   protected final ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
       manifestServiceSupplier;
+  protected final FileHashCache fileHashCache;
 
   protected PerBuildStateFactory(
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
+      FileHashCache fileHashCache) {
     this.manifestServiceSupplier = manifestServiceSupplier;
+    this.fileHashCache = fileHashCache;
   }
 
   /**
@@ -54,7 +58,8 @@ public abstract class PerBuildStateFactory {
       BuckConfig buckConfig,
       Watchman watchman,
       BuckEventBus eventBus,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
+      FileHashCache fileHashCache) {
     return buckConfig.getView(ParserConfig.class).getEnableConfigurableAttributes()
         ? new PerBuildStateFactoryWithConfigurableAttributes(
             typeCoercerFactory,
@@ -63,7 +68,8 @@ public abstract class PerBuildStateFactory {
             parserPythonInterpreterProvider,
             watchman,
             eventBus,
-            manifestServiceSupplier)
+            manifestServiceSupplier,
+            fileHashCache)
         : new LegacyPerBuildStateFactory(
             typeCoercerFactory,
             marshaller,
@@ -71,7 +77,8 @@ public abstract class PerBuildStateFactory {
             parserPythonInterpreterProvider,
             watchman,
             eventBus,
-            manifestServiceSupplier);
+            manifestServiceSupplier,
+            fileHashCache);
   }
 
   public PerBuildState create(

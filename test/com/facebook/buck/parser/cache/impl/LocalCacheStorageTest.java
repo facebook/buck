@@ -35,6 +35,7 @@ import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
@@ -178,7 +179,16 @@ public class LocalCacheStorageTest {
             filesystem);
     Path buildPath = filesystem.getPath(FOO_BAR_PATH);
     HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildPath, getConfig().getConfig());
-    HashCode strongFingerprint = Fingerprinter.getStrongFingerprint(filesystem, ImmutableList.of());
+    HashCode strongFingerprint =
+        Fingerprinter.getStrongFingerprint(
+            filesystem,
+            ImmutableList.of(),
+            new FakeFileHashCache(
+                ImmutableMap.of(
+                    filesystem.getPath("/foo/bar/FooBar.bzl"), HashCode.fromBytes(new byte[] {1}),
+                    filesystem.getPath("/foo/bar/BUCK"), HashCode.fromBytes(new byte[] {2}),
+                    filesystem.getPath("/foo/bar/BarFoo.bzl"),
+                        HashCode.fromBytes(new byte[] {3}))));
     localCacheStorage.storeBuildFileManifest(
         weakFingerprint, strongFingerprint, new byte[] {0, 1, 2});
     Path localCachePath = tempDir.getRoot().resolve(FOO_BAR_PATH);
@@ -208,7 +218,16 @@ public class LocalCacheStorageTest {
     filesystem.createNewFile(newFilePath);
     assertTrue(filesystem.exists(newFilePath));
     HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildPath, getConfig().getConfig());
-    HashCode strongFingerprint = Fingerprinter.getStrongFingerprint(filesystem, ImmutableList.of());
+    HashCode strongFingerprint =
+        Fingerprinter.getStrongFingerprint(
+            filesystem,
+            ImmutableList.of(),
+            new FakeFileHashCache(
+                ImmutableMap.of(
+                    filesystem.getPath("/foo/bar/FooBar.bzl"), HashCode.fromBytes(new byte[] {1}),
+                    filesystem.getPath("/foo/bar/BUCK"), HashCode.fromBytes(new byte[] {2}),
+                    filesystem.getPath("/foo/bar/BarFoo.bzl"),
+                        HashCode.fromBytes(new byte[] {3}))));
     localCacheStorage.storeBuildFileManifest(
         weakFingerprint, strongFingerprint, new byte[] {0, 1, 2});
     assertNotNull(localCachePath);
@@ -252,8 +271,8 @@ public class LocalCacheStorageTest {
 
     ImmutableMap<String, String> configs =
         ImmutableMap.of("confKey1", "confVal1", "confKey2", "confVal2");
-    filesystem.createNewFile(filesystem.getPath("Includes1"));
-    filesystem.createNewFile(filesystem.getPath("includes2"));
+    Path include1 = filesystem.createNewFile(filesystem.getPath("Includes1"));
+    Path include2 = filesystem.createNewFile(filesystem.getPath("includes2"));
     ImmutableList<String> includes = ImmutableList.of("/Includes1", "/includes2");
     ImmutableMap<String, Object> target1Map = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
     ImmutableMap<String, Object> target2Map = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
@@ -291,7 +310,14 @@ public class LocalCacheStorageTest {
 
     HashCode weakFingerprinter =
         Fingerprinter.getWeakFingerprint(buildPath, getConfig().getConfig());
-    HashCode strongFingerprinter = Fingerprinter.getStrongFingerprint(filesystem, includes);
+    HashCode strongFingerprinter =
+        Fingerprinter.getStrongFingerprint(
+            filesystem,
+            includes,
+            new FakeFileHashCache(
+                ImmutableMap.of(
+                    include1, HashCode.fromBytes(new byte[] {1}),
+                    include2, HashCode.fromBytes(new byte[] {2}))));
 
     // Store in local cache
     localCacheStorage.storeBuildFileManifest(

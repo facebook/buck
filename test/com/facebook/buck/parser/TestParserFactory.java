@@ -27,8 +27,10 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import org.pf4j.PluginManager;
 
@@ -59,7 +61,8 @@ public class TestParserFactory {
             buckConfig,
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
-            getManifestSupplier()),
+            getManifestSupplier(),
+            new FakeFileHashCache(ImmutableMap.of())),
         eventBus);
   }
 

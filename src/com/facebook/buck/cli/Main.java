@@ -160,6 +160,7 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.ThrowingCloseableWrapper;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -1229,7 +1230,8 @@ public final class Main {
                   forkJoinPoolSupplier,
                   ruleKeyConfiguration,
                   executableFinder,
-                  manifestServiceSupplier);
+                  manifestServiceSupplier,
+                  fileHashCache);
 
           // Because the Parser is potentially constructed before the CounterRegistry,
           // we need to manually register its counters after it's created.
@@ -1432,7 +1434,8 @@ public final class Main {
       CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier,
       RuleKeyConfiguration ruleKeyConfiguration,
       ExecutableFinder executableFinder,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier)
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
+      FileHashCache fileHashCache)
       throws IOException, InterruptedException {
     WatchmanWatcher watchmanWatcher = null;
     if (daemonOptional.isPresent() && watchman.getTransportPath().isPresent()) {
@@ -1484,7 +1487,8 @@ public final class Main {
               watchman,
               buildEventBus,
               targetPlatforms,
-              manifestServiceSupplier);
+              manifestServiceSupplier,
+              fileHashCache);
       daemon.getFileEventBus().register(daemon.getDaemonicParserState());
 
       parserAndCaches =
@@ -1516,7 +1520,8 @@ public final class Main {
                   watchman,
                   buildEventBus,
                   targetPlatforms,
-                  manifestServiceSupplier),
+                  manifestServiceSupplier,
+                  fileHashCache),
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),

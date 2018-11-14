@@ -23,6 +23,7 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -42,7 +43,8 @@ public class ParserFactory {
       Watchman watchman,
       BuckEventBus eventBus,
       Supplier<ImmutableList<String>> targetPlatforms,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
+      FileHashCache fileHashCache) {
     if (buckConfig.getView(ParserConfig.class).getEnableConfigurableAttributes()) {
       return new ParserWithConfigurableAttributes(
           daemonicParserState,
@@ -53,7 +55,8 @@ public class ParserFactory {
               parserPythonInterpreterProvider,
               watchman,
               eventBus,
-              manifestServiceSupplier),
+              manifestServiceSupplier,
+              fileHashCache),
           targetSpecResolver,
           watchman,
           eventBus,
@@ -68,7 +71,8 @@ public class ParserFactory {
               parserPythonInterpreterProvider,
               watchman,
               eventBus,
-              manifestServiceSupplier),
+              manifestServiceSupplier,
+              fileHashCache),
           targetSpecResolver,
           watchman,
           eventBus,

@@ -26,6 +26,7 @@ import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.config.Config;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -41,12 +42,17 @@ public class ParserCache {
   private final ParserCacheStorage parserCacheStorage;
   private final ProjectFilesystem filesystem;
   private final Config config;
+  private final FileHashCache fileHashCache;
 
   private ParserCache(
-      Config config, ProjectFilesystem filesystem, ParserCacheStorage parserCacheStorage) {
+      Config config,
+      ProjectFilesystem filesystem,
+      ParserCacheStorage parserCacheStorage,
+      FileHashCache fileHashCache) {
     this.filesystem = filesystem;
     this.config = config;
     this.parserCacheStorage = parserCacheStorage;
+    this.fileHashCache = fileHashCache;
   }
 
   /**
@@ -58,12 +64,14 @@ public class ParserCache {
   public static ParserCache of(
       BuckConfig buckConfig,
       ProjectFilesystem filesystem,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
+      FileHashCache fileHashCache) {
     return new ParserCache(
         buckConfig.getConfig(),
         filesystem,
         ParserCacheStorageFactory.createParserCacheStorage(
-            buckConfig, filesystem, manifestServiceSupplier));
+            buckConfig, filesystem, manifestServiceSupplier),
+        fileHashCache);
   }
 
   @VisibleForTesting
@@ -83,7 +91,7 @@ public class ParserCache {
       throws IOException, InterruptedException {
     final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
     final HashCode strongFingerprint =
-        Fingerprinter.getStrongFingerprint(filesystem, includeBuildFiles);
+        Fingerprinter.getStrongFingerprint(filesystem, includeBuildFiles, fileHashCache);
 
     return parserCacheStorage.getBuildFileManifest(weakFingerprint, strongFingerprint);
   }
@@ -98,7 +106,8 @@ public class ParserCache {
     final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
     try {
       final HashCode strongFingerprint =
-          Fingerprinter.getStrongFingerprint(filesystem, buildFileManifest.getIncludes());
+          Fingerprinter.getStrongFingerprint(
+              filesystem, buildFileManifest.getIncludes(), fileHashCache);
       byte[] serializedManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
       parserCacheStorage.storeBuildFileManifest(
           weakFingerprint, strongFingerprint, serializedManifest);

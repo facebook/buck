@@ -98,7 +98,8 @@ public class AuditRulesCommand extends AbstractCommand {
                 new ParserPythonInterpreterProvider(
                     params.getCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getKnownRuleTypesProvider(),
-                params.getManifestServiceSupplier())
+                params.getManifestServiceSupplier(),
+                params.getFileHashCache())
             .createBuildFileParser(
                 params.getBuckEventBus(), params.getCell(), params.getWatchman())) {
       /*

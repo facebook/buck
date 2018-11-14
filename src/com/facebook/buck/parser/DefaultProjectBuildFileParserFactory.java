@@ -51,6 +51,7 @@ import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.EventKind;
@@ -68,9 +69,9 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final boolean enableProfiling;
   private final Optional<AtomicLong> processedBytes;
-
   private final ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
       manifestServiceSupplier;
+  private final FileHashCache fileHashCache;
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
@@ -79,7 +80,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       KnownRuleTypesProvider knownRuleTypesProvider,
       boolean enableProfiling,
       Optional<AtomicLong> processedBytes,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
+      FileHashCache fileHashCache) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.console = console;
     this.pythonInterpreterProvider = pythonInterpreterProvider;
@@ -87,6 +89,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     this.enableProfiling = enableProfiling;
     this.processedBytes = processedBytes;
     this.manifestServiceSupplier = manifestServiceSupplier;
+    this.fileHashCache = fileHashCache;
   }
 
   public DefaultProjectBuildFileParserFactory(
@@ -95,7 +98,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       boolean enableProfiling,
       Optional<AtomicLong> processedBytes,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
+      FileHashCache fileHashCache) {
     this(
         typeCoercerFactory,
         Console.createNullConsole(),
@@ -103,7 +107,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         knownRuleTypesProvider,
         enableProfiling,
         processedBytes,
-        manifestServiceSupplier);
+        manifestServiceSupplier,
+        fileHashCache);
   }
 
   public DefaultProjectBuildFileParserFactory(
@@ -111,7 +116,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       Console console,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
+      FileHashCache fileHashCache) {
     this(
         typeCoercerFactory,
         console,
@@ -119,7 +125,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         knownRuleTypesProvider,
         false,
         Optional.empty(),
-        manifestServiceSupplier);
+        manifestServiceSupplier,
+        fileHashCache);
   }
 
   /**
@@ -182,7 +189,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       ProjectFilesystem filesystem) {
     AbstractParserCacheConfig parserCacheConfig = buckConfig.getView(ParserCacheConfig.class);
     if (parserCacheConfig.isParserCacheEnabled()) {
-      ParserCache parserCache = ParserCache.of(buckConfig, filesystem, manifestServiceSupplier);
+      ParserCache parserCache =
+          ParserCache.of(buckConfig, filesystem, manifestServiceSupplier, fileHashCache);
       return CachingProjectBuildFileParserDecorator.of(parserCache, skylarkParser);
     }
 

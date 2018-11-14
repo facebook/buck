@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.cache.impl;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -75,35 +76,27 @@ public final class Fingerprinter {
         .hash();
   }
 
-  private static void addContentHash(ProjectFilesystem fs, Path filePath, Hasher hasher)
-      throws IOException {
-    hasher.putString(fs.computeSha256(filePath), StandardCharsets.UTF_8);
-  }
-
-  private static void addIncludeEntryToFingerprint(
-      ProjectFilesystem fs, Hasher hasher, String value) throws IOException {
-    Path includePath = fs.getPath(value);
-    hasher.putString(fs.relativize(includePath).toString(), StandardCharsets.UTF_8);
-    addContentHash(fs, includePath, hasher);
-  }
-
   /**
    * Calculates a strong fingerprint.
    *
    * @param fs the {@link ProjectFilesystem} that we use to calculate the strong fingerprint.
    * @param includes the list of included build files for which we calculate the strong fingerprint.
+   * @param fileHashCache the {@link FileHashCache} object to use to get the content hash of the
+   *     loaded files.
    * @return a strong fingerprint - {@link HashCode} that represent a unique hash value.
    * @throws IOException can throw if there is a problem getting the content of the main BUCK build
    *     spec or an included file.
    */
-  public static HashCode getStrongFingerprint(ProjectFilesystem fs, ImmutableList<String> includes)
+  public static HashCode getStrongFingerprint(
+      ProjectFilesystem fs, ImmutableList<String> includes, FileHashCache fileHashCache)
       throws IOException {
     Hasher hasher = Hashing.sha256().newHasher();
 
     // Now add the loaded paths.
     ImmutableSortedSet<String> sortedIncludes = ImmutableSortedSet.copyOf(includes);
     for (String value : sortedIncludes) {
-      addIncludeEntryToFingerprint(fs, hasher, value);
+      hasher.putString(fs.relativize(fs.getPath(value)).toString(), StandardCharsets.UTF_8);
+      hasher.putBytes(fileHashCache.get(fs.getPath(value)).asBytes());
     }
 
     return hasher.hash();

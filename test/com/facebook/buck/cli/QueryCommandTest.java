@@ -40,6 +40,7 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -117,7 +118,8 @@ public class QueryCommandTest {
                 cell.getBuckConfig(),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
-                getManifestSupplier())
+                getManifestSupplier(),
+                new FakeFileHashCache(ImmutableMap.of()))
             .create(
                 params.getParser().getPermState(),
                 executorService,
