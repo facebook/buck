@@ -28,6 +28,8 @@ import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.concurrent.TimeUnit;
+import okhttp3.ConnectionPool;
+import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 
@@ -47,11 +49,17 @@ public class ManifestServiceConfig {
   public ManifestService createManifestService(
       Clock clock, BuckEventBus eventBus, ListeningExecutorService executor) {
     ClientSideSlb slb = slbConfig.createClientSideSlb(clock, eventBus);
+    Dispatcher dispatcher = new Dispatcher();
+    dispatcher.setMaxRequestsPerHost(getThreadPoolSize());
     OkHttpClient client =
         new Builder()
             .connectTimeout(getTimeoutMillis(), TimeUnit.MILLISECONDS)
             .readTimeout(getTimeoutMillis(), TimeUnit.MILLISECONDS)
             .writeTimeout(getTimeoutMillis(), TimeUnit.MILLISECONDS)
+            .dispatcher(dispatcher)
+            .connectionPool(
+                new ConnectionPool(
+                    getThreadPoolSize(), getThreadPoolKeepAliveDurationMillis(), TimeUnit.MINUTES))
             .build();
     HttpService httpService = new LoadBalancedService(slb, client, eventBus);
     HybridThriftOverHttpServiceImplArgs args =
@@ -70,5 +78,15 @@ public class ManifestServiceConfig {
 
   public String getHybridThriftEndpoint() {
     return buckConfig.getValue(MANIFEST_SECTION, "hybrid_thrift_endpoint").orElse("/hybrid_thrift");
+  }
+
+  public int getThreadPoolSize() {
+    return buckConfig.getInteger(MANIFEST_SECTION, "http_thread_pool_size").orElse(5);
+  }
+
+  public long getThreadPoolKeepAliveDurationMillis() {
+    return buckConfig
+        .getLong(MANIFEST_SECTION, "http_thread_pool_keep_alive_duration_millis")
+        .orElse(TimeUnit.MINUTES.toMillis(1));
   }
 }
