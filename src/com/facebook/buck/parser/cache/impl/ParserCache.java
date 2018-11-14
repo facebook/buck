@@ -24,6 +24,7 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.config.Config;
 import com.google.common.annotations.VisibleForTesting;
@@ -131,6 +132,8 @@ public class ParserCache {
       }
     } catch (IOException e) {
       LOG.debug(e, "Could not get BuildFileManifest from cache, will reparse BUCK file");
+    } catch (BuildFileParseException e) {
+      LOG.debug(e, "Parser failure while getting all include files.");
     }
 
     return Optional.empty();

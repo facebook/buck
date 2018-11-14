@@ -18,6 +18,7 @@ package com.facebook.buck.parser.cache.impl;
 
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
@@ -156,9 +157,16 @@ public class ParserCacheTest {
   static class FakeParser implements ProjectBuildFileParser {
 
     private final ProjectFilesystem filesystem;
+    private final boolean throwsBuildFileParseException;
 
     FakeParser(ProjectFilesystem filesystem) {
       this.filesystem = filesystem;
+      this.throwsBuildFileParseException = false;
+    }
+
+    FakeParser(ProjectFilesystem filesystem, boolean throwsBuildFileParseException) {
+      this.filesystem = filesystem;
+      this.throwsBuildFileParseException = throwsBuildFileParseException;
     }
 
     @Override
@@ -173,6 +181,10 @@ public class ParserCacheTest {
     @Override
     public ImmutableList<String> getIncludedFiles(Path buildFile)
         throws BuildFileParseException, InterruptedException, IOException {
+      if (throwsBuildFileParseException) {
+        throw BuildFileParseException.createForUnknownParseError("Fake exception!");
+      }
+
       return ImmutableList.of(
           filesystem.getPath(filesystem.getRootPath().toString(), "Includes1").toString(),
           filesystem.getPath(filesystem.getRootPath().toString(), "Includes2").toString());
@@ -198,6 +210,14 @@ public class ParserCacheTest {
   }
 
   @Test
+  public void testRemoteStorageInstantiatedWhenRemoteOnlyEnabled()
+      throws IOException, ExecutionException, InterruptedException, ParserCacheException {
+    BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "none", "readwrite");
+    ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
+    assertTrue(parserCache.getParserCacheStorage() instanceof RemoteManifestServiceCacheStorage);
+  }
+
+  @Test
   public void testLocalStorageInstantiatedWhenLocalOnlyEnabled()
       throws IOException, ExecutionException, InterruptedException, ParserCacheException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "readwrite", "none");
@@ -206,11 +226,13 @@ public class ParserCacheTest {
   }
 
   @Test
-  public void testRemoteStorageInstantiatedWhenRemoteOnlyEnabled()
+  public void testCacheWhenGetAllIncludesThrowsBuildFileParseException()
       throws IOException, ExecutionException, InterruptedException, ParserCacheException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "none", "readwrite");
     ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
-    assertTrue(parserCache.getParserCacheStorage() instanceof RemoteManifestServiceCacheStorage);
+    Path buildPath = filesystem.getPath("Foo/Bar");
+    assertFalse(
+        parserCache.getBuildFileManifest(buildPath, new FakeParser(filesystem, true)).isPresent());
   }
 
   @Test
