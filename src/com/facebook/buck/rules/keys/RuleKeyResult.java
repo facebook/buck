@@ -24,7 +24,7 @@ public class RuleKeyResult<R> {
   /** The result of rule key computation. */
   public final R result;
 
-  /** All other `BuildRule`s and `RuleKeyAppendable`s which this rule key's value depends on. */
+  /** All other `BuildRule`s and `AddsToRuleKey`s which this rule key's value depends on. */
   public final Iterable<?> deps;
 
   /** All inputs this rule key's value depends on. */

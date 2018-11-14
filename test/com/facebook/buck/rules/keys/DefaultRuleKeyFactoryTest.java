@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -491,8 +490,8 @@ public class DefaultRuleKeyFactoryTest {
     // Create a sample dep rule.
     BuildRule dep = new EmptyFakeBuildRule(BuildTargetFactory.newInstance("//:dep"));
 
-    // Create a sample rule key appendable.
-    RuleKeyAppendable appendable = sink -> {};
+    // Create a sample rule key.
+    AddsToRuleKey addsToRuleKey = new AddsToRuleKey() {};
 
     // Create a dummy build rule that uses the input.
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
@@ -504,7 +503,7 @@ public class DefaultRuleKeyFactoryTest {
 
           @AddToRuleKey private final SourcePath inputField = input;
 
-          @AddToRuleKey private final RuleKeyAppendable appendableField = appendable;
+          @AddToRuleKey private final AddsToRuleKey ruleKeyField = addsToRuleKey;
         };
 
     // Build the rule key.
@@ -516,7 +515,7 @@ public class DefaultRuleKeyFactoryTest {
     assertThat(
         result.inputs,
         Matchers.containsInAnyOrder(RuleKeyInput.of(filesystem, input.getRelativePath())));
-    assertThat(result.deps, Matchers.containsInAnyOrder(dep, appendable));
+    assertThat(result.deps, Matchers.containsInAnyOrder(dep, addsToRuleKey));
   }
 
   @Test
@@ -545,15 +544,17 @@ public class DefaultRuleKeyFactoryTest {
     // Create a sample dep rule.
     BuildRule dep = new EmptyFakeBuildRule(BuildTargetFactory.newInstance("//:dep"));
 
-    // Create a sample dep appendable.
-    RuleKeyAppendable depAppendable = sink -> {};
+    // Create a sample dep rule key.
+    AddsToRuleKey depRuleKey = new AddsToRuleKey() {};
 
-    // Create a sample rule key appendable.
-    RuleKeyAppendable appendable =
-        sink -> {
-          sink.setReflectively("input", input);
-          sink.setReflectively("dep", dep);
-          sink.setReflectively("depAppendable", depAppendable);
+    // Create a sample rule key.
+    AddsToRuleKey ruleKey =
+        new AddsToRuleKey() {
+          @AddToRuleKey private final PathSourcePath pathSourcePath = input;
+
+          @AddToRuleKey private final BuildRule depBuildRule = dep;
+
+          @AddToRuleKey private final AddsToRuleKey depRuleKeyFields = depRuleKey;
         };
 
     // Create a dummy build rule that uses the input.
@@ -562,19 +563,19 @@ public class DefaultRuleKeyFactoryTest {
         new NoopBuildRuleWithDeclaredAndExtraDeps(
             buildTarget, filesystem, TestBuildRuleParams.create()) {
 
-          @AddToRuleKey private final RuleKeyAppendable appendableField = appendable;
+          @AddToRuleKey private final AddsToRuleKey ruleKeyField = ruleKey;
         };
 
     // Build the rule key.
     factory.build(rule);
 
     // Verify the input was properly reported to the rule key cache.
-    RuleKeyResult<RuleKey> result = noopRuleKeyCache.results.get(appendable);
+    RuleKeyResult<RuleKey> result = noopRuleKeyCache.results.get(ruleKey);
     assertThat(result, Matchers.notNullValue());
     assertThat(
         result.inputs,
         Matchers.containsInAnyOrder(RuleKeyInput.of(filesystem, input.getRelativePath())));
-    assertThat(result.deps, Matchers.containsInAnyOrder(dep, depAppendable));
+    assertThat(result.deps, Matchers.containsInAnyOrder(dep, depRuleKey));
   }
 
   private void assertBothKeysAndValuesGetHashed(@Nullable Object val1, @Nullable Object val2) {
@@ -631,13 +632,8 @@ public class DefaultRuleKeyFactoryTest {
     }
   }
 
-  private static class Appender implements RuleKeyAppendable {
+  private static class Appender implements AddsToRuleKey {
     @AddToRuleKey private String wine = "cabernet";
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("cheese", "brie");
-    }
 
     @Override
     public String toString() {
@@ -672,10 +668,9 @@ public class DefaultRuleKeyFactoryTest {
     }
 
     @Override
-    public V get(
-        AddsToRuleKey appendable, Function<? super AddsToRuleKey, RuleKeyResult<V>> create) {
-      RuleKeyResult<V> result = create.apply(appendable);
-      results.put(appendable, result);
+    public V get(AddsToRuleKey ruleKey, Function<? super AddsToRuleKey, RuleKeyResult<V>> create) {
+      RuleKeyResult<V> result = create.apply(ruleKey);
+      results.put(ruleKey, result);
       return result.result;
     }
 
@@ -683,7 +678,7 @@ public class DefaultRuleKeyFactoryTest {
       throw new UnsupportedOperationException();
     }
 
-    public boolean isCached(AddsToRuleKey appendable) {
+    public boolean isCached(AddsToRuleKey ruleKey) {
       throw new UnsupportedOperationException();
     }
 

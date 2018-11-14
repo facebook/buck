@@ -17,11 +17,9 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.module.BuckModuleHashStrategy;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 
 public class RuleKeyFieldLoader {
@@ -57,11 +55,6 @@ public class RuleKeyFieldLoader {
 
     // Add in any extra details to the rule key via the rule's `appendToRuleKey` method.
     buildRule.appendToRuleKey(builder);
-
-    // We used to require build rules to piggyback on the `RuleKeyAppendable` type to add in
-    // additional details, but have since switched to using a method in the build rule class, so
-    // error out if we see the `RuleKeyAppendable` being used improperly.
-    Preconditions.checkArgument(!(builder instanceof RuleKeyAppendable));
 
     AlterRuleKeys.amendKey(builder, buildRule);
   }

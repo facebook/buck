@@ -769,7 +769,7 @@ public class RuleKeyTest {
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     Result<RuleKey, String> result =
         createFactory(resolver, ruleFinder)
-            .buildForDiagnostics((RuleKeyAppendable) (sink) -> {}, new StringRuleKeyHasher());
+            .buildForDiagnostics(new AddsToRuleKey() {}, new StringRuleKeyHasher());
     assertThat(
         result.diagKey,
         Matchers.containsString(
