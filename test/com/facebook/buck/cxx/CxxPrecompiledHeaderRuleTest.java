@@ -701,4 +701,37 @@ public class CxxPrecompiledHeaderRuleTest {
     assertNotNull(pchHashC);
     assertNotEquals(pchHashA, pchHashC);
   }
+
+  @Test
+  public void conflictingHeaderBasenameWhitelistIsPropagated() {
+    BuildTarget pchTarget = newTarget("//test:pch");
+    CxxPrecompiledHeaderTemplate pch = newPCH(pchTarget);
+    graphBuilder.addToIndex(pch);
+
+    ImmutableSortedSet<String> conflictingHeaderBasenameWhitelist = ImmutableSortedSet.of("foo");
+
+    BuildTarget libTarget = newTarget("//test:lib");
+    CxxSourceRuleFactory factory1 =
+        newFactoryBuilder(libTarget, new FakeProjectFilesystem(), "-flag-for-factory")
+            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
+            .setCxxPlatform(
+                CxxPlatformUtils.DEFAULT_PLATFORM.withConflictingHeaderBasenameWhitelist(
+                    conflictingHeaderBasenameWhitelist))
+            .build();
+    CxxPreprocessAndCompile lib =
+        factory1.requirePreprocessAndCompileBuildRule(
+            "lib.cpp", newCxxSourceBuilder().setPath(FakeSourcePath.of("lib.cpp")).build());
+    graphBuilder.addToIndex(lib);
+
+    CxxPrecompiledHeader pchInstance = null;
+    for (BuildRule dep : lib.getBuildDeps()) {
+      if (dep instanceof CxxPrecompiledHeader) {
+        pchInstance = (CxxPrecompiledHeader) dep;
+      }
+    }
+    assertNotNull(pchInstance);
+    assertThat(
+        pchInstance.getPreprocessorDelegate().getConflictingHeadersBasenameWhitelist(),
+        Matchers.equalTo(conflictingHeaderBasenameWhitelist));
+  }
 }

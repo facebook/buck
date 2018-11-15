@@ -321,4 +321,9 @@ class CxxPrecompiledHeader extends AbstractBuildRule
         getInput(),
         canPrecompileFlag);
   }
+
+  @VisibleForTesting
+  public PreprocessorDelegate getPreprocessorDelegate() {
+    return preprocessorDelegate;
+  }
 }

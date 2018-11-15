@@ -47,6 +47,7 @@ import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.WeakMemoizer;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -450,5 +451,10 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
           Optional.empty(),
           conflictingHeadersBasenameWhitelist);
     }
+  }
+
+  @VisibleForTesting
+  public ImmutableSortedSet<String> getConflictingHeadersBasenameWhitelist() {
+    return conflictingHeadersBasenameWhitelist;
   }
 }

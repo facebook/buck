@@ -274,7 +274,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
         /* leadingIncludePaths */ Optional.empty(),
         Optional.empty(),
-        ImmutableSortedSet.of());
+        cxxPlatform.getConflictingHeaderBasenameWhitelist());
   }
 
   public abstract CxxPrecompiledHeader getPrecompiledHeader(
