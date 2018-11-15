@@ -51,7 +51,8 @@
       <h2>Enabling the Skylark parser</h2>
       <p>
         In order to enable Skylark support for your project, add the
-        following section to your {call buck.buckconfig_link /} file. 
+        following key to the {call buckconfig.parser /} section in your
+        <code>.buckconfig</code> file. 
       </p>
 <p>
 <pre>
@@ -61,14 +62,6 @@
 {/literal}
 </pre>
 </p>
-
-      <p>
-        In case your project includes build files that rely on legacy Python
-        DSL features, you can enable multi-language support by setting
-        {sp}{call buckconfig.parser_polyglot_parsing_enabled /}{sp}
-        to <code>true</code> in {call buck.buckconfig_link /} file and use
-        parser directives described below.
-      </p>
 
       <p>
         We recommend Skylark for new projects and it will become the default in the future. 
@@ -102,10 +95,17 @@ default_build_file_syntax = PYTHON_DSL
       </p>
 
       <p>
-        Because Skylark will eventually become the default, we
-        recommended that you migrate as soon as possible. To make that
-        easier, Buck gives you control over which parser it uses for
-        individual {call buck.build_file/}s.  If you add 
+        If your project includes build files that rely on legacy Python
+        DSL features, you can enable <em>multi-language</em> support by setting
+        {sp}{call buckconfig.parser_polyglot_parsing_enabled /}{sp}
+        to <code>true</code> in {call buck.buckconfig_link /} file and use
+        the file-specific parser directives described below.
+      </p>
+
+      <p>
+         We recommend that you migrate Skylark as soon as possible. To
+         make that easier, Buck gives you control over which parser it
+         uses for individual {call buck.build_file/}s.  If you add 
       </p>
 
 <p>
@@ -130,14 +130,18 @@ default_build_file_syntax = PYTHON_DSL
 </p>
 
       <p>
-        Buck uses the Python DSL parser. If neither of these lines is
-        present, Buck uses the parser specified in 
-        the <code>[parser]</code> section of <code>.buckconfig</code>.
+        then Buck uses the Python DSL parser. 
       </p>
 
       <p>
-        It's best to enable the Skylark parser globally in
-        <code>.buckconfig</code> and add
+        If neither of these lines is present, Buck uses the parser
+        specified in the {call buckconfig.parser /} section 
+        of <code>.buckconfig</code>.
+      </p>
+
+      <p>
+        Because Skylark will eventually become the default, it's best to
+        enable the Skylark parser globally in <code>.buckconfig</code> and add
       </p>
 
 <p>
@@ -154,9 +158,9 @@ default_build_file_syntax = PYTHON_DSL
       </p>
 
       <p>
-        <b>Note:</b> <code># BUILD FILE SYNTAX: </code> parser directive is
-        taken into account only if support for multi-language (polyglot)
-        parsing is enabled:
+        <b>Note:</b> The <code># BUILD FILE SYNTAX:</code> parser
+        directive is recognized in build files only if support for multi-language
+        (polyglot) parsing is enabled in <code>.buckconfig</code>:
       </p>
 <p>
 <pre>
