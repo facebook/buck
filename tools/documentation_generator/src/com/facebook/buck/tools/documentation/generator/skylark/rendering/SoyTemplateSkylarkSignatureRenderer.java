@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 import org.stringtemplate.v4.ST;
 
@@ -76,6 +77,7 @@ public class SoyTemplateSkylarkSignatureRenderer {
     stringTemplate.add(
         "signatures",
         Streams.stream(signatures)
+            .sorted(Comparator.comparing(SkylarkCallable::name))
             .map(SoyTemplateSkylarkSignatureRenderer::toMap)
             .collect(Collectors.toList()));
     return stringTemplate.render();
