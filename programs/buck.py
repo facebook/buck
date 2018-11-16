@@ -93,7 +93,9 @@ def _get_java_version(java_path):
     Information is provided by java tool and parsing is based on
     http://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html
     """
-    java_version = check_output([java_path, "-version"], stderr=subprocess.STDOUT)
+    java_version = check_output(
+        [java_path, "-version"], stderr=subprocess.STDOUT
+    ).decode("utf-8")
     # extract java version from a string like 'java version "1.8.0_144"'
     match = re.search('java version "(?P<version>.+)"', java_version)
     if not match:
