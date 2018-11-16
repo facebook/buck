@@ -418,7 +418,9 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     if (lines.isEmpty()) {
       return;
     }
-    console.getStdErr().println(String.join(System.lineSeparator(), lines));
+    if (console.getVerbosity().shouldPrintStandardInformation()) {
+      console.getStdErr().println(String.join(System.lineSeparator(), lines));
+    }
   }
 
   @Override
