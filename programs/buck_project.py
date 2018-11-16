@@ -68,11 +68,11 @@ class BuckProject:
             buck_javaargs_path_local)
 
     def get_root_hash(self):
-        return hashlib.sha256(self.root).hexdigest()
+        return hashlib.sha256(self.root.encode("utf-8")).hexdigest()
 
     def get_buckd_transport_file_path(self):
         if os.name == 'nt':
-            return ur'\\.\pipe\buckd_{0}'.format(self.get_root_hash())
+            return '\\\\.\\pipe\\buckd_{0}'.format(self.get_root_hash())
         else:
             return os.path.join(self.buckd_dir, 'sock')
 
