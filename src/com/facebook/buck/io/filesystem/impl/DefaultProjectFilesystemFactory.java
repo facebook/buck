@@ -31,8 +31,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -81,14 +81,16 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       Path root, Config config, BuckPaths buckPaths) {
     ImmutableSet.Builder<PathMatcher> builder = ImmutableSet.builder();
 
-    builder.add(RecursiveFileMatcher.of(Paths.get(".idea")));
+    FileSystem rootFs = root.getFileSystem();
+
+    builder.add(RecursiveFileMatcher.of(rootFs.getPath(".idea")));
 
     String projectKey = "project";
     String ignoreKey = "ignore";
 
     String buckdDirProperty = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
     if (!Strings.isNullOrEmpty(buckdDirProperty)) {
-      addPathMatcherRelativeToRepo(root, builder, Paths.get(buckdDirProperty));
+      addPathMatcherRelativeToRepo(root, builder, rootFs.getPath(buckdDirProperty));
     }
 
     Path cacheDir =
@@ -110,7 +112,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
                 builder.add(GlobPatternMatcher.of(input));
                 return;
               }
-              addPathMatcherRelativeToRepo(root, builder, Paths.get(input));
+              addPathMatcherRelativeToRepo(root, builder, rootFs.getPath(input));
             });
 
     return builder.build();
