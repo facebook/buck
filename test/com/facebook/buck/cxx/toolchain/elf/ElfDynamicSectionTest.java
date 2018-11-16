@@ -18,12 +18,12 @@ package com.facebook.buck.cxx.toolchain.elf;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.ElfFile;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,21 +43,17 @@ public class ElfDynamicSectionTest {
 
   @Test
   public void testParse() throws IOException {
-    try (FileChannel channel = FileChannel.open(workspace.resolve("libfoo.so"))) {
-      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      ElfSection stringTable =
-          elf.getMandatorySectionByName(channel.toString(), ".dynstr").getSection();
-      ElfSection section =
-          elf.getMandatorySectionByName(channel.toString(), ".dynamic").getSection();
-      ElfDynamicSection dynamicSection =
-          ElfDynamicSection.parse(ElfHeader.EIClass.ELFCLASS64, section.body);
-      assertThat(
-          stringTable.lookupString(
-              dynamicSection
-                  .lookup(ElfDynamicSection.DTag.DT_NEEDED)
-                  .orElseThrow(AssertionError::new)),
-          Matchers.equalTo("libc.so.6"));
-    }
+    Path elfFilePath = workspace.resolve("libfoo.so");
+    Elf elf = ElfFile.mapReadOnly(elfFilePath);
+    ElfSection stringTable = elf.getMandatorySectionByName(elfFilePath, ".dynstr").getSection();
+    ElfSection section = elf.getMandatorySectionByName(elfFilePath, ".dynamic").getSection();
+    ElfDynamicSection dynamicSection =
+        ElfDynamicSection.parse(ElfHeader.EIClass.ELFCLASS64, section.body);
+    assertThat(
+        stringTable.lookupString(
+            dynamicSection
+                .lookup(ElfDynamicSection.DTag.DT_NEEDED)
+                .orElseThrow(AssertionError::new)),
+        Matchers.equalTo("libc.so.6"));
   }
 }

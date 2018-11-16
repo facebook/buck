@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -35,10 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -91,19 +87,15 @@ public class ElfExtractSectionsStepTest {
     step.execute(TestExecutionContext.newInstanceWithRealProcessExecutor());
 
     // Verify that the program table section is empty.
-    try (FileChannel channel =
-        FileChannel.open(filesystem.resolve(output), StandardOpenOption.READ)) {
-      MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      List<String> sections = new ArrayList<>();
-      for (int index = 0; index < elf.getNumberOfSections(); index++) {
-        ElfSection section = elf.getSectionByIndex(index);
-        if (section.header.sh_flags != 0) {
-          String name = elf.getSectionName(section.header);
-          sections.add(name);
-        }
+    Elf elf = ElfFile.mapReadOnly(filesystem.resolve(output));
+    List<String> sections = new ArrayList<>();
+    for (int index = 0; index < elf.getNumberOfSections(); index++) {
+      ElfSection section = elf.getSectionByIndex(index);
+      if (section.header.sh_flags != 0) {
+        String name = elf.getSectionName(section.header);
+        sections.add(name);
       }
-      assertThat(sections, Matchers.equalTo(ImmutableList.of(".dynamic")));
     }
+    assertThat(sections, Matchers.equalTo(ImmutableList.of(".dynamic")));
   }
 }

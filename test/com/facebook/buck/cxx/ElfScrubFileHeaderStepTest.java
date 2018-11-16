@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.toolchain.elf.Elf;
@@ -26,9 +25,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.file.StandardOpenOption;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,12 +45,8 @@ public class ElfScrubFileHeaderStepTest {
     step.execute(TestExecutionContext.newInstance());
 
     // Verify that the program table section is empty.
-    try (FileChannel channel =
-        FileChannel.open(step.getFilesystem().resolve(step.getPath()), StandardOpenOption.READ)) {
-      MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      // Verify that the entry address is zero'd.
-      assertThat(elf.header.e_entry, Matchers.equalTo(0L));
-    }
+    Elf elf = ElfFile.mapReadOnly(step.getFilesystem().resolve(step.getPath()));
+    // Verify that the entry address is zero'd.
+    assertThat(elf.header.e_entry, Matchers.equalTo(0L));
   }
 }
