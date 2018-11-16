@@ -61,7 +61,7 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 # Kill all buck processes
 def killall_buck(reporter):
     # Linux or macOS
-    if os.name != "posix":
+    if os.name != "posix" and os.name != "nt":
         message = "killall is not implemented on: " + os.name
         logging.error(message)
         reporter.status_message = message
