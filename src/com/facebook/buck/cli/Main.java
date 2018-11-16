@@ -1398,11 +1398,7 @@ public final class Main {
       return ImmutableList.of();
     }
 
-    return ImmutableList.of(
-        new RemoteExecutionConsoleLineProvider(
-            remoteExecutionConfig.isSuperConsoleEnabledForCasStats(),
-            remoteExecutionConfig.isSuperConsoleEnabledForCasStats(),
-            remoteExecutionListener.get()));
+    return ImmutableList.of(new RemoteExecutionConsoleLineProvider(remoteExecutionListener.get()));
   }
 
   /** Struct for the multiple values returned by {@link #getParserAndCaches}. */

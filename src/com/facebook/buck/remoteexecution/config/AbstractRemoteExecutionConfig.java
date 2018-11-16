@@ -35,9 +35,6 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final String SECTION = "remoteexecution";
   public static final String OLD_SECTION = ModernBuildRuleConfig.SECTION;
 
-  public static final String CONSOLE_CAS_ENABLED_CONFIG = "show_cas_stats_on_console";
-  public static final String CONSOLE_ACTIONS_ENABLED_CONFIG = "show_action_stats_on_console";
-
   public static final int DEFAULT_REMOTE_PORT = 19030;
   public static final int DEFAULT_CAS_PORT = 19031;
 
@@ -124,16 +121,6 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   /** Whether SuperConsole output of Remote Execution information is enabled. */
   public boolean isSuperConsoleEnabled() {
-    return isSuperConsoleEnabledForActionStats() || isSuperConsoleEnabledForCasStats();
-  }
-
-  /** Print CAS statistics to the Super Console. */
-  public boolean isSuperConsoleEnabledForCasStats() {
-    return getDelegate().getBooleanValue(SECTION, CONSOLE_CAS_ENABLED_CONFIG, true);
-  }
-
-  /** Print Action statistics to the Super Console. */
-  public boolean isSuperConsoleEnabledForActionStats() {
-    return getDelegate().getBooleanValue(SECTION, CONSOLE_ACTIONS_ENABLED_CONFIG, true);
+    return getType() != RemoteExecutionType.NONE;
   }
 }
