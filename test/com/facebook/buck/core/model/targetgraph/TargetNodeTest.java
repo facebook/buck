@@ -48,13 +48,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.immutables.value.Value;
 import org.junit.Test;
 
@@ -96,13 +94,7 @@ public class TargetNodeTest {
             "AnotherClass.java");
 
     TargetNode<ExampleDescriptionArg> targetNode =
-        createTargetNode(
-            TARGET_THREE,
-            depsTargets,
-            rawNode,
-            Sets.newHashSet(
-                Paths.get("example/path/AnotherClass.java"),
-                Paths.get("example/path/MyClass.java")));
+        createTargetNode(TARGET_THREE, depsTargets, rawNode);
 
     assertThat(
         targetNode.getInputs(),
@@ -145,7 +137,7 @@ public class TargetNodeTest {
         ImmutableMap.of("name", TARGET_THREE.getShortName(), "cmd", "$(query_outputs '123')");
 
     try {
-      createTargetNode(TARGET_THREE, ImmutableSet.of(), rawNode, Sets.newHashSet());
+      createTargetNode(TARGET_THREE, ImmutableSet.of(), rawNode);
     } catch (HumanReadableException e) {
       assertEquals(
           "Cannot traverse attribute cmd of //example/path:three: Error parsing query: 123",
@@ -204,16 +196,15 @@ public class TargetNodeTest {
             "sourcePaths",
             ImmutableSortedSet.of());
 
-    return createTargetNode(buildTarget, ImmutableSet.of(), rawNode, Sets.newHashSet());
+    return createTargetNode(buildTarget, ImmutableSet.of(), rawNode);
   }
 
   private static TargetNode<ExampleDescriptionArg> createTargetNode(
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
-      ImmutableMap<String, Object> rawNode,
-      Set<Path> files)
+      ImmutableMap<String, Object> rawNode)
       throws NoSuchBuildTargetException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(files);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     ExampleDescription description = new ExampleDescription();
 

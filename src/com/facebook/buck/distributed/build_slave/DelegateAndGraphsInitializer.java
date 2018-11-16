@@ -211,8 +211,7 @@ public class DelegateAndGraphsInitializer {
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             args.getKnownRuleTypesProvider(),
             new ConstructorArgMarshaller(typeCoercerFactory),
-            new TargetNodeFactory(
-                typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
+            new TargetNodeFactory(typeCoercerFactory),
             args.getRuleKeyConfiguration());
 
     return new DistBuildTargetGraphCodec(

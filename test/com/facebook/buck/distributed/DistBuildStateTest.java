@@ -423,8 +423,7 @@ public class DistBuildStateTest {
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             knownRuleTypesProvider,
             new ConstructorArgMarshaller(typeCoercerFactory),
-            new TargetNodeFactory(
-                typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
+            new TargetNodeFactory(typeCoercerFactory),
             TestRuleKeyConfigurationFactory.create());
 
     return new DistBuildTargetGraphCodec(

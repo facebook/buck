@@ -29,11 +29,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class ConfigSettingIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testSelectWorksWithConfigurationValues() throws IOException {
@@ -300,28 +298,5 @@ public class ConfigSettingIntegrationTest {
         .runBuckCommand(
             "test", "-c", "cat.file=a", ":java_test_with_duplicate_keys_in_select_in_env")
         .assertFailure("Duplicate keys found when trying to concatenate attributes: VARA");
-  }
-
-  @Test
-  public void testBuildWorksWithNonExistingFiles() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
-    workspace.setUp();
-
-    Path output =
-        workspace.buildAndReturnOutput("-c", "cat.file=a", ":genrule_with_non_existent_src");
-    assertEquals("a", Files.readAllLines(output).get(0));
-  }
-
-  @Test
-  public void testBuildFailsWithNonExistingFiles() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
-    workspace.setUp();
-
-    workspace
-        .runBuckBuild("-c", "cat.file=b", ":genrule_with_non_existent_src")
-        .assertFailure(
-            "//:genrule_with_non_existent_src references non-existing file or directory 'd.txt'");
   }
 }
