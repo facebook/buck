@@ -17,11 +17,15 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.elf.Elf;
+import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
+import com.facebook.buck.cxx.toolchain.elf.ElfSection;
+import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Optional;
 
 public class ElfFile {
   /** Load the given ELF file into memory. */
@@ -30,5 +34,22 @@ public class ElfFile {
       MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
       return new Elf(buffer);
     }
+  }
+
+  /** @return the value of the ELF file's DT_SONAME .dynamic entry, if present. */
+  public static Optional<String> getSoname(Elf elf) {
+    Optional<ElfSectionLookupResult> dynamicSectionLookupResult = elf.getSectionByName(".dynamic");
+    if (!dynamicSectionLookupResult.isPresent()) {
+      return Optional.empty();
+    }
+    ElfSection dynamicSection = dynamicSectionLookupResult.get().getSection();
+    ElfDynamicSection dynamic = ElfDynamicSection.parse(elf.header.ei_class, dynamicSection.body);
+    Optional<Long> sonameOffset = dynamic.lookup(ElfDynamicSection.DTag.DT_SONAME);
+    if (!sonameOffset.isPresent()) {
+      return Optional.empty();
+    }
+    ElfSection strtabSection = elf.getSectionByIndex((int) dynamicSection.header.sh_link);
+    String soname = strtabSection.lookupString(sonameOffset.get());
+    return Optional.of(soname);
   }
 }
