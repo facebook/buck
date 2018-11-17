@@ -1,18 +1,19 @@
 from __future__ import print_function
+
 import errno
+import hashlib
 import os
-import tempfile
-import textwrap
 import shutil
 import sys
+import tempfile
+import textwrap
 
 import file_locks
 from tracing import Tracing
-import hashlib
 
 
 def get_file_contents_if_exists(path, default=None):
-    with Tracing('BuckProject.get_file_contents_if_it_exists', args={'path': path}):
+    with Tracing("BuckProject.get_file_contents_if_it_exists", args={"path": path}):
         if not os.path.exists(path):
             return default
         with open(path) as f:
@@ -21,8 +22,8 @@ def get_file_contents_if_exists(path, default=None):
 
 
 def write_contents_to_file(path, contents):
-    with Tracing('BuckProject.write_contents_to_file', args={'path': path}):
-        with open(path, 'w') as output_file:
+    with Tracing("BuckProject.write_contents_to_file", args={"path": path}):
+        with open(path, "w") as output_file:
             output_file.write(str(contents))
 
 
@@ -40,7 +41,6 @@ def makedirs(path):
 
 
 class BuckProject:
-
     def __init__(self, root):
         self.root = root
         self._buck_out = os.path.join(root, "buck-out")
@@ -62,25 +62,23 @@ class BuckProject:
         buck_javaargs_path = os.path.join(self.root, ".buckjavaargs")
         self.buck_javaargs = get_file_contents_if_exists(buck_javaargs_path)
 
-        buck_javaargs_path_local = os.path.join(
-            self.root, ".buckjavaargs.local")
-        self.buck_javaargs_local = get_file_contents_if_exists(
-            buck_javaargs_path_local)
+        buck_javaargs_path_local = os.path.join(self.root, ".buckjavaargs.local")
+        self.buck_javaargs_local = get_file_contents_if_exists(buck_javaargs_path_local)
 
     def get_root_hash(self):
         return hashlib.sha256(self.root.encode("utf-8")).hexdigest()
 
     def get_buckd_transport_file_path(self):
-        if os.name == 'nt':
-            return '\\\\.\\pipe\\buckd_{0}'.format(self.get_root_hash())
+        if os.name == "nt":
+            return "\\\\.\\pipe\\buckd_{0}".format(self.get_root_hash())
         else:
-            return os.path.join(self.buckd_dir, 'sock')
+            return os.path.join(self.buckd_dir, "sock")
 
     def get_buckd_transport_address(self):
-        if os.name == 'nt':
-            return 'local:buckd_{0}'.format(self.get_root_hash())
+        if os.name == "nt":
+            return "local:buckd_{0}".format(self.get_root_hash())
         else:
-            return 'local:.buckd/sock'
+            return "local:.buckd/sock"
 
     def get_running_buckd_version(self):
         return get_file_contents_if_exists(self.buckd_version_file)
@@ -103,7 +101,7 @@ class BuckProject:
         return self._buck_out_log
 
     def clean_up_buckd(self):
-        with Tracing('BuckProject.clean_up_buckd'):
+        with Tracing("BuckProject.clean_up_buckd"):
             if os.path.exists(self.buckd_dir):
                 file_locks.rmtree_if_can_lock(self.buckd_dir)
 
@@ -112,8 +110,7 @@ class BuckProject:
             return self.buckd_tmp_dir
         tmp_dir_parent = os.path.join(self.buckd_dir, "tmp")
         makedirs(tmp_dir_parent)
-        self.buckd_tmp_dir = tempfile.mkdtemp(prefix="buck_run.",
-                                              dir=tmp_dir_parent)
+        self.buckd_tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=tmp_dir_parent)
         return self.buckd_tmp_dir
 
     def save_buckd_version(self, version):
@@ -124,9 +121,9 @@ class BuckProject:
 
     @staticmethod
     def from_current_dir():
-        with Tracing('BuckProject.from_current_dir'):
+        with Tracing("BuckProject.from_current_dir"):
             current_dir = os.getcwd()
-            if '--version' in sys.argv or '-V' in sys.argv:
+            if "--version" in sys.argv or "-V" in sys.argv:
                 return BuckProject(current_dir)
             at_root_dir = False
             while not at_root_dir:
@@ -141,7 +138,7 @@ class BuckProject:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        with Tracing('BuckProject.__exit__'):
+        with Tracing("BuckProject.__exit__"):
             if os.path.exists(self.tmp_dir):
                 try:
                     shutil.rmtree(self.tmp_dir)
@@ -151,14 +148,17 @@ class BuckProject:
 
 
 class NoBuckConfigFoundException(Exception):
-
     def __init__(self):
         no_buckconfig_message_path = ".no_buckconfig_message"
-        default_message = textwrap.dedent("""\
+        default_message = textwrap.dedent(
+            """\
             This does not appear to be the root of a Buck project. Please 'cd'
             to the root of your project before running buck. If this really is
             the root of your project, run
             'touch .buckconfig'
-            and then re-run your buck command.""")
-        message = get_file_contents_if_exists(no_buckconfig_message_path, default_message)
+            and then re-run your buck command."""
+        )
+        message = get_file_contents_if_exists(
+            no_buckconfig_message_path, default_message
+        )
         Exception.__init__(self, message)
