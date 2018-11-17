@@ -173,6 +173,9 @@ if os.name == "nt":
     ERROR_IO_PENDING = 0x000003E5
     ERROR_PIPE_BUSY = 231
 
+    # No process is on the other end of the pipe error on Windows
+    ERROR_NO_PROCESS_ON_OTHER_END_OF_PIPE = 233
+
     # The pointer size follows the architecture
     # We use WPARAM since this type is already conditionally defined
     ULONG_PTR = ctypes.wintypes.WPARAM
@@ -361,8 +364,14 @@ class WindowsNamedPipeTransport(Transport):
 
         immediate = ReadFile(self.pipe, buf, nbytes, None, olap)
 
+        err = GetLastError()
+
+        if err == ERROR_NO_PROCESS_ON_OTHER_END_OF_PIPE:
+            raise NailgunException(
+                "No process on the other end of pipe", NailgunException.CONNECTION_BROKEN
+            )
+
         if not immediate:
-            err = GetLastError()
             if err != ERROR_IO_PENDING:
                 self._raise_win_err("failed to read %d bytes" % nbytes, GetLastError())
 
