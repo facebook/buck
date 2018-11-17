@@ -68,6 +68,16 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     return SkylarkList.createImmutable(kwargs.keySet());
   }
 
+  @SkylarkCallable(
+      name = "dummy",
+      doc = "Doc with {} inside.",
+      documented = false,
+      useAst = true,
+      useEnvironment = true)
+  public SkylarkList<String> dummyWithBracesInside() {
+    return SkylarkList.createImmutable(Collections.emptyList());
+  }
+
   @Before
   public void setUp() {
     // ignore windows and its new line philosophy
@@ -97,6 +107,16 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
     Method dummyField = getClass().getMethod("dummyWithoutArgs");
     String expectedContent = getExpectedContent("data/expected_dummy_function_without_args.soy");
+    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkCallable.class));
+    assertEquals(expectedContent, actualContent);
+  }
+
+  @Test
+  public void rendersAnExpectedFunctionSoyTemplateWithBracesInside() throws Exception {
+    SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
+    Method dummyField = getClass().getMethod("dummyWithBracesInside");
+    String expectedContent =
+        getExpectedContent("data/expected_dummy_function_with_braces_inside.soy");
     String actualContent = renderer.render(dummyField.getAnnotation(SkylarkCallable.class));
     assertEquals(expectedContent, actualContent);
   }

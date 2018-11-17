@@ -6,6 +6,7 @@ export_files(
         "expected_dummy_toc.soy",
         "expected_dummy_function_with_kwargs.soy",
         "expected_dummy_function_without_args.soy",
+        "expected_dummy_function_with_braces_inside.soy",
     ],
     visibility = ["//tools/documentation_generator/test/..."],
 )
