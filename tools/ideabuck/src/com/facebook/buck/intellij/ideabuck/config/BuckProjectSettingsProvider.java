@@ -26,7 +26,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.jetbrains.annotations.Nullable;
 
 /** Project-level preferences. */
@@ -202,33 +201,6 @@ public class BuckProjectSettingsProvider extends AbstractProjectComponent
 
   public void setCustomizedInstallSettingCommand(String customizedInstallSettingCommand) {
     state.customizedInstallSettingCommand = customizedInstallSettingCommand;
-  }
-
-  /**
-   * Returns a stream of buck cells in this project.
-   *
-   * @deprecated Use {@link BuckCellSettingsProvider#getCells()}.
-   */
-  public Stream<BuckCell> getCells() {
-    return buckCellSettingsProvider.getCells().stream();
-  }
-
-  /**
-   * Returns a list of buck cell names in this project.
-   *
-   * @deprecated Use {@link BuckCellSettingsProvider#getCellNames()}.
-   */
-  public List<String> getCellNames() {
-    return buckCellSettingsProvider.getCellNames();
-  }
-
-  /**
-   * Sets a list of buck cells in this project.
-   *
-   * @deprecated Use {@link BuckCellSettingsProvider#setCells(List)}.
-   */
-  public void setCells(List<BuckCell> cells) {
-    buckCellSettingsProvider.setCells(cells);
   }
 
   @Override
