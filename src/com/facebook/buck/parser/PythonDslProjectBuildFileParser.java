@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.WatchmanDiagnostic;
@@ -35,6 +36,7 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -90,6 +92,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private static final Logger LOG = Logger.get(PythonDslProjectBuildFileParser.class);
 
   private final ImmutableMap<String, String> environment;
+  private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
 
   @Nullable private BuckPythonProgram buckPythonProgram;
   private Supplier<Path> rawConfigJson;
@@ -167,6 +170,9 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                 throw new RuntimeException(e);
               }
             });
+
+    this.packageImplicitIncludeFinder =
+        PackageImplicitIncludesFinder.fromConfiguration(options.getPackageImplicitIncludes());
   }
 
   @VisibleForTesting
@@ -409,9 +415,14 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       BuildFilePythonResult resultObject =
           performJsonRequest(
               ImmutableMap.of(
-                  "buildFile", buildFile.toString(),
-                  "watchRoot", watchRoot,
-                  "projectPrefix", projectPrefix));
+                  "buildFile",
+                  buildFile.toString(),
+                  "watchRoot",
+                  watchRoot,
+                  "projectPrefix",
+                  projectPrefix,
+                  "packageImplicitLoad",
+                  packageImplicitIncludeFinder.findIncludeForBuildFile(getBasePath(buildFile))));
       Path buckPyPath = getPathToBuckPy(options.getDescriptions());
       handleDiagnostics(
           buildFile, buckPyPath.getParent(), resultObject.getDiagnostics(), buckEventBus);
@@ -442,6 +453,15 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     }
   }
 
+  /**
+   * @return The path of the provided {@code buildFile}. For example, for {@code
+   *     /Users/foo/repo/src/bar/BUCK}, where {@code /Users/foo/repo} is the path to the repo, it
+   *     would return {@code src/bar}.
+   */
+  private Path getBasePath(Path buildFile) {
+    return MorePaths.getParentOrEmpty(MorePaths.relativize(options.getProjectRoot(), buildFile));
+  }
+
   @SuppressWarnings("unchecked")
   private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> values) {
     return BuildFileManifest.of(
@@ -468,7 +488,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     return builder.build();
   }
 
-  private BuildFilePythonResult performJsonRequest(ImmutableMap<String, String> request)
+  private BuildFilePythonResult performJsonRequest(ImmutableMap<String, Object> request)
       throws IOException {
     Objects.requireNonNull(request);
     Objects.requireNonNull(buckPyProcessJsonGenerator);

@@ -17,6 +17,8 @@ package com.facebook.buck.parser.implicit;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.SkylarkImport;
@@ -33,16 +35,25 @@ import org.immutables.value.Value;
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
 public abstract class AbstractImplicitInclude {
+  @JsonIgnore
   @Value.Parameter
   abstract Path getPath();
 
+  @JsonProperty("load_symbols")
   @Value.Parameter
   abstract ImmutableMap<String, String> getSymbols();
+
+  @JsonProperty("load_path")
+  @Value.Derived
+  public String getImportString() {
+    return getLoadPath().getImportString();
+  }
 
   /**
    * Returns the load path for the given path. SkylarkImport is used to eagerly compute fewer
    * objects up front and centralize error handling
    */
+  @JsonIgnore
   @Value.Derived
   public SkylarkImport getLoadPath() {
     Path path = getPath();

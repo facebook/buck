@@ -32,12 +32,13 @@ from typing import (
     Union,
 )
 
-import pywatchman
-from pywatchman import WatchmanError
 from six import PY3, iteritems, itervalues, string_types
 
 # Python 2.6, 2.7, use iterator filter from Python 3
 from six.moves import builtins, filter
+
+import pywatchman
+from pywatchman import WatchmanError
 
 from .deterministic_set import DeterministicSet
 from .glob_internal import glob_internal
@@ -147,6 +148,7 @@ class BuildFileContext(AbstractContext):
         sync_cookie_state,
         watchman_glob_stat_results,
         watchman_use_glob_generator,
+        implicit_package_symbols,
     ):
         self.globals = {}
         self._includes = set()
@@ -168,6 +170,7 @@ class BuildFileContext(AbstractContext):
         self.sync_cookie_state = sync_cookie_state
         self.watchman_glob_stat_results = watchman_glob_stat_results
         self.watchman_use_glob_generator = watchman_use_glob_generator
+        self.implicit_package_symbols = implicit_package_symbols
 
     @property
     def includes(self):
@@ -224,7 +227,7 @@ class IncludeContext(AbstractContext):
 # Generic context type that should be used in places where return and parameter
 # types are the same but could be either of the concrete contexts.
 _GCT = TypeVar("_GCT", IncludeContext, BuildFileContext)
-
+LoadStatement = Dict[str, Union[str, Dict[str, str]]]
 
 BuildInclude = collections.namedtuple("BuildInclude", ["cell_name", "path"])
 
@@ -865,6 +868,7 @@ class BuildFileProcessor(object):
             "include_defs": functools.partial(self._include_defs, is_implicit_include),
             "add_build_file_dep": self._add_build_file_dep,
             "read_config": self._read_config,
+            "implicit_package_symbol": self._implicit_package_symbol,
             "allow_unsafe_import": self._import_whitelist_manager.allow_unsafe_import,
             "glob": self._glob,
             "subdir_glob": self._subdir_glob,
@@ -889,9 +893,11 @@ class BuildFileProcessor(object):
         self._install_builtins(native_globals, force_native_rules=True)
         assert "glob" not in native_globals
         assert "host_info" not in native_globals
+        assert "implicit_package_symbol" not in native_globals
         assert "read_config" not in native_globals
         native_globals["glob"] = self._glob
         native_globals["host_info"] = self._host_info
+        native_globals["implicit_package_symbol"] = self._implicit_package_symbol
         native_globals["read_config"] = self._read_config
         return self._native_module_class(**native_globals)
 
@@ -905,7 +911,7 @@ class BuildFileProcessor(object):
             "native",
             list(global_functions)
             + list(native_functions)
-            + ["glob", "host_info", "read_config"],
+            + ["glob", "host_info", "read_config", "implicit_package_symbol"],
         )
 
     def _wrap_env_var_read(self, read, real):
@@ -1155,6 +1161,17 @@ class BuildFileProcessor(object):
 
         return value
 
+    def _implicit_package_symbol(self, symbol, default=None):
+        # type: (str, Any) -> Any
+        """
+        Gives access to a symbol that has been implicitly loaded for the package of the
+        build file that is currently being evaluated. If the symbol was not present,
+        `default` will be returned.
+        """
+
+        build_env = self._current_build_env
+        return build_env.implicit_package_symbols.get(symbol, default)
+
     def _glob(
         self,
         includes,
@@ -1267,6 +1284,40 @@ class BuildFileProcessor(object):
         BuildFileProcessor._merge_explicit_globals(
             module, frame.f_globals, symbols, symbol_kwargs
         )
+
+        # Pull in the include's accounting of its own referenced includes
+        # into the current build context.
+        build_env.includes.add(build_include.path)
+        build_env.merge(inner_env)
+
+    def _load_package_implicit(self, build_env, package_implicit_load):
+        """
+        Updates `build_env` to contain all symbols from `package_implicit_load`
+
+        Args:
+            build_env: The build environment on which to modify includes /
+                       implicit_package_symbols properties
+            package_implicit_load: A dictionary with "load_path", the first part of the
+                                   a `load` statement, and "load_symbols", a dictionary
+                                   that works like the **symbols attribute of `load`
+        """
+
+        # Resolve the named include to its path and process it to get its
+        # build context and module.
+        build_include = self._get_load_path(package_implicit_load["load_path"])
+        inner_env, module = self._process_include(build_include, True)
+
+        # Validate that symbols that are requested explicitly by config are present
+        # in the .bzl file
+        for key, value in iteritems(package_implicit_load["load_symbols"]):
+            try:
+                build_env.implicit_package_symbols[key] = getattr(module, value)
+            except AttributeError:
+                raise BuildFileFailError(
+                    "Could not find symbol '{}' in implicitly loaded extension '{}'".format(
+                        value, package_implicit_load["load_path"]
+                    )
+                )
 
         # Pull in the include's accounting of its own referenced includes
         # into the current build context.
@@ -1439,14 +1490,17 @@ class BuildFileProcessor(object):
             with self._import_whitelist_manager.allow_unsafe_import(False):
                 yield
 
-    def _process(self, build_env, path, is_implicit_include):
-        # type: (_GCT, str, bool) -> Tuple[_GCT, types.ModuleType]
+    def _process(self, build_env, path, is_implicit_include, package_implicit_load):
+        # type: (_GCT, str, bool, Optional[LoadStatement]) -> Tuple[_GCT, types.ModuleType]
         """Process a build file or include at the given path.
 
         :param build_env: context of the file to process.
         :param path: target-like path to the file to process.
         :param is_implicit_include: whether the file being processed is an implicit include, or was
             included from an implicit include.
+        :package_implicit_load: if provided, a dictionary containing the path to
+                                load for this given package, and the symbols to load
+                                from that .bzl file.
         :returns: build context (potentially different if retrieved from cache) and loaded module.
         """
 
@@ -1467,6 +1521,9 @@ class BuildFileProcessor(object):
                     self._merge_globals(mod, self._default_globals)
                     build_env.includes.add(build_include.path)
                     build_env.merge(inner_env)
+
+                if package_implicit_load:
+                    self._load_package_implicit(build_env, package_implicit_load)
 
             # Build a new module for the given file, using the default globals
             # created above.
@@ -1510,14 +1567,19 @@ class BuildFileProcessor(object):
             cell_name=build_include.cell_name, path=build_include.path
         )
         build_env, mod = self._process(
-            build_env, build_include.path, is_implicit_include=is_implicit_include
+            build_env,
+            build_include.path,
+            is_implicit_include=is_implicit_include,
+            package_implicit_load=None,
         )
 
         self._include_cache[build_include.path] = build_env, mod
         return build_env, mod
 
-    def _process_build_file(self, watch_root, project_prefix, path):
-        # type: (str, str, str) -> Tuple[BuildFileContext, types.ModuleType]
+    def _process_build_file(
+        self, watch_root, project_prefix, path, package_implicit_load
+    ):
+        # type: (str, str, str, Optional[LoadStatement]) -> Tuple[BuildFileContext, types.ModuleType]
         """Process the build file at the given path."""
         # Create the build file context, including the base path and directory
         # name of the given path.
@@ -1527,7 +1589,6 @@ class BuildFileProcessor(object):
         len_suffix = -len(self._build_file_name) - 1
         base_path = relative_path_to_build_file[:len_suffix]
         dirname = os.path.dirname(path)
-
         build_env = BuildFileContext(
             self._project_root,
             base_path,
@@ -1542,15 +1603,26 @@ class BuildFileProcessor(object):
             self._sync_cookie_state,
             self._watchman_glob_stat_results,
             self._watchman_use_glob_generator,
+            {},
         )
 
-        return self._process(build_env, path, is_implicit_include=False)
+        return self._process(
+            build_env,
+            path,
+            is_implicit_include=False,
+            package_implicit_load=package_implicit_load,
+        )
 
-    def process(self, watch_root, project_prefix, path, diagnostics):
-        # type: (str, Optional[str], str, List[Diagnostic]) -> List[Dict[str, Any]]
+    def process(
+        self, watch_root, project_prefix, path, diagnostics, package_implicit_load
+    ):
+        # type: (str, Optional[str], str, List[Diagnostic], Optional[LoadStatement]) -> List[Dict[str, Any]]
         """Process a build file returning a dict of its rules and includes."""
         build_env, mod = self._process_build_file(
-            watch_root, project_prefix, os.path.join(self._project_root, path)
+            watch_root,
+            project_prefix,
+            os.path.join(self._project_root, path),
+            package_implicit_load=package_implicit_load,
         )
 
         # Initialize the output object to a map of the parsed rules.
@@ -1645,6 +1717,7 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent):
     build_file = build_file_query.get("buildFile")
     watch_root = build_file_query.get("watchRoot")
     project_prefix = build_file_query.get("projectPrefix")
+    package_implicit_load = build_file_query.get("packageImplicitLoad")
 
     build_file = cygwin_adjusted_path(build_file)
     watch_root = cygwin_adjusted_path(watch_root)
@@ -1655,7 +1728,11 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent):
     values = []
     try:
         values = build_file_processor.process(
-            watch_root, project_prefix, build_file, diagnostics=diagnostics
+            watch_root,
+            project_prefix,
+            build_file,
+            diagnostics=diagnostics,
+            package_implicit_load=package_implicit_load,
         )
     except BaseException as e:
         # sys.exit() don't emit diagnostics.

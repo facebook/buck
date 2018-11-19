@@ -6,9 +6,10 @@ import tempfile
 import unittest
 from typing import Sequence
 
-from pywatchman import WatchmanError
 from six import iteritems
 from six.moves import StringIO, builtins
+
+from pywatchman import WatchmanError
 
 from .buck import (
     BuildFileFailError,
@@ -170,6 +171,7 @@ class BuckTest(unittest.TestCase):
             build_file.prefix,
             build_file.path,
             set(),
+            None,
         )
 
         # Construct a processor with no default includes, have a generated
@@ -192,6 +194,7 @@ class BuckTest(unittest.TestCase):
             build_file.prefix,
             build_file.path,
             set(),
+            None,
         )
 
     def test_lazy_include_defs(self):
@@ -228,7 +231,7 @@ class BuckTest(unittest.TestCase):
             includes=[include_def1.name, include_def2.name]
         )
         build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, []
+            build_file.root, build_file.prefix, build_file.path, [], None
         )
 
         # Construct a processor with no default includes, have a generated
@@ -247,7 +250,7 @@ class BuckTest(unittest.TestCase):
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor()
         build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, []
+            build_file.root, build_file.prefix, build_file.path, [], None
         )
 
     def test_private_globals_are_ignored(self):
@@ -273,6 +276,7 @@ class BuckTest(unittest.TestCase):
             build_file.prefix,
             build_file.path,
             [],
+            None,
         )
 
         # Test we don't get private module attributes from explicit includes.
@@ -290,6 +294,7 @@ class BuckTest(unittest.TestCase):
             build_file.prefix,
             build_file.path,
             [],
+            None,
         )
 
     def test_implicit_includes_apply_to_explicit_includes(self):
@@ -318,7 +323,7 @@ class BuckTest(unittest.TestCase):
             includes=[implicit_inc.name]
         )
         build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, []
+            build_file.root, build_file.prefix, build_file.path, [], None
         )
 
     def test_all_list_is_respected(self):
@@ -345,6 +350,7 @@ class BuckTest(unittest.TestCase):
             build_file.prefix,
             build_file.path,
             [],
+            None,
         )
 
         # Test we don't get non-whitelisted attributes from explicit includes.
@@ -362,6 +368,7 @@ class BuckTest(unittest.TestCase):
             build_file.prefix,
             build_file.path,
             [],
+            None,
         )
 
     def test_do_not_override_overridden_builtins(self):
@@ -400,6 +407,7 @@ class BuckTest(unittest.TestCase):
                 build_file.prefix,
                 build_file.path,
                 [],
+                None,
             )
 
     def test_watchman_glob_failure_raises_diagnostic_with_stack(self):
@@ -469,7 +477,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("srcs"), ["Foo.java"])
 
@@ -498,6 +506,7 @@ class BuckTest(unittest.TestCase):
                 build_file.prefix,
                 build_file.path,
                 diagnostics,
+                None,
             )
 
     def test_watchman_glob_warning_adds_diagnostic(self):
@@ -521,7 +530,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
         self.assertEqual(["Foo.java"], rules[0]["srcs"])
         self.assertEqual(
@@ -565,7 +574,7 @@ class BuckTest(unittest.TestCase):
         with build_file_processor.with_builtins(builtins.__dict__):
             diagnostics = []
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(["Foo.java", "Foo.c"], rules[0]["srcs"])
             self.assertEqual(
@@ -606,7 +615,7 @@ class BuckTest(unittest.TestCase):
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, []
+                build_file.root, build_file.prefix, build_file.path, [], None
             )
         self.assertEqual(["Foo.java"], rules[0]["srcs"])
         self.assertIsInstance(rules[0]["srcs"][0], str)
@@ -630,7 +639,7 @@ class BuckTest(unittest.TestCase):
             configs={("hello", "world"): "foo"}
         )
         result = build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, []
+            build_file.root, build_file.prefix, build_file.path, [], None
         )
         self.assertEquals(
             get_config_from_results(result),
@@ -650,7 +659,7 @@ class BuckTest(unittest.TestCase):
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor()
         build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, []
+            build_file.root, build_file.prefix, build_file.path, [], None
         )
 
     def test_can_read_custom_repository_name(self):
@@ -663,7 +672,7 @@ class BuckTest(unittest.TestCase):
         self.cell_name = "foo"
         build_file_processor = self.create_build_file_processor()
         build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, []
+            build_file.root, build_file.prefix, build_file.path, [], None
         )
 
     def test_struct_is_available(self):
@@ -680,7 +689,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), "foo")
 
@@ -703,7 +712,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), '{"name":"foo"}')
 
@@ -726,7 +735,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), "bar")
 
@@ -744,7 +753,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), "bar")
 
@@ -764,7 +773,11 @@ class BuckTest(unittest.TestCase):
                 "Please use absolute label instead \(\[cell\]//pkg\[/pkg\]:target\).",
             ):
                 build_file_processor.process(
-                    build_file.root, build_file.prefix, build_file.path, diagnostics
+                    build_file.root,
+                    build_file.prefix,
+                    build_file.path,
+                    diagnostics,
+                    None,
                 )
 
     def test_cannot_have_load_without_symbols(self):
@@ -779,7 +792,11 @@ class BuckTest(unittest.TestCase):
                 AssertionError, "expected at least one symbol to load"
             ):
                 build_file_processor.process(
-                    build_file.root, build_file.prefix, build_file.path, diagnostics
+                    build_file.root,
+                    build_file.prefix,
+                    build_file.path,
+                    diagnostics,
+                    None,
                 )
 
     def test_provider_is_available(self):
@@ -803,7 +820,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), "foo")
 
@@ -828,7 +845,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), "foo")
 
@@ -855,7 +872,7 @@ class BuckTest(unittest.TestCase):
                 TypeError, "got an unexpected keyword argument 'name'"
             ):
                 rules = build_file_processor.process(
-                    build_file.root, build_file.prefix, build_file.path, []
+                    build_file.root, build_file.prefix, build_file.path, [], None
                 )
 
     def test_native_module_is_available(self):
@@ -879,7 +896,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("srcs"), ["BUCK", "ext.bzl"])
 
@@ -906,7 +923,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), "baz")
 
@@ -923,7 +940,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), "False")
 
@@ -945,7 +962,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), "True")
 
@@ -974,7 +991,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[1].get("name"), "True")
 
@@ -998,7 +1015,7 @@ class BuckTest(unittest.TestCase):
                 "Cannot use `rule_exists\(\)` at the top-level of an included file.",
             ):
                 build_file_processor.process(
-                    build_file.root, build_file.prefix, build_file.path, []
+                    build_file.root, build_file.prefix, build_file.path, [], None
                 )
 
     def test_package_name_is_available(self):
@@ -1014,7 +1031,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), "pkg")
 
@@ -1037,7 +1054,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), "pkg")
 
@@ -1060,7 +1077,7 @@ class BuckTest(unittest.TestCase):
         diagnostics = []
         with build_file_processor.with_builtins(builtins.__dict__):
             rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics
+                build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
             self.assertEqual(rules[0].get("name"), "pkg")
 
@@ -1085,7 +1102,11 @@ class BuckTest(unittest.TestCase):
                 "Cannot use `package_name\(\)` at the top-level of an included file.",
             ):
                 build_file_processor.process(
-                    build_file.root, build_file.prefix, build_file.path, diagnostics
+                    build_file.root,
+                    build_file.prefix,
+                    build_file.path,
+                    diagnostics,
+                    None,
                 )
 
     def test_add_build_file_dep(self):
@@ -1103,7 +1124,7 @@ class BuckTest(unittest.TestCase):
         # Create a process and run it.
         build_file_processor = self.create_build_file_processor()
         results = build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, []
+            build_file.root, build_file.prefix, build_file.path, [], None
         )
 
         # Verify that the dep was recorded.
@@ -1126,6 +1147,7 @@ class BuckTest(unittest.TestCase):
                 build_file.prefix,
                 build_file.path,
                 [],
+                None,
             )
 
     def test_import_whitelist(self):
@@ -1148,7 +1170,7 @@ class BuckTest(unittest.TestCase):
         self.write_files(build_file)
         build_file_processor = self.create_build_file_processor()
         build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, []
+            build_file.root, build_file.prefix, build_file.path, [], None
         )
 
     def test_allow_unsafe_import_allows_to_import(self):
@@ -1165,7 +1187,7 @@ class BuckTest(unittest.TestCase):
         build_file_processor = self.create_build_file_processor()
         with build_file_processor.with_builtins(builtins.__dict__):
             build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, []
+                build_file.root, build_file.prefix, build_file.path, [], None
             )
 
     def test_modules_are_not_copied_unless_specified(self):
@@ -1203,6 +1225,7 @@ class BuckTest(unittest.TestCase):
             build_file.prefix,
             build_file.path,
             [],
+            None,
         )
 
         # Confirm that math_pi() works
@@ -1217,7 +1240,7 @@ class BuckTest(unittest.TestCase):
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor()
         build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, []
+            build_file.root, build_file.prefix, build_file.path, [], None
         )
 
         # If specified in '__all__', math should be accessible
@@ -1241,7 +1264,7 @@ class BuckTest(unittest.TestCase):
         self.write_files(include_def, build_file)
         build_file_processor = self.create_build_file_processor()
         build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, []
+            build_file.root, build_file.prefix, build_file.path, [], None
         )
 
     def test_os_getenv(self):
@@ -1264,7 +1287,7 @@ class BuckTest(unittest.TestCase):
             build_file_processor = self.create_build_file_processor()
             with build_file_processor.with_env_interceptors():
                 result = build_file_processor.process(
-                    build_file.root, build_file.prefix, build_file.path, []
+                    build_file.root, build_file.prefix, build_file.path, [], None
                 )
         self.assertEquals(
             get_env_from_results(result), {"TEST1": "foo", "TEST2": None, "TEST3": None}
@@ -1295,7 +1318,7 @@ class BuckTest(unittest.TestCase):
             build_file_processor = self.create_build_file_processor()
             with build_file_processor.with_env_interceptors():
                 result = build_file_processor.process(
-                    build_file.root, build_file.prefix, build_file.path, []
+                    build_file.root, build_file.prefix, build_file.path, [], None
                 )
         self.assertEquals(
             get_env_from_results(result),
@@ -1325,7 +1348,7 @@ class BuckTest(unittest.TestCase):
         with with_envs({"TEST1": "foo"}):
             build_file_processor = self.create_build_file_processor()
             build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, []
+                build_file.root, build_file.prefix, build_file.path, [], None
             )
 
     def test_safe_modules_block_unsafe_functions(self):
@@ -1348,6 +1371,7 @@ class BuckTest(unittest.TestCase):
             build_file.prefix,
             build_file.path,
             [],
+            None,
         )
 
     def test_wrap_access_prints_warnings(self):
@@ -1362,7 +1386,7 @@ class BuckTest(unittest.TestCase):
         build_file_processor = self.create_build_file_processor()
         diagnostics = []
         build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, diagnostics
+            build_file.root, build_file.prefix, build_file.path, diagnostics, None
         )
         expected_message = (
             "Access to a non-tracked file detected! {0} is not a ".format(path)
@@ -1421,7 +1445,9 @@ class BuckTest(unittest.TestCase):
         self.write_files(extension_file, build_file)
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         with build_file_processor.with_builtins(builtins.__dict__):
-            result = build_file_processor.process(self.project_root, None, "BUCK", [])
+            result = build_file_processor.process(
+                self.project_root, None, "BUCK", [], None
+            )
             foo_target = result[0]
             self.assertEqual(foo_target["name"], "loaded_name")
 
@@ -1538,7 +1564,7 @@ class BuckTest(unittest.TestCase):
         self.write_files(defs_file, build_file)
         processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         with processor.with_builtins(builtins.__dict__):
-            result = processor.process(self.project_root, None, "BUCK", [])
+            result = processor.process(self.project_root, None, "BUCK", [], None)
             self.assertTrue(
                 [x for x in result if x.get("name", "") == "foo3"],
                 "result should contain rule with name derived from an explicitly loaded value",
@@ -1564,7 +1590,9 @@ class BuckTest(unittest.TestCase):
         with processor.with_builtins(builtins.__dict__):
             self.assertRaises(
                 NameError,
-                lambda: processor.process(self.project_root, None, "BUCK_fail", []),
+                lambda: processor.process(
+                    self.project_root, None, "BUCK_fail", [], None
+                ),
             )
 
     def test_can_rename_loaded_global(self):
@@ -1584,7 +1612,7 @@ class BuckTest(unittest.TestCase):
         self.write_files(defs_file, build_file)
         processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         with processor.with_builtins(builtins.__dict__):
-            result = processor.process(self.project_root, None, "BUCK", [])
+            result = processor.process(self.project_root, None, "BUCK", [], None)
             self.assertTrue(
                 [x for x in result if x.get("name", "") == "foo3"],
                 "result should contain rule with name derived from an explicitly loaded value",
@@ -1607,7 +1635,9 @@ class BuckTest(unittest.TestCase):
         with processor.with_builtins(builtins.__dict__):
             self.assertRaises(
                 NameError,
-                lambda: processor.process(self.project_root, None, "BUCK_fail", []),
+                lambda: processor.process(
+                    self.project_root, None, "BUCK_fail", [], None
+                ),
             )
 
     def test_cannot_load_non_existent_symbol(self):
@@ -1631,7 +1661,7 @@ class BuckTest(unittest.TestCase):
         )
         with processor.with_builtins(builtins.__dict__):
             with self.assertRaises(KeyError) as e:
-                processor.process(self.project_root, None, "BUCK_fail", [])
+                processor.process(self.project_root, None, "BUCK_fail", [], None)
             self.assertEqual(e.exception.message, expected_msg)
 
     def test_cannot_load_non_existent_symbol_by_keyword(self):
@@ -1655,7 +1685,7 @@ class BuckTest(unittest.TestCase):
         )
         with processor.with_builtins(builtins.__dict__):
             with self.assertRaises(KeyError) as e:
-                processor.process(self.project_root, None, "BUCK_fail", [])
+                processor.process(self.project_root, None, "BUCK_fail", [], None)
             self.assertEqual(e.exception.message, expected_msg)
 
     def test_fail_function_throws_an_error(self):
@@ -1670,7 +1700,7 @@ class BuckTest(unittest.TestCase):
 
         with processor.with_builtins(builtins.__dict__):
             with self.assertRaisesRegexp(BuildFileFailError, "expected error"):
-                processor.process(self.project_root, None, "BUCK_fail", [])
+                processor.process(self.project_root, None, "BUCK_fail", [], None)
 
     def test_fail_function_includes_attribute_information(self):
         build_file = ProjectFile(
@@ -1682,7 +1712,7 @@ class BuckTest(unittest.TestCase):
 
         with processor.with_builtins(builtins.__dict__):
             with self.assertRaisesRegexp(BuildFileFailError, "attribute foo: error"):
-                processor.process(self.project_root, None, "BUCK_fail", [])
+                processor.process(self.project_root, None, "BUCK_fail", [], None)
 
     def test_values_from_namespaced_includes_accessible_only_via_namespace(self):
         defs_file = ProjectFile(
@@ -1699,7 +1729,7 @@ class BuckTest(unittest.TestCase):
         self.write_files(defs_file, build_file)
         processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         with processor.with_builtins(builtins.__dict__):
-            result = processor.process(self.project_root, None, "BUCK", [])
+            result = processor.process(self.project_root, None, "BUCK", [], None)
         self.assertTrue(
             [x for x in result if x.get("name", "") == "foo2"],
             "result should contain rule with name derived from a value in namespaced defs",
@@ -1718,7 +1748,9 @@ class BuckTest(unittest.TestCase):
         with processor.with_builtins(builtins.__dict__):
             self.assertRaises(
                 NameError,
-                lambda: processor.process(self.project_root, None, "BUCK_fail", []),
+                lambda: processor.process(
+                    self.project_root, None, "BUCK_fail", [], None
+                ),
             )
 
     def test_json_encoding_skips_None(self):
@@ -1875,8 +1907,8 @@ foo_rule(
         # Parse bar, which parses foo as an include def, then parse foo as a
         # build file.
         build_file_processor = self.create_build_file_processor()
-        build_file_processor.process(bar.root, bar.prefix, bar.path, [])
-        build_file_processor.process(foo.root, foo.prefix, foo.path, [])
+        build_file_processor.process(bar.root, bar.prefix, bar.path, [], None)
+        build_file_processor.process(foo.root, foo.prefix, foo.path, [], None)
 
     def test_load_with_implicit_includes(self):
         """
@@ -1903,7 +1935,28 @@ foo_rule(
             includes=[include_def2.name]
         )
         build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, []
+            build_file.root, build_file.prefix, build_file.path, [], None
+        )
+
+    def test_package_implicit_include(self):
+        load = {"load_path": "//:name.bzl", "load_symbols": {"NAME": "NAME"}}
+        contents = (
+            'load("//:get_name.bzl", "get_name")\n'
+            'implicit_package_symbol("NAME") + "__" + get_name()\n'
+        )
+        get_name = (
+            'def get_name():\n    return native.implicit_package_symbol("NAME")',
+        )
+        bzl1 = ProjectFile(
+            self.project_root, path="name.bzl", contents="NAME='some_name'"
+        )
+        bzl2 = ProjectFile(self.project_root, path="get_name.bzl", contents=get_name)
+        build_file = ProjectFile(self.project_root, path="BUCK", contents=contents)
+
+        self.write_files(bzl1, bzl2, build_file)
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.process(
+            build_file.root, build_file.prefix, build_file.path, [], load
         )
 
 
