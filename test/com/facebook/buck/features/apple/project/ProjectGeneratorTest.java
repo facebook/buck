@@ -2071,7 +2071,7 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setConfigs(ImmutableSortedMap.of("RandomConfig", ImmutableMap.of()))
             .setSrcs(
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(FakeSourcePath.of("foo.m"), ImmutableList.of("-foo")),
@@ -2089,7 +2089,7 @@ public class ProjectGeneratorTest {
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
-    assertHasConfigurations(target, "Debug");
+    assertHasConfigurations(target, "RandomConfig");
     assertEquals("Should have exact number of build phases", 1, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,
