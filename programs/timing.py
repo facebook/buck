@@ -29,7 +29,7 @@ def set_posix_time_nanos(clock_gettime, clock_id):
     def _monotonic_time_nanos_posix():
         t = struct_timespec()
         clock_gettime(clock_id, ctypes.byref(t))
-        return t.tv_sec * NSEC_PER_SEC + t.tv_nsec
+        return int(t.tv_sec * NSEC_PER_SEC + t.tv_nsec)
 
     monotonic_time_nanos = _monotonic_time_nanos_posix
 
@@ -59,7 +59,7 @@ elif platform.system() == "Darwin":
     mach_absolute_time.restype = ctypes.c_uint64
 
     def _monotonic_time_nanos_darwin():
-        return (mach_absolute_time() * mach_ti.numer) / mach_ti.denom
+        return int((mach_absolute_time() * mach_ti.numer) / mach_ti.denom)
 
     monotonic_time_nanos = _monotonic_time_nanos_darwin
 elif platform.system() == "Windows":
@@ -70,7 +70,7 @@ elif platform.system() == "Windows":
     def _monotonic_time_nanos_windows():
         perf_counter = ctypes.c_uint64()
         ctypes.windll.kernel32.QueryPerformanceCounter(ctypes.byref(perf_counter))
-        return perf_counter.value * NSEC_PER_SEC / perf_frequency.value
+        return int(perf_counter.value * NSEC_PER_SEC / perf_frequency.value)
 
     monotonic_time_nanos = _monotonic_time_nanos_windows
 elif sys.platform == "cygwin":
@@ -81,7 +81,7 @@ elif sys.platform == "cygwin":
     def _monotonic_time_nanos_cygwin():
         perf_counter = ctypes.c_uint64()
         k32.QueryPerformanceCounter(ctypes.byref(perf_counter))
-        return perf_counter.value * NSEC_PER_SEC / perf_frequency.value
+        return int(perf_counter.value * NSEC_PER_SEC / perf_frequency.value)
 
     monotonic_time_nanos = _monotonic_time_nanos_cygwin
 elif platform.system() == "FreeBSD":
