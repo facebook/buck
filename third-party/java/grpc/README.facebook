@@ -1,3 +1,9 @@
 This is the grpc open-source library.
 
 Acquired from the Maven central repository (search for io.grpc).
+
+URL: https://mvnrepository.com/artifact/io.grpc
+
+Make sure that netty-tcnative and netty-handler version match,
+see https://github.com/grpc/grpc-java/blob/master/SECURITY.md#netty
+for table with matching version pairs.

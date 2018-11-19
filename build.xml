@@ -160,10 +160,13 @@
     <include name="grpc/grpc-context-1.11.0.jar" />
     <include name="grpc/grpc-core-1.10.1.jar" />
     <include name="grpc/grpc-netty-1.10.1.jar" />
+    <include name="grpc/grpc-netty-shaded-1.10.1.jar" />
     <include name="grpc/grpc-protobuf-1.10.1.jar" />
     <include name="grpc/grpc-protobuf-lite-1.11.0.jar" />
     <include name="grpc/grpc-stub-1.10.1.jar" />
     <include name="netty/netty-all-4.1.24.Final.jar" />
+    <include name="netty-handler/netty-handler-4.0.17.Final.jar" />
+    <include name="netty-tcnative/netty-tcnative-boringssl-static-2.0.7.Final.jar" />
     <include name="gson/gson-2.8.2.jar" />
     <include name="guice/guice-3.0.jar" />
     <include name="guice/guice-assistedinject-3.0.jar" />

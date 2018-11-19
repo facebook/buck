@@ -64,7 +64,9 @@ java_immutables_library(
         "//third-party/java/jsr:jsr305",
         # Nothing in here explicitly uses netty, but grpc picks it up dynamically when trying to
         # connect to a remote server.
-        "//third-party/java/grpc:grpc-netty",
+        "//third-party/java/grpc:grpc-netty-shaded",
+        "//third-party/java/netty-handler:netty-handler",
+        "//third-party/java/netty-tcnative:netty-tcnative",
         "//third-party/java/guava:guava",
     ],
 )

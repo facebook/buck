@@ -24,6 +24,8 @@ import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -60,6 +62,37 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public int getCasPort() {
     return getValueWithFallback("cas_port").map(Integer::parseInt).orElse(DEFAULT_CAS_PORT);
+  }
+
+  public boolean getInsecure() {
+    return getDelegate().getBooleanValue(SECTION, "insecure", true);
+  }
+
+  public boolean getCasInsecure() {
+    return getDelegate().getBooleanValue(SECTION, "cas_insecure", true);
+  }
+
+  public Optional<String> getRemoteHostSNIName() {
+    return getDelegate().getValue(SECTION, "remote_host_sni_name");
+  }
+
+  public Optional<String> getCasHostSNIName() {
+    return getDelegate().getValue(SECTION, "cas_host_sni_name");
+  }
+
+  /** client TLS certificate file in PEM format */
+  public Optional<Path> getCertFile() {
+    return getFileOption("cert");
+  }
+
+  /** client TLS private key in PEM format */
+  public Optional<Path> getKeyFile() {
+    return getFileOption("key");
+  }
+
+  /** file containing all TLS authorities to verify server certificate with (PEM format) */
+  public Optional<Path> getCAsFile() {
+    return getFileOption("ca");
   }
 
   public RemoteExecutionType getType() {
@@ -117,6 +150,10 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
           SECTION, key, OLD_SECTION, key);
     }
     return value;
+  }
+
+  public Optional<Path> getFileOption(String key) {
+    return getDelegate().getValue(SECTION, key).map(Paths::get);
   }
 
   /** Whether SuperConsole output of Remote Execution information is enabled. */

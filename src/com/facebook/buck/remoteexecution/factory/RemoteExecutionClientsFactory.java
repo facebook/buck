@@ -54,6 +54,13 @@ public class RemoteExecutionClientsFactory {
             remoteExecutionConfig.getRemotePort(),
             remoteExecutionConfig.getCasHost(),
             remoteExecutionConfig.getCasPort(),
+            remoteExecutionConfig.getInsecure(),
+            remoteExecutionConfig.getCasInsecure(),
+            remoteExecutionConfig.getRemoteHostSNIName(),
+            remoteExecutionConfig.getCasHostSNIName(),
+            remoteExecutionConfig.getCertFile(),
+            remoteExecutionConfig.getKeyFile(),
+            remoteExecutionConfig.getCAsFile(),
             traceInfoProvider,
             eventBus);
       case DEBUG_GRPC_IN_PROCESS:

@@ -27,11 +27,19 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.internal.GrpcUtil;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NegotiationType;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
+import javax.net.ssl.SSLException;
 
 /** Factory for creating grpc-based strategies. */
 public class GrpcExecutionFactory {
+  public static final int MAX_INBOUND_MESSAGE_SIZE = 500 * 1024 * 1024;
   /**
    * The in-process strategy starts up a grpc remote execution service in process and connects to it
    * directly.
@@ -74,21 +82,76 @@ public class GrpcExecutionFactory {
       int executionEnginePort,
       String casHost,
       int casPort,
+      boolean insecure,
+      boolean casInsecure,
+      Optional<String> executionEngineHostSNIName,
+      Optional<String> casHostSNIName,
+      Optional<Path> certPath,
+      Optional<Path> keyPath,
+      Optional<Path> caPath,
       Optional<TraceInfoProvider> traceInfoProvider,
-      BuckEventBus buckEventBus) {
-    ManagedChannel executionEngineChannel =
-        ManagedChannelBuilder.forAddress(executionEngineHost, executionEnginePort)
-            .usePlaintext(true)
-            .maxInboundMessageSize(500 * 1024 * 1024)
-            .build();
+      BuckEventBus buckEventBus)
+      throws SSLException {
 
-    ManagedChannel casChannel =
-        ManagedChannelBuilder.forAddress(casHost, casPort)
-            .usePlaintext(true)
-            .maxInboundMessageSize(500 * 1024 * 1024)
-            .build();
+    ManagedChannel executionEngineChannel;
+    if (insecure) {
+      executionEngineChannel = createInsecureChannel(executionEngineHost, executionEnginePort);
+    } else {
+      executionEngineChannel =
+          createSecureChannel(
+              executionEngineHost,
+              executionEnginePort,
+              executionEngineHostSNIName,
+              certPath,
+              keyPath,
+              caPath);
+    }
+
+    ManagedChannel casChannel;
+    if (casInsecure) {
+      casChannel = createInsecureChannel(casHost, casPort);
+    } else {
+      casChannel = createSecureChannel(casHost, casPort, casHostSNIName, certPath, keyPath, caPath);
+    }
 
     return new GrpcRemoteExecutionClients(
         "buck", executionEngineChannel, casChannel, traceInfoProvider, buckEventBus);
+  }
+
+  private static ManagedChannel createInsecureChannel(String host, int port) {
+    return ManagedChannelBuilder.forAddress(host, port)
+        .maxInboundMessageSize(MAX_INBOUND_MESSAGE_SIZE)
+        .usePlaintext(true)
+        .build();
+  }
+
+  private static ManagedChannel createSecureChannel(
+      String host,
+      int port,
+      Optional<String> hostSNIName,
+      Optional<Path> certPath,
+      Optional<Path> keyPath,
+      Optional<Path> caPath)
+      throws SSLException {
+
+    SslContextBuilder contextBuilder = GrpcSslContexts.forClient();
+    if (certPath.isPresent() && keyPath.isPresent()) {
+      contextBuilder.keyManager(certPath.get().toFile(), keyPath.get().toFile());
+    }
+    if (caPath.isPresent()) {
+      contextBuilder.trustManager(caPath.get().toFile());
+    }
+
+    NettyChannelBuilder channelBuilder =
+        NettyChannelBuilder.forAddress(host, port)
+            .maxInboundMessageSize(MAX_INBOUND_MESSAGE_SIZE)
+            .sslContext(contextBuilder.build())
+            .negotiationType(NegotiationType.TLS);
+
+    if (hostSNIName.isPresent()) {
+      channelBuilder.overrideAuthority(GrpcUtil.authorityFromHostAndPort(hostSNIName.get(), port));
+    }
+
+    return channelBuilder.build();
   }
 }

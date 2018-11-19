@@ -1,0 +1,5 @@
+This is subset of netty required to make io.grpc-netty-shaded work
+
+Acquired from the Maven central repository (search for io.netty).
+
+URL: http://central.maven.org/maven2/io/netty/netty-handler/4.0.17.Final/
