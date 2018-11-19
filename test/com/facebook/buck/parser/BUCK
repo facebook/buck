@@ -248,6 +248,7 @@ java_test(
         "//src/com/facebook/buck/parser/api:api",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/parser/function:function",
+        "//src/com/facebook/buck/parser/implicit:implicit",
         "//src/com/facebook/buck/parser/options:options",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules/args:args",

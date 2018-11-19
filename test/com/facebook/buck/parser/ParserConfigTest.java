@@ -30,6 +30,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanWatcher.CursorType;
+import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -220,5 +221,29 @@ public class ParserConfigTest {
         "Should return the configured string",
         "foobar:spamham",
         parserConfig.getPythonModuleSearchPath().orElse("<not set>"));
+  }
+
+  @Test
+  public void getImplicitIncludes() {
+    ImmutableMap<String, ImplicitInclude> actual =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "buildfile",
+                    ImmutableMap.of(
+                        "package_includes",
+                        "=>includes.bzl::get_name::get_value,foo/bar=>foo/bar/includes.bzl::get_name::get_value")))
+            .build()
+            .getView(ParserConfig.class)
+            .getPackageImplicitIncludes();
+
+    ImmutableMap<String, ImplicitInclude> expected =
+        ImmutableMap.of(
+            "",
+            ImplicitInclude.fromConfigurationString("includes.bzl::get_name::get_value"),
+            "foo/bar",
+            ImplicitInclude.fromConfigurationString("foo/bar/includes.bzl::get_name::get_value"));
+
+    assertEquals(expected, actual);
   }
 }
