@@ -24,6 +24,8 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.implicit.ImplicitInclude;
+import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -38,6 +40,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.devtools.build.lib.cmdline.Label;
@@ -60,8 +63,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -87,6 +92,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final GlobberFactory globberFactory;
   private final LoadingCache<LoadImport, ExtensionData> extensionDataCache;
   private final LoadingCache<LoadImport, IncludesData> includesDataCache;
+  private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
 
   private SkylarkProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
@@ -121,6 +127,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
                     return loadInclude(loadImport);
                   }
                 });
+
+    this.packageImplicitIncludeFinder =
+        PackageImplicitIncludesFinder.fromConfiguration(options.getPackageImplicitIncludes());
   }
 
   /** Create an instance of Skylark project build file parser using provided options. */
@@ -169,24 +178,56 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     return parseResult;
   }
 
+  private ImplicitlyLoadedExtension loadImplicitExtension(String basePath, Label containingLabel)
+      throws IOException, InterruptedException {
+    Optional<ImplicitInclude> implicitInclude =
+        packageImplicitIncludeFinder.findIncludeForBuildFile(Paths.get(basePath));
+    if (!implicitInclude.isPresent()) {
+      return ImplicitlyLoadedExtension.empty();
+    }
+
+    // Only export requested symbols, and ensure that all requsted symbols are present.
+    ExtensionData data =
+        loadExtension(LoadImport.of(containingLabel, implicitInclude.get().getLoadPath()));
+    ImmutableMap<String, Object> symbols = data.getExtension().getBindings();
+    ImmutableMap<String, String> expectedSymbols = implicitInclude.get().getSymbols();
+    Builder<String, Object> loaded = ImmutableMap.builderWithExpectedSize(expectedSymbols.size());
+    for (Entry<String, String> kvp : expectedSymbols.entrySet()) {
+      Object symbol = symbols.get(kvp.getValue());
+      if (symbol == null) {
+        throw BuildFileParseException.createForUnknownParseError(
+            String.format(
+                "Could not find symbol '%s' in implicitly loaded extension '%s'",
+                kvp.getValue(), implicitInclude.get().getLoadPath().getImportString()));
+      }
+      loaded.put(kvp.getKey(), symbol);
+    }
+    return ImplicitlyLoadedExtension.of(data, loaded.build());
+  }
+
   /** @return The parsed build rules defined in {@code buildFile}. */
   private ParseResult parseBuildRules(Path buildFile)
       throws IOException, BuildFileParseException, InterruptedException {
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(buildFile.toString());
 
-    BuildFileAST buildFileAst = parseBuildFile(buildFile, buildFilePath);
     String basePath = getBasePath(buildFile);
+    Label containingLabel = createContainingLabel(basePath);
+    ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, containingLabel);
+
+    BuildFileAST buildFileAst = parseBuildFile(buildFile, buildFilePath);
     CachingGlobber globber = newGlobber(buildFile);
-    PackageContext packageContext = createPackageContext(basePath, globber);
+    PackageContext packageContext =
+        createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
     ParseContext parseContext = new ParseContext(packageContext);
     try (Mutability mutability = Mutability.create("parsing " + buildFile)) {
       EnvironmentData envData =
           createBuildFileEvaluationEnvironment(
               buildFilePath,
-              createContainingLabel(basePath),
+              containingLabel,
               buildFileAst,
               mutability,
-              parseContext);
+              parseContext,
+              implicitLoad.getExtensionData());
       boolean exec = buildFileAst.exec(envData.getEnvironment(), eventHandler);
       if (!exec) {
         throw BuildFileParseException.createForUnknownParseError(
@@ -243,11 +284,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       Label containingLabel,
       BuildFileAST buildFileAst,
       Mutability mutability,
-      ParseContext parseContext)
+      ParseContext parseContext,
+      @Nullable ExtensionData implicitLoadExtensionData)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableList<ExtensionData> dependencies =
         loadExtensions(containingLabel, buildFileAst.getImports());
-    ImmutableMap<String, Environment.Extension> importMap = toImportMap(dependencies);
+    ImmutableMap<String, Environment.Extension> importMap =
+        toImportMap(dependencies, implicitLoadExtensionData);
     Environment env =
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
@@ -259,18 +302,21 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
     parseContext.setup(env);
 
-    return EnvironmentData.of(env, toLoadedPaths(buildFilePath, dependencies));
+    return EnvironmentData.of(
+        env, toLoadedPaths(buildFilePath, dependencies, implicitLoadExtensionData));
   }
 
   @Nonnull
-  private PackageContext createPackageContext(String basePath, Globber globber) {
+  private PackageContext createPackageContext(
+      String basePath, Globber globber, ImmutableMap<String, Object> implicitlyLoadedSymbols) {
     return PackageContext.of(
         globber,
         options.getRawConfig(),
         PackageIdentifier.create(
             RepositoryName.createFromValidStrippedName(options.getCellName()),
             PathFragment.create(basePath)),
-        eventHandler);
+        eventHandler,
+        implicitlyLoadedSymbols);
   }
 
   private Label createContainingLabel(String basePath) {
@@ -289,9 +335,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private ImmutableList<String> toLoadedPaths(
       com.google.devtools.build.lib.vfs.Path containingPath,
-      ImmutableList<ExtensionData> dependencies) {
+      ImmutableList<ExtensionData> dependencies,
+      @Nullable ExtensionData implicitLoadExtensionData) {
     // expected size is used to reduce the number of unnecessary resize invocations
     int expectedSize = 1;
+    if (implicitLoadExtensionData != null) {
+      expectedSize += implicitLoadExtensionData.getLoadTransitiveClosure().size();
+    }
     for (int i = 0; i < dependencies.size(); ++i) {
       expectedSize += dependencies.get(i).getLoadTransitiveClosure().size();
     }
@@ -301,6 +351,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     loadedPathsBuilder.add(containingPath.toString());
     for (int i = 0; i < dependencies.size(); ++i) {
       loadedPathsBuilder.addAll(dependencies.get(i).getLoadTransitiveClosure());
+    }
+    if (implicitLoadExtensionData != null) {
+      loadedPathsBuilder.addAll(implicitLoadExtensionData.getLoadTransitiveClosure());
     }
     return loadedPathsBuilder.build();
   }
@@ -335,7 +388,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             : loadIncludes(label, fileAst.getImports());
 
     return IncludesData.of(
-        filePath, dependencies, toIncludedPaths(filePath.toString(), dependencies));
+        filePath, dependencies, toIncludedPaths(filePath.toString(), dependencies, null));
   }
 
   /** Collects all the included files identified by corresponding {@link SkylarkImport}s. */
@@ -361,9 +414,14 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   private ImmutableList<String> toIncludedPaths(
-      String containingPath, ImmutableList<IncludesData> dependencies) {
+      String containingPath,
+      ImmutableList<IncludesData> dependencies,
+      @Nullable ExtensionData implicitLoadExtensionData) {
     // expected size is used to reduce the number of unnecessary resize invocations
     int expectedSize = 1;
+    if (implicitLoadExtensionData != null) {
+      implicitLoadExtensionData.getLoadTransitiveClosure().size();
+    }
     for (int i = 0; i < dependencies.size(); ++i) {
       expectedSize += dependencies.get(i).getLoadTransitiveClosure().size();
     }
@@ -373,6 +431,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     // for loop is used instead of foreach to avoid iterator overhead, since it's a hot spot
     for (int i = 0; i < dependencies.size(); ++i) {
       includedPathsBuilder.addAll(dependencies.get(i).getLoadTransitiveClosure());
+    }
+    if (implicitLoadExtensionData != null) {
+      includedPathsBuilder.addAll(implicitLoadExtensionData.getLoadTransitiveClosure());
     }
     return includedPathsBuilder.build();
   }
@@ -429,13 +490,19 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    *     Environment.Extension} for provided {@code dependencies}.
    */
   private ImmutableMap<String, Environment.Extension> toImportMap(
-      ImmutableList<ExtensionData> dependencies) {
+      ImmutableList<ExtensionData> dependencies,
+      @Nullable ExtensionData implicitLoadExtensionData) {
     ImmutableMap.Builder<String, Environment.Extension> builder =
-        ImmutableMap.builderWithExpectedSize(dependencies.size());
+        ImmutableMap.builderWithExpectedSize(
+            dependencies.size() + (implicitLoadExtensionData == null ? 0 : 1));
     // foreach is not used to avoid iterator overhead
     for (int i = 0; i < dependencies.size(); ++i) {
       ExtensionData extensionData = dependencies.get(i);
       builder.put(extensionData.getImportString(), extensionData.getExtension());
+    }
+    if (implicitLoadExtensionData != null) {
+      builder.put(
+          implicitLoadExtensionData.getImportString(), implicitLoadExtensionData.getExtension());
     }
     return builder.build();
   }
@@ -473,7 +540,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               .setGlobals(buckGlobals.getBuckLoadContextGlobals());
       if (!extensionAst.getImports().isEmpty()) {
         dependencies = loadExtensions(label, extensionAst.getImports());
-        envBuilder.setImportedExtensions(toImportMap(dependencies));
+        envBuilder.setImportedExtensions(toImportMap(dependencies, null));
       }
       Environment extensionEnv =
           envBuilder.setSemantics(SkylarkSemantics.DEFAULT_SEMANTICS).build();
@@ -490,7 +557,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         extensionPath,
         dependencies,
         loadImport.getImport().getImportString(),
-        toLoadedPaths(extensionPath, dependencies));
+        toLoadedPaths(extensionPath, dependencies, null));
   }
 
   /**
@@ -549,14 +616,15 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   public ImmutableList<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(buildFile.toString());
-    BuildFileAST buildFileAst = parseBuildFile(buildFile, buildFilePath);
 
     String basePath = getBasePath(buildFile);
     Label containingLabel = createContainingLabel(basePath);
+    ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, containingLabel);
+    BuildFileAST buildFileAst = parseBuildFile(buildFile, buildFilePath);
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, buildFileAst.getImports());
 
-    return toIncludedPaths(buildFile.toString(), dependencies);
+    return toIncludedPaths(buildFile.toString(), dependencies, implicitLoad.getExtensionData());
   }
 
   @Override
@@ -601,6 +669,26 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     /** Returns a label of current import file. */
     Label getLabel() {
       return getImport().getLabel(getContainingLabel());
+    }
+  }
+
+  /**
+   * A value object for information about implicit loads. This allows us to both validate implicit
+   * import information, and return some additional information needed to setup build file
+   * environments in one swoop.
+   */
+  @Value.Immutable(builder = false, copy = false)
+  @BuckStyleImmutable
+  abstract static class AbstractImplicitlyLoadedExtension {
+    @Value.Parameter
+    abstract @Nullable ExtensionData getExtensionData();
+
+    @Value.Parameter
+    abstract ImmutableMap<String, Object> getLoadedSymbols();
+
+    @Value.Lazy
+    static ImplicitlyLoadedExtension empty() {
+      return ImplicitlyLoadedExtension.of(null, ImmutableMap.of());
     }
   }
 }

@@ -97,7 +97,8 @@ public class SkylarkNativeModuleTest {
                 NativeGlobber.create(root),
                 rawConfig,
                 PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("my/package")),
-                eventHandler))
+                eventHandler,
+                ImmutableMap.of()))
         .setup(env);
     env.setup(
         "package_name",

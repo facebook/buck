@@ -45,4 +45,8 @@ abstract class AbstractPackageContext {
   /** @return The event handler for reporting events during package parsing. */
   @Value.Parameter
   public abstract EventHandler getEventHandler();
+
+  /** Gets objects that were implciitly loaded */
+  @Value.Parameter
+  public abstract ImmutableMap<String, Object> getImplicitlyLoadedSymbols();
 }

@@ -170,6 +170,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .setDisableImplicitNativeRules(parserConfig.getDisableImplicitNativeRules())
             .setWarnAboutDeprecatedSyntax(parserConfig.isWarnAboutDeprecatedSyntax())
+            .setPackageImplicitIncludes(parserConfig.getPackageImplicitIncludes())
             .build();
     return EventReportingProjectBuildFileParser.of(
         createProjectBuildFileParser(

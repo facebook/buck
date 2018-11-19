@@ -185,7 +185,8 @@ public class GlobTest {
                 NativeGlobber.create(root),
                 ImmutableMap.of(),
                 PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")),
-                eventHandler))
+                eventHandler,
+                ImmutableMap.of()))
         .setup(env);
     env.setup(
         "glob", FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, "glob"));

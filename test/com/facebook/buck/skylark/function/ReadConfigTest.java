@@ -110,7 +110,8 @@ public class ReadConfigTest {
                 NativeGlobber.create(root),
                 rawConfig,
                 PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")),
-                eventHandler));
+                eventHandler,
+                ImmutableMap.of()));
     parseContext.setup(env);
     env.setup(
         "read_config",

@@ -270,5 +270,35 @@ public class SkylarkNativeModule {
     return HostInfo.HOST_INFO;
   }
 
+  @SkylarkCallable(
+      name = "implicit_package_symbol",
+      doc =
+          "Gives access to a symbol that has been implicitly loaded for the package of the build "
+              + "file that is currently being evaluated. If the symbol was not present, "
+              + "`default` will be returned.",
+      documented = true,
+      useAst = true,
+      useEnvironment = true,
+      allowReturnNones = true,
+      parameters = {
+        @Param(
+            name = "symbol",
+            type = String.class,
+            doc = "the symbol from implicitly loaded files to return."),
+        @Param(
+            name = "default",
+            type = Object.class,
+            defaultValue = "None",
+            doc = "if no implicit symbol with the requested name exists, return this value."),
+      })
+  public @Nullable Object implicitPackageSymbol(
+      String symbol, Object defaultValue, FuncallExpression ast, Environment env)
+      throws EvalException {
+    return ParseContext.getParseContext(env, ast)
+        .getPackageContext()
+        .getImplicitlyLoadedSymbols()
+        .getOrDefault(symbol, defaultValue);
+  }
+
   public static final SkylarkNativeModule NATIVE_MODULE = new SkylarkNativeModule();
 }
