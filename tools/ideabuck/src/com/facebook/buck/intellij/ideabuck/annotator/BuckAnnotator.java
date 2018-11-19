@@ -221,18 +221,23 @@ public class BuckAnnotator implements Annotator {
     return true;
   }
 
-  /** Annotates targets that refer to this file, as in ":other-target" */
+  /** Annotates targets that refer to files relative to this file. */
   private boolean annotateLocalFile(
       BuckSingleExpression targetExpression,
       String targetValue,
       AnnotationHolder annotationHolder) {
-    VirtualFile sourceFile = targetExpression.getContainingFile().getVirtualFile();
-    VirtualFile targetFile = sourceFile.getParent().findFileByRelativePath(targetValue);
-    if (targetFile == null || !targetFile.exists()) {
+    Optional<VirtualFile> targetFile =
+        Optional.of(targetExpression)
+            .map(PsiElement::getContainingFile)
+            .map(PsiFile::getVirtualFile)
+            .map(VirtualFile::getParent)
+            .map(dir -> dir.findFileByRelativePath(targetValue))
+            .filter(VirtualFile::exists);
+    if (!targetFile.isPresent()) {
       return false;
     }
     Annotation annotation =
-        annotationHolder.createInfoAnnotation(targetExpression, targetFile.getPath());
+        annotationHolder.createInfoAnnotation(targetExpression, targetFile.get().getPath());
     annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_FILE_NAME);
     return true;
   }
