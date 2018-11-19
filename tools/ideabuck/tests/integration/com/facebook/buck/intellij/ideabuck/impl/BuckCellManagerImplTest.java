@@ -17,7 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.impl;
 
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
-import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.impl.BuckCellManagerImpl.CellImpl;
 import com.intellij.openapi.components.PathMacroManager;
 import com.intellij.openapi.project.Project;
@@ -38,7 +38,7 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
 
   private VirtualFileManager virtualFileManager;
   private PathMacroManager pathMacroManager;
-  private BuckProjectSettingsProvider buckProjectSettingsProvider;
+  private BuckCellSettingsProvider buckCellSettingsProvider;
 
   @Override
   public void setUp() throws Exception {
@@ -46,7 +46,7 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
     Project project = getProject();
     virtualFileManager = VirtualFileManager.getInstance();
     pathMacroManager = PathMacroManager.getInstance(project);
-    buckProjectSettingsProvider = BuckProjectSettingsProvider.getInstance(project);
+    buckCellSettingsProvider = BuckCellSettingsProvider.getInstance(project);
   }
 
   private Path createFile(Path path) {
@@ -81,7 +81,7 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
   @Nonnull
   private BuckCellManagerImpl createBuckCellManager() {
     return new BuckCellManagerImpl(
-        getProject(), buckProjectSettingsProvider, virtualFileManager, pathMacroManager);
+        getProject(), buckCellSettingsProvider, virtualFileManager, pathMacroManager);
   }
 
   public void testGetNamedDefaultCell() {
@@ -90,7 +90,7 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
     Path fooPath = Paths.get(fooRoot.getPath());
     assertNotNull(fooRoot);
     BuckCell barCell = createCell("bar", "$PROJECT_DIR$/bar").withBuildFileName("BARBUCK");
-    buckProjectSettingsProvider.setCells(Arrays.asList(fooCell, barCell));
+    buckCellSettingsProvider.setCells(Arrays.asList(fooCell, barCell));
 
     BuckCellManagerImpl buckCellManager = createBuckCellManager();
     CellImpl defaultCell = buckCellManager.getDefaultCell().orElse(null);
@@ -106,7 +106,7 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
 
   public void testGetUnnamedDefaultCell() {
     BuckCell defaultBuckCell = createCell("", "$PROJECT_DIR$");
-    buckProjectSettingsProvider.setCells(Collections.singletonList(defaultBuckCell));
+    buckCellSettingsProvider.setCells(Collections.singletonList(defaultBuckCell));
 
     BuckCellManagerImpl buckCellManager = createBuckCellManager();
     CellImpl defaultCell = buckCellManager.getDefaultCell().orElse(null);
@@ -118,7 +118,7 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
   public void testFindCellByName() {
     BuckCell fooBuckCell = createCell("foo", "$PROJECT_DIR$/foo");
     BuckCell barBuckCell = createCell("bar", "$PROJECT_DIR$/bar");
-    buckProjectSettingsProvider.setCells(Arrays.asList(fooBuckCell, barBuckCell));
+    buckCellSettingsProvider.setCells(Arrays.asList(fooBuckCell, barBuckCell));
 
     BuckCellManagerImpl buckCellManager = createBuckCellManager();
 
@@ -133,7 +133,7 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
     VirtualFile projectDir = getProject().getBaseDir();
     BuckCell fooCell = createCell("foo", "$PROJECT_DIR$/foo");
     BuckCell barCell = createCell("bar", "$PROJECT_DIR$/bar");
-    buckProjectSettingsProvider.setCells(Arrays.asList(fooCell, barCell));
+    buckCellSettingsProvider.setCells(Arrays.asList(fooCell, barCell));
 
     VirtualFile fileInFooCell = createVirtualFile(projectDir, "foo/eff/oh/oh");
     VirtualFile fileInBarCell = createVirtualFile(projectDir, "bar/bee/ay/ar");
@@ -154,7 +154,7 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
     Path projectDir = Paths.get(getProject().getBasePath());
     BuckCell fooCell = createCell("foo", "$PROJECT_DIR$/foo");
     BuckCell barCell = createCell("bar", "$PROJECT_DIR$/bar");
-    buckProjectSettingsProvider.setCells(Arrays.asList(fooCell, barCell));
+    buckCellSettingsProvider.setCells(Arrays.asList(fooCell, barCell));
 
     Path pathInFooCell = createFile(projectDir.resolve("foo/eff/oh/oh"));
     Path pathInBarCell = createFile(projectDir.resolve("bar/bee/ay/ar"));
@@ -176,7 +176,7 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
     BuckCell outerCell = createCell("outer", "$PROJECT_DIR$/one");
     BuckCell middleCell = createCell("middle", "$PROJECT_DIR$/one/two");
     BuckCell innerCell = createCell("inner", "$PROJECT_DIR$/one/two/three");
-    buckProjectSettingsProvider.setCells(Arrays.asList(middleCell, innerCell, outerCell));
+    buckCellSettingsProvider.setCells(Arrays.asList(middleCell, innerCell, outerCell));
 
     Path pathInInnerCell = createFile(projectDir.resolve("one/two/three/x/y/z"));
     Path pathInMiddleCell = createFile(projectDir.resolve("one/two/i/c/u"));

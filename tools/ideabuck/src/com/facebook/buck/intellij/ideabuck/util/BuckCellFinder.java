@@ -17,7 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.util;
 
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
-import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Ordering;
 import com.intellij.openapi.components.AbstractProjectComponent;
@@ -39,23 +39,23 @@ public class BuckCellFinder extends AbstractProjectComponent {
     return project.getComponent(BuckCellFinder.class);
   }
 
-  private BuckProjectSettingsProvider projectSettingsProvider;
+  private BuckCellSettingsProvider buckCellSettingsProvider;
   private Function<String, String> pathMacroExpander;
 
   public BuckCellFinder(
       Project project,
-      BuckProjectSettingsProvider buckProjectSettingsProvider,
+      BuckCellSettingsProvider buckCellSettingsProvider,
       PathMacroManager pathMacroManager) {
-    this(project, buckProjectSettingsProvider, pathMacroManager::expandPath);
+    this(project, buckCellSettingsProvider, pathMacroManager::expandPath);
   }
 
   @VisibleForTesting
   BuckCellFinder(
       Project project,
-      BuckProjectSettingsProvider projectSettingsProvider,
+      BuckCellSettingsProvider buckCellSettingsProvider,
       Function<String, String> pathMacroExpander) {
     super(project);
-    this.projectSettingsProvider = projectSettingsProvider;
+    this.buckCellSettingsProvider = buckCellSettingsProvider;
     this.pathMacroExpander = pathMacroExpander;
   }
 
@@ -64,8 +64,9 @@ public class BuckCellFinder extends AbstractProjectComponent {
    * default cell, regardless of what it is called.
    */
   public Optional<BuckCell> findBuckCellByName(String name) {
-    return projectSettingsProvider
+    return buckCellSettingsProvider
         .getCells()
+        .stream()
         .filter(c -> "".equals(name) || c.getName().equals(name))
         .findFirst();
   }
@@ -91,8 +92,9 @@ public class BuckCellFinder extends AbstractProjectComponent {
 
   /** Returns the {@link BuckCell} from the given canonical path. */
   public Optional<BuckCell> findBuckCellFromCanonicalPath(String canonicalPath) {
-    return projectSettingsProvider
+    return buckCellSettingsProvider
         .getCells()
+        .stream()
         .filter(
             cell -> {
               String root = pathMacroExpander.apply(cell.getRoot());

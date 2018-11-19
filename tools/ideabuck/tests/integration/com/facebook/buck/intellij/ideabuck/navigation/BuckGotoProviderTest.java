@@ -18,7 +18,7 @@ package com.facebook.buck.intellij.ideabuck.navigation;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
-import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.endtoend.BuckTestCase;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
@@ -49,7 +49,8 @@ public class BuckGotoProviderTest extends BuckTestCase {
   public void setUp() throws Exception {
     super.setUp();
     Project project = super.getProject();
-    BuckProjectSettingsProvider settingsProvider = BuckProjectSettingsProvider.getInstance(project);
+    BuckCellSettingsProvider buckCellSettingsProvider =
+        BuckCellSettingsProvider.getInstance(project);
 
     tempFiles = new TempFiles(new ArrayList<>());
     mainCellRoot = tempFiles.createTempVDir("main");
@@ -57,7 +58,7 @@ public class BuckGotoProviderTest extends BuckTestCase {
 
     BuckCell mainCell = new BuckCell().withName("main").withRoot(mainCellRoot.getPath());
     BuckCell otherCell = new BuckCell().withName("other").withRoot(otherCellRoot.getPath());
-    settingsProvider.setCells(Arrays.asList(mainCell, otherCell));
+    buckCellSettingsProvider.setCells(Arrays.asList(mainCell, otherCell));
 
     buckGotoProvider = new BuckGotoProvider();
   }

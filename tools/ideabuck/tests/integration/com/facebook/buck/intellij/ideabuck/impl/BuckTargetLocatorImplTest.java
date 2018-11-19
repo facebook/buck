@@ -20,7 +20,7 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
-import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.PlatformTestCase;
@@ -28,10 +28,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.gradle.internal.impldep.com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,7 +39,7 @@ import org.jetbrains.annotations.Nullable;
 public class BuckTargetLocatorImplTest extends PlatformTestCase {
 
   private Project project;
-  private BuckProjectSettingsProvider buckProjectSettingsProvider;
+  private BuckCellSettingsProvider buckCellSettingsProvider;
   private BuckCell defaultCell;
   private BuckTargetLocator buckTargetLocator;
   private VirtualFile tempDir;
@@ -49,7 +49,7 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
     super.setUp();
     tempDir = getTempDir().createTempVDir();
     project = getProject();
-    buckProjectSettingsProvider = BuckProjectSettingsProvider.getInstance(project);
+    buckCellSettingsProvider = BuckCellSettingsProvider.getInstance(project);
     defaultCell = setDefaultCell(null, null, null);
     buckTargetLocator = BuckTargetLocator.getInstance(project);
   }
@@ -85,16 +85,15 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
   public BuckCell setDefaultCell(
       @Nullable String name, @Nullable String tempRelativePath, String buildfileName) {
     BuckCell cell = createCell(name, tempRelativePath, buildfileName);
-    buckProjectSettingsProvider.setCells(Collections.singletonList(cell));
+    buckCellSettingsProvider.setCells(Collections.singletonList(cell));
     return cell;
   }
 
   public BuckCell addCell(String name, String tempRelativePath, String buildfileName) {
     BuckCell cell = createCell(name, tempRelativePath, buildfileName);
-    List<BuckCell> cells = new ArrayList<>();
-    buckProjectSettingsProvider.getCells().forEach(cells::add);
+    List<BuckCell> cells = Lists.newArrayList(buckCellSettingsProvider.getCells());
     cells.add(cell);
-    buckProjectSettingsProvider.setCells(cells);
+    buckCellSettingsProvider.setCells(cells);
     return cell;
   }
 
