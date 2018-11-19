@@ -37,6 +37,7 @@ import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Test;
@@ -56,7 +58,11 @@ public class RawTargetNodeToTargetNodeFactoryTest {
   public void testTargetNodeCreatedWithAttributes() {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//a/b:c");
-    Cell cell = new TestCellBuilder().build();
+    Cell cell =
+        new TestCellBuilder()
+            .setFilesystem(
+                new FakeProjectFilesystem(Sets.newHashSet(Paths.get("src1"), Paths.get("src2"))))
+            .build();
     SourcePath path1 = PathSourcePath.of(cell.getFilesystem(), Paths.get("src1"));
     SourcePath path2 = PathSourcePath.of(cell.getFilesystem(), Paths.get("src2"));
     RawAttributes attributes =

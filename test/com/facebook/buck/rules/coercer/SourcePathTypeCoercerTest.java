@@ -44,9 +44,7 @@ public class SourcePathTypeCoercerTest {
   private CellPathResolver cellRoots;
   private final Path pathRelativeToProjectRoot = Paths.get("");
   private final SourcePathTypeCoercer sourcePathTypeCoercer =
-      new SourcePathTypeCoercer(
-          new BuildTargetTypeCoercer(),
-          new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.VERIFY));
+      new SourcePathTypeCoercer(new BuildTargetTypeCoercer(), new PathTypeCoercer());
 
   @Before
   public void setUp() {

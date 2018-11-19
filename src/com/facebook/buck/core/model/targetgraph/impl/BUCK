@@ -8,7 +8,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
-        "//src/com/facebook/buck/rules/coercer:interface",
+        "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/visibility:visibility",
     ],
     tests = [

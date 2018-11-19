@@ -115,7 +115,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           }
         };
     TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
-    PathTypeCoercer pathTypeCoercer = new PathTypeCoercer(pathExistenceVerificationMode);
+    PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
     TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer =

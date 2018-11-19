@@ -36,6 +36,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.PathTypeCoercer.PathExistenceVerificationMode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;
@@ -170,7 +171,8 @@ public abstract class AbstractNodeBuilder<
           rawHashCode == null
               ? Hashing.sha1().hashString(target.getFullyQualifiedName(), UTF_8)
               : rawHashCode;
-      TargetNodeFactory factory = new TargetNodeFactory(TYPE_COERCER_FACTORY);
+      TargetNodeFactory factory =
+          new TargetNodeFactory(TYPE_COERCER_FACTORY, PathExistenceVerificationMode.DO_NOT_VERIFY);
       TArg populatedArg = getPopulatedArg();
       return factory
           .createFromObject(
