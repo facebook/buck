@@ -70,7 +70,7 @@ class BuckProject:
 
     def get_buckd_transport_file_path(self):
         if os.name == "nt":
-            return "\\\\.\\pipe\\buckd_{0}".format(self.get_root_hash())
+            return u"\\\\.\\pipe\\buckd_{0}".format(self.get_root_hash())
         else:
             return os.path.join(self.buckd_dir, "sock")
 
