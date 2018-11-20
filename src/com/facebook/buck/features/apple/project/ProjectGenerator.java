@@ -3564,8 +3564,7 @@ public class ProjectGenerator {
                 targetNode,
                 xcodeDescriptions.getXCodeDescriptions(),
                 Optional.of(defaultCxxPlatform)));
-    return allDeps
-        .filter(this::isLibraryWithSourcesToCompile);
+    return allDeps.filter(this::isLibraryWithSourcesToCompile);
   }
 
   private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(
