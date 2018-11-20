@@ -2450,9 +2450,12 @@ public class SuperConsoleEventBusListenerTest {
             0L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
+    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(actionGraphStarted, 0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ActionGraphEvent.finished(ActionGraphEvent.started()),
+            ActionGraphEvent.finished(actionGraphStarted),
             0L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

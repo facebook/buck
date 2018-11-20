@@ -37,6 +37,7 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
+import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.event.listener.cachestats.CacheRateStatsKeeper;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.ParseEvent;
@@ -414,6 +415,61 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * @param prefix Prefix to print for this event pair.
    * @param suffix Suffix to print for this event pair.
    * @param currentMillis The current time in milliseconds.
+   * @param eventPairs the collection of start/end events to measure elapsed time.
+   * @param lines The builder to append lines to.
+   * @return True if all events are finished, false otherwise
+   */
+  protected boolean addLineFromEvents(
+      String prefix,
+      Optional<String> suffix,
+      long currentMillis,
+      Collection<EventPair> eventPairs,
+      Optional<Double> progress,
+      Optional<Long> minimum,
+      ImmutableList.Builder<String> lines) {
+
+    EventPair startAndFinish = getStartAndFinish(eventPairs);
+
+    if (!startAndFinish.getStart().isPresent()) {
+      // nothing to display, event has not even started yet
+      return false;
+    }
+
+    boolean isFinished = startAndFinish.getFinish().isPresent();
+    long startTime = startAndFinish.getStartTime();
+    long endTime = isFinished ? startAndFinish.getEndTime() : currentMillis;
+    long elapsedTime = endTime - startTime;
+
+    if (minimum.isPresent() && elapsedTime < minimum.get()) {
+      return isFinished;
+    }
+
+    String result = prefix;
+    if (!isFinished) {
+      result += "... ";
+    } else {
+      result += showTextInAllCaps ? ": FINISHED IN " : ": finished in ";
+    }
+    result += formatElapsedTime(elapsedTime);
+
+    if (progress.isPresent()) {
+      result += isFinished ? " (100%)" : " (" + Math.round(progress.get() * 100) + "%)";
+    }
+
+    if (suffix.isPresent()) {
+      result += " " + suffix.get();
+    }
+
+    lines.add(result);
+    return isFinished;
+  }
+
+  /**
+   * Adds a line about a set of start and finished events to lines.
+   *
+   * @param prefix Prefix to print for this event pair.
+   * @param suffix Suffix to print for this event pair.
+   * @param currentMillis The current time in milliseconds.
    * @param offsetMs Offset to remove from calculated time. Set this to a non-zero value if the
    *     event pair would contain another event. For example, build time includes parse time, but to
    *     make the events easier to reason about it makes sense to pull parse time out of build time.
@@ -422,6 +478,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * @return The summed time between start and finished events if each start event has a matching
    *     finished event, otherwise {@link AbstractConsoleEventBusListener#UNFINISHED_EVENT_PAIR}.
    */
+  @Deprecated
   protected long logEventPair(
       String prefix,
       Optional<String> suffix,
@@ -464,6 +521,46 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   /**
+   * Calculate event pair that start and end the sequence. If there is any ongoing event, end event
+   * would be empty.
+   *
+   * @param eventPairs the collection of event starts/stops.
+   * @return The pair of events, start event is the earliest start event, end event is the latest
+   *     finish event, or empty if there are ongoing events, i.e. not completed pairs
+   */
+  private static EventPair getStartAndFinish(Collection<EventPair> eventPairs) {
+
+    Optional<BuckEventExternalInterface> start = Optional.empty();
+    Optional<BuckEventExternalInterface> end = Optional.empty();
+    boolean anyOngoing = false;
+
+    for (EventPair pair : eventPairs) {
+      Optional<BuckEventExternalInterface> candidate = pair.getStart();
+      if (!start.isPresent()
+          || (candidate.isPresent()
+              && candidate.get().getTimestamp() < start.get().getTimestamp())) {
+        start = candidate;
+      }
+
+      if (anyOngoing) {
+        continue;
+      }
+
+      candidate = pair.getFinish();
+      if (!candidate.isPresent()) {
+        anyOngoing = true;
+        end = Optional.empty();
+        continue;
+      }
+
+      if (!end.isPresent() || candidate.get().getTimestamp() > end.get().getTimestamp()) {
+        end = candidate;
+      }
+    }
+    return EventPair.of(start, end);
+  }
+
+  /**
    * Takes a collection of start and finished events. If there are any events that have a start, but
    * no finished time, the collection is considered ongoing.
    *
@@ -472,6 +569,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * @return -1 if all events are completed, otherwise the time elapsed between the latest event and
    *     currentMillis.
    */
+  @Deprecated
   protected static long getWorkingTimeFromLastStartUntilNow(
       Collection<EventPair> eventPairs, long currentMillis) {
     // We examine all events to determine whether we have any incomplete events and also
