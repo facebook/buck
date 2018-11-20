@@ -53,6 +53,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
@@ -989,7 +990,7 @@ public class SkylarkProjectBuildFileParserTest {
             "load('//src/test:build_rules.bzl', 'get_name')",
             "prebuilt_jar(name='foo', binary_jar=get_name())"));
     Files.write(extensionFile, Arrays.asList("def get_name():", "  return 'jar'"));
-    ImmutableList<String> includes = parser.getIncludedFiles(buildFile);
+    ImmutableSortedSet<String> includes = parser.getIncludedFiles(buildFile);
     assertThat(includes, Matchers.hasSize(2));
     assertThat(
         includes
@@ -998,7 +999,7 @@ public class SkylarkProjectBuildFileParserTest {
             .map(Path::getFileName) // simplify matching by stripping temporary path prefixes
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()),
-        equalTo(ImmutableList.of("BUCK", "build_rules.bzl")));
+        Matchers.containsInAnyOrder("BUCK", "build_rules.bzl"));
   }
 
   @Test
@@ -1018,7 +1019,7 @@ public class SkylarkProjectBuildFileParserTest {
     Map<String, Object> prebuiltJarRule =
         Iterables.getOnlyElement(buildFileManifest.getTargets().values());
     assertThat(prebuiltJarRule.get("name"), equalTo("foo"));
-    ImmutableList<String> includes = buildFileManifest.getIncludes();
+    ImmutableSortedSet<String> includes = buildFileManifest.getIncludes();
     assertThat(
         includes
             .stream()
@@ -1026,7 +1027,7 @@ public class SkylarkProjectBuildFileParserTest {
             .map(Path::getFileName) // simplify matching by stripping temporary path prefixes
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()),
-        equalTo(ImmutableList.of("BUCK", "build_rules.bzl")));
+        Matchers.containsInAnyOrder("BUCK", "build_rules.bzl"));
     Map<String, Object> configs = buildFileManifest.getConfigs();
     assertThat(configs, equalTo(ImmutableMap.of()));
     Optional<ImmutableMap<String, Optional<String>>> env = buildFileManifest.getEnv();
@@ -1390,7 +1391,7 @@ public class SkylarkProjectBuildFileParserTest {
               .stream()
               .map(Paths::get)
               .collect(ImmutableList.toImmutableList()),
-          equalTo(expectedIncludes));
+          Matchers.containsInAnyOrder(expectedIncludes.toArray()));
       assertThat(
           String.format(
               "Expected file at %s to parse and have includes %s", kvp.getKey(), expectedIncludes),
@@ -1399,7 +1400,7 @@ public class SkylarkProjectBuildFileParserTest {
               .stream()
               .map(Paths::get)
               .collect(ImmutableList.toImmutableList()),
-          equalTo(expectedIncludes));
+          Matchers.containsInAnyOrder(expectedIncludes.toArray()));
     }
   }
 

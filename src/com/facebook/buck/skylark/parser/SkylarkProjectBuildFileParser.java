@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
@@ -150,7 +151,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ParseResult parseResult = parseBuildFile(buildFile);
     return BuildFileManifest.of(
         parseResult.getRawRules(),
-        ImmutableSet.copyOf(parseResult.getLoadedPaths()),
+        ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
         parseResult.getReadConfigurationOptions(),
         Optional.empty(),
         parseResult.getGlobManifestWithResult());
@@ -413,20 +414,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     return includes.build();
   }
 
-  private ImmutableList<String> toIncludedPaths(
+  private ImmutableSet<String> toIncludedPaths(
       String containingPath,
       ImmutableList<IncludesData> dependencies,
       @Nullable ExtensionData implicitLoadExtensionData) {
-    // expected size is used to reduce the number of unnecessary resize invocations
-    int expectedSize = 1;
-    if (implicitLoadExtensionData != null) {
-      implicitLoadExtensionData.getLoadTransitiveClosure().size();
-    }
-    for (int i = 0; i < dependencies.size(); ++i) {
-      expectedSize += dependencies.get(i).getLoadTransitiveClosure().size();
-    }
-    ImmutableList.Builder<String> includedPathsBuilder =
-        ImmutableList.builderWithExpectedSize(expectedSize);
+    ImmutableSet.Builder<String> includedPathsBuilder = ImmutableSet.builder();
     includedPathsBuilder.add(containingPath);
     // for loop is used instead of foreach to avoid iterator overhead, since it's a hot spot
     for (int i = 0; i < dependencies.size(); ++i) {
@@ -613,7 +605,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public ImmutableList<String> getIncludedFiles(Path buildFile)
+  public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(buildFile.toString());
 
@@ -624,7 +616,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, buildFileAst.getImports());
 
-    return toIncludedPaths(buildFile.toString(), dependencies, implicitLoad.getExtensionData());
+    // it might be potentially faster to keep sorted sets for each dependency separately and just
+    // merge sorted lists as we aggregate transitive close up
+    // But Guava does not seem to have a built-in way of merging sorted lists/sets
+    return ImmutableSortedSet.copyOf(
+        toIncludedPaths(buildFile.toString(), dependencies, implicitLoad.getExtensionData()));
   }
 
   @Override

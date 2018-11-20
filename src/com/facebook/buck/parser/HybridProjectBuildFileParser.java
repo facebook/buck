@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -69,7 +70,7 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public ImmutableList<String> getIncludedFiles(Path buildFile)
+  public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return getParserForBuildFile(buildFile).getIncludedFiles(buildFile);
   }

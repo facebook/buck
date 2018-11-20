@@ -41,6 +41,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -181,13 +182,13 @@ public class ParserCacheTest {
     public void reportProfile() throws IOException {}
 
     @Override
-    public ImmutableList<String> getIncludedFiles(Path buildFile)
+    public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
         throws BuildFileParseException, InterruptedException, IOException {
       if (throwsBuildFileParseException) {
         throw BuildFileParseException.createForUnknownParseError("Fake exception!");
       }
 
-      return ImmutableList.of(
+      return ImmutableSortedSet.of(
           filesystem.getPath(filesystem.getRootPath().toString(), "Includes1").toString(),
           filesystem.getPath(filesystem.getRootPath().toString(), "Includes2").toString());
     }
@@ -298,7 +299,7 @@ public class ParserCacheTest {
     ImmutableList<GlobSpecWithResult> globSpecs = globSpecsBuilder.build();
 
     ImmutableMap configs = ImmutableMap.of("confKey1", "confVal1", "confKey2", "confVal2");
-    ImmutableList<String> includes = ImmutableList.of("/Includes1", "/Includes2");
+    ImmutableSortedSet<String> includes = ImmutableSortedSet.of("/Includes1", "/Includes2");
     ImmutableMap target1 = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
     ImmutableMap target2 = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
     ImmutableMap targets = ImmutableMap.of("tar1", target1, "tar2", target2);

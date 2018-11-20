@@ -45,6 +45,7 @@ import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.Futures;
@@ -240,7 +241,7 @@ public class RemoteManifestServiceCacheStorageTest {
     ImmutableMap configs = ImmutableMap.of("confKey1", "confVal1", "confKey2", "confVal2");
     Path include1 = filesystem.createNewFile(filesystem.getPath("Includes1"));
     Path include2 = filesystem.createNewFile(filesystem.getPath("includes2"));
-    ImmutableList<String> includes = ImmutableList.of("/Includes1", "/includes2");
+    ImmutableSortedSet<String> includes = ImmutableSortedSet.of("/Includes1", "/includes2");
     ImmutableMap target1 = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
     ImmutableMap target2 = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
     ImmutableMap targets = ImmutableMap.of("tar1", target1, "tar2", target2);

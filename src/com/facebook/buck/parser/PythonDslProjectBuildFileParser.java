@@ -466,7 +466,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> values) {
     return BuildFileManifest.of(
         indexTargetsByName(values.subList(0, values.size() - 3).asList()),
-        ImmutableList.copyOf(
+        ImmutableSortedSet.copyOf(
             Objects.requireNonNull(
                 (List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))),
         Objects.requireNonNull(
@@ -744,7 +744,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public ImmutableList<String> getIncludedFiles(Path buildFile)
+  public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException {
     return getBuildFileManifest(buildFile).getIncludes();
   }

@@ -29,7 +29,7 @@ import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.config.Config;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -87,7 +87,7 @@ public class ParserCache {
    *     if no cache info is found.
    */
   private Optional<BuildFileManifest> getManifestFromStorage(
-      Path buildFile, ImmutableList<String> includeBuildFiles)
+      Path buildFile, ImmutableSortedSet<String> includeBuildFiles)
       throws IOException, InterruptedException {
     final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
     final HashCode strongFingerprint =
@@ -129,7 +129,7 @@ public class ParserCache {
 
     // Try to retrieve a cached build file manifest
     try {
-      ImmutableList<String> includeFilesForBuildFile = parser.getIncludedFiles(buildFile);
+      ImmutableSortedSet<String> includeFilesForBuildFile = parser.getIncludedFiles(buildFile);
       Optional<BuildFileManifest> cachedManifest =
           getManifestFromStorage(buildFile, includeFilesForBuildFile);
       if (cachedManifest.isPresent()

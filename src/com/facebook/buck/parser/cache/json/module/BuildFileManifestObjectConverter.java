@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -42,12 +43,12 @@ public class BuildFileManifestObjectConverter extends JsonDeserializer<BuildFile
   }
 
   @SuppressWarnings({"unchecked"})
-  private ImmutableList<String> readIncludes(JsonParser jsonParser, TreeNode treeNode)
+  private ImmutableSortedSet<String> readIncludes(JsonParser jsonParser, TreeNode treeNode)
       throws IOException {
     TreeNode includesNode = treeNode.get("includes");
     JsonParser includesParser = includesNode.traverse();
     includesParser.setCodec(jsonParser.getCodec());
-    return includesParser.readValueAs(ImmutableList.class);
+    return ImmutableSortedSet.copyOf(includesParser.readValueAs(ImmutableList.class));
   }
 
   @SuppressWarnings({"unchecked"})
@@ -104,7 +105,7 @@ public class BuildFileManifestObjectConverter extends JsonDeserializer<BuildFile
     TreeNode treeNode = jsonParser.readValueAsTree();
 
     ImmutableMap<String, ImmutableMap<String, Object>> targets = readTargets(jsonParser, treeNode);
-    ImmutableList<String> includes = readIncludes(jsonParser, treeNode);
+    ImmutableSortedSet<String> includes = readIncludes(jsonParser, treeNode);
     ImmutableMap<String, Object> configs = readConfigs(jsonParser, treeNode);
     Preconditions.checkState(
         treeNode.get("env") == null || treeNode.get("env").size() == 0,

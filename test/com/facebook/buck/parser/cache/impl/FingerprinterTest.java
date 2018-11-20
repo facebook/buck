@@ -94,8 +94,8 @@ public class FingerprinterTest {
     fs.createNewFile(fs.getPath("foo/bar/FooBar.bzl"));
     fs.createNewFile(fs.getPath("foo/bar/BUCK"));
     fs.createNewFile(fs.getPath("foo/bar/BarFoo.bzl"));
-    ImmutableList<String> includes =
-        ImmutableList.of("/foo/bar/FooBar.bzl", "/foo/bar/BUCK", "/foo/bar/BarFoo.bzl");
+    ImmutableSortedSet<String> includes =
+        ImmutableSortedSet.of("/foo/bar/FooBar.bzl", "/foo/bar/BUCK", "/foo/bar/BarFoo.bzl");
     BuildFileManifest buildFileManifest =
         BuildFileManifest.of(
             ImmutableMap.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());
@@ -128,8 +128,8 @@ public class FingerprinterTest {
     fs.mkdirs(fs.getPath("foo/bar"));
     fs.createNewFile(fs.getPath("foo/bar/FooBar.bzl"));
     fs.createNewFile(fs.getPath("foo/bar/BarFoo.bzl"));
-    ImmutableList<String> includes =
-        ImmutableList.of("/foo/bar/FooBar.bzl", "/foo/bar/BUCK", "/foo/bar/BarFoo.bzl");
+    ImmutableSortedSet<String> includes =
+        ImmutableSortedSet.of("/foo/bar/FooBar.bzl", "/foo/bar/BUCK", "/foo/bar/BarFoo.bzl");
     BuildFileManifest buildFileManifest =
         BuildFileManifest.of(
             ImmutableMap.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());

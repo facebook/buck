@@ -90,8 +90,9 @@ public class EventReportingProjectBuildFileParserTest {
     }
 
     @Override
-    public ImmutableList<String> getIncludedFiles(Path buildFile) throws BuildFileParseException {
-      return ImmutableList.of();
+    public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
+        throws BuildFileParseException {
+      return ImmutableSortedSet.of();
     }
 
     @Override

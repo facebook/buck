@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -34,7 +35,7 @@ abstract class AbstractBuildFileManifest {
 
   /** @return a set of extension files read during parsing. */
   @Value.Parameter
-  public abstract ImmutableList<String> getIncludes();
+  public abstract ImmutableSortedSet<String> getIncludes();
 
   /**
    * @return a map from configuration section to configuration key to the value returned during

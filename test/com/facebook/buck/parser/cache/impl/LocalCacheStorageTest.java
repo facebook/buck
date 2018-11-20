@@ -42,6 +42,7 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.File;
 import java.io.IOException;
@@ -182,7 +183,7 @@ public class LocalCacheStorageTest {
     HashCode strongFingerprint =
         Fingerprinter.getStrongFingerprint(
             filesystem,
-            ImmutableList.of(),
+            ImmutableSortedSet.of(),
             new FakeFileHashCache(
                 ImmutableMap.of(
                     filesystem.getPath("/foo/bar/FooBar.bzl"), HashCode.fromBytes(new byte[] {1}),
@@ -221,7 +222,7 @@ public class LocalCacheStorageTest {
     HashCode strongFingerprint =
         Fingerprinter.getStrongFingerprint(
             filesystem,
-            ImmutableList.of(),
+            ImmutableSortedSet.of(),
             new FakeFileHashCache(
                 ImmutableMap.of(
                     filesystem.getPath("/foo/bar/FooBar.bzl"), HashCode.fromBytes(new byte[] {1}),
@@ -273,7 +274,7 @@ public class LocalCacheStorageTest {
         ImmutableMap.of("confKey1", "confVal1", "confKey2", "confVal2");
     Path include1 = filesystem.createNewFile(filesystem.getPath("Includes1"));
     Path include2 = filesystem.createNewFile(filesystem.getPath("includes2"));
-    ImmutableList<String> includes = ImmutableList.of("/Includes1", "/includes2");
+    ImmutableSortedSet<String> includes = ImmutableSortedSet.of("/Includes1", "/includes2");
     ImmutableMap<String, Object> target1Map = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
     ImmutableMap<String, Object> target2Map = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
     ImmutableMap<String, ImmutableMap<String, Object>> targets =

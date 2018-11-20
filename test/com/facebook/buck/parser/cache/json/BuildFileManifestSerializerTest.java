@@ -26,6 +26,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -70,7 +71,7 @@ public class BuildFileManifestSerializerTest {
     ImmutableMap<String, Optional<String>> envs = ImmutableMap.of("envKey", Optional.of("envVal"));
     ImmutableMap<String, String> configs =
         ImmutableMap.of("confKey1", "confVal1", "confKey2", "confVal2");
-    ImmutableList<String> includes = ImmutableList.of("/Includes1", "/includes2");
+    ImmutableSortedSet<String> includes = ImmutableSortedSet.of("/Includes1", "/includes2");
     ImmutableMap<String, Object> target1 = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
     ImmutableMap<String, Object> target2 = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
     ImmutableMap<String, ImmutableMap<String, Object>> targets =
