@@ -587,7 +587,8 @@ public class WorkspaceAndProjectGenerator {
         workspaceArguments,
         schemeConfigsBuilder,
         schemeNameToSrcTargetNodeBuilder,
-        extraTestNodesBuilder);
+        extraTestNodesBuilder,
+        Optional.of(defaultCxxPlatform));
     addExtraWorkspaceSchemes(
         xcodeDescriptions,
         projectGraph,
@@ -595,7 +596,8 @@ public class WorkspaceAndProjectGenerator {
         workspaceArguments.getExtraSchemes(),
         schemeConfigsBuilder,
         schemeNameToSrcTargetNodeBuilder,
-        extraTestNodesBuilder);
+        extraTestNodesBuilder,
+        Optional.of(defaultCxxPlatform));
     ImmutableSetMultimap<String, Optional<TargetNode<?>>> schemeNameToSrcTargetNode =
         schemeNameToSrcTargetNodeBuilder.build();
     ImmutableSetMultimap<String, TargetNode<AppleTestDescriptionArg>> extraTestNodes =
@@ -622,7 +624,8 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?>>>
           schemeNameToSrcTargetNodeBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescriptionArg>>
-          extraTestNodesBuilder) {
+          extraTestNodesBuilder,
+      Optional<CxxPlatform> targetPlatform) {
     LOG.debug("Adding scheme %s", schemeName);
     schemeConfigsBuilder.put(schemeName, schemeArguments);
     if (schemeArguments.getSrcTarget().isPresent()) {
@@ -633,7 +636,8 @@ public class WorkspaceAndProjectGenerator {
                   xcodeDescriptions,
                   projectGraph,
                   Optional.of(dependenciesCache),
-                  projectGraph.get(schemeArguments.getSrcTarget().get())),
+                  projectGraph.get(schemeArguments.getSrcTarget().get()),
+                  targetPlatform),
               Optional::of));
     } else {
       schemeNameToSrcTargetNodeBuilder.put(
@@ -649,7 +653,8 @@ public class WorkspaceAndProjectGenerator {
                   xcodeDescriptions,
                   projectGraph,
                   Optional.of(dependenciesCache),
-                  Objects.requireNonNull(projectGraph.get(extraTarget))),
+                  Preconditions.checkNotNull(projectGraph.get(extraTarget)),
+                  targetPlatform),
               Optional::of));
     }
 
@@ -671,7 +676,8 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?>>>
           schemeNameToSrcTargetNodeBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescriptionArg>>
-          extraTestNodesBuilder) {
+          extraTestNodesBuilder,
+      Optional<CxxPlatform> targetPlatform) {
     for (Map.Entry<String, BuildTarget> extraSchemeEntry : extraSchemes.entrySet()) {
       BuildTarget extraSchemeTarget = extraSchemeEntry.getValue();
       Optional<TargetNode<?>> extraSchemeNode = projectGraph.getOptional(extraSchemeTarget);
@@ -692,7 +698,8 @@ public class WorkspaceAndProjectGenerator {
           extraSchemeArg,
           schemeConfigsBuilder,
           schemeNameToSrcTargetNodeBuilder,
-          extraTestNodesBuilder);
+          extraTestNodesBuilder,
+          targetPlatform);
     }
   }
 
@@ -812,6 +819,7 @@ public class WorkspaceAndProjectGenerator {
    * @param projectGraph {@link TargetGraph} containing nodes
    * @param nodes Nodes to fetch dependencies for.
    * @param excludes Nodes to exclude from dependencies list.
+   * @param targetPlatform Target platform that the project should be generated for.
    * @return targets and their dependencies that should be build.
    */
   private static ImmutableSet<TargetNode<?>> getTransitiveDepsAndInputs(
@@ -819,7 +827,8 @@ public class WorkspaceAndProjectGenerator {
       TargetGraph projectGraph,
       AppleDependenciesCache dependenciesCache,
       Iterable<? extends TargetNode<?>> nodes,
-      ImmutableSet<TargetNode<?>> excludes) {
+      ImmutableSet<TargetNode<?>> excludes,
+      Optional<CxxPlatform> targetPlatform) {
     return FluentIterable.from(nodes)
         .transformAndConcat(
             input ->
@@ -829,7 +838,8 @@ public class WorkspaceAndProjectGenerator {
                     Optional.of(dependenciesCache),
                     RecursiveDependenciesMode.BUILDING,
                     input,
-                    Optional.empty()))
+                    Optional.empty(),
+                    targetPlatform))
         .append(nodes)
         .filter(
             input ->
@@ -885,7 +895,12 @@ public class WorkspaceAndProjectGenerator {
           Iterables.filter(
               TopologicalSort.sort(projectGraph),
               getTransitiveDepsAndInputs(
-                      xcodeDescriptions, projectGraph, dependenciesCache, testNodes, targetNodes)
+                      xcodeDescriptions,
+                      projectGraph,
+                      dependenciesCache,
+                      testNodes,
+                      targetNodes,
+                      Optional.of(defaultCxxPlatform))
                   ::contains));
     }
   }

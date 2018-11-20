@@ -195,6 +195,15 @@ public class CxxLibraryDescription
         args.getRawHeaders());
   }
 
+  public static boolean isPlatformSupported(
+      CxxLibraryDescriptionArg args, CxxPlatform cxxPlatform) {
+    return !args.getSupportedPlatformsRegex().isPresent()
+        || args.getSupportedPlatformsRegex()
+            .get()
+            .matcher(cxxPlatform.getFlavor().toString())
+            .find();
+  }
+
   @Override
   public Class<CxxLibraryDescriptionArg> getConstructorArgType() {
     return CxxLibraryDescriptionArg.class;

@@ -156,6 +156,7 @@ public class AppleBuildRulesTest {
               cache,
               AppleBuildRules.RecursiveDependenciesMode.BUILDING,
               rootNode,
+              Optional.empty(),
               Optional.empty());
 
       assertTrue(Iterables.elementsEqual(ImmutableSortedSet.of(libraryNode, bundleNode), rules));
@@ -212,6 +213,7 @@ public class AppleBuildRulesTest {
               cache,
               AppleBuildRules.RecursiveDependenciesMode.LINKING,
               rootNode,
+              Optional.empty(),
               Optional.empty());
 
       assertEquals(
@@ -368,6 +370,7 @@ public class AppleBuildRulesTest {
               cache,
               AppleBuildRules.RecursiveDependenciesMode.LINKING,
               barFrameworkNode,
+              Optional.empty(),
               Optional.empty());
 
       assertEquals(ImmutableSortedSet.of(fooGenruleNode), ImmutableSortedSet.copyOf(rules));
@@ -420,6 +423,7 @@ public class AppleBuildRulesTest {
               cache,
               AppleBuildRules.RecursiveDependenciesMode.COPYING,
               barFrameworkNode,
+              Optional.empty(),
               Optional.empty());
 
       assertEquals(ImmutableSortedSet.of(fooGenruleNode), ImmutableSortedSet.copyOf(rules));
@@ -492,6 +496,7 @@ public class AppleBuildRulesTest {
               cache,
               AppleBuildRules.RecursiveDependenciesMode.BUILDING,
               bazFrameworkNode,
+              Optional.empty(),
               Optional.empty());
 
       assertEquals(

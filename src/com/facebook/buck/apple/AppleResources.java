@@ -57,7 +57,8 @@ public class AppleResources {
                 cache,
                 mode,
                 targetNode,
-                ImmutableSet.of(AppleResourceDescription.class)))
+                ImmutableSet.of(AppleResourceDescription.class),
+                Optional.empty()))
         .transform(input -> (AppleResourceDescriptionArg) input.getConstructorArg())
         .toSet();
   }
@@ -80,7 +81,7 @@ public class AppleResources {
             mode,
             targetNode,
             IS_APPLE_BUNDLE_RESOURCE_NODE,
-            Optional.of(appleCxxPlatform));
+            Optional.of(appleCxxPlatform.getCxxPlatform()));
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
     for (TargetNode<?> resourceNode : resourceNodes) {

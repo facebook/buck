@@ -429,7 +429,8 @@ public class AppleDescriptions {
             Optional.empty(),
             AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode),
-            RecursiveDependenciesMode.COPYING);
+            RecursiveDependenciesMode.COPYING,
+            Optional.of(appleCxxPlatform.getCxxPlatform()));
 
     BuildTarget coreDataModelBuildTarget = buildTarget.withAppendedFlavors(CoreDataModel.FLAVOR);
 
@@ -466,7 +467,8 @@ public class AppleDescriptions {
             Optional.empty(),
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode),
-            RecursiveDependenciesMode.COPYING);
+            RecursiveDependenciesMode.COPYING,
+            Optional.of(appleCxxPlatform.getCxxPlatform()));
 
     BuildTarget sceneKitAssetsBuildTarget = buildTarget.withAppendedFlavors(SceneKitAssets.FLAVOR);
 

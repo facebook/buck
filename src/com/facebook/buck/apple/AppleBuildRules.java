@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -27,6 +26,8 @@ import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -106,7 +107,8 @@ public final class AppleBuildRules {
       Optional<AppleDependenciesCache> cache,
       RecursiveDependenciesMode mode,
       TargetNode<?> targetNode,
-      Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses) {
+      Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses,
+      Optional<CxxPlatform> targetPlatform) {
     LOG.verbose(
         "Getting recursive dependencies of node %s, mode %s, including only types %s\n",
         targetNode, mode, descriptionClasses);
@@ -119,14 +121,16 @@ public final class AppleBuildRules {
             .orElse(x -> true);
 
     ImmutableSet<TargetNode<?>> result =
-        getRecursiveTargetNodeDependenciesOfTypes(
-            xcodeDescriptions,
-            targetGraph,
-            cache,
-            mode,
-            targetNode,
-            isDependencyNode,
-            Optional.empty());
+        RichStream.from(
+                getRecursiveTargetNodeDependenciesOfTypes(
+                    xcodeDescriptions,
+                    targetGraph,
+                    cache,
+                    mode,
+                    targetNode,
+                    isDependencyNode,
+                    targetPlatform))
+            .toImmutableSet();
 
     LOG.verbose(
         "Got recursive dependencies of node %s mode %s types %s: %s\n",
@@ -148,7 +152,7 @@ public final class AppleBuildRules {
       RecursiveDependenciesMode mode,
       TargetNode<?> targetNode,
       Predicate<TargetNode<?>> isDependencyNode,
-      Optional<AppleCxxPlatform> appleCxxPlatform) {
+      Optional<CxxPlatform> cxxPlatform) {
 
     @SuppressWarnings("unchecked")
     GraphTraversable<TargetNode<?>> graphTraversable =
@@ -163,7 +167,8 @@ public final class AppleBuildRules {
           }
 
           // Stop traversal for rules outside the specific set.
-          if (!xcodeDescriptions.isXcodeDescription(node.getDescription())) {
+          if (!xcodeDescriptions.isXcodeDescription(node.getDescription())
+              || !targetIsSupportedOnPlatform(node, cxxPlatform)) {
             return Collections.emptyIterator();
           }
 
@@ -178,7 +183,7 @@ public final class AppleBuildRules {
             ImmutableSortedSet.Builder<TargetNode<?>> exportedDepsBuilder =
                 ImmutableSortedSet.naturalOrder();
             addDirectAndExportedDeps(
-                targetGraph, node, defaultDepsBuilder, exportedDepsBuilder, appleCxxPlatform);
+                targetGraph, node, defaultDepsBuilder, exportedDepsBuilder, cxxPlatform);
             defaultDeps = defaultDepsBuilder.build();
             exportedDeps = exportedDepsBuilder.build();
           } else {
@@ -201,7 +206,7 @@ public final class AppleBuildRules {
                     targetGraph.get(rule.getBuildTarget()),
                     editedDeps,
                     editedExportedDeps,
-                    appleCxxPlatform);
+                    cxxPlatform);
               } else {
                 editedDeps.add(rule);
               }
@@ -289,12 +294,15 @@ public final class AppleBuildRules {
           return deps.iterator();
         };
 
+    // Only targets that match the given predicate and supported by the given platform are added
     ImmutableSet.Builder<TargetNode<?>> filteredRules = ImmutableSet.builder();
     AcyclicDepthFirstPostOrderTraversal<TargetNode<?>> traversal =
         new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable);
     try {
       for (TargetNode<?> node : traversal.traverse(ImmutableList.of(targetNode))) {
-        if (node != targetNode && isDependencyNode.test(node)) {
+        if (node != targetNode
+            && isDependencyNode.test(node)
+            && targetIsSupportedOnPlatform(node, cxxPlatform)) {
           filteredRules.add(node);
         }
       }
@@ -312,9 +320,16 @@ public final class AppleBuildRules {
       Optional<AppleDependenciesCache> cache,
       RecursiveDependenciesMode mode,
       TargetNode<?> input,
-      ImmutableSet<Class<? extends BaseDescription<?>>> descriptionClasses) {
+      ImmutableSet<Class<? extends BaseDescription<?>>> descriptionClasses,
+      Optional<CxxPlatform> targetPlatform) {
     return getRecursiveTargetNodeDependenciesOfTypes(
-        xcodeDescriptions, targetGraph, cache, mode, input, Optional.of(descriptionClasses));
+        xcodeDescriptions,
+        targetGraph,
+        cache,
+        mode,
+        input,
+        Optional.of(descriptionClasses),
+        targetPlatform);
   }
 
   static void addDirectAndExportedDeps(
@@ -322,7 +337,7 @@ public final class AppleBuildRules {
       TargetNode<?> targetNode,
       ImmutableSortedSet.Builder<TargetNode<?>> directDepsBuilder,
       ImmutableSortedSet.Builder<TargetNode<?>> exportedDepsBuilder,
-      Optional<AppleCxxPlatform> appleCxxPlatform) {
+      Optional<CxxPlatform> appleCxxPlatform) {
     directDepsBuilder.addAll(targetGraph.getAll(targetNode.getBuildDeps()));
     if (targetNode.getDescription() instanceof AppleLibraryDescription
         || targetNode.getDescription() instanceof CxxLibraryDescription) {
@@ -356,7 +371,8 @@ public final class AppleBuildRules {
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
-      TargetNode<?> targetNode) {
+      TargetNode<?> targetNode,
+      Optional<CxxPlatform> cxxPlatform) {
     Iterable<TargetNode<?>> targetNodes =
         Iterables.concat(
             getRecursiveTargetNodeDependenciesOfTypes(
@@ -365,7 +381,8 @@ public final class AppleBuildRules {
                 cache,
                 RecursiveDependenciesMode.BUILDING,
                 targetNode,
-                Optional.empty()),
+                Optional.empty(),
+                cxxPlatform),
             ImmutableSet.of(targetNode));
 
     return RichStream.from(targetNodes)
@@ -388,7 +405,8 @@ public final class AppleBuildRules {
                         cache,
                         mode,
                         input,
-                        APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES)
+                        APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES,
+                        Optional.empty())
                     .stream())
         .map(input -> (AppleAssetCatalogDescriptionArg) input.getConstructorArg())
         .toImmutableSet();
@@ -410,7 +428,8 @@ public final class AppleBuildRules {
                         cache,
                         mode,
                         input,
-                        WRAPPER_RESOURCE_DESCRIPTION_CLASSES)
+                        WRAPPER_RESOURCE_DESCRIPTION_CLASSES,
+                        Optional.empty())
                     .stream())
         .map(input -> (AppleWrapperResourceArg) input.getConstructorArg())
         .toImmutableSet();
@@ -423,13 +442,20 @@ public final class AppleBuildRules {
       Optional<AppleDependenciesCache> cache,
       ImmutableSet<Class<? extends BaseDescription<?>>> descriptionClasses,
       Collection<TargetNode<?>> targetNodes,
-      RecursiveDependenciesMode mode) {
+      RecursiveDependenciesMode mode,
+      Optional<CxxPlatform> targetPlatform) {
 
     return RichStream.from(targetNodes)
         .flatMap(
             targetNode ->
                 getRecursiveTargetNodeDependenciesOfTypes(
-                        xcodeDescriptions, targetGraph, cache, mode, targetNode, descriptionClasses)
+                        xcodeDescriptions,
+                        targetGraph,
+                        cache,
+                        mode,
+                        targetNode,
+                        descriptionClasses,
+                        targetPlatform)
                     .stream())
         .map(input -> (T) input.getConstructorArg())
         .toImmutableSet();
@@ -441,5 +467,15 @@ public final class AppleBuildRules {
         .filter(node -> node.getDescription() instanceof AppleAssetCatalogDescription)
         .map(node -> (AppleAssetCatalogDescriptionArg) node.getConstructorArg())
         .toImmutableSet();
+  }
+
+  private static boolean targetIsSupportedOnPlatform(
+      TargetNode<?> targetNode, Optional<CxxPlatform> cxxPlatform) {
+    if (cxxPlatform.isPresent() && targetNode.getDescription() instanceof CxxLibraryDescription) {
+      return CxxLibraryDescription.isPlatformSupported(
+          (CxxLibraryDescriptionArg) targetNode.getConstructorArg(), cxxPlatform.get());
+    } else {
+      return true;
+    }
   }
 }
