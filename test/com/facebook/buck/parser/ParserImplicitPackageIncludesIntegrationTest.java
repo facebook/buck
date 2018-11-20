@@ -63,7 +63,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "//root/foo/bar:subdir__subdir",
             "//root/foo/bar/baz:subdir__subdir",
             "-c",
-            "buildfile.package_includes=root=>root/name.bzl::NAME,root/foo/bar=>root/foo/bar/name.bzl::NAME",
+            "buildfile.package_includes=root=>root/name.bzl::NAME,root/foo/bar=>root/foo/bar/name.bzl::NAME=SOME_OTHER_NAME",
             "-c",
             "parser.default_build_file_syntax=" + parser);
 

@@ -1,3 +1,3 @@
 """ IGNORED DOCSTRING """
 
-NAME = "subdir"
+SOME_OTHER_NAME = "subdir"

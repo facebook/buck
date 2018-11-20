@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.parser.implicit;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,7 +29,6 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.function.Function;
 import org.immutables.value.Value;
 
 /** Represents a load path and symbols that should be implicitly included in a build file */
@@ -75,7 +75,7 @@ public abstract class AbstractImplicitInclude {
    *
    * @param configurationString The string used in configuration
    * @return A parsed {@link AbstractImplicitInclude} object
-   * @throws {@link RuntimeException} if the configuration string is invalid
+   * @throws {@link HumanReadableException} if the configuration string is invalid
    */
   public static ImplicitInclude fromConfigurationString(String configurationString) {
     // Double colons are used so that if someone uses an absolute windows path, their error
@@ -86,36 +86,63 @@ public abstract class AbstractImplicitInclude {
             .map(String::trim)
             .collect(ImmutableList.toImmutableList());
     if (parts.size() < 2) {
-      throw new RuntimeException(
+      throw new HumanReadableException(
           String.format(
               "Configuration setting '%s' did not list any symbols to load. Setting should be of "
                   + "the format <path>::<symbol1>::<symbol2>...",
               configurationString));
     }
+    int i = 0;
+    ImmutableMap.Builder<String, String> symbolBuilder = ImmutableMap.builder();
     for (String part : parts) {
       if (part.isEmpty()) {
-        throw new RuntimeException(
+        throw new HumanReadableException(
             String.format(
                 "Provided configuration %s specifies an empty path/symbols", configurationString));
       }
+      // Path is the first component, symbols are each subsequent one
+      if (i > 0) {
+        parseSymbolsFromConfiguration(part, symbolBuilder, configurationString);
+      }
+      i++;
     }
 
     Path loadPath;
     try {
       loadPath = Paths.get(parts.get(0));
       if (loadPath.isAbsolute()) {
-        throw new RuntimeException(String.format("Path %s may not be absolute", loadPath));
+        throw new HumanReadableException(String.format("Path %s may not be absolute", loadPath));
       }
     } catch (InvalidPathException e) {
-      throw new RuntimeException(
+      throw new HumanReadableException(
           String.format("Provided path %s is not a valid path", parts.get(0)), e);
     }
 
-    return ImplicitInclude.of(
-        loadPath,
-        parts
-            .stream()
-            .skip(1)
-            .collect(ImmutableMap.toImmutableMap(Function.identity(), Function.identity())));
+    return ImplicitInclude.of(loadPath, symbolBuilder.build());
+  }
+
+  static void parseSymbolsFromConfiguration(
+      String part, ImmutableMap.Builder<String, String> symbolBuilder, String configurationString) {
+    String[] symbolParts = part.split("=", 2);
+    String alias;
+    String symbol;
+    if (symbolParts.length == 1) {
+      alias = symbolParts[0];
+      symbol = symbolParts[0];
+    } else {
+      alias = symbolParts[0];
+      symbol = symbolParts[1];
+    }
+    if (symbol.isEmpty()) {
+      throw new HumanReadableException(
+          String.format(
+              "Provided configuration %s specifies an empty symbol", configurationString));
+    }
+    if (alias.isEmpty()) {
+      throw new HumanReadableException(
+          String.format(
+              "Provided configuration %s specifies an empty symbol alias", configurationString));
+    }
+    symbolBuilder.put(alias, symbol);
   }
 }

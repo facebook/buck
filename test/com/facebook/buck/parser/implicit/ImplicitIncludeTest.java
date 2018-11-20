@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.parser.implicit;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
@@ -46,7 +47,7 @@ public class ImplicitIncludeTest {
 
   @Test
   public void failsOnMissingSymbols() {
-    expected.expect(RuntimeException.class);
+    expected.expect(HumanReadableException.class);
     expected.expectMessage("did not list any symbols");
 
     ImplicitInclude.fromConfigurationString("foo/bar.bzl");
@@ -55,7 +56,7 @@ public class ImplicitIncludeTest {
   @Test
   public void failsOnInvalidPath() {
     Assume.assumeTrue(Platform.detect() == Platform.WINDOWS);
-    expected.expect(RuntimeException.class);
+    expected.expect(HumanReadableException.class);
     expected.expectMessage("is not a valid path");
 
     ImplicitInclude.fromConfigurationString("\\C:\\path.bzl::symbol1");
@@ -63,7 +64,7 @@ public class ImplicitIncludeTest {
 
   @Test
   public void failsOnAbsolutePath() {
-    expected.expect(RuntimeException.class);
+    expected.expect(HumanReadableException.class);
     expected.expectMessage("may not be absolute");
 
     String absolutePath = Platform.detect() == Platform.WINDOWS ? "C:/foo/bar.bzl" : "/foo/bar.bzl";
@@ -73,10 +74,26 @@ public class ImplicitIncludeTest {
 
   @Test
   public void failsOnEmptySymbols() {
-    expected.expect(RuntimeException.class);
+    expected.expect(HumanReadableException.class);
     expected.expectMessage("specifies an empty path/symbols");
 
     ImplicitInclude.fromConfigurationString("foo/bar.bzl::::symbol2");
+  }
+
+  @Test
+  public void failsOnEmptySymbolWithAliasDelimiter() {
+    expected.expect(HumanReadableException.class);
+    expected.expectMessage("specifies an empty symbol");
+
+    ImplicitInclude.fromConfigurationString("foo/bar.bzl::=");
+  }
+
+  @Test
+  public void failsOnEmptyAlias() {
+    expected.expect(HumanReadableException.class);
+    expected.expectMessage("specifies an empty symbol alias");
+
+    ImplicitInclude.fromConfigurationString("foo/bar.bzl::=symbol2");
   }
 
   @Test
@@ -86,8 +103,11 @@ public class ImplicitIncludeTest {
             Paths.get("foo", "bar.bzl"),
             ImmutableMap.of(
                 "symbol1", "symbol1",
-                "symbol2", "symbol2"));
+                "symbol2", "symbol2",
+                "symbol_alias", "symbol3"));
     Assert.assertEquals(
-        expected, ImplicitInclude.fromConfigurationString("foo/bar.bzl::symbol1::symbol2"));
+        expected,
+        ImplicitInclude.fromConfigurationString(
+            "foo/bar.bzl::symbol1::symbol2::symbol_alias=symbol3"));
   }
 }
