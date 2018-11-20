@@ -1209,18 +1209,8 @@ public class ProjectGenerator {
     CxxLibraryDescription.CommonArg arg = targetNode.getConstructorArg();
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(pathRelativizer, this::resolveSourcePath);
-
-    // Both exported headers and exported platform headers will be put into the symlink tree
-    // exported platform headers will be excluded and then included by platform
-    ImmutableSet.Builder<SourcePath> exportedHeadersBuilder = ImmutableSet.builder();
-    exportedHeadersBuilder.addAll(getHeaderSourcePaths(arg.getExportedHeaders()));
-    PatternMatchedCollection<SourceSortedSet> exportedPlatformHeaders =
-        arg.getExportedPlatformHeaders();
-    for (SourceSortedSet headersSet : exportedPlatformHeaders.getValues()) {
-      exportedHeadersBuilder.addAll(getHeaderSourcePaths(headersSet));
-    }
-
-    ImmutableSet<SourcePath> exportedHeaders = exportedHeadersBuilder.build();
+    ImmutableSet<SourcePath> exportedHeaders =
+        ImmutableSet.copyOf(getHeaderSourcePaths(arg.getExportedHeaders()));
     ImmutableSet.Builder<SourcePath> headersBuilder = ImmutableSet.builder();
     headersBuilder.addAll(getHeaderSourcePaths(arg.getHeaders()));
     for (SourceSortedSet headersSet : arg.getPlatformHeaders().getValues()) {
@@ -1261,17 +1251,6 @@ public class ProjectGenerator {
       platformHeadersIterableBuilder.add(
           new Pair<>(platformHeader.getFirst(), getHeaderSourcePaths(platformHeader.getSecond())));
     }
-
-    ImmutableList<Pair<Pattern, SourceSortedSet>> exportedPlatformHeadersPatternsAndValues =
-        exportedPlatformHeaders.getPatternsAndValues();
-    for (Pair<Pattern, SourceSortedSet> exportedPlatformHeader :
-        exportedPlatformHeadersPatternsAndValues) {
-      platformHeadersIterableBuilder.add(
-          new Pair<>(
-              exportedPlatformHeader.getFirst(),
-              getHeaderSourcePaths(exportedPlatformHeader.getSecond())));
-    }
-
     ImmutableList<Pair<Pattern, Iterable<SourcePath>>> platformHeadersIterable =
         platformHeadersIterableBuilder.build();
 
@@ -2368,28 +2347,10 @@ public class ProjectGenerator {
       Path headerPathPrefix =
           AppleDescriptions.getHeaderPathPrefix(
               (AppleNativeTargetDescriptionArg) arg, targetNode.getBuildTarget());
-
-      ImmutableSortedMap.Builder<String, SourcePath> exportedHeadersBuilder =
-          ImmutableSortedMap.naturalOrder();
-      exportedHeadersBuilder.putAll(
-          AppleDescriptions.convertHeadersToPublicCxxHeaders(
-              targetNode.getBuildTarget(),
-              this::resolveSourcePath,
-              headerPathPrefix,
-              arg.getExportedHeaders()));
-
-      for (Pair<Pattern, SourceSortedSet> patternMatchedHeader :
-          arg.getExportedPlatformHeaders().getPatternsAndValues()) {
-        exportedHeadersBuilder.putAll(
-            AppleDescriptions.convertHeadersToPublicCxxHeaders(
-                targetNode.getBuildTarget(),
-                this::resolveSourcePath,
-                headerPathPrefix,
-                patternMatchedHeader.getSecond()));
-      }
-
-      ImmutableSortedMap<String, SourcePath> fullExportedHeaders = exportedHeadersBuilder.build();
-      return convertMapKeysToPaths(fullExportedHeaders);
+      ImmutableSortedMap<String, SourcePath> cxxHeaders =
+          AppleDescriptions.convertAppleHeadersToPublicCxxHeaders(
+              targetNode.getBuildTarget(), this::resolveSourcePath, headerPathPrefix, arg);
+      return convertMapKeysToPaths(cxxHeaders);
     } else {
       ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
@@ -2423,41 +2384,10 @@ public class ProjectGenerator {
       Path headerPathPrefix =
           AppleDescriptions.getHeaderPathPrefix(
               (AppleNativeTargetDescriptionArg) arg, targetNode.getBuildTarget());
-
-      ImmutableSortedMap.Builder<String, SourcePath> fullHeadersBuilder =
-          ImmutableSortedMap.naturalOrder();
-      fullHeadersBuilder.putAll(
-          AppleDescriptions.convertHeadersToPrivateCxxHeaders(
-              targetNode.getBuildTarget(),
-              this::resolveSourcePath,
-              headerPathPrefix,
-              arg.getHeaders(),
-              arg.getExportedHeaders()));
-
-      for (Pair<Pattern, SourceSortedSet> patternMatchedHeader :
-          arg.getExportedPlatformHeaders().getPatternsAndValues()) {
-        fullHeadersBuilder.putAll(
-            AppleDescriptions.convertHeadersToPrivateCxxHeaders(
-                targetNode.getBuildTarget(),
-                this::resolveSourcePath,
-                headerPathPrefix,
-                SourceSortedSet.ofNamedSources(ImmutableSortedMap.of()),
-                patternMatchedHeader.getSecond()));
-      }
-
-      for (Pair<Pattern, SourceSortedSet> patternMatchedHeader :
-          arg.getPlatformHeaders().getPatternsAndValues()) {
-        fullHeadersBuilder.putAll(
-            AppleDescriptions.convertHeadersToPrivateCxxHeaders(
-                targetNode.getBuildTarget(),
-                this::resolveSourcePath,
-                headerPathPrefix,
-                patternMatchedHeader.getSecond(),
-                SourceSortedSet.ofNamedSources(ImmutableSortedMap.of())));
-      }
-
-      ImmutableSortedMap<String, SourcePath> fullHeaders = fullHeadersBuilder.build();
-      return convertMapKeysToPaths(fullHeaders);
+      ImmutableSortedMap<String, SourcePath> cxxHeaders =
+          AppleDescriptions.convertAppleHeadersToPrivateCxxHeaders(
+              targetNode.getBuildTarget(), this::resolveSourcePath, headerPathPrefix, arg);
+      return convertMapKeysToPaths(cxxHeaders);
     } else {
       ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);

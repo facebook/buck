@@ -24,7 +24,6 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.AbstractCxxSource;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -112,12 +111,6 @@ public class AppleLibraryBuilder
     return this;
   }
 
-  public AppleLibraryBuilder setPlatformSrcs(
-      PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> platformSrcs) {
-    getArgForPopulating().setPlatformSrcs(platformSrcs);
-    return this;
-  }
-
   public AppleLibraryBuilder setExtraXcodeSources(ImmutableList<SourcePath> extraXcodeSources) {
     getArgForPopulating().setExtraXcodeSources(extraXcodeSources);
     return this;
@@ -139,18 +132,6 @@ public class AppleLibraryBuilder
 
   public AppleLibraryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
     return setHeaders(SourceSortedSet.ofNamedSources(headers));
-  }
-
-  public AppleLibraryBuilder setPlatformHeaders(
-      PatternMatchedCollection<SourceSortedSet> platformHeaders) {
-    getArgForPopulating().setPlatformHeaders(platformHeaders);
-    return this;
-  }
-
-  public AppleLibraryBuilder setExportedPlatformHeaders(
-      PatternMatchedCollection<SourceSortedSet> exportedPlatformHeaders) {
-    getArgForPopulating().setExportedPlatformHeaders(exportedPlatformHeaders);
-    return this;
   }
 
   public AppleLibraryBuilder setExportedHeaders(SourceSortedSet exportedHeaders) {
