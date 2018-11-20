@@ -375,6 +375,7 @@ public final class Main {
       new NonReentrantSystemExit();
 
   public interface KnownRuleTypesFactoryFactory {
+
     KnownRuleTypesFactory create(
         ProcessExecutor executor,
         PluginManager pluginManager,
@@ -1186,13 +1187,13 @@ public final class Main {
                       vcBuckConfig.getHgCmd(),
                       buckConfig.getEnvironment()),
                   vcBuckConfig.getPregeneratedVersionControlStats());
-          if (command.subcommand instanceof AbstractCommand
+          if (vcBuckConfig.shouldGenerateStatistics()
+              && command.subcommand instanceof AbstractCommand
               && !(command.subcommand instanceof DistBuildCommand)) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
             if (!commandMode.equals(CommandMode.TEST)) {
               vcStatsGenerator.generateStatsAsync(
-                  subcommand.isSourceControlStatsGatheringEnabled()
-                      || vcBuckConfig.shouldGenerateStatistics(),
+                  subcommand.isSourceControlStatsGatheringEnabled(),
                   diskIoExecutorService.get(),
                   buildEventBus);
             }
@@ -1405,6 +1406,7 @@ public final class Main {
   @Value.Immutable(copy = false, builder = false)
   @BuckStyleTuple
   abstract static class AbstractParserAndCaches {
+
     public abstract Parser getParser();
 
     public abstract TypeCoercerFactory getTypeCoercerFactory();
@@ -2143,6 +2145,7 @@ public final class Main {
   }
 
   public static final class DaemonBootstrap {
+
     private static final int AFTER_COMMAND_AUTO_GC_DELAY_MS = 5000;
     private static final int SUBSEQUENT_GC_DELAY_MS = 10000;
     private static @Nullable DaemonKillers daemonKillers;
@@ -2232,6 +2235,7 @@ public final class Main {
   }
 
   private static class DaemonKillers {
+
     private final NGServer server;
     private final IdleKiller idleKiller;
     private final SocketLossKiller unixDomainSocketLossKiller;
