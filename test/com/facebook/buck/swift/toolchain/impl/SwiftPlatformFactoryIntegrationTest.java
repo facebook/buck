@@ -51,11 +51,16 @@ public class SwiftPlatformFactoryIntegrationTest {
   public void testBuildSwiftPlatformWithEmptyToolchainPaths() {
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
-            "iphoneos", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
+            "iphoneos",
+            ImmutableSet.of(),
+            swiftcTool,
+            Optional.of(swiftStdTool),
+            "x86_64-apple-ios9.3");
     assertThat(swiftPlatform.getSwiftStdlibTool().get(), equalTo(swiftStdTool));
     assertThat(swiftPlatform.getSwiftc(), equalTo(swiftcTool));
     assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
+    assertThat(swiftPlatform.getSwiftTarget(), equalTo("x86_64-apple-ios9.3"));
   }
 
   @Test
@@ -63,7 +68,11 @@ public class SwiftPlatformFactoryIntegrationTest {
     Path dir = tmp.newFolder("foo");
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
-            "iphoneos", ImmutableSet.of(dir), swiftcTool, Optional.of(swiftStdTool));
+            "iphoneos",
+            ImmutableSet.of(dir),
+            swiftcTool,
+            Optional.of(swiftStdTool),
+            "x86_64-apple-ios9.3");
     assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
@@ -81,7 +90,8 @@ public class SwiftPlatformFactoryIntegrationTest {
                 tmp.getRoot().resolve("foo2"),
                 tmp.getRoot().resolve("foo3")),
             swiftcTool,
-            Optional.of(swiftStdTool));
+            Optional.of(swiftStdTool),
+            "x86_64-apple-ios9.3");
     assertThat(swiftPlatform.getSwiftRuntimePaths(), hasSize(1));
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), hasSize(2));
   }

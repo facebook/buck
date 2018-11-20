@@ -32,12 +32,17 @@ public class SwiftPlatformFactory {
   private SwiftPlatformFactory() {}
 
   public static SwiftPlatform build(
-      String platformName, Set<Path> toolchainPaths, Tool swiftc, Optional<Tool> swiftStdLibTool) {
+      String platformName,
+      Set<Path> toolchainPaths,
+      Tool swiftc,
+      Optional<Tool> swiftStdLibTool,
+      String swiftTarget) {
     SwiftPlatform.Builder builder =
         SwiftPlatform.builder()
             .setSwiftc(swiftc)
             .setSwiftStdlibTool(swiftStdLibTool)
-            .setSwiftSharedLibraryRunPaths(buildSharedRunPaths(platformName));
+            .setSwiftSharedLibraryRunPaths(buildSharedRunPaths(platformName))
+            .setSwiftTarget(swiftTarget);
 
     for (Path toolchainPath : toolchainPaths) {
       Path swiftRuntimePath = toolchainPath.resolve("usr/lib/swift").resolve(platformName);

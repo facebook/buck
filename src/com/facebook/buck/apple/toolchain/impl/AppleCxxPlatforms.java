@@ -493,9 +493,7 @@ public class AppleCxxPlatforms {
         ImmutableList.of(
             "-frontend",
             "-sdk",
-            sdkPaths.getSdkPath().toString(),
-            "-target",
-            targetArchitectureName);
+            sdkPaths.getSdkPath().toString());
 
     ImmutableList.Builder<String> swiftStdlibToolParamsBuilder = ImmutableList.builder();
     swiftStdlibToolParamsBuilder
@@ -523,7 +521,11 @@ public class AppleCxxPlatforms {
     if (swiftc.isPresent()) {
       return Optional.of(
           SwiftPlatformFactory.build(
-              platformName, sdkPaths.getToolchainPaths(), swiftc.get(), swiftStdLibTool));
+              platformName,
+              sdkPaths.getToolchainPaths(),
+              swiftc.get(),
+              swiftStdLibTool,
+              targetArchitectureName));
     } else {
       return Optional.empty();
     }

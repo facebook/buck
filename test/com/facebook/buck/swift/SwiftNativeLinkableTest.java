@@ -56,7 +56,11 @@ public class SwiftNativeLinkableTest {
   public void testStaticLinkerFlagsOnMobile() {
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
-            "iphoneos", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
+            "iphoneos",
+            ImmutableSet.of(),
+            swiftcTool,
+            Optional.of(swiftStdTool),
+            "x86_64-apple-ios9.3");
 
     ImmutableList.Builder<Arg> staticArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkable.populateLinkerArguments(
@@ -88,7 +92,11 @@ public class SwiftNativeLinkableTest {
   public void testStaticLinkerFlagsOnMac() {
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
-            "macosx", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
+            "macosx",
+            ImmutableSet.of(),
+            swiftcTool,
+            Optional.of(swiftStdTool),
+            "x86_64-apple-ios9.3");
 
     ImmutableList.Builder<Arg> sharedArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkable.populateLinkerArguments(

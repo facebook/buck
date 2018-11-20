@@ -51,4 +51,10 @@ interface AbstractSwiftPlatform {
    *     "@executable_path/Frameworks" is a common rpath.
    */
   ImmutableList<Path> getSwiftSharedLibraryRunPaths();
+
+  /**
+   * @return String that represents the architecture target the swift module is built for
+   * e.g. x86_64-apple-ios9.0
+   */
+  String getSwiftTarget();
 }
