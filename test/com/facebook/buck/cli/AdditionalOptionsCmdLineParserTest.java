@@ -116,4 +116,11 @@ public class AdditionalOptionsCmdLineParserTest {
     assertNull(options.sub2.three);
     assertNull(options.sub.sub.four);
   }
+
+  @Test
+  public void testIgnoresFlagFiles() throws CmdLineException {
+    parser.parseArgument(O1, "@value");
+
+    assertEquals("@value", options.one);
+  }
 }

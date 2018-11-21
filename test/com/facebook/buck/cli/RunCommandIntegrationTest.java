@@ -100,7 +100,7 @@ public class RunCommandIntegrationTest {
             "one_arg",
             workspace.getPath("output").toAbsolutePath().toString());
     result.assertSuccess("buck run should succeed");
-    assertEquals("SUCCESS\n", result.getStdout());
+    assertThat(result.getStdout(), containsString("SUCCESS"));
     workspace.verify();
   }
 
@@ -131,5 +131,25 @@ public class RunCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("run", "//cmd:command");
     result.assertSpecialExitCode("buck run should propagate failure", ExitCode.BUILD_ERROR);
+  }
+
+  @Test
+  public void testRunCommandWithDashArgumentsAndFlagFile() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "run",
+            "//cmd:command",
+            "@extra_options",
+            "--",
+            "@flagfile",
+            workspace.getPath("configured_output").toAbsolutePath().toString());
+    result.assertSuccess("buck run should succeed");
+    assertThat(result.getStdout(), containsString("CONFIG = baz"));
+    assertThat(result.getStdout(), containsString("SUCCESS"));
+    assertEquals("@flagfile", workspace.getFileContents("configured_output").trim());
   }
 }
