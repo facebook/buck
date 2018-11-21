@@ -19,7 +19,10 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -120,6 +123,7 @@ public class AuditDependenciesCommandIntegrationTest {
 
   @Test
   public void testTestFlagWithTransitiveShowsAllTests() throws IOException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_dependencies", tmp);
     workspace.setUp();
