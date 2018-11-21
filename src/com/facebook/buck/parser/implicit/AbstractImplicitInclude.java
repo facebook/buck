@@ -90,19 +90,6 @@ public abstract class AbstractImplicitInclude {
               + "the format <path>::<symbol1>::<symbol2>...",
           configurationString);
     }
-    int i = 0;
-    ImmutableMap.Builder<String, String> symbolBuilder = ImmutableMap.builder();
-    for (String part : parts) {
-      if (part.isEmpty()) {
-        throw new HumanReadableException(
-            "Provided configuration %s specifies an empty path/symbols", configurationString);
-      }
-      // Path is the first component, symbols are each subsequent one
-      if (i > 0) {
-        parseSymbolsFromConfiguration(part, symbolBuilder, configurationString);
-      }
-      i++;
-    }
 
     Path loadPath;
     try {
@@ -114,7 +101,23 @@ public abstract class AbstractImplicitInclude {
       throw new HumanReadableException(e, "Provided path %s is not a valid path", parts.get(0));
     }
 
-    return ImplicitInclude.of(loadPath, symbolBuilder.build());
+    ImmutableMap<String, String> symbols =
+        parseAllSymbolsFromConfiguration(parts.subList(1, parts.size()), configurationString);
+
+    return ImplicitInclude.of(loadPath, symbols);
+  }
+
+  private static ImmutableMap<String, String> parseAllSymbolsFromConfiguration(
+      ImmutableList<String> allSymbols, String configurationString) {
+    ImmutableMap.Builder<String, String> symbolBuilder = ImmutableMap.builder();
+    for (String symbolString : allSymbols) {
+      if (symbolString.isEmpty()) {
+        throw new HumanReadableException(
+            "Provided configuration %s specifies an empty path/symbols", configurationString);
+      }
+      parseSymbolsFromConfiguration(symbolString, symbolBuilder, configurationString);
+    }
+    return symbolBuilder.build();
   }
 
   static void parseSymbolsFromConfiguration(
