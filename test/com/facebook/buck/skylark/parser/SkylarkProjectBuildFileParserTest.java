@@ -1302,13 +1302,13 @@ public class SkylarkProjectBuildFileParserTest {
                 .setPackageImplicitIncludes(
                     ImmutableMap.of(
                         "",
-                        ImplicitInclude.fromConfigurationString("get_name.bzl::get_rule_name"),
+                        ImplicitInclude.fromConfigurationString("//:get_name.bzl::get_rule_name"),
                         "src/foo",
                         ImplicitInclude.fromConfigurationString(
-                            "src/foo/get_name.bzl::get_rule_name"),
+                            "//src/foo:get_name.bzl::get_rule_name"),
                         "src/alias",
                         ImplicitInclude.of(
-                            Paths.get("src/alias/get_name.bzl"),
+                            "//src/alias:get_name.bzl",
                             ImmutableMap.of("get_rule_name", "get_rule_name_alias"))))
                 .build());
 
@@ -1421,7 +1421,7 @@ public class SkylarkProjectBuildFileParserTest {
             getDefaultParserOptions()
                 .setPackageImplicitIncludes(
                     ImmutableMap.of(
-                        "src", ImplicitInclude.fromConfigurationString("src/name.bzl::NAME")))
+                        "src", ImplicitInclude.fromConfigurationString("//src:name.bzl::NAME")))
                 .build());
 
     Path srcBuildFile = projectFilesystem.resolve(Paths.get("src", "BUCK"));
@@ -1467,7 +1467,7 @@ public class SkylarkProjectBuildFileParserTest {
                     ImmutableMap.of(
                         "src",
                         ImplicitInclude.fromConfigurationString(
-                            "src/get_name.bzl::invalid_symbol")))
+                            "//src:get_name.bzl::invalid_symbol")))
                 .build());
 
     Path buildFile = projectFilesystem.resolve(Paths.get("src", "BUCK"));
@@ -1490,7 +1490,8 @@ public class SkylarkProjectBuildFileParserTest {
             getDefaultParserOptions()
                 .setPackageImplicitIncludes(
                     ImmutableMap.of(
-                        "src", ImplicitInclude.fromConfigurationString("src/get_name.bzl::symbol")))
+                        "src",
+                        ImplicitInclude.fromConfigurationString("//src:get_name.bzl::symbol")))
                 .build());
 
     Path buildFile = projectFilesystem.resolve(Paths.get("src", "BUCK"));
@@ -1520,7 +1521,7 @@ public class SkylarkProjectBuildFileParserTest {
                     ImmutableMap.of(
                         "src",
                         ImplicitInclude.fromConfigurationString(
-                            "src/get_name.bzl::invalid_symbol")))
+                            "//src:get_name.bzl::invalid_symbol")))
                 .build());
 
     Path buildFile = projectFilesystem.resolve(Paths.get("src", "BUCK"));
@@ -1549,7 +1550,8 @@ public class SkylarkProjectBuildFileParserTest {
                 .setPackageImplicitIncludes(
                     ImmutableMap.of(
                         "src",
-                        ImplicitInclude.fromConfigurationString("src/get_name.bzl::get_rule_name")))
+                        ImplicitInclude.fromConfigurationString(
+                            "//src:get_name.bzl::get_rule_name")))
                 .build());
 
     Path buildFile = projectFilesystem.resolve(Paths.get("src", "BUCK"));

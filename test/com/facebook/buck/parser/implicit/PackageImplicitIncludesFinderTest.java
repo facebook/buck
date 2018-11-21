@@ -25,8 +25,10 @@ public class PackageImplicitIncludesFinderTest {
 
   @Test
   public void parsesBasicConfiguration() {
-    ImplicitInclude include1 = ImplicitInclude.fromConfigurationString("include_1.bzl::get_name");
-    ImplicitInclude include2 = ImplicitInclude.fromConfigurationString("include_2.bzl::get_name");
+    ImplicitInclude include1 =
+        ImplicitInclude.fromConfigurationString("//:include_1.bzl::get_name");
+    ImplicitInclude include2 =
+        ImplicitInclude.fromConfigurationString("//:include_2.bzl::get_name");
 
     ImmutableMap<String, ImplicitInclude> config =
         ImmutableMap.of(
@@ -51,12 +53,12 @@ public class PackageImplicitIncludesFinderTest {
   @Test
   public void handlesRootConfigs() {
     ImmutableMap<String, ImplicitInclude> config =
-        ImmutableMap.of("", ImplicitInclude.fromConfigurationString("include.bzl::get_name"));
+        ImmutableMap.of("", ImplicitInclude.fromConfigurationString("//:include.bzl::get_name"));
 
     PackageImplicitIncludesFinder finder = PackageImplicitIncludesFinder.fromConfiguration(config);
 
     Optional<ImplicitInclude> expected =
-        Optional.of(ImplicitInclude.fromConfigurationString("include.bzl::get_name"));
+        Optional.of(ImplicitInclude.fromConfigurationString("//:include.bzl::get_name"));
 
     Assert.assertEquals(expected, finder.findIncludeForBuildFile(Paths.get("foo", "bar", "baz")));
     Assert.assertEquals(expected, finder.findIncludeForBuildFile(Paths.get("")));
@@ -66,11 +68,11 @@ public class PackageImplicitIncludesFinderTest {
   public void handlesSkippingALevel() {
     ImmutableMap<String, ImplicitInclude> config =
         ImmutableMap.of(
-            "foo", ImplicitInclude.fromConfigurationString("include_1.bzl::get_name"),
-            "foo/bar/baz", ImplicitInclude.fromConfigurationString("include_2.bzl::get_name"));
+            "foo", ImplicitInclude.fromConfigurationString("//:include_1.bzl::get_name"),
+            "foo/bar/baz", ImplicitInclude.fromConfigurationString("//:include_2.bzl::get_name"));
 
     Optional<ImplicitInclude> expected =
-        Optional.of(ImplicitInclude.fromConfigurationString("include_1.bzl::get_name"));
+        Optional.of(ImplicitInclude.fromConfigurationString("//:include_1.bzl::get_name"));
 
     PackageImplicitIncludesFinder finder = PackageImplicitIncludesFinder.fromConfiguration(config);
 

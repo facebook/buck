@@ -17,7 +17,6 @@ package com.facebook.buck.parser.implicit;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.io.file.MorePaths;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
@@ -25,9 +24,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.SkylarkImport;
 import com.google.devtools.build.lib.syntax.SkylarkImports;
 import com.google.devtools.build.lib.syntax.SkylarkImports.SkylarkImportSyntaxException;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import org.immutables.value.Value;
 
@@ -37,7 +33,7 @@ import org.immutables.value.Value;
 public abstract class AbstractImplicitInclude {
   @JsonIgnore
   @Value.Parameter
-  abstract Path getPath();
+  abstract String getRawImportLabel();
 
   @JsonProperty("load_symbols")
   @Value.Parameter
@@ -56,10 +52,7 @@ public abstract class AbstractImplicitInclude {
   @JsonIgnore
   @Value.Derived
   public SkylarkImport getLoadPath() {
-    Path path = getPath();
-    final Path packagePath = MorePaths.getParentOrEmpty(path);
-    String loadPath = MorePaths.pathWithUnixSeparators(packagePath);
-    String label = String.format("//%s:%s", loadPath, path.getFileName());
+    String label = getRawImportLabel();
     try {
       return SkylarkImports.create(label);
     } catch (SkylarkImportSyntaxException e) {
@@ -70,7 +63,7 @@ public abstract class AbstractImplicitInclude {
   /**
    * Constructs a {@link AbstractImplicitInclude} from a configuration string in the form of
    *
-   * <p>path/to/bzl_file.bzl::symbol_to_import::second_symbol_to_import
+   * <p>//path/to:bzl_file.bzl::symbol_to_import::second_symbol_to_import
    *
    * @param configurationString The string used in configuration
    * @return A parsed {@link AbstractImplicitInclude} object
@@ -87,27 +80,15 @@ public abstract class AbstractImplicitInclude {
     if (parts.size() < 2) {
       throw new HumanReadableException(
           "Configuration setting '%s' did not list any symbols to load. Setting should be of "
-              + "the format <path>::<symbol1>::<symbol2>...",
+              + "the format //<load label>::<symbol1>::<symbol2>...",
           configurationString);
     }
 
-    Path loadPath = validateLoadPath(parts.get(0));
+    String rawLabel = validateLabelFromConfiguration(parts.get(0), configurationString);
     ImmutableMap<String, String> symbols =
         parseAllSymbolsFromConfiguration(parts.subList(1, parts.size()), configurationString);
 
-    return ImplicitInclude.of(loadPath, symbols);
-  }
-
-  private static Path validateLoadPath(String rawPath) {
-    try {
-      Path loadPath = Paths.get(rawPath);
-      if (loadPath.isAbsolute()) {
-        throw new HumanReadableException("Path %s may not be absolute", loadPath);
-      }
-      return loadPath;
-    } catch (InvalidPathException e) {
-      throw new HumanReadableException(e, "Provided path %s is not a valid path", rawPath);
-    }
+    return ImplicitInclude.of(rawLabel, symbols);
   }
 
   private static ImmutableMap<String, String> parseAllSymbolsFromConfiguration(
@@ -121,6 +102,23 @@ public abstract class AbstractImplicitInclude {
       parseSymbolsFromConfiguration(symbolString, symbolBuilder, configurationString);
     }
     return symbolBuilder.build();
+  }
+
+  private static String validateLabelFromConfiguration(
+      String rawLabel, String configurationString) {
+    if (!rawLabel.contains("//")) {
+      throw new HumanReadableException(
+          "Provided configuration %s specifies a non-absolute load path. It must be relative to "
+              + "the project root, or to another cell's root",
+          configurationString);
+    }
+    if (!rawLabel.contains(":")) {
+      throw new HumanReadableException(
+          "Provided configuration %s does not specify a file to load in its label. Does it "
+              + "contain a ':'?",
+          configurationString);
+    }
+    return rawLabel;
   }
 
   static void parseSymbolsFromConfiguration(

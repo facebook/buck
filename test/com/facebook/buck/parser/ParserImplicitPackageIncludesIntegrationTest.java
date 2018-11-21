@@ -63,7 +63,26 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "//root/foo/bar:subdir__subdir",
             "//root/foo/bar/baz:subdir__subdir",
             "-c",
-            "buildfile.package_includes=root=>root/name.bzl::NAME,root/foo/bar=>root/foo/bar/name.bzl::NAME=SOME_OTHER_NAME",
+            "buildfile.package_includes=root=>//root:name.bzl::NAME,root/foo/bar=>//root/foo/bar:name.bzl::NAME=SOME_OTHER_NAME",
+            "-c",
+            "parser.default_build_file_syntax=" + parser);
+
+    result.assertSuccess();
+  }
+
+  @Test
+  public void crossCellImplicitPackageSymbolsAreVisible() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "package_implicit_includes", temporaryFolder);
+    workspace.setUp();
+    // The build files use implicit functions in generating their names, so if implicits break,
+    // or the wrong functions are called, the targets just won't exist, and the query will fail.
+    ProcessResult result =
+        workspace.runBuckBuild(
+            "//root:cell__cell",
+            "-c",
+            "buildfile.package_includes=root=>@cell//:name.bzl::NAME",
             "-c",
             "parser.default_build_file_syntax=" + parser);
 
@@ -85,7 +104,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "//default/no_symbol:root__root", // Invalid/missing symbol
             "//default/has_symbol:some_name__some_name", // symbol is present
             "-c",
-            "buildfile.package_includes=default/no_symbol=>default/no_symbol/name.bzl::NAME,default/has_symbol=>default/has_symbol/name.bzl::NAME",
+            "buildfile.package_includes=default/no_symbol=>//default/no_symbol:name.bzl::NAME,default/has_symbol=>//default/has_symbol:name.bzl::NAME",
             "-c",
             "parser.default_build_file_syntax=" + parser);
 
@@ -103,7 +122,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
         workspace.runBuckBuild(
             "//default:root__root",
             "-c",
-            "buildfile.package_includes=default=>get_suffix.bzl::MISSING",
+            "buildfile.package_includes=default=>//:get_suffix.bzl::MISSING",
             "-c",
             "parser.default_build_file_syntax=" + parser);
 
@@ -121,7 +140,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
         workspace.runBuckBuild(
             "//default:root__root",
             "-c",
-            "buildfile.package_includes=default=>missing.bzl::NAME",
+            "buildfile.package_includes=default=>//:missing.bzl::NAME",
             "-c",
             "parser.default_build_file_syntax=" + parser);
 
@@ -135,7 +154,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             this, "package_implicit_includes", temporaryFolder);
     workspace.setUp();
     String implicits =
-        "buildfile.package_includes=default/no_symbol=>default/no_symbol/name.bzl::NAME,default/has_symbol=>default/has_symbol/name.bzl::NAME";
+        "buildfile.package_includes=default/no_symbol=>//default/no_symbol:name.bzl::NAME,default/has_symbol=>//default/has_symbol:name.bzl::NAME";
 
     ImmutableList<Path> expectedRoot =
         ImmutableList.of(

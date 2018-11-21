@@ -232,7 +232,7 @@ public class ParserConfigTest {
                     "buildfile",
                     ImmutableMap.of(
                         "package_includes",
-                        "=>includes.bzl::get_name::get_value,foo/bar=>foo/bar/includes.bzl::get_name::get_value")))
+                        "=>//:includes.bzl::get_name::get_value,foo/bar=>//foo/bar:includes.bzl::get_name::get_value")))
             .build()
             .getView(ParserConfig.class)
             .getPackageImplicitIncludes();
@@ -240,9 +240,9 @@ public class ParserConfigTest {
     ImmutableMap<String, ImplicitInclude> expected =
         ImmutableMap.of(
             "",
-            ImplicitInclude.fromConfigurationString("includes.bzl::get_name::get_value"),
+            ImplicitInclude.fromConfigurationString("//:includes.bzl::get_name::get_value"),
             "foo/bar",
-            ImplicitInclude.fromConfigurationString("foo/bar/includes.bzl::get_name::get_value"));
+            ImplicitInclude.fromConfigurationString("//foo/bar:includes.bzl::get_name::get_value"));
 
     assertEquals(expected, actual);
   }
