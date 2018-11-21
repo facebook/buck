@@ -91,20 +91,23 @@ public abstract class AbstractImplicitInclude {
           configurationString);
     }
 
-    Path loadPath;
-    try {
-      loadPath = Paths.get(parts.get(0));
-      if (loadPath.isAbsolute()) {
-        throw new HumanReadableException("Path %s may not be absolute", loadPath);
-      }
-    } catch (InvalidPathException e) {
-      throw new HumanReadableException(e, "Provided path %s is not a valid path", parts.get(0));
-    }
-
+    Path loadPath = validateLoadPath(parts.get(0));
     ImmutableMap<String, String> symbols =
         parseAllSymbolsFromConfiguration(parts.subList(1, parts.size()), configurationString);
 
     return ImplicitInclude.of(loadPath, symbols);
+  }
+
+  private static Path validateLoadPath(String rawPath) {
+    try {
+      Path loadPath = Paths.get(rawPath);
+      if (loadPath.isAbsolute()) {
+        throw new HumanReadableException("Path %s may not be absolute", loadPath);
+      }
+      return loadPath;
+    } catch (InvalidPathException e) {
+      throw new HumanReadableException(e, "Provided path %s is not a valid path", rawPath);
+    }
   }
 
   private static ImmutableMap<String, String> parseAllSymbolsFromConfiguration(
