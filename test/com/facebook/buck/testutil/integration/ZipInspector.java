@@ -76,6 +76,16 @@ public class ZipInspector {
     assertFileContents(MorePaths.pathWithUnixSeparators(pathRelativeToRoot), expected);
   }
 
+  public void assertFileContains(String pathRelativeToRoot, String expected) throws IOException {
+    assertThat(
+        new String(getFileContents(pathRelativeToRoot), Charsets.UTF_8),
+        MoreStringsForTests.containsIgnoringPlatformNewlines(expected));
+  }
+
+  public void assertFileContains(Path pathRelativeToRoot, String expected) throws IOException {
+    assertFileContains(MorePaths.pathWithUnixSeparators(pathRelativeToRoot), expected);
+  }
+
   public byte[] getFileContents(String pathRelativeToRoot) throws IOException {
     try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
       ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
