@@ -65,6 +65,7 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
@@ -136,7 +137,7 @@ public abstract class IsolatedBuildableBuilder {
     Architecture architecture = Architecture.detect();
     Platform platform = Platform.detect();
 
-    ImmutableMap<String, String> clientEnvironment = ImmutableMap.copyOf(System.getenv());
+    ImmutableMap<String, String> clientEnvironment = EnvVariablesProvider.getSystemEnv();
 
     DefaultCellPathResolver cellPathResolver =
         DefaultCellPathResolver.of(filesystem.getRootPath(), config);

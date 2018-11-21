@@ -35,6 +35,7 @@ import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.timing.Clock;
@@ -120,7 +121,7 @@ public class PublicAnnouncementManagerIntegrationTest {
       BuckEventBus eventBus = BuckEventBusForTests.newInstance(clock);
       ExecutionEnvironment executionEnvironment =
           new DefaultExecutionEnvironment(
-              ImmutableMap.copyOf(System.getenv()), System.getProperties());
+              EnvVariablesProvider.getSystemEnv(), System.getProperties());
       BuckConfig buckConfig =
           new FakeBuckConfig.Builder()
               .setSections(

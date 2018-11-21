@@ -58,6 +58,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -129,7 +130,7 @@ public class TargetsCommandTest {
             eventBus,
             FakeBuckConfig.builder().build(),
             Platform.detect(),
-            ImmutableMap.copyOf(System.getenv()),
+            EnvVariablesProvider.getSystemEnv(),
             new FakeJavaPackageFinder(),
             Optional.empty());
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());

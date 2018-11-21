@@ -29,6 +29,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -65,7 +66,7 @@ public class WatchmanWatcherIntegrationTest {
     watchman =
         watchmanFactory.build(
             ImmutableSet.of(tmp.getRoot()),
-            ImmutableMap.copyOf(System.getenv()),
+            EnvVariablesProvider.getSystemEnv(),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),
             new DefaultClock(),
             Optional.empty());

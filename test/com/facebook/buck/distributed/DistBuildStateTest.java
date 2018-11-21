@@ -75,6 +75,7 @@ import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -120,7 +121,7 @@ public class DistBuildStateTest {
         FakeBuckConfig.builder()
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .putAll(System.getenv())
+                    .putAll(EnvVariablesProvider.getSystemEnv())
                     .put("envKey", "envValue")
                     .build())
             .setFilesystem(filesystem)
@@ -173,7 +174,7 @@ public class DistBuildStateTest {
         FakeBuckConfig.builder()
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .putAll(System.getenv())
+                    .putAll(EnvVariablesProvider.getSystemEnv())
                     .put("envKey", "envValue")
                     .build())
             .setFilesystem(filesystem)
@@ -190,7 +191,7 @@ public class DistBuildStateTest {
         FakeBuckConfig.builder()
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .putAll(System.getenv())
+                    .putAll(EnvVariablesProvider.getSystemEnv())
                     .put("envKey", "envValue")
                     .build())
             .setFilesystem(filesystem)
@@ -311,7 +312,7 @@ public class DistBuildStateTest {
         FakeBuckConfig.builder()
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .putAll(System.getenv())
+                    .putAll(EnvVariablesProvider.getSystemEnv())
                     .put("envKey", "envValue")
                     .build())
             .setFilesystem(cell1Filesystem)
@@ -340,7 +341,7 @@ public class DistBuildStateTest {
         FakeBuckConfig.builder()
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .putAll(System.getenv())
+                    .putAll(EnvVariablesProvider.getSystemEnv())
                     .put("envKey", "envValue")
                     .build())
             .setFilesystem(cell1Filesystem)

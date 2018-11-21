@@ -49,6 +49,7 @@ import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -440,7 +441,7 @@ public class JavaBuckConfigTest {
             defaultFilesystem,
             Architecture.detect(),
             Platform.detect(),
-            ImmutableMap.copyOf(System.getenv()));
+            EnvVariablesProvider.getSystemEnv());
     return raw.getView(JavaBuckConfig.class);
   }
 }

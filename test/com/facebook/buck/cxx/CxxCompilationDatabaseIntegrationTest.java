@@ -38,9 +38,9 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -77,7 +77,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     String executable = Platform.detect() == Platform.MACOS ? "clang++" : "g++";
     COMPILER_PATH =
         new ExecutableFinder()
-            .getOptionalExecutable(Paths.get(executable), ImmutableMap.copyOf(System.getenv()))
+            .getOptionalExecutable(Paths.get(executable), EnvVariablesProvider.getSystemEnv())
             .orElse(Paths.get("/usr/bin/", executable))
             .toString();
   }

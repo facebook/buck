@@ -22,8 +22,8 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -68,7 +68,7 @@ public class ExternalJavacEscaperTest {
 
     Path javac =
         new ExecutableFinder()
-            .getExecutable(Paths.get("javac"), ImmutableMap.copyOf(System.getenv()));
+            .getExecutable(Paths.get("javac"), EnvVariablesProvider.getSystemEnv());
     assumeTrue(Files.exists(javac));
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toString());
 

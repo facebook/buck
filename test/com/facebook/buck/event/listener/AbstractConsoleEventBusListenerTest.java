@@ -21,9 +21,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -39,7 +39,7 @@ public class AbstractConsoleEventBusListenerTest {
         FakeClock.doNotCare(),
         Locale.US,
         new DefaultExecutionEnvironment(
-            ImmutableMap.copyOf(System.getenv()), System.getProperties()),
+            EnvVariablesProvider.getSystemEnv(), System.getProperties()),
         false,
         1,
         false) {

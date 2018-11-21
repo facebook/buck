@@ -34,6 +34,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
@@ -174,7 +175,7 @@ public class BuckConfigTest {
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()));
+        EnvVariablesProvider.getSystemEnv());
   }
 
   @Test

@@ -39,10 +39,10 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.util.concurrent.Futures;
@@ -195,7 +195,7 @@ public class CacheCommandTest {
             clock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                ImmutableMap.copyOf(System.getenv()), System.getProperties()),
+                EnvVariablesProvider.getSystemEnv(), System.getProperties()),
             Locale.US,
             logPath,
             timeZone,

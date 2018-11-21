@@ -27,6 +27,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -124,7 +125,7 @@ public class CsharpLibraryIntegrationTest {
       }
       return builder.build();
     } else {
-      return ImmutableMap.copyOf(System.getenv());
+      return EnvVariablesProvider.getSystemEnv();
     }
   }
 }

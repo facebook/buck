@@ -32,6 +32,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -360,6 +361,6 @@ public class ArtifactCacheBuckConfigTest {
             projectFilesystem,
             Architecture.detect(),
             Platform.detect(),
-            ImmutableMap.copyOf(System.getenv())));
+            EnvVariablesProvider.getSystemEnv()));
   }
 }

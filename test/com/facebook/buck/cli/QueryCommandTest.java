@@ -47,6 +47,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.concurrent.FakeListeningExecutorService;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -103,7 +104,7 @@ public class QueryCommandTest {
             eventBus,
             FakeBuckConfig.builder().build(),
             Platform.detect(),
-            ImmutableMap.copyOf(System.getenv()),
+            EnvVariablesProvider.getSystemEnv(),
             new FakeJavaPackageFinder(),
             Optional.empty());
 

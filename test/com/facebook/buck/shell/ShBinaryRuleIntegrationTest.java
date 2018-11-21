@@ -28,6 +28,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -113,7 +114,7 @@ public class ShBinaryRuleIntegrationTest {
     List<String> lines = Files.readAllLines(outputFile, US_ASCII);
     ExecutionEnvironment executionEnvironment =
         new DefaultExecutionEnvironment(
-            ImmutableMap.copyOf(System.getenv()), System.getProperties());
+            EnvVariablesProvider.getSystemEnv(), System.getProperties());
     String expectedPlatform = executionEnvironment.getPlatform().getPrintableName();
     assertEquals(expectedPlatform, lines.get(0));
     assertEquals("arg1 arg2", lines.get(1));

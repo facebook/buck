@@ -69,6 +69,7 @@ import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.CommandMode;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.trace.ChromeTraceParser;
@@ -427,7 +428,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     assumeTrue(
         "watchman must exist to run buckd",
         new ExecutableFinder(Platform.detect())
-            .getOptionalExecutable(Paths.get("watchman"), ImmutableMap.copyOf(System.getenv()))
+            .getOptionalExecutable(Paths.get("watchman"), EnvVariablesProvider.getSystemEnv())
             .isPresent());
     return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath, Optional.of(context), ImmutableMap.of(), stderr, args);
@@ -631,7 +632,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     DefaultCellPathResolver rootCellCellPathResolver =
         DefaultCellPathResolver.of(filesystem.getRootPath(), config);
 
-    ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
+    ImmutableMap<String, String> env = EnvVariablesProvider.getSystemEnv();
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(config.getRawConfig())

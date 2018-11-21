@@ -36,6 +36,7 @@ import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.CommandMode;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -114,7 +115,7 @@ public class DaemonIntegrationTest {
     // Build an NGContext connected to an NGInputStream reading from a stream that will timeout.
     Thread.currentThread().setName("Test");
     try (TestContext context =
-        new TestContext(ImmutableMap.copyOf(System.getenv()), timeoutMillis)) {
+        new TestContext(EnvVariablesProvider.getSystemEnv(), timeoutMillis)) {
       Thread thread = Thread.currentThread();
       context.addClientListener(
           reason -> {
@@ -173,7 +174,7 @@ public class DaemonIntegrationTest {
             main.runMainWithExitCode(
                 new BuildId(),
                 tmp.getRoot(),
-                ImmutableMap.copyOf(System.getenv()),
+                EnvVariablesProvider.getSystemEnv(),
                 CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),

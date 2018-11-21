@@ -53,6 +53,7 @@ import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
@@ -162,7 +163,7 @@ public class CommandRunnerParamsForTesting {
     private BuckConfig config = FakeBuckConfig.builder().build();
     private BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     private Platform platform = Platform.detect();
-    private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
+    private ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();
     private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
     private Optional<WebServer> webServer = Optional.empty();
     @Nullable private ToolchainProvider toolchainProvider = null;

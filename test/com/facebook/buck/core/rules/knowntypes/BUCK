@@ -51,6 +51,7 @@ java_immutables_library(
         "//test/...",
     ],
     deps = [
+        "//src/com/facebook/buck/util/environment:environment",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/sandbox:testutil",
     ],

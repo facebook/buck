@@ -55,6 +55,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
@@ -308,7 +309,7 @@ public class CleanCommandTest {
         TestParserFactory.create(buckConfig, knownRuleTypesProvider),
         BuckEventBusForTests.newInstance(),
         Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()),
+        EnvVariablesProvider.getSystemEnv(),
         new FakeJavaPackageFinder(),
         new DefaultClock(),
         new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),

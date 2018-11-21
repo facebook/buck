@@ -58,6 +58,7 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -1325,7 +1326,7 @@ public class CxxBinaryIntegrationTest {
     String executable = Platform.detect() == Platform.MACOS ? "clang++" : "g++";
     Path executableLocation =
         new ExecutableFinder()
-            .getOptionalExecutable(Paths.get(executable), ImmutableMap.copyOf(System.getenv()))
+            .getOptionalExecutable(Paths.get(executable), EnvVariablesProvider.getSystemEnv())
             .orElse(Paths.get("/usr/bin", executable));
 
     // Write script as faux clang++/g++ binary

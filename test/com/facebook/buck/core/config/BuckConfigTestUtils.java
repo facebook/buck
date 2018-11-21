@@ -21,6 +21,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -38,7 +39,7 @@ public class BuckConfigTestUtils {
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()));
+        EnvVariablesProvider.getSystemEnv());
   }
 
   public static <T extends ConfigView<BuckConfig>> T createWithDefaultFilesystem(

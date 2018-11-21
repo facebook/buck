@@ -26,6 +26,7 @@ import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 
@@ -47,7 +48,7 @@ public class FakeBuckConfig {
 
   public static class Builder {
     private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
+    private ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();
     private RawConfig sections = RawConfig.of();
     private Architecture architecture = Architecture.detect();
     private Platform platform = Platform.detect();

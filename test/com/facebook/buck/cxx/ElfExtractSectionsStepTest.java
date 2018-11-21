@@ -29,9 +29,9 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -55,7 +55,7 @@ public class ElfExtractSectionsStepTest {
     for (String name : OBJCOPY_NAMES) {
       objcopy =
           finder.getOptionalExecutable(
-              tmp.getRoot().getFileSystem().getPath(name), ImmutableMap.copyOf(System.getenv()));
+              tmp.getRoot().getFileSystem().getPath(name), EnvVariablesProvider.getSystemEnv());
       if (objcopy.isPresent()) {
         break;
       }

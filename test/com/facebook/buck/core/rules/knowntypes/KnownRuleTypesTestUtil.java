@@ -21,6 +21,7 @@ import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +39,7 @@ import java.util.Set;
 public final class KnownRuleTypesTestUtil {
 
   private static final String FAKE_XCODE_DEV_PATH = "/Fake/Path/To/Xcode.app/Contents/Developer";
-  static final ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
+  static final ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();
 
   private KnownRuleTypesTestUtil() {
     // Utility class.

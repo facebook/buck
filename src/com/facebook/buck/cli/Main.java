@@ -175,6 +175,7 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.NetworkInfo;
 import com.facebook.buck.util.environment.Platform;
@@ -1739,9 +1740,11 @@ public final class Main {
     if (context.isPresent()) {
       return ImmutableMap.<String, String>copyOf((Map) context.get().getEnv());
     } else {
+      ImmutableMap<String, String> systemEnv = EnvVariablesProvider.getSystemEnv();
       ImmutableMap.Builder<String, String> builder =
-          ImmutableMap.builderWithExpectedSize(System.getenv().size());
-      System.getenv()
+          ImmutableMap.builderWithExpectedSize(systemEnv.size());
+
+      systemEnv
           .entrySet()
           .stream()
           .filter(
@@ -2014,7 +2017,7 @@ public final class Main {
     if (context.isPresent()) {
       specifiedBuildId = context.get().getEnv().getProperty(BUCK_BUILD_ID_ENV_VAR);
     } else {
-      specifiedBuildId = System.getenv().get(BUCK_BUILD_ID_ENV_VAR);
+      specifiedBuildId = EnvVariablesProvider.getSystemEnv().get(BUCK_BUILD_ID_ENV_VAR);
     }
     if (specifiedBuildId == null) {
       specifiedBuildId = UUID.randomUUID().toString();

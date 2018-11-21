@@ -91,6 +91,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.config.ConfigBuilder;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -2300,7 +2301,7 @@ public class DefaultParserTest {
         FakeBuckConfig.builder()
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .putAll(System.getenv())
+                    .putAll(EnvVariablesProvider.getSystemEnv())
                     .put("FOO", "value")
                     .build())
             .setFilesystem(filesystem)
@@ -2316,7 +2317,7 @@ public class DefaultParserTest {
             .setFilesystem(filesystem)
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .putAll(System.getenv())
+                    .putAll(EnvVariablesProvider.getSystemEnv())
                     .put("FOO", "other value")
                     .build())
             .build();
@@ -2354,7 +2355,7 @@ public class DefaultParserTest {
             .setFilesystem(filesystem)
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .putAll(System.getenv())
+                    .putAll(EnvVariablesProvider.getSystemEnv())
                     .put("FOO", "other value")
                     .build())
             .build();
@@ -2384,7 +2385,7 @@ public class DefaultParserTest {
         FakeBuckConfig.builder()
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .putAll(System.getenv())
+                    .putAll(EnvVariablesProvider.getSystemEnv())
                     .put("FOO", "value")
                     .build())
             .setFilesystem(filesystem)
@@ -2422,7 +2423,7 @@ public class DefaultParserTest {
         FakeBuckConfig.builder()
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .putAll(System.getenv())
+                    .putAll(EnvVariablesProvider.getSystemEnv())
                     .put("FOO", "value")
                     .put("BAR", "something")
                     .build())
@@ -2438,7 +2439,7 @@ public class DefaultParserTest {
         FakeBuckConfig.builder()
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .putAll(System.getenv())
+                    .putAll(EnvVariablesProvider.getSystemEnv())
                     .put("FOO", "value")
                     .put("BAR", "something else")
                     .build())
