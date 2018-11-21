@@ -87,18 +87,16 @@ public abstract class AbstractImplicitInclude {
             .collect(ImmutableList.toImmutableList());
     if (parts.size() < 2) {
       throw new HumanReadableException(
-          String.format(
-              "Configuration setting '%s' did not list any symbols to load. Setting should be of "
-                  + "the format <path>::<symbol1>::<symbol2>...",
-              configurationString));
+          "Configuration setting '%s' did not list any symbols to load. Setting should be of "
+              + "the format <path>::<symbol1>::<symbol2>...",
+          configurationString);
     }
     int i = 0;
     ImmutableMap.Builder<String, String> symbolBuilder = ImmutableMap.builder();
     for (String part : parts) {
       if (part.isEmpty()) {
         throw new HumanReadableException(
-            String.format(
-                "Provided configuration %s specifies an empty path/symbols", configurationString));
+            "Provided configuration %s specifies an empty path/symbols", configurationString);
       }
       // Path is the first component, symbols are each subsequent one
       if (i > 0) {
@@ -111,11 +109,10 @@ public abstract class AbstractImplicitInclude {
     try {
       loadPath = Paths.get(parts.get(0));
       if (loadPath.isAbsolute()) {
-        throw new HumanReadableException(String.format("Path %s may not be absolute", loadPath));
+        throw new HumanReadableException("Path %s may not be absolute", loadPath);
       }
     } catch (InvalidPathException e) {
-      throw new HumanReadableException(
-          String.format("Provided path %s is not a valid path", parts.get(0)), e);
+      throw new HumanReadableException(e, "Provided path %s is not a valid path", parts.get(0));
     }
 
     return ImplicitInclude.of(loadPath, symbolBuilder.build());
@@ -135,13 +132,11 @@ public abstract class AbstractImplicitInclude {
     }
     if (symbol.isEmpty()) {
       throw new HumanReadableException(
-          String.format(
-              "Provided configuration %s specifies an empty symbol", configurationString));
+          "Provided configuration %s specifies an empty symbol", configurationString);
     }
     if (alias.isEmpty()) {
       throw new HumanReadableException(
-          String.format(
-              "Provided configuration %s specifies an empty symbol alias", configurationString));
+          "Provided configuration %s specifies an empty symbol alias", configurationString);
     }
     symbolBuilder.put(alias, symbol);
   }
