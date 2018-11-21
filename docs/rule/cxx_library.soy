@@ -43,7 +43,7 @@ whereas an Android APK (<code>android_binary</code>) would require a shared PIC-
 
 <p>
 Also, in order to ensure that Buck builds a target that the <code>cxx_library</code> rule 
-depends on, such as a {call buck.ruleLink}{param name : 'cxx_genrule' /}{/call},
+depends on, such as a {call buck.cxx_genrule /},
 you should specify to {call buck.cmd_link}{param name : 'build'
 /}{/call} a top-level target rather than the <code>cxx_library</code> itself. 
 For example, you might specify to <code>buck build</code> a <code>cxx_binary</code> that 

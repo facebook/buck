@@ -42,10 +42,11 @@ Examples of rules that use string parameter macros are:
 </p>
 
 <ul>
-<li>{call buck.ruleLink}{param name : 'genrule' /}{/call}</li>
-<li>{call buck.ruleLink}{param name : 'apk_genrule' /}{/call}</li>
-<li>{call buck.ruleLink}{param name : 'cxx_genrule' /}{/call}</li>
+<li>{call buck.genrule /}</li>
+<li>{call buck.apk_genrule /}</li>
+<li>{call buck.cxx_genrule /}</li>
 </ul>
+
 
 String parameter macros have the form 
 
