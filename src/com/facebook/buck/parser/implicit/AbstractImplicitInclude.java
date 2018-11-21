@@ -63,8 +63,7 @@ public abstract class AbstractImplicitInclude {
     try {
       return SkylarkImports.create(label);
     } catch (SkylarkImportSyntaxException e) {
-      throw new IllegalStateException(
-          String.format("Invalid implicit label provided: %s", label), e);
+      throw new HumanReadableException(e, "Invalid implicit label provided: %s", label);
     }
   }
 
