@@ -24,7 +24,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.manifestservice.ManifestService;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -55,7 +55,7 @@ public class TestParserFactory {
         buckConfig,
         PerBuildStateFactory.createFactory(
             typeCoercerFactory,
-            new ConstructorArgMarshaller(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(typeCoercerFactory),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
             buckConfig,

@@ -59,7 +59,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -423,7 +423,7 @@ public class DistBuildStateTest {
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             knownRuleTypesProvider,
-            new ConstructorArgMarshaller(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(
                 typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
             TestRuleKeyConfigurationFactory.create());

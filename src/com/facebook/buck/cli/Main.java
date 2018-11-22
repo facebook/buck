@@ -123,7 +123,7 @@ import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.remoteexecution.RemoteExecutionConsoleLineProvider;
 import com.facebook.buck.remoteexecution.RemoteExecutionEventListener;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -1477,7 +1477,7 @@ public final class Main {
       Parser parser =
           ParserFactory.create(
               typeCoercerFactory,
-              new ConstructorArgMarshaller(typeCoercerFactory),
+              new DefaultConstructorArgMarshaller(typeCoercerFactory),
               knownRuleTypesProvider,
               new ParserPythonInterpreterProvider(parserConfig, executableFinder),
               rootCell.getBuckConfig(),
@@ -1510,7 +1510,7 @@ public final class Main {
           ParserAndCaches.of(
               ParserFactory.create(
                   typeCoercerFactory,
-                  new ConstructorArgMarshaller(typeCoercerFactory),
+                  new DefaultConstructorArgMarshaller(typeCoercerFactory),
                   knownRuleTypesProvider,
                   new ParserPythonInterpreterProvider(parserConfig, executableFinder),
                   rootCell.getBuckConfig(),

@@ -41,6 +41,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -233,7 +234,7 @@ public class TargetNodeTest {
   private static ExampleDescriptionArg createPopulatedConstructorArg(
       BuildTarget buildTarget, Map<String, Object> instance) throws NoSuchBuildTargetException {
     ConstructorArgMarshaller marshaller =
-        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
+        new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     try {
       return marshaller.populate(

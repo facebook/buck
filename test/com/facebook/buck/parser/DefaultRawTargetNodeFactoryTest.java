@@ -34,7 +34,7 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.visibility.BuildTargetVisibilityPattern;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +56,7 @@ public class DefaultRawTargetNodeFactoryTest {
     DefaultRawTargetNodeFactory factory =
         new DefaultRawTargetNodeFactory(
             knownRuleTypesProvider,
-            new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
+            new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
             new BuiltTargetVerifier());
 
     Cell cell = new TestCellBuilder().build();

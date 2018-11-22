@@ -59,7 +59,7 @@ import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -837,7 +837,7 @@ public class TargetsCommand extends AbstractCommand {
     try (PerBuildState state =
         PerBuildStateFactory.createFactory(
                 params.getTypeCoercerFactory(),
-                new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
                     params.getCell().getBuckConfig(), params.getExecutableFinder()),

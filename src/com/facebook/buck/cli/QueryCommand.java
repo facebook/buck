@@ -31,7 +31,7 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PatternsMatcher;
@@ -184,7 +184,7 @@ public class QueryCommand extends AbstractCommand {
         PerBuildState parserState =
             PerBuildStateFactory.createFactory(
                     params.getTypeCoercerFactory(),
-                    new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                    new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                     params.getKnownRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
                         params.getCell().getBuckConfig(), params.getExecutableFinder()),

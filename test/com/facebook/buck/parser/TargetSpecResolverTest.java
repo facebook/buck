@@ -41,6 +41,7 @@ import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecReso
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -100,7 +101,7 @@ public class TargetSpecResolverTest {
     cell = new TestCellBuilder().setFilesystem(filesystem).build();
     eventBus = BuckEventBusForTests.newInstance();
     typeCoercerFactory = new DefaultTypeCoercerFactory();
-    constructorArgMarshaller = new ConstructorArgMarshaller(typeCoercerFactory);
+    constructorArgMarshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);

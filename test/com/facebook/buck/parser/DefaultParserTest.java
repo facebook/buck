@@ -77,7 +77,7 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -197,7 +197,7 @@ public class DefaultParserTest {
     try (PerBuildState state =
         PerBuildStateFactory.createFactory(
                 typeCoercerFactory,
-                new ConstructorArgMarshaller(typeCoercerFactory),
+                new DefaultConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
                 cell.getBuckConfig(),

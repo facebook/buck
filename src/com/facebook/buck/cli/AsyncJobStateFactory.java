@@ -34,7 +34,7 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.RemoteCommand;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -96,7 +96,7 @@ public class AsyncJobStateFactory {
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             params.getKnownRuleTypesProvider(),
-            new ConstructorArgMarshaller(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(
                 typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
             params.getRuleKeyConfiguration());

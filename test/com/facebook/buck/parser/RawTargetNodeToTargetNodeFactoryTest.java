@@ -40,7 +40,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
@@ -82,7 +82,7 @@ public class RawTargetNodeToTargetNodeFactoryTest {
     RawTargetNodeToTargetNodeFactory factory =
         new RawTargetNodeToTargetNodeFactory(
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
-            new ConstructorArgMarshaller(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),
             new NoopPackageBoundaryChecker(),
             (file, targetNode) -> {},

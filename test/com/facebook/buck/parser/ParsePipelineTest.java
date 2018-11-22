@@ -43,6 +43,7 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -367,7 +368,7 @@ public class ParsePipelineTest {
       this.rawNodeParsePipelineCache = new TypedParsePipelineCache<>();
       TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
       ConstructorArgMarshaller constructorArgMarshaller =
-          new ConstructorArgMarshaller(coercerFactory);
+          new DefaultConstructorArgMarshaller(coercerFactory);
 
       projectBuildFileParserPool =
           new ProjectBuildFileParserPool(

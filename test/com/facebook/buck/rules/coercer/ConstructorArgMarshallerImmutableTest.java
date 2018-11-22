@@ -70,7 +70,7 @@ public class ConstructorArgMarshallerImmutableTest {
   @Before
   public void setUpInspector() {
     basePath = Paths.get("example", "path");
-    marshaller = new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
+    marshaller = new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     filesystem = new FakeProjectFilesystem();
   }
 

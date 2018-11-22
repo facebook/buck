@@ -21,7 +21,7 @@ import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.collect.ImmutableSet;
@@ -63,7 +63,7 @@ public class AuditOwnerCommand extends AbstractCommand {
         PerBuildState parserState =
             PerBuildStateFactory.createFactory(
                     params.getTypeCoercerFactory(),
-                    new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                    new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                     params.getKnownRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
                         params.getCell().getBuckConfig(), params.getExecutableFinder()),
