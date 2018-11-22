@@ -5,6 +5,7 @@ genrule(
     ],
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type $SRCS > $OUT",
     target_compatible_with = [
         "//config:linux",
     ],
@@ -17,6 +18,7 @@ genrule(
     ],
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type $SRCS > $OUT",
     target_compatible_with = [
         "//config:osx",
     ],
