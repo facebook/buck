@@ -17,7 +17,6 @@
 package com.facebook.buck.parser.cache.impl;
 
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -26,10 +25,7 @@ import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
-import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.config.Config;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,22 +33,10 @@ import java.util.Optional;
 
 /** This class implements the caching behavior for parsing build specs. */
 public class ParserCache {
-  private static final Logger LOG = Logger.get(ParserCache.class);
-
   private final ParserCacheStorage parserCacheStorage;
-  private final ProjectFilesystem filesystem;
-  private final Config config;
-  private final FileHashCache fileHashCache;
 
-  private ParserCache(
-      Config config,
-      ProjectFilesystem filesystem,
-      ParserCacheStorage parserCacheStorage,
-      FileHashCache fileHashCache) {
-    this.filesystem = filesystem;
-    this.config = config;
+  private ParserCache(ParserCacheStorage parserCacheStorage) {
     this.parserCacheStorage = parserCacheStorage;
-    this.fileHashCache = fileHashCache;
   }
 
   /**
@@ -64,14 +48,10 @@ public class ParserCache {
   public static ParserCache of(
       BuckConfig buckConfig,
       ProjectFilesystem filesystem,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashCache fileHashCache) {
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
     return new ParserCache(
-        buckConfig.getConfig(),
-        filesystem,
         ParserCacheStorageFactory.createParserCacheStorage(
-            buckConfig, filesystem, manifestServiceSupplier),
-        fileHashCache);
+            buckConfig, filesystem, manifestServiceSupplier));
   }
 
   @VisibleForTesting
@@ -80,40 +60,22 @@ public class ParserCache {
   }
 
   /**
-   * This method looks for the cached result for this build spec and returns a constructed {@link
-   * BuildFileManifest}.
-   *
-   * @return a constructed result object based on the cache found data or {@code Optional.empty()}
-   *     if no cache info is found.
-   */
-  private Optional<BuildFileManifest> getManifestFromStorage(
-      Path buildFile, ImmutableSortedSet<String> includeBuildFiles)
-      throws IOException, InterruptedException {
-    final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
-    final HashCode strongFingerprint =
-        Fingerprinter.getStrongFingerprint(filesystem, includeBuildFiles, fileHashCache);
-
-    return parserCacheStorage.getBuildFileManifest(weakFingerprint, strongFingerprint);
-  }
-
-  /**
    * Store a parsed entry in the cache, ignoring errors
    *
-   * @param buildFileManifest the {@code BuildFileManifest} to store.
+   * @param buildFile the BUCK file associated with the cell for which the parsing is performed
+   * @param buildFileManifest the {@code BuildFileManifest} to store
+   * @param weakFingerprint the weak fingerprint.
+   * @param strongFingerprint the strong fingerprint.
    */
-  public void storeBuildFileManifest(Path buildFile, BuildFileManifest buildFileManifest)
-      throws InterruptedException {
-    final HashCode weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
-    try {
-      final HashCode strongFingerprint =
-          Fingerprinter.getStrongFingerprint(
-              filesystem, buildFileManifest.getIncludes(), fileHashCache);
-      byte[] serializedManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
-      parserCacheStorage.storeBuildFileManifest(
-          weakFingerprint, strongFingerprint, serializedManifest);
-    } catch (IOException e) {
-      LOG.error(e, "Failure storing parsed BuildFileManifest.");
-    }
+  public void storeBuildFileManifest(
+      Path buildFile,
+      BuildFileManifest buildFileManifest,
+      HashCode weakFingerprint,
+      HashCode strongFingerprint)
+      throws InterruptedException, IOException {
+    byte[] serializedManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
+    parserCacheStorage.storeBuildFileManifest(
+        weakFingerprint, strongFingerprint, serializedManifest);
   }
 
   /**
@@ -121,28 +83,25 @@ public class ParserCache {
    *
    * @param buildFile BUCK file to be parsed
    * @param parser Parser to retrieve meta information, like includes and globs, from build file
-   * @return {@link BuildFileManifest} if found in cache, {@link Optional#empty() if not found or if
-   *     there was an error accessing the cache}
+   * @param weakFingerprint the weak fingerprint.
+   * @param strongFingerprint the strong fingerprint.
+   * @return {@link BuildFileManifest} if found in cache, {@link Optional#empty()} if not found.
    */
   public Optional<BuildFileManifest> getBuildFileManifest(
-      Path buildFile, ProjectBuildFileParser parser) throws InterruptedException {
+      Path buildFile,
+      ProjectBuildFileParser parser,
+      HashCode weakFingerprint,
+      HashCode strongFingerprint)
+      throws IOException, InterruptedException, BuildFileParseException {
 
     // Try to retrieve a cached build file manifest
-    try {
-      ImmutableSortedSet<String> includeFilesForBuildFile = parser.getIncludedFiles(buildFile);
-      Optional<BuildFileManifest> cachedManifest =
-          getManifestFromStorage(buildFile, includeFilesForBuildFile);
-      if (cachedManifest.isPresent()
-          && parser.globResultsMatchCurrentState(
-              buildFile, cachedManifest.get().getGlobManifest())) {
-        // There is a match only if the glob state on disk is the same as the recorded globs and
-        // results.
-        return cachedManifest;
-      }
-    } catch (IOException e) {
-      LOG.debug(e, "Could not get BuildFileManifest from cache, will reparse BUCK file");
-    } catch (BuildFileParseException e) {
-      LOG.debug(e, "Parser failure while getting all include files.");
+    Optional<BuildFileManifest> cachedManifest =
+        parserCacheStorage.getBuildFileManifest(weakFingerprint, strongFingerprint);
+    if (cachedManifest.isPresent()
+        && parser.globResultsMatchCurrentState(buildFile, cachedManifest.get().getGlobManifest())) {
+      // There is a match only if the glob state on disk is the same as the recorded globs and
+      // results.
+      return cachedManifest;
     }
 
     return Optional.empty();

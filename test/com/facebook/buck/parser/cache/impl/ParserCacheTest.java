@@ -35,7 +35,6 @@ import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -208,12 +207,7 @@ public class ParserCacheTest {
   public void testHybridStorageInstantiatedWhenLocalAndRemoteStoragesEnabled()
       throws IOException, ExecutionException, InterruptedException, ParserCacheException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "readwrite", "readwrite");
-    ParserCache parserCache =
-        ParserCache.of(
-            buckConfig,
-            filesystem,
-            getManifestSupplier(),
-            new FakeFileHashCache(ImmutableMap.of()));
+    ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
     assertTrue(parserCache.getParserCacheStorage() instanceof HybridCacheStorage);
   }
 
@@ -221,12 +215,7 @@ public class ParserCacheTest {
   public void testRemoteStorageInstantiatedWhenRemoteOnlyEnabled()
       throws IOException, ExecutionException, InterruptedException, ParserCacheException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "none", "readwrite");
-    ParserCache parserCache =
-        ParserCache.of(
-            buckConfig,
-            filesystem,
-            getManifestSupplier(),
-            new FakeFileHashCache(ImmutableMap.of()));
+    ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
     assertTrue(parserCache.getParserCacheStorage() instanceof RemoteManifestServiceCacheStorage);
   }
 
@@ -234,12 +223,7 @@ public class ParserCacheTest {
   public void testLocalStorageInstantiatedWhenLocalOnlyEnabled()
       throws IOException, ExecutionException, InterruptedException, ParserCacheException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "readwrite", "none");
-    ParserCache parserCache =
-        ParserCache.of(
-            buckConfig,
-            filesystem,
-            getManifestSupplier(),
-            new FakeFileHashCache(ImmutableMap.of()));
+    ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
     assertTrue(parserCache.getParserCacheStorage() instanceof LocalCacheStorage);
   }
 
@@ -247,15 +231,16 @@ public class ParserCacheTest {
   public void testCacheWhenGetAllIncludesThrowsBuildFileParseException()
       throws IOException, ExecutionException, InterruptedException, ParserCacheException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "none", "readwrite");
-    ParserCache parserCache =
-        ParserCache.of(
-            buckConfig,
-            filesystem,
-            getManifestSupplier(),
-            new FakeFileHashCache(ImmutableMap.of()));
+    ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
     Path buildPath = filesystem.getPath("Foo/Bar");
     assertFalse(
-        parserCache.getBuildFileManifest(buildPath, new FakeParser(filesystem, true)).isPresent());
+        parserCache
+            .getBuildFileManifest(
+                buildPath,
+                new FakeParser(filesystem, true),
+                HashCode.fromInt(1),
+                HashCode.fromInt(2))
+            .isPresent());
   }
 
   @Test
@@ -265,19 +250,9 @@ public class ParserCacheTest {
 
     Path buildPath = filesystem.getPath("Foo/Bar");
 
-    Path include1 = filesystem.createNewFile(filesystem.getPath("Includes1"));
-    Path include2 = filesystem.createNewFile(filesystem.getPath("Includes2"));
-    ParserCache parserCache =
-        ParserCache.of(
-            buckConfig,
-            filesystem,
-            getManifestSupplier(),
-            new FakeFileHashCache(
-                ImmutableMap.of(
-                    include1,
-                    HashCode.fromBytes(new byte[] {1}),
-                    include2,
-                    HashCode.fromBytes(new byte[] {2}))));
+    filesystem.createNewFile(filesystem.getPath("Includes1"));
+    filesystem.createNewFile(filesystem.getPath("Includes2"));
+    ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
     GlobSpec globSpec =
         GlobSpec.builder()
             .setExclude(ImmutableList.of("excludeSpec"))
@@ -329,11 +304,13 @@ public class ParserCacheTest {
     assertEquals(buildFileManifest.getGlobManifest(), deserializedManifest.getGlobManifest());
 
     // Store in cache
-    parserCache.storeBuildFileManifest(buildPath, buildFileManifest);
+    parserCache.storeBuildFileManifest(
+        buildPath, buildFileManifest, HashCode.fromInt(1), HashCode.fromInt(2));
 
     // Get from local cache
     Optional<BuildFileManifest> cachedBuildFileManifest =
-        parserCache.getBuildFileManifest(buildPath, new FakeParser(filesystem));
+        parserCache.getBuildFileManifest(
+            buildPath, new FakeParser(filesystem), HashCode.fromInt(1), HashCode.fromInt(2));
     assertEquals(buildFileManifest, cachedBuildFileManifest.get());
   }
 }

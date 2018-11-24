@@ -190,9 +190,9 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       ProjectFilesystem filesystem) {
     AbstractParserCacheConfig parserCacheConfig = buckConfig.getView(ParserCacheConfig.class);
     if (parserCacheConfig.isParserCacheEnabled()) {
-      ParserCache parserCache =
-          ParserCache.of(buckConfig, filesystem, manifestServiceSupplier, fileHashCache);
-      return CachingProjectBuildFileParserDecorator.of(parserCache, skylarkParser);
+      ParserCache parserCache = ParserCache.of(buckConfig, filesystem, manifestServiceSupplier);
+      return CachingProjectBuildFileParserDecorator.of(
+          parserCache, skylarkParser, buckConfig.getConfig(), filesystem, fileHashCache);
     }
 
     return skylarkParser;
