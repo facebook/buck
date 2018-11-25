@@ -1,4 +1,4 @@
-apple_library(
+java_library(
     name = "lib2",
     srcs = ["lib2.txt"],
     visibility = ["PUBLIC"],
