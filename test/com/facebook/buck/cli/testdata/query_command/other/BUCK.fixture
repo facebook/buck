@@ -1,7 +1,6 @@
-apple_test(
+java_test(
     name = "eight-tests",
     srcs = ["8-test.txt"],
-    info_plist = "Test.plist",
     visibility = [
         "PUBLIC",
     ],

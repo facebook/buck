@@ -19,6 +19,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PerBuildState;
@@ -248,6 +249,7 @@ final class OwnersReport {
       ImmutableSet<String> missingFiles =
           RichStream.from(arguments)
               .filter(f -> !Files.exists(rootCellFilesystem.getPathForRelativePath(f)))
+              .map(MorePaths::pathWithPlatformSeparators)
               .toImmutableSet();
 
       ImmutableSet.Builder<Path> inputWithNoOwners = ImmutableSet.builder();

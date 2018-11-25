@@ -1,4 +1,4 @@
-apple_library(
+java_library(
     name = "seven",
     srcs = ["7.txt"],
     tests = [
@@ -8,14 +8,13 @@ apple_library(
     deps = [],
 )
 
-apple_test(
+java_test(
     name = "seven-tests",
     srcs = ["7-test.txt"],
-    info_plist = "Test.plist",
     deps = [":seven"],
 )
 
-apple_library(
+java_library(
     name = "nine",
     srcs = ["lib/9.txt"],
     deps = [],

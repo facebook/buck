@@ -32,6 +32,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.manifestservice.ManifestService;
@@ -194,7 +195,8 @@ public class BuckQueryEnvironmentTest {
   public void whenNonExistentFileIsQueriedAWarningIsIssued() {
     ImmutableList<String> expectedTargets = ImmutableList.of("/foo/bar");
     buckQueryEnvironment.getFileOwners(expectedTargets);
-    String expectedWarning = "File /foo/bar does not exist";
+    String expectedWarning =
+        "File " + MorePaths.pathWithPlatformSeparators("/foo/bar") + " does not exist";
     assertThat(
         capturingConsoleEventListener.getLogMessages(),
         CoreMatchers.equalTo(singletonList(expectedWarning)));
