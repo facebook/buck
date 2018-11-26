@@ -31,16 +31,19 @@ import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputDirectory;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputFile;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
-import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.longrunning.Operation;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.Metadata;
 import io.grpc.Metadata.Key;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -85,7 +88,7 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
   }
 
   @Override
-  public ExecutionResult execute(Protocol.Digest actionDigest)
+  public ListenableFuture<ExecutionResult> execute(Protocol.Digest actionDigest)
       throws IOException, InterruptedException {
     SettableFuture<Operation> future = SettableFuture.create();
 
@@ -115,70 +118,76 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
               }
             });
 
-    try {
-      Operation operation = future.get();
-      if (operation.hasError()) {
-        throw new RuntimeException("Execution failed: " + operation.getError().getMessage());
-      }
-
-      if (!operation.hasResponse()) {
-        throw new RuntimeException("Invalid operation response: missing ExecutionResponse object");
-      }
-
-      ActionResult actionResult = operation.getResponse().unpack(ExecuteResponse.class).getResult();
-      return new ExecutionResult() {
-        @Override
-        public List<OutputDirectory> getOutputDirectories() {
-          return actionResult
-              .getOutputDirectoriesList()
-              .stream()
-              .map(GrpcOutputDirectory::new)
-              .collect(Collectors.toList());
-        }
-
-        @Override
-        public List<OutputFile> getOutputFiles() {
-          return actionResult
-              .getOutputFilesList()
-              .stream()
-              .map(GrpcOutputFile::new)
-              .collect(Collectors.toList());
-        }
-
-        @Override
-        public int getExitCode() {
-          return actionResult.getExitCode();
-        }
-
-        @Override
-        public Optional<String> getStderr() {
-          ByteString stderrRaw = actionResult.getStderrRaw();
-          if (stderrRaw == null
-              || (stderrRaw.isEmpty() && actionResult.getStderrDigest().getSizeBytes() > 0)) {
-            System.err.println("Got stderr digest.");
-            try {
-              ByteString data = ByteString.EMPTY;
-              GrpcRemoteExecutionClients.readByteStream(
-                      instanceName,
-                      new GrpcDigest(actionResult.getStderrDigest()),
-                      byteStreamStub,
-                      data::concat)
-                  .get();
-              return Optional.of(data.toStringUtf8());
-            } catch (InterruptedException | ExecutionException e) {
-              throw new RuntimeException(e);
-            }
-          } else {
-            System.err.println("Got raw stderr: " + stderrRaw.toStringUtf8());
-            return Optional.of(stderrRaw.toStringUtf8());
+    return Futures.transform(
+        future,
+        operation -> {
+          Objects.requireNonNull(operation);
+          if (operation.hasError()) {
+            throw new RuntimeException("Execution failed: " + operation.getError().getMessage());
           }
+
+          if (!operation.hasResponse()) {
+            throw new RuntimeException(
+                "Invalid operation response: missing ExecutionResponse object");
+          }
+
+          try {
+            return getExecutionResult(
+                operation.getResponse().unpack(ExecuteResponse.class).getResult());
+          } catch (InvalidProtocolBufferException e) {
+            throw new BuckUncheckedExecutionException(e);
+          }
+        });
+  }
+
+  private ExecutionResult getExecutionResult(ActionResult actionResult) {
+    return new ExecutionResult() {
+      @Override
+      public List<OutputDirectory> getOutputDirectories() {
+        return actionResult
+            .getOutputDirectoriesList()
+            .stream()
+            .map(GrpcOutputDirectory::new)
+            .collect(Collectors.toList());
+      }
+
+      @Override
+      public List<OutputFile> getOutputFiles() {
+        return actionResult
+            .getOutputFilesList()
+            .stream()
+            .map(GrpcOutputFile::new)
+            .collect(Collectors.toList());
+      }
+
+      @Override
+      public int getExitCode() {
+        return actionResult.getExitCode();
+      }
+
+      @Override
+      public Optional<String> getStderr() {
+        ByteString stderrRaw = actionResult.getStderrRaw();
+        if (stderrRaw == null
+            || (stderrRaw.isEmpty() && actionResult.getStderrDigest().getSizeBytes() > 0)) {
+          System.err.println("Got stderr digest.");
+          try {
+            ByteString data = ByteString.EMPTY;
+            GrpcRemoteExecutionClients.readByteStream(
+                    instanceName,
+                    new GrpcDigest(actionResult.getStderrDigest()),
+                    byteStreamStub,
+                    data::concat)
+                .get();
+            return Optional.of(data.toStringUtf8());
+          } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+          }
+        } else {
+          System.err.println("Got raw stderr: " + stderrRaw.toStringUtf8());
+          return Optional.of(stderrRaw.toStringUtf8());
         }
-      };
-    } catch (ExecutionException e) {
-      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
-      Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
-      e.printStackTrace();
-      throw new BuckUncheckedExecutionException(e.getCause());
-    }
+      }
+    };
   }
 }

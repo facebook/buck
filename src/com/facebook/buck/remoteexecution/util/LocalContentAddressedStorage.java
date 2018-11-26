@@ -187,20 +187,19 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
   }
 
   @Override
-  public void addMissing(
-      ImmutableMap<Protocol.Digest, ThrowingSupplier<InputStream, IOException>> data)
-      throws IOException {
-    uploader.addMissing(data);
+  public ListenableFuture<Void> addMissing(
+      ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data) throws IOException {
+    return uploader.addMissing(data);
   }
 
   /**
    * Materializes the outputs into the build root. All required data must be present (or inlined).
    */
   @Override
-  public void materializeOutputs(
+  public ListenableFuture<Void> materializeOutputs(
       List<OutputDirectory> outputDirectories, List<OutputFile> outputFiles, Path root)
       throws IOException {
-    outputsMaterializer.materialize(outputDirectories, outputFiles, root);
+    return outputsMaterializer.materialize(outputDirectories, outputFiles, root);
   }
 
   public Protocol.Action materializeAction(Protocol.Digest actionDigest) throws IOException {

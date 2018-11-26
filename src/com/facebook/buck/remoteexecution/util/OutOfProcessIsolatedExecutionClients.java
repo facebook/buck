@@ -32,6 +32,7 @@ import com.facebook.buck.util.NamedTemporaryDirectory;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Futures;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -89,29 +90,30 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
                             .collect(ImmutableSet.toImmutableSet()),
                         buildDir);
             try (Scope ignored2 = LeafEvents.scope(eventBus, "uploading_results")) {
-              storage.addMissing(actionResult.requiredData);
+              Futures.getUnchecked(storage.addMissing(actionResult.requiredData));
             }
-            return new ExecutionResult() {
-              @Override
-              public ImmutableList<OutputDirectory> getOutputDirectories() {
-                return actionResult.outputDirectories;
-              }
+            return Futures.immediateFuture(
+                new ExecutionResult() {
+                  @Override
+                  public ImmutableList<OutputDirectory> getOutputDirectories() {
+                    return actionResult.outputDirectories;
+                  }
 
-              @Override
-              public ImmutableList<OutputFile> getOutputFiles() {
-                return actionResult.outputFiles;
-              }
+                  @Override
+                  public ImmutableList<OutputFile> getOutputFiles() {
+                    return actionResult.outputFiles;
+                  }
 
-              @Override
-              public int getExitCode() {
-                return actionResult.exitCode;
-              }
+                  @Override
+                  public int getExitCode() {
+                    return actionResult.exitCode;
+                  }
 
-              @Override
-              public Optional<String> getStderr() {
-                return Optional.of(actionResult.stderr);
-              }
-            };
+                  @Override
+                  public Optional<String> getStderr() {
+                    return Optional.of(actionResult.stderr);
+                  }
+                });
           }
         };
   }

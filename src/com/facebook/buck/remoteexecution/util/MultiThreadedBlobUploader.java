@@ -38,7 +38,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
@@ -94,18 +93,13 @@ public class MultiThreadedBlobUploader {
   }
 
   /** Uploads missing items to the CAS. */
-  public void addMissing(ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data)
-      throws IOException {
-    try {
-      data =
-          ImmutableMap.copyOf(Maps.filterKeys(data, k -> !containedHashes.contains(k.getHash())));
-      if (data.isEmpty()) {
-        return;
-      }
-      enqueue(data).get();
-    } catch (InterruptedException | ExecutionException e) {
-      throw new IOException(e);
+  public ListenableFuture<Void> addMissing(
+      ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data) {
+    data = ImmutableMap.copyOf(Maps.filterKeys(data, k -> !containedHashes.contains(k.getHash())));
+    if (data.isEmpty()) {
+      return Futures.immediateFuture(null);
     }
+    return enqueue(data);
   }
 
   private ListenableFuture<Void> enqueue(

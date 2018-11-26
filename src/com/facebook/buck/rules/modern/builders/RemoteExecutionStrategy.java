@@ -46,6 +46,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -185,14 +186,17 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             State.UPLOADING_INPUTS,
             buildTarget,
             Optional.of(actionInfo.getActionDigest()))) {
-      executionClients.getContentAddressedStorage().addMissing(actionInfo.getRequiredData());
+      Futures.getUnchecked(
+          executionClients.getContentAddressedStorage().addMissing(actionInfo.getRequiredData()));
     }
 
     ExecutionResult result;
     try (Scope ignored =
         RemoteExecutionActionEvent.sendEvent(
             eventBus, State.EXECUTING, buildTarget, Optional.of(actionInfo.getActionDigest()))) {
-      result = executionClients.getRemoteExecutionService().execute(actionInfo.getActionDigest());
+      result =
+          Futures.getUnchecked(
+              executionClients.getRemoteExecutionService().execute(actionInfo.getActionDigest()));
     }
 
     if (result.getExitCode() == 0) {
@@ -202,10 +206,11 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               State.MATERIALIZING_OUTPUTS,
               buildTarget,
               Optional.of(actionInfo.getActionDigest()))) {
-        executionClients
-            .getContentAddressedStorage()
-            .materializeOutputs(
-                result.getOutputDirectories(), result.getOutputFiles(), cellPathPrefix);
+        Futures.getUnchecked(
+            executionClients
+                .getContentAddressedStorage()
+                .materializeOutputs(
+                    result.getOutputDirectories(), result.getOutputFiles(), cellPathPrefix));
         RemoteExecutionActionEvent.sendTerminalEvent(
             eventBus,
             State.ACTION_SUCCEEDED,

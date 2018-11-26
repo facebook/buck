@@ -19,7 +19,6 @@ package com.facebook.buck.remoteexecution.grpc;
 import build.bazel.remote.execution.v2.Command.EnvironmentVariable;
 import build.bazel.remote.execution.v2.OutputFile.Builder;
 import com.facebook.buck.remoteexecution.Protocol;
-import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -27,7 +26,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.List;
@@ -413,11 +411,7 @@ public class GrpcProtocol implements Protocol {
   }
 
   @Override
-  public OutputFile newOutputFile(
-      Path output,
-      Digest digest,
-      boolean isExecutable,
-      ThrowingSupplier<InputStream, IOException> dataSupplier) {
+  public OutputFile newOutputFile(Path output, Digest digest, boolean isExecutable) {
     Builder builder = build.bazel.remote.execution.v2.OutputFile.newBuilder();
     builder.setPath(output.toString());
     builder.setDigest(get(digest));
