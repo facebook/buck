@@ -68,7 +68,7 @@ public class ModernBuildRuleBuilderFactory {
         case DEBUG_GRPC_SERVICE_IN_PROCESS:
         case DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC:
           return Optional.of(
-              RemoteExecution.createRemoteExecutionStrategy(
+              RemoteExecutionStrategy.createRemoteExecutionStrategy(
                   eventBus,
                   remoteExecutionConfig.useWorkerThreadPool()
                       ? Optional.of(remoteExecutorService)
