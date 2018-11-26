@@ -1,9 +1,14 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
 
 java_immutables_library(
     name = "server",
     srcs = glob(["**/*.java"]),
-    visibility = ["PUBLIC"],
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         "//src/com/facebook/buck/remoteexecution/grpc:grpc",
         "//src/com/facebook/buck/remoteexecution/util:util",
@@ -11,7 +16,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//third-party/java/grpc:grpc-core",
-        "//third-party/java/grpc:grpc-netty",
+        "//third-party/java/grpc:grpc-netty-shaded",
     ],
 )
 
