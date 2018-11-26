@@ -157,7 +157,7 @@ public class DiffRuleKeysScriptIntegrationTest {
         Matchers.stringContainsInOrder(
             "Change details for [//cxx:cxx_bin#compile-a.cpp.", /* hash */
             ",default->preprocessDelegate->preprocessorFlags->includes]",
-            "(sourcePaths):",
+            "(cxx/a.h):",
             "-[path(cxx/a.h:", /*hash*/
             ")]",
             "+[path(cxx/a.h:", /*hash*/

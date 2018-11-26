@@ -17,7 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.RuleKeyAppendable;
+import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
@@ -40,7 +41,6 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,7 +55,7 @@ import org.immutables.value.Value;
 @Value.Immutable(prehash = true)
 @BuckStyleImmutable
 @CustomClassBehavior(AbstractCxxSymlinkTreeHeaders.SerializationBehavior.class)
-abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements AddsToRuleKey {
+abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleKeyAppendable {
 
   @SuppressWarnings("immutables")
   private final AtomicReference<Optional<ImmutableList<BuildRule>>> computedDeps =
@@ -68,11 +68,6 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements AddsT
   @Override
   @CustomFieldBehavior(RootInputsBehavior.class)
   public abstract SourcePath getRoot();
-
-  @AddToRuleKey
-  public final ImmutableSortedSet<SourcePath> getSourcePaths() {
-    return ImmutableSortedSet.copyOf(getNameToPathMap().values());
-  }
 
   /**
    * @return the path to add to the preprocessor search path to find the includes. This defaults to
@@ -136,6 +131,17 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements AddsT
                 .stream(),
             builder.build())
         .distinct();
+  }
+
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    // Add stringified paths as keys. The paths in this map represent include directives rather
+    // than actual on-disk locations. Also, manually wrap the beginning and end of the structure to
+    // delimit the contents of this map from other fields that may have the same key.
+    sink.setReflectively(".nameToPathMap", "start");
+    getNameToPathMap()
+        .forEach((path, sourcePath) -> sink.setReflectively(path.toString(), sourcePath));
+    sink.setReflectively(".nameToPathMap", "end");
   }
 
   /** @return a {@link CxxHeaders} constructed from the given {@link HeaderSymlinkTree}. */
