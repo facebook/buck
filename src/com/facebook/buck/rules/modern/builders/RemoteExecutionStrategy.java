@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
@@ -31,6 +29,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
@@ -49,8 +48,10 @@ import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -135,89 +136,104 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   @Override
   public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
     Preconditions.checkState(rule instanceof ModernBuildRule);
+    ListeningExecutorService service = executorService.orElse(strategyContext.getExecutorService());
+    BuildTarget buildTarget = rule.getBuildTarget();
+
+    ListenableFuture<RemoteExecutionActionInfo> actionInfoFuture =
+        service.submit(() -> getRemoteExecutionActionInfo(rule, strategyContext, buildTarget));
+
     ListenableFuture<Optional<BuildResult>> buildResult =
-        executorService
-            .orElse(strategyContext.getExecutorService())
-            .submit(
-                () -> {
-                  try (Scope ignored = strategyContext.buildRuleScope()) {
-                    executeRule(
-                        rule,
-                        strategyContext.getExecutionContext(),
-                        strategyContext.getBuildRuleBuildContext(),
-                        strategyContext.getBuildableContext());
-                    return Optional.of(
-                        strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY));
-                  }
-                });
+        Futures.transformAsync(
+            actionInfoFuture,
+            actionInfo -> {
+              Objects.requireNonNull(actionInfo);
+              Scope uploadingInputsScope =
+                  RemoteExecutionActionEvent.sendEvent(
+                      eventBus,
+                      State.UPLOADING_INPUTS,
+                      buildTarget,
+                      Optional.of(actionInfo.getActionDigest()));
+              ListenableFuture<Void> inputsUploadedFuture =
+                  executionClients
+                      .getContentAddressedStorage()
+                      .addMissing(actionInfo.getRequiredData());
+
+              return Futures.transformAsync(
+                  inputsUploadedFuture,
+                  ignored -> {
+                    uploadingInputsScope.close();
+                    return executeNowThatInputsAreReady(
+                        rule.getProjectFilesystem(),
+                        strategyContext,
+                        buildTarget,
+                        actionInfo,
+                        service);
+                  },
+                  service);
+            },
+            service);
+
     return StrategyBuildResult.nonCancellable(buildResult);
   }
 
-  private void executeRule(
-      BuildRule rule,
-      ExecutionContext executionContext,
-      BuildContext buildRuleBuildContext,
-      BuildableContext buildableContext)
-      throws IOException, StepFailedException, InterruptedException {
-    BuildTarget buildTarget = rule.getBuildTarget();
-    RemoteExecutionActionInfo actionInfo;
+  private RemoteExecutionActionInfo getRemoteExecutionActionInfo(
+      BuildRule rule, BuildStrategyContext strategyContext, BuildTarget buildTarget)
+      throws IOException {
+    try (Scope ignored = strategyContext.buildRuleScope()) {
+      RemoteExecutionActionInfo actionInfo;
 
-    try (Scope ignored =
-        RemoteExecutionActionEvent.sendEvent(
-            eventBus, State.COMPUTING_ACTION, rule.getBuildTarget(), Optional.empty())) {
-      actionInfo =
-          mbrHelper.prepareRemoteExecution((ModernBuildRule<?>) rule, buildRuleBuildContext);
-    }
-
-    try (Scope ignored =
-        RemoteExecutionActionEvent.sendEvent(
-            eventBus,
-            State.DELETING_STALE_OUTPUTS,
-            buildTarget,
-            Optional.of(actionInfo.getActionDigest()))) {
-      for (Path path : actionInfo.getOutputs()) {
-        MostFiles.deleteRecursivelyIfExists(cellPathPrefix.resolve(path));
+      try (Scope ignored1 =
+          RemoteExecutionActionEvent.sendEvent(
+              eventBus, State.COMPUTING_ACTION, rule.getBuildTarget(), Optional.empty())) {
+        actionInfo =
+            mbrHelper.prepareRemoteExecution(
+                (ModernBuildRule<?>) rule, strategyContext.getBuildRuleBuildContext());
       }
-    }
 
-    try (Scope ignored =
-        RemoteExecutionActionEvent.sendEvent(
-            eventBus,
-            State.UPLOADING_INPUTS,
-            buildTarget,
-            Optional.of(actionInfo.getActionDigest()))) {
-      Futures.getUnchecked(
-          executionClients.getContentAddressedStorage().addMissing(actionInfo.getRequiredData()));
-    }
-
-    ExecutionResult result;
-    try (Scope ignored =
-        RemoteExecutionActionEvent.sendEvent(
-            eventBus, State.EXECUTING, buildTarget, Optional.of(actionInfo.getActionDigest()))) {
-      result =
-          Futures.getUnchecked(
-              executionClients.getRemoteExecutionService().execute(actionInfo.getActionDigest()));
-    }
-
-    if (result.getExitCode() == 0) {
-      try (Scope ignored =
+      try (Scope ignored1 =
           RemoteExecutionActionEvent.sendEvent(
               eventBus,
-              State.MATERIALIZING_OUTPUTS,
+              State.DELETING_STALE_OUTPUTS,
               buildTarget,
               Optional.of(actionInfo.getActionDigest()))) {
-        Futures.getUnchecked(
-            executionClients
-                .getContentAddressedStorage()
-                .materializeOutputs(
-                    result.getOutputDirectories(), result.getOutputFiles(), cellPathPrefix));
-        RemoteExecutionActionEvent.sendTerminalEvent(
-            eventBus,
-            State.ACTION_SUCCEEDED,
-            buildTarget,
-            Optional.of(actionInfo.getActionDigest()));
+        for (Path path : actionInfo.getOutputs()) {
+          MostFiles.deleteRecursivelyIfExists(cellPathPrefix.resolve(path));
+        }
       }
-    } else {
+      return actionInfo;
+    }
+  }
+
+  private ListenableFuture<Optional<BuildResult>> executeNowThatInputsAreReady(
+      ProjectFilesystem filesystem,
+      BuildStrategyContext strategyContext,
+      BuildTarget buildTarget,
+      RemoteExecutionActionInfo actionInfo,
+      ListeningExecutorService service)
+      throws IOException, InterruptedException {
+    Scope executingScope =
+        RemoteExecutionActionEvent.sendEvent(
+            eventBus, State.EXECUTING, buildTarget, Optional.of(actionInfo.getActionDigest()));
+    ListenableFuture<ExecutionResult> executionResult =
+        executionClients.getRemoteExecutionService().execute(actionInfo.getActionDigest());
+    return Futures.transformAsync(
+        executionResult,
+        result -> {
+          executingScope.close();
+          return handleExecutionResult(
+              filesystem, strategyContext, buildTarget, actionInfo, result);
+        },
+        service);
+  }
+
+  private ListenableFuture<Optional<BuildResult>> handleExecutionResult(
+      ProjectFilesystem filesystem,
+      BuildStrategyContext strategyContext,
+      BuildTarget buildTarget,
+      RemoteExecutionActionInfo actionInfo,
+      ExecutionResult result)
+      throws IOException, StepFailedException {
+    if (result.getExitCode() != 0) {
       LOG.error(
           "Failed to build target [%s] with exit code [%d]. stderr: %s",
           buildTarget.getFullyQualifiedName(),
@@ -232,10 +248,41 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               throw new RuntimeException();
             }
           },
-          executionContext,
+          strategyContext.getExecutionContext(),
           StepExecutionResult.of(result.getExitCode(), result.getStderr()));
     }
 
-    actionInfo.getOutputs().forEach(buildableContext::recordArtifact);
+    Scope materializationScope =
+        RemoteExecutionActionEvent.sendEvent(
+            eventBus,
+            State.MATERIALIZING_OUTPUTS,
+            buildTarget,
+            Optional.of(actionInfo.getActionDigest()));
+
+    ListenableFuture<Void> materializationFuture =
+        executionClients
+            .getContentAddressedStorage()
+            .materializeOutputs(
+                result.getOutputDirectories(), result.getOutputFiles(), cellPathPrefix);
+
+    return Futures.transform(
+        materializationFuture,
+        ignored -> {
+          materializationScope.close();
+          RemoteExecutionActionEvent.sendTerminalEvent(
+              eventBus,
+              State.ACTION_SUCCEEDED,
+              buildTarget,
+              Optional.of(actionInfo.getActionDigest()));
+          actionInfo
+              .getOutputs()
+              .forEach(
+                  output ->
+                      strategyContext
+                          .getBuildableContext()
+                          .recordArtifact(filesystem.relativize(cellPathPrefix.resolve(output))));
+          return Optional.of(strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY));
+        },
+        MoreExecutors.directExecutor());
   }
 }
