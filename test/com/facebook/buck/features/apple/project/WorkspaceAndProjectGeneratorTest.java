@@ -40,6 +40,7 @@ import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.XCScheme.AdditionalActions;
+import com.facebook.buck.apple.xcode.XCScheme.LaunchAction.WatchInterface;
 import com.facebook.buck.apple.xcode.XCScheme.SchemePrePostAction;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
@@ -922,6 +923,7 @@ public class WorkspaceAndProjectGeneratorTest {
             .setSrcTarget(Optional.of(fooLibTarget))
             .setExplicitRunnablePath(Optional.of("/some.app"))
             .setLaunchStyle(Optional.of(XCScheme.LaunchAction.LaunchStyle.WAIT))
+            .setWatchInterface(Optional.of(WatchInterface.COMPLICATION))
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(fooLib, workspaceNode);
@@ -959,6 +961,8 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(launchAction.getRunnablePath().get(), Matchers.equalTo("/some.app"));
     assertThat(
         launchAction.getLaunchStyle(), Matchers.equalTo(XCScheme.LaunchAction.LaunchStyle.WAIT));
+    assertThat(
+        launchAction.getWatchInterface().get(), Matchers.equalTo(WatchInterface.COMPLICATION));
   }
 
   @Test

@@ -955,7 +955,8 @@ public class WorkspaceAndProjectGenerator {
               targetToProjectPathMap,
               schemeConfigArg.getEnvironmentVariables(),
               schemeConfigArg.getAdditionalSchemeActions(),
-              schemeConfigArg.getLaunchStyle().orElse(XCScheme.LaunchAction.LaunchStyle.AUTO));
+              schemeConfigArg.getLaunchStyle().orElse(XCScheme.LaunchAction.LaunchStyle.AUTO),
+              schemeConfigArg.getWatchInterface());
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }
