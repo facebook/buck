@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.log.Logger;
@@ -37,6 +38,14 @@ public final class AlterRuleKeys {
   }
 
   public static void amendKey(RuleKeyObjectSink sink, AddsToRuleKey appendable) {
+    if (appendable instanceof RuleKeyAppendable) {
+      ((RuleKeyAppendable) appendable).appendToRuleKey(sink);
+    }
+
+    // Honor @AddToRuleKey on RuleKeyAppendable's in addition to their custom code. Having this be a
+    // static method invoking things from outside (as opposed to a default method) ensures that the
+    // long-standing habit of not needing to chain to super in RuleKeyAppendable doesn't cause
+    // subtle breakages.
     amendKey(sink, (Object) appendable);
   }
 
