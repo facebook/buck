@@ -73,7 +73,7 @@ import java.util.stream.Stream;
  * <p>See https://docs.google.com/document/d/1AaGk7fOPByEvpAbqeXIyE8HX_A3_axxNnvroblTZ_6s/preview
  * for a high-level description of the approach to remote execution.
  */
-public final class RemoteExecution implements IsolatedExecution {
+public final class RemoteExecution {
   private static final Logger LOG = Logger.get(RemoteExecution.class);
   private static final Path TRAMPOLINE =
       Paths.get(
@@ -140,7 +140,6 @@ public final class RemoteExecution implements IsolatedExecution {
     return eventBus;
   }
 
-  @Override
   public Protocol getProtocol() {
     return clients.getProtocol();
   }
@@ -164,12 +163,10 @@ public final class RemoteExecution implements IsolatedExecution {
     return pathsBuilder.build();
   }
 
-  @Override
   public void close() throws IOException {
     clients.close();
   }
 
-  @Override
   public void build(
       ExecutionContext executionContext,
       FileTreeBuilder inputsBuilder,

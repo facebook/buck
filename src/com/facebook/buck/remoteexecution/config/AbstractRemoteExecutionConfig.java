@@ -108,7 +108,6 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     switch (fallbackStrategy) {
       case DEBUG_RECONSTRUCT:
       case DEBUG_PASSTHROUGH:
-      case DEBUG_ISOLATED_IN_PROCESS:
       case REMOTE:
       case NONE:
         break;

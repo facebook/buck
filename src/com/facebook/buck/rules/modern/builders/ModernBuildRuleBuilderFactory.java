@@ -28,15 +28,11 @@ import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.factory.RemoteExecutionClientsFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.hashing.FileHashLoader;
-import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -53,7 +49,6 @@ public class ModernBuildRuleBuilderFactory {
       CellPathResolver cellResolver,
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
-      Console console,
       ListeningExecutorService remoteExecutorService,
       Optional<TraceInfoProvider> traceInfoProvider) {
     try {
@@ -68,16 +63,6 @@ public class ModernBuildRuleBuilderFactory {
               createReconstructing(new SourcePathRuleFinder(resolver), cellResolver, rootCell));
         case DEBUG_PASSTHROUGH:
           return Optional.of(createPassthrough());
-        case DEBUG_ISOLATED_IN_PROCESS:
-          return Optional.of(
-              createIsolatedInProcess(
-                  new SourcePathRuleFinder(resolver),
-                  cellResolver,
-                  rootCell,
-                  hashLoader::get,
-                  eventBus,
-                  console));
-
         case REMOTE:
         case GRPC_REMOTE:
         case DEBUG_GRPC_SERVICE_IN_PROCESS:
@@ -120,28 +105,5 @@ public class ModernBuildRuleBuilderFactory {
   public static BuildRuleStrategy createReconstructing(
       SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, Cell rootCell) {
     return new ReconstructingStrategy(ruleFinder, cellResolver, rootCell);
-  }
-
-  /**
-   * This strategy will construct a separate isolated build directory for each rule. The rule will
-   * be serialized to data files in that directory, and all inputs required (including buck configs)
-   * will be materialized there and then the rule will be deserialized within this process and run
-   * within that directory. The outputs will be copied back to the real build directory.
-   */
-  public static BuildRuleStrategy createIsolatedInProcess(
-      SourcePathRuleFinder ruleFinder,
-      CellPathResolver cellResolver,
-      Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher,
-      BuckEventBus eventBus,
-      Console console)
-      throws IOException {
-    return IsolatedExecution.createIsolatedExecutionStrategy(
-        new InProcessIsolatedExecution(eventBus, console),
-        ruleFinder,
-        cellResolver,
-        rootCell,
-        fileHasher,
-        Optional.empty());
   }
 }

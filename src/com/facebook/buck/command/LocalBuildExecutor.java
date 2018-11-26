@@ -226,7 +226,6 @@ public class LocalBuildExecutor implements BuildExecutor {
             args.getRootCell().getCellPathResolver(),
             cachingBuildEngineDelegate.getFileHashCache(),
             args.getBuckEventBus(),
-            args.getConsole(),
             Objects.requireNonNull(args.getExecutors().get(ExecutorPool.REMOTE)),
             traceInfoProvider),
         executorService,

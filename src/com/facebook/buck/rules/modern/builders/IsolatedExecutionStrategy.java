@@ -71,7 +71,7 @@ import javax.annotation.Nullable;
  * rule data, serialized buck configs, etc). Handles recording outputs, etc.
  */
 public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
-  private final IsolatedExecution executionStrategy;
+  private final RemoteExecution executionStrategy;
   private final CellPathResolver cellResolver;
   private final Cell rootCell;
   private final ThrowingFunction<Path, HashCode, IOException> fileHasher;
@@ -85,7 +85,7 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final Optional<ListeningExecutorService> executorService;
 
   IsolatedExecutionStrategy(
-      IsolatedExecution executionStrategy,
+      RemoteExecution executionStrategy,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,

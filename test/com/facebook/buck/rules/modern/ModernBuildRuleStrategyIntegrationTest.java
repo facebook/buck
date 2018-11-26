@@ -91,10 +91,6 @@ public class ModernBuildRuleStrategyIntegrationTest {
     return ImmutableList.<Object[]>builder()
         .add(new Object[] {ModernBuildRuleBuildStrategy.NONE, RemoteExecutionType.NONE})
         .add(
-            new Object[] {
-              ModernBuildRuleBuildStrategy.DEBUG_ISOLATED_IN_PROCESS, RemoteExecutionType.NONE
-            })
-        .add(
             new Object[] {ModernBuildRuleBuildStrategy.DEBUG_RECONSTRUCT, RemoteExecutionType.NONE})
         .add(
             new Object[] {ModernBuildRuleBuildStrategy.DEBUG_PASSTHROUGH, RemoteExecutionType.NONE})

@@ -594,7 +594,6 @@ public class TestCommand extends BuildCommand {
                         params.getCell().getCellPathResolver(),
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         params.getBuckEventBus(),
-                        params.getConsole(),
                         Objects.requireNonNull(params.getExecutors().get(ExecutorPool.REMOTE)),
                         params.getTraceInfoProvider()),
                     pool.getWeightedListeningExecutorService(),
