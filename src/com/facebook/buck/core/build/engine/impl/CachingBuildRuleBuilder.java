@@ -62,6 +62,7 @@ import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
+import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy.StrategyBuildResult;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.rules.schedule.OverrideScheduleRule;
@@ -183,6 +184,9 @@ class CachingBuildRuleBuilder {
   private volatile ListenableFuture<Void> uploadCompleteFuture = Futures.immediateFuture(null);
   private volatile boolean depsAreAvailable;
   private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
+
+  private @Nullable volatile Throwable firstFailure = null;
+  private @Nullable volatile StrategyBuildResult strategyResult = null;
 
   public CachingBuildRuleBuilder(
       BuildRuleBuilderDelegate buildRuleBuilderDelegate,
@@ -321,10 +325,10 @@ class CachingBuildRuleBuilder {
     return buildResultBuilder().setStatus(BuildRuleStatus.FAIL).setFailureOptional(thrown).build();
   }
 
-  private BuildResult canceled(Throwable thrown) {
+  private BuildResult canceled(@Nullable Throwable thrown) {
     return buildResultBuilder()
         .setStatus(BuildRuleStatus.CANCELED)
-        .setFailureOptional(thrown)
+        .setFailureOptional(Objects.requireNonNull(thrown))
         .build();
   }
 
@@ -862,7 +866,8 @@ class CachingBuildRuleBuilder {
 
     ListenableFuture<Optional<BuildResult>> future;
     if (customBuildRuleStrategy.isPresent() && customBuildRuleStrategy.get().canBuild(rule)) {
-      future = customBuildRuleStrategy.get().build(rule, strategyContext);
+      this.strategyResult = customBuildRuleStrategy.get().build(rule, strategyContext);
+      future = strategyResult.getBuildResult();
     } else {
       future = Futures.submitAsync(strategyContext::runWithDefaultBehavior, service);
     }
@@ -924,8 +929,8 @@ class CachingBuildRuleBuilder {
 
   private ListenableFuture<BuildResult> buildOrFetchFromCache() {
     // If we've already seen a failure, exit early.
-    if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
-      return Futures.immediateFuture(canceled(buildRuleBuilderDelegate.getFirstFailure()));
+    if (!shouldKeepGoing()) {
+      return Futures.immediateFuture(canceled(firstFailure));
     }
 
     // 1. Check if it's already built.
@@ -1050,6 +1055,10 @@ class CachingBuildRuleBuilder {
 
     // Unwrap the result.
     return Futures.transform(buildResultFuture, Optional::get);
+  }
+
+  private boolean shouldKeepGoing() {
+    return firstFailure == null;
   }
 
   private ListenableFuture<Optional<BuildResult>> attemptDistributedBuildSynchronization(
@@ -1294,10 +1303,8 @@ class CachingBuildRuleBuilder {
         () ->
             executor.submit(
                 () -> {
-                  if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
-                    return Optional.of(
-                        canceled(
-                            Objects.requireNonNull(buildRuleBuilderDelegate.getFirstFailure())));
+                  if (!shouldKeepGoing()) {
+                    return Optional.of(canceled(firstFailure));
                   }
                   try (Scope ignored = buildRuleScope()) {
                     return function.call();
@@ -1316,14 +1323,21 @@ class CachingBuildRuleBuilder {
           if (result.isPresent()) {
             return Futures.immediateFuture(result);
           }
-          if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
-            return Futures.immediateFuture(
-                Optional.of(
-                    canceled(Objects.requireNonNull(buildRuleBuilderDelegate.getFirstFailure()))));
+          if (!shouldKeepGoing()) {
+            return Futures.immediateFuture(Optional.of(canceled(firstFailure)));
           }
           return function.call();
         },
         MoreExecutors.directExecutor());
+  }
+
+  public void cancel(Throwable throwable) {
+    firstFailure = throwable;
+    // TODO(cjhopman): There's a small race here where we might delegate to the strategy after
+    // checking here if it's null. I don't think we care, though.
+    if (strategyResult != null) {
+      Objects.requireNonNull(strategyResult).cancel();
+    }
   }
 
   /** Encapsulates the steps involved in building a single {@link BuildRule} locally. */
@@ -1353,9 +1367,8 @@ class CachingBuildRuleBuilder {
 
     public void runWithDefaultExecutor() {
       try {
-        if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
-          Objects.requireNonNull(buildRuleBuilderDelegate.getFirstFailure());
-          future.set(Optional.of(canceled(buildRuleBuilderDelegate.getFirstFailure())));
+        if (!shouldKeepGoing()) {
+          future.set(Optional.of(canceled(firstFailure)));
           return;
         }
         try (Scope ignored = buildRuleScope()) {
@@ -1413,17 +1426,12 @@ class CachingBuildRuleBuilder {
   public interface BuildRuleBuilderDelegate {
     void markRuleAsUsed(BuildRule rule, BuckEventBus eventBus);
 
-    boolean shouldKeepGoing();
-
     void setFirstFailure(Throwable throwable);
 
     ListenableFuture<List<BuildResult>> getDepResults(
         BuildRule rule, ExecutionContext executionContext);
 
     void addAsyncCallback(ListenableFuture<Void> callback);
-
-    @Nullable
-    Throwable getFirstFailure();
 
     void onRuleAboutToBeBuilt(BuildRule rule);
   }

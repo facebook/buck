@@ -79,6 +79,10 @@ public class FakeBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this(BuildTargetFactory.newInstance(target), new FakeProjectFilesystem(), deps);
   }
 
+  public FakeBuildRule(String target, ProjectFilesystem filesystem, BuildRule... deps) {
+    this(BuildTargetFactory.newInstance(target), filesystem, deps);
+  }
+
   public FakeBuildRule setRuntimeDeps(BuildRule... deps) {
     runtimeDeps = Sets.newHashSet(deps);
     return this;

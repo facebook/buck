@@ -166,23 +166,24 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
   }
 
   @Override
-  public ListenableFuture<Optional<BuildResult>> build(
-      BuildRule rule, BuildStrategyContext strategyContext) {
+  public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
     Preconditions.checkState(rule instanceof ModernBuildRule);
-    return executorService
-        .orElse(strategyContext.getExecutorService())
-        .submit(
-            () -> {
-              try (Scope ignored = strategyContext.buildRuleScope()) {
-                executeRule(
-                    rule,
-                    strategyContext.getExecutionContext(),
-                    strategyContext.getBuildRuleBuildContext(),
-                    strategyContext.getBuildableContext());
-                return Optional.of(
-                    strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY));
-              }
-            });
+    ListenableFuture<Optional<BuildResult>> buildResult =
+        executorService
+            .orElse(strategyContext.getExecutorService())
+            .submit(
+                () -> {
+                  try (Scope ignored = strategyContext.buildRuleScope()) {
+                    executeRule(
+                        rule,
+                        strategyContext.getExecutionContext(),
+                        strategyContext.getBuildRuleBuildContext(),
+                        strategyContext.getBuildableContext());
+                    return Optional.of(
+                        strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY));
+                  }
+                });
+    return StrategyBuildResult.nonCancellable(buildResult);
   }
 
   private void executeRule(

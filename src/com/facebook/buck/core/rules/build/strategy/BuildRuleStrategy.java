@@ -30,9 +30,33 @@ public interface BuildRuleStrategy extends Closeable {
   void close() throws IOException;
 
   /** Builds the rule. */
-  ListenableFuture<Optional<BuildResult>> build(
-      BuildRule rule, BuildStrategyContext strategyContext);
+  StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext);
 
   /** A rule will be built by the custom strategy only if canBuild() returns true. */
   boolean canBuild(BuildRule instance);
+
+  /** A simple interface for build results exposing an explicit cancellation. */
+  interface StrategyBuildResult {
+    /**
+     * Indicates that the caller is no longer interested in the result and the strategy is free to
+     * cancel pending work.
+     */
+    void cancel();
+
+    /** A ListenableFuture for the build result. */
+    ListenableFuture<Optional<BuildResult>> getBuildResult();
+
+    /** A simple helper to make a StrategyBuildResult that can't be cancelled. */
+    static StrategyBuildResult nonCancellable(ListenableFuture<Optional<BuildResult>> result) {
+      return new StrategyBuildResult() {
+        @Override
+        public void cancel() {}
+
+        @Override
+        public ListenableFuture<Optional<BuildResult>> getBuildResult() {
+          return result;
+        }
+      };
+    }
+  }
 }

@@ -150,11 +150,13 @@ import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.MoreFutures;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.exceptions.ExceptionWithContext;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
@@ -162,7 +164,6 @@ import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -197,6 +198,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.SortedSet;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -206,7 +208,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -1952,7 +1953,7 @@ public class CachingBuildEngineTest {
 
     public static class CustomStrategyTests extends CommonFixture {
       private BuildTarget target;
-      private Supplier<StepExecutionResult> resultSupplier;
+      private ThrowingSupplier<StepExecutionResult, InterruptedException> resultSupplier;
       private BuildRule rule;
       private FakeStrategy strategy;
 
@@ -1967,19 +1968,31 @@ public class CachingBuildEngineTest {
 
       private static class FakeStrategy implements BuildRuleStrategy {
         boolean closed = false;
-        boolean canBuild = false;
+        Predicate<BuildRule> canBuild = rule -> false;
         Optional<Builder> builder = Optional.empty();
+        Runnable cancelCallback = () -> {};
 
         @Override
-        public ListenableFuture<Optional<BuildResult>> build(
-            BuildRule rule, BuildStrategyContext strategyContext) {
+        public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
           Preconditions.checkState(builder.isPresent());
-          return builder.get().build(strategyContext.getExecutorService(), rule, strategyContext);
+          ListenableFuture<Optional<BuildResult>> buildResult =
+              builder.get().build(strategyContext.getExecutorService(), rule, strategyContext);
+          return new StrategyBuildResult() {
+            @Override
+            public void cancel() {
+              cancelCallback.run();
+            }
+
+            @Override
+            public ListenableFuture<Optional<BuildResult>> getBuildResult() {
+              return buildResult;
+            }
+          };
         }
 
         @Override
         public boolean canBuild(BuildRule instance) {
-          return canBuild;
+          return canBuild.test(instance);
         }
 
         @Override
@@ -1998,11 +2011,12 @@ public class CachingBuildEngineTest {
       public void setUp() throws Exception {
         super.setUp();
         target = BuildTargetFactory.newInstance("//:rule");
-        resultSupplier = Suppliers.ofInstance(StepExecutionResults.ERROR);
+        resultSupplier = () -> StepExecutionResults.ERROR;
         Step step =
             new AbstractExecutionStep("step") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) {
+              public StepExecutionResult execute(ExecutionContext context)
+                  throws InterruptedException {
                 return resultSupplier.get();
               }
             };
@@ -2020,11 +2034,9 @@ public class CachingBuildEngineTest {
       public void runVerifiedBuild(BuildRule rule) throws InterruptedException, ExecutionException {
         try (CachingBuildEngine cachingBuildEngine =
             cachingBuildEngineFactory().setCustomBuildRuleStrategy(strategy).build()) {
+          ExecutionContext executionContext = TestExecutionContext.newInstance();
           BuildResult buildResult =
-              cachingBuildEngine
-                  .build(buildContext, TestExecutionContext.newInstance(), rule)
-                  .getResult()
-                  .get();
+              cachingBuildEngine.build(buildContext, executionContext, rule).getResult().get();
           assertTrue(
               buildResult.getFailureOptional().map(ErrorLogger::getUserFriendlyMessage).toString(),
               buildResult.isSuccess());
@@ -2034,14 +2046,14 @@ public class CachingBuildEngineTest {
 
       @Test
       public void testCustomBuildRuleStrategyCanRejectRules() throws Exception {
-        resultSupplier = Suppliers.ofInstance(StepExecutionResults.SUCCESS);
+        resultSupplier = () -> StepExecutionResults.SUCCESS;
         runVerifiedBuild(rule);
       }
 
       @Test
       public void testCustomBuildRuleStrategyCanRunRulesWithDefaultBehavior() throws Exception {
-        resultSupplier = Suppliers.ofInstance(StepExecutionResults.SUCCESS);
-        strategy.canBuild = true;
+        resultSupplier = () -> StepExecutionResults.SUCCESS;
+        strategy.canBuild = rule -> true;
         strategy.builder =
             Optional.of((service, rule, executorRunner) -> executorRunner.runWithDefaultBehavior());
         runVerifiedBuild(rule);
@@ -2054,7 +2066,7 @@ public class CachingBuildEngineTest {
               fail();
               return null;
             };
-        strategy.canBuild = true;
+        strategy.canBuild = rule -> true;
         strategy.builder =
             Optional.of(
                 (service, rule, strategyContext) -> {
@@ -2065,6 +2077,87 @@ public class CachingBuildEngineTest {
                   }
                 });
         runVerifiedBuild(rule);
+      }
+
+      @Test
+      public void customBuildRuleStrategyGetsCancelCallOnFirstFailure() throws Exception {
+        CountDownLatch failureBlocker = new CountDownLatch(1);
+        CountDownLatch cancelSignal = new CountDownLatch(1);
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+
+        strategy.canBuild = rule -> rule == this.rule;
+
+        ListeningExecutorService executorService =
+            listeningDecorator(MostExecutors.newMultiThreadExecutor("test", 4));
+
+        // It can be pretty difficult to determine the state of the different threads when
+        // debugging, so we print a little bit about the state.
+        strategy.builder =
+            Optional.of(
+                (service, rule, strategyContext) ->
+                    // Only async strategies can actually receive a cancellation signal.
+                    executorService.submit(
+                        () -> {
+                          try (Scope ignored = strategyContext.buildRuleScope()) {
+                            System.err.println("Signalling failure to continue.");
+                            failureBlocker.countDown();
+                            System.err.println("Waiting for cancellation signal.");
+                            if (cancelSignal.await(1, TimeUnit.SECONDS)) {
+                              System.err.println("Got cancellation.");
+                            } else {
+                              failure.set(new RuntimeException("Never got cancel signal."));
+                            }
+
+                            return Optional.of(
+                                strategyContext.createBuildResult(
+                                    BuildRuleSuccessType.BUILT_LOCALLY));
+                          }
+                        }));
+        strategy.cancelCallback = () -> cancelSignal.countDown();
+
+        FakeBuildRule failingRule =
+            new FakeBuildRule("//:failing_rule", filesystem) {
+              @Override
+              public ImmutableList<Step> getBuildSteps(
+                  BuildContext context, BuildableContext buildableContext) {
+                return ImmutableList.of(
+                    new AbstractExecutionStep("failing_step") {
+                      @Override
+                      public StepExecutionResult execute(ExecutionContext context)
+                          throws InterruptedException {
+                        System.err.println("Waiting to fail.");
+                        if (failureBlocker.await(1, TimeUnit.SECONDS)) {
+                          System.err.println("Failing.");
+                        } else {
+                          failure.set(new RuntimeException("Never got failure signal."));
+                        }
+                        return StepExecutionResults.ERROR;
+                      }
+                    });
+              }
+            };
+        try (CachingBuildEngine cachingBuildEngine =
+            cachingBuildEngineFactory()
+                .setCustomBuildRuleStrategy(strategy)
+                .setExecutorService(executorService)
+                .build()) {
+          ExecutionContext executionContext = TestExecutionContext.newInstance();
+
+          cachingBuildEngine
+              .build(
+                  buildContext,
+                  executionContext,
+                  new FakeBuildRule("//:with_deps", filesystem, rule, failingRule))
+              .getResult()
+              .get();
+        }
+        strategy.assertClosed();
+
+        if (failure.get() != null) {
+          failure.get().printStackTrace(System.err);
+          fail("Failing due to thrown exception: " + failure.get().getMessage());
+        }
+        assertEquals(0, cancelSignal.getCount());
       }
     }
 
