@@ -810,6 +810,11 @@ class CachingBuildRuleBuilder {
 
   private ListenableFuture<Optional<BuildResult>> buildLocally(
       final CacheResult cacheResult, final ListeningExecutorService service) {
+    @SuppressWarnings("PMD.PrematureDeclaration")
+    long start = System.currentTimeMillis();
+
+    onRuleAboutToBeBuilt();
+
     BuildRuleSteps<RulePipelineState> buildRuleSteps = new BuildRuleSteps<>(cacheResult, null);
     BuildExecutorRunner runner =
         new BuildExecutorRunner() {
@@ -832,7 +837,7 @@ class CachingBuildRuleBuilder {
             return buildRuleSteps.future;
           }
         };
-    long start = System.currentTimeMillis();
+
     ListenableFuture<Optional<BuildResult>> future;
     if (customBuildRuleStrategy.isPresent() && customBuildRuleStrategy.get().canBuild(rule)) {
       future = customBuildRuleStrategy.get().build(service, rule, runner);
@@ -1067,6 +1072,7 @@ class CachingBuildRuleBuilder {
 
               @Override
               public void run() {
+                onRuleAboutToBeBuilt();
                 steps.runWithDefaultExecutor();
               }
             });
@@ -1168,6 +1174,16 @@ class CachingBuildRuleBuilder {
     // TODO(cjhopman): Delete old outputs.
   }
 
+  private void onRuleAboutToBeBuilt() {
+    try {
+      onOutputsWillChange();
+    } catch (IOException e) {
+      throw new BuckUncheckedExecutionException(e);
+    }
+    buildRuleBuilderDelegate.onRuleAboutToBeBuilt(rule);
+    eventBus.post(BuildRuleEvent.willBuildLocally(rule));
+  }
+
   private void executePostBuildSteps(Iterable<Step> postBuildSteps)
       throws InterruptedException, StepFailedException {
 
@@ -1257,8 +1273,9 @@ class CachingBuildRuleBuilder {
             executor.submit(
                 () -> {
                   if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
-                    Objects.requireNonNull(buildRuleBuilderDelegate.getFirstFailure());
-                    return Optional.of(canceled(buildRuleBuilderDelegate.getFirstFailure()));
+                    return Optional.of(
+                        canceled(
+                            Objects.requireNonNull(buildRuleBuilderDelegate.getFirstFailure())));
                   }
                   try (Scope ignored = buildRuleScope()) {
                     return function.call();
@@ -1331,19 +1348,10 @@ class CachingBuildRuleBuilder {
      */
     private void executeCommandsNowThatDepsAreBuilt(BuildExecutor executor)
         throws InterruptedException, StepFailedException, IOException {
-      try {
-        onOutputsWillChange();
-      } catch (IOException e) {
-        throw new BuckUncheckedExecutionException(e);
-      }
-      buildRuleBuilderDelegate.onRuleAboutToBeBuilt(rule);
-
       LOG.debug("Building locally: %s", rule);
       // Attempt to get an approximation of how long it takes to actually run the command.
       @SuppressWarnings("PMD.PrematureDeclaration")
       long start = System.nanoTime();
-
-      eventBus.post(BuildRuleEvent.willBuildLocally(rule));
 
       ExecutionContext contextWithContextualExecutor =
           executionContext.withProcessExecutor(
