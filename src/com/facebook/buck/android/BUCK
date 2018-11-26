@@ -166,7 +166,6 @@ java_library_with_plugins(
         ":steps",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
-        "//src/com/facebook/buck/android/bundle:bundle",
         "//src/com/facebook/buck/android/dalvik:dalvik",
         "//src/com/facebook/buck/android/dalvik:steps",
         "//src/com/facebook/buck/android/redex:options",
@@ -435,7 +434,6 @@ java_immutables_library(
         ":split_dex",
         ":utils",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
-        "//src/com/facebook/buck/android/bundle:bundle",
         "//src/com/facebook/buck/android/dalvik:dalvik",
         "//src/com/facebook/buck/android/dalvik/firstorder:firstorder",
         "//src/com/facebook/buck/android/packageable:packageable",
@@ -488,5 +486,6 @@ java_immutables_library(
         "//third-party/java/dx:dx",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/bundletool:bundletool"
     ],
 )

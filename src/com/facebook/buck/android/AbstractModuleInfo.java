@@ -42,19 +42,15 @@ public abstract class AbstractModuleInfo {
   public abstract ImmutableMap<Path, String> getAssetDirectories();
 
   @Value.Parameter
-  @Nullable
-  public abstract Path getTempAssets();
-
-  @Value.Parameter
   public abstract ImmutableSet<Path> getNativeLibraryDirectories();
-
-  @Value.Parameter
-  @Nullable
-  public abstract Path getTempNatives();
 
   @Value.Parameter
   public abstract ImmutableSet<Path> getZipFiles();
 
   @Value.Parameter
   public abstract ImmutableSet<Path> getJarFilesThatMayContainResources();
+
+  public boolean isBaseModule() {
+    return "base".equals(getModuleName());
+  }
 }

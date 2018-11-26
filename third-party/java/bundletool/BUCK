@@ -1,34 +1,17 @@
-genrule(
-    name = "proto-gen",
-    srcs = glob(["**/*.proto"]),
-    out = "bundle.src.zip",
-    cmd = "for f in `find . -name '*.proto'`; do protoc -I . $f --plugin=protoc-gen-grpc-java=$(location //third-party/java/grpc:protobuf-plugin) --grpc-java_out=$TMP --java_out=$TMP; done; cd $TMP; jar cf $OUT .",
-)
-
-DEPS = [
-    "//third-party/java/protobuf:protobuf",
-    "//third-party/java/grpc:grpc-core",
-    "//third-party/java/grpc:grpc-stub",
-    "//third-party/java/grpc:grpc-protobuf",
-]
-
-java_library(
-    name = "bundle",
-    srcs = [":proto-gen"],
-    deps = DEPS,
-)
-
 prebuilt_jar(
-    name = "prebuilt",
-    binary_jar = "bundle.jar",
-    licenses = ["LICENSE"],
-    source_jar = "bundle.src.jar",
+name = "prebuilt",
+    binary_jar = "bundletool-0.7.1.jar",
 )
 
-# prebuild_jar doesn't support exported_deps, so just wrap it in a java_library with no sources.
 java_library(
     name = "bundletool",
     srcs = [],
-    exported_deps = [":prebuilt"] + DEPS,
+    exported_deps = [
+        "//third-party/java/aapt2-proto:aapt2-proto",
+        "//third-party/java/protobuf:protobuf",
+        "//third-party/java/protobuf:protobuf-util",
+        "//third-party/java/guava:guava",
+        ":prebuilt"
+    ],
     visibility = ["PUBLIC"],
 )

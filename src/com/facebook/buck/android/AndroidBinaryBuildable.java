@@ -17,9 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.android.bundle.GenerateAssetsStep;
-import com.facebook.buck.android.bundle.GenerateBundleConfigStep;
-import com.facebook.buck.android.bundle.GenerateNativeStep;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
@@ -275,17 +272,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               false,
               javaRuntimeLauncher.getCommandPrefix(pathResolver)));
     } else {
-      Path tempBundleConfig =
-          BuildTargetPaths.getGenPath(
-              getProjectFilesystem(), buildTarget, "__BundleConfig__%s__.pb");
-      steps.add(new GenerateBundleConfigStep(getProjectFilesystem(), tempBundleConfig));
-
       ImmutableSet<String> moduleNames =
           apkModules.stream().map(APKModule::getName).collect(ImmutableSet.toImmutableSet());
 
-      Path tempAssets =
-          BuildTargetPaths.getGenPath(
-              getProjectFilesystem(), buildTarget, "__assets__base__%s__.pb");
       for (Path path : dexFilesInfo.getSecondaryDexDirs(getProjectFilesystem(), pathResolver)) {
         if (path.getFileName().toString().equals("additional_dexes")) {
           File[] assetFiles = path.toFile().listFiles();
@@ -311,28 +300,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           baseModuleInfo.putAssetDirectories(path, "");
         }
       }
-      steps.add(
-          new GenerateAssetsStep(
-              getProjectFilesystem(),
-              tempAssets,
-              baseModuleInfo.build().getAssetDirectories().keySet()));
-
-      Path tempNative =
-          BuildTargetPaths.getGenPath(
-              getProjectFilesystem(), buildTarget, "__native__base__%s__.pb");
-      steps.add(
-          new GenerateNativeStep(
-              getProjectFilesystem(),
-              tempNative,
-              baseModuleInfo.build().getNativeLibraryDirectories()));
 
       baseModuleInfo
           .setResourceApk(pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath))
           .addDexFile(pathResolver.getRelativePath(dexFilesInfo.primaryDexPath))
           .setJarFilesThatMayContainResources(thirdPartyJars)
-          .setZipFiles(zipFiles.build())
-          .setTempAssets(tempAssets)
-          .setTempNatives(tempNative);
+          .setZipFiles(zipFiles.build());
 
       modulesInfo.add(baseModuleInfo.build());
 
@@ -340,10 +313,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           new AabBuilderStep(
               getProjectFilesystem(),
               getSignedApkPath(),
-              pathToKeystore,
-              keystoreProperties,
+              buildTarget,
               false,
-              tempBundleConfig,
               modulesInfo.build(),
               moduleNames));
     }
@@ -475,33 +446,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           .addAllDexFile(dexFileDirectoriesBuilderForThisModule.build());
     } else {
       String moduleName = module.getName();
-      Path tempAssets =
-          BuildTargetPaths.getGenPath(
-              getProjectFilesystem(), buildTarget, "__assets__" + moduleName + "__%s__.pb");
-      steps.add(
-          new GenerateAssetsStep(
-              getProjectFilesystem(),
-              tempAssets,
-              assetDirectoriesBuilderForThisModule.build().keySet()));
-
-      Path tempNative =
-          BuildTargetPaths.getGenPath(
-              getProjectFilesystem(), buildTarget, "__native__" + moduleName + "__%s__.pb");
-      steps.add(
-          new GenerateNativeStep(
-              getProjectFilesystem(),
-              tempNative,
-              nativeLibraryDirectoriesBuilderForThisModule.build()));
-
       modulesInfo.add(
           ModuleInfo.of(
               moduleName,
               resourcesDirectoryForThisModule,
               dexFileDirectoriesBuilderForThisModule.build(),
               assetDirectoriesBuilderForThisModule.build(),
-              tempAssets,
               nativeLibraryDirectoriesBuilderForThisModule.build(),
-              tempNative,
               ImmutableSet.<Path>builder().build(),
               ImmutableSet.<Path>builder().build()));
     }
@@ -848,8 +799,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   private String getUnsignedApkPath() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.unsigned.apk")
-        .toString();
+    return getPath("%s.unsigned.apk").toString();
+  }
+
+  private Path getPath(String format) {
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), format);
   }
 
   private Path getRedexedApkPath() {
