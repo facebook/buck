@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.builders;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -27,7 +28,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.factory.RemoteExecutionClientsFactory;
-import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
+import com.facebook.buck.rules.modern.config.HybridLocalBuildStrategyConfig;
+import com.facebook.buck.rules.modern.config.ModernBuildRuleStrategyConfig;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.util.concurrent.Futures;
@@ -42,7 +44,7 @@ import java.util.Optional;
 public class ModernBuildRuleBuilderFactory {
   /** Creates a BuildRuleStrategy for ModernBuildRules based on the buck configuration. */
   public static Optional<BuildRuleStrategy> getBuildStrategy(
-      ModernBuildRuleConfig config,
+      ModernBuildRuleStrategyConfig config,
       RemoteExecutionConfig remoteExecutionConfig,
       BuildRuleResolver resolver,
       Cell rootCell,
@@ -63,6 +65,18 @@ public class ModernBuildRuleBuilderFactory {
               createReconstructing(new SourcePathRuleFinder(resolver), cellResolver, rootCell));
         case DEBUG_PASSTHROUGH:
           return Optional.of(createPassthrough());
+        case HYBRID_LOCAL:
+          return Optional.of(
+              createHybridLocal(
+                  config.getHybridLocalConfig(),
+                  remoteExecutionConfig,
+                  resolver,
+                  rootCell,
+                  cellResolver,
+                  hashLoader,
+                  eventBus,
+                  remoteExecutorService,
+                  traceInfoProvider));
         case REMOTE:
         case GRPC_REMOTE:
         case DEBUG_GRPC_SERVICE_IN_PROCESS:
@@ -84,6 +98,33 @@ public class ModernBuildRuleBuilderFactory {
     }
     throw new IllegalStateException(
         "Unrecognized build strategy " + config.getBuildStrategy() + ".");
+  }
+
+  private static BuildRuleStrategy createHybridLocal(
+      HybridLocalBuildStrategyConfig hybridLocalConfig,
+      RemoteExecutionConfig remoteExecutionConfig,
+      BuildRuleResolver resolver,
+      Cell rootCell,
+      CellPathResolver cellResolver,
+      FileHashLoader hashLoader,
+      BuckEventBus eventBus,
+      ListeningExecutorService remoteExecutorService,
+      Optional<TraceInfoProvider> traceInfoProvider) {
+    BuildRuleStrategy delegate =
+        getBuildStrategy(
+                hybridLocalConfig.getDelegateConfig(),
+                remoteExecutionConfig,
+                resolver,
+                rootCell,
+                cellResolver,
+                hashLoader,
+                eventBus,
+                remoteExecutorService,
+                traceInfoProvider)
+            .orElseThrow(
+                () -> new HumanReadableException("Delegate config configured incorrectly."));
+    return new HybridLocalStrategy(
+        hybridLocalConfig.getLocalJobs(), hybridLocalConfig.getDelegateJobs(), delegate);
   }
 
   /** The passthrough strategy just forwards to executorRunner.runWithDefaultExecutor. */

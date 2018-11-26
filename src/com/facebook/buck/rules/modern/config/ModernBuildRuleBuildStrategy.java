@@ -27,6 +27,7 @@ public enum ModernBuildRuleBuildStrategy {
 
   // This is used for all remote execution-based strategies.
   REMOTE,
+  HYBRID_LOCAL,
 
   // Creates a strategy that serializes and deserializes ModernBuildRules in memory and then
   // builds the deserialized version.

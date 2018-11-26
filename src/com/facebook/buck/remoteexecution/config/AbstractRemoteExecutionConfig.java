@@ -106,6 +106,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
         getDelegate().getView(ModernBuildRuleConfig.class).getBuildStrategy();
     // Try the old modern_build_rule way.
     switch (fallbackStrategy) {
+      case HYBRID_LOCAL:
       case DEBUG_RECONSTRUCT:
       case DEBUG_PASSTHROUGH:
       case REMOTE:

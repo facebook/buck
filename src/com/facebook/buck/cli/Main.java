@@ -131,6 +131,7 @@ import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
+import com.facebook.buck.rules.modern.config.ModernBuildRuleStrategyConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.step.ExecutorPool;
@@ -1371,11 +1372,17 @@ public final class Main {
   }
 
   private boolean isRemoteExecutionBuild(BuckCommand command, BuckConfig config) {
-    ModernBuildRuleBuildStrategy strategy =
-        config.getView(ModernBuildRuleConfig.class).getBuildStrategy();
-    return command.getSubcommand().isPresent()
-        && command.getSubcommand().get() instanceof BuildCommand
-        && strategy == ModernBuildRuleBuildStrategy.REMOTE;
+    if (!command.getSubcommand().isPresent()
+        || !(command.getSubcommand().get() instanceof BuildCommand)) {
+      return false;
+    }
+
+    ModernBuildRuleStrategyConfig strategyConfig =
+        config.getView(ModernBuildRuleConfig.class).getDefaultStrategyConfig();
+    while (strategyConfig.getBuildStrategy() == ModernBuildRuleBuildStrategy.HYBRID_LOCAL) {
+      strategyConfig = strategyConfig.getHybridLocalConfig().getDelegateConfig();
+    }
+    return strategyConfig.getBuildStrategy() == ModernBuildRuleBuildStrategy.REMOTE;
   }
 
   @Nonnull

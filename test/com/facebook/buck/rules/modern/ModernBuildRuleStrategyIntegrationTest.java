@@ -58,6 +58,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -96,6 +97,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
             new Object[] {ModernBuildRuleBuildStrategy.DEBUG_PASSTHROUGH, RemoteExecutionType.NONE})
         // Remote execution strategies.
         .add(new Object[] {ModernBuildRuleBuildStrategy.REMOTE, RemoteExecutionType.GRPC})
+        .add(new Object[] {ModernBuildRuleBuildStrategy.HYBRID_LOCAL, RemoteExecutionType.GRPC})
         // TODO(shivanker): We don't have a dummy implementation for Thrift in this repository.
         // Probably add this in the future to be able to have unit tests.
         // .add(new Object[] {ModernBuildRuleBuildStrategy.REMOTE, RemoteExecutionType.THRIFT})
@@ -322,15 +324,38 @@ public class ModernBuildRuleStrategyIntegrationTest {
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
     workspace.addBuckConfigLocalOption("remoteexecution", "type", executionType.toString());
+
+    int remotePort = -1;
+
+    if (executionType == RemoteExecutionType.GRPC) {
+      // TODO(cjhopman): newer versions of grpc can find us a port.
+      for (int i = 0; i < 100; i++) {
+        if (server.isPresent()) {
+          break;
+        }
+        try (ServerSocket socket = new ServerSocket(0)) {
+          remotePort = socket.getLocalPort();
+        }
+        try {
+          server = Optional.of(new GrpcServer(remotePort));
+        } catch (Exception e) { // NOPMD
+        }
+      }
+      Preconditions.checkState(server.isPresent());
+    }
+
     workspace.addBuckConfigLocalOption(
-        "remoteexecution", "remote_port", Integer.toString(REMOTE_PORT));
-    workspace.addBuckConfigLocalOption(
-        "remoteexecution", "cas_port", Integer.toString(REMOTE_PORT));
+        "remoteexecution", "remote_port", Integer.toString(remotePort));
+    workspace.addBuckConfigLocalOption("remoteexecution", "cas_port", Integer.toString(remotePort));
 
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    if (executionType == RemoteExecutionType.GRPC) {
-      server = Optional.of(new GrpcServer(REMOTE_PORT));
+    if (strategy == ModernBuildRuleBuildStrategy.HYBRID_LOCAL) {
+      workspace.addBuckConfigLocalOption(
+          "modern_build_rule#remote", "strategy", ModernBuildRuleBuildStrategy.REMOTE.toString());
+      workspace.addBuckConfigLocalOption("modern_build_rule", "local_jobs", "0");
+      workspace.addBuckConfigLocalOption("modern_build_rule", "delegate_jobs", "1");
+      workspace.addBuckConfigLocalOption("modern_build_rule", "delegate", "remote");
     }
   }
 
