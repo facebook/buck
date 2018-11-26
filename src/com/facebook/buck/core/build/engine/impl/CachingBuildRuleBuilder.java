@@ -164,6 +164,11 @@ class CachingBuildRuleBuilder {
   @Nullable private volatile Pair<Long, Long> manifestRuleKeyCacheCheckTimestampsMillis = null;
   @Nullable private volatile Pair<Long, Long> buildTimestampsMillis = null;
 
+  // This is used to mark that we've invalidated cached state that is no longer valid if this rule's
+  // outputs change. When we finish the rule, we verify that that invalidation has happened if this
+  // rule has changed.
+  private volatile boolean outputsCanChange = false;
+
   /**
    * This is used to weakly cache the manifest RuleKeyAndInputs. I
    *
@@ -483,6 +488,16 @@ class CachingBuildRuleBuilder {
       try (Scope ignored = LeafEvents.scope(eventBus, "finalizing_build_rule")) {
         // We shouldn't see any build fail result at this point.
         BuildRuleSuccessType success = input.getSuccess();
+
+        if (success.outputsHaveChanged()) {
+          // We could just invalidate the previous cached state here, but that would just be hiding
+          // our failure to do the correct thing at the right time.
+          Preconditions.checkState(
+              outputsCanChange,
+              "%s success type indicates that outputs have changed, but onOutputsWillChange wasn't called.",
+              success);
+        }
+
         switch (success) {
           case BUILT_LOCALLY:
             finalizeBuiltLocally(outputSize);
@@ -805,7 +820,7 @@ class CachingBuildRuleBuilder {
               return pipelinesRunner.runPipelineStartingAt(
                   buildRuleBuildContext, (SupportsPipelining<?>) rule, service);
             } else {
-              buildRuleSteps.run();
+              buildRuleSteps.runWithDefaultExecutor();
               return buildRuleSteps.future;
             }
           }
@@ -1039,7 +1054,22 @@ class CachingBuildRuleBuilder {
 
   private <T extends RulePipelineState> void addToPipelinesRunner(
       SupportsPipelining<T> rule, CacheResult cacheResult) {
-    pipelinesRunner.addRule(rule, pipeline -> new BuildRuleSteps<T>(cacheResult, pipeline));
+    pipelinesRunner.addRule(
+        rule,
+        pipeline ->
+            new RunnableWithFuture<Optional<BuildResult>>() {
+              BuildRuleSteps<T> steps = new BuildRuleSteps<>(cacheResult, pipeline);
+
+              @Override
+              public ListenableFuture<Optional<BuildResult>> getFuture() {
+                return steps.getFuture();
+              }
+
+              @Override
+              public void run() {
+                steps.runWithDefaultExecutor();
+              }
+            });
   }
 
   private Optional<BuildResult> checkMatchingLocalKey() {
@@ -1130,6 +1160,7 @@ class CachingBuildRuleBuilder {
    * artifact from the cache).
    */
   private void onOutputsWillChange() throws IOException {
+    outputsCanChange = true;
     if (rule instanceof InitializableFromDisk) {
       ((InitializableFromDisk<?>) rule).getBuildOutputInitializer().invalidate();
     }
@@ -1257,8 +1288,7 @@ class CachingBuildRuleBuilder {
   }
 
   /** Encapsulates the steps involved in building a single {@link BuildRule} locally. */
-  public class BuildRuleSteps<T extends RulePipelineState>
-      implements RunnableWithFuture<Optional<BuildResult>> {
+  public class BuildRuleSteps<T extends RulePipelineState> {
     private final CacheResult cacheResult;
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
     @Nullable private final T pipelineState;
@@ -1268,13 +1298,11 @@ class CachingBuildRuleBuilder {
       this.pipelineState = pipelineState;
     }
 
-    @Override
     public SettableFuture<Optional<BuildResult>> getFuture() {
       return future;
     }
 
-    @Override
-    public void run() {
+    public void runWithDefaultExecutor() {
       runWithExecutor(this::executeCommands);
     }
 

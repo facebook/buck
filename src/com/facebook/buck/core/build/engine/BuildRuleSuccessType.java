@@ -92,6 +92,10 @@ public enum BuildRuleSuccessType {
     return properties.contains(Property.SHOULD_UPLOAD_RESULTING_ARTIFACT);
   }
 
+  public boolean outputsHaveChanged() {
+    return properties.contains(Property.OUTPUTS_HAVE_CHANGED);
+  }
+
   public String getShortDescription() {
     return shortDescription;
   }

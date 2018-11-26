@@ -29,7 +29,6 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -49,8 +48,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
-import com.facebook.buck.core.build.distributed.synchronization.impl.RemoteBuildRuleSynchronizer;
-import com.facebook.buck.core.build.distributed.synchronization.impl.RemoteBuildRuleSynchronizerTestUtil;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
 import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.BuildExecutorRunner;
@@ -99,12 +96,10 @@ import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
-import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.schedule.OverrideScheduleRule;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -193,7 +188,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -246,8 +240,8 @@ public class CachingBuildEngineTest {
       new SourcePathRuleFinder(new TestActionGraphBuilder());
   private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
       DefaultSourcePathResolver.from(DEFAULT_RULE_FINDER);
-  private static final long NO_INPUT_FILE_SIZE_LIMIT = Long.MAX_VALUE;
-  private static final RuleKeyFieldLoader FIELD_LOADER =
+  public static final long NO_INPUT_FILE_SIZE_LIMIT = Long.MAX_VALUE;
+  public static final RuleKeyFieldLoader FIELD_LOADER =
       new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
   private static final DefaultRuleKeyFactory NOOP_RULE_KEY_FACTORY =
       new DefaultRuleKeyFactory(
@@ -3879,467 +3873,6 @@ public class CachingBuildEngineTest {
     }
   }
 
-  public static class InitializableFromDiskTests extends CommonFixture {
-    private static final String DEPFILE_INPUT_CONTENT = "depfile input";
-    private static final String NON_DEPFILE_INPUT_CONTENT = "depfile input";
-    private PathSourcePath depfileInput;
-    private PathSourcePath nonDepfileInput;
-    private NoopBuildRuleWithValueAddedToRuleKey dependency;
-    private AbstractCachingBuildRuleWithInputs buildRule;
-    private ArtifactCache artifactCache;
-    private BuildRuleSuccessType lastSuccessType;
-
-    private static class NoopBuildRuleWithValueAddedToRuleKey extends NoopBuildRule {
-      @AddToRuleKey private int value = 0;
-
-      public NoopBuildRuleWithValueAddedToRuleKey(
-          BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
-        super(buildTarget, projectFilesystem);
-      }
-
-      @Override
-      public SortedSet<BuildRule> getBuildDeps() {
-        return ImmutableSortedSet.of();
-      }
-    }
-
-    public InitializableFromDiskTests(MetadataStorage storageType) {
-      super(storageType);
-    }
-
-    @Test
-    public void runTestForAllSuccessTypes() throws Exception {
-      // This is done to ensure that every success type is covered by a test.
-      // TODO(cjhopman): add test for failed case.
-      for (BuildRuleSuccessType successType : EnumSet.allOf(BuildRuleSuccessType.class)) {
-        reset();
-        switch (successType) {
-          case BUILT_LOCALLY:
-            testBuiltLocally();
-            break;
-          case FETCHED_FROM_CACHE:
-            testFetchedFromCache();
-            break;
-          case MATCHING_RULE_KEY:
-            testMatchingRuleKey();
-            break;
-          case FETCHED_FROM_CACHE_INPUT_BASED:
-            testFetchedFromCacheInputBased();
-            break;
-          case FETCHED_FROM_CACHE_MANIFEST_BASED:
-            testFetchedFromCacheManifestBased();
-            break;
-          case MATCHING_INPUT_BASED_RULE_KEY:
-            testMatchingInputBasedKey();
-            break;
-          case MATCHING_DEP_FILE_RULE_KEY:
-            testMatchingDepFileKey();
-            break;
-            // Every success type should be covered by a test. Don't add a default clause here.
-        }
-        assertEquals(lastSuccessType, successType);
-      }
-    }
-
-    @Test
-    public void testMatchingRuleKey() throws Exception {
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertEquals(
-          "Matching rule key should not invalidate InitializableFromDisk state.",
-          firstState,
-          secondState);
-    }
-
-    @Test
-    public void testMatchingInputBasedKey() throws Exception {
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      dependency.value = 1;
-      assertEquals(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertEquals(
-          "Matching input based rule key should not invalidate InitializableFromDisk state.",
-          firstState,
-          secondState);
-    }
-
-    @Test
-    public void testMatchingDepFileKey() throws Exception {
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      writeNonDepfileInput("something else");
-      assertEquals(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertEquals(
-          "Matching rule key should not invalidate InitializableFromDisk state.",
-          firstState,
-          secondState);
-    }
-
-    @Test
-    public void testFetchedFromCache() throws Exception {
-      // write to cache
-      String newContent = "new content";
-      writeDepfileInput(newContent);
-      // populate cache
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      doClean();
-
-      writeDepfileInput(DEPFILE_INPUT_CONTENT);
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      writeDepfileInput(newContent);
-      assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertNotEquals(
-          "Fetching from cache should invalidate InitializableFromDisk state.",
-          firstState,
-          secondState);
-    }
-
-    @Test
-    public void testFetchedFromCacheInputBased() throws Exception {
-      // write to cache
-      String newContent = "new content";
-      writeDepfileInput(newContent);
-      // populate cache
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      doClean();
-
-      writeDepfileInput(DEPFILE_INPUT_CONTENT);
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      dependency.value = 1;
-      writeDepfileInput(newContent);
-      assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, doBuild().getSuccess());
-
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertNotEquals(
-          "Fetching from cache should invalidate InitializableFromDisk state.",
-          firstState,
-          secondState);
-    }
-
-    @Test
-    public void testFetchedFromCacheManifestBased() throws Exception {
-      // write to cache
-      String newContent = "new content";
-      writeDepfileInput(newContent);
-      // populate cache
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      doClean();
-
-      writeDepfileInput(DEPFILE_INPUT_CONTENT);
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      writeDepfileInput(newContent);
-      writeNonDepfileInput(newContent);
-      assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED, doBuild().getSuccess());
-
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertNotEquals(
-          "Fetching from cache should invalidate InitializableFromDisk state.",
-          firstState,
-          secondState);
-    }
-
-    @Test
-    public void testBuiltLocally() throws Exception {
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      writeDepfileInput("new content");
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertNotEquals(
-          "Building locally should invalidate InitializableFromDisk state.",
-          firstState,
-          secondState);
-    }
-
-    @Test(timeout = 10000)
-    public void testBuildLocallyWithImmediateRemoteSynchronization() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = createRemoteBuildRuleSynchronizer();
-      synchronizer.switchToAlwaysWaitingMode();
-
-      // Signal completion of the build rule before the caching build engine requests it.
-      // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
-      // ImmediateFuture with the completion handler executed on the caching build engine's thread.
-      synchronizer.signalCompletionOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
-
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      writeDepfileInput("new content");
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertNotEquals(
-          "Building locally should invalidate InitializableFromDisk state.",
-          firstState,
-          secondState);
-
-      // Check that the build engine waited for the remote build of rule to finish.
-      assertTrue(
-          RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
-              synchronizer, BUILD_TARGET.getFullyQualifiedName()));
-
-      synchronizer.close();
-    }
-
-    @Test(timeout = 10000)
-    public void testBuildLocallyWithDelayedRemoteSynchronization() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = createRemoteBuildRuleSynchronizer();
-      synchronizer.switchToAlwaysWaitingMode();
-
-      // Signal the completion of the build rule asynchronously.
-      // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
-      // Future that later has its completion handler invoked by the Thread below.
-      Thread signalBuildRuleCompletedThread =
-          new Thread(
-              () -> {
-                try {
-                  Thread.sleep(10);
-                } catch (InterruptedException e) {
-                  fail("Test was interrupted");
-                }
-                synchronizer.signalCompletionOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
-              });
-      signalBuildRuleCompletedThread.start();
-
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      writeDepfileInput("new content");
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertNotEquals(
-          "Building locally should invalidate InitializableFromDisk state.",
-          firstState,
-          secondState);
-
-      signalBuildRuleCompletedThread.join(1000);
-
-      // Check that the build engine waited for the remote build of rule to finish.
-      assertTrue(
-          RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
-              synchronizer, BUILD_TARGET.getFullyQualifiedName()));
-
-      synchronizer.close();
-    }
-
-    @Test(timeout = 10000)
-    public void testBuildLocallyWhenRemoteBuildNotStartedAndAlwaysWaitSetToFalse()
-        throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = createRemoteBuildRuleSynchronizer();
-
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      writeDepfileInput("new content");
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertNotEquals(
-          "Building locally should invalidate InitializableFromDisk state.",
-          firstState,
-          secondState);
-
-      // Check that the build engine did not wait for the remote build of rule to finish
-      assertFalse(
-          RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
-              synchronizer, BUILD_TARGET.getFullyQualifiedName()));
-
-      synchronizer.close();
-    }
-
-    @Test(timeout = 10000)
-    public void testBuildLocallyWhenRemoteBuildStartedAndAlwaysWaitSetToFalse() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = createRemoteBuildRuleSynchronizer();
-
-      // Signal that the build has started, which should ensure build waits.
-      synchronizer.signalStartedRemoteBuildingOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
-
-      // Signal the completion of the build rule asynchronously.
-      // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
-      // Future that later has its completion handler invoked by the Thread below.
-      Thread signalBuildRuleCompletedThread =
-          new Thread(
-              () -> {
-                try {
-                  Thread.sleep(10);
-                } catch (InterruptedException e) {
-                  fail("Test was interrupted");
-                }
-                synchronizer.signalCompletionOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
-              });
-      signalBuildRuleCompletedThread.start();
-
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      writeDepfileInput("new content");
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
-      assertTrue(buildRule.isInitializedFromDisk());
-      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
-
-      assertNotEquals(
-          "Building locally should invalidate InitializableFromDisk state.",
-          firstState,
-          secondState);
-
-      signalBuildRuleCompletedThread.join(1000);
-
-      // Check that the build engine waited for the remote build of rule to finish.
-      assertTrue(
-          RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
-              synchronizer, BUILD_TARGET.getFullyQualifiedName()));
-
-      synchronizer.close();
-    }
-
-    private BuildEngineBuildContext createBuildContext(BuildId buildId) {
-      return BuildEngineBuildContext.builder()
-          .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
-          .setClock(new DefaultClock())
-          .setBuildId(buildId)
-          .setArtifactCache(artifactCache)
-          .build();
-    }
-
-    private RemoteBuildRuleSynchronizer createRemoteBuildRuleSynchronizer() {
-      // Allow only up to 2 very quick backoffs.
-      return new RemoteBuildRuleSynchronizer(
-          new DefaultClock(), Executors.newSingleThreadScheduledExecutor(), 6, 10);
-    }
-
-    private void writeDepfileInput(String content) throws IOException {
-      filesystem.mkdirs(depfileInput.getRelativePath().getParent());
-      filesystem.writeContentsToPath(content, depfileInput.getRelativePath());
-    }
-
-    private void writeNonDepfileInput(String content) throws IOException {
-      filesystem.mkdirs(nonDepfileInput.getRelativePath().getParent());
-      filesystem.writeContentsToPath(content, nonDepfileInput.getRelativePath());
-    }
-
-    @Before
-    public void setUpChild() throws Exception {
-      depfileInput = FakeSourcePath.of(filesystem, "path/in/depfile");
-      nonDepfileInput = FakeSourcePath.of(filesystem, "path/not/in/depfile");
-      dependency =
-          new NoopBuildRuleWithValueAddedToRuleKey(
-              BUILD_TARGET.withFlavors(InternalFlavor.of("noop")), filesystem);
-      buildRule =
-          createInputBasedRule(
-              filesystem,
-              graphBuilder,
-              ImmutableSortedSet.of(dependency),
-              ImmutableList.of(),
-              ImmutableList.of(),
-              null,
-              ImmutableList.of(),
-              ImmutableSortedSet.of(depfileInput, nonDepfileInput),
-              ImmutableSortedSet.of(depfileInput));
-      reset();
-    }
-
-    public void reset() throws IOException {
-      writeDepfileInput(DEPFILE_INPUT_CONTENT);
-      writeNonDepfileInput(NON_DEPFILE_INPUT_CONTENT);
-      dependency.value = 0;
-      artifactCache = new InMemoryArtifactCache();
-      lastSuccessType = null;
-      doClean();
-    }
-
-    private BuildResult doBuild() throws Exception {
-      return doBuild(defaultRemoteBuildRuleCompletionWaiter);
-    }
-
-    private BuildResult doBuild(RemoteBuildRuleCompletionWaiter synchronizer) throws Exception {
-      fileHashCache.invalidateAll();
-      try (CachingBuildEngine cachingBuildEngine =
-          cachingBuildEngineFactory(synchronizer)
-              .setDepFiles(DepFiles.CACHE)
-              .setRuleKeyFactories(
-                  RuleKeyFactories.of(
-                      new DefaultRuleKeyFactory(
-                          FIELD_LOADER, fileHashCache, pathResolver, ruleFinder),
-                      new TestInputBasedRuleKeyFactory(
-                          FIELD_LOADER,
-                          fileHashCache,
-                          pathResolver,
-                          ruleFinder,
-                          NO_INPUT_FILE_SIZE_LIMIT),
-                      new DefaultDependencyFileRuleKeyFactory(
-                          FIELD_LOADER, fileHashCache, pathResolver, ruleFinder)))
-              .build()) {
-        BuildResult result =
-            cachingBuildEngine
-                .build(
-                    createBuildContext(new BuildId()),
-                    TestExecutionContext.newInstance(),
-                    buildRule)
-                .getResult()
-                .get();
-        if (DEBUG && !result.isSuccess()) {
-          result.getFailure().printStackTrace();
-        }
-        lastSuccessType = result.getSuccess();
-        return result;
-      }
-    }
-
-    private void doClean() throws IOException {
-      buildInfoStoreManager.close();
-      buildInfoStoreManager = new BuildInfoStoreManager();
-      filesystem.deleteRecursivelyIfExists(Paths.get("buck-out"));
-      Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
-      buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
-      System.out.println(
-          buildInfoStore.readMetadata(dependency.getBuildTarget(), BuildInfo.MetadataKey.RULE_KEY));
-    }
-  }
-
 
   // TODO(mbolin): Test that when the success files match, nothing is built and nothing is
   // written back to the cache.
@@ -4426,7 +3959,7 @@ public class CachingBuildEngineTest {
     }
   }
 
-  private static class BuildableAbstractCachingBuildRule extends AbstractBuildRule
+  public static class BuildableAbstractCachingBuildRule extends AbstractBuildRule
       implements HasPostBuildSteps, InitializableFromDisk<Object> {
 
     private final ImmutableSortedSet<BuildRule> deps;
@@ -4493,12 +4026,12 @@ public class CachingBuildEngineTest {
     }
   }
 
-  private static class AbstractCachingBuildRuleWithInputs extends BuildableAbstractCachingBuildRule
+  public static class AbstractCachingBuildRuleWithInputs extends BuildableAbstractCachingBuildRule
       implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> inputs;
     private final ImmutableSortedSet<SourcePath> depfileInputs;
 
-    private AbstractCachingBuildRuleWithInputs(
+    public AbstractCachingBuildRuleWithInputs(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         @Nullable String pathToOutputFile,
