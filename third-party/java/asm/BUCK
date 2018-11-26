@@ -1,9 +1,9 @@
 java_library(
     name = "asm",
     exported_deps = [
-        ":asm-jar",
         ":asm-analysis",
         ":asm-commons",
+        ":asm-jar",
         ":asm-tree",
         ":asm-util",
         ":asm-xml",

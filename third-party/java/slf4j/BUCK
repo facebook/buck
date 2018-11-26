@@ -8,10 +8,10 @@ prebuilt_jar(
     visibility = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/maven:maven",
+        "//test/com/facebook/buck/core/module/impl/...",
         "//third-party/java/aether:aether-impl",
         "//third-party/java/fbthrift:fbthrift",
         "//third-party/java/sisu:sisu-guice",
-        "//test/com/facebook/buck/core/module/impl/...",
     ],
 )
 

@@ -17,8 +17,8 @@ prebuilt_jar(
     visibility = ["PUBLIC"],
     deps = [
         ":grpc-context",
-        "//third-party/java/guava:guava",
         "//third-party/java/gson:gson",
+        "//third-party/java/guava:guava",
         "//third-party/java/opencensus:opencensus-api",
         "//third-party/java/opencensus:opencensus-contrib-grpc-metrics",
     ],
@@ -33,9 +33,9 @@ prebuilt_jar(
     deps = [
         ":grpc-core",
         ":grpc-protobuf-lite",
+        "//third-party/java/guava:guava",
         "//third-party/java/protobuf:protobuf",
         "//third-party/java/protobuf:protobuf-util",
-        "//third-party/java/guava:guava",
     ],
 )
 
@@ -75,7 +75,6 @@ prebuilt_jar(
     ],
 )
 
-
 prebuilt_jar(
     name = "grpc-netty",
     binary_jar = "grpc-netty-1.10.1.jar",
@@ -89,6 +88,6 @@ prebuilt_jar(
 )
 
 file_alias(
-    name="protobuf-plugin",
-    source="protoc-gen-grpc-java-1.10.1-osx-x86_64.exe",
+    name = "protobuf-plugin",
+    source = "protoc-gen-grpc-java-1.10.1-osx-x86_64.exe",
 )

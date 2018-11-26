@@ -5,10 +5,10 @@ prebuilt_jar(
         "LICENSE",
     ],
     visibility = [
-        "//tools/ideabuck:ideabuck-lib",
         "//src/com/facebook/buck/util/config:config",
+        "//test/com/facebook/buck/cli:cli",
         "//test/com/facebook/buck/testutil/integration:util",
         "//test/com/facebook/buck/util:util",
-        "//test/com/facebook/buck/cli:cli",
+        "//tools/ideabuck:ideabuck-lib",
     ],
 )

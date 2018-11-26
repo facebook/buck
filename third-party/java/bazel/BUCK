@@ -5,9 +5,9 @@ prebuilt_jar(
     source_jar = "bazel_deploy-src.jar",
     visibility = ["PUBLIC"],
     deps = [
-        "//third-party/java/objenesis:objenesis",
         "//third-party/java/errorprone:error-prone-annotations",
         "//third-party/java/guava:guava",
+        "//third-party/java/objenesis:objenesis",
         "//third-party/java/protobuf:protobuf",
-    ]
+    ],
 )

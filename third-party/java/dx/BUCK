@@ -1,11 +1,12 @@
 load("//tools/build_rules:file_alias.bzl", "file_alias")
 
-java_library(required_for_source_only_abi = True,
+java_library(
     name = "dx",
     srcs = glob(["src/**/*.java"]),
     licenses = [
         "NOTICE",
     ],
+    required_for_source_only_abi = True,
     visibility = ["PUBLIC"],
     deps = ["//third-party/java/guava:guava"],
 )

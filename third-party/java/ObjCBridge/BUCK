@@ -12,7 +12,8 @@ prebuilt_jar(
     ],
 )
 
-export_files(["libjcocoa.dylib"],
+export_files(
+    ["libjcocoa.dylib"],
     licenses = [
         "LICENSE",
     ],

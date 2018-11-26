@@ -3,7 +3,7 @@ genrule(
     srcs = glob(["**/*.proto"]),
     out = "bundle.src.zip",
     cmd = "for f in `find . -name '*.proto'`; do protoc -I . $f --plugin=protoc-gen-grpc-java=$(location //third-party/java/grpc:protobuf-plugin) --grpc-java_out=$TMP --java_out=$TMP; done; cd $TMP; jar cf $OUT .",
-    )
+)
 
 DEPS = [
     "//third-party/java/protobuf:protobuf",
@@ -14,9 +14,8 @@ DEPS = [
 
 java_library(
     name = "bundle",
-    srcs = [ ":proto-gen" ],
+    srcs = [":proto-gen"],
     deps = DEPS,
-
 )
 
 prebuilt_jar(

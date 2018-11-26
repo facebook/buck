@@ -14,7 +14,7 @@ DEPS = [
 
 java_library(
     name = "bundle",
-    srcs = [ ":proto-gen" ],
+    srcs = [":proto-gen"],
     deps = DEPS,
 )
 
