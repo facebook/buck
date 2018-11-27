@@ -36,6 +36,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
 
   private static final boolean DEFAULT_READ_ONLY_VALUE = false;
   private static final boolean DEFAULT_ABSOLUTE_HEADER_MAP_PATHS = false;
+  private static final boolean DEFAULT_SHARED_LIBRARIES_AS_DYNAMIC_FRAMEWORKS = false;
 
   @Option(
       name = "--combined-project",
@@ -110,6 +111,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
             projectCommandArguments,
             appleCxxPlatformsProvider.getAppleCxxPlatforms().getFlavors(),
             getAbsoluteHeaderMapPaths(params.getBuckConfig()),
+            getSharedLibrariesInBundles(params.getBuckConfig()),
             projectGeneratorParameters.getEnableParserProfiling(),
             projectGeneratorParameters.isWithTests(),
             projectGeneratorParameters.isWithoutTests(),
@@ -147,6 +149,11 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
   private boolean getAbsoluteHeaderMapPaths(BuckConfig buckConfig) {
     return buckConfig.getBooleanValue(
         "project", "absolute_header_map_paths", DEFAULT_ABSOLUTE_HEADER_MAP_PATHS);
+  }
+
+  private boolean getSharedLibrariesInBundles(BuckConfig buckConfig) {
+    return buckConfig.getBooleanValue(
+        "project", "shared_libraries_in_bundles", DEFAULT_SHARED_LIBRARIES_AS_DYNAMIC_FRAMEWORKS);
   }
 
   @Override

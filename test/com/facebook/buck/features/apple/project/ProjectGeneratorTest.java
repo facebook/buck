@@ -268,6 +268,73 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testProjectWithSharedBundleDep() throws IOException {
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "sharedFramework");
+    BuildTarget sharedLibTarget = BuildTargetFactory.newInstance(rootPath, "//foo:shared#shared");
+
+    TargetNode<?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setBinary(sharedLibTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setProductName(Optional.of("shared"))
+            .build();
+
+    TargetNode<?> libraryNode =
+        AppleLibraryBuilder.createBuilder(libraryTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))))
+            .setDeps(ImmutableSortedSet.of(bundleTarget, sharedLibTarget))
+            .build();
+
+    TargetNode<?> sharedLibNode =
+        AppleLibraryBuilder.createBuilder(sharedLibTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .build();
+
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(libraryNode, bundleNode, sharedLibNode);
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(
+            nodes,
+            nodes,
+            ProjectGeneratorOptions.builder().build(),
+            ImmutableSet.of(InternalFlavor.of("iphonesimulator-x86_64")),
+            Optional.of(ImmutableMap.of(sharedLibTarget, bundleNode)));
+
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+    assertEquals(project.getMainGroup().getChildren().size(), 5);
+    assertEquals(project.getTargets().size(), 3);
+  }
+
+  @Test
+  public void testSwapWithSharedBundes() throws IOException {
+    BuildTarget sharedLibrary = BuildTargetFactory.newInstance(rootPath, "//foo:shared#shared");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "sharedFramework");
+
+    TargetNode<?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setBinary(sharedLibrary)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setProductName(Optional.of("shared"))
+            .build();
+
+    TargetNode<?> sharedNode = AppleLibraryBuilder.createBuilder(sharedLibrary).build();
+
+    ImmutableMap<BuildTarget, TargetNode<?>> sharedLibraryToBundle =
+        ImmutableMap.of(sharedLibrary, bundleNode);
+
+    FluentIterable<TargetNode<?>> input = FluentIterable.of(sharedNode);
+    FluentIterable<TargetNode<?>> output =
+        ProjectGenerator.swapSharedLibrariesForBundles(input, sharedLibraryToBundle);
+    assertTrue(output.contains(bundleNode));
+    assertFalse(output.contains(sharedNode));
+    assertEquals(output.size(), 1);
+  }
+
+  @Test
   public void testProjectStructureWithDuplicateBundle() throws IOException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo:lib");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo:bundle");
@@ -306,7 +373,8 @@ public class ProjectGeneratorTest {
             nodes,
             ProjectGeneratorOptions.builder().build(),
             ImmutableSet.of(
-                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")));
+                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")),
+            Optional.empty());
 
     projectGenerator.createXcodeProjects();
 
@@ -730,7 +798,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(frameworkLibNode, frameworkBundleNode, appBinaryNode, appBundleNode),
             ImmutableSet.of(frameworkBundleNode, appBinaryNode, appBundleNode),
             ProjectGeneratorOptions.builder().build(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            Optional.empty());
 
     projectGenerator.createXcodeProjects();
 
@@ -941,7 +1010,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(libNode, frameworkNode),
             ImmutableSet.of(frameworkNode),
             ProjectGeneratorOptions.builder().build(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            Optional.empty());
 
     projectGenerator.createXcodeProjects();
 
@@ -1063,7 +1133,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node),
             ImmutableSet.of(node),
             ProjectGeneratorOptions.builder().build(),
-            ImmutableSet.of(simulator));
+            ImmutableSet.of(simulator),
+            Optional.empty());
 
     projectGenerator.createXcodeProjects();
 
@@ -1196,7 +1267,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node, privateGeneratedNode, publicGeneratedNode),
             ImmutableSet.of(node, privateGeneratedNode, publicGeneratedNode),
             ProjectGeneratorOptions.builder().build(),
-            ImmutableSet.of(simulator));
+            ImmutableSet.of(simulator),
+            Optional.empty());
 
     projectGenerator.createXcodeProjects();
 
@@ -1736,7 +1808,8 @@ public class ProjectGeneratorTest {
             allNodes,
             allNodes,
             ProjectGeneratorOptions.builder().setShouldUseAbsoluteHeaderMapPaths(true).build(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            Optional.empty());
 
     projectGenerator.createXcodeProjects();
 
@@ -3125,7 +3198,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node),
             ProjectGeneratorOptions.builder().build(),
             ImmutableSet.of(
-                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")));
+                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")),
+            Optional.empty());
 
     projectGenerator.createXcodeProjects();
 
@@ -3243,7 +3317,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node, dependentNode),
             ProjectGeneratorOptions.builder().build(),
             ImmutableSet.of(
-                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")));
+                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")),
+            Optional.empty());
 
     projectGenerator.createXcodeProjects();
 
@@ -6160,7 +6235,8 @@ public class ProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
 
     projectGeneratorLib2.createXcodeProjects();
 
@@ -6206,7 +6282,8 @@ public class ProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
 
     projectGeneratorLib1.createXcodeProjects();
 
@@ -6331,7 +6408,8 @@ public class ProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
 
     projectGeneratorLib2.createXcodeProjects();
 
@@ -6385,7 +6463,8 @@ public class ProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
 
     projectGeneratorLib1.createXcodeProjects();
 
@@ -6447,21 +6526,27 @@ public class ProjectGeneratorTest {
 
   private ProjectGenerator createProjectGenerator(Collection<TargetNode<?>> allNodes) {
     return createProjectGenerator(
-        allNodes, allNodes, ProjectGeneratorOptions.builder().build(), ImmutableSet.of());
+        allNodes,
+        allNodes,
+        ProjectGeneratorOptions.builder().build(),
+        ImmutableSet.of(),
+        Optional.empty());
   }
 
   private ProjectGenerator createProjectGenerator(
       Collection<TargetNode<?>> allNodes,
       Collection<TargetNode<?>> initialTargetNodes,
       ProjectGeneratorOptions projectGeneratorOptions,
-      ImmutableSet<Flavor> appleCxxFlavors) {
+      ImmutableSet<Flavor> appleCxxFlavors,
+      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibrariesToBundles) {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGenerator(
         allNodes,
         initialTargetNodes,
         projectGeneratorOptions,
         appleCxxFlavors,
-        getActionGraphBuilderNodeFunction(targetGraph));
+        getActionGraphBuilderNodeFunction(targetGraph),
+        sharedLibrariesToBundles);
   }
 
   private ProjectGenerator createProjectGenerator(
@@ -6472,7 +6557,8 @@ public class ProjectGeneratorTest {
         allNodes,
         projectGeneratorOptions,
         ImmutableSet.of(),
-        getActionGraphBuilderNodeFunction(targetGraph));
+        getActionGraphBuilderNodeFunction(targetGraph),
+        Optional.empty());
   }
 
   private ProjectGenerator createProjectGenerator(
@@ -6485,7 +6571,8 @@ public class ProjectGeneratorTest {
         initialTargetNodes,
         projectGeneratorOptions,
         ImmutableSet.of(),
-        getActionGraphBuilderNodeFunction(targetGraph));
+        getActionGraphBuilderNodeFunction(targetGraph),
+        Optional.empty());
   }
 
   private ProjectGenerator createProjectGenerator(
@@ -6493,7 +6580,12 @@ public class ProjectGeneratorTest {
       ProjectGeneratorOptions projectGeneratorOptions,
       Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode) {
     return createProjectGenerator(
-        allNodes, allNodes, projectGeneratorOptions, ImmutableSet.of(), actionGraphBuilderForNode);
+        allNodes,
+        allNodes,
+        projectGeneratorOptions,
+        ImmutableSet.of(),
+        actionGraphBuilderForNode,
+        Optional.empty());
   }
 
   private ProjectGenerator createProjectGenerator(
@@ -6501,7 +6593,8 @@ public class ProjectGeneratorTest {
       Collection<TargetNode<?>> initialTargetNodes,
       ProjectGeneratorOptions projectGeneratorOptions,
       ImmutableSet<Flavor> appleCxxFlavors,
-      Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode) {
+      Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode,
+      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibrariesToBundles) {
     ImmutableSet<BuildTarget> initialBuildTargets =
         initialTargetNodes
             .stream()
@@ -6537,7 +6630,8 @@ public class ProjectGeneratorTest {
         halideBuckConfig,
         cxxBuckConfig,
         appleConfig,
-        swiftBuckConfig);
+        swiftBuckConfig,
+        sharedLibrariesToBundles);
   }
 
   private Function<TargetNode<?>, ActionGraphBuilder> getActionGraphBuilderNodeFunction(

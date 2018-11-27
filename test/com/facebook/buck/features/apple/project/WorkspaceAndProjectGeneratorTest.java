@@ -263,7 +263,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -321,7 +322,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -371,7 +373,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -420,7 +423,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
 
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -489,7 +493,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -539,7 +544,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -693,7 +699,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -816,7 +823,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -893,7 +901,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -951,7 +960,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -1014,7 +1024,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());

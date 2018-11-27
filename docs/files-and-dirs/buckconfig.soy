@@ -3967,6 +3967,17 @@ Pkg.Revision = 13.1.3345770
 
 {call buckconfig.entry}
   {param section: 'project' /}
+  {param name: 'shared_libraries_in_bundles' /}
+  {param example_value: 'false' /}
+  {param description}
+    When using xcode project, for projects that depend on a library, if set to <code>'true'</code>,
+    if that library is the 'binary' of a bundle, the bundle will replace the library in the Xcode
+    linking phase
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'project' /}
   {param name: 'motd' /}
   {param example_value: '"DO NOT BREAK THE BUILD"' /}
   {param description}
