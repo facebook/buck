@@ -165,7 +165,9 @@ public class NdkCxxPlatforms {
                                 ? 15
                                 : ndkVersion.startsWith("16.")
                                     ? 16
-                                    : ndkVersion.startsWith("17.") ? 17 : -1;
+                                    : ndkVersion.startsWith("17.")
+                                      ? 17
+                                      : ndkVersion.startsWith("18.") ? 18 : -1;
   }
 
   public static String getDefaultGccVersionForNdk(String ndkVersion) {
