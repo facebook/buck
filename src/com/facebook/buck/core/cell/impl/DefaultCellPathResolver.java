@@ -18,9 +18,11 @@ package com.facebook.buck.core.cell.impl;
 
 import com.facebook.buck.core.cell.AbstractCellPathResolver;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.Configs;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -28,9 +30,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
@@ -88,10 +92,14 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
   }
 
   public static DefaultCellPathResolver of(Path root, Config config) {
-    return ImmutableDefaultCellPathResolver.of(
-        root,
-        sortCellPaths(
-            getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION))));
+    try {
+      return ImmutableDefaultCellPathResolver.of(
+          root,
+          sortCellPaths(
+              getCellPathsRecursively(root, config)));
+    } catch (IOException error) {
+      throw new HumanReadableException(error.getMessage());
+    }
   }
 
   static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(
@@ -102,6 +110,60 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
             input ->
                 root.resolve(MorePaths.expandHomeDir(root.getFileSystem().getPath(input)))
                     .normalize()));
+  }
+
+  static ImmutableMap<String, Path> getCellPathsRecursively(final Path root, final Config rootConfig) throws IOException {
+    ImmutableMap<String, Path> solution = ImmutableMap.copyOf(
+        Maps.transformValues(
+            rootConfig.get(REPOSITORIES_SECTION),
+            input ->
+                root.resolve(MorePaths.expandHomeDir(root.getFileSystem().getPath(input)))
+                    .normalize()));
+
+    final Queue<Path> pending = new LinkedList<>();
+    final HashSet<Path> visited = new HashSet<>();
+
+    pending.addAll(solution.values());
+
+    while (!pending.isEmpty()) {
+      final Path path = pending.remove();
+
+      visited.add(path);
+
+      final Path configFilePath = Configs.getMainConfigurationFile(path);
+
+      final ImmutableMap<String, String> repositoriesSection =
+          Configs.parseConfigFile(configFilePath)
+              .getOrDefault(REPOSITORIES_SECTION, ImmutableMap.of());
+
+      final ImmutableMap<String, Path> cellPaths =
+          getCellPathsFromConfigRepositoriesSection(path, repositoriesSection);
+
+      for (final Map.Entry<String, Path> cellPath : cellPaths.entrySet()) {
+        if (solution.containsKey(cellPath.getKey())) {
+          final Path existingPath = solution.get(cellPath.getKey());
+
+          if (!cellPath.getValue().equals(existingPath)) {
+            throw new HumanReadableException(
+                "repositories.%s has conflicting mappings %s and %s",
+                cellPath.getKey(),
+                existingPath,
+                cellPath.getValue());
+          }
+        } else {
+          if (!visited.contains(cellPath.getValue())) {
+            pending.add(cellPath.getValue());
+          }
+
+          solution = new ImmutableMap.Builder<String, Path>()
+              .putAll(solution)
+              .put(cellPath)
+              .build();
+        }
+      }
+    }
+
+    return solution;
   }
 
   /**
@@ -118,6 +180,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
     ImmutableSortedSet<String> sortedCellNames =
         ImmutableSortedSet.<String>naturalOrder().addAll(cellPaths.keySet()).build();
+
     for (String cellName : sortedCellNames) {
       Path cellRoot =
           Objects.requireNonNull(
@@ -137,9 +200,9 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
     return builder.build();
   }
 
-  public static ImmutableMap<CellName, Path> bootstrapPathMapping(Path root, Config config) {
+  public static ImmutableMap<CellName, Path> bootstrapPathMapping(Path root, Config config) throws IOException {
     return bootstrapPathMapping(
-        root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
+        root, getCellPathsRecursively(root, config));
   }
 
   @Override

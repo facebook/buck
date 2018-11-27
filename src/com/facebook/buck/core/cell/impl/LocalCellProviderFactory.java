@@ -68,6 +68,7 @@ public class LocalCellProviderFactory {
     }
 
     ImmutableSet<Path> allRoots = ImmutableSet.copyOf(cellPathMapping.values());
+
     return new CellProvider(
         cellProvider ->
             new CacheLoader<Path, Cell>() {

@@ -563,19 +563,35 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void childCellWithCellMappingNotInRootCellShouldThrowError() throws IOException {
+  public void childCellWithCellMappingTransitivelyDefinedShouldSucceed() throws IOException {
     ProjectWorkspace root = createWorkspace("inter-cell/validation/root");
     ProjectWorkspace second = createWorkspace("inter-cell/validation/root");
     ProjectWorkspace third = createWorkspace("inter-cell/validation/root");
     registerCell(root, "second", second);
     registerCell(second, "third", third);
 
-    // should fail since "third" is not specified in root
+    // should succeed since "third" is defined via "second"
+    ProcessResult processResult = root.runBuckBuild("//:dummy");
+    processResult.assertSuccess();
+  }
+
+  @Test
+  public void childCellWithCellMappingTransitivelyDefinedInconsistentlyShouldFail() throws IOException {
+    ProjectWorkspace root = createWorkspace("inter-cell/validation/root");
+    ProjectWorkspace second = createWorkspace("inter-cell/validation/root");
+    ProjectWorkspace third = createWorkspace("inter-cell/validation/root");
+    ProjectWorkspace notThird = createWorkspace("inter-cell/validation/root");
+    registerCell(root, "second", second);
+    registerCell(root, "third", third);
+    registerCell(second, "third", notThird);
+
+    // should fail since "third" is defined to different places
     ProcessResult processResult = root.runBuckBuild("//:dummy");
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        containsString("repositories.third must exist in the root cell's cell mappings."));
+        containsString("repositories.third has conflicting mappings"));
+
   }
 
   @Test
