@@ -747,7 +747,15 @@ abstract class AbstractCxxSourceRuleFactory {
   /** Quick and dirty memoized function. */
   private static <K, V> Function<K, V> memoize(Function<K, V> mappingFunction) {
     HashMap<K, V> cache = new HashMap<>();
-    return k -> cache.computeIfAbsent(k, mappingFunction);
+    return k -> {
+      V value = cache.get(k);
+      if (value != null) {
+        return value;
+      }
+      value = mappingFunction.apply(k);
+      cache.put(k, value);
+      return value;
+    };
   }
 
   private class HashBuilder extends AbstractRuleKeyBuilder<String> {
