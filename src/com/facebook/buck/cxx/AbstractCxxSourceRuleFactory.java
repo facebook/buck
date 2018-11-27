@@ -548,10 +548,20 @@ abstract class AbstractCxxSourceRuleFactory {
       return Optional.empty();
     }
 
+    CxxSource.Type sourceType = source.getType();
+    if (sourceType.isAssembly()) {
+      // Asm files do not use precompiled headers; indeed, CxxPrecompiledHeader will throw if
+      // created for an assembly source.
+      //
+      // It's unclear why this is distinct from canUsePrecompiledHeaders(), or why a
+      // CxxPrecompiledHeader can be created with canPrecompile = false.
+      return Optional.empty();
+    }
+
     return Optional.of(
         requirePrecompiledHeaderBuildRule(
             preprocessorDelegateValue,
-            source.getType(),
+            sourceType,
             source.getFlags(),
             getActionGraphBuilder(),
             getRuleFinder(),
