@@ -85,7 +85,7 @@ class DaemonLifecycleManager {
                       .getAnsi()
                       .asWarningText(
                           String.format(
-                              "Shutting down and restarting buck daemon: %s",
+                              "Invalidating internal cached state: %s. This may cause slower builds.",
                               cacheCompat.toHumanReasonableError())));
         }
 
