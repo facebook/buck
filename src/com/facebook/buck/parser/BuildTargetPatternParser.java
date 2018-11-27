@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.UnknownCellException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.base.Preconditions;
@@ -83,8 +84,16 @@ public abstract class BuildTargetPatternParser<T> {
     String buildTargetPattern;
     int index = buildTargetPatternWithCell.indexOf(BUILD_RULE_PREFIX);
     if (index > 0) {
-      cellPath =
-          cellNames.getCellPathOrThrow(Optional.of(buildTargetPatternWithCell.substring(0, index)));
+      try {
+        cellPath =
+            cellNames.getCellPathOrThrow(
+                Optional.of(buildTargetPatternWithCell.substring(0, index)));
+      } catch (UnknownCellException e) {
+        throw new BuildTargetParseException(
+            String.format(
+                "When parsing %s: %s",
+                buildTargetPatternWithCell, e.getHumanReadableErrorMessage()));
+      }
       buildTargetPattern = buildTargetPatternWithCell.substring(index);
     } else {
       cellPath = cellNames.getCellPathOrThrow(Optional.empty());

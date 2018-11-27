@@ -116,7 +116,7 @@ public class BuildTargetParser {
       cellPath = cellNames.getCellPathOrThrow(givenCellName);
     } catch (UnknownCellException e) {
       throw new BuildTargetParseException(
-          String.format("when parsing %s: %s", buildTargetName, e.getHumanReadableErrorMessage()));
+          String.format("When parsing %s: %s", buildTargetName, e.getHumanReadableErrorMessage()));
     }
 
     ImmutableUnflavoredBuildTarget.Builder unflavoredBuilder =

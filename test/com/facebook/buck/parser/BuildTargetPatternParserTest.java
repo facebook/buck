@@ -191,4 +191,25 @@ public class BuildTargetPatternParserTest {
     exception.expectMessage("(found ///facebookorca/...)");
     buildTargetPatternParser.parse(createCellRoots(filesystem), "///facebookorca/...");
   }
+
+  @Test
+  public void testIncludesTargetNameInMissingCellErrorMessage() {
+    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
+        BuildTargetPatternParser.forVisibilityArgument();
+
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    CellPathResolver rootCellPathResolver =
+        DefaultCellPathResolver.of(
+            filesystem.getPath("root").normalize(),
+            ImmutableMap.of("localreponame", filesystem.getPath("localrepo").normalize()));
+
+    exception.expect(BuildTargetParseException.class);
+    // It contains the pattern
+    exception.expectMessage("lclreponame//facebook/...");
+    // The invalid cell
+    exception.expectMessage("Unknown cell: lclreponame");
+    // And the suggestion
+    exception.expectMessage("localreponame");
+    buildTargetPatternParser.parse(rootCellPathResolver, "lclreponame//facebook/...");
+  }
 }
