@@ -185,6 +185,16 @@ public class GoTestIntegrationTest {
     result.assertSuccess();
   }
 
+  @Test
+  public void testNonprintableCharacterInResult() throws IOException {
+    ProcessResult result = workspace.runBuckCommand("test", "//testOutput:all_tests");
+    assertThat(
+        "`buck test` should print out the error message",
+        result.getStderr(),
+        containsString("is not printable"));
+    assertFalse(result.getStderr().contains("MalformedInputException"));
+  }
+
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
     assertTrue(Files.isSymbolicLink(link));
     assertTrue(Files.isSameFile(target, Files.readSymbolicLink(link)));
