@@ -22,7 +22,6 @@ import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -32,9 +31,13 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.features.go.CgoLibraryDescription.AbstractCgoLibraryDescriptionArg;
+import com.facebook.buck.features.go.GoLibraryDescription.AbstractGoLibraryDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.Parser;
@@ -56,13 +59,17 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.annotation.Nonnull;
 
 public class GoProjectCommandHelper {
 
@@ -267,33 +274,85 @@ public class GoProjectCommandHelper {
   }
 
   /**
-   * Find code generation targets by inspecting go_library targets in the target graph with "srcs"
-   * pointing to other Buck targets rather than Go files. Those Buck targets in "srcs" are assumed
-   * to be code generation targets. Their output is intended to be used as some package name, either
-   * specified by package_name argument of go_library, or guessed from the base path of the the
-   * go_library
+   * Find code generation targets by inspecting go_library and cgo_library targets in the target
+   * graph with "srcs", "go_srcs", or "headers" pointing to other Buck targets rather than regular
+   * files. Those Buck targets are assumed to be code generation targets. Their output is intended
+   * to be used as some package name, either specified by package_name argument of go_library or
+   * cgo_library, or guessed from the base path of the targets. For cgo_library targets, this method
+   * also examine its cxxDeps and see if any of the cxx_library targets has empty header_namespace,
+   * which indicates that the cxx_library is in the same package as the cgo_library. In such case,
+   * the srcs and headers of the cxx_library that are Buck targets are also copied.
    */
   private Map<BuildTargetSourcePath, Path> findCodeGenerationTargets(
       TargetGraphAndTargets targetGraphAndTargets) {
     Map<BuildTargetSourcePath, Path> generatedPackages = new HashMap<>();
     for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
       Object constructorArg = targetNode.getConstructorArg();
-      if (constructorArg instanceof GoLibraryDescriptionArg) {
-        Optional<String> packageNameArg =
-            ((GoLibraryDescriptionArg) constructorArg).getPackageName();
+      BuildTarget buildTarget = targetNode.getBuildTarget();
+      if (constructorArg instanceof AbstractGoLibraryDescriptionArg) {
+        AbstractGoLibraryDescriptionArg goArgs = (AbstractGoLibraryDescriptionArg) constructorArg;
+        Optional<String> packageNameArg = goArgs.getPackageName();
         Path pkgName =
-            packageNameArg
-                .map(Paths::get)
-                .orElse(goBuckConfig.getDefaultPackageName(targetNode.getBuildTarget()));
-        generatedPackages.putAll(
-            ((HasSrcs) constructorArg)
-                .getSrcs()
+            packageNameArg.map(Paths::get).orElse(goBuckConfig.getDefaultPackageName(buildTarget));
+        generatedPackages.putAll(getSrcsMap(filterBuildTargets(goArgs.getSrcs()), pkgName));
+      } else if (constructorArg instanceof AbstractCgoLibraryDescriptionArg) {
+        AbstractCgoLibraryDescriptionArg cgoArgs =
+            (AbstractCgoLibraryDescriptionArg) constructorArg;
+        Optional<String> packageNameArg = cgoArgs.getPackageName();
+        Path pkgName =
+            packageNameArg.map(Paths::get).orElse(goBuckConfig.getDefaultPackageName(buildTarget));
+        generatedPackages.putAll(getSrcsMap(getSrcAndHeaderTargets(cgoArgs), pkgName));
+        generatedPackages.putAll(getSrcsMap(filterBuildTargets(cgoArgs.getGoSrcs()), pkgName));
+        List<CxxConstructorArg> cxxLibs =
+            cgoArgs
+                .getCxxDeps()
+                .getDeps()
                 .stream()
-                .filter(srcPath -> srcPath instanceof BuildTargetSourcePath)
-                .collect(Collectors.toMap(src -> (BuildTargetSourcePath) src, src -> pkgName)));
+                .map(
+                    target ->
+                        (CxxConstructorArg)
+                            targetGraphAndTargets.getTargetGraph().get(target).getConstructorArg())
+                .filter(
+                    cxxArgs -> cxxArgs.getHeaderNamespace().filter(ns -> ns.equals("")).isPresent())
+                .collect(Collectors.toList());
+        for (CxxConstructorArg cxxArgs : cxxLibs) {
+          generatedPackages.putAll(getSrcsMap(getSrcAndHeaderTargets(cxxArgs), pkgName));
+        }
       }
     }
     return generatedPackages;
+  }
+
+  @Nonnull
+  private Map<BuildTargetSourcePath, Path> getSrcsMap(
+      Stream<BuildTargetSourcePath> targetPaths, Path pkgName) {
+    return targetPaths.collect(Collectors.toMap(src -> src, src -> pkgName));
+  }
+
+  private Stream<BuildTargetSourcePath> getSrcAndHeaderTargets(CxxConstructorArg constructorArg) {
+    List<BuildTargetSourcePath> targets = new ArrayList<>();
+    targets.addAll(
+        filterBuildTargets(
+                constructorArg
+                    .getSrcs()
+                    .stream()
+                    .map(srcWithFlags -> srcWithFlags.getSourcePath())
+                    .collect(Collectors.toSet()))
+            .collect(Collectors.toList()));
+    constructorArg
+        .getHeaders()
+        .getUnnamedSources()
+        .ifPresent(
+            headers -> targets.addAll(filterBuildTargets(headers).collect(Collectors.toList())));
+    return targets.stream();
+  }
+
+  @Nonnull
+  private Stream<BuildTargetSourcePath> filterBuildTargets(Set<SourcePath> paths) {
+    return paths
+        .stream()
+        .filter(srcPath -> srcPath instanceof BuildTargetSourcePath)
+        .map(src -> (BuildTargetSourcePath) src);
   }
 
   private ProjectTestsMode testsMode() {
