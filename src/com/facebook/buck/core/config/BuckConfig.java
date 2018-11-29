@@ -45,6 +45,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -104,7 +105,12 @@ public class BuckConfig {
     ignoreFieldsForDaemonRestartBuilder.put("project", ImmutableSet.of("ide_prompt"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "ui",
-        ImmutableSet.of("superconsole", "thread_line_limit", "thread_line_output_max_columns"));
+        ImmutableSet.of(
+            "superconsole",
+            "thread_line_limit",
+            "thread_line_output_max_columns",
+            "warn_on_config_file_overrides",
+            "warn_on_config_file_overrides_ignored_files"));
     ignoreFieldsForDaemonRestartBuilder.put("color", ImmutableSet.of("ui"));
     IGNORE_FIELDS_FOR_DAEMON_RESTART = ignoreFieldsForDaemonRestartBuilder.build();
   }
@@ -894,5 +900,17 @@ public class BuckConfig {
 
   public ProjectFilesystem getFilesystem() {
     return projectFilesystem;
+  }
+
+  public boolean getWarnOnConfigFileOverrides() {
+    return config.getBooleanValue("ui", "warn_on_config_file_overrides", true);
+  }
+
+  public ImmutableSet<Path> getWarnOnConfigFileOverridesIgnoredFiles() {
+    return config
+        .getListWithoutComments("ui", "warn_on_config_file_overrides_ignored_files", ',')
+        .stream()
+        .map(Paths::get)
+        .collect(ImmutableSet.toImmutableSet());
   }
 }
