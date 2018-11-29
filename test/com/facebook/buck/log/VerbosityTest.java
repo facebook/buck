@@ -37,7 +37,6 @@ public class VerbosityTest {
   @Before
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "log", tmp);
-    workspace.addBuckConfigLocalOption("ui", "warn_on_config_file_overrides", "false");
     workspace.setUp();
   }
 

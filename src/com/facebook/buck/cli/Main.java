@@ -203,7 +203,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
@@ -237,7 +236,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -672,7 +670,6 @@ public final class Main {
                       target, BuildTargetPatternParser.fullyQualified(), cellPathResolver));
       // Set so that we can use some settings when we print out messages to users
       parsedRootConfig = Optional.of(buckConfig);
-      warnAboutConfigFileOverrides(filesystem.getRootPath(), buckConfig, console);
 
       ImmutableSet<Path> projectWatchList =
           getProjectWatchList(canonicalRootPath, buckConfig, cellPathResolver);
@@ -1357,48 +1354,6 @@ public final class Main {
       }
     }
     return exitCode;
-  }
-
-  private void warnAboutConfigFileOverrides(Path root, BuckConfig config, Console console)
-      throws IOException {
-    if (!config.getWarnOnConfigFileOverrides()) {
-      return;
-    }
-
-    if (!console.getVerbosity().shouldPrintStandardInformation()) {
-      return;
-    }
-
-    // Useful for filtering out things like system wide buckconfigs in /etc that might be managed
-    // by the system. We don't want to warn users about files that they have not necessarily
-    // created.
-    ImmutableSet<Path> overridesToIgnore = config.getWarnOnConfigFileOverridesIgnoredFiles();
-    Path mainConfigPath = Configs.getMainConfigurationFile(root);
-
-    ImmutableSortedSet<Path> userSpecifiedOverrides =
-        Configs.getDefaultConfigurationFiles(root)
-            .stream()
-            .filter(
-                path ->
-                    !overridesToIgnore.contains(path.getFileName()) && !mainConfigPath.equals(path))
-            .map(path -> path.startsWith(root) ? root.relativize(path) : path)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
-
-    if (userSpecifiedOverrides.isEmpty()) {
-      return;
-    }
-
-    // Use the raw stream because otherwise this will stop superconsole from ever printing again
-    console
-        .getStdErr()
-        .getRawStream()
-        .println(
-            console
-                .getAnsi()
-                .asWarningText(
-                    String.format(
-                        "Using additional configuration options from %s",
-                        Joiner.on(", ").join(userSpecifiedOverrides))));
   }
 
   private ListeningExecutorService getDirCacheStoreExecutor(
