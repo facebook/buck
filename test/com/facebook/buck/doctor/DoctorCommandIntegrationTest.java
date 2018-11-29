@@ -53,7 +53,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
-import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -283,7 +282,7 @@ public class DoctorCommandIntegrationTest {
                       /* rageUrl */ Optional.of("http://remoteUrlToVisit"),
                       /* message */ Optional.of("This is supposed to be JSON."));
               try (DataOutputStream out = new DataOutputStream(httpResponse.getOutputStream())) {
-                ObjectMappers.WRITER.writeValue((DataOutput) out, json);
+                ObjectMappers.WRITER.writeValue(out, json);
               }
             }
           });
@@ -433,7 +432,7 @@ public class DoctorCommandIntegrationTest {
             Matchers.containsString(expectedBody));
 
         try (DataOutputStream out = new DataOutputStream(httpResponse.getOutputStream())) {
-          ObjectMappers.WRITER.writeValue((DataOutput) out, doctorResponse);
+          ObjectMappers.WRITER.writeValue(out, doctorResponse);
         }
       }
     };

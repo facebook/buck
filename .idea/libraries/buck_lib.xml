@@ -13,16 +13,15 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/slf4j/slf4j-jdk14-1.7.5.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/oshi/oshi-core-3.3-SNAPSHOT.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jimfs/jimfs-1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-annotations-2.7.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.7.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-databind-2.7.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-guava-2.7.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-jdk8-2.7.8.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error_prone_annotations-2.0.19.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nuprocess/nuprocess-1.2.4.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nailgun/nailgun-server-1.0.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-annotations-2.9.7.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.9.7.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-databind-2.9.7.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-guava-2.9.7.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-jdk8-2.9.7.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-module-mrbean-2.9.7.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
@@ -39,12 +38,6 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/sqlite/sqlite-jdbc-3.20.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nuprocess/nuprocess-1.2.4-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nailgun/nailgun-server-1.0.0-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-annotations-2.9.7-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.9.7-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-databind-2.9.7-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-guava-2.9.7-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-jdk8-2.9.7-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-module-mrbean-2.9.7-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

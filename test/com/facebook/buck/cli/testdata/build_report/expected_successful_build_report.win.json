@@ -8,7 +8,8 @@
     },
     "//:rule_without_output" : {
       "success" : true,
-      "type" : "BUILT_LOCALLY"
+      "type" : "BUILT_LOCALLY",
+      "output" : null
     }
   },
   "failures" : { }

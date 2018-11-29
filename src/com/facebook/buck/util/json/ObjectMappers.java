@@ -29,8 +29,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import java.io.BufferedInputStream;
@@ -151,15 +149,6 @@ public class ObjectMappers {
     mapper.registerModule(new SkylarkModule());
     // Add support for serializing BuildFileManifest types.
     mapper.registerModule(new BuildFileManifestModule());
-
-    // With some version of Jackson JDK8 module, it starts to serialize Path objects using
-    // getURI() function, this results for serialized paths to be absolute paths with 'file:///'
-    // prefix. That does not work well with custom filesystems that Buck uses. Following hack
-    // restores legacy behavior to serialize Paths using toString().
-    SimpleModule pathModule = new SimpleModule("PathToString");
-    pathModule.addSerializer(Path.class, new ToStringSerializer());
-    mapper.registerModule(pathModule);
-
     return mapper;
   }
 
