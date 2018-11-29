@@ -118,4 +118,27 @@ public class ConfigurationWarningsIntegrationTest {
                 makeStdErrPattern(
                     "Using additional configuration options from.* \\.buckconfig[^\\.]"))));
   }
+
+  @Test
+  public void printsErrorMessageWhenConfigChanges() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "configuration_warnings", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckdCommand("query", "//...").assertSuccess();
+
+    assertThat(
+        result.getStderr(),
+        not(
+            containsString(
+                "Invalidating internal cached state: Buck configuration options changed between invocations. This may cause slower builds.")));
+
+    workspace.addBuckConfigLocalOption("foo", "bar", "baz1");
+    result = workspace.runBuckdCommand("query", "-c", "foo.bar=baz1", "//...").assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "Invalidating internal cached state: Buck configuration options changed between invocations. This may cause slower builds."));
+  }
 }
