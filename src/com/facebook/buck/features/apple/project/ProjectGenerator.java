@@ -1051,8 +1051,8 @@ public class ProjectGenerator {
         targetNodeWithSwiftArgs.flatMap(t -> t.getConstructorArg().getSwiftVersion());
     if (!targetExplicitSwiftVersion.isPresent()
         && (targetNode.getDescription() instanceof AppleLibraryDescription
-        || targetNode.getDescription() instanceof AppleBinaryDescription
-        || targetNode.getDescription() instanceof AppleTestDescription)) {
+            || targetNode.getDescription() instanceof AppleBinaryDescription
+            || targetNode.getDescription() instanceof AppleTestDescription)) {
       return swiftBuckConfig.getVersion();
     }
     return targetExplicitSwiftVersion;
