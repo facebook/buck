@@ -261,10 +261,12 @@ class ClassVisitorDriverFromElement {
               signatureFactory.getSignature(e),
               exceptions);
 
-      visitParameters(e.getParameters(), methodVisitor, MoreElements.isInnerClassConstructor(e));
-      visitDefaultValue(e, methodVisitor);
-      visitAnnotations(e, methodVisitor::visitAnnotation);
-      methodVisitor.visitEnd();
+      if (methodVisitor != null) {
+        visitParameters(e.getParameters(), methodVisitor, MoreElements.isInnerClassConstructor(e));
+        visitDefaultValue(e, methodVisitor);
+        visitAnnotations(e, methodVisitor::visitAnnotation);
+        methodVisitor.visitEnd();
+      }
 
       return null;
     }
