@@ -26,6 +26,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -60,9 +61,14 @@ public class QueryPathsMacroExpanderIntegrationTest {
     // Remove the newline added by echo from the result
     String seen = new String(Files.readAllBytes(result), UTF_8).trim();
 
+    // Read in the file list
+    Path filelistPath = Paths.get(seen.substring(1));
+    String filelist = new String(Files.readAllBytes(filelistPath), UTF_8);
+
     Path beta = workspace.getPath("beta.txt");
     Path spaces = workspace.getPath("file with spaces.txt");
     assertTrue(beta.isAbsolute());
-    assertEquals(beta.toString() + "\n" + spaces.toString(), seen);
+    assertTrue(filelist.contains(beta.toString()));
+    assertTrue(filelist.contains("'" + spaces + "'"));
   }
 }

@@ -20,5 +20,5 @@ genrule(
 genrule(
     name = "files",
     out = "files.txt",
-    cmd = 'PATHS=($(query_paths "inputs(deps(:example))")); for p in "${PATHS[@]}"; do echo "$p"; done | sort > $OUT',
+    cmd = "echo $(@query_paths 'inputs(deps(:example))') >$OUT",
 )
