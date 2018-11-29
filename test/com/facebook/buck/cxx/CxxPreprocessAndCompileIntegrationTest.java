@@ -705,4 +705,23 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.runBuckBuild("//:c-as-c").assertFailure();
     workspace.runBuckBuild("//:c-as-cxx").assertSuccess();
   }
+
+  // Setup a test which modifies the header layout of a dependency and verify that it gets
+  // rebuilt.
+  @Test
+  public void depHeaderTreesAreUpdated() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "dep_headers_up_to_date", tmp.newFolder());
+    workspace.setUp();
+    workspace
+        .runBuckBuild("-c", "test.header=first.h", "-c", "test.flag=-DFOO", "//:first")
+        .assertSuccess();
+    workspace
+        .runBuckBuild("-c", "test.header=second.h", "-c", "test.flag=-DFOO", "//:second")
+        .assertSuccess();
+    workspace
+        .runBuckBuild("-c", "test.header=first.h", "-c", "test.flag=-DBAR", "//:first")
+        .assertSuccess();
+  }
 }

@@ -366,7 +366,12 @@ public class CxxBinaryIntegrationTest {
     buildLog = workspace.getBuildLog();
     targetsBuilder =
         ImmutableSortedSet.<BuildTarget>naturalOrder()
-            .add(aggregatedDepsTarget, captureBuildTarget, inferAnalysisTarget, inferReportTarget);
+            .add(
+                aggregatedDepsTarget,
+                captureBuildTarget,
+                inferAnalysisTarget,
+                inferReportTarget,
+                headerSymlinkTreeTarget);
     assertEquals(buildLog.getAllTargets(), targetsBuilder.build());
     buildLog.assertTargetBuiltLocally(captureBuildTarget.toString());
     buildLog.assertTargetBuiltLocally(inferAnalysisTarget.toString());
@@ -522,6 +527,8 @@ public class CxxBinaryIntegrationTest {
                 topCaptureBuildTarget, // cached
                 depTwoInferAnalysisTarget, // cached
                 depOneAggregatedDepsTarget,
+                depOneHeaderSymlinkTreeTarget,
+                depOneExportedHeaderSymlinkTreeTarget,
                 depOneCaptureBuildTarget, // capture of the changed file runs again
                 depOneInferAnalysisTarget // analysis of the library runs again
                 );
@@ -1510,7 +1517,7 @@ public class CxxBinaryIntegrationTest {
     buildLog = workspace.getBuildLog();
     assertEquals(
         ImmutableSet.<BuildTarget>builder()
-            .add(aggregatedDepsTarget, compileTarget, binaryTarget, target)
+            .add(aggregatedDepsTarget, compileTarget, binaryTarget, headerSymlinkTreeTarget, target)
             .build(),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget.toString());
@@ -1531,7 +1538,7 @@ public class CxxBinaryIntegrationTest {
     buildLog = workspace.getBuildLog();
     assertEquals(
         ImmutableSet.<BuildTarget>builder()
-            .add(aggregatedDepsTarget, compileTarget, binaryTarget, target)
+            .add(aggregatedDepsTarget, compileTarget, binaryTarget, headerSymlinkTreeTarget, target)
             .build(),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget.toString());
@@ -1752,6 +1759,8 @@ public class CxxBinaryIntegrationTest {
         depCompileTarget,
         depArchiveTarget,
         depTarget,
+        depHeaderExportedSymlinkTreeTarget,
+        depHeaderSymlinkTreeTarget,
         compileTarget,
         binaryTarget,
         target);
