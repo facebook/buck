@@ -194,7 +194,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
 
   @Override
   public boolean useDependencyFileRuleKeys() {
-    return true;
+    return CxxSourceTypes.supportsDepFiles(getBuildable().inputType);
   }
 
   @Override
@@ -321,7 +321,9 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
           resolvedOutput,
           // Use a depfile if there's a preprocessing stage, this logic should be kept in sync with
           // getInputsAfterBuildingLocally.
-          preprocessDelegate.map(ignored -> getDepFilePath(resolvedOutput)),
+          CxxSourceTypes.supportsDepFiles(inputType)
+              ? preprocessDelegate.map(ignored -> getDepFilePath(resolvedOutput))
+              : Optional.empty(),
           relativeInputPath,
           inputType,
           new CxxPreprocessAndCompileStep.ToolCommand(

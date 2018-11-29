@@ -37,7 +37,8 @@ public class CxxSourceTypes {
         || sourceType == CxxSource.Type.OBJCXX
         || sourceType == CxxSource.Type.CUDA
         || sourceType == CxxSource.Type.HIP
-        || sourceType == CxxSource.Type.ASM_WITH_CPP;
+        || sourceType == CxxSource.Type.ASM_WITH_CPP
+        || sourceType == CxxSource.Type.PCM;
   }
 
   /**
@@ -67,6 +68,7 @@ public class CxxSourceTypes {
         preprocessor = cxxPlatform.getCpp();
         break;
       case CXX:
+      case PCM:
         preprocessor = cxxPlatform.getCxxpp();
         break;
       case OBJC:
@@ -115,6 +117,7 @@ public class CxxSourceTypes {
         flags.addAll(cxxPlatform.getCppflags());
         break;
       case CXX:
+      case PCM:
         flags.addAll(cxxPlatform.getCxxppflags());
         break;
       case OBJC:
@@ -169,12 +172,20 @@ public class CxxSourceTypes {
       case ASM_WITH_CPP:
         outputType = CxxSource.Type.ASM;
         break;
+      case PCM:
+        outputType = CxxSource.Type.PCM;
+        break;
         // $CASES-OMITTED$
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", type));
     }
 
     return outputType;
+  }
+
+  /** @return whether this source type supports dep files. */
+  public static boolean supportsDepFiles(CxxSource.Type type) {
+    return type != CxxSource.Type.PCM;
   }
 
   /** @return the appropriate compiler for the given language type. */
