@@ -754,23 +754,18 @@ class BuckTool(object):
                 "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
             ]
 
-            if "BUCK_DEFAULT_FILESYSTEM" not in os.environ and (
-                sys.platform == "darwin" or sys.platform.startswith("linux")
+            if (
+                "BUCK_DEFAULT_FILESYSTEM" not in os.environ
+                and (sys.platform == "darwin" or sys.platform.startswith("linux"))
+                and not java10_test_mode
             ):
                 # Change default filesystem to custom filesystem for memory optimizations
                 # Calls like Paths.get() would return optimized Path implementation
+                # TODO: Temporarily disabled for Java 10/11 due to class loader issues.
                 java_args.append(
                     "-Djava.nio.file.spi.DefaultFileSystemProvider="
                     "com.facebook.buck.cli.bootstrapper.filesystem.BuckFileSystemProvider"
                 )
-
-                if java10_test_mode:
-                    # In Java 9+, DefaultFileSystemProvider is initialized at a time during which
-                    # the classes in the normal classpath are not visible to the system class
-                    # loader, so we add the Buck bootstrapper to Java's boot classpath here.
-                    java_args.append(
-                        "-Xbootclasspath/a:" + self._get_bootstrap_classpath()
-                    )
 
             resource_lock_path = self._get_resource_lock_path()
             if resource_lock_path is not None:
