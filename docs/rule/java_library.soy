@@ -22,18 +22,19 @@
     {param navid: 'rule_java_library' /}
     {param prettify: true /}
     {param description}
-      A rule that is used to define a set of Java files that can be compiled
-      together.
+      A rule that is used to define a set of Java files that can be
+      compiled together.
     {/param}
     {param content}
 
 {call buck.rule}
 {param status: 'FROZEN' /}
 {param overview}
-A <code>java_library()</code> rule is used to define a set of Java
+A <code>java_library()</code> rule defines a set of Java
 files that can be compiled together. The main output of a
 {sp}<code>java_library()</code> rule is a single JAR file containing all
-of the compiled class files and resources.
+of the compiled class files, as well as the static files specified in
+the <code>resources</code> argument.
 {/param}
 
 {param args}

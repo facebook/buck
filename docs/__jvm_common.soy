@@ -45,15 +45,18 @@
   {param name: 'resources' /}
   {param default: '[]' /}
   {param desc}
-  Static files to include among the compiled <code>.class</code>
-  {sp}files. These files can be loaded via <a
-  href="http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html#getResource(java.lang.String)"
-  target="_blank">Class.getResource()</a>.
   <p>
-  <strong>Note:</strong> If <code>resources_root</code> isn't set, Buck uses
-  the <code>{call buckconfig.java_src_roots /}</code> property in <a
-  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a> to help
-  determine where resources should be placed within the generated JAR file.
+    Static files to include with the compiled <code>.class</code> {sp}files. 
+    These files can be loaded 
+    via <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html#getResource(java.lang.String)" target="_blank">Class.getResource()</a>.
+  </p>
+
+  <p>
+    <strong>Note:</strong> If <code>resources_root</code> isn't set,
+    Buck uses the <code>{call buckconfig.java_src_roots /}</code>
+    property in <a href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a> to
+    determine where resources should be placed within the generated JAR
+    file.
   <p>
   {/param}
 {/call}

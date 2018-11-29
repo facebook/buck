@@ -22,16 +22,25 @@
     {param navid: 'rule_python_test' /}
     {param prettify: true /}
     {param description}
-      A rule that is used to define a set of python files that contian tests
-      to run via the python unit testing framework.
+      A rule that defines a set of python files that contain tests
+      to run via the Python unit testing framework.
     {/param}
     {param content}
 
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-A <code>python_test()</code> rule is used to define a set of <code>.py</code>{sp}
-files that contain tests to run via the <a href="https://docs.python.org/2/library/unittest.html">Python unit testing framework</a>.
+<p>
+  A <code>python_test()</code> rule defines a set of <code>.py</code>{sp}
+  files that contain tests to run via the <a href="https://docs.python.org/2/library/unittest.html">Python unit testing framework</a>.
+</p>
+
+<p>
+  If your test requires static files you should specify these in 
+  the <strong>resources</strong> or <strong>platform_resources</strong> arguments.
+  If you do not specify these files, they won't be available when your
+  test runs.
+</p>
 {/param}
 
 {param args}

@@ -22,8 +22,8 @@
     {param navid: 'rule_go_test' /}
     {param prettify: true /}
     {param description}
-      A go_test() rule builds a Go library with the sources and runs them as a
-      "testing" package test.
+      A go_test rule builds a Go library from the specified sources and
+      resources, then runs it as a "testing" package test.
     {/param}
     {param content}
 
@@ -31,9 +31,17 @@
 {param status: 'UNFROZEN' /}
 {param overview}
 <p>
-  A go_test() rule builds a native binary from the supplied set of Go source files
-  and a generated main file. It's similar to the <i>go test</i> command.
+  A <code>go_test()</code> rule builds a native binary from the
+  specified Go source and resource files&mdash;and a generated main file. It's
+  similar to the <code>go test</code> command.
 </p>
+
+<p>
+  If your test requires static files you should specify these in 
+  the <strong>resources</strong> argument. If you do not specify these 
+  files, they won't be available when your test runs.
+</p>
+
 <p>
   {call go_common.supported_language_version /}
 </p>
@@ -96,8 +104,9 @@
   {param name: 'resources' /}
   {param default : '[]' /}
   {param desc}
-  Static files to be symlinked into the working directory of the test. You can access these in your
-  by opening the files as relative paths, e.g. <code>ioutil.ReadFile("testdata/input")</code>.
+  Static files that are symlinked into the working directory of the
+  test. You can access these files in your test by opening them using
+  relative paths, such as <code>ioutil.ReadFile("testdata/input")</code>.
   {/param}
 {/call}
 
