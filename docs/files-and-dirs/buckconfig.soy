@@ -4822,6 +4822,30 @@ buck = .
 {/call}
 
 {call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'warn_on_config_file_overrides' /}
+  {param example_value: 'false' /}
+  {param description}
+    Whether to display a warning when using configuration overrides from
+    {sp}<code>.buckconfig.local</code> or any of the files mentioned in {call buckconfig.section_concept_link}{param id:'config-precedence' /}{param rendered_text: 'Precedence of Buck configuration specifications' /}{/call} This is true by default.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'warn_on_config_file_overrides_ignored_files' /}
+  {param example_value: 'experiments,system' /}
+  {param description}
+    <p>A comma-separated list of names of configuration files that should be ignored.</p>
+
+    By default, Buck prints a warning if settings are in use from any of the files in {call buckconfig.section_concept_link}{param id:'config-precedence' /}{param rendered_text: 'Precedence of Buck configuration specifications' /}{/call}
+    Sometimes, however, a user should not be alerted about specific files. For example, there may be global Buck settings in <code>/etc/buckconfig.d/system</code> that
+    are managed by an IT organization, not the user, and the warning would just be ignored. In this case, this setting could be set to <code>system</code>
+    so that <code>/etc/buckconfig.d/system</code> being present would not elicit a warning.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
   {param section: 'unknown_flavors_messages' /}
   {param name: 'unknown_flavors_messages' /}
   {param description}
