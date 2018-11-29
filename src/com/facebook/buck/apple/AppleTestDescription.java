@@ -284,48 +284,53 @@ public class AppleTestDescription
 
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
 
+    BuildTarget appleBundleBuildTarget =
+        buildTarget.withAppendedFlavors(
+            BUNDLE_FLAVOR,
+            debugFormat.getFlavor(),
+            LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+            AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     AppleBundle bundle =
-        AppleDescriptions.createAppleBundle(
-            xcodeDescriptions,
-            getCxxPlatformsProvider(),
-            appleCxxPlatformFlavorDomain,
-            context.getTargetGraph(),
-            buildTarget.withAppendedFlavors(
-                BUNDLE_FLAVOR,
-                debugFormat.getFlavor(),
-                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
-                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-            projectFilesystem,
-            params.withDeclaredDeps(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .add(library)
-                    .addAll(params.getDeclaredDeps().get())
-                    .build()),
-            graphBuilder,
-            toolchainProvider.getByName(
-                CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
-            toolchainProvider.getByName(
-                ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
-            Optional.of(library.getBuildTarget()),
-            Optional.empty(),
-            args.getExtension(),
-            Optional.empty(),
-            args.getInfoPlist(),
-            args.getInfoPlistSubstitutions(),
-            args.getDeps(),
-            args.getTests(),
-            debugFormat,
-            appleConfig.useDryRunCodeSigning(),
-            appleConfig.cacheBundlesAndPackages(),
-            appleConfig.shouldVerifyBundleResources(),
-            appleConfig.assetCatalogValidation(),
-            args.getAssetCatalogsCompilationOptions(),
-            args.getCodesignFlags(),
-            args.getCodesignIdentity(),
-            Optional.empty(),
-            appleConfig.getCodesignTimeout(),
-            swiftBuckConfig.getCopyStdlibToFrameworks());
-    graphBuilder.addToIndex(bundle);
+        AppleBundle.class.cast(
+            graphBuilder.computeIfAbsent(
+                appleBundleBuildTarget,
+                ignored ->
+                    AppleDescriptions.createAppleBundle(
+                        xcodeDescriptions,
+                        getCxxPlatformsProvider(),
+                        appleCxxPlatformFlavorDomain,
+                        context.getTargetGraph(),
+                        appleBundleBuildTarget,
+                        projectFilesystem,
+                        params.withDeclaredDeps(
+                            ImmutableSortedSet.<BuildRule>naturalOrder()
+                                .add(library)
+                                .addAll(params.getDeclaredDeps().get())
+                                .build()),
+                        graphBuilder,
+                        toolchainProvider.getByName(
+                            CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
+                        toolchainProvider.getByName(
+                            ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
+                        Optional.of(library.getBuildTarget()),
+                        Optional.empty(),
+                        args.getExtension(),
+                        Optional.empty(),
+                        args.getInfoPlist(),
+                        args.getInfoPlistSubstitutions(),
+                        args.getDeps(),
+                        args.getTests(),
+                        debugFormat,
+                        appleConfig.useDryRunCodeSigning(),
+                        appleConfig.cacheBundlesAndPackages(),
+                        appleConfig.shouldVerifyBundleResources(),
+                        appleConfig.assetCatalogValidation(),
+                        args.getAssetCatalogsCompilationOptions(),
+                        args.getCodesignFlags(),
+                        args.getCodesignIdentity(),
+                        Optional.empty(),
+                        appleConfig.getCodesignTimeout(),
+                        swiftBuckConfig.getCopyStdlibToFrameworks())));
 
     Optional<SourcePath> xctool = getXctool(projectFilesystem, params, graphBuilder);
 
@@ -471,7 +476,7 @@ public class AppleTestDescription
               blacklist,
               extraCxxDeps,
               CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromDeps());
-      graphBuilder.addToIndex(library);
+      graphBuilder.computeIfAbsent(library.getBuildTarget(), ignored -> library);
     }
     return library;
   }
