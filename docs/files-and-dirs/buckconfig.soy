@@ -69,6 +69,13 @@ The <code>.buckconfig</code> implementation supports some modifications
 to the INI file format; these are discussed below.
 </p>
 
+<p>
+<strong>Note:</strong> As just mentioned, we have extended the INI
+file parser that Buck uses to parse configuration files. As a result,
+{sp}<em>INI file parsers provided by other languages or libraries are
+often not able to parse Buck's configuration files successfully</em>.
+</p>
+
 
 <h2>Character encoding</h2>
 
@@ -311,6 +318,13 @@ of a section. In this second use case, you'll need to ensure that
 the <em>included</em> file is referenced beneath the appropriate section 
 in the <em>including</em> file. Because of this additional complexity, 
 we recommend that you include only files that contain complete sections.
+</p>
+
+<p>
+<strong>Note:</strong> Inclusion of files is a Buck-specific extension
+to the INI file parser that Buck uses. Therefore, if you use this
+feature, your Buck configuration files will probably not be parsable by
+other more-generic INI file parsers.
 </p>
 
 <p>
