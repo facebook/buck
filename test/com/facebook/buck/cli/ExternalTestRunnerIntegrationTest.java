@@ -16,12 +16,15 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -52,6 +55,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void runPass() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test", "-c", "test.external_runner=" + workspace.getPath("test_runner.py"), "//:pass");
@@ -103,6 +108,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void runFail() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test", "-c", "test.external_runner=" + workspace.getPath("test_runner.py"), "//:fail");
@@ -112,6 +119,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void extraArgs() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -160,6 +169,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void numberOfJobsIsPassedToExternalRunner() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -174,6 +185,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void numberOfJobsInExtraArgsIsPassedToExternalRunner() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -201,6 +214,8 @@ public class ExternalTestRunnerIntegrationTest {
   @Test
   public void numberOfJobsInExtraArgsWithShortNotationIsPassedToExternalRunner()
       throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -227,6 +242,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void numberOfJobsWithUtilizationRatioAppliedIsPassedToExternalRunner() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -243,6 +260,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void numberOfJobsWithTestThreadsIsPassedToExternalRunner() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
