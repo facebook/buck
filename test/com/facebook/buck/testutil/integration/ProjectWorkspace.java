@@ -63,6 +63,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ErrorLogger.LogImpl;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.JavaVersion;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
@@ -553,30 +554,32 @@ public class ProjectWorkspace extends AbstractWorkspace {
           stdout.getContentsAsString(Charsets.UTF_8),
           stderr.getContentsAsString(Charsets.UTF_8) + errorMessage.toString());
     } finally {
-      // javac has a global cache of zip/jar file content listings. It determines the validity of
-      // a given cache entry based on the modification time of the zip file in question. In normal
-      // usage, this is fine. However, in tests, we often will do a build, change something, and
-      // then rapidly do another build. If this happens quickly, javac can be operating from
-      // incorrect information when reading a jar file, resulting in "bad class file" or
-      // "corrupted zip file" errors. We work around this for testing purposes by reaching inside
-      // the compiler and clearing the cache.
-      try {
-        Class<?> cacheClass =
-            Class.forName(
-                "com.sun.tools.javac.file.ZipFileIndexCache",
-                false,
-                ToolProvider.getSystemToolClassLoader());
+      if (JavaVersion.getMajorVersion() < 9) {
+        // javac has a global cache of zip/jar file content listings. It determines the validity of
+        // a given cache entry based on the modification time of the zip file in question. In normal
+        // usage, this is fine. However, in tests, we often will do a build, change something, and
+        // then rapidly do another build. If this happens quickly, javac can be operating from
+        // incorrect information when reading a jar file, resulting in "bad class file" or
+        // "corrupted zip file" errors. We work around this for testing purposes by reaching inside
+        // the compiler and clearing the cache.
+        try {
+          Class<?> cacheClass =
+              Class.forName(
+                  "com.sun.tools.javac.file.ZipFileIndexCache",
+                  false,
+                  ToolProvider.getSystemToolClassLoader());
 
-        Method getSharedInstanceMethod = cacheClass.getMethod("getSharedInstance");
-        Method clearCacheMethod = cacheClass.getMethod("clearCache");
+          Method getSharedInstanceMethod = cacheClass.getMethod("getSharedInstance");
+          Method clearCacheMethod = cacheClass.getMethod("clearCache");
 
-        Object cache = getSharedInstanceMethod.invoke(cacheClass);
-        clearCacheMethod.invoke(cache);
-      } catch (ClassNotFoundException
-          | IllegalAccessException
-          | InvocationTargetException
-          | NoSuchMethodException e) {
-        throw new RuntimeException(e);
+          Object cache = getSharedInstanceMethod.invoke(cacheClass);
+          clearCacheMethod.invoke(cache);
+        } catch (ClassNotFoundException
+            | IllegalAccessException
+            | InvocationTargetException
+            | NoSuchMethodException e) {
+          throw new RuntimeException(e);
+        }
       }
     }
   }
