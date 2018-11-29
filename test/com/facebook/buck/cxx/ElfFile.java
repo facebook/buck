@@ -37,6 +37,11 @@ public class ElfFile {
   }
 
   /** @return the value of the ELF file's DT_SONAME .dynamic entry, if present. */
+  public static Optional<String> getSoname(Path elfFilePath) throws IOException {
+    return getSoname(mapReadOnly(elfFilePath));
+  }
+
+  /** @return the value of the ELF file's DT_SONAME .dynamic entry, if present. */
   public static Optional<String> getSoname(Elf elf) {
     Optional<ElfSectionLookupResult> dynamicSectionLookupResult = elf.getSectionByName(".dynamic");
     if (!dynamicSectionLookupResult.isPresent()) {

@@ -107,6 +107,14 @@ public class RustCompileUtils {
     CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
+    Optional<String> filename = crateType.filenameFor(target, crateName, cxxPlatform);
+
+    if (crateType == CrateType.CDYLIB) {
+      String soname = filename.get();
+      Linker linker = cxxPlatform.getLd().resolve(graphBuilder);
+      linkerArgs.addAll(StringArg.from(linker.soname(soname)));
+    }
+
     Stream.concat(rustPlatform.getLinkerArgs().stream(), extraLinkerFlags.stream())
         .filter(x -> !x.isEmpty())
         .map(StringArg::of)
@@ -224,8 +232,6 @@ public class RustCompileUtils {
         || crateType == CrateType.DYLIB) {
       args.add(StringArg.of("-Cprefer-dynamic"));
     }
-
-    Optional<String> filename = crateType.filenameFor(target, crateName, cxxPlatform);
 
     return RustCompileRule.from(
         ruleFinder,
