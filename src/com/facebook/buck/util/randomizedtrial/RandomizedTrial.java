@@ -83,6 +83,19 @@ public class RandomizedTrial {
    * <p>This choice is stable for a particular buildId/test/user/hostname.
    *
    * @param name name of trial.
+   * @param enumValuesWithProbabilities Map of enum values to probabilities.
+   */
+  public static <T extends Enum<T>> T getGroup(
+      String name, String buildId, Map<T, Double> enumValuesWithProbabilities) {
+    return selectGroup(name, enumValuesWithProbabilities, getPoint(name, buildId));
+  }
+
+  /**
+   * Returns a group for trial with given name.
+   *
+   * <p>This choice is stable for a particular buildId/test/user/hostname.
+   *
+   * @param name name of trial.
    * @param enumClass Class of an enum which conforms to {@link WithProbability} interface.
    */
   public static <T extends Enum<T> & WithProbability> T getGroup(

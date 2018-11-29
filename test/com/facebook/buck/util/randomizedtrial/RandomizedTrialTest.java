@@ -121,4 +121,17 @@ public class RandomizedTrialTest {
         RandomizedTrial.getGroupStable("name", enumValuesWithProbabilities),
         Matchers.equalTo(RegularEnum.GROUP2));
   }
+
+  @Test
+  public void testGetGroupWithExperimentSetReturnsCorrectGroup() {
+    BuildId buildId = new BuildId("01234");
+    double point = RandomizedTrial.getPoint("name", buildId.toString());
+    Map<RegularEnum, Double> enumValuesWithProbabilities = new TreeMap<>();
+    enumValuesWithProbabilities.put(RegularEnum.GROUP1, point);
+    enumValuesWithProbabilities.put(RegularEnum.GROUP2, 1.0 - point);
+
+    assertThat(
+        RandomizedTrial.getGroup("name", buildId.toString(), enumValuesWithProbabilities),
+        Matchers.equalTo(RegularEnum.GROUP2));
+  }
 }
