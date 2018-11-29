@@ -134,29 +134,4 @@ public class ConfigurationWarningsEndToEndTest {
                 makeStdErrPattern(
                     "Using additional configuration options from.* \\.buckconfig[^\\.]"))));
   }
-
-  @Test
-  public void printsErrorMessageWhenConfigChanges(
-      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
-    workspace.addPremadeTemplate("configuration_warnings");
-
-    ProcessResult result = workspace.runBuckCommand(true, "query", "//...");
-
-    result.assertSuccess();
-    assertThat(
-        result.getStderr(),
-        not(
-            containsString(
-                "Invalidating internal cached state: Buck configuration options changed between invocations. This may cause slower builds.")));
-
-    workspace.addBuckConfigLocalOption("foo", "bar", "baz1");
-
-    result = workspace.runBuckCommand(true, "query", "//...");
-
-    result.assertSuccess();
-    assertThat(
-        result.getStderr(),
-        containsString(
-            "Invalidating internal cached state: Buck configuration options changed between invocations. This may cause slower builds."));
-  }
 }
