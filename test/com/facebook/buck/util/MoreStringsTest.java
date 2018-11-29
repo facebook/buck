@@ -143,4 +143,9 @@ public class MoreStringsTest {
         MoreStrings.getSpellingSuggestions("ppl:", ImmutableList.of("apple", "foo"), 1),
         ImmutableList.of());
   }
+
+  @Test
+  public void testRemoveCR() {
+    assertEquals("a\nb\nc\nd", MoreStrings.replaceCR("a\r\nb\rc\r\nd"));
+  }
 }

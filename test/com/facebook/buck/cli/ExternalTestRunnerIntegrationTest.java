@@ -27,6 +27,8 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.environment.PlatformType;
 import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.util.Arrays;
@@ -124,35 +126,36 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void runJavaTest() throws IOException {
+    String externalTestRunner =
+        Platform.detect().getType() == PlatformType.WINDOWS ? "test_runner.bat" : "test_runner.py";
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
             "-c",
-            "test.external_runner=" + workspace.getPath("test_runner.py"),
+            "test.external_runner=" + workspace.getPath(externalTestRunner),
             "//:simple");
     result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        Matchers.matchesPattern(
-            Joiner.on(System.lineSeparator())
-                    .join(
-                        "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
-                        "<testcase name=\"SimpleTest\" runner_capabilities=\"simple_test_selector\">",
-                        "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest\" "
-                            + "time=\"\\d*\" type=\"SUCCESS\">",
-                        "    <stdout>passed!",
-                        "</stdout>",
-                        "  </test>",
-                        "</testcase>",
-                        "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
-                        "<testcase name=\"SimpleTest2\" runner_capabilities=\"simple_test_selector\">",
-                        "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest2\" "
-                            + "time=\"\\d*\" type=\"SUCCESS\">",
-                        "    <stdout>passed!",
-                        "</stdout>",
-                        "  </test>",
-                        "</testcase>")
-                + System.lineSeparator()));
+    String expected =
+        Joiner.on(System.lineSeparator())
+                .join(
+                    "(?s).*<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
+                    "<testcase name=\"SimpleTest\" runner_capabilities=\"simple_test_selector\">",
+                    "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest\" "
+                        + "time=\"\\d*\" type=\"SUCCESS\">",
+                    "    <stdout>passed!",
+                    "</stdout>",
+                    "  </test>",
+                    "</testcase>",
+                    "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
+                    "<testcase name=\"SimpleTest2\" runner_capabilities=\"simple_test_selector\">",
+                    "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest2\" "
+                        + "time=\"\\d*\" type=\"SUCCESS\">",
+                    "    <stdout>passed!",
+                    "</stdout>",
+                    "  </test>",
+                    "</testcase>")
+            + System.lineSeparator();
+    assertThat(result.getStdout(), Matchers.matchesPattern(expected));
   }
 
   @Test
