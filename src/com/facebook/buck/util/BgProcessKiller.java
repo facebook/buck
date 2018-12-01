@@ -107,6 +107,7 @@ public class BgProcessKiller {
    * Use this method instead of {@link ProcessBuilder#start} in order to properly synchronize with
    * signal handling.
    */
+  @SuppressWarnings("PMD.BlacklistedDefaultProcessMethod")
   public static synchronized Process startProcess(ProcessBuilder pb) throws IOException {
     checkArmedStatus();
     return pb.start();
