@@ -39,6 +39,7 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 public class GroovyLibraryDescription
@@ -51,7 +52,7 @@ public class GroovyLibraryDescription
 
   public GroovyLibraryDescription(
       ToolchainProvider toolchainProvider,
-      GroovyBuckConfig groovyBuckConfig,
+      @Nullable GroovyBuckConfig groovyBuckConfig,
       JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;

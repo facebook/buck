@@ -32,16 +32,15 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
-  private final GroovyBuckConfig groovyBuckConfig;
+  @Nullable private final GroovyBuckConfig groovyBuckConfig;
+  @Nullable private Tool groovyc;
 
-  private @Nullable Tool groovyc;
-
-  public GroovyConfiguredCompilerFactory(GroovyBuckConfig groovyBuckConfig) {
+  public GroovyConfiguredCompilerFactory(@Nullable GroovyBuckConfig groovyBuckConfig) {
     this.groovyBuckConfig = groovyBuckConfig;
   }
 
   private Tool getGroovyc() {
-    if (groovyc == null) {
+    if (groovyc == null && groovyBuckConfig != null) {
       groovyc = groovyBuckConfig.getGroovyc();
     }
     return groovyc;
@@ -62,6 +61,8 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   public void addTargetDeps(
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    Optionals.addIfPresent(groovyBuckConfig.getGroovycTarget(), extraDepsBuilder);
+    if (groovyBuckConfig != null) {
+      Optionals.addIfPresent(groovyBuckConfig.getGroovycTarget(), extraDepsBuilder);
+    }
   }
 }
