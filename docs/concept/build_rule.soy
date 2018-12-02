@@ -1,3 +1,18 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.build_rule}
 
 /***/
@@ -6,80 +21,143 @@
     {param title: 'Build Rule' /}
     {param navid: 'concept_build_rule' /}
     {param description}
-      A procedure for producing an output file from a set of input files.
+      A procedure for producing output files from a set of input files
+      in the context of a specified build configuration.
     {/param}
     {param content}
 
-A <em>build rule</em> is a procedure for producing an output file from
-a set of input files.
+<p>
+A <em>build rule</em> is a procedure for producing output files from
+a set of input files in the context of a specified build
+configuration. Build rules are specified in {call buck.build_file /}s. 
+</p>
 
 <p>
-
-Buck comes with a number of built-in build rules, as there are many common
-procedures when building software. For example, compiling Java code against
-the Android SDK is a common operation, so the build rule
-{sp}{call buck.android_library /} exists to facilitate that. 
-Similarly, the primary objective of most Android developers
-is to create an APK, so the build rule {sp}{call buck.android_binary /} can be used
-to do that.
+Buck comes with a collection of built-in build rules, as there are many
+common procedures when building software. For example, compiling Java
+code against the Android SDK is a common operation, so Buck provides the 
+build rule {sp}{call buck.android_library /} to do that.  Similarly,
+the final product of most Android development is an APK, so the build
+rule {sp}{call buck.android_binary /} can be used to create an APK.
+</p>
 
 <p>
+This documentation organizes Buck's build rules by development language
+and by target platform. Examples 
+are: <strong>C++</strong>, <strong>Java</strong>, <strong>Python</strong> (development languages) 
+and <strong>Android</strong>, <strong>iOS</strong>, <strong>.NET</strong> (target platforms).
+Consult the table of contents to locate the build rules that are
+appropriate for your development project.
+</p>
 
-Build rules are defined using built-in Python functions in 
-a {call buck.build_file /}. (Both the Python function to define
-the rule and the corresponding Java object that is ultimately created to
-carry out the procedure are commonly referred to as "the build rule,"
-even though they are technically different things.) 
-Every build rule takes at least the following three arguments:
+
+<h2>Dependencies: Output from one rule as input to another rule</h2>
+
+<p>
+A build rule can use the output from another build rule as one of its inputs by
+specifying that rule as a <em>dependency</em>. Typically, a build rule 
+specifies its dependencies as a list of {call buck.build_target /}s  
+in its <code>deps</code> argument. However, the rule can also 
+specify dependencies&mdash;as build targets&mdash;in other arguments, such as <code>srcs</code>.
+</p>
+
+<p>
+<strong>Example:</strong> The output of a {call buck.java_library /}{sp} rule 
+is a JAR file. If a <code>java_library</code>{sp} rule
+specifies another <code>java_library</code> rule as a dependency, the
+JAR file produced by the specified rule is added to the classpath for
+the <code>java_library</code> that depends on it.
+</p>
+
+<p>
+<strong>Example:</strong> If a {call buck.java_binary /}{sp} rule 
+specifies a <code>java_library</code> rule as a dependency, the JAR file 
+for the specified <code>java_library</code> is available on the classpath for 
+the <code>java_binary</code>. In addition, in the case of <code>java_binary</code>, 
+the JAR files for any dependencies of the <code>java_library</code> rule <em>are also</em> made 
+available to the <code>java_binary</code> rule&mdash;and if those 
+dependencies have dependencies of their own, they are added as well. 
+This exhaustive cascade of dependencies is referred to as the 
+rule's <em>transitive closure</em>.
+</p>
+
+
+<h3>Required dependencies are always built first</h3>
+
+<p>
+Buck guarantees that any dependencies that a rule lists that are required 
+in order to build that rule are built successfully <em>before</em> Buck
+builds the rule itself. Note though that there can be special 
+cases&mdash;such as {call buck.apple_bundle /}&mdash;where 
+listed dependencies do not actually need to be built before the rule
+itself.
+</p>
+
+<p>
+<strong>Note:</strong> A build rule must explicitly specify all of its
+required inputs in its arguments in order for Buck to be able to ensure
+that it can build the output in a way that is deterministic and
+reproducible.
+</p>
+
+
+<h3>Visibility</h3>
+
+<p>
+In order for a build rule to take a dependency on another build rule, the
+build rule on which the dependency is taken must be <em>visible</em> to
+the build rule taking the dependency. A build rule's <code>visibility</code> argument 
+is a list of {call buck.build_target_pattern /}s that specify the rules 
+that can take this rule as a dependency. For more information about the 
+concept of visibility in Buck, see 
+the {call buck.concept_link}{param page: 'Visibility' /}{param name: 'Visibility' /}{/call} topic.
+</p>
+
+
+<h3>Dependencies define a graph</h3>
+
+<p>
+Build rules and their dependencies define a directed acyclic graph
+(DAG). Buck requires this graph to be acyclic because to make it  
+easier to build independent subgraphs in parallel.
+</p>
+
+
+<h2>How to handle special cases: genrules and macros</h2>
+
+<p>
+Although Buck provides a rich set of built-in build rules for 
+developers, it is not able to address all possible needs. As an "escape hatch," 
+Buck provides a category of generic build rules called <em>genrules</em>. 
+With a genrule, you can perform arbitrary operations using a shell script. 
+Examples of genrules are:
+</p>
 
 <ul>
-  <li><code>name</code> The name of the build rule,
-      which must be unique within a build file.
-  <li><code>deps</code> The build rule's dependencies,
-      expressed as a list of {call buck.build_target /}s.  
-  <li><code>visibility</code> The set of build rules that are allowed to
-      claim this rule as a dependency, expressed as a list 
-      of {call buck.build_target_pattern /}s. 
-</ul>                       
-<p>
+  <li>{call buck.genrule /}</li>
+  <li>{call buck.apk_genrule /}</li>
+  <li>{call buck.cxx_genrule /}</li>
+</ul>
 
-In Buck, every build rule can produce zero or one output files.
-These output files can be used by other rules that declare the rule
-responsible for the output file as a dependency. For example,
-the output of an {call buck.android_library /}{sp}
-is a JAR file, so an
-{sp}{call buck.android_binary /}{sp}
-that declares the <code>android_library</code> as a dependency can include
-the <code>.class</code> files from the <code>android_library</code>'s JAR
-file in its resulting APK. Or when one <code>android_library</code>{sp}
-depends on another, the JAR of dependent rule will be included on the
-classpath when the rule that depends on it compiles its Java code.
-Check the documentation for each build rule to see how it uses its <code>deps</code>.
-Note that no matter how a rule uses its <code>deps</code>, every rule in a rule's
-{sp}<code>deps</code> is guaranteed to be built before the rule attempts to build itself.
+
+<h3>Multiple output files with genrules</h3>
 
 <p>
+In most cases, a build produces exactly one output file. However, with
+genrules, you can specify an output <em>directory</em> and write
+arbitrary files to that directory.
+</p>
 
-Build rules and their dependencies define a directed graph. Buck requires that this
-graph be acyclic. This helps Buck build efficiently, as it makes it easier to
-build independent subgraphs in parallel.
+
+<h3>Macros</h3>
 
 <p>
-
-Although Buck tries to provide a rich set of built-in build rules for 
-developers, it is not able to address all possible needs. As an "escape hatch," Buck
-also provides a vanilla build rule called a
-{sp}{call buck.genrule /},
-which you can use to build an arbitrary rule using a Bash script.
-<p>
-
-Finally, note that build files are evaluated as Python files.
-This means that you can define your own functions within build files that
-generate build rules. This should not be something that you need to do often,
-but taking advantage of this may help you add something to Buck's build process
-without editing its source code.
-For more details on this topic, see the article
-on <a href="{ROOT}extending/macros.html">macros</a>.
+Finally, note that you can define your own functions that generate build
+rules. In general, this should not be something that you need to do, but
+taking advantage of this option might help you add something to Buck's
+build process without editing its source code.  For more details, see 
+the topic <a href="{ROOT}extending/macros.html">Custom Macros</a>.
+</p>
 
     {/param}
   {/call}

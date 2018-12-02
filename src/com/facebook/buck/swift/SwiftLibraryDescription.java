@@ -260,7 +260,7 @@ public class SwiftLibraryDescription
       CxxPreprocessorInput inputs =
           CxxPreprocessorInput.concat(
               CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                  cxxPlatform, graphBuilder, params.getBuildDeps()));
+                  cxxPlatform, graphBuilder, params.getBuildDeps(), x -> true));
       PreprocessorFlags cxxDeps =
           PreprocessorFlags.of(
               Optional.empty(),
@@ -408,6 +408,7 @@ public class SwiftLibraryDescription
 
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
+        swiftBuckConfig,
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)),
         delegateArgsBuilder,
         args,

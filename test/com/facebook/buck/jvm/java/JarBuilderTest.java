@@ -265,6 +265,6 @@ public class JarBuilderTest {
     }
 
     @Override
-    public void close() throws IOException {}
+    public void close() {}
   }
 }

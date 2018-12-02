@@ -169,7 +169,7 @@ public class DepsFunction implements QueryFunction {
     @Override
     public ImmutableSet<QueryTarget> eval(
         QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args) {
-      Preconditions.checkArgument(args.size() == 0);
+      Preconditions.checkArgument(args.isEmpty());
       return env.resolveTargetVariable(getName());
     }
   }

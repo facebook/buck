@@ -1,0 +1,3 @@
+""" Ignored docstring """
+
+NAME = "cell"

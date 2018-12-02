@@ -151,8 +151,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       try (OutputStream outputStream =
           getProjectFilesystem().newFileOutputStream(outputRelativePath)) {
         try (JsonGenerator jsonGen = ObjectMappers.createGenerator(outputStream)) {

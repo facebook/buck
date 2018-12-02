@@ -16,7 +16,18 @@
 
 package com.facebook.buck.rules.coercer.concat;
 
-/** Indicates that a class supports concatenation. */
+import javax.annotation.Nullable;
+
+/**
+ * Indicates that a class provides concatenation operation (which can either perform concatenation
+ * or indicate that the type doesn't support concatenation).
+ */
 public interface Concatable<T> {
+
+  /**
+   * @return an instance with concatenated elements or {@code null} if concatenation is not
+   *     supported for the type
+   */
+  @Nullable
   T concat(Iterable<T> elements);
 }

@@ -21,9 +21,9 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,7 +49,7 @@ public abstract class PlatformUtils {
   protected String findExecutable(String bin) {
     try {
       Path executablePath =
-          executableFinder.getExecutable(Paths.get(bin), ImmutableMap.copyOf(System.getenv()));
+          executableFinder.getExecutable(Paths.get(bin), EnvVariablesProvider.getSystemEnv());
       return executablePath.toAbsolutePath().toString();
     } catch (HumanReadableException e) {
       assumeNoException(e);

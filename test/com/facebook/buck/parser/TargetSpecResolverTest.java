@@ -35,17 +35,22 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.TargetSpecResolver.FlavorEnhancer;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -81,6 +86,11 @@ public class TargetSpecResolverTest {
   private TargetSpecResolver targetNodeTargetSpecResolver;
   private FlavorEnhancer<TargetNode<?>> flavorEnhancer;
 
+  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
+      getManifestSupplier() {
+    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
+  }
+
   @Before
   public void setUp() throws Exception {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "target_specs", tmp);
@@ -91,7 +101,7 @@ public class TargetSpecResolverTest {
     cell = new TestCellBuilder().setFilesystem(filesystem).build();
     eventBus = BuckEventBusForTests.newInstance();
     typeCoercerFactory = new DefaultTypeCoercerFactory();
-    constructorArgMarshaller = new ConstructorArgMarshaller(typeCoercerFactory);
+    constructorArgMarshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
@@ -100,13 +110,17 @@ public class TargetSpecResolverTest {
     parserPythonInterpreterProvider =
         new ParserPythonInterpreterProvider(parserConfig, executableFinder);
     perBuildStateFactory =
-        new PerBuildStateFactory(
+        PerBuildStateFactory.createFactory(
             typeCoercerFactory,
             constructorArgMarshaller,
             knownRuleTypesProvider,
             parserPythonInterpreterProvider,
+            cell.getBuckConfig(),
             WatchmanFactory.NULL_WATCHMAN,
-            eventBus);
+            eventBus,
+            getManifestSupplier(),
+            new FakeFileHashCache(ImmutableMap.of()));
+
     targetNodeTargetSpecResolver = new TargetSpecResolver();
     parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory);
     flavorEnhancer = (target, targetNode, targetType) -> target;
@@ -114,7 +128,7 @@ public class TargetSpecResolverTest {
   }
 
   @After
-  public void tearDown() throws Exception {
+  public void tearDown() {
     executorService.shutdown();
   }
 

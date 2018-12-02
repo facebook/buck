@@ -1,0 +1,7 @@
+prebuilt_jar(
+    name = "netty-tcnative",
+    binary_jar = "netty-tcnative-boringssl-static-2.0.7.Final.jar",
+    licenses = ["LICENSE"],
+    source_jar = "netty-tcnative-boringssl-static-2.0.7.Final-sources.jar",
+    visibility = ["PUBLIC"],
+)

@@ -92,7 +92,7 @@ public class LuaBinaryDescriptionTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
-  public void mainModule() throws Exception {
+  public void mainModule() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     LuaBinary binary =
         new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -102,7 +102,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void extensionOverride() throws Exception {
+  public void extensionOverride() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -118,7 +118,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void toolOverride() throws Exception {
+  public void toolOverride() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Tool override = new CommandTool.Builder().addArg("override").build();
     LuaBinary binary =

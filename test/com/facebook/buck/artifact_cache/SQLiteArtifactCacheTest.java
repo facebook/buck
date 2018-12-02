@@ -70,7 +70,7 @@ public class SQLiteArtifactCacheTest {
   private SQLiteArtifactCache artifactCache;
 
   @Before
-  public void setUp() throws InterruptedException, IOException, SQLException {
+  public void setUp() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot());
     fileA = tmpDir.newFile("a");
     fileB = tmpDir.newFile("b");

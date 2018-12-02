@@ -46,7 +46,7 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
       };
 
   @Override
-  public ImmutableCollection<AlterRuleKey> load(Class<?> key) throws Exception {
+  public ImmutableCollection<AlterRuleKey> load(Class<?> key) {
     ImmutableList.Builder<AlterRuleKey> builder = ImmutableList.builder();
     List<Class<?>> superClasses = new ArrayList<>();
 

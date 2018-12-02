@@ -52,8 +52,7 @@ public class AuditCellCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     ImmutableMap<String, Path> cellMap;
     if (getArguments().isEmpty()) {
       cellMap = params.getCell().getCellPathResolver().getCellPaths();

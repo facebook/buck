@@ -21,6 +21,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 
+/** Factory for creating instances of {link ProjectBuildFileParser}. */
 public interface ProjectBuildFileParserFactory {
+  /** Creates an instance of {link ProjectBuildFileParser} based on passed in options. */
   ProjectBuildFileParser createBuildFileParser(BuckEventBus eventBus, Cell cell, Watchman watchman);
 }

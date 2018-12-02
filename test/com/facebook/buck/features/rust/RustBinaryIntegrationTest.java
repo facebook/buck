@@ -28,6 +28,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,7 +41,7 @@ public class RustBinaryIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void ensureRustIsAvailable() throws IOException, InterruptedException {
+  public void ensureRustIsAvailable() {
     RustAssumptions.assumeRustIsConfigured();
   }
 
@@ -603,6 +604,21 @@ public class RustBinaryIntegrationTest {
             containsString("Calling helloer"),
             containsString("I'm printing hello!"),
             containsString("Helloer called")));
+  }
+
+  @Test
+  public void cxxBinaryWithSharedRustDependencyExecutesOutsideProjectDirectory()
+      throws IOException, java.lang.InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_with_rust_dep", tmp);
+    workspace.setUp();
+
+    Path programPath = workspace.buildAndReturnOutput("//:hello-shared");
+    java.lang.Process process =
+        new java.lang.ProcessBuilder(new String[] {programPath.toString()})
+            .directory(programPath.getRoot().toFile())
+            .start();
+    assertThat(process.waitFor(), Matchers.equalTo(0));
   }
 
   @Test

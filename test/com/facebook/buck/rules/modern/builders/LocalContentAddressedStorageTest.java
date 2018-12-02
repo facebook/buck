@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.Futures;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,7 +61,8 @@ public class LocalContentAddressedStorageTest {
   public void canAddData() throws IOException {
     byte[] data = "hello world!".getBytes(Charsets.UTF_8);
     Digest digest = protocol.newDigest("myhashcode", data.length);
-    storage.addMissing(ImmutableMap.of(digest, () -> new ByteArrayInputStream(data)));
+    Futures.getUnchecked(
+        storage.addMissing(ImmutableMap.of(digest, () -> new ByteArrayInputStream(data))));
     assertDataEquals(data, getBytes(digest));
   }
 
@@ -80,13 +82,15 @@ public class LocalContentAddressedStorageTest {
   public void presentDataIsNotAdded() throws IOException {
     byte[] data = "hello world!".getBytes(Charsets.UTF_8);
     Digest digest = protocol.newDigest("myhashcode", data.length);
-    storage.addMissing(ImmutableMap.of(digest, () -> new ByteArrayInputStream(data)));
-    storage.addMissing(
-        ImmutableMap.of(
-            digest,
-            () -> {
-              throw new RuntimeException();
-            }));
+    Futures.getUnchecked(
+        storage.addMissing(ImmutableMap.of(digest, () -> new ByteArrayInputStream(data))));
+    Futures.getUnchecked(
+        storage.addMissing(
+            ImmutableMap.of(
+                digest,
+                () -> {
+                  throw new RuntimeException();
+                })));
   }
 
   @Test
@@ -104,7 +108,7 @@ public class LocalContentAddressedStorageTest {
     Digest rootDigest =
         inputsBuilder.buildTree(new ProtocolTreeBuilder(requiredData::put, dir -> {}, protocol));
 
-    storage.addMissing(requiredData.build());
+    Futures.getUnchecked(storage.addMissing(requiredData.build()));
 
     Path inputsDir = tmp.getRoot().resolve("inputs");
     storage.materializeInputs(inputsDir, rootDigest, Optional.empty());

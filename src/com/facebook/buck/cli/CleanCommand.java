@@ -115,7 +115,7 @@ public class CleanCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params) throws IOException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
     for (Cell cell : params.getCell().getLoadedCells().values()) {
       cleanCell(params, cell);
     }

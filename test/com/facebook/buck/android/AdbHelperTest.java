@@ -72,8 +72,8 @@ public class AdbHelperTest {
     return device;
   }
 
-  private AdbHelper createAdbHelper(AdbOptions adbOptions, TargetDeviceOptions targetDeviceOptions)
-      throws CmdLineException {
+  private AdbHelper createAdbHelper(
+      AdbOptions adbOptions, TargetDeviceOptions targetDeviceOptions) {
     return createAdbHelper(testContext, adbOptions, targetDeviceOptions);
   }
 
@@ -238,7 +238,7 @@ public class AdbHelperTest {
 
   /** Verify that filtering by environment variable works. */
   @Test
-  public void whenSerialNumberSetInEnvironmentThenCorrectDeviceFound() throws CmdLineException {
+  public void whenSerialNumberSetInEnvironmentThenCorrectDeviceFound() {
     IDevice[] devices =
         new IDevice[] {
           createRealDevice("1", IDevice.DeviceState.ONLINE),

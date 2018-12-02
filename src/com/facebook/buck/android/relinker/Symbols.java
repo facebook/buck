@@ -47,7 +47,7 @@ public class Symbols {
   static final Pattern SYMBOL_RE =
       Pattern.compile(
           "\\s*"
-              + "(?<address>[0-9a-f]{8})"
+              + "(?<address>[0-9a-f]{8,16})"
               + " "
               + "(?<global>.)"
               + "(?<weak>.)"

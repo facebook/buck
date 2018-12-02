@@ -35,7 +35,7 @@ public class RustTestIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void ensureRustIsAvailable() throws IOException, InterruptedException {
+  public void ensureRustIsAvailable() {
     RustAssumptions.assumeRustIsConfigured();
   }
 

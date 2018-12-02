@@ -32,6 +32,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.log.TraceInfoProvider;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -41,6 +43,7 @@ import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
@@ -50,6 +53,7 @@ import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
@@ -163,6 +167,13 @@ public abstract class AbstractCommandRunnerParams {
 
   @Value.Parameter
   public abstract CloseableMemoizedSupplier<ForkJoinPool> getPoolSupplier();
+
+  @Value.Parameter
+  public abstract Optional<TraceInfoProvider> getTraceInfoProvider();
+
+  @Value.Parameter
+  public abstract ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
+      getManifestServiceSupplier();
 
   /**
    * Create {@link BuildExecutorArgs} using this {@link CommandRunnerParams}.

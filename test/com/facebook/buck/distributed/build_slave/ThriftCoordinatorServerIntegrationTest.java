@@ -358,7 +358,7 @@ public class ThriftCoordinatorServerIntegrationTest {
     Assert.assertEquals(chromeExpectedToBeCreated, traceFile.exists());
   }
 
-  private File newNonExistentTmpFile() throws IOException {
+  private File newNonExistentTmpFile() {
     return new File(
         tempDirectory.getRoot().toPath().resolve(UUID.randomUUID().toString()).toString());
   }

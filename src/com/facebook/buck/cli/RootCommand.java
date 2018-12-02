@@ -21,7 +21,7 @@ import com.facebook.buck.util.ExitCode;
 public final class RootCommand extends AbstractCommand {
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params) {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     String path =
         params.getCell().getFilesystem().getRootPath().normalize().toAbsolutePath().toString();
 

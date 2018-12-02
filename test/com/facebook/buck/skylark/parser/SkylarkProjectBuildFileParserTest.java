@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.parser;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.Matchers.stringContainsInOrder;
@@ -40,6 +41,7 @@ import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
@@ -51,6 +53,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
@@ -61,9 +64,11 @@ import com.google.devtools.build.lib.syntax.Type;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -83,7 +88,7 @@ public class SkylarkProjectBuildFileParserTest {
   private Cell cell;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -399,7 +404,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.createFile(directory.resolve("file2"));
     Files.createFile(directory.resolve("bad_file"));
     BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(1));
+    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
     assertThat(
         buildFileManifest.getGlobManifest(),
         equalTo(
@@ -985,7 +990,7 @@ public class SkylarkProjectBuildFileParserTest {
             "load('//src/test:build_rules.bzl', 'get_name')",
             "prebuilt_jar(name='foo', binary_jar=get_name())"));
     Files.write(extensionFile, Arrays.asList("def get_name():", "  return 'jar'"));
-    ImmutableList<String> includes = parser.getIncludedFiles(buildFile);
+    ImmutableSortedSet<String> includes = parser.getIncludedFiles(buildFile);
     assertThat(includes, Matchers.hasSize(2));
     assertThat(
         includes
@@ -994,7 +999,7 @@ public class SkylarkProjectBuildFileParserTest {
             .map(Path::getFileName) // simplify matching by stripping temporary path prefixes
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()),
-        equalTo(ImmutableList.of("BUCK", "build_rules.bzl")));
+        Matchers.containsInAnyOrder("BUCK", "build_rules.bzl"));
   }
 
   @Test
@@ -1010,10 +1015,11 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name='foo', binary_jar=get_name())"));
     Files.write(extensionFile, Arrays.asList("def get_name():", "  return 'jar'"));
     BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(1));
-    Map<String, Object> prebuiltJarRule = buildFileManifest.getTargets().get(0);
+    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
+    Map<String, Object> prebuiltJarRule =
+        Iterables.getOnlyElement(buildFileManifest.getTargets().values());
     assertThat(prebuiltJarRule.get("name"), equalTo("foo"));
-    ImmutableList<String> includes = buildFileManifest.getIncludes();
+    ImmutableSortedSet<String> includes = buildFileManifest.getIncludes();
     assertThat(
         includes
             .stream()
@@ -1021,7 +1027,7 @@ public class SkylarkProjectBuildFileParserTest {
             .map(Path::getFileName) // simplify matching by stripping temporary path prefixes
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()),
-        equalTo(ImmutableList.of("BUCK", "build_rules.bzl")));
+        Matchers.containsInAnyOrder("BUCK", "build_rules.bzl"));
     Map<String, Object> configs = buildFileManifest.getConfigs();
     assertThat(configs, equalTo(ImmutableMap.of()));
     Optional<ImmutableMap<String, Optional<String>>> env = buildFileManifest.getEnv();
@@ -1214,9 +1220,8 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name='foo', binary_jar='binary.jar')",
             "prebuilt_jar(name=str(rule_exists('foo')), binary_jar='foo')"));
     BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(2));
-    Map<String, Object> rule = buildFileManifest.getTargets().get(1);
-    assertThat(rule.get("name"), equalTo("True"));
+    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(2));
+    assertThat(buildFileManifest.getTargets(), hasKey("foo"));
   }
 
   @Test
@@ -1239,8 +1244,8 @@ public class SkylarkProjectBuildFileParserTest {
         extensionFile,
         Collections.singletonList("load('//src/test:extension_rules.bzl', 'get_name')"));
     BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(2));
-    Map<String, Object> rule = buildFileManifest.getTargets().get(0);
+    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(2));
+    Map<String, Object> rule = Iterables.getFirst(buildFileManifest.getTargets().values(), null);
     assertThat(rule.get("name"), is("foo"));
     assertThat(rule.get("binaryJar"), equalTo("True"));
   }
@@ -1264,10 +1269,305 @@ public class SkylarkProjectBuildFileParserTest {
     parser.getBuildFileManifest(buildFile);
   }
 
+  @Test
+  public void exportsPerPackageImplicitIncludes() throws IOException, InterruptedException {
+    Path rootImplicitExtension = projectFilesystem.resolve("get_name.bzl");
+    Path implicitExtension =
+        projectFilesystem.resolve("src").resolve("foo").resolve("get_name.bzl");
+    Path implicitUsingExtension = projectFilesystem.resolve("get_bin_name.bzl");
+    Path implicitExtensionWithAliases =
+        projectFilesystem.resolve("src").resolve("alias").resolve("get_name.bzl");
+
+    Files.write(
+        rootImplicitExtension, Arrays.asList("def get_rule_name():", "    return \"root\""));
+    Files.write(
+        implicitUsingExtension,
+        Arrays.asList(
+            "def get_bin_name():",
+            "    return native.implicit_package_symbol('get_rule_name')() + '.jar'"));
+    Files.createDirectories(implicitExtension.getParent());
+    Files.write(
+        implicitExtension,
+        Arrays.asList(
+            "def get_rule_name():", "    return native.package_name().replace('/', '_')"));
+    Files.createDirectories(implicitExtensionWithAliases.getParent());
+    Files.write(
+        implicitExtensionWithAliases,
+        Arrays.asList("def get_rule_name_alias():", "    return 'alias_that_symbol'"));
+
+    parser =
+        createParserWithOptions(
+            new PrintingEventHandler(EventKind.ALL_EVENTS),
+            getDefaultParserOptions()
+                .setPackageImplicitIncludes(
+                    ImmutableMap.of(
+                        "",
+                        ImplicitInclude.fromConfigurationString("//:get_name.bzl::get_rule_name"),
+                        "src/foo",
+                        ImplicitInclude.fromConfigurationString(
+                            "//src/foo:get_name.bzl::get_rule_name"),
+                        "src/alias",
+                        ImplicitInclude.of(
+                            "//src/alias:get_name.bzl",
+                            ImmutableMap.of("get_rule_name", "get_rule_name_alias"))))
+                .build());
+
+    ImmutableMap<Path, String> expected =
+        ImmutableMap.of(
+            Paths.get("BUCK"),
+            "root",
+            Paths.get("src", "BUCK"),
+            "root",
+            Paths.get("src", "foo", "BUCK"),
+            "src_foo",
+            Paths.get("src", "foo", "bar", "BUCK"),
+            "src_foo_bar",
+            Paths.get("src", "alias", "BUCK"),
+            "alias_that_symbol");
+
+    ImmutableMap<Path, ImmutableList<Path>> expectedIncludesPaths =
+        ImmutableMap.of(
+            Paths.get("BUCK"),
+            ImmutableList.of(
+                Paths.get("BUCK"), Paths.get("get_bin_name.bzl"), Paths.get("get_name.bzl")),
+            Paths.get("src", "BUCK"),
+            ImmutableList.of(
+                Paths.get("src", "BUCK"), Paths.get("get_bin_name.bzl"), Paths.get("get_name.bzl")),
+            Paths.get("src", "foo", "BUCK"),
+            ImmutableList.of(
+                Paths.get("src", "foo", "BUCK"),
+                Paths.get("get_bin_name.bzl"),
+                Paths.get("src", "foo", "get_name.bzl")),
+            Paths.get("src", "foo", "bar", "BUCK"),
+            ImmutableList.of(
+                Paths.get("src", "foo", "bar", "BUCK"),
+                Paths.get("get_bin_name.bzl"),
+                Paths.get("src", "foo", "get_name.bzl")),
+            Paths.get("src", "alias", "BUCK"),
+            ImmutableList.of(
+                Paths.get("src", "alias", "BUCK"),
+                Paths.get("get_bin_name.bzl"),
+                Paths.get("src", "alias", "get_name.bzl")));
+
+    for (Map.Entry<Path, String> kvp : expected.entrySet()) {
+      Path buildFile = projectFilesystem.resolve(kvp.getKey());
+      String expectedName = kvp.getValue();
+      ImmutableList expectedIncludes =
+          expectedIncludesPaths
+              .get(kvp.getKey())
+              .stream()
+              .map(projectFilesystem::resolve)
+              .collect(ImmutableList.toImmutableList());
+
+      Files.createDirectories(buildFile.getParent());
+      Files.write(
+          buildFile,
+          Arrays.asList(
+              "load('//:get_bin_name.bzl', 'get_bin_name')",
+              "prebuilt_jar(name=implicit_package_symbol('get_rule_name')(), binary_jar=get_bin_name())"));
+
+      BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
+      assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
+      Map<String, Object> results =
+          Iterables.getOnlyElement(buildFileManifest.getTargets().values());
+
+      assertThat(
+          String.format(
+              "Expected file at %s to parse and have name %s", kvp.getKey(), expectedName),
+          results.get("name"),
+          equalTo(expectedName));
+      assertThat(
+          String.format(
+              "Expected file at %s to parse and have name %s", kvp.getKey(), expectedName),
+          results.get("binaryJar"),
+          equalTo(expectedName + ".jar"));
+
+      assertThat(
+          String.format(
+              "Expected file at %s to parse and have manifest includes %s",
+              kvp.getKey(), buildFileManifest.getIncludes()),
+          buildFileManifest
+              .getIncludes()
+              .stream()
+              .map(Paths::get)
+              .collect(ImmutableList.toImmutableList()),
+          Matchers.containsInAnyOrder(expectedIncludes.toArray()));
+      assertThat(
+          String.format(
+              "Expected file at %s to parse and have includes %s", kvp.getKey(), expectedIncludes),
+          parser
+              .getIncludedFiles(projectFilesystem.resolve(kvp.getKey()))
+              .stream()
+              .map(Paths::get)
+              .collect(ImmutableList.toImmutableList()),
+          Matchers.containsInAnyOrder(expectedIncludes.toArray()));
+    }
+  }
+
+  @Test
+  public void returnsDefaultImplicitValueIfMissing() throws IOException, InterruptedException {
+    Path extension = projectFilesystem.resolve("get_name.bzl");
+    Path implicitExtension = projectFilesystem.resolve("src").resolve("name.bzl");
+    Files.createDirectories(implicitExtension.getParent());
+    Files.write(
+        extension,
+        Arrays.asList(
+            "def get_name():", "    return native.implicit_package_symbol('NAME', 'root')"));
+    Files.write(implicitExtension, Arrays.asList("NAME = 'src'"));
+
+    parser =
+        createParserWithOptions(
+            new PrintingEventHandler(EventKind.ALL_EVENTS),
+            getDefaultParserOptions()
+                .setPackageImplicitIncludes(
+                    ImmutableMap.of(
+                        "src", ImplicitInclude.fromConfigurationString("//src:name.bzl::NAME")))
+                .build());
+
+    Path srcBuildFile = projectFilesystem.resolve(Paths.get("src", "BUCK"));
+    Path rootBuildFile = projectFilesystem.resolve(Paths.get("BUCK"));
+
+    List<String> buildFileContent =
+        Arrays.asList(
+            "load(\"//:get_name.bzl\", \"get_name\")",
+            "prebuilt_jar(",
+            "    name = get_name(),",
+            "    binary_jar=implicit_package_symbol('NAME', 'root') + \".jar\")");
+
+    Files.write(srcBuildFile, buildFileContent);
+    Files.write(rootBuildFile, buildFileContent);
+
+    Map<String, Object> srcRule = getSingleRule(srcBuildFile);
+    Map<String, Object> rootRule = getSingleRule(rootBuildFile);
+
+    assertThat(srcRule.get("name"), equalTo("src"));
+    assertThat(srcRule.get("binaryJar"), equalTo("src.jar"));
+    assertThat(rootRule.get("name"), equalTo("root"));
+    assertThat(rootRule.get("binaryJar"), equalTo("root.jar"));
+  }
+
+  @Test
+  public void failsIfInvalidImplicitSymbolSpecified() throws IOException, InterruptedException {
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage(
+        "Could not find symbol 'invalid_symbol' in implicitly loaded extension '//src:get_name.bzl");
+
+    Path implicitExtension = projectFilesystem.resolve("src").resolve("get_name.bzl");
+    Files.createDirectories(implicitExtension.getParent());
+    Files.write(
+        implicitExtension,
+        Arrays.asList(
+            "def get_rule_name():", "    return native.package_name().replace('/', '_')"));
+
+    parser =
+        createParserWithOptions(
+            new PrintingEventHandler(EventKind.ALL_EVENTS),
+            getDefaultParserOptions()
+                .setPackageImplicitIncludes(
+                    ImmutableMap.of(
+                        "src",
+                        ImplicitInclude.fromConfigurationString(
+                            "//src:get_name.bzl::invalid_symbol")))
+                .build());
+
+    Path buildFile = projectFilesystem.resolve(Paths.get("src", "BUCK"));
+
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "prebuilt_jar(name=implicit_package_symbol('get_rule_name'), binary_jar=\"foo.jar\")"));
+
+    getSingleRule(buildFile);
+  }
+
+  @Test
+  public void failsIfMissingExtensionSpecified() throws IOException, InterruptedException {
+    thrown.expect(IOException.class);
+
+    parser =
+        createParserWithOptions(
+            new PrintingEventHandler(EventKind.ALL_EVENTS),
+            getDefaultParserOptions()
+                .setPackageImplicitIncludes(
+                    ImmutableMap.of(
+                        "src",
+                        ImplicitInclude.fromConfigurationString("//src:get_name.bzl::symbol")))
+                .build());
+
+    Path buildFile = projectFilesystem.resolve(Paths.get("src", "BUCK"));
+
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "prebuilt_jar(name=implicit_package_symbol('get_rule_name'), binary_jar=\"foo.jar\")"));
+
+    getSingleRule(buildFile);
+  }
+
+  @Test
+  public void failsIfInvalidImplicitExtensionSpecified() throws IOException, InterruptedException {
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot parse extension file //src:get_name.bzl");
+
+    Path implicitExtension = projectFilesystem.resolve("src").resolve("get_name.bzl");
+    Files.createDirectories(implicitExtension.getParent());
+    Files.write(implicitExtension, Arrays.asList("def some_invalid_syntax():"));
+
+    parser =
+        createParserWithOptions(
+            new PrintingEventHandler(EventKind.ALL_EVENTS),
+            getDefaultParserOptions()
+                .setPackageImplicitIncludes(
+                    ImmutableMap.of(
+                        "src",
+                        ImplicitInclude.fromConfigurationString(
+                            "//src:get_name.bzl::invalid_symbol")))
+                .build());
+
+    Path buildFile = projectFilesystem.resolve(Paths.get("src", "BUCK"));
+
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "prebuilt_jar(name=implicit_package_symbol('get_rule_name'), binary_jar=\"foo.jar\")"));
+
+    getSingleRule(buildFile);
+  }
+
+  @Test
+  public void failsIfMissingSymbolRequested() throws IOException, InterruptedException {
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot evaluate build file");
+
+    Path implicitExtension = projectFilesystem.resolve("src").resolve("get_name.bzl");
+    Files.createDirectories(implicitExtension.getParent());
+    Files.write(implicitExtension, Arrays.asList("def get_rule_name():", "    return \"foo\""));
+
+    parser =
+        createParserWithOptions(
+            new PrintingEventHandler(EventKind.ALL_EVENTS),
+            getDefaultParserOptions()
+                .setPackageImplicitIncludes(
+                    ImmutableMap.of(
+                        "src",
+                        ImplicitInclude.fromConfigurationString(
+                            "//src:get_name.bzl::get_rule_name")))
+                .build());
+
+    Path buildFile = projectFilesystem.resolve(Paths.get("src", "BUCK"));
+
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "prebuilt_jar(name=implicit_package_symbol('missing_method') + '_cant_concat_with_none', binary_jar=\"foo.jar\")"));
+
+    getSingleRule(buildFile);
+  }
+
   private Map<String, Object> getSingleRule(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(1));
-    return buildFileManifest.getTargets().get(0);
+    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
+    return Iterables.getOnlyElement(buildFileManifest.getTargets().values());
   }
 }

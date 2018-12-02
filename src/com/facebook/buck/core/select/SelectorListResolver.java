@@ -17,6 +17,7 @@
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.model.BuildTarget;
+import javax.annotation.Nullable;
 
 /**
  * A resolver that analyzes {@link SelectorList}, evaluates selectable statements and constructs the
@@ -32,8 +33,10 @@ public interface SelectorListResolver {
    * @param attributeName the name of the attribute that holds the given selector list
    * @param selectorList a list with selectable elements
    * @param <T> the type of elements stored in the provided selectable list
-   * @return an object produced by concatenating resolved elements of the given list.
+   * @return an object produced by concatenating resolved elements of the given list or {@code null}
+   *     if the list is resolved to an absent element
    */
+  @Nullable
   <T> T resolveList(
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,

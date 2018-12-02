@@ -22,9 +22,10 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.environment.Platform;
@@ -97,8 +98,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   private final Path projectRoot;
   private final BuckPaths buckPaths;
 
-  private final ImmutableSet<PathOrGlobMatcher> blackListedPaths;
-  private final ImmutableSet<PathOrGlobMatcher> blackListedDirectories;
+  private final ImmutableSet<PathMatcher> blackListedPaths;
+  private final ImmutableSet<PathMatcher> blackListedDirectories;
 
   /** Supplier that returns an absolute path that is guaranteed to exist. */
   private final Supplier<Path> tmpDir;
@@ -134,7 +135,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   public DefaultProjectFilesystem(
       FileSystem vfs,
       Path root,
-      ImmutableSet<PathOrGlobMatcher> blackListedPaths,
+      ImmutableSet<PathMatcher> blackListedPaths,
       BuckPaths buckPaths,
       ProjectFilesystemDelegate delegate,
       @Nullable WindowsFS winFSInstance) {
@@ -161,13 +162,13 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
                                     buckPaths)),
                             root))
                     .append(ImmutableSet.of(buckPaths.getTrashDir()))
-                    .transform(PathOrGlobMatcher::new))
+                    .transform(RecursiveFileMatcher::of))
             .toSet();
     this.buckPaths = buckPaths;
 
     this.blackListedDirectories =
         FluentIterable.from(this.blackListedPaths)
-            .filter(matcher -> matcher.getType() == PathOrGlobMatcher.Type.PATH)
+            .filter(RecursiveFileMatcher.class)
             .transform(
                 matcher -> {
                   Path path = matcher.getPath();
@@ -181,10 +182,14 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
             // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but
             // we really don't end up ignoring it in reality (see extractIgnorePaths).
             .append(ImmutableSet.of(buckPaths.getBuckOut()))
-            .transform(PathOrGlobMatcher::new)
+            .transform(RecursiveFileMatcher::of)
+            .transform(matcher -> (PathMatcher) matcher)
             .append(
+                // RecursiveFileMatcher instances are handled separately above because they all
+                // must be relative to the project root, but all other matchers are not relative
+                // to the root and do not require any special treatment.
                 Iterables.filter(
-                    this.blackListedPaths, input -> input.getType() == PathOrGlobMatcher.Type.GLOB))
+                    this.blackListedPaths, matcher -> !(matcher instanceof RecursiveFileMatcher)))
             .toSet();
     this.tmpDir =
         MoreSuppliers.memoize(
@@ -254,13 +259,13 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   }
 
   @Override
-  public ImmutableSet<PathOrGlobMatcher> getBlacklistedPaths() {
+  public ImmutableSet<PathMatcher> getBlacklistedPaths() {
     return blackListedPaths;
   }
 
-  /** @return A {@link ImmutableSet} of {@link PathOrGlobMatcher} objects to have buck ignore. */
+  /** @return A {@link ImmutableSet} of {@link PathMatcher} objects to have buck ignore. */
   @Override
-  public ImmutableSet<PathOrGlobMatcher> getIgnorePaths() {
+  public ImmutableSet<PathMatcher> getIgnorePaths() {
     return blackListedDirectories;
   }
 
@@ -889,7 +894,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
           }
 
           @Override
-          public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+          public FileVisitResult visitFileFailed(Path file, IOException exc) {
             return FileVisitResult.CONTINUE;
           }
 
@@ -1027,7 +1032,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   @Override
   public boolean isIgnored(Path path) {
     Preconditions.checkArgument(!path.isAbsolute());
-    for (PathOrGlobMatcher blackListedPath : blackListedPaths) {
+    for (PathMatcher blackListedPath : blackListedPaths) {
       if (blackListedPath.matches(path)) {
         return true;
       }

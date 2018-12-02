@@ -1,16 +1,16 @@
 digraph result_graph {
   "//example:five" -> "//example:six";
-  "//example:five" [style=filled,color="#D6D3F5","buck_buck.type"=apple_library,buck_name=five];
+  "//example:five" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=five];
   "//example:four" -> "//example:six";
-  "//example:four" [style=filled,color="#D6D3F5","buck_buck.type"=apple_library,buck_name=four];
+  "//example:four" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=four];
   "//example:one" -> "//example:three";
   "//example:one" -> "//example:two";
-  "//example:one" [style=filled,color="#D6D3F5","buck_buck.type"=apple_library,buck_name=one];
-  "//example:six" [style=filled,color="#D6D3F5","buck_buck.type"=apple_library,buck_name=six];
+  "//example:one" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=one];
+  "//example:six" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=six];
   "//example:three" -> "//example:five";
   "//example:three" -> "//example:four";
   "//example:three" -> "//example:six";
-  "//example:three" [style=filled,color="#D6D3F5","buck_buck.type"=apple_library,buck_name=three];
+  "//example:three" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=three];
   "//example:two" -> "//example:four";
-  "//example:two" [style=filled,color="#D6D3F5","buck_buck.type"=apple_library,buck_name=two];
+  "//example:two" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=two];
 }

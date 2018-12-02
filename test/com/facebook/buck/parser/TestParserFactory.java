@@ -23,10 +23,15 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import org.pf4j.PluginManager;
 
 public class TestParserFactory {
@@ -37,19 +42,27 @@ public class TestParserFactory {
     return create(buckConfig, knownRuleTypesProvider);
   }
 
+  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
+      getManifestSupplier() {
+    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
+  }
+
   public static Parser create(
       BuckConfig buckConfig, KnownRuleTypesProvider knownRuleTypesProvider, BuckEventBus eventBus) {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     return create(
         buckConfig,
-        new PerBuildStateFactory(
+        PerBuildStateFactory.createFactory(
             typeCoercerFactory,
-            new ConstructorArgMarshaller(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(typeCoercerFactory),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
+            buckConfig,
             WatchmanFactory.NULL_WATCHMAN,
-            eventBus),
+            eventBus,
+            getManifestSupplier(),
+            new FakeFileHashCache(ImmutableMap.of())),
         eventBus);
   }
 
@@ -64,10 +77,9 @@ public class TestParserFactory {
 
   public static Parser create(
       BuckConfig buckConfig, PerBuildStateFactory perBuildStateFactory, BuckEventBus eventBus) {
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     return new DefaultParser(
-        new DaemonicParserState(typeCoercerFactory, parserConfig.getNumParsingThreads()),
+        new DaemonicParserState(parserConfig.getNumParsingThreads()),
         perBuildStateFactory,
         new TargetSpecResolver(),
         WatchmanFactory.NULL_WATCHMAN,

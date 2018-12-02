@@ -67,7 +67,11 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     SourcePathRuleFinder rulePathFinder = new SourcePathRuleFinder(graphBuilder);
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-        DefaultSourcePathResolver.from(rulePathFinder), delegateArgsBuilder, args, target);
+        swiftBuckConfig,
+        DefaultSourcePathResolver.from(rulePathFinder),
+        delegateArgsBuilder,
+        args,
+        target);
     SwiftLibraryDescriptionArg swiftArgs = delegateArgsBuilder.build();
 
     Preprocessor preprocessor = platform.getCpp().resolve(graphBuilder);

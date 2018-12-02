@@ -1,12 +1,19 @@
-{namespace buck.buckconfig}
-
-/**
- * @param title
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
-{template .section}
-  <h2 id="{$title}">[{$title}]</h2>
-  <p>
-{/template}
+{namespace buck.buckconfig}
 
 /***/
 {template .soyweb}
@@ -20,60 +27,144 @@
     {param content}
 
 <p>
-The root of your project must contain a configuration file
-named <code>.buckconfig</code>. If present, Buck will read this file
-before executing its business logic so that any customizations specified
-in <code>.buckconfig</code> will take effect. This file uses the
-{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a> with
-a few extensions discussed below.
+The root of your {call buck.key_concepts_link}{param rendered_text: 'project' /}{/call} must 
+contain a configuration file named <code>.buckconfig</code>. 
+Before executing, Buck reads this file to incorporate any customizations
+it specifies.
+</p>
+
+
+<h2>Performance impact of Buck configuration changes</h2>
+
+<p>
+Changes to Buck's configuration can&mdash;temporarily&mdash;degrade 
+Buck's performance because of how they affect Buck's parsing and caching 
+behavior.
 </p>
 
 <p>
-Although the INI format only recognizes strings as values, Buck allows
-fields to be parsed as a list of strings, separated by a separator character.
-For example, a field containing command line flags to be passed to a compiler
-may parse its value as a list of strings, separated by space, so
-that <code>-foo -bar</code> is parsed as a list of two strings, instead of
-a single string.
+If you change the Buck configuration in any of the locations discussed
+here, it can trigger Buck to reparse your build files the next time
+you build. If your build files are large or you have many build files,
+this reparsing can impact your build time.
 </p>
 
 <p>
+Also, because configuration settings are sometimes included in the cache
+keys that Buck uses in its caching system, changes to Buck's
+configuration can invalidate previously-built artifacts in Buck's
+caches. If this occurs, Buck rebuilds those artifacts, which can impact
+your build time.  
+</p>
 
-To ensure that any character can be encoded in a <code>.buckconfig</code> value, Buck
-allows values or part of values to be quoted by surrounding them by double
-quotes. Inside double quotes, escape sequences can be used to encode
-characters that would otherwise be problematic to use in values. The
+
+<h2>The .buckconfig file uses the INI file format</h2>
+
+<p>
+The <code>.buckconfig</code> file uses the
+{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a>. 
+That is, it is divided into <em>sections</em> where each section
+contains a collection of key <em>names</em> and key <em>values</em>.
+The <code>.buckconfig</code> implementation supports some modifications
+to the INI file format; these are discussed below.
+</p>
+
+<p>
+<strong>Note:</strong> As just mentioned, we have extended the INI
+file parser that Buck uses to parse configuration files. As a result,
+{sp}<em>INI file parsers provided by other languages or libraries are
+often not able to parse Buck's configuration files successfully</em>.
+</p>
+
+
+<h2>Character encoding</h2>
+
+<p>
+To ensure that any character can be encoded in a <code>.buckconfig</code> key 
+value, Buck allows values or part of values to be quoted by surrounding
+them with double quotes. Inside double quotes, you can use escape sequences 
+to encode characters that would otherwise be problematic to use in values. The
 following escape sequences are supported:
+</p>
 
 <table summary="Escape sequences in .buckconfig"><tr>
-<td>\\</td><td>backslash</td>
+<td><code>\\</code></td><td>backslash</td>
 </tr><tr>
-<td>\"</td><td>double quote</td>
+<td><code>\"</code></td><td>double quote</td>
 </tr><tr>
-<td>\n</td><td>newline</td>
+<td><code>\n</code></td><td>newline</td>
 </tr><tr>
-<td>\r</td><td>carriage return</td>
+<td><code>\r</code></td><td>carriage return</td>
 </tr><tr>
-<td>\t</td><td>tab</td>
+<td><code>\t</code></td><td>tab</td>
 </tr><tr>
-<td>\x##</td><td>Unicode character with code point ## (in hex)</td>
+<td><code>\x##</code></td><td>Unicode character with code point ## (in hex)</td>
 </tr><tr>
-<td>\u####</td><td>Unicode character with code point #### (in hex)</td>
+<td><code>\u####</code></td><td>Unicode character with code point #### (in hex)</td>
 </tr><tr>
-<td>\U########</td><td>Unicode character with code point ######## (in hex)</td>
+<td><code>\U########</code></td><td>Unicode character with code point ######## (in hex)</td>
 </tr></table>
 
-<p>
 
-In addition, when a field is parsed as a list instead of a string,
-the separator character is only interpreted as a separator when it occurs
-outside double quotes. For example, if <em>flags</em> is a field being
-interpreted as a list of strings separated by
-spaces, <code>flags=-foo "-bar \u0429"</code> will result in two
-strings: <q>foo</q> and <q>-bar &#1065;</q>.
+<h2>Key values as lists</h2>
 
 <p>
-Other fields' values can be interpolated by including <code>$(config &lt;section&gt;.&lt;field&gt;)</code> inside a value. For example, to use the go vendor path in a custom setting:
+Although the standard INI format supports only key values that represent 
+a single item, Buck supports key values that represent a list of items.
+The syntax is to separate the items in the list using the space (<code>0x20</code>) character.
+For example, a key value for the list of command-line flags to be passed
+to a compiler could be represented as a list of the flags separated by
+spaces:
+</p>
+
+<p>
+<pre>
+{literal}
+flags = -foo -bar -baz -qux
+{/literal}
+</pre>
+</p>
+
+<p>
+When a key value is parsed as a list instead of a single item,
+the separator character is interpreted as a separator only when it 
+occurs <em>outside of double quotes</em>. For example, if <code>flags</code> is 
+a key value interpreted as a list of items separated by spaces, then 
+</p>
+
+<p>
+<pre>
+{literal}
+flags = -foo "-bar \u0429"
+{/literal}
+</pre>
+</p>                                   
+
+<p>
+results in the two strings: <code>foo</code> and <code>-bar &#1065;</code>; 
+the space character between <code>-bar</code> and <code>\u0429</code> is 
+not interpreted as a separator.
+</p>
+
+
+<h2>Transclusion of values from one key to another</h2>
+
+<p>
+Values from other keys can be transcluded into the current key using 
+the following syntax inside the current key value. 
+</p>
+
+<p>
+<pre>
+{literal}
+$(config &lt;section&gt;.&lt;field&gt;)
+{/literal}
+</pre>
+</p>
+
+<p>
+For example, to use the {call buckconfig.go_vendor_path /} in 
+a custom setting:
 </p>
 
 <p>
@@ -84,34 +175,236 @@ custom_value = $(config go.vendor_path)
 {/literal}
 </p>
 
+
+<h2>Comments</h2>
+
 <p>
-Finally, you can use the pound sign (<code>#</code>), in addition to the 
-semicolon (<code>;</code>), as a comment character in <code>.buckconfig</code>.
+In addition to the semicolon (<code>;</code>), 
+you can use the pound sign (<code>#</code>), 
+as a comment character in <code>.buckconfig</code>.
 </p>
 
 
 <h2>.buckconfig.local</h2>
 
-The root of your project may also contain a second configuration file
-named <code>.buckconfig.local</code>. Its format is exactly the same as
-that of <code>.buckconfig</code>, but any definition in <code>.buckconfig.local</code>{sp}
-will override that of <code>.buckconfig</code>. In practice, <code>.buckconfig</code> will be a
-version-controlled file that contains settings that are applicable to all team members (such as
-standard includes for build files), whereas <code>.buckconfig.local</code> will be excluded from
-version control because it contains user-specific overrides (such as personal aliases).
+<p>
+The root of your {call buck.key_concepts_link}{param rendered_text: 'project' /}{/call} may 
+contain a second configuration file named <code>.buckconfig.local</code>. Its format is 
+the same as that of <code>.buckconfig</code>, but settings in <code>.buckconfig.local</code>{sp}
+override those in <code>.buckconfig</code>. In practice, <code>.buckconfig</code> is a
+version-controlled file that contains settings that are applicable to all team members, 
+whereas <code>.buckconfig.local</code> is excluded from version control to allow users to define
+personal settings, such as personal aliases.
+</p>
+
+
+<h2>Other initialization files</h2>
 
 <p>
+In addition to the <code>.buckconfig</code> and <code>.buckconfig.local</code> files in 
+the project root, Buck supports a cascading set of other configuration
+files. These files are identified either by having the name <code>.buckconfig</code> or 
+by being located in a subdirectory named <code>.buckconfig.d</code>.
+</p>
 
-If a configuration option is not found in the project's <code>.buckconfig</code>, it will fall
-back to a <code>.buckconfig</code> file and <code>.buckconfig.d</code> directory in your home
-directory. Each of those has the same format as a <code>.buckconfig</code> file but will have
-any settings overridden by project-specific configurations. If you have build issues, make sure
-that there is nothing in your <code>.buckconfig</code> or <code>.buckconfig.d</code> that could
-be conflicting with the project you're trying to build.
+<p>
+Buck supports the following locations for additional <code>.buckconfig</code> files 
+and <code>.buckconfig.d</code> directories:
+</p>
+
+<ol>
+
+  <li>
+    The root directory of your Buck project. That is, you can locate 
+    a <code>.buckconfig.d</code> directory in the same location 
+    as <code>.buckconfig.local</code> and the primary <code>.buckconfig</code>. 
+  </li>
+
+  <li>
+    The current user's home directory which, on Unix-like systems, is
+    available from the <code>HOME</code> environment variable or through
+    the <code>~</code> symbol.
+  </li>
+
+  <li>
+    The system directory <code>/etc/</code>.
+  </li>
+
+</ol>
+
+
+<p>
+Buck treats <em>any</em> file&mdash;irrespective of name&mdash;in a <code>.buckconfig.d</code> directory 
+as a Buck configuration file, provided that it adheres to <code>.buckconfig</code> syntax.
+</p>
+
+<p>
+Note that a <code>.buckconfig.d</code> directory is distinct from the 
+similarly-named <code>.buckd</code> directory which is used by 
+the {sp}{call buck.concept_link}{param page: 'buckd' /}{param name: 'Buck Daemon (<code>buckd</code>)' /}{/call}{sp}.
+</p>
+
+<p>
+For a description of how Buck resolves collisions between settings in
+these configuration files, see the 
+section {call buckconfig.section_concept_link}{param id:'config-precedence' /}{param rendered_text: 'Precedence of Buck configuration specifications' /}{/call}
+below.
+</p>
+
+<h2>Command-line control of configuration</h2>
+
+<p>
+In addition to the above configuration files, Buck supports specifying 
+additional configuration files from the Buck command line using 
+the <code>--config-file</code> parameter.
+</p>
+
+<p>
+You can also specify configuration settings <em>individually</em> on 
+the Buck command line using the <code>--config</code> (<code>-c</code>) parameter.
+Furthermore, you can aggregate these settings into <em>flag files</em> using 
+the <code>--flagfile</code> parameter. A flag file provides similar
+functionality to a configuration file but uses a different syntax.
+Flag files are sometimes called <em>mode files</em> or <em>at</em> (<code>@</code>) files.
+</p>
+
+<p>
+For more information about the <code>--config-file</code> and <code>--flagfile</code> parameters, 
+see the {call buck.cmd_link}{param name: 'common_parameters' /}{param
+rendered_text: '<strong>Common Parameters</strong>' /}{/call} topic.
+</p>
+
+
+{call buckconfig.section_concept_h2}{param id:'config-precedence' /}{param title:'Precedence of Buck configuration specifications' /}{/call}
+
+<p>
+The following list shows the order of precedence for how Buck interprets
+its configuration specifications. Settings specified using a method closer 
+to the top of the list have higher precedence and will override those lower 
+on the list. For example, the <code>.buckconfig</code> file in the project directory
+overrides a <code>.buckconfig</code> file in the user's <code>HOME</code> directory.
+</p>
+
+<ol>
+<li>
+Configuration specified on the command line using <code>--config</code> (<code>-c</code>), <code>--config-file</code> and <code>--flag-file</code>. 
+Configuration specified later on the command line overrides configuration specified earlier.
+</li>
+<li><code>.buckconfig.local</code> in the project directory.</li>
+<li><code>.buckconfig</code> in the project directory.</li>
+<li><code>.buckconfig</code> in the <code>HOME</code> directory.</li>
+<li>Files in a <code>.buckconfig.d</code> subdirectory of the project directory, irrespective of filename.</li>
+<li>Files in a <code>.buckconfig.d</code> subdirectory of the <code>HOME</code> directory, irrespective of filename.</li>
+<li><code>.buckconfig</code> in the <code>/etc/</code> directory.</li>
+<li>Files in a <code>.buckconfig.d</code> subdirectory of the <code>/etc/</code> directory, irrespective of filename.</li>
+</ol>
+
+<p>
+Files in a <code>.buckconfig.d</code> directory have precedence
+according to the lexicographical order of their file names. 
+Files <em>later</em> in the lexicographical order have precedence 
+over files earlier in that order.
+</p>
+
+
+<h2>Configuration files can include other files</h2>
+
+<p>
+Any of the configuration files that we've discussed so far can also
+include by reference other files that contain configuration information.
+These included files can contain complete <code>.buckconfig</code> sections 
+or they can contain a group of key name/value pairs that constitute part
+of a section. In this second use case, you'll need to ensure that 
+the <em>included</em> file is referenced beneath the appropriate section 
+in the <em>including</em> file. Because of this additional complexity, 
+we recommend that you include only files that contain complete sections.
+</p>
+
+<p>
+<strong>Note:</strong> Inclusion of files is a Buck-specific extension
+to the INI file parser that Buck uses. Therefore, if you use this
+feature, your Buck configuration files will probably not be parsable by
+other more-generic INI file parsers.
+</p>
+
+<p>
+The syntax to include a file is
+<p>
+<pre>
+{literal}
+&lt;file:<em>path-to-included-file</em>>
+{/literal}
+</pre>
+</p>
+
+<p>
+where <em>path-to-included-file</em> is either a relative path from the
+including file (recommended) or an absolute path from the root of the
+file system.  
+</p>
+
+<p>
+You can also specify that the file should be included only if it exists
+by prefixing with a question mark (<code>?</code>). 
+</p>
+
+<p>
+<pre>
+{literal}
+&lt;?file:<em>path-to-included-file</em>>
+{/literal}
+</pre>
+</p>
+
+<p>
+If you use this prefix, it is not an error condition if the file does 
+not exist; Buck just silently continues to process the rest of the 
+configuration file.
+</p>
+
+<p>
+In the following example, the <code>.buckconfig</code> file includes
+the file <code>cxx-other-platform.include</code> which exists in the
+subdirectory <code>cxx-other-platform</code>. 
+The <code>.buckconfig</code> file will also include the 
+file <code>future-platform</code> from the directory <code>future-platform.include</code> if 
+that file exists.
+</p>
+
+<p>
+<pre>
+{literal}
+#
+# .buckconfig
+#
+[cxx]
+  cxxppflags="-D MYMACRO=\"Buck\""
+
+&lt;file:cxx-other-platform/cxx-other-platform.include>
+
+&lt;?file:future-platform/future-platform.include>
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+#
+# cxx-other-platform.include
+#
+[cxx#other_platform]
+  cxxppflags="-D MYMACRO=\"Watchman\""
+{/literal}
+</pre>
+</p>
+
 
 <h2>Sections</h2>
 
+<p>
 The following sections are recognized by Buck:
+</p>
 
 <p>
 
@@ -1161,11 +1454,16 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
   {param name: 'http_client_tls_cert' /}
   {param example_value: '/etc/pki/client.crt' /}
   {param description}
-    The path to a PEM encoded client X.509 TLS certificate that should be used for any http requests to a remote cache.
-    This is used when http_mode settings are one of "http" or "thrift_over_http", and operates on both read and write connections.
-    This can be useful within a server to restrict access to a write path, log which users are writing which artifacts, and generally authenticate cache clients.
+    <p>
+    The path to a PEM encoded client X.509 TLS certificate that should be used for any HTTP requests to a remote cache.
+    This is used when {call buckconfig.http_mode /} settings are one of <code>http</code> or <code>thrift_over_http</code>, and operates on both read and write connections.
+  </p>
 
-    <p>Note: http_client_tls_cert must be set for this setting to be used.</p>
+    <p>
+    This can be useful within a server to restrict access to a write path, log which users are writing which artifacts, and generally authenticate cache clients.
+    </p>
+
+    <p><strong>Note:</strong> <code>http_client_tls_key</code> must be set for this setting to be used.</p>
   {/param}
 {/call}
 
@@ -1174,11 +1472,16 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
   {param name: 'http_client_tls_key' /}
   {param example_value: '/etc/pki/client.key' /}
   {param description}
-    The path to a PEM encoded PKCS#8 key that should be used for any http requests to a remote cache.
-    This is used when http_mode settings are one of "http" or "thrift_over_http", and operates on both read and write connections.
-    This can be useful within a server to restrict access to a write path, log which users are writing which artifacts, and generally authenticate cache clients.
+    <p>
+    The path to a PEM encoded PKCS#8 key that should be used for any HTTP requests to a remote cache.
+    This is used when {call buckconfig.http_mode /} settings are one of <code>http</code> or <code>thrift_over_http</code>, and operates on both read and write connections.
+    </p>
 
-    <p>Note: http_client_tls_cert must be set for this setting to be used.</p>
+    <p>
+    This can be useful within a server to restrict access to a write path, log which users are writing which artifacts, and generally authenticate cache clients.
+    </p>
+
+    <p><strong>Note:</strong> <code>http_client_tls_cert</code> must be set for this setting to be used.</p>
   {/param}
 {/call}
 
@@ -1672,9 +1975,59 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
   {param name: 'cxx' /}
   {param description}
     <p>
-      This section configures the paths to the C++ and C toolchains' binaries and the default flags
-      to pass to all invocations of them.
+      This section configures the paths to the C and C++  toolchains'
+      binaries and the default flags to pass to all invocations of them.
     </p>
+
+    <h4>C/C++ platform flavors in <code>.buckconfig</code></h4>
+    <p>
+      Buck enables you to create additional platform <em>flavors</em> for 
+      C/C++ in <code>.buckconfig</code>. A platform flavor groups together a set of
+      configuration parameters, which you can then reference at build time.
+    </p>
+    <p>
+      To create a new C/C++ platform flavor, add a section with the header 
+    </p>
+
+<p>
+<pre class="prettyprint">
+{literal}
+[cxx#<i>flavor</i>]
+{/literal}
+</pre>
+</p>
+
+    <p>
+      to <code>.buckconfig</code>. 
+    </p>
+
+    <p>
+      If you invoke Buck with the specified <em>flavor</em> appended 
+      to the {sp}{call buck.build_target /}, Buck uses the values in 
+      this section instead of those in {sp}<code>[cxx]</code>.
+      For example, to build with the values 
+      in {sp}<code>[cxx#my-custom-flavor]</code> instead of <code>[cxx]</code>,
+      you could invoke Buck using the following command:
+    </p>
+
+<p>
+<pre class="prettyprint">
+{literal}
+$ buck build app#my-custom-flavor
+{/literal}
+</pre>
+</p>
+
+    <p>
+      You can also use these platform flavors, in the <code>platform_*</code> arguments 
+      of the {call buck.ruleLink}{param name : 'cxx_binary' /}{/call} and {call buck.ruleLink}{param name : 'cxx_library' /}{/call} rules.
+    </p>
+
+    <p>
+      The <a href="https://github.com/fbsamples/bucksamples/tree/master/hello-buck-cxx">Buck sample for C++</a> demonstrates 
+      how to use a custom platform flavor.
+    </p>
+
   {/param}
 {/call}
 
@@ -1941,41 +2294,103 @@ cxx_library(
 {call buckconfig.entry}
   {param section: 'cxx' /}
   {param name: 'should_remap_host_platform' /}
-  {param example_value: 'true' /}
   {param description}
     <p>
-    Whether the <code>default</code> flavor should be remapped to the
-    {sp}<a href="#cxx.host_platform"><code>host_platform</code></a>.
-    If <code>host_platform</code> is not set, Buck will fall back to the
-    inferred host platform.
+      Specifies whether the <code>default</code> flavor should be remapped to the value of 
+      the {call buckconfig.host_platform /} configuration parameter.
+    </p>
+
+<p>
+<pre>
+{literal}
+[cxx]
+  should_remap_host_platform = true
+{/literal}
+</pre>
+</p>
+
+    <p>
+      Default is <code>false</code>.
     </p>
 
     <p>
-    Default is <code>false</code>.
+      Because Buck is designed for cross-platform development, Buck
+      normally ignores the host platform when building a target. For
+      example, Buck normally builds the same Linux target irrespective
+      of whether Buck itself is running on, say, Linux or macOS. 
+      The <code>should_remap_host_platform</code> configuration parameter 
+      enables you to change Buck's behavior so that Buck's target
+      platform is the host platform on which Buck is running.
     </p>
+
   {/param}
 {/call}
 
 {call buckconfig.entry}
   {param section: 'cxx' /}
   {param name: 'host_platform' /}
-  {param example_value: 'linux-x86_64' /}
   {param description}
     <p>
-    Override the inferred <code>host_platform</code> for build rules. Unused unless
-    {sp}<a href="#cxx.should_remap_host_platform"><code>should_remap_host_platform</code></a>{sp}
-    is also set to true.
+      Specifies the host platform to use 
+      if {call buckconfig.should_remap_host_platform /} is <code>true</code>.  
     </p>
 
     <p>
-    Default is inferred based on the local computer from one of
-    <ul>
-      <li><code>LINUX</code></li>
-      <li><code>MACOS</code></li>
-      <li><code>FREEBSD</code></li>
-      <li><code>WINDOWS</code></li>
-    </ul>
+      The value that you specify could be one of Buck's internal platform
+      flavors, such as <code>linux-x86_64</code> or <code>macosx-x86_64</code>:
     </p>
+
+<p>
+<pre>
+{literal}
+[cxx]
+  host_platform = linux-x86_64
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+[cxx]
+  host_platform = macosx-x86_64
+{/literal}
+</pre>
+</p>
+
+<p>
+or the value could be a custom platform flavor:
+</p>
+
+<p>
+<pre>
+{literal}
+[cxx]
+  host_platform = my-custom-flavor
+{/literal}
+</pre>
+</p>
+
+    <p>
+      If <code>[cxx].should_remap_host_platform</code> is <code>true</code>,
+      but <code>host_platform</code> is unspecified, then Buck infers
+      the host platform from the local computer to be one of the following values:
+    </p>
+
+    <ul>
+      <li><code>linux-x86_64</code> (Linux)</li>
+      <li><code>macosx-x86_64</code> (macOS)</li>
+      <li><code>freebsd-x86_64</code> (FreeBSD)</li>
+      <li><code>windows-x86_64</code> (Windows)</li>
+    </ul>
+
+
+    <p>
+      If <code>[cxx].should_remap_host_platform</code> is 
+      unset&mdash;or explicitly set to <code>false</code>&mdash;then 
+      Buck ignores the value of <code>host_platform</code></a>{sp}.
+    </p>
+
   {/param}
 {/call}
 
@@ -3566,6 +3981,17 @@ Pkg.Revision = 13.1.3345770
 
 {call buckconfig.entry}
   {param section: 'project' /}
+  {param name: 'shared_libraries_in_bundles' /}
+  {param example_value: 'false' /}
+  {param description}
+    When using xcode project, for projects that depend on a library, if set to <code>'true'</code>,
+    if that library is the 'binary' of a bundle, the bundle will replace the library in the Xcode
+    linking phase
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'project' /}
   {param name: 'motd' /}
   {param example_value: '"DO NOT BREAK THE BUILD"' /}
   {param description}
@@ -4201,6 +4627,15 @@ buck = .
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'test' /}
+  {param name: 'threads' /}
+  {param example_value: '5' /}
+  {param description}
+    Specify number of threads used when running test.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'thrift' /}
   {param description}
@@ -4397,6 +4832,30 @@ buck = .
     Valid values are ENABLED, DISABLED, and AUTO. By default, this is set to AUTO
     which will take OS, terminal settings and other things into account. In most
     interactive cases, it will be enabled.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'warn_on_config_file_overrides' /}
+  {param example_value: 'false' /}
+  {param description}
+    Whether to display a warning when using configuration overrides from
+    {sp}<code>.buckconfig.local</code> or any of the files mentioned in {call buckconfig.section_concept_link}{param id:'config-precedence' /}{param rendered_text: 'Precedence of Buck configuration specifications' /}{/call} This is true by default.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'warn_on_config_file_overrides_ignored_files' /}
+  {param example_value: 'experiments,system' /}
+  {param description}
+    <p>A comma-separated list of names of configuration files that should be ignored.</p>
+
+    By default, Buck prints a warning if settings are in use from any of the files in {call buckconfig.section_concept_link}{param id:'config-precedence' /}{param rendered_text: 'Precedence of Buck configuration specifications' /}{/call}
+    Sometimes, however, a user should not be alerted about specific files. For example, there may be global Buck settings in <code>/etc/buckconfig.d/system</code> that
+    are managed by an IT organization, not the user, and the warning would just be ignored. In this case, this setting could be set to <code>system</code>
+    so that <code>/etc/buckconfig.d/system</code> being present would not elicit a warning.
   {/param}
 {/call}
 

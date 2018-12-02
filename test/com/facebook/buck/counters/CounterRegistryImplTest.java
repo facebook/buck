@@ -67,7 +67,6 @@ public class CounterRegistryImplTest {
   }
 
   @Before
-  @SuppressWarnings("unchecked")
   public void setUp() {
     this.mockFuture = new FakeScheduledFuture<>();
     this.eventBus = BuckEventBusForTests.newInstance();

@@ -270,7 +270,7 @@ public class DistBuildPostBuildAnalysis {
 
     public abstract Optional<String> getRuleType();
 
-    public abstract Long getWallMillisDuration();
+    public abstract long getWallMillisDuration();
 
     public abstract String getRuleKey();
 

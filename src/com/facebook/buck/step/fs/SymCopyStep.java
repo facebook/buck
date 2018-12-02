@@ -52,8 +52,7 @@ public class SymCopyStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     for (Path source : roots) {
       Preconditions.checkArgument(!source.isAbsolute() && filesystem.exists(source));
       filesystem.walkRelativeFileTree(source, new SymCopyFileVisitor(source, dest));

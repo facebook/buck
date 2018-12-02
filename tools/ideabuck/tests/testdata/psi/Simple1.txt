@@ -19,6 +19,7 @@ Buck File
                         BuckSingleExpressionImpl(SINGLE_EXPRESSION)
                           BuckPrimaryWithSuffixImpl(PRIMARY_WITH_SUFFIX)
                             BuckPrimaryImpl(PRIMARY)
-                              PsiElement(BuckTokenType.SINGLE_QUOTED_STRING)('':simple'')
+                              BuckStringImpl(STRING)
+                                PsiElement(BuckTokenType.SINGLE_QUOTED_STRING)('':simple'')
                       PsiElement(BuckTokenType.,)(',')
                     PsiElement(BuckTokenType.))(')')

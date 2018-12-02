@@ -70,7 +70,7 @@ public class ConstructorArgMarshallerImmutableTest {
   @Before
   public void setUpInspector() {
     basePath = Paths.get("example", "path");
-    marshaller = new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
+    marshaller = new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     filesystem = new FakeProjectFilesystem();
   }
 
@@ -623,7 +623,7 @@ public class ConstructorArgMarshallerImmutableTest {
   @Test
   public void populateFromCoercedAttributesThrowsOnSelectorList() {
     SelectorList<String> selectorList =
-        new SelectorList<>(new IdentityTypeCoercer<>(String.class), Collections.emptyList());
+        new SelectorList<>(new StringTypeCoercer(), Collections.emptyList());
 
     expected.expect(IllegalArgumentException.class);
     expected.expectMessage("Attribute \"string\" is not resolved");

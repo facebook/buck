@@ -206,13 +206,13 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void pattern() throws Exception {
+  public void pattern() {
     assertEquals("pattern:string(abcd)", stringify(new WithPattern()));
   }
 
   @Override
   @Test
-  public void anEnum() throws Exception {
+  public void anEnum() {
     assertEquals(
         "type:string(GOOD)\n" + "otherType:Optional<\n" + "  string(BAD)\n" + ">",
         stringify(new WithEnum()));
@@ -220,7 +220,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void nonHashableSourcePathContainer() throws Exception {
+  public void nonHashableSourcePathContainer() {
     assertEquals(
         "container:SourcePath(/project/root/some/path)",
         stringify(new WithNonHashableSourcePathContainer()));
@@ -274,7 +274,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void supplier() throws Exception {
+  public void supplier() {
     assertEquals(
         "stringSupplier:string(string)\n" + "weakPath:SourcePath(/project/root/some.path)",
         stringify(new WithSupplier()));
@@ -282,7 +282,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void nullable() throws Exception {
+  public void nullable() {
     assertEquals(
         "nullString:null\n" + "nullPath:null\n" + "nonNullPath:SourcePath(/project/root/some.path)",
         stringify(new WithNullable()));
@@ -290,7 +290,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void either() throws Exception {
+  public void either() {
     assertEquals(
         "leftString:boolean(true)string(left)\n"
             + "rightPath:boolean(false)SourcePath(/project/root/some.path)",
@@ -299,13 +299,13 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void excluded() throws Exception {
+  public void excluded() {
     assertEquals("excluded:\n" + "nullNotAnnoted:", stringify(new WithExcluded()));
   }
 
   @Override
   @Test
-  public void immutables() throws Exception {
+  public void immutables() {
     assertEquals(
         "tupleInterfaceData:com.facebook.buck.rules.modern.impl.TupleInterfaceData<\n"
             + "  first:SourcePath(/project/root/first.path)\n"
@@ -328,13 +328,13 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void stringified() throws Exception {
+  public void stringified() {
     assertEquals("stringified:", stringify(new WithStringified()));
   }
 
   @Override
   @Test
-  public void wildcards() throws Exception {
+  public void wildcards() {
     assertEquals(
         "path:Optional.empty()\n"
             + "appendables:List<\n"

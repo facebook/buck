@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 /** Creates {@link TargetNode} from {@link RawTargetNode}. */
 public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory<RawTargetNode> {
@@ -148,6 +149,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   }
 
   @SuppressWarnings("unchecked")
+  @Nullable
   private <T> T configureAttributeValue(
       SelectableConfigurationContext configurationContext,
       SelectorListResolver selectorListResolver,

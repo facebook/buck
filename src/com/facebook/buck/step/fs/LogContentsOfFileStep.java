@@ -40,8 +40,7 @@ public class LogContentsOfFileStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
 
     if (LOG.isLoggable(level)) {
       String contents = Files.toString(absolutePath.toFile(), StandardCharsets.UTF_8);

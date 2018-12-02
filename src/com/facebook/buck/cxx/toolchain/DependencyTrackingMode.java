@@ -20,6 +20,8 @@ package com.facebook.buck.cxx.toolchain;
 public enum DependencyTrackingMode {
   /** MAKEFILE corresponds to `gcc -MD -MF depfile ...` on *nix */
   MAKEFILE,
+  /** SHOW_HEADERS corresponds to `clang/gcc -H ...` on *nix */
+  SHOW_HEADERS,
   /** SHOW_INCLUDES corresponds to `cl.exe /showIncludes ...` on windows */
   SHOW_INCLUDES,
   /** Some compilers - like ml64 - do not produce information about included files */

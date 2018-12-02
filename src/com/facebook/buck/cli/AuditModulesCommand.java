@@ -44,8 +44,7 @@ public class AuditModulesCommand extends AbstractCommand {
   private boolean generateJsonOutput;
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
 
     collectAndDumpModuleInformation(
         params.getConsole(), params.getBuckModuleManager(), generateJsonOutput);

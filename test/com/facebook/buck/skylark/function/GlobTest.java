@@ -59,7 +59,7 @@ public class GlobTest {
   private EventCollector eventHandler;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
     root = fileSystem.getPath(projectFilesystem.getRootPath().toString());
@@ -185,7 +185,8 @@ public class GlobTest {
                 NativeGlobber.create(root),
                 ImmutableMap.of(),
                 PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")),
-                eventHandler))
+                eventHandler,
+                ImmutableMap.of()))
         .setup(env);
     env.setup(
         "glob", FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, "glob"));

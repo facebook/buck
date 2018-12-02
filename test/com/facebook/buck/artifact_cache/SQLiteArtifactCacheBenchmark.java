@@ -75,7 +75,7 @@ public class SQLiteArtifactCacheBenchmark {
   private ListeningExecutorService executor;
 
   @Before
-  public void setUp() throws InterruptedException, IOException, SQLException {
+  public void setUp() throws IOException, SQLException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot());
 
     emptyFile = tmpDir.newFile(".empty");

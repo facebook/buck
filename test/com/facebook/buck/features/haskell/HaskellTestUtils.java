@@ -24,9 +24,9 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -102,7 +102,7 @@ class HaskellTestUtils {
     ExecutableFinder executableFinder = new ExecutableFinder();
     Optional<Path> compilerOptional =
         executableFinder.getOptionalExecutable(
-            Paths.get("ghc"), ImmutableMap.copyOf(System.getenv()));
+            Paths.get("ghc"), EnvVariablesProvider.getSystemEnv());
     assumeTrue(compilerOptional.isPresent());
 
     // Find the major version of the haskell compiler.

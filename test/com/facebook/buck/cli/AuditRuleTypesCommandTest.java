@@ -29,7 +29,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,7 +64,7 @@ public class AuditRuleTypesCommandTest {
       ImmutableList.of(new SomeBuildRuleDescription(), new AnotherBuildRuleDescription());
 
   @Before
-  public void setUp() throws IOException, InterruptedException {}
+  public void setUp() {}
 
   @Test
   public void testBuildInfoPrintedInJsonFormat() throws Exception {

@@ -17,10 +17,11 @@
 package com.facebook.buck.testutil.integration;
 
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.facebook.nailgun.NGClientDisconnectReason;
+import com.facebook.nailgun.NGClientListener;
+import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
-import com.martiansoftware.nailgun.NGClientDisconnectReason;
-import com.martiansoftware.nailgun.NGClientListener;
-import com.martiansoftware.nailgun.NGContext;
 import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class TestContext extends NGContext implements Closeable {
 
   /** Simulates client that never disconnects, with normal system environment. */
   public TestContext() {
-    this(ImmutableMap.copyOf(System.getenv()), createNoOpStream(), 0);
+    this(EnvVariablesProvider.getSystemEnv(), createNoOpStream(), 0);
   }
 
   /** Simulates client that never disconnects, with given environment. */

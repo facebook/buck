@@ -178,8 +178,7 @@ public class InstallCommandIntegrationTest {
   }
 
   @Test
-  public void appleBundleInstallsInDeviceWithHelperAsPath()
-      throws IOException, InterruptedException {
+  public void appleBundleInstallsInDeviceWithHelperAsPath() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(FakeAppleDeveloperEnvironment.supportsBuildAndInstallToDevice());
 
@@ -199,8 +198,7 @@ public class InstallCommandIntegrationTest {
   // Disabled until fbsimctl builds properly with Buck
   @Ignore
   @Test
-  public void appleBundleInstallsInDeviceWithHelperAsTarget()
-      throws IOException, InterruptedException {
+  public void appleBundleInstallsInDeviceWithHelperAsTarget() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(FakeAppleDeveloperEnvironment.supportsBuildAndInstallToDevice());
 
@@ -247,7 +245,7 @@ public class InstallCommandIntegrationTest {
     result.assertSuccess();
   }
 
-  @Test (timeout = 150000)
+  @Test(timeout = 150000)
   public void appleBundleInstallsAndRunsInTVSimulatorWithDwarfDebugging()
       throws IOException, InterruptedException {
     assumeTrue(

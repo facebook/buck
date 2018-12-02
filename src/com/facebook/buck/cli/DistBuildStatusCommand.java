@@ -25,7 +25,6 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import java.io.IOException;
 
 public class DistBuildStatusCommand extends AbstractDistBuildCommand {
   @Override
@@ -39,8 +38,7 @@ public class DistBuildStatusCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     StampedeId stampedeId = getStampedeId();
     Console console = params.getConsole();
     ObjectMapper objectMapper =

@@ -160,7 +160,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(getBuckEventBus(), "set_up_adb_call")) {
       devices = getDevices(quiet);
-      if (devices.size() == 0) {
+      if (devices.isEmpty()) {
         throw new HumanReadableException("Didn't find any attached Android devices/emulators.");
       }
     }

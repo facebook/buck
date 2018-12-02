@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.config;
 
 import com.intellij.openapi.project.Project;
+import java.util.Arrays;
 import java.util.Optional;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -33,9 +34,10 @@ public class BuckProjectSettingsProviderTest {
     Project project = EasyMock.createMock(Project.class);
     EasyMock.expect(project.getBasePath()).andReturn("/path/to/project").anyTimes();
     EasyMock.replay(buckExecutableDetector, project);
+    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider(project);
 
     BuckProjectSettingsProvider projectSettings =
-        new BuckProjectSettingsProvider(project, buckExecutableDetector);
+        new BuckProjectSettingsProvider(project, buckCellSettingsProvider, buckExecutableDetector);
 
     projectSettings.setAdbExecutableOverride(Optional.empty());
     Assert.assertEquals(
@@ -60,9 +62,10 @@ public class BuckProjectSettingsProviderTest {
     Project project = EasyMock.createMock(Project.class);
     EasyMock.expect(project.getBasePath()).andReturn("/path/to/project").anyTimes();
     EasyMock.replay(buckExecutableDetector, project);
+    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider(project);
 
     BuckProjectSettingsProvider projectSettings =
-        new BuckProjectSettingsProvider(project, buckExecutableDetector);
+        new BuckProjectSettingsProvider(project, buckCellSettingsProvider, buckExecutableDetector);
 
     projectSettings.setBuckExecutableOverride(Optional.empty());
     Assert.assertEquals(
@@ -75,5 +78,30 @@ public class BuckProjectSettingsProviderTest {
         "Should use project buck when overridden",
         projectBuck,
         projectSettings.resolveBuckExecutable());
+  }
+
+  @Test
+  public void migrateCellPrefsOnLoadState() {
+    Project project = EasyMock.createMock(Project.class);
+    BuckExecutableDetector buckExecutableDetector =
+        EasyMock.createMock(BuckExecutableDetector.class);
+    EasyMock.replay(project, buckExecutableDetector);
+
+    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider(project);
+    BuckProjectSettingsProvider.State state = new BuckProjectSettingsProvider.State();
+    BuckCell cell1 = new BuckCell().withName("one").withRoot("$PROJECT_DIR$/one");
+    BuckCell cell2 = new BuckCell().withName("two").withRoot("$PROJECT_DIR$/two");
+    state.cells = Arrays.asList(cell1, cell2);
+
+    BuckProjectSettingsProvider projectSettings =
+        new BuckProjectSettingsProvider(project, buckCellSettingsProvider, buckExecutableDetector);
+    projectSettings.loadState(state);
+    Assert.assertEquals(
+        "loadState() should have migrated cell settinsg to the BuckCellSettingsProvider",
+        Arrays.asList(cell1, cell2),
+        buckCellSettingsProvider.getCells());
+    Assert.assertNull(
+        "BuckProjectSettingsProvider's state should no longer contain cell info",
+        projectSettings.getState().cells);
   }
 }

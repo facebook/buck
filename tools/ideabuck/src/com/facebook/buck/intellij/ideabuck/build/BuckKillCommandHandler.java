@@ -24,9 +24,15 @@ import com.intellij.openapi.vfs.VirtualFile;
 
 public class BuckKillCommandHandler extends BuckCommandHandler {
 
+  /** @deprecated Use {@link BuckKillCommandHandler(Project, BuckCommand)}. */
+  @Deprecated
   public BuckKillCommandHandler(
       final Project project, final VirtualFile root, final BuckCommand command) {
     super(project, VfsUtil.virtualToIoFile(root), command, true);
+  }
+
+  public BuckKillCommandHandler(Project project, BuckCommand command) {
+    super(project, command, true);
   }
 
   @Override

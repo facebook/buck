@@ -18,7 +18,6 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.util.ExitCode;
-import java.io.IOException;
 
 /** Default implementation of some methods in {@link DistBuildModeRunner}. */
 public abstract class AbstractDistBuildModeRunner implements DistBuildModeRunner {
@@ -29,7 +28,7 @@ public abstract class AbstractDistBuildModeRunner implements DistBuildModeRunner
    */
   @Override
   public ExitCode runWithHeartbeatServiceAndReturnExitCode(DistBuildConfig config)
-      throws InterruptedException, IOException {
+      throws Exception {
     try (HeartbeatService service = new HeartbeatService(config.getHeartbeatServiceRateMillis())) {
       return runAndReturnExitCode(service);
     }

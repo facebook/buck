@@ -56,6 +56,9 @@ public class JsBundleGenruleBuilder
     if (options.rewriteMisc) {
       getArgForPopulating().setRewriteMisc(true);
     }
+    if (options.rewriteDepsFile) {
+      getArgForPopulating().setRewriteDepsFile(true);
+    }
     if (options.skipResources) {
       getArgForPopulating().setSkipResources(true);
     }
@@ -75,6 +78,7 @@ public class JsBundleGenruleBuilder
     BuildTarget jsBundle;
     boolean rewriteSourcemap = false;
     boolean rewriteMisc = false;
+    boolean rewriteDepsFile = false;
     boolean skipResources = false;
     @Nullable public StringWithMacros cmd = null;
     @Nullable private String bundleName;
@@ -91,6 +95,11 @@ public class JsBundleGenruleBuilder
 
     public Options rewriteMisc() {
       rewriteMisc = true;
+      return this;
+    }
+
+    public Options rewriteDepsFile() {
+      rewriteDepsFile = true;
       return this;
     }
 

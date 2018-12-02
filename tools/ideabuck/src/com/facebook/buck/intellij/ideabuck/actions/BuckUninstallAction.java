@@ -48,8 +48,7 @@ public class BuckUninstallAction extends BuckBaseAction {
     }
 
     // Initiate a buck uninstall
-    BuckBuildCommandHandler handler =
-        new BuckBuildCommandHandler(project, project.getBaseDir(), BuckCommand.UNINSTALL);
+    BuckBuildCommandHandler handler = new BuckBuildCommandHandler(project, BuckCommand.UNINSTALL);
     handler.command().addParameter(target);
     buildManager.runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }

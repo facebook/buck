@@ -66,7 +66,7 @@ public class PrebuiltJarSymbolsFinderTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void extractSymbolsFromBinaryJar() throws InterruptedException, IOException {
+  public void extractSymbolsFromBinaryJar() throws IOException {
     ImmutableSet<String> entries =
         ImmutableSet.of(
             "META-INF/",

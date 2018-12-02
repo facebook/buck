@@ -222,4 +222,21 @@ public class BuildTargetParserTest {
         parser.parse(backslashStr, fullyQualifiedParser, createCellRoots(null));
     assertEquals("//com/microsoft/windows", buildTarget.getBaseName());
   }
+
+  @Test
+  public void testIncludesTargetNameInMissingCellErrorMessage() {
+    Path localRepoRoot = Paths.get("/opt/local/repo");
+    CellPathResolver cellRoots =
+        DefaultCellPathResolver.of(
+            Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
+
+    exception.expect(BuildTargetParseException.class);
+    // It contains the target
+    exception.expectMessage("lclreponame//facebook/orca:assets");
+    // The invalid cell
+    exception.expectMessage("Unknown cell: lclreponame");
+    // And the suggestion
+    exception.expectMessage("localreponame");
+    parser.parse("lclreponame//facebook/orca:assets", fullyQualifiedParser, cellRoots);
+  }
 }

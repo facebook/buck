@@ -74,6 +74,12 @@ def parse_args(args):
         ),
     )
     parser.add_argument(
+        "--no-prompt-for-message",
+        help="If set, use a default message rather than prompting for a message",
+        action="store_false",
+        dest="prompt_for_message",
+    )
+    parser.add_argument(
         "--no-build-deb",
         dest="build_deb",
         action="store_false",
@@ -367,7 +373,11 @@ def main():
             release = get_release_for_tag(args.repository, github_token, version_tag)
         else:
             release = create_new_release(
-                args.repository, github_token, version_tag, args.release_message
+                args.repository,
+                github_token,
+                version_tag,
+                args.release_message,
+                args.prompt_for_message,
             )
         if args.output_dir:
             output_dir = args.output_dir

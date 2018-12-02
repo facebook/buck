@@ -17,7 +17,9 @@
 package com.facebook.buck.rules.coercer;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
@@ -33,6 +35,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -147,6 +151,99 @@ public class StringWithMacrosTypeCoercerTest {
                     Either.ofLeft("string with "),
                     Either.ofLeft("$(test arg)"),
                     Either.ofLeft(" macro")))));
+  }
+
+  @Test
+  public void testConcatCombinesStrings() throws CoerceFailedException {
+    StringWithMacrosTypeCoercer coercer =
+        StringWithMacrosTypeCoercer.from(
+            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+
+    StringWithMacros string1 =
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "string with $(test arg) macro");
+    StringWithMacros string2 =
+        coercer.coerce(
+            CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, " + another string with $(test arg) macro");
+    StringWithMacros string3 =
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, " + string");
+    StringWithMacros string4 =
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, " + string + $(test arg)");
+    StringWithMacros string5 =
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "$(test arg)");
+    StringWithMacros string6 =
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "+ string");
+    StringWithMacros string7 =
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "$(test arg)");
+    StringWithMacros string8 =
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "+ another string");
+    StringWithMacros result =
+        coercer.coerce(
+            CELL_PATH_RESOLVER,
+            FILESYSTEM,
+            BASE_PATH,
+            "string with $(test arg) macro + another string with $(test arg) macro"
+                + " + string + string + $(test arg)$(test arg)+ string$(test arg)+ another string");
+
+    assertEquals(
+        result,
+        coercer.concat(
+            Arrays.asList(string1, string2, string3, string4, string5, string6, string7, string8)));
+  }
+
+  @Test
+  public void testConcatCombinesTwoStrings() throws CoerceFailedException {
+    StringWithMacrosTypeCoercer coercer =
+        StringWithMacrosTypeCoercer.from(
+            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+
+    StringWithMacros string1 = coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "string1");
+    StringWithMacros string2 = coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "string2");
+    StringWithMacros result =
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "string1string2");
+
+    assertEquals(result, coercer.concat(Arrays.asList(string1, string2)));
+  }
+
+  @Test
+  public void testConcatOfOneStringReturnsTheSameString() throws CoerceFailedException {
+    StringWithMacrosTypeCoercer coercer =
+        StringWithMacrosTypeCoercer.from(
+            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+
+    StringWithMacros string1 = coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "string1");
+    StringWithMacros result = coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "string1");
+
+    assertEquals(result, coercer.concat(Collections.singleton(string1)));
+  }
+
+  @Test
+  public void testConcatOfEmptyStringReturnsEmptyString() {
+    StringWithMacrosTypeCoercer coercer =
+        StringWithMacrosTypeCoercer.from(ImmutableMap.of(), ImmutableList.of());
+
+    assertTrue(
+        coercer
+            .concat(Collections.singleton(StringWithMacros.of(ImmutableList.of())))
+            .getParts()
+            .isEmpty());
+  }
+
+  @Test
+  public void testConcatCombinesStringInTheMiddle() throws CoerceFailedException {
+    StringWithMacrosTypeCoercer coercer =
+        StringWithMacrosTypeCoercer.from(
+            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+
+    StringWithMacros string1 =
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "$(test arg) string1");
+    StringWithMacros string2 = coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "string2");
+    StringWithMacros string3 =
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "$(test arg)");
+    StringWithMacros result =
+        coercer.coerce(
+            CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "$(test arg) string1string2$(test arg)");
+
+    assertEquals(result, coercer.concat(Arrays.asList(string1, string2, string3)));
   }
 
   private static class TestMacro implements Macro {

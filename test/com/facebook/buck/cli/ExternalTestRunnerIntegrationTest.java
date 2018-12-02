@@ -16,17 +16,22 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.environment.PlatformType;
 import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.util.Arrays;
@@ -50,6 +55,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void runPass() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test", "-c", "test.external_runner=" + workspace.getPath("test_runner.py"), "//:pass");
@@ -76,6 +83,18 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
+  public void runPythonCxxAdditionalCoverage() throws IOException {
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_additional_coverage.py"),
+            "//dir:python-cxx-additional-coverage");
+    result.assertSuccess();
+    assertTrue(result.getStdout().trim().endsWith("/buck-out/gen/dir/cpp_binary"));
+  }
+
+  @Test
   public void runAdditionalCoverage() throws IOException {
     ProcessResult result =
         workspace.runBuckCommand(
@@ -89,6 +108,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void runFail() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test", "-c", "test.external_runner=" + workspace.getPath("test_runner.py"), "//:fail");
@@ -98,6 +119,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void extraArgs() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -112,39 +135,42 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void runJavaTest() throws IOException {
+    String externalTestRunner =
+        Platform.detect().getType() == PlatformType.WINDOWS ? "test_runner.bat" : "test_runner.py";
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
             "-c",
-            "test.external_runner=" + workspace.getPath("test_runner.py"),
+            "test.external_runner=" + workspace.getPath(externalTestRunner),
             "//:simple");
     result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        Matchers.matchesPattern(
-            Joiner.on(System.lineSeparator())
-                    .join(
-                        "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
-                        "<testcase name=\"SimpleTest\" runner_capabilities=\"simple_test_selector\">",
-                        "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest\" "
-                            + "time=\"\\d*\" type=\"SUCCESS\">",
-                        "    <stdout>passed!",
-                        "</stdout>",
-                        "  </test>",
-                        "</testcase>",
-                        "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
-                        "<testcase name=\"SimpleTest2\" runner_capabilities=\"simple_test_selector\">",
-                        "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest2\" "
-                            + "time=\"\\d*\" type=\"SUCCESS\">",
-                        "    <stdout>passed!",
-                        "</stdout>",
-                        "  </test>",
-                        "</testcase>")
-                + System.lineSeparator()));
+    String expected =
+        Joiner.on(System.lineSeparator())
+                .join(
+                    "(?s).*<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
+                    "<testcase name=\"SimpleTest\" runner_capabilities=\"simple_test_selector\">",
+                    "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest\" "
+                        + "time=\"\\d*\" type=\"SUCCESS\">",
+                    "    <stdout>passed!",
+                    "</stdout>",
+                    "  </test>",
+                    "</testcase>",
+                    "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
+                    "<testcase name=\"SimpleTest2\" runner_capabilities=\"simple_test_selector\">",
+                    "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest2\" "
+                        + "time=\"\\d*\" type=\"SUCCESS\">",
+                    "    <stdout>passed!",
+                    "</stdout>",
+                    "  </test>",
+                    "</testcase>")
+            + System.lineSeparator();
+    assertThat(result.getStdout(), Matchers.matchesPattern(expected));
   }
 
   @Test
   public void numberOfJobsIsPassedToExternalRunner() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -159,6 +185,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void numberOfJobsInExtraArgsIsPassedToExternalRunner() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -186,6 +214,8 @@ public class ExternalTestRunnerIntegrationTest {
   @Test
   public void numberOfJobsInExtraArgsWithShortNotationIsPassedToExternalRunner()
       throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -212,6 +242,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void numberOfJobsWithUtilizationRatioAppliedIsPassedToExternalRunner() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -224,5 +256,21 @@ public class ExternalTestRunnerIntegrationTest {
             "13");
     result.assertSuccess();
     assertThat(result.getStdout().trim(), is(equalTo("7")));
+  }
+
+  @Test
+  public void numberOfJobsWithTestThreadsIsPassedToExternalRunner() throws IOException {
+    // sh_test doesn't support Windows
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_echo_jobs.py"),
+            "-c",
+            "test.threads=2",
+            "//:pass");
+    result.assertSuccess();
+    assertThat(result.getStdout().trim(), is(equalTo("2")));
   }
 }

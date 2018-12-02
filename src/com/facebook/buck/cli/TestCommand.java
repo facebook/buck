@@ -458,8 +458,7 @@ public class TestCommand extends BuildCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
 
     assertArguments(params);
 
@@ -483,7 +482,7 @@ public class TestCommand extends BuildCommand {
           targetGraphAndBuildTargets =
               params
                   .getParser()
-                  .buildTargetGraphForTargetNodeSpecs(
+                  .buildTargetGraphWithoutConfigurationTargets(
                       params.getCell(),
                       getEnableParserProfiling(),
                       pool.getListeningExecutorService(),
@@ -492,6 +491,7 @@ public class TestCommand extends BuildCommand {
                                   BuildFileSpec.fromRecursivePath(
                                       Paths.get(""), params.getCell().getRoot()))
                               .withOnlyTests(true)),
+                      getExcludeIncompatibleTargets(),
                       parserConfig.getDefaultFlavorsMode());
           targetGraphAndBuildTargets =
               targetGraphAndBuildTargets.withBuildTargets(ImmutableSet.of());
@@ -503,7 +503,7 @@ public class TestCommand extends BuildCommand {
           targetGraphAndBuildTargets =
               params
                   .getParser()
-                  .buildTargetGraphForTargetNodeSpecs(
+                  .buildTargetGraphWithoutConfigurationTargets(
                       params.getCell(),
                       getEnableParserProfiling(),
                       pool.getListeningExecutorService(),
@@ -511,6 +511,7 @@ public class TestCommand extends BuildCommand {
                           params.getCell().getCellPathResolver(),
                           params.getBuckConfig(),
                           getArguments()),
+                      getExcludeIncompatibleTargets(),
                       parserConfig.getDefaultFlavorsMode());
 
           LOG.debug("Got explicit build targets %s", targetGraphAndBuildTargets.getBuildTargets());
@@ -593,8 +594,8 @@ public class TestCommand extends BuildCommand {
                         params.getCell().getCellPathResolver(),
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         params.getBuckEventBus(),
-                        params.getConsole(),
-                        Objects.requireNonNull(params.getExecutors().get(ExecutorPool.REMOTE))),
+                        Objects.requireNonNull(params.getExecutors().get(ExecutorPool.REMOTE)),
+                        params.getTraceInfoProvider()),
                     pool.getWeightedListeningExecutorService(),
                     new DefaultStepRunner(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),

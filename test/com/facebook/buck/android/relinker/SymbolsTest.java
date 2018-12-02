@@ -69,5 +69,13 @@ public class SymbolsTest {
     assertFalse(si.isUndefined);
     assertTrue(si.isGlobal);
     assertEquals(si.symbol, "__aeabi_unwind_cpp_pr0");
+
+    si =
+        Symbols.extractSymbolInfo(
+            "00000000002cde9c g     F .text     00000004 _ZN5folly6detail27annotate_rwlock_create_implEPVKvPKci");
+    assertNotNull(si);
+    assertTrue(si.isGlobal);
+    assertFalse(si.isUndefined);
+    assertEquals(si.symbol, "_ZN5folly6detail27annotate_rwlock_create_implEPVKvPKci");
   }
 }

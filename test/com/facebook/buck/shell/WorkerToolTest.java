@@ -86,7 +86,7 @@ public class WorkerToolTest {
   }
 
   @Test
-  public void testArgsWithLocationMacroAffectDependenciesAndExpands() throws Exception {
+  public void testArgsWithLocationMacroAffectDependenciesAndExpands() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -123,7 +123,7 @@ public class WorkerToolTest {
   }
 
   @Test
-  public void testEnvWithLocationMacroAffectDependenciesAndExpands() throws Exception {
+  public void testEnvWithLocationMacroAffectDependenciesAndExpands() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -163,7 +163,7 @@ public class WorkerToolTest {
   }
 
   @Test
-  public void testUnderlyingToolIncludesDependenciesAsInputs() throws Exception {
+  public void testUnderlyingToolIncludesDependenciesAsInputs() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildRule shBinaryRule =

@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.core.util.graph.Dot;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -91,8 +90,7 @@ public class AuditClasspathCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargetPaths.
     ImmutableSet<BuildTarget> targets =

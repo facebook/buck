@@ -107,3 +107,48 @@ zip_file(
         ":ziptastic",
     ],
 )
+
+genrule(
+    name = "copy",
+    srcs = ["cake.txt"],
+    out = "copy_out",
+    cmd = "mkdir -p $OUT && cp $SRCS $OUT",
+)
+
+zip_file(
+    name = "copy_zip",
+    srcs = [
+        ":copy",
+    ],
+)
+
+zip_file(
+    name = "zip1",
+    srcs = [
+        "cake.txt",
+    ],
+)
+
+zip_file(
+    name = "zip2",
+    srcs = [
+        "duplicates/cake.txt",
+    ],
+    flatten = True,
+)
+
+zip_file(
+    name = "overwrite_duplicates",
+    zip_srcs = [
+        ":zip1",
+        ":zip2",
+    ],
+)
+
+zip_file(
+    name = "overwrite_duplicates_in_different_order",
+    zip_srcs = [
+        ":zip2",
+        ":zip1",
+    ],
+)

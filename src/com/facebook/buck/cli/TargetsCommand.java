@@ -44,7 +44,6 @@ import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.Dot;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
@@ -60,7 +59,7 @@ import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -300,8 +299,7 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     assertArguments();
 
     try (CommandThreadManager pool =
@@ -337,7 +335,7 @@ public class TargetsCommand extends AbstractCommand {
     // referencedFiles can try to find targets based on a file, so make sure at least
     // /something/ is provided. We don't want people accidentally crawling a whole repo
     // when they didn't intend to.
-    if (getArguments().size() == 0 && this.referencedFiles.get().size() == 0) {
+    if (getArguments().isEmpty() && this.referencedFiles.get().isEmpty()) {
       throw new CommandLineException(
           "Must specify at least one build target pattern. See https://buckbuild.com/concept/build_target_pattern.html");
     }
@@ -514,7 +512,7 @@ public class TargetsCommand extends AbstractCommand {
       TargetGraphAndBuildTargets completeTargetGraphAndBuildTargets =
           params
               .getParser()
-              .buildTargetGraphForTargetNodeSpecs(
+              .buildTargetGraphWithConfigurationTargets(
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,
@@ -522,6 +520,7 @@ public class TargetsCommand extends AbstractCommand {
                       TargetNodePredicateSpec.of(
                           BuildFileSpec.fromRecursivePath(
                               Paths.get(""), params.getCell().getRoot()))),
+                  getExcludeIncompatibleTargets(),
                   parserConfig.getDefaultFlavorsMode());
       SortedMap<String, TargetNode<?>> matchingNodes =
           getMatchingNodes(params, completeTargetGraphAndBuildTargets, descriptionClasses);
@@ -559,7 +558,7 @@ public class TargetsCommand extends AbstractCommand {
   private TargetGraphAndBuildTargets filterTargetGraphAndBuildTargetsByType(
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses) {
-    if (!descriptionClasses.isPresent() || descriptionClasses.get().size() == 0) {
+    if (!descriptionClasses.isPresent() || descriptionClasses.get().isEmpty()) {
       return targetGraphAndBuildTargets;
     }
 
@@ -638,7 +637,7 @@ public class TargetsCommand extends AbstractCommand {
           TargetGraphAndBuildTargets.of(
               params
                   .getParser()
-                  .buildTargetGraphForTargetNodeSpecs(
+                  .buildTargetGraphWithConfigurationTargets(
                       params.getCell(),
                       getEnableParserProfiling(),
                       executor,
@@ -646,6 +645,7 @@ public class TargetsCommand extends AbstractCommand {
                           TargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
                                   Paths.get(""), params.getCell().getRoot()))),
+                      getExcludeIncompatibleTargets(),
                       parserConfig.getDefaultFlavorsMode())
                   .getTargetGraph(),
               ImmutableSet.of());
@@ -653,7 +653,7 @@ public class TargetsCommand extends AbstractCommand {
       targetGraphAndBuildTargets =
           params
               .getParser()
-              .buildTargetGraphForTargetNodeSpecs(
+              .buildTargetGraphWithConfigurationTargets(
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,
@@ -661,6 +661,7 @@ public class TargetsCommand extends AbstractCommand {
                       params.getCell().getCellPathResolver(),
                       params.getBuckConfig(),
                       getArguments()),
+                  getExcludeIncompatibleTargets(),
                   parserConfig.getDefaultFlavorsMode());
     }
     return params.getBuckConfig().getTargetsVersions()
@@ -834,14 +835,17 @@ public class TargetsCommand extends AbstractCommand {
     Iterator<TargetNode<?>> targetNodeIterator = targetNodes.iterator();
 
     try (PerBuildState state =
-        new PerBuildStateFactory(
+        PerBuildStateFactory.createFactory(
                 params.getTypeCoercerFactory(),
-                new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
                     params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                params.getCell().getBuckConfig(),
                 params.getWatchman(),
-                params.getBuckEventBus())
+                params.getBuckEventBus(),
+                params.getManifestServiceSupplier(),
+                params.getFileHashCache())
             .create(
                 params.getParser().getPermState(),
                 executor,

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -84,7 +85,7 @@ public class WorkerMacroArgTest {
   }
 
   @Test
-  public void testWorkerMacroArgWithNoMacros() throws MacroException, NoSuchBuildTargetException {
+  public void testWorkerMacroArgWithNoMacros() throws NoSuchBuildTargetException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     MacroHandler macroHandler =
@@ -129,7 +130,7 @@ public class WorkerMacroArgTest {
           cellNames,
           graphBuilder,
           unexpanded);
-    } catch (MacroException e) {
+    } catch (HumanReadableException e) {
       assertThat(e.getMessage(), Matchers.containsString("does not correspond to a worker_tool"));
     }
   }
@@ -137,6 +138,8 @@ public class WorkerMacroArgTest {
   @Test
   public void testWorkerMacroArgWithMacroInWrongLocation() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    WorkerToolBuilder.newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker"))
+        .build(graphBuilder);
 
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));

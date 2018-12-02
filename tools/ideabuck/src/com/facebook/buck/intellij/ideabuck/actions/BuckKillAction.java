@@ -61,8 +61,7 @@ public class BuckKillAction extends BuckBaseAction {
       BuckModule buckModule = project.getComponent(BuckModule.class);
 
       // run the buck kill command
-      BuckKillCommandHandler handler =
-          new BuckKillCommandHandler(project, project.getBaseDir(), BuckCommand.KILL);
+      BuckKillCommandHandler handler = new BuckKillCommandHandler(project, BuckCommand.KILL);
       BuckBuildManager.getInstance(project)
           .runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
     }

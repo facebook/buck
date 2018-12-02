@@ -23,8 +23,10 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.Dot;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
@@ -41,6 +43,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
@@ -74,20 +77,20 @@ public class AuditActionGraphCommand extends AbstractCommand {
   @Argument private List<String> targetSpecs = new ArrayList<>();
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     try (CommandThreadManager pool =
         new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig())); ) {
       // Create the target graph.
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets =
           params
               .getParser()
-              .buildTargetGraphForTargetNodeSpecs(
+              .buildTargetGraphWithoutConfigurationTargets(
                   params.getCell(),
                   getEnableParserProfiling(),
                   pool.getListeningExecutorService(),
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell().getCellPathResolver(), params.getBuckConfig(), targetSpecs),
+                  getExcludeIncompatibleTargets(),
                   params.getBuckConfig().getView(ParserConfig.class).getDefaultFlavorsMode());
       TargetGraphAndBuildTargets targetGraphAndBuildTargets =
           params.getBuckConfig().getBuildVersions()
@@ -101,6 +104,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
               .getActionGraph(targetGraphAndBuildTargets.getTargetGraph());
       SourcePathRuleFinder ruleFinder =
           new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
       // Dump the action graph.
       if (generateDotOutput) {
@@ -116,6 +120,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
             actionGraphAndBuilder.getActionGraph(),
             actionGraphAndBuilder.getActionGraphBuilder(),
             ruleFinder,
+            pathResolver,
             includeRuntimeDeps,
             nodeView,
             params.getConsole().getStdOut());
@@ -150,6 +155,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
       ActionGraph graph,
       ActionGraphBuilder actionGraphBuilder,
       SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
       boolean includeRuntimeDeps,
       NodeView nodeView,
       OutputStream out)
@@ -161,7 +167,13 @@ public class AuditActionGraphCommand extends AbstractCommand {
       json.writeStartArray();
       for (BuildRule node : graph.getNodes()) {
         writeJsonObjectForBuildRule(
-            json, node, actionGraphBuilder, ruleFinder, includeRuntimeDeps, nodeView);
+            json,
+            node,
+            actionGraphBuilder,
+            ruleFinder,
+            pathResolver,
+            includeRuntimeDeps,
+            nodeView);
       }
       json.writeEndArray();
     }
@@ -172,6 +184,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
       BuildRule node,
       ActionGraphBuilder actionGraphBuilder,
       SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
       boolean includeRuntimeDeps,
       NodeView nodeView)
       throws IOException {
@@ -190,6 +203,11 @@ public class AuditActionGraphCommand extends AbstractCommand {
           json.writeString(dep.getFullyQualifiedName());
         }
         json.writeEndArray();
+      }
+      SourcePath sourcePathToOutput = node.getSourcePathToOutput();
+      if (sourcePathToOutput != null) {
+        Path outputPath = pathResolver.getAbsolutePath(sourcePathToOutput);
+        json.writeStringField("outputPath", outputPath.toString());
       }
     }
     if (nodeView == NodeView.Extended) {

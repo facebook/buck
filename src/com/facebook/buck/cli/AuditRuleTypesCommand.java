@@ -33,8 +33,7 @@ public class AuditRuleTypesCommand extends AbstractCommand {
   private boolean generateJsonOutput;
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     collectAndDumpBuildRuleTypesInformation(
         params.getConsole(),
         params.getKnownRuleTypesProvider().get(params.getCell()),

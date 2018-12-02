@@ -6,7 +6,7 @@
         <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="/../../buck-out/android/android/app/lib/gen" />
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="/../../buck-out/android/android/app/lib/gen" />
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="/../../android/app/lib/AndroidManifest.xml" />
-        <option name="RES_FOLDERS_RELATIVE_PATH" value="file://$MODULE_DIR$/../../buck-out/gen/android/app/lib/res#resources-symlink-tree/res" />
+        <option name="RES_FOLDERS_RELATIVE_PATH" value="/../../../buck-out/gen/android/app/lib/res#resources-symlink-tree/res" />
         <option name="LIBRARY_PROJECT" value="true" />
         <option name="PROJECT_TYPE" value="1" />
         <option name="UPDATE_PROPERTY_FILES" value="false" />

@@ -75,7 +75,7 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
   }
 
   @Override
-  public HashCode get(Path path) throws IOException {
+  public HashCode get(Path path) {
     return loadingCache.get(path.normalize()).getHashCode();
   }
 
@@ -94,7 +94,7 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
   }
 
   @Override
-  public long getSize(Path relativePath) throws IOException {
+  public long getSize(Path relativePath) {
     return sizeCache.get(relativePath.normalize());
   }
 

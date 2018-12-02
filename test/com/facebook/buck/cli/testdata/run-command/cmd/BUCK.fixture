@@ -5,7 +5,7 @@ genrule(
         "command_template.sh",
     ],
     out = "command.sh",
-    bash = "echo BUILDING && cp $SRCS $OUT && chmod +x $OUT",
+    bash = "echo 'BUILDING' && sed 's@<<CONFIG>>@{}@' $SRCS > $OUT && chmod +x $OUT".format(read_config("foo", "bar")),
 )
 
 sh_binary(

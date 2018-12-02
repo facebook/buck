@@ -29,4 +29,7 @@ public interface PathMatcher extends java.nio.file.PathMatcher {
    * this matcher.
    */
   ImmutableList<?> toWatchmanMatchQuery(Set<Capability> capabilities);
+
+  /** Returns a path or glob pattern identifying paths that should be matched by this matcher. */
+  String getPathOrGlob();
 }

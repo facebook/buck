@@ -19,6 +19,7 @@ package com.facebook.buck.remoteexecution;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.Protocol.OutputFile;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +34,8 @@ public interface RemoteExecutionService {
 
     int getExitCode();
 
+    // TODO(cjhopman): This needs a getStdout()
+
     Optional<String> getStderr();
   }
 
@@ -41,5 +44,6 @@ public interface RemoteExecutionService {
    *
    * <p>Returns an ActionResult with exit code, outputs, stdout/stderr, etc.
    */
-  ExecutionResult execute(Digest actionDigest) throws IOException, InterruptedException;
+  ListenableFuture<ExecutionResult> execute(Digest actionDigest)
+      throws IOException, InterruptedException;
 }

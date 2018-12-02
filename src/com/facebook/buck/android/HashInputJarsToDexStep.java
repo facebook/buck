@@ -78,8 +78,7 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     ImmutableList.Builder<Path> allInputs = ImmutableList.builder();
     allInputs.addAll(primaryInputsToDex.get());
     if (secondaryOutputToInputs.isPresent()) {

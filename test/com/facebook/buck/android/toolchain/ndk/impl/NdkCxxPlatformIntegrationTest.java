@@ -117,7 +117,7 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     if (AssumeAndroidPlatform.isArmAvailable()) {
       architectures = "arm, armv7, arm64, x86, x86_64";
@@ -127,7 +127,7 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Test
-  public void runtimeSupportsStl() throws InterruptedException, IOException {
+  public void runtimeSupportsStl() throws IOException {
     assumeTrue(
         "libcxx is unsupported with this ndk",
         NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
@@ -136,7 +136,7 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Test
-  public void changedPlatformTarget() throws InterruptedException, IOException {
+  public void changedPlatformTarget() throws IOException {
     assumeTrue(
         "libcxx is unsupported with this ndk",
         NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
@@ -161,8 +161,7 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Test
-  public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized()
-      throws InterruptedException, IOException {
+  public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized() throws IOException {
     String buckConfig =
         "[ndk]\n"
             + "  cpu_abis = "

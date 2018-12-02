@@ -74,8 +74,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     ImmutableSet<BuildTarget> targets =
         getArgumentsFormattedAsBuildTargets(params.getBuckConfig())
             .stream()

@@ -22,11 +22,14 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.FileExtensionMatcher;
+import com.facebook.buck.io.filesystem.GlobPatternMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +66,7 @@ public class WatchmanWatcherIntegrationTest {
     watchman =
         watchmanFactory.build(
             ImmutableSet.of(tmp.getRoot()),
-            ImmutableMap.copyOf(System.getenv()),
+            EnvVariablesProvider.getSystemEnv(),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),
             new DefaultClock(),
             Optional.empty());
@@ -76,7 +79,7 @@ public class WatchmanWatcherIntegrationTest {
 
   @Test
   public void ignoreDotFileInGlob() throws IOException, InterruptedException {
-    WatchmanWatcher watcher = createWatchmanWatcher(new PathOrGlobMatcher("**/*.swp"));
+    WatchmanWatcher watcher = createWatchmanWatcher(FileExtensionMatcher.of("swp"));
 
     // Create a dot-file which should be ignored by the above glob.
     Path path = tmp.getRoot().getFileSystem().getPath("foo/bar/.hello.swp");
@@ -92,7 +95,7 @@ public class WatchmanWatcherIntegrationTest {
 
   @Test
   public void globMatchesWholeName() throws IOException, InterruptedException {
-    WatchmanWatcher watcher = createWatchmanWatcher(new PathOrGlobMatcher("*.txt"));
+    WatchmanWatcher watcher = createWatchmanWatcher(GlobPatternMatcher.of("*.txt"));
 
     // Create a dot-file which should be ignored by the above glob.
     Path path = tmp.getRoot().getFileSystem().getPath("foo/bar/hello.txt");
@@ -113,7 +116,7 @@ public class WatchmanWatcherIntegrationTest {
 
   // Create a watcher for the given ignore paths, clearing the initial overflow event before
   // returning it.
-  private WatchmanWatcher createWatchmanWatcher(PathOrGlobMatcher... ignorePaths)
+  private WatchmanWatcher createWatchmanWatcher(PathMatcher... ignorePaths)
       throws IOException, InterruptedException {
 
     WatchmanWatcher watcher =

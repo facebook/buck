@@ -127,7 +127,7 @@ public class DistBuildControllerTest {
   private RemoteBuildRuleSynchronizer remoteBuildRuleSynchronizer;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     mockDistBuildService = EasyMock.createMock(DistBuildService.class);
     mockLogStateTracker = EasyMock.createMock(LogStateTracker.class);
     scheduler = Executors.newScheduledThreadPool(2);
@@ -264,8 +264,7 @@ public class DistBuildControllerTest {
   }
 
   @Test
-  public void testReturnsExecutionResultOnSyncPreparationFailure()
-      throws IOException, InterruptedException {
+  public void testReturnsExecutionResultOnSyncPreparationFailure() throws InterruptedException {
     BuildJobState buildJobState = createMinimalFakeBuildJobState();
 
     DistBuildController controller = createController(Futures.immediateFuture(buildJobState));

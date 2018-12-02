@@ -19,8 +19,10 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
 
@@ -62,5 +64,19 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
       return Optional.empty();
     }
     return Optional.of(coercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
+  }
+
+  @Nullable
+  @Override
+  public Optional<T> concat(Iterable<Optional<T>> elements) {
+    Iterable<Optional<T>> presentElements = Iterables.filter(elements, Optional::isPresent);
+
+    if (Iterables.isEmpty(presentElements)) {
+      return Optional.empty();
+    }
+
+    T result = coercer.concat(Iterables.transform(presentElements, Optional::get));
+
+    return result == null ? null : Optional.of(result);
   }
 }

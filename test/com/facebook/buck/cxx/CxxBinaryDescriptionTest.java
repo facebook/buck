@@ -61,11 +61,11 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.versions.ParallelVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionUniverse;
 import com.facebook.buck.versions.VersionUniverseVersionSelector;
 import com.facebook.buck.versions.VersionedAliasBuilder;
-import com.facebook.buck.versions.VersionedTargetGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -442,13 +442,14 @@ public class CxxBinaryDescriptionTest {
         VersionUniverse.of(ImmutableMap.of(depBuilder.getTarget(), Version.of("2.0")));
 
     TargetGraph versionedTargetGraph =
-        VersionedTargetGraphBuilder.transform(
+        ParallelVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
                 TargetGraphAndBuildTargets.of(
                     unversionedTargetGraph, ImmutableSet.of(builder.getTarget())),
                 new ForkJoinPool(),
-                new DefaultTypeCoercerFactory())
+                new DefaultTypeCoercerFactory(),
+                20)
             .getTargetGraph();
 
     assertThat(

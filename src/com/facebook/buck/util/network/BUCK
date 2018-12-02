@@ -11,6 +11,7 @@ java_library(
         "//src/com/facebook/buck/event/listener:listener",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/log/memory:memory",
+        "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/network/...",

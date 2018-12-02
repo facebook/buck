@@ -33,7 +33,7 @@ import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.Sl
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -69,7 +69,7 @@ public class DelegateAndGraphsInitializer {
                 () -> {
                   try {
                     return createDelegateAndGraphs();
-                  } catch (InterruptedException | IOException e) {
+                  } catch (InterruptedException e) {
                     LOG.error(
                         e, "Critical failure while creating the build engine delegate and graphs.");
                     throw new RuntimeException(e);
@@ -86,7 +86,7 @@ public class DelegateAndGraphsInitializer {
         delegateAndGraphs, x -> x.getActionGraphAndBuilder(), MoreExecutors.directExecutor());
   }
 
-  private DelegateAndGraphs createDelegateAndGraphs() throws IOException, InterruptedException {
+  private DelegateAndGraphs createDelegateAndGraphs() throws InterruptedException {
     LOG.info("Starting to preload source files.");
     StackedFileHashCaches stackedCaches = createStackedFileHashesAndPreload();
     LOG.info("Finished pre-loading source files.");
@@ -210,8 +210,9 @@ public class DelegateAndGraphsInitializer {
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             args.getKnownRuleTypesProvider(),
-            new ConstructorArgMarshaller(typeCoercerFactory),
-            new TargetNodeFactory(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(typeCoercerFactory),
+            new TargetNodeFactory(
+                typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
             args.getRuleKeyConfiguration());
 
     return new DistBuildTargetGraphCodec(
@@ -222,7 +223,6 @@ public class DelegateAndGraphsInitializer {
             return args.getParser()
                 .getTargetNodeRawAttributes(
                     args.getState().getRootCell().getCell(input.getBuildTarget()),
-                    /* enableProfiling */ false,
                     args.getExecutorService(),
                     input);
           } catch (BuildFileParseException e) {

@@ -34,7 +34,7 @@ public class RustLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
-  public void ensureRustIsAvailable() throws IOException, InterruptedException {
+  public void ensureRustIsAvailable() {
     RustAssumptions.assumeRustIsConfigured();
   }
 

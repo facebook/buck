@@ -23,6 +23,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
@@ -54,7 +55,7 @@ public class IJProjectCleaner {
 
   private final ProjectFilesystem projectFilesystem;
 
-  private final Set<File> filesToKeep = new HashSet<>();
+  private final Set<File> filesToKeep = Sets.newConcurrentHashSet();
 
   public IJProjectCleaner(ProjectFilesystem projectFilesystem) {
     this.projectFilesystem = projectFilesystem;

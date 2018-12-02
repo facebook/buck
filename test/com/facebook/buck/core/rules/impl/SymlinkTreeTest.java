@@ -514,7 +514,7 @@ public class SymlinkTreeTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void resolveDuplicateRelativePaths() throws InterruptedException, IOException {
+  public void resolveDuplicateRelativePaths() {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
@@ -540,7 +540,7 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void resolveDuplicateRelativePathsWithConflicts() throws Exception {
+  public void resolveDuplicateRelativePathsWithConflicts() {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));

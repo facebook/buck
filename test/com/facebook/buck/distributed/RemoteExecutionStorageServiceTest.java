@@ -33,7 +33,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Before;
@@ -66,7 +65,7 @@ public class RemoteExecutionStorageServiceTest {
 
   @Test
   public void testStoreAndFetchAfter()
-      throws IOException, ExecutionException, InterruptedException, TimeoutException {
+      throws IOException, ExecutionException, InterruptedException {
     ImmutableList<UploadData> allUploadData = createData("key1", "key2");
     service.batchUpdateBlobs(allUploadData);
     for (UploadData data : allUploadData) {
@@ -76,8 +75,7 @@ public class RemoteExecutionStorageServiceTest {
   }
 
   @Test
-  public void testStoreAndMissing()
-      throws IOException, ExecutionException, InterruptedException, TimeoutException {
+  public void testStoreAndMissing() throws IOException {
     ImmutableList<UploadData> allUploadData = createData("key3", "key4");
     service.batchUpdateBlobs(allUploadData);
 

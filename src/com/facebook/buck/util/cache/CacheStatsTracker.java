@@ -21,31 +21,31 @@ public interface CacheStatsTracker {
 
   CacheRequest startRequest();
 
-  Long getTotalHitCount();
+  long getTotalHitCount();
 
-  Long getTotalMissCount();
+  long getTotalMissCount();
 
-  Long getTotalMissMatchCount();
+  long getTotalMissMatchCount();
 
-  Long getTotalEvictionCount();
+  long getTotalEvictionCount();
 
-  Long getTotalInvalidationCount();
+  long getTotalInvalidationCount();
 
-  Long getTotalLoadSuccessCount();
+  long getTotalLoadSuccessCount();
 
-  Long getTotalLoadExceptionCount();
+  long getTotalLoadExceptionCount();
 
-  Long getTotalRetrievalTime();
+  long getTotalRetrievalTime();
 
-  Long getTotalLoadTime();
+  long getTotalLoadTime();
 
-  Long getTotalMissTime();
+  long getTotalMissTime();
 
-  Long getAverageRetrievalTime();
+  long getAverageRetrievalTime();
 
-  Long getAverageMissTime();
+  long getAverageMissTime();
 
-  Long getAverageLoadTime();
+  long getAverageLoadTime();
 
   void recordEviction();
 

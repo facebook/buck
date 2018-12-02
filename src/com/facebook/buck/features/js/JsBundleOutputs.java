@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.js;
 
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 
@@ -63,4 +64,10 @@ public interface JsBundleOutputs extends BuildRule {
   default SourcePath getSourcePathToMisc() {
     return JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), "misc");
   }
+
+  /**
+   * @return the {@link JsDependenciesOutputs} rule which is responsible for building the
+   *     dependencies file.
+   */
+  JsDependenciesOutputs getJsDependenciesOutputs(ActionGraphBuilder graphBuilder);
 }

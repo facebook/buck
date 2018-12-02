@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain.elf;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.ElfFile;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -54,11 +55,8 @@ public class ElfSectionHeaderTest {
     }
 
     // Verify the result.
-    try (FileChannel channel = FileChannel.open(elfPath)) {
-      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      ElfSection section = elf.getMandatorySectionByName(elfPath, ".text").getSection();
-      assertThat(section.header.sh_info, Matchers.equalTo(87L));
-    }
+    Elf elf = ElfFile.mapReadOnly(elfPath);
+    ElfSection section = elf.getMandatorySectionByName(elfPath, ".text").getSection();
+    assertThat(section.header.sh_info, Matchers.equalTo(87L));
   }
 }

@@ -83,6 +83,7 @@ public class FatJarMain {
     return cmd;
   }
 
+  @SuppressWarnings("PMD.BlacklistedDefaultProcessMethod")
   public static void main(String[] args) throws Exception {
     Class<?> clazz = FatJarMain.class;
     ClassLoader classLoader = clazz.getClassLoader();

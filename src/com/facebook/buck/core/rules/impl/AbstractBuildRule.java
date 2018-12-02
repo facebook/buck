@@ -22,10 +22,6 @@ import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider;
-import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider.ProviderKey;
-import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
-import com.facebook.buck.core.rules.provider.MissingProviderException;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.MoreSuppliers;
@@ -135,21 +131,5 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   private final int computeHashCode() {
     return this.buildTarget.hashCode();
-  }
-
-  @Override
-  public final boolean hasProviders() {
-    return false;
-  }
-
-  @Override
-  public <T extends BuildRuleInfoProvider> T getProvider(ProviderKey providerKey)
-      throws MissingProviderException {
-    throw new UnsupportedOperationException("Not yet implemented");
-  }
-
-  @Override
-  public BuildRuleInfoProviderCollection getProviderCollection() {
-    throw new UnsupportedOperationException("Not yet implemented");
   }
 }

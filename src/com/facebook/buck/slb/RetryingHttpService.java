@@ -99,8 +99,7 @@ public class RetryingHttpService implements HttpService {
         return response;
 
       } catch (IOException exception) {
-        LOG.warn(
-            exception, "encountered an exception while connecting to the service for %s", path);
+        LOG.verbose("encountered an exception while connecting to the service for %s", path);
         allExceptions.add(exception);
       }
 

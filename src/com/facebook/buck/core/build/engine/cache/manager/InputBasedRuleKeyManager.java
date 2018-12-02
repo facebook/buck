@@ -36,7 +36,6 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -117,8 +116,8 @@ public class InputBasedRuleKeyManager {
         });
   }
 
-  public ListenableFuture<Optional<Pair<BuildRuleSuccessType, CacheResult>>> checkInputBasedCaches()
-      throws IOException {
+  public ListenableFuture<Optional<Pair<BuildRuleSuccessType, CacheResult>>>
+      checkInputBasedCaches() {
     Optional<RuleKey> ruleKey;
     try (Scope ignored = buildRuleScopeManager.scope()) {
       // Calculate input-based rule key.

@@ -67,7 +67,7 @@ public class DaemonLifecycleManagerTest {
   private Clock clock;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     buckConfig = FakeBuckConfig.builder().build();
     daemonLifecycleManager = new DaemonLifecycleManager();
@@ -77,7 +77,7 @@ public class DaemonLifecycleManagerTest {
   }
 
   @Test
-  public void whenBuckConfigChangesParserInvalidated() throws IOException {
+  public void whenBuckConfigChangesParserInvalidated() {
     Object daemon =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder()
@@ -132,7 +132,7 @@ public class DaemonLifecycleManagerTest {
   }
 
   @Test
-  public void whenAndroidNdkVersionChangesParserInvalidated() throws IOException {
+  public void whenAndroidNdkVersionChangesParserInvalidated() {
 
     BuckConfig buckConfig1 =
         FakeBuckConfig.builder()
@@ -221,7 +221,7 @@ public class DaemonLifecycleManagerTest {
   }
 
   @Test
-  public void testAndroidSdkChangesParserInvalidated() throws IOException, InterruptedException {
+  public void testAndroidSdkChangesParserInvalidated() throws IOException {
     // Disable the test on Windows for now since it's failing to find python.
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
@@ -289,8 +289,7 @@ public class DaemonLifecycleManagerTest {
   }
 
   @Test
-  public void testAndroidSdkChangesParserInvalidatedWhenToolchainsPresent()
-      throws IOException, InterruptedException {
+  public void testAndroidSdkChangesParserInvalidatedWhenToolchainsPresent() throws IOException {
     // Disable the test on Windows for now since it's failing to find python.
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
@@ -368,8 +367,7 @@ public class DaemonLifecycleManagerTest {
   }
 
   @Test
-  public void testParserInvalidatedWhenToolchainFailsToCreateFirstTime()
-      throws IOException, InterruptedException {
+  public void testParserInvalidatedWhenToolchainFailsToCreateFirstTime() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
@@ -402,7 +400,7 @@ public class DaemonLifecycleManagerTest {
 
   @Test
   public void testParserInvalidatedWhenToolchainFailsToCreateAfterFirstCreation()
-      throws IOException, InterruptedException {
+      throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
@@ -433,8 +431,7 @@ public class DaemonLifecycleManagerTest {
   }
 
   @Test
-  public void testParserNotInvalidatedWhenToolchainFailsWithTheSameProblem()
-      throws IOException, InterruptedException {
+  public void testParserNotInvalidatedWhenToolchainFailsWithTheSameProblem() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
@@ -467,7 +464,7 @@ public class DaemonLifecycleManagerTest {
 
   @Test
   public void testParserNotInvalidatedWhenToolchainFailsWithTheSameProblemButNotInstantiated()
-      throws IOException, InterruptedException {
+      throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
@@ -497,8 +494,7 @@ public class DaemonLifecycleManagerTest {
   }
 
   @Test
-  public void testParserInvalidatedWhenToolchainFailsWithDifferentProblem()
-      throws IOException, InterruptedException {
+  public void testParserInvalidatedWhenToolchainFailsWithDifferentProblem() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();

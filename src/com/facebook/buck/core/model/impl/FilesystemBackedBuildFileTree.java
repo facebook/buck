@@ -18,7 +18,7 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -102,14 +102,14 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
     // When we find one, we can stop crawling anything under the directory it's in.
     ImmutableSet.Builder<Path> childPaths = ImmutableSet.builder();
     Path basePath = target.getBasePath();
-    ImmutableSet<PathOrGlobMatcher> ignoredPaths = projectFilesystem.getIgnorePaths();
+    ImmutableSet<PathMatcher> ignoredPaths = projectFilesystem.getIgnorePaths();
     try {
       projectFilesystem.walkRelativeFileTree(
           basePath,
           new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-              for (PathOrGlobMatcher ignoredPath : ignoredPaths) {
+              for (PathMatcher ignoredPath : ignoredPaths) {
                 if (ignoredPath.matches(dir)) {
                   return FileVisitResult.SKIP_SUBTREE;
                 }

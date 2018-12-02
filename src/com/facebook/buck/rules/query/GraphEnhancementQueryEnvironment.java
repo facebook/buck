@@ -39,6 +39,7 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.QueryTargetAccessor;
+import com.facebook.buck.query.RdepsFunction;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
@@ -48,7 +49,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * A query environment that can be used for graph-enhancement, including macro expansion or dynamic
@@ -65,6 +68,7 @@ import java.util.stream.Stream;
  *  intersect
  *  filter
  *  kind
+ *  rdeps
  *  set
  *  union
  * </pre>
@@ -116,7 +120,12 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
   @Override
   public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) {
-    throw new UnsupportedOperationException();
+    Preconditions.checkState(targetGraph.isPresent());
+    return StreamSupport.stream(targets.spliterator(), false)
+        .map(this::getNode)
+        .flatMap(targetNode -> targetGraph.get().getIncomingNodesFor(targetNode).stream())
+        .map(node -> QueryBuildTarget.of(node.getBuildTarget()))
+        .collect(Collectors.toSet());
   }
 
   @Override
@@ -126,12 +135,20 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         .stream()
         .map(path -> PathSourcePath.of(node.getFilesystem(), path))
         .map(QueryFileTarget::of)
-        .collect(ImmutableSet.toImmutableSet());
+        .collect(Collectors.toSet());
   }
 
   @Override
   public Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets) {
-    throw new UnsupportedOperationException();
+    Preconditions.checkState(targetGraph.isPresent());
+    return targetGraph
+        .get()
+        .getSubgraph(targets.stream().map(this::getNode).collect(Collectors.toList()))
+        .getNodes()
+        .stream()
+        .map(TargetNode::getBuildTarget)
+        .map(QueryBuildTarget::of)
+        .collect(Collectors.toSet());
   }
 
   @Override
@@ -205,7 +222,8 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
           new KindFunction(),
           new FilterFunction(),
           new LabelsFunction(),
-          new InputsFunction());
+          new InputsFunction(),
+          new RdepsFunction());
 
   @Override
   public Iterable<QueryEnvironment.QueryFunction> getFunctions() {

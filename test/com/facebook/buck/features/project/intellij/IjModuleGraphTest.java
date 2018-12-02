@@ -485,7 +485,7 @@ public class IjModuleGraphTest {
         FluentIterable.from(moduleGraph.getNodes()).filter(IjLibrary.class).first().get();
 
     assertEquals(ImmutableSet.of(rDotJavaClassPath), productModule.getExtraClassPathDependencies());
-    assertEquals(ImmutableSet.of(rDotJavaClassPath), rDotJavaLibrary.getClassPaths());
+    assertEquals(ImmutableSet.of(rDotJavaClassPath), rDotJavaLibrary.getBinaryJars());
     assertEquals(
         moduleGraph.getDependentLibrariesFor(productModule),
         ImmutableMap.of(rDotJavaLibrary, DependencyType.PROD));
@@ -647,8 +647,10 @@ public class IjModuleGraphTest {
         };
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     IjProjectConfig projectConfig =
-        IjProjectBuckConfig.create(
-            buckConfig, aggregationMode, null, "", "", false, false, false, false, true, false);
+        IjTestProjectConfig.createBuilder(buckConfig)
+            .setAggregationMode(aggregationMode)
+            .setExcludeArtifactsEnabled(false)
+            .build();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     JavaPackageFinder packageFinder =
         (buckConfig == null)

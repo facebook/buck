@@ -76,16 +76,18 @@ class DaemonLifecycleManager {
             "Shutting down and restarting daemon on config or directory graphBuilder change (%s != %s)",
             daemon.getRootCell(), rootCell);
         // Use the raw stream because otherwise this will stop superconsole from ever printing again
-        console
-            .getStdErr()
-            .getRawStream()
-            .println(
-                console
-                    .getAnsi()
-                    .asWarningText(
-                        String.format(
-                            "Shutting down and restarting buck daemon: %s",
-                            cacheCompat.toHumanReasonableError())));
+        if (console.getVerbosity().shouldPrintStandardInformation()) {
+          console
+              .getStdErr()
+              .getRawStream()
+              .println(
+                  console
+                      .getAnsi()
+                      .asWarningText(
+                          String.format(
+                              "Invalidating internal cached state: %s. This may cause slower builds.",
+                              cacheCompat.toHumanReasonableError())));
+        }
 
         Optional<WebServer> webServer;
         if (shouldReuseWebServer(rootCell)) {

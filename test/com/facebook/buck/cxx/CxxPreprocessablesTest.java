@@ -176,7 +176,7 @@ public class CxxPreprocessablesTest {
   }
 
   @Test
-  public void createHeaderSymlinkTreeBuildRuleHasNoDeps() throws Exception {
+  public void createHeaderSymlinkTreeBuildRuleHasNoDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 

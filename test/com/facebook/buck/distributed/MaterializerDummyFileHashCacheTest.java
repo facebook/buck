@@ -233,7 +233,7 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeDirectory() throws InterruptedException, IOException {
+  public void testMaterializeDirectory() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
 
@@ -247,7 +247,7 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeDuringPreloadingDirectory() throws InterruptedException, IOException {
+  public void testMaterializeDuringPreloadingDirectory() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
 
@@ -261,7 +261,7 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   @Test
-  public void testPreloadDirectory() throws InterruptedException, IOException {
+  public void testPreloadDirectory() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
 
@@ -272,7 +272,7 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   @Test
-  public void testPreloadThenMaterializeDirectory() throws InterruptedException, IOException {
+  public void testPreloadThenMaterializeDirectory() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
 
@@ -286,8 +286,7 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeDirWithDifferentHashCodeThrowsException()
-      throws InterruptedException, IOException {
+  public void testMaterializeDirWithDifferentHashCodeThrowsException() throws IOException {
     testMaterializeDirectoryHelper(false, THROWING_GET, false);
   }
 
@@ -332,7 +331,7 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeRealFileSetsContents() throws InterruptedException, IOException {
+  public void testMaterializeRealFileSetsContents() throws IOException {
     // Scenario:
     //  path: /project/linktoexternaldir/externalfile
     //  contents: "filecontents"
@@ -345,8 +344,7 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeRealFileDuringPreloadingSetsContents()
-      throws InterruptedException, IOException {
+  public void testMaterializeRealFileDuringPreloadingSetsContents() throws IOException {
     // Scenario:
     //  path: /project/linktoexternaldir/externalfile
     //  contents: "filecontents"
@@ -360,8 +358,7 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeAllFilesDuringPreloadSetsContents()
-      throws IOException, InterruptedException {
+  public void testMaterializeAllFilesDuringPreloadSetsContents() throws IOException {
     // Scenario:
     //  path: /project/linktoexternaldir/externalfile
     //  contents: "filecontents"
@@ -375,7 +372,7 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   @Test
-  public void testPreloadRealFileTouchesFile() throws InterruptedException, IOException {
+  public void testPreloadRealFileTouchesFile() throws IOException {
     // Scenario:
     //  path: /project/linktoexternaldir/externalfile
     //  contents: "filecontents"
@@ -387,8 +384,7 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeFileWithDifferentHashCodeThrowsException()
-      throws InterruptedException, IOException {
+  public void testMaterializeFileWithDifferentHashCodeThrowsException() throws IOException {
     testEntryForRealFile(false, THROWING_GET, false);
   }
 
@@ -445,26 +441,22 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   @Test
-  public void testPreloadSymlinkToFileWithinExternalDirectory()
-      throws InterruptedException, IOException {
+  public void testPreloadSymlinkToFileWithinExternalDirectory() throws IOException {
     testSymlinkToFileWithinExternalDirectory(PRELOAD, true);
   }
 
   @Test
-  public void testMaterializeSymlinkToFileWithinExternalDirectory()
-      throws InterruptedException, IOException {
+  public void testMaterializeSymlinkToFileWithinExternalDirectory() throws IOException {
     testSymlinkToFileWithinExternalDirectory(GET, true);
   }
 
   @Test
-  public void testPreloadThenMaterializeSymlinkToFileWithinExternalDirectory()
-      throws InterruptedException, IOException {
+  public void testPreloadThenMaterializeSymlinkToFileWithinExternalDirectory() throws IOException {
     testSymlinkToFileWithinExternalDirectory(PRELOAD_THEN_GET, true);
   }
 
   @Test
-  public void testMaterializeSymlinkWithDifferentHashCodeThrowsException()
-      throws InterruptedException, IOException {
+  public void testMaterializeSymlinkWithDifferentHashCodeThrowsException() throws IOException {
     testSymlinkToFileWithinExternalDirectory(THROWING_GET, false);
   }
 

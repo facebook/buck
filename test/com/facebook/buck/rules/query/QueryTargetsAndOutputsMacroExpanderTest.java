@@ -64,7 +64,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   private HashMapWithStats<MacroMatchResult, Object> cache;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     cache = new HashMapWithStats<>();
     expander = new QueryTargetsAndOutputsMacroExpander(Optional.empty());
     handler = new MacroHandler(ImmutableMap.of("query_targets_and_outputs", expander));

@@ -606,6 +606,29 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
+  public void errorVerifyNestedHeaders() throws IOException {
+    ProcessResult result;
+    result =
+        workspace.runBuckBuild(
+            "-c",
+            "cxx.untracked_headers=error",
+            "-c",
+            "cxx.untracked_headers_whitelist=/usr/include/stdc-predef\\.h",
+            "-c",
+            "cxx.detailed_untracked_header_messages=true",
+            "//header_check:nested_untracked_header");
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            String.format(
+                "header_check/nested_untracked_header.cpp: included an untracked header: %n"
+                    + "header_check/untracked_header.h, which is included by: %n"
+                    + "header_check/untracked_header_includer.h, which is included by: %n"
+                    + "header_check/parent_header.h")));
+  }
+
+  @Test
   public void whitelistVerifyHeaders() throws IOException {
     ProcessResult result =
         workspace.runBuckBuild(
@@ -681,5 +704,24 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:c-as-c").assertFailure();
     workspace.runBuckBuild("//:c-as-cxx").assertSuccess();
+  }
+
+  // Setup a test which modifies the header layout of a dependency and verify that it gets
+  // rebuilt.
+  @Test
+  public void depHeaderTreesAreUpdated() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "dep_headers_up_to_date", tmp.newFolder());
+    workspace.setUp();
+    workspace
+        .runBuckBuild("-c", "test.header=first.h", "-c", "test.flag=-DFOO", "//:first")
+        .assertSuccess();
+    workspace
+        .runBuckBuild("-c", "test.header=second.h", "-c", "test.flag=-DFOO", "//:second")
+        .assertSuccess();
+    workspace
+        .runBuckBuild("-c", "test.header=first.h", "-c", "test.flag=-DBAR", "//:first")
+        .assertSuccess();
   }
 }

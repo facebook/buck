@@ -78,6 +78,12 @@ public class XcodeWorkspaceConfigBuilder
     return this;
   }
 
+  public XcodeWorkspaceConfigBuilder setWatchInterface(
+      Optional<XCScheme.LaunchAction.WatchInterface> watchInterface) {
+    getArgForPopulating().setWatchInterface(watchInterface);
+    return this;
+  }
+
   public XcodeWorkspaceConfigBuilder setLaunchStyle(
       Optional<XCScheme.LaunchAction.LaunchStyle> launchStyle) {
     getArgForPopulating().setLaunchStyle(launchStyle);

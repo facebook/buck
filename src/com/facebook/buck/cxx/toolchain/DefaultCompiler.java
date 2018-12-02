@@ -25,6 +25,7 @@ import java.util.Optional;
 
 /** Default implementation of the Compiler interface. */
 public abstract class DefaultCompiler extends DelegatingTool implements Compiler {
+
   public DefaultCompiler(Tool tool) {
     super(tool);
   }
@@ -52,7 +53,7 @@ public abstract class DefaultCompiler extends DelegatingTool implements Compiler
 
   @Override
   public ImmutableList<String> outputDependenciesArgs(String outputPath) {
-    return ImmutableList.of("-MD", "-MF", outputPath);
+    return ImmutableList.of();
   }
 
   @Override

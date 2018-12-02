@@ -108,7 +108,7 @@ public class BuildSlaveLogsMaterializer {
   /** Fetches the logs directory of a BuildSlave. */
   public List<LogDir> fetchBuildSlaveLogDirs(
       StampedeId stampedeId, List<BuildSlaveRunId> toMaterialize) {
-    if (toMaterialize.size() == 0) {
+    if (toMaterialize.isEmpty()) {
       return Lists.newArrayList();
     }
 

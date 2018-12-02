@@ -46,6 +46,11 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
+  public boolean shouldDesugarInterfaceMethods() {
+    return javaBuckConfig.shouldDesugarInterfaceMethods();
+  }
+
+  @Override
   public boolean shouldCompileAgainstAbis() {
     return javaBuckConfig.shouldCompileAgainstAbis();
   }

@@ -93,8 +93,8 @@ public class MinionWorkloadAllocator {
   }
 
   public synchronized boolean isBuildFinished() {
-    return nodesAssignedToMinions.size() == 0
-        && workUnitsFromFailedMinions.size() == 0
+    return nodesAssignedToMinions.isEmpty()
+        && workUnitsFromFailedMinions.isEmpty()
         && !queue.hasReadyZeroDependencyNodes();
   }
 

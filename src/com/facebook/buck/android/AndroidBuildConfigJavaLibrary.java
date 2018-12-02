@@ -86,7 +86,9 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* requiredForSourceOnlyAbi */ false,
         UnusedDependenciesAction.IGNORE,
         Optional.empty(),
-        null);
+        null,
+        false,
+        false);
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(getBuildDeps().contains(androidBuildConfig));
   }

@@ -20,8 +20,8 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.cli.BuildCommand;
 import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.CommandThreadManager;
+import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectSubCommand;
-import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.ExitCode;
@@ -36,6 +36,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
 
   private static final boolean DEFAULT_READ_ONLY_VALUE = false;
   private static final boolean DEFAULT_ABSOLUTE_HEADER_MAP_PATHS = false;
+  private static final boolean DEFAULT_SHARED_LIBRARIES_AS_DYNAMIC_FRAMEWORKS = false;
 
   @Option(
       name = "--combined-project",
@@ -110,6 +111,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
             projectCommandArguments,
             appleCxxPlatformsProvider.getAppleCxxPlatforms().getFlavors(),
             getAbsoluteHeaderMapPaths(params.getBuckConfig()),
+            getSharedLibrariesInBundles(params.getBuckConfig()),
             projectGeneratorParameters.getEnableParserProfiling(),
             projectGeneratorParameters.isWithTests(),
             projectGeneratorParameters.isWithoutTests(),
@@ -124,7 +126,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
             arguments -> {
               try {
                 return runBuild(params, arguments);
-              } catch (IOException | InterruptedException e) {
+              } catch (Exception e) {
                 throw new RuntimeException("Cannot run a build", e);
               }
             });
@@ -132,7 +134,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
   }
 
   private ExitCode runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
-      throws IOException, InterruptedException {
+      throws Exception {
     BuildCommand buildCommand = new BuildCommand(arguments);
     return buildCommand.run(params);
   }
@@ -147,6 +149,11 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
   private boolean getAbsoluteHeaderMapPaths(BuckConfig buckConfig) {
     return buckConfig.getBooleanValue(
         "project", "absolute_header_map_paths", DEFAULT_ABSOLUTE_HEADER_MAP_PATHS);
+  }
+
+  private boolean getSharedLibrariesInBundles(BuckConfig buckConfig) {
+    return buckConfig.getBooleanValue(
+        "project", "shared_libraries_in_bundles", DEFAULT_SHARED_LIBRARIES_AS_DYNAMIC_FRAMEWORKS);
   }
 
   @Override

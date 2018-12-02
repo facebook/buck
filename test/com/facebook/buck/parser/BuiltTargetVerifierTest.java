@@ -46,7 +46,7 @@ public class BuiltTargetVerifierTest {
   private Cell cell;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     cell = new TestCellBuilder().build();
   }
 

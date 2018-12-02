@@ -95,8 +95,7 @@ public class VerifyCachesCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     boolean success = true;
 
     PrintStream stdOut = params.getConsole().getStdOut();

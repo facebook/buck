@@ -68,7 +68,7 @@ public class DistBuildPostBuildAnalysisTest {
   private ObjectWriter objectWriter;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     stampedeId.setId("stampede5057850940756389804");
     buildSlaveRunId1.setId("stampede-slave1241653611715395998");
     buildSlaveRunId2.setId("stampede-slave8890909885267341364");
@@ -182,8 +182,7 @@ public class DistBuildPostBuildAnalysisTest {
           expected.getRuleKeys().getInputRuleKey().map(rk -> rk.toString()).orElse(""));
       Assert.assertEquals(result.getRuleType().get(), expected.getBuildRule().getType());
       Assert.assertEquals(
-          result.getWallMillisDuration().longValue(),
-          expected.getDuration().getWallMillisDuration());
+          result.getWallMillisDuration(), expected.getDuration().getWallMillisDuration());
       Assert.assertEquals(result.getBuildRuleStatus().get(), expected.getStatus());
       Assert.assertEquals(result.getCacheResultType().get(), expected.getCacheResult().getType());
       Assert.assertEquals(
@@ -192,7 +191,7 @@ public class DistBuildPostBuildAnalysisTest {
   }
 
   @Test
-  public void testFileStructure() throws IOException, InterruptedException {
+  public void testFileStructure() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "post_build_analysis", tmpPath.getRoot());

@@ -18,9 +18,10 @@ package com.facebook.buck.parser.options;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -41,11 +42,13 @@ abstract class AbstractProjectBuildFileParserOptions {
 
   abstract boolean getAllowEmptyGlobs();
 
-  abstract ImmutableSet<PathOrGlobMatcher> getIgnorePaths();
+  abstract ImmutableSet<PathMatcher> getIgnorePaths();
 
   abstract String getBuildFileName();
 
   abstract List<String> getDefaultIncludes();
+
+  abstract ImmutableMap<String, ImplicitInclude> getPackageImplicitIncludes();
 
   abstract ImmutableSet<BaseDescription<?>> getDescriptions();
 

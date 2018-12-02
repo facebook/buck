@@ -17,6 +17,7 @@
 package com.facebook.buck.features.apple.project;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleBinaryBuilder;
@@ -35,12 +36,14 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -276,6 +279,62 @@ public class XCodeProjectCommandHelperTest {
   }
 
   @Test
+  public void testSharedLibrariesToBundles() {
+    BuildTarget sharedLibTarget = BuildTargetFactory.newInstance("//foo:shared");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
+    BuildTarget workspaceTarget = BuildTargetFactory.newInstance("//foo:workspace");
+    BuildTarget fooBinTarget = BuildTargetFactory.newInstance("//foo:bin");
+    BuildTarget fooBinBinaryTarget = BuildTargetFactory.newInstance("//foo:binbinary");
+
+    TargetNode<?> sharedLibNode =
+        AppleLibraryBuilder.createBuilder(sharedLibTarget)
+            .setPreferredLinkage(Linkage.SHARED)
+            .build();
+    TargetNode<?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setBinary(sharedLibTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setInfoPlist(FakeSourcePath.of("Info2.plist"))
+            .build();
+    TargetNode<?> fooBinBinaryNode =
+        AppleBinaryBuilder.createBuilder(fooBinBinaryTarget)
+            .setDeps(ImmutableSortedSet.of(sharedLibTarget))
+            .build();
+    TargetNode<?> fooBinNode =
+        AppleBundleBuilder.createBuilder(fooBinTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setBinary(fooBinBinaryTarget)
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .build();
+    TargetNode<?> workspaceNode =
+        XcodeWorkspaceConfigBuilder.createBuilder(workspaceTarget)
+            .setWorkspaceName(Optional.of("workspace"))
+            .setSrcTarget(Optional.of(fooBinTarget))
+            .build();
+    XcodeWorkspaceConfigBuilder.createBuilder(workspaceTarget)
+        .setWorkspaceName(Optional.of("workspace"))
+        .setSrcTarget(Optional.of(fooBinTarget))
+        .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            sharedLibNode, bundleNode, fooBinBinaryNode, fooBinNode, workspaceNode);
+    TargetGraphAndTargets targetGraphAndTargets =
+        createTargetGraph(
+            targetGraph,
+            ImmutableSet.of(workspaceNode.getBuildTarget()),
+            /* withTests = */ false,
+            /* withDependenciesTests */ false);
+
+    ImmutableMap<BuildTarget, TargetNode<?>> sharedLibraryToBundle =
+        ProjectGenerator.computeSharedLibrariesToBundles(
+            ImmutableSet.of(sharedLibNode, bundleNode), targetGraphAndTargets);
+    assertTrue(sharedLibraryToBundle.containsKey(sharedLibTarget));
+    assertTrue(sharedLibraryToBundle.containsValue(bundleNode));
+    assertEquals(sharedLibraryToBundle.size(), 1);
+  }
+
+  @Test
   public void testCreateTargetGraphForSmallSliceWithoutTests() {
     TargetGraphAndTargets targetGraphAndTargets =
         createTargetGraph(
@@ -456,7 +515,8 @@ public class XCodeProjectCommandHelperTest {
         FocusedModuleTargetMatcher.noFocus(),
         projectGenerators,
         false,
-        new NullPathOutputPresenter());
+        new NullPathOutputPresenter(),
+        Optional.empty());
     return projectGenerators;
   }
 }

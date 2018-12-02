@@ -88,7 +88,7 @@ public class CxxTestTest {
 
     @Override
     protected ImmutableList<TestResultSummary> parseResults(
-        Path exitCode, Path output, Path results) throws Exception {
+        Path exitCode, Path output, Path results) {
       return ImmutableList.of();
     }
   }

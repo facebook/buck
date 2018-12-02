@@ -74,7 +74,7 @@ public class ThriftOverHttpServiceImpl<
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     config.getService().close();
   }
 }

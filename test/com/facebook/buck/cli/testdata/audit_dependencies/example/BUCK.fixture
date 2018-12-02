@@ -1,4 +1,4 @@
-apple_library(
+java_library(
     name = "one",
     srcs = ["1.txt"],
     tests = [":one-tests"],
@@ -8,7 +8,7 @@ apple_library(
     ],
 )
 
-apple_library(
+java_library(
     name = "two",
     srcs = ["2.txt"],
     deps = [
@@ -16,7 +16,7 @@ apple_library(
     ],
 )
 
-apple_library(
+java_library(
     name = "three",
     srcs = ["3.txt"],
     deps = [
@@ -25,7 +25,7 @@ apple_library(
     ],
 )
 
-apple_library(
+java_library(
     name = "four",
     srcs = ["4.txt"],
     tests = [
@@ -37,7 +37,7 @@ apple_library(
     ],
 )
 
-apple_library(
+java_library(
     name = "five",
     srcs = [
         "5.txt",
@@ -45,70 +45,66 @@ apple_library(
     ],
 )
 
-apple_library(
+java_library(
     name = "six",
     srcs = ["6.txt"],
     tests = [":six-tests"],
 )
 
-apple_test(
+java_test(
     name = "one-tests",
     srcs = ["1-test.txt"],
-    info_plist = "Test.plist",
     deps = [":one"],
 )
 
-apple_test(
+java_test(
     name = "four-tests",
     srcs = ["4-test.txt"],
-    info_plist = "Test.plist",
     deps = [":four"],
 )
 
-apple_test(
+java_test(
     name = "four-application-tests",
     srcs = ["4-application-test.txt"],
-    info_plist = "Test.plist",
     deps = [
         ":application-test-lib",
         ":four",
     ],
 )
 
-apple_test(
+java_test(
     name = "six-tests",
     srcs = ["6-test.txt"],
-    info_plist = "Test.plist",
     deps = [":six"],
 )
 
-apple_library(
+java_library(
     name = "application-test-lib",
 )
 
-apple_library(
+java_library(
     name = "app-library",
     srcs = ["app-library.txt"],
     deps = [":app-library-two"],
 )
 
-apple_library(
+java_library(
     name = "app-library-two",
     srcs = ["app-library-two.txt"],
     exported_deps = [":app-target"],
 )
 
-apple_library(
+java_library(
     name = "app-target",
     srcs = ["app-target.txt"],
     exported_deps = [":app-target-three"],
     deps = [":app-target-two"],
 )
 
-apple_library(
+java_library(
     name = "app-target-two",
 )
 
-apple_library(
+java_library(
     name = "app-target-three",
 )

@@ -80,7 +80,7 @@ public class NdkLibraryDescriptionTest {
   }
 
   @Test
-  public void transitiveCxxLibraryDepsBecomeFirstOrderDepsOfNdkBuildRule() throws Exception {
+  public void transitiveCxxLibraryDepsBecomeFirstOrderDepsOfNdkBuildRule() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     FakeBuildRule transitiveInput =

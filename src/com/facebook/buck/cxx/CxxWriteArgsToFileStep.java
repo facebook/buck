@@ -84,8 +84,7 @@ class CxxWriteArgsToFileStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     if (Files.notExists(argFilePath.getParent())) {
       Files.createDirectories(argFilePath.getParent());
     }

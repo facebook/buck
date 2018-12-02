@@ -43,8 +43,7 @@ import java.util.Optional;
 public class DoctorCommand extends AbstractCommand {
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
 

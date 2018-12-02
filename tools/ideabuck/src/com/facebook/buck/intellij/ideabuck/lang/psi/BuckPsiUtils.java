@@ -164,7 +164,7 @@ public final class BuckPsiUtils {
    * if it cannot be found.
    */
   @Nullable
-  public static PsiElement findTargetInPsiTree(PsiElement root, String name) {
+  public static BuckFunctionCall findTargetInPsiTree(PsiElement root, String name) {
     for (BuckFunctionCall buckRuleBlock :
         PsiTreeUtil.findChildrenOfType(root, BuckFunctionCall.class)) {
       BuckFunctionCallSuffix buckRuleBody = buckRuleBlock.getFunctionCallSuffix();

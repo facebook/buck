@@ -22,10 +22,13 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.apple.AppleLibraryBuilder;
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.AppleTestBuilder;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.core.cell.Cell;
@@ -58,6 +61,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -106,7 +110,7 @@ public class TargetsCommandTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     console = new TestConsole();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "target_command", tmp);
     workspace.setUp();
@@ -129,7 +133,7 @@ public class TargetsCommandTest {
             eventBus,
             FakeBuckConfig.builder().build(),
             Platform.detect(),
-            ImmutableMap.copyOf(System.getenv()),
+            EnvVariablesProvider.getSystemEnv(),
             new FakeJavaPackageFinder(),
             Optional.empty());
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
@@ -387,6 +391,7 @@ public class TargetsCommandTest {
 
   @Test
   public void testGetMatchingAppleLibraryBuildTarget() {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -422,6 +427,7 @@ public class TargetsCommandTest {
 
   @Test
   public void testGetMatchingAppleTestBuildTarget() {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -534,6 +540,7 @@ public class TargetsCommandTest {
 
   @Test
   public void testDetectTestChanges() {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     BuildTarget libraryTestTarget1 = BuildTargetFactory.newInstance("//foo:xctest1");
     BuildTarget libraryTestTarget2 = BuildTargetFactory.newInstance("//foo:xctest2");

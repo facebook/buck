@@ -21,13 +21,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cxx.ElfFile;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -46,14 +45,11 @@ public class ElfTest {
     workspace.setUp();
 
     Path elfPath = workspace.resolve(Paths.get("le64.o"));
-    try (FileChannel channel = FileChannel.open(elfPath)) {
-      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      assertEquals(ElfHeader.EIClass.ELFCLASS64, elf.header.ei_class);
-      assertEquals(ElfHeader.EIData.ELFDATA2LSB, elf.header.ei_data);
-      assertEquals(11, elf.getNumberOfSections());
-      assertTrue(elf.getSectionByName(".text").isPresent());
-    }
+    Elf elf = ElfFile.mapReadOnly(elfPath);
+    assertEquals(ElfHeader.EIClass.ELFCLASS64, elf.header.ei_class);
+    assertEquals(ElfHeader.EIData.ELFDATA2LSB, elf.header.ei_data);
+    assertEquals(11, elf.getNumberOfSections());
+    assertTrue(elf.getSectionByName(".text").isPresent());
   }
 
   @Test
@@ -63,14 +59,11 @@ public class ElfTest {
     workspace.setUp();
 
     Path elfPath = workspace.resolve(Paths.get("le32.o"));
-    try (FileChannel channel = FileChannel.open(elfPath)) {
-      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      assertEquals(ElfHeader.EIClass.ELFCLASS32, elf.header.ei_class);
-      assertEquals(ElfHeader.EIData.ELFDATA2LSB, elf.header.ei_data);
-      assertEquals(9, elf.getNumberOfSections());
-      assertTrue(elf.getSectionByName(".text").isPresent());
-    }
+    Elf elf = ElfFile.mapReadOnly(elfPath);
+    assertEquals(ElfHeader.EIClass.ELFCLASS32, elf.header.ei_class);
+    assertEquals(ElfHeader.EIData.ELFDATA2LSB, elf.header.ei_data);
+    assertEquals(9, elf.getNumberOfSections());
+    assertTrue(elf.getSectionByName(".text").isPresent());
   }
 
   @Test
@@ -80,14 +73,11 @@ public class ElfTest {
     workspace.setUp();
 
     Path elfPath = workspace.resolve(Paths.get("be32.o"));
-    try (FileChannel channel = FileChannel.open(elfPath)) {
-      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      assertEquals(ElfHeader.EIClass.ELFCLASS32, elf.header.ei_class);
-      assertEquals(ElfHeader.EIData.ELFDATA2MSB, elf.header.ei_data);
-      assertEquals(14, elf.getNumberOfSections());
-      assertTrue(elf.getSectionByName(".text").isPresent());
-    }
+    Elf elf = ElfFile.mapReadOnly(elfPath);
+    assertEquals(ElfHeader.EIClass.ELFCLASS32, elf.header.ei_class);
+    assertEquals(ElfHeader.EIData.ELFDATA2MSB, elf.header.ei_data);
+    assertEquals(14, elf.getNumberOfSections());
+    assertTrue(elf.getSectionByName(".text").isPresent());
   }
 
   @Test
@@ -97,27 +87,24 @@ public class ElfTest {
     workspace.setUp();
 
     Path elfPath = workspace.resolve(Paths.get("section_types.o"));
-    try (FileChannel channel = FileChannel.open(elfPath)) {
-      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      Optional<ElfSection> section;
+    Elf elf = ElfFile.mapReadOnly(elfPath);
+    Optional<ElfSection> section;
 
-      section = elf.getSectionByName(".text").map(ElfSectionLookupResult::getSection);
-      assertTrue(section.isPresent());
-      assertEquals(ElfSectionHeader.SHType.SHT_PROGBITS, section.get().header.sh_type);
+    section = elf.getSectionByName(".text").map(ElfSectionLookupResult::getSection);
+    assertTrue(section.isPresent());
+    assertEquals(ElfSectionHeader.SHType.SHT_PROGBITS, section.get().header.sh_type);
 
-      section = elf.getSectionByName(".bss").map(ElfSectionLookupResult::getSection);
-      assertTrue(section.isPresent());
-      assertEquals(ElfSectionHeader.SHType.SHT_NOBITS, section.get().header.sh_type);
+    section = elf.getSectionByName(".bss").map(ElfSectionLookupResult::getSection);
+    assertTrue(section.isPresent());
+    assertEquals(ElfSectionHeader.SHType.SHT_NOBITS, section.get().header.sh_type);
 
-      section = elf.getSectionByName(".strtab").map(ElfSectionLookupResult::getSection);
-      assertTrue(section.isPresent());
-      assertEquals(ElfSectionHeader.SHType.SHT_STRTAB, section.get().header.sh_type);
+    section = elf.getSectionByName(".strtab").map(ElfSectionLookupResult::getSection);
+    assertTrue(section.isPresent());
+    assertEquals(ElfSectionHeader.SHType.SHT_STRTAB, section.get().header.sh_type);
 
-      section = elf.getSectionByName(".symtab").map(ElfSectionLookupResult::getSection);
-      assertTrue(section.isPresent());
-      assertEquals(ElfSectionHeader.SHType.SHT_SYMTAB, section.get().header.sh_type);
-    }
+    section = elf.getSectionByName(".symtab").map(ElfSectionLookupResult::getSection);
+    assertTrue(section.isPresent());
+    assertEquals(ElfSectionHeader.SHType.SHT_SYMTAB, section.get().header.sh_type);
   }
 
   @Test
@@ -127,11 +114,8 @@ public class ElfTest {
     workspace.setUp();
 
     Path elfPath = workspace.resolve(Paths.get("has43664sections.o"));
-    try (FileChannel channel = FileChannel.open(elfPath)) {
-      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      assertThat(elf.getNumberOfSections(), Matchers.equalTo(43664));
-    }
+    Elf elf = ElfFile.mapReadOnly(elfPath);
+    assertThat(elf.getNumberOfSections(), Matchers.equalTo(43664));
   }
 
   @Test

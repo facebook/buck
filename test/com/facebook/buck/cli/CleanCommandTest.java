@@ -42,6 +42,7 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -51,8 +52,10 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
@@ -87,8 +90,7 @@ public class CleanCommandTest {
   // exit code is 1 and that the appropriate error message is printed.
 
   @Test
-  public void testCleanCommandNoArguments()
-      throws CmdLineException, IOException, InterruptedException {
+  public void testCleanCommandNoArguments() throws Exception {
     CleanCommand cleanCommand = createCommandFromArgs();
     CommandRunnerParams params = createCommandRunnerParams(cleanCommand, true);
 
@@ -108,6 +110,7 @@ public class CleanCommandTest {
 
     // Simulate `buck clean`.
     ExitCode exitCode = cleanCommand.run(params);
+
     assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
@@ -120,8 +123,7 @@ public class CleanCommandTest {
   }
 
   @Test
-  public void testCleanCommandWithKeepCache()
-      throws CmdLineException, IOException, InterruptedException {
+  public void testCleanCommandWithKeepCache() throws Exception {
     CleanCommand cleanCommand = createCommandFromArgs("--keep-cache");
     CommandRunnerParams params = createCommandRunnerParams(cleanCommand, true);
 
@@ -141,6 +143,7 @@ public class CleanCommandTest {
 
     // Simulate `buck clean`.
     ExitCode exitCode = cleanCommand.run(params);
+
     assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
@@ -153,8 +156,7 @@ public class CleanCommandTest {
   }
 
   @Test
-  public void testCleanCommandExcludeLocalCache()
-      throws CmdLineException, IOException, InterruptedException {
+  public void testCleanCommandExcludeLocalCache() throws Exception {
     String cacheToKeep = "warmtestcache";
     CleanCommand cleanCommand =
         createCommandFromArgs("-c", "clean.excluded_dir_caches=" + cacheToKeep);
@@ -177,6 +179,7 @@ public class CleanCommandTest {
 
     // Simulate `buck clean`.
     ExitCode exitCode = cleanCommand.run(params);
+
     assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
@@ -193,8 +196,7 @@ public class CleanCommandTest {
   }
 
   @Test
-  public void testCleanCommandWithDryRun()
-      throws CmdLineException, IOException, InterruptedException {
+  public void testCleanCommandWithDryRun() throws Exception {
     CleanCommand cleanCommand = createCommandFromArgs("--dry-run");
     CommandRunnerParams params = createCommandRunnerParams(cleanCommand, true);
 
@@ -214,6 +216,7 @@ public class CleanCommandTest {
 
     // Simulate `buck clean`.
     ExitCode exitCode = cleanCommand.run(params);
+
     assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertTrue(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
@@ -226,8 +229,7 @@ public class CleanCommandTest {
   }
 
   @Test
-  public void testCleanCommandWithAdditionalPaths()
-      throws CmdLineException, IOException, InterruptedException {
+  public void testCleanCommandWithAdditionalPaths() throws Exception {
     Path additionalPath = projectFilesystem.getPath("foo");
     CleanCommand cleanCommand =
         createCommandFromArgs("-c", "clean.additional_paths=" + additionalPath);
@@ -239,6 +241,7 @@ public class CleanCommandTest {
 
     // Simulate `buck clean --project`.
     ExitCode exitCode = cleanCommand.run(params);
+
     assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(additionalPath));
@@ -251,8 +254,7 @@ public class CleanCommandTest {
   }
 
   private CommandRunnerParams createCommandRunnerParams(
-      AbstractCommand command, boolean enableCacheSection)
-      throws InterruptedException, IOException {
+      AbstractCommand command, boolean enableCacheSection) {
     FakeBuckConfig.Builder buckConfigBuilder = FakeBuckConfig.builder();
 
     if (enableCacheSection) {
@@ -281,6 +283,11 @@ public class CleanCommandTest {
     return createCommandRunnerParams(buckConfig, cell);
   }
 
+  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
+      getManifestSupplier() {
+    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
+  }
+
   private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell) {
     ProcessExecutor processExecutor = new FakeProcessExecutor();
 
@@ -302,7 +309,7 @@ public class CleanCommandTest {
         TestParserFactory.create(buckConfig, knownRuleTypesProvider),
         BuckEventBusForTests.newInstance(),
         Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()),
+        EnvVariablesProvider.getSystemEnv(),
         new FakeJavaPackageFinder(),
         new DefaultClock(),
         new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
@@ -328,6 +335,8 @@ public class CleanCommandTest {
         executableFinder,
         pluginManager,
         TestBuckModuleManagerFactory.create(pluginManager),
-        Main.getForkJoinPoolSupplier(buckConfig));
+        Main.getForkJoinPoolSupplier(buckConfig),
+        Optional.empty(),
+        getManifestSupplier());
   }
 }

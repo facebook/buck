@@ -93,8 +93,7 @@ public class CacheCommand extends AbstractCommand {
   @VisibleForTesting static final boolean MUTE_FETCH_SUBCOMMAND_WARNING = true;
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
 
     params.getBuckEventBus().post(ConsoleEvent.fine("cache command start"));
 

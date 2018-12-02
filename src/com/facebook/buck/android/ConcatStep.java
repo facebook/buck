@@ -70,8 +70,7 @@ public class ConcatStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     ImmutableList<Path> list = inputs.get();
     try (OutputStream out = filesystem.newFileOutputStream(output)) {
       for (Path p : list) {

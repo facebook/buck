@@ -30,13 +30,12 @@ public class SimctlListOutputParsing {
   private static final String DEVICE_NAME_GROUP = "name";
   private static final String DEVICE_UDID_GROUP = "udid";
   private static final String DEVICE_STATE_GROUP = "state";
-  private static final String DEVICE_UNAVAILABLE_GROUP = "unavailable";
 
   private static final String TERM_ESCS = "(?:\\u001B\\[[;\\d]*[mK])*";
 
   private static final Pattern SIMCTL_LIST_DEVICES_PATTERN =
       Pattern.compile(
-          " *(?<"
+          "(?<"
               + DEVICE_NAME_GROUP
               + ">.+) "
               + "\\((?<"
@@ -44,10 +43,7 @@ public class SimctlListOutputParsing {
               + ">[0-9A-F-]+)\\) "
               + "\\((?<"
               + DEVICE_STATE_GROUP
-              + ">Creating|Booting|Shutting Down|Shutdown|Booted)\\)"
-              + "(?<"
-              + DEVICE_UNAVAILABLE_GROUP
-              + ">\\(unavailable, .*\\))?");
+              + ">Creating|Booting|Shutting Down|Shutdown|Booted)\\)");
 
   // Utility class; do not instantiate.
   private SimctlListOutputParsing() {}
@@ -59,7 +55,7 @@ public class SimctlListOutputParsing {
   public static void parseOutput(
       String output, ImmutableSet.Builder<AppleSimulator> simulatorsBuilder) throws IOException {
     for (String line : MoreStrings.lines(output)) {
-      line = line.replaceAll(TERM_ESCS, "");
+      line = line.replaceAll(TERM_ESCS, "").trim();
       parseLine(line, simulatorsBuilder);
     }
   }
@@ -68,7 +64,7 @@ public class SimctlListOutputParsing {
       String line, ImmutableSet.Builder<AppleSimulator> simulatorsBuilder) {
     LOG.debug("Parsing simctl list output line: %s", line);
     Matcher matcher = SIMCTL_LIST_DEVICES_PATTERN.matcher(line);
-    if (matcher.matches() && matcher.group(DEVICE_UNAVAILABLE_GROUP) == null) {
+    if (matcher.matches()) {
       AppleSimulator simulator =
           AppleSimulator.builder()
               .setName(matcher.group(DEVICE_NAME_GROUP))

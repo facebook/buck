@@ -23,6 +23,7 @@ public enum ExopackageMode {
   NATIVE_LIBRARY(2),
   RESOURCES(4),
   MODULES(8),
+  ARCH64(16),
   ;
 
   private final int code;
@@ -45,6 +46,10 @@ public enum ExopackageMode {
 
   public static boolean enabledForModules(EnumSet<ExopackageMode> modes) {
     return modes.contains(MODULES);
+  }
+
+  public static boolean enabledForArch64(EnumSet<ExopackageMode> modes) {
+    return modes.contains(ARCH64);
   }
 
   public static int toBitmask(EnumSet<ExopackageMode> modes) {

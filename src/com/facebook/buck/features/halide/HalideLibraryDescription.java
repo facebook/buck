@@ -42,7 +42,7 @@ import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxFlags.TranslateMacrosAppendableFunction;
+import com.facebook.buck.cxx.CxxFlags.TranslateMacrosFunction;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxSource;
@@ -57,7 +57,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
@@ -246,8 +246,8 @@ public class HalideLibraryDescription
   private Optional<ImmutableList<String>> expandInvocationFlags(
       Optional<ImmutableList<String>> optionalFlags, CxxPlatform platform) {
     if (optionalFlags.isPresent()) {
-      RuleKeyAppendableFunction<String, String> macroMapper =
-          new TranslateMacrosAppendableFunction(
+      AddsToRuleKeyFunction<String, String> macroMapper =
+          new TranslateMacrosFunction(
               ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
       ImmutableList<String> flags = optionalFlags.get();
       ImmutableList.Builder<String> builder = ImmutableList.builder();

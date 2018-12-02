@@ -75,6 +75,7 @@ public class DefaultClassUsageFileWriterTest {
         javaFileObject.openInputStream();
       }
     }
+    filesystem.createParentDirs(outputOne);
     writerOne.writeFile(trackerOne, outputOne, filesystem, cellPathResolver);
 
     DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter();
@@ -87,6 +88,7 @@ public class DefaultClassUsageFileWriterTest {
         javaFileObject.openInputStream();
       }
     }
+    filesystem.createParentDirs(outputTwo);
     writerTwo.writeFile(trackerTwo, outputTwo, filesystem, cellPathResolver);
 
     assertEquals(
@@ -122,6 +124,7 @@ public class DefaultClassUsageFileWriterTest {
         javaFileObject.openInputStream();
       }
     }
+    homeFs.createParentDirs(outputOne);
     writer.writeFile(trackerOne, outputOne, homeFs, cellPathResolver);
 
     // The xcell file should appear relative to the "home" filesystem, and the external class

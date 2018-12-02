@@ -27,7 +27,6 @@ import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -44,7 +43,7 @@ public class ParsingJavaPackageFinderTest {
   private JavaFileParser javaFileParser;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() {
     matchPath = Paths.get("case1/org/test/package1/Match.java");
     mismatchPath = Paths.get("case1/org/test/package2/Mismatch.java");
     placeholderPath = Paths.get("case3/com/test/placeholder");

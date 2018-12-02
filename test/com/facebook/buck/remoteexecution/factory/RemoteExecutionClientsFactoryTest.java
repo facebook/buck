@@ -28,6 +28,7 @@ import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionClients;
 import com.facebook.buck.remoteexecution.util.OutOfProcessIsolatedExecutionClients;
 import com.facebook.buck.util.timing.FakeClock;
 import java.io.IOException;
+import java.util.Optional;
 import org.junit.Test;
 
 public class RemoteExecutionClientsFactoryTest {
@@ -37,9 +38,7 @@ public class RemoteExecutionClientsFactoryTest {
     BuckConfig config =
         FakeBuckConfig.builder().setSections("[remoteexecution]", "type=grpc").build();
 
-    try (RemoteExecutionClients remoteExecutionClients =
-        new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
-            .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")))) {
+    try (RemoteExecutionClients remoteExecutionClients = createClients(config)) {
       assertTrue(remoteExecutionClients instanceof GrpcRemoteExecutionClients);
     }
   }
@@ -49,9 +48,7 @@ public class RemoteExecutionClientsFactoryTest {
     BuckConfig config =
         FakeBuckConfig.builder().setSections("[remoteexecution]", "type=debug_grpc_local").build();
 
-    try (RemoteExecutionClients remoteExecutionClients =
-        new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
-            .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")))) {
+    try (RemoteExecutionClients remoteExecutionClients = createClients(config)) {
       assertTrue(remoteExecutionClients instanceof GrpcRemoteExecutionClients);
     }
   }
@@ -63,9 +60,7 @@ public class RemoteExecutionClientsFactoryTest {
             .setSections("[remoteexecution]", "type=debug_grpc_in_process")
             .build();
 
-    try (RemoteExecutionClients remoteExecutionClients =
-        new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
-            .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")))) {
+    try (RemoteExecutionClients remoteExecutionClients = createClients(config)) {
       assertTrue(remoteExecutionClients instanceof OutOfProcessIsolatedExecutionClients);
     }
   }
@@ -75,9 +70,7 @@ public class RemoteExecutionClientsFactoryTest {
     BuckConfig config =
         FakeBuckConfig.builder().setSections("[modern_build_rule]", "strategy=grpc_remote").build();
 
-    try (RemoteExecutionClients remoteExecutionClients =
-        new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
-            .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")))) {
+    try (RemoteExecutionClients remoteExecutionClients = createClients(config)) {
       assertTrue(remoteExecutionClients instanceof GrpcRemoteExecutionClients);
     }
   }
@@ -89,9 +82,7 @@ public class RemoteExecutionClientsFactoryTest {
             .setSections("[modern_build_rule]", "strategy=debug_grpc_service_in_process")
             .build();
 
-    try (RemoteExecutionClients remoteExecutionClients =
-        new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
-            .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")))) {
+    try (RemoteExecutionClients remoteExecutionClients = createClients(config)) {
       assertTrue(remoteExecutionClients instanceof GrpcRemoteExecutionClients);
     }
   }
@@ -103,10 +94,13 @@ public class RemoteExecutionClientsFactoryTest {
             .setSections("[modern_build_rule]", "strategy=debug_isolated_out_of_process_grpc")
             .build();
 
-    try (RemoteExecutionClients remoteExecutionClients =
-        new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
-            .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")))) {
+    try (RemoteExecutionClients remoteExecutionClients = createClients(config)) {
       assertTrue(remoteExecutionClients instanceof OutOfProcessIsolatedExecutionClients);
     }
+  }
+
+  private RemoteExecutionClients createClients(BuckConfig config) throws IOException {
+    return new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
+        .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")), Optional.empty());
   }
 }

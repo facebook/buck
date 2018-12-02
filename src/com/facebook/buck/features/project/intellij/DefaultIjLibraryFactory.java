@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
@@ -152,9 +151,6 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     @Override
     public void apply(
         TargetNode<AndroidPrebuiltAarDescriptionArg> targetNode, IjLibrary.Builder library) {
-      Optional<SourcePath> libraryPath = libraryFactoryResolver.getPathIfJavaLibrary(targetNode);
-      libraryPath.ifPresent(path -> library.addBinaryJars(libraryFactoryResolver.getPath(path)));
-
       AndroidPrebuiltAarDescriptionArg arg = targetNode.getConstructorArg();
       arg.getSourceJar()
           .ifPresent(
@@ -172,6 +168,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       // Based on https://developer.android.com/studio/projects/android-library.html#aar-contents,
       // the AAR library is required to have a resources folder.
       library.addClassPaths(Paths.get(aarUnpackPath.toString(), "res"));
+      library.addBinaryJars(Paths.get(aarUnpackPath.toString(), "classes.jar"));
     }
   }
 

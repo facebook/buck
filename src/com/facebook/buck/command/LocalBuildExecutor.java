@@ -40,6 +40,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
@@ -81,6 +82,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
   private final Optional<BuildType> buildEngineMode;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
+  private final Optional<TraceInfoProvider> traceInfoProvider;
 
   private final CachingBuildEngine cachingBuildEngine;
   private final Build build;
@@ -99,7 +101,8 @@ public class LocalBuildExecutor implements BuildExecutor {
       RuleKeyCacheScope<RuleKey> ruleKeyRuleKeyCacheScope,
       Optional<BuildType> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
+      Optional<TraceInfoProvider> traceInfoProvider) {
     this.actionGraphAndBuilder = actionGraphAndBuilder;
     this.executorService = executorService;
     this.args = args;
@@ -108,6 +111,7 @@ public class LocalBuildExecutor implements BuildExecutor {
     this.ruleKeyLogger = ruleKeyLogger;
     this.ruleKeyCacheScope = ruleKeyRuleKeyCacheScope;
     this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
+    this.traceInfoProvider = traceInfoProvider;
 
     // Init resources.
     this.cachingBuildEngine = createCachingBuildEngine();
@@ -126,7 +130,7 @@ public class LocalBuildExecutor implements BuildExecutor {
 
   @Override
   public ExitCode buildLocallyAndReturnExitCode(
-      Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport) {
+      Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport) throws Exception {
     return buildTargets(
         FluentIterable.from(targetsToBuild)
             .transform(
@@ -138,7 +142,7 @@ public class LocalBuildExecutor implements BuildExecutor {
 
   @Override
   public ExitCode buildTargets(
-      Iterable<BuildTarget> targetsToBuild, Optional<Path> pathToBuildReport) {
+      Iterable<BuildTarget> targetsToBuild, Optional<Path> pathToBuildReport) throws Exception {
     Preconditions.checkArgument(!isShutdown);
     try {
       return build.executeAndPrintFailuresToEventBus(
@@ -162,7 +166,8 @@ public class LocalBuildExecutor implements BuildExecutor {
   public ExitCode waitForBuildToFinish(
       Iterable<String> targetsToBuild,
       List<BuildEngineResult> resultFutures,
-      Optional<Path> pathToBuildReport) {
+      Optional<Path> pathToBuildReport)
+      throws Exception {
     Preconditions.checkArgument(!isShutdown);
     return build.waitForBuildToFinishAndPrintFailuresToEventBus(
         getRulesToBuild(targetsToBuild),
@@ -221,8 +226,8 @@ public class LocalBuildExecutor implements BuildExecutor {
             args.getRootCell().getCellPathResolver(),
             cachingBuildEngineDelegate.getFileHashCache(),
             args.getBuckEventBus(),
-            args.getConsole(),
-            Objects.requireNonNull(args.getExecutors().get(ExecutorPool.REMOTE))),
+            Objects.requireNonNull(args.getExecutors().get(ExecutorPool.REMOTE)),
+            traceInfoProvider),
         executorService,
         new DefaultStepRunner(),
         buildEngineMode.orElse(engineConfig.getBuildEngineMode()),

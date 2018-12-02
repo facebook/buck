@@ -49,7 +49,7 @@ public class AndroidAarIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
@@ -207,7 +207,7 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testCxxLibraryDependent() throws InterruptedException, IOException {
+  public void testCxxLibraryDependent() throws IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -236,7 +236,7 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testNativeLibraryDependent() throws InterruptedException, IOException {
+  public void testNativeLibraryDependent() throws IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -289,7 +289,7 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testEmptyExceptManifest() throws InterruptedException, IOException {
+  public void testEmptyExceptManifest() throws IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);

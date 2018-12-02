@@ -1,0 +1,7 @@
+prebuilt_jar(
+    name = "netty-handler",
+    binary_jar = "netty-handler-4.0.17.Final.jar",
+    licenses = ["LICENSE"],
+    source_jar = "netty-handler-4.0.17.Final-sources.jar",
+    visibility = ["PUBLIC"],
+)

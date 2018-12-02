@@ -17,7 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.completion;
 
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
-import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.file.BuckFileType;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
@@ -105,9 +105,9 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       return; // already beyond a cell name
     }
     Project project = position.getProject();
-    BuckProjectSettingsProvider buckProjectSettingsProvider =
-        BuckProjectSettingsProvider.getInstance(project);
-    for (String cellName : buckProjectSettingsProvider.getCellNames()) {
+    BuckCellSettingsProvider buckCellSettingsProvider =
+        BuckCellSettingsProvider.getInstance(project);
+    for (String cellName : buckCellSettingsProvider.getCellNames()) {
       if (cellName.startsWith(prefix)) {
         addResultForTarget(result, cellName + "//");
       }

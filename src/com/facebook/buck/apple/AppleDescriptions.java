@@ -137,6 +137,18 @@ public class AppleDescriptions {
         buildTarget, pathResolver, headerPathPrefix, arg.getExportedHeaders());
   }
 
+  /** @returns Apple headers converted to public cxx headers */
+  public static ImmutableSortedMap<String, SourcePath> convertHeadersToPublicCxxHeaders(
+      BuildTarget buildTarget,
+      Function<SourcePath, Path> pathResolver,
+      Path headerPathPrefix,
+      SourceSortedSet sourceSet) {
+    // The exported headers in the populated cxx constructor arg will contain exported headers from
+    // the apple constructor arg with the public include style.
+    return AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
+        buildTarget, pathResolver, headerPathPrefix, sourceSet);
+  }
+
   public static ImmutableSortedMap<String, SourcePath> convertAppleHeadersToPrivateCxxHeaders(
       BuildTarget buildTarget,
       Function<SourcePath, Path> pathResolver,
@@ -158,6 +170,42 @@ public class AppleDescriptions {
                             .stream(),
                         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
                                 buildTarget, pathResolver, headerPathPrefix, arg.getHeaders())
+                            .entrySet()
+                            .stream())
+                    .reduce(Stream::concat)
+                    .orElse(Stream.empty())
+                    .distinct() // allow duplicate entries as long as they map to the same path
+                    .collect(
+                        ImmutableSortedMap.toImmutableSortedMap(
+                            Ordering.natural(), Map.Entry::getKey, Map.Entry::getValue)));
+
+    return headersMapBuilder.build();
+  }
+
+  /** @returns Apple headers converted to private cxx headers */
+  public static ImmutableSortedMap<String, SourcePath> convertHeadersToPrivateCxxHeaders(
+      BuildTarget buildTarget,
+      Function<SourcePath, Path> pathResolver,
+      Path headerPathPrefix,
+      SourceSortedSet privateSourceSet,
+      SourceSortedSet publicSourceSet) {
+    // The private headers should contain exported headers with the private include style and
+    // private
+    // headers with both styles.
+    ImmutableSortedMap.Builder<String, SourcePath> headersMapBuilder =
+        ImmutableSortedMap.<String, SourcePath>naturalOrder()
+            .putAll(
+                Stream.of(
+                        AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
+                                buildTarget, pathResolver, privateSourceSet)
+                            .entrySet()
+                            .stream(),
+                        AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
+                                buildTarget, pathResolver, publicSourceSet)
+                            .entrySet()
+                            .stream(),
+                        AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
+                                buildTarget, pathResolver, headerPathPrefix, privateSourceSet)
                             .entrySet()
                             .stream())
                     .reduce(Stream::concat)

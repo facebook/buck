@@ -27,8 +27,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -49,20 +47,17 @@ public class ElfRewriteDynStrSectionStepTest {
 
   private ImmutableSet<String> readDynStr(Path path) throws IOException {
     ImmutableSet.Builder<String> strings = ImmutableSet.builder();
-    try (FileChannel channel = FileChannel.open(workspace.resolve(path))) {
-      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      ElfSection section = elf.getMandatorySectionByName(path, ".dynstr").getSection();
+    Elf elf = ElfFile.mapReadOnly(workspace.resolve(path));
+    ElfSection section = elf.getMandatorySectionByName(path, ".dynstr").getSection();
 
-      StringBuilder builder = new StringBuilder();
-      while (section.body.hasRemaining()) {
-        char c = (char) section.body.get();
-        if (c == '\0') {
-          strings.add(builder.toString());
-          builder = new StringBuilder();
-        } else {
-          builder.append(c);
-        }
+    StringBuilder builder = new StringBuilder();
+    while (section.body.hasRemaining()) {
+      char c = (char) section.body.get();
+      if (c == '\0') {
+        strings.add(builder.toString());
+        builder = new StringBuilder();
+      } else {
+        builder.append(c);
       }
     }
     return strings.build();

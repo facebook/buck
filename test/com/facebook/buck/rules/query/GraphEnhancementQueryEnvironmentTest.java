@@ -56,7 +56,7 @@ public class GraphEnhancementQueryEnvironmentTest {
   private static final Path ROOT = Paths.get("/fake/cell/root");
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     cellRoots = DefaultCellPathResolver.of(ROOT, ImmutableMap.of());
   }
 
@@ -190,6 +190,19 @@ public class GraphEnhancementQueryEnvironmentTest {
     ImmutableList.Builder<Object> subLibDeps = ImmutableList.builder();
     env.forEachFwdDep(ImmutableSet.of(getQueryTarget("//:sublib")), subLibDeps::add);
     assertThat(subLibDeps.build(), Matchers.contains(getQueryTarget("//:bottom")));
+  }
+
+  @Test
+  public void getRDeps() {
+    GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
+    // lib -> sublib
+    assertThat(
+        env.getReverseDeps(ImmutableSet.of(getQueryTarget("//:sublib"))),
+        Matchers.contains(getQueryTarget("//:lib")));
+    // sublib -> bottom
+    assertThat(
+        env.getReverseDeps(ImmutableSet.of(getQueryTarget("//:bottom"))),
+        Matchers.contains(getQueryTarget("//:sublib")));
   }
 
   @Test

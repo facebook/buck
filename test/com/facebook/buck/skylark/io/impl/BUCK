@@ -15,7 +15,7 @@ standard_java_test(
         "//test/com/facebook/buck/io/watchman:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/util/timing:testutil",
-        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/bazel:bazel",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/jsr:jsr305",

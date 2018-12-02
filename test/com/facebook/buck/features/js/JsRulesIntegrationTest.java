@@ -62,7 +62,7 @@ public class JsRulesIntegrationTest {
   private Path genPath;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     // worker tool does not work on windows
     assumeFalse(Platform.detect() == Platform.WINDOWS);
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "js_rules", tmp);
@@ -79,7 +79,7 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void librariesDoNotMaterializeGeneratedDeps() throws IOException, InterruptedException {
+  public void librariesDoNotMaterializeGeneratedDeps() throws IOException {
     String libraryTarget = "//js:lib-depending-on-lib-with-generated-sources";
 
     workspace.enableDirCache();
@@ -103,7 +103,7 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void bundlesMaterializeGeneratedDeps() throws IOException, InterruptedException {
+  public void bundlesMaterializeGeneratedDeps() throws IOException {
     String bundleTarget = "//js:bundle-with-generated-sources";
 
     // We build all dependencies of the bundle target, and clean buck-out/ afterwards. That means
@@ -374,6 +374,12 @@ public class JsRulesIntegrationTest {
   public void genruleAllowsToRewriteMiscDir() throws IOException {
     workspace.runBuckBuild("//js:misc-genrule").assertSuccess();
     workspace.verify(Paths.get("misc_genrule.expected"), genPath);
+  }
+
+  @Test
+  public void genruleAllowsToRewriteDepsFile() throws IOException {
+    workspace.runBuckBuild("//js:deps-file-genrule#dependencies").assertSuccess();
+    workspace.verify(Paths.get("deps_file_genrule.expected"), genPath);
   }
 
   private Path getGenPath(String filename) {

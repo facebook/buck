@@ -103,6 +103,8 @@ public class XcodeWorkspaceConfigDescription
 
     Optional<String> getExplicitRunnablePath();
 
+    Optional<XCScheme.LaunchAction.WatchInterface> getWatchInterface();
+
     Optional<XCScheme.LaunchAction.LaunchStyle> getLaunchStyle();
 
     Optional<

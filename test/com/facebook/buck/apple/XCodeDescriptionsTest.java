@@ -35,7 +35,7 @@ import org.junit.Test;
 public class XCodeDescriptionsTest {
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
   }
 

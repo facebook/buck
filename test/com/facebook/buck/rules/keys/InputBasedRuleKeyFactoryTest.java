@@ -106,7 +106,7 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeyChangesIfInputContentsFromPathSourceChanges() throws Exception {
+  public void ruleKeyChangesIfInputContentsFromPathSourceChanges() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -137,7 +137,7 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathChanges() throws Exception {
+  public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathChanges() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -212,8 +212,7 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathInRuleKeyAppendableChanges()
-      throws Exception {
+  public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathInRuleKeyAppendableChanges() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -318,7 +317,7 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void nestedSizeLimitExceptionHandled() throws Exception {
+  public void nestedSizeLimitExceptionHandled() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
@@ -350,7 +349,7 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeyNotCalculatedIfSizeLimitHit() throws Exception {
+  public void ruleKeyNotCalculatedIfSizeLimitHit() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
@@ -381,7 +380,7 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeyNotCalculatedIfSizeLimitHitWithMultipleInputs() throws Exception {
+  public void ruleKeyNotCalculatedIfSizeLimitHitWithMultipleInputs() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
@@ -416,7 +415,7 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeyNotCalculatedIfSizeLimitHitWithDirectory() throws Exception {
+  public void ruleKeyNotCalculatedIfSizeLimitHitWithDirectory() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
@@ -449,7 +448,7 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeysForOversizedRules() throws Exception {
+  public void ruleKeysForOversizedRules() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
@@ -481,7 +480,7 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeysForUndersizedRules() throws Exception {
+  public void ruleKeysForUndersizedRules() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());

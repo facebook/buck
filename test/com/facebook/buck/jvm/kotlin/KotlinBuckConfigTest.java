@@ -43,7 +43,7 @@ public class KotlinBuckConfigTest {
   private Path testDataDirectory;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     KotlinTestAssumptions.assumeUnixLike();
 
     tmp.newFolder("faux_kotlin_home", "bin");

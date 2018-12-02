@@ -25,7 +25,6 @@ import com.google.caliper.Param;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
@@ -43,7 +42,7 @@ public class CacheBenchmark {
   private WatchedFileHashCache cache;
 
   @Before
-  public void setUpTest() throws Exception {
+  public void setUpTest() {
     setUpBenchmark();
     cache = new WatchedFileHashCache(new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT);
   }
@@ -83,24 +82,20 @@ public class CacheBenchmark {
   }
 
   @Benchmark
-  public void addMultipleEntries() throws Exception {
+  public void addMultipleEntries() {
     addEntries();
   }
 
   private void addEntries() {
     leaves.forEach(
         leaf -> {
-          try {
-            HashCode hashCode = Hashing.sha1().newHasher().putBytes(leaf.getBytes()).hash();
-            cache.set(Paths.get(leaf), hashCode);
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
+          HashCode hashCode = Hashing.sha1().newHasher().putBytes(leaf.getBytes()).hash();
+          cache.set(Paths.get(leaf), hashCode);
         });
   }
 
   @Test
-  public void invalidateMultipleEntries() throws Exception {
+  public void invalidateMultipleEntries() {
     addEntries();
     invalidateEntries();
   }

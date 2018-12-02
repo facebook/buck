@@ -32,7 +32,6 @@ standard_java_test(
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
-        "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/testutil:testutil",

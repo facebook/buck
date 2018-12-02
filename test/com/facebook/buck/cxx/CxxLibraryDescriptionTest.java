@@ -1011,7 +1011,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkableDeps() throws Exception {
+  public void nativeLinkableDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     CxxLibrary dep =
         (CxxLibrary)
@@ -1032,7 +1032,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkableExportedDeps() throws Exception {
+  public void nativeLinkableExportedDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     CxxLibrary dep =
         (CxxLibrary)
@@ -1053,7 +1053,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkTargetMode() throws Exception {
+  public void nativeLinkTargetMode() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     CxxLibrary rule =
         (CxxLibrary)
@@ -1066,7 +1066,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkTargetDeps() throws Exception {
+  public void nativeLinkTargetDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     CxxLibrary dep =
         (CxxLibrary)

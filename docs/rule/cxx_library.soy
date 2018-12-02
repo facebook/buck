@@ -1,3 +1,18 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace cxx_library}
 
 /***/
@@ -28,7 +43,7 @@ whereas an Android APK (<code>android_binary</code>) would require a shared PIC-
 
 <p>
 Also, in order to ensure that Buck builds a target that the <code>cxx_library</code> rule 
-depends on, such as a {call buck.ruleLink}{param name : 'cxx_genrule' /}{/call},
+depends on, such as a {call buck.cxx_genrule /},
 you should specify to {call buck.cmd_link}{param name : 'build'
 /}{/call} a top-level target rather than the <code>cxx_library</code> itself. 
 For example, you might specify to <code>buck build</code> a <code>cxx_binary</code> that 

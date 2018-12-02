@@ -24,6 +24,7 @@ import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Wrapper class around VersionedTargetGraphCache containing a command specific stats tracker to
@@ -50,12 +51,12 @@ public class InstrumentedVersionedTargetGraphCache {
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ImmutableMap<String, VersionUniverse> versionUniverses,
       ForkJoinPool pool)
-      throws VersionException, InterruptedException {
-    return cache.getVersionedTargetGraph(
+      throws VersionException, InterruptedException, TimeoutException {
+    return cache.toVersionedTargetGraph(
         eventBus,
+        versionUniverses,
         typeCoercerFactory,
         targetGraphAndBuildTargets,
-        versionUniverses,
         pool,
         statsTracker);
   }
@@ -77,6 +78,7 @@ public class InstrumentedVersionedTargetGraphCache {
             targetGraphAndBuildTargets,
             new VersionBuckConfig(buckConfig).getVersionUniverses(),
             new ForkJoinPool(buckConfig.getNumThreads()),
+            new VersionBuckConfig(buckConfig),
             statsTracker)
         .getTargetGraphAndBuildTargets();
   }

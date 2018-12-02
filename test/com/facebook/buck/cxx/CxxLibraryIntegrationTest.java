@@ -364,7 +364,7 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void buildWithExplicitHeaderMode() throws InterruptedException, IOException {
+  public void buildWithExplicitHeaderMode() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
     workspace.setUp();

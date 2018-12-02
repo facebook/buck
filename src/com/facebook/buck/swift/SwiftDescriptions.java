@@ -56,6 +56,7 @@ public class SwiftDescriptions {
   }
 
   public static void populateSwiftLibraryDescriptionArg(
+      SwiftBuckConfig swiftBuckConfig,
       SourcePathResolver sourcePathResolver,
       SwiftLibraryDescriptionArg.Builder output,
       CxxLibraryDescription.CommonArg args,
@@ -64,8 +65,12 @@ public class SwiftDescriptions {
     output.setName(args.getName());
     output.setSrcs(filterSwiftSources(sourcePathResolver, args.getSrcs()));
     if (args instanceof SwiftCommonArg) {
+      Optional<String> swiftVersion = ((SwiftCommonArg) args).getSwiftVersion();
+      if (!swiftVersion.isPresent()) {
+        swiftVersion = swiftBuckConfig.getVersion();
+      }
       output.setCompilerFlags(((SwiftCommonArg) args).getSwiftCompilerFlags());
-      output.setVersion(((SwiftCommonArg) args).getSwiftVersion());
+      output.setVersion(swiftVersion);
     } else {
       output.setCompilerFlags(args.getCompilerFlags());
     }

@@ -209,7 +209,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
   }
 
   @Override
-  public HashCode get(Path path) throws IOException {
+  public HashCode get(Path path) {
     return fileSystemMap.get(path).getHashCodeAndFileType().getHashCode();
   }
 
@@ -231,7 +231,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
   }
 
   @Override
-  public long getSize(Path relativePath) throws IOException {
+  public long getSize(Path relativePath) {
     return fileSystemMap.get(relativePath).getSize();
   }
 

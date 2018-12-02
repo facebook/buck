@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.MoreStringsForTests.containsIgnoringPlatformNewlines;
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -25,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -273,9 +275,21 @@ public class QueryCommandIntegrationTest {
 
     result.assertSuccess();
     assertThat(result.getStdout(), containsString("//example:one"));
-    assertThat(result.getStderr(), containsString("No owner was found for odd_files/unowned.cpp"));
-    assertThat(result.getStderr(), containsString("File odd_files/missing.cpp does not exist"));
-    assertThat(result.getStderr(), containsString("odd_files/non_file is not a regular file"));
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "No owner was found for "
+                + MorePaths.pathWithPlatformSeparators("odd_files/unowned.cpp")));
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "File "
+                + MorePaths.pathWithPlatformSeparators("odd_files/missing.cpp")
+                + " does not exist"));
+    assertThat(
+        result.getStderr(),
+        containsString(
+            MorePaths.pathWithPlatformSeparators("odd_files/non_file") + " is not a regular file"));
   }
 
   @Test
@@ -314,9 +328,9 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    Path onePath = workspace.getPath("example/1.txt");
     ProcessResult result =
-        workspace.runBuckCommand("query", "owner(%s)", onePath.toAbsolutePath().toString());
+        workspace.runBuckCommand(
+            "query", "owner(%s)", MorePaths.pathWithUnixSeparators("example/1.txt"));
 
     result.assertSuccess();
     assertThat(result.getStdout(), containsString("//example:one"));
@@ -377,7 +391,7 @@ public class QueryCommandIntegrationTest {
         workspace.runBuckCommand(
             "query",
             "--json",
-            "kind('apple_library', deps('%s') except '%s')",
+            "kind('java_library', deps('%s') except '%s')",
             "//example:one",
             "//example:five",
             "//example/app:seven");
@@ -449,7 +463,9 @@ public class QueryCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("query", "labels('srcs', '//example:one')");
     result.assertSuccess();
-    assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("example/1.txt\n")));
+    assertThat(
+        result.getStdout(),
+        containsIgnoringPlatformNewlines(MorePaths.pathWithPlatformSeparators("example/1.txt")));
   }
 
   @Test
@@ -464,7 +480,10 @@ public class QueryCommandIntegrationTest {
         result.getStdout(),
         is(
             equalToIgnoringPlatformNewlines(
-                String.format("%s%n%s%n", "example/1.txt", "example/2.txt"))));
+                String.format(
+                    "%s%n%s%n",
+                    MorePaths.pathWithPlatformSeparators("example/1.txt"),
+                    MorePaths.pathWithPlatformSeparators("example/2.txt")))));
   }
 
   @Test
@@ -477,13 +496,17 @@ public class QueryCommandIntegrationTest {
         workspace.runBuckCommand(
             "query",
             "labels('tests', '//example:four') + labels('srcs', '//example:five') "
-                + "+ labels('exported_headers', '//example:six') - '//example:six'");
+                + "+ labels('srcs', '//example:six') - '//example:six'");
     result.assertSuccess();
     assertThat(
         result.getStdout(),
         is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-one-five-except-six-src-test-exp-header"))));
+            containsIgnoringPlatformNewlines(
+                "//example:four-application-tests\n"
+                    + "//example:four-tests\n"
+                    + MorePaths.pathWithPlatformSeparators("example/5.txt")
+                    + "\n"
+                    + MorePaths.pathWithPlatformSeparators("example/6.txt"))));
   }
 
   @Test
@@ -497,7 +520,45 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         parseJSON(result.getStdout()),
-        is(equalTo(parseJSON(workspace.getFileContents("stdout-pkg-sources.json")))));
+        is(
+            equalTo(
+                parseJSON(
+                    ("{\n"
+                            + "  \"//example:\" : [\n"
+                            + "    \"//example:six\",\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("example/1-test.txt")
+                            + "\",\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("example/1.txt")
+                            + "\",\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("example/2.txt")
+                            + "\",\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("example/3.txt")
+                            + "\",\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("example/4-application-test.txt")
+                            + "\",\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("example/4-test.txt")
+                            + "\",\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("example/4.txt")
+                            + "\",\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("example/5.txt")
+                            + "\",\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("example/6-test.txt")
+                            + "\",\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("example/6.txt")
+                            + "\"\n"
+                            + "  ]\n"
+                            + "}\n")
+                        .replace("\\", "\\\\")))));
   }
 
   @Test
@@ -724,7 +785,7 @@ public class QueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "query",
-            "deps(//example:one#no-linkermap)",
+            "deps(//example:one#doc)",
             "--output",
             "minrank",
             "--output-attributes",
@@ -739,7 +800,7 @@ public class QueryCommandIntegrationTest {
     result =
         workspace.runBuckCommand(
             "query",
-            "deps(//example:one#no-linkermap)",
+            "deps(//example:one#doc)",
             "--output",
             "maxrank",
             "--output-attributes",
@@ -753,6 +814,7 @@ public class QueryCommandIntegrationTest {
   }
 
   class ParserProfileFinder extends SimpleFileVisitor<Path> {
+
     private Path profilerPath = null;
 
     @Override
@@ -851,7 +913,9 @@ public class QueryCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("query", "buildfile(owner('example/1.txt'))");
 
     result.assertSuccess();
-    assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("example/BUCK\n")));
+    assertThat(
+        result.getStdout(),
+        containsIgnoringPlatformNewlines(MorePaths.pathWithPlatformSeparators("example/BUCK")));
   }
 
   @Test
@@ -871,7 +935,22 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         parseJSON(result.getStdout()),
-        is(equalTo(parseJSON(workspace.getFileContents("stdout-buildfile-eight-nine.json")))));
+        is(
+            equalTo(
+                parseJSON(
+                    ("{\n"
+                            + "  \"example/app/lib/9.txt\": [\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("example/app/BUCK")
+                            + "\"\n"
+                            + "  ],\n"
+                            + "  \"other/8-test.txt\": [\n"
+                            + "    \""
+                            + MorePaths.pathWithPlatformSeparators("other/BUCK")
+                            + "\"\n"
+                            + "  ]\n"
+                            + "}\n")
+                        .replace("\\", "\\\\")))));
   }
 
   @Test
@@ -884,8 +963,7 @@ public class QueryCommandIntegrationTest {
 
     result.assertSuccess();
     assertThat(
-        result.getStdout(),
-        is(equalToIgnoringPlatformNewlines("example/4-test.txt\nexample/Test.plist\n")));
+        result.getStdout().trim(), is(MorePaths.pathWithPlatformSeparators("example/4-test.txt")));
   }
 
   @Test
@@ -898,7 +976,10 @@ public class QueryCommandIntegrationTest {
         workspace.runBuckCommand(workspace.resolve("cell1"), "query", "inputs(cell2//foo:test)");
 
     result.assertSuccess();
-    assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("../cell2/foo/foo.txt\n")));
+    assertThat(
+        result.getStdout(),
+        containsIgnoringPlatformNewlines(
+            MorePaths.pathWithPlatformSeparators("../cell2/foo/foo.txt")));
   }
 
   @Test
@@ -916,7 +997,9 @@ public class QueryCommandIntegrationTest {
         is(
             equalToIgnoringPlatformNewlines(
                 String.format(
-                    "%s%n%s%n%s%n", "example/4-test.txt", "example/Test.plist", "example/1.txt"))));
+                    "%s%n%s%n",
+                    MorePaths.pathWithPlatformSeparators("example/4-test.txt"),
+                    MorePaths.pathWithPlatformSeparators("example/1.txt")))));
   }
 
   @Test
@@ -1062,5 +1145,161 @@ public class QueryCommandIntegrationTest {
     JsonNode jsonNode = new ObjectMapper().readTree(result.getStdout());
 
     assertEquals(expectedNode, jsonNode);
+  }
+
+  @Test
+  public void testListValuesFromConfigurableAttributesAreConcatenated() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_configurable_attributes", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=a",
+            "//:genrule_with_select_in_srcs",
+            "--output-attributes",
+            "srcs");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:genrule_with_select_in_srcs\" : {\n"
+                    + "    \"srcs\" : [ \":c\", \":a\" ]\n"
+                    + "  }\n"
+                    + "}\n")));
+  }
+
+  @Test
+  public void testStringValuesFromConfigurableAttributesAreConcatenated() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_configurable_attributes", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=a",
+            "//:genrule_with_select_in_cmd",
+            "--output-attributes",
+            "cmd");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:genrule_with_select_in_cmd\" : {\n"
+                    + "    \"cmd\" : \"echo $(location :a) > $OUT\"\n"
+                    + "  }\n"
+                    + "}\n")));
+  }
+
+  @Test
+  public void testIntegerValuesFromConfigurableAttributesAreConcatenated() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_configurable_attributes", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=a",
+            "//:java_test_with_select_in_timeout",
+            "--output-attributes",
+            "test_case_timeout_ms");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:java_test_with_select_in_timeout\" : {\n"
+                    + "    \"test_case_timeout_ms\" : 13\n"
+                    + "  }\n"
+                    + "}\n")));
+
+    result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=b",
+            "//:java_test_with_select_in_timeout",
+            "--output-attributes",
+            "test_case_timeout_ms");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:java_test_with_select_in_timeout\" : {\n"
+                    + "    \"test_case_timeout_ms\" : 14\n"
+                    + "  }\n"
+                    + "}\n")));
+  }
+
+  @Test
+  public void testMapValuesFromConfigurableAttributesAreConcatenated() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_configurable_attributes", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=a",
+            "//:java_test_with_select_in_env",
+            "--output-attributes",
+            "env");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:java_test_with_select_in_env\" : {\n"
+                    + "    \"env\" : {\n"
+                    + "      \"var1\" : \"val1\",\n"
+                    + "      \"var2\" : \"val2\",\n"
+                    + "      \"vara\" : \"vala\"\n"
+                    + "    }\n"
+                    + "  }\n"
+                    + "}\n")));
+
+    result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=b",
+            "//:java_test_with_select_in_env",
+            "--output-attributes",
+            "env");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:java_test_with_select_in_env\" : {\n"
+                    + "    \"env\" : {\n"
+                    + "      \"var1\" : \"val1\",\n"
+                    + "      \"var2\" : \"val2\",\n"
+                    + "      \"varb\" : \"valb\"\n"
+                    + "    }\n"
+                    + "  }\n"
+                    + "}\n")));
   }
 }

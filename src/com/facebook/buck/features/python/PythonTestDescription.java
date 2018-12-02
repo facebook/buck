@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -36,6 +37,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -71,6 +73,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import com.google.common.io.Resources;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -323,6 +326,7 @@ public class PythonTestDescription
             .concat(args.getNeededCoverage().stream().map(NeededCoverageSpec::getBuildTarget))
             .map(graphBuilder::getRule)
             .collect(ImmutableList.toImmutableList());
+
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
@@ -411,6 +415,21 @@ public class PythonTestDescription
             ImmutableMap.copyOf(
                 Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder)));
 
+    // Additional CXX Targets used to generate CXX coverage.
+    ImmutableSet<UnflavoredBuildTarget> additionalCoverageTargets =
+        RichStream.from(args.getAdditionalCoverageTargets())
+            .map(target -> target.getUnflavoredBuildTarget())
+            .collect(ImmutableSet.toImmutableSet());
+    ImmutableSortedSet<SourcePath> additionalCoverageSourcePaths =
+        additionalCoverageTargets.isEmpty()
+            ? ImmutableSortedSet.of()
+            : binary
+                .getRuntimeDeps(ruleFinder)
+                .filter(
+                    target -> additionalCoverageTargets.contains(target.getUnflavoredBuildTarget()))
+                .map(target -> DefaultBuildTargetSourcePath.of(target))
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+
     // Generate and return the python test rule, which depends on the python binary rule above.
     return PythonTest.from(
         buildTarget,
@@ -421,6 +440,7 @@ public class PythonTestDescription
         binary,
         args.getLabels(),
         neededCoverageBuilder.build(),
+        additionalCoverageSourcePaths,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
             .orElse(cxxBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
@@ -473,5 +493,12 @@ public class PythonTestDescription
     ImmutableList<String> getBuildArgs();
 
     ImmutableMap<String, StringWithMacros> getEnv();
+
+    // Addidtional CxxLibrary Targets for coverage check
+    // When we use python to drive cxx modules (loaded as foo.so), we would like
+    // to collect code coverage of foo.so as well. In this case, we to path
+    // targets that builds foo.so so that buck can resolve its binary path and
+    // export the downstream testing framework to consume
+    ImmutableSet<BuildTarget> getAdditionalCoverageTargets();
   }
 }

@@ -39,22 +39,14 @@ public class RemoteExecutionConsoleLineProviderTest {
     statsProvider.casDownloads = 21;
     statsProvider.actionsPerState.put(State.ACTION_SUCCEEDED, 84);
     RemoteExecutionConsoleLineProvider provider =
-        new RemoteExecutionConsoleLineProvider(true, true, statsProvider);
+        new RemoteExecutionConsoleLineProvider(statsProvider);
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(2, lines.size());
     Assert.assertEquals(
-        "RE Actions: Local=0 Remote=[del=0 comp=0 upl=0 exec=0 dwl=0 suc=84 fail=0]", lines.get(0));
+        "[RE] Actions: Local=0 Remote=[del=0 comp=0 upl=0 exec=0 dwl=0 suc=84 fail=0]",
+        lines.get(0));
     Assert.assertEquals(
-        "RE CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(1));
-  }
-
-  @Test
-  public void testLoggingDisable() {
-    RemoteExecutionConsoleLineProvider provider =
-        new RemoteExecutionConsoleLineProvider(false, false, statsProvider);
-
-    List<String> lines = provider.createConsoleLinesAtTime(0);
-    Assert.assertEquals(0, lines.size());
+        "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(1));
   }
 
   private static final class TestStatsProvider implements RemoteExecutionStatsProvider {

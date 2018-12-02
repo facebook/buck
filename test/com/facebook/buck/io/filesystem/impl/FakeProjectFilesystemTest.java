@@ -77,7 +77,7 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void testReadLines() throws IOException {
+  public void testReadLines() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.writeContentsToPath(linesToText("line one.", "line two.", ""), Paths.get("A.txt"));
     filesystem.writeLinesToPath(ImmutableList.of(), Paths.get("B.txt"));
@@ -244,7 +244,7 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void testSingleElementMkdirsExists() throws IOException {
+  public void testSingleElementMkdirsExists() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(Paths.get("foo"));
     assertTrue(filesystem.isDirectory(Paths.get("foo")));
@@ -252,7 +252,7 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void testEachElementOfMkdirsExists() throws IOException {
+  public void testEachElementOfMkdirsExists() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(Paths.get("foo/bar/baz"));
     assertTrue(filesystem.isDirectory(Paths.get("foo")));
@@ -262,7 +262,7 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void testDirectoryDoesNotExistAfterRmdir() throws IOException {
+  public void testDirectoryDoesNotExistAfterRmdir() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(Paths.get("foo"));
     filesystem.deleteRecursivelyIfExists(Paths.get("foo"));
@@ -270,7 +270,7 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void testDirectoryExistsIfIsDirectory() throws IOException {
+  public void testDirectoryExistsIfIsDirectory() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(Paths.get("foo"));
     assertTrue(filesystem.isDirectory(Paths.get("foo")));

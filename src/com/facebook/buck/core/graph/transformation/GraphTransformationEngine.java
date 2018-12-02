@@ -17,8 +17,8 @@
 package com.facebook.buck.core.graph.transformation;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
+import java.util.Set;
+import java.util.concurrent.Future;
 
 /**
  * Transformation engine that transforms supplied ComputeKey into ComputeResult via {@link
@@ -27,12 +27,12 @@ import java.util.function.Function;
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
  * request dependent results of other transformations through {@link
- * TransformationEnvironment#evaluate(Object, Function)}.
- *
- * <p>Implementations should have all methods of this class as tail recursive and non-blocking when
- * working together with {@link TransformationEnvironment} and {@link GraphTransformer}.
+ * GraphTransformer#discoverDeps(Object)}
  */
 public interface GraphTransformationEngine<ComputeKey, ComputeResult> {
+
+  /** Shuts down the engine and the backing executor */
+  void shutdownNow();
 
   /**
    * Asynchronously computes the result for the given key
@@ -40,7 +40,7 @@ public interface GraphTransformationEngine<ComputeKey, ComputeResult> {
    * @param key the specific Key on the graph to compute
    * @return future of the result of applying the transformer on the graph with the given key
    */
-  CompletableFuture<ComputeResult> compute(ComputeKey key);
+  Future<ComputeResult> compute(ComputeKey key);
 
   /**
    * Synchronously computes the given key
@@ -56,7 +56,7 @@ public interface GraphTransformationEngine<ComputeKey, ComputeResult> {
    * @param keys iterable of keys to compute on the graph
    * @return a map of futures of the result for each of the keys supplied
    */
-  ImmutableMap<ComputeKey, CompletableFuture<ComputeResult>> computeAll(Iterable<ComputeKey> keys);
+  ImmutableMap<ComputeKey, Future<ComputeResult>> computeAll(Set<ComputeKey> keys);
 
   /**
    * Synchronously computes the result for multiple keys
@@ -64,5 +64,5 @@ public interface GraphTransformationEngine<ComputeKey, ComputeResult> {
    * @param keys iterable of the keys to compute on the graph
    * @return a map of the results for each of the keys supplied
    */
-  ImmutableMap<ComputeKey, ComputeResult> computeAllUnchecked(Iterable<ComputeKey> keys);
+  ImmutableMap<ComputeKey, ComputeResult> computeAllUnchecked(Set<ComputeKey> keys);
 }

@@ -80,3 +80,86 @@ genrule(
         "//:c": "echo c > $OUT",
     }),
 )
+
+genrule(
+    name = "echo_with_concatenation_in_out",
+    out = "a" + select({
+        "//:a": "a",
+        "//:b": "b",
+    }) + "c",
+    cmd = "echo a > $OUT",
+)
+
+config_setting(
+    name = "java_version_7",
+    values = {
+        "java.version": "7",
+    },
+)
+
+config_setting(
+    name = "java_version_8",
+    values = {
+        "java.version": "8",
+    },
+)
+
+java_library(
+    name = "java_library_with_target_version",
+    srcs = ["JavaClassWithVersion8Syntax.java"],
+    source = "1." + select({
+        "//:java_version_7": "7",
+        "//:java_version_8": "8",
+    }),
+    target = "1." + select({
+        "//:java_version_7": "7",
+        "//:java_version_8": "8",
+    }),
+)
+
+genrule(
+    name = "echo_with_concatenation_in_cmd",
+    out = "echo_out.txt",
+    cmd = "echo " + select({
+        "//:a": "a",
+        "//:b": "b",
+    }) + " > $OUT",
+)
+
+java_test(
+    name = "java_test_with_select_in_env",
+    srcs = ["JavaEnvTest.java"],
+    env = {
+        "VARC": "c",
+    } + select({
+        "//:a": {"VARA": "a"},
+        "//:b": {"VARB": "b"},
+    }),
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)
+
+java_test(
+    name = "java_test_with_duplicate_keys_in_select_in_env",
+    srcs = ["JavaEnvTest.java"],
+    env = {
+        "VARA": "a",
+    } + select({
+        "//:a": {"VARA": "a"},
+        "//:b": {"VARB": "b"},
+    }),
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)
+
+genrule(
+    name = "genrule_with_non_existent_src",
+    srcs = select({
+        ":a": ["a.txt"],
+        ":b": ["d.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+)

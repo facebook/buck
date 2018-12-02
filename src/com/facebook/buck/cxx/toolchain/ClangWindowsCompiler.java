@@ -29,8 +29,8 @@ import java.nio.file.Path;
  */
 public class ClangWindowsCompiler extends ClangCompiler {
 
-  public ClangWindowsCompiler(Tool tool) {
-    super(tool);
+  public ClangWindowsCompiler(Tool tool, boolean useDependencyTree) {
+    super(tool, useDependencyTree);
   }
 
   @Override

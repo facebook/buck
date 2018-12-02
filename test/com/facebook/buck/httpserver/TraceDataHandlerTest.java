@@ -31,7 +31,6 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.regex.Matcher;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.easymock.EasyMockSupport;
@@ -56,7 +55,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
   }
 
   @Test
-  public void testHandleGet() throws IOException, ServletException {
+  public void testHandleGet() throws IOException {
     Request baseRequest = createMock(Request.class);
     expect(baseRequest.getMethod()).andReturn("GET");
     expect(baseRequest.getPathInfo()).andReturn("/abcdef");
@@ -87,7 +86,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
   }
 
   @Test
-  public void testHandleGetWithMultipleTrace() throws IOException, ServletException {
+  public void testHandleGetWithMultipleTrace() throws IOException {
     Request baseRequest = createMock(Request.class);
     expect(baseRequest.getMethod()).andReturn("GET");
     expect(baseRequest.getPathInfo()).andReturn("/abcdef");
@@ -120,7 +119,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
   }
 
   @Test
-  public void testHandleGetWithCallback() throws IOException, ServletException {
+  public void testHandleGetWithCallback() throws IOException {
     Request baseRequest = createMock(Request.class);
     expect(baseRequest.getMethod()).andReturn("GET");
     expect(baseRequest.getPathInfo()).andReturn("/abcdef");
@@ -151,7 +150,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
   }
 
   @Test
-  public void testHandleGetWithMultipleTraceCallback() throws IOException, ServletException {
+  public void testHandleGetWithMultipleTraceCallback() throws IOException {
     Request baseRequest = createMock(Request.class);
     expect(baseRequest.getMethod()).andReturn("GET");
     expect(baseRequest.getPathInfo()).andReturn("/abcdef");

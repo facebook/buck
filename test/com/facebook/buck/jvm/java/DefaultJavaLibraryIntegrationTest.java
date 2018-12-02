@@ -116,7 +116,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
@@ -136,7 +136,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testBuildJavaLibraryWithoutSrcsAndVerifyAbi()
-      throws InterruptedException, IOException, CompressorException {
+      throws IOException, CompressorException {
     setUpProjectWorkspaceForScenario("abi");
     workspace.enableDirCache();
 
@@ -1151,14 +1151,13 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     assertThat(
         result.getStderr(),
         Matchers.stringContainsInOrder(
-            "Build failed:",
             "The annotation processor com.example.buck.AnnotationProcessor has crashed.",
             "java.lang.RuntimeException: java.lang.IllegalArgumentException: Test crash!   |\n|  at com.example.buck.AnnotationProcessor.process(AnnotationProcessor.java:22) |\n|  ...", // Buck frames have been stripped properly
             "Caused by: java.lang.IllegalArgumentException: Test crash!", // Without then stripping
             // out the caused
             // exception!
-            "    When running <javac>.",
-            "    When building rule //:main."));
+            "When running <javac>.",
+            "When building rule //:main."));
   }
 
   @Test

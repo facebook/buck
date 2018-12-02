@@ -73,8 +73,7 @@ public class WriteFileStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     try (InputStream sourceStream = source.openStream()) {
       filesystem.copyToPath(sourceStream, outputPath, StandardCopyOption.REPLACE_EXISTING);
       if (executable) {

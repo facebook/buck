@@ -137,8 +137,7 @@ public class CopyStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     filesystem.copy(source, destination, copySourceMode);
     return StepExecutionResults.SUCCESS;
   }

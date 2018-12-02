@@ -40,7 +40,7 @@ public class ThriftRuleKeyLoggerTest {
   private Path logDir;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     logDir = temporaryFolder.newFolder("root");
   }
 

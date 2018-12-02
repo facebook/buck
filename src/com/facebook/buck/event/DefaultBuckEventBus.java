@@ -27,7 +27,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -153,7 +152,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
    * debugging when close is called during exception processing.
    */
   @Override
-  public void close() throws IOException {
+  public void close() {
     long timeoutTime = System.currentTimeMillis() + shutdownTimeoutMillis;
 
     // it might have happened that executor service is still processing a task which in turn may

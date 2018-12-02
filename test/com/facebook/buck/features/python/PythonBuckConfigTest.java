@@ -51,7 +51,7 @@ public class PythonBuckConfigTest {
   @Rule public TemporaryPaths temporaryFolder2 = new TemporaryPaths();
 
   @Before
-  public void setUp() throws Exception {}
+  public void setUp() {}
 
   @Test
   public void testPathToPexExecuterUsesConfigSetting() throws IOException {

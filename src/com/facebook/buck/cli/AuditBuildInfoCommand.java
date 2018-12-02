@@ -54,8 +54,7 @@ public class AuditBuildInfoCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
     try {
       collectAndDumpBuildInformation(params.getConsole(), arguments, generateJsonOutput);
     } catch (IllegalArgumentException e) {

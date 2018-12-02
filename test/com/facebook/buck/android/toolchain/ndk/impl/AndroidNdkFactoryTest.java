@@ -57,7 +57,7 @@ public class AndroidNdkFactoryTest {
   private RuleKeyConfiguration ruleKeyConfiguration;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     projectFilesystem = TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     processExecutor = new DefaultProcessExecutor(new TestConsole());
     executableFinder = new ExecutableFinder();

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
@@ -58,6 +59,11 @@ public class Optionals {
     } else {
       return first.get().compareTo(second.get());
     }
+  }
+
+  public static <T> T require(Optional<T> optional) {
+    Preconditions.checkState(optional.isPresent());
+    return optional.get();
   }
 
   /**

@@ -70,8 +70,7 @@ public class JarDirectoryStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
 
     JavacEventSinkToBuckEventBusBridge eventSink =
         new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());

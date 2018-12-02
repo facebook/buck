@@ -26,6 +26,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
@@ -59,7 +60,6 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
-import com.google.common.collect.ImmutableSortedSet;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Rule;
@@ -96,6 +96,10 @@ public class JsBundleGenruleDescriptionTest {
     setUpWithOptions(builderOptions().rewriteMisc(), extraFlavors);
   }
 
+  private void setUpWithRewriteDepsFile(Flavor... extraFlavors) {
+    setUpWithOptions(builderOptions().rewriteDepsFile(), extraFlavors);
+  }
+
   private void setupWithSkipResources(Flavor... extraFlavors) {
     setUpWithOptions(builderOptions().skipResources(), extraFlavors);
   }
@@ -117,8 +121,7 @@ public class JsBundleGenruleDescriptionTest {
   public void forwardsFlavorsToJsBundle() {
     Flavor[] extraFlavors = {JsFlavors.IOS, JsFlavors.RELEASE};
     setUp(defaultBundleTarget.withAppendedFlavors(JsFlavors.RAM_BUNDLE_INDEXED), extraFlavors);
-    assertEquals(
-        ImmutableSortedSet.of(setup.jsBundle(extraFlavors)), setup.genrule().getBuildDeps());
+    assertThat(setup.genrule().getBuildDeps(), hasItem(setup.jsBundle(extraFlavors)));
   }
 
   @Test
@@ -423,16 +426,6 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
-  public void exposeDepsFileOfJsBundleWithSpecialFlavor() {
-    setUp(JsFlavors.DEPENDENCY_FILE);
-    DefaultSourcePathResolver pathResolver = sourcePathResolver();
-
-    assertEquals(
-        pathResolver.getRelativePath(setup.jsBundleDepsFile().getSourcePathToOutput()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
-  }
-
-  @Test
   public void createsJsDir() {
     JsBundleGenrule genrule = setup.genrule();
     BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
@@ -483,21 +476,30 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
-  public void addsSourceMapAndSourceMapOutAsEnvironmentVariable() {
+  public void addsSourceMapAsEnvironmentVariable() {
+    setUp();
+
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+
+    assertThat(
+        builder.build(),
+        hasEntry(
+            "SOURCEMAP",
+            pathResolver.getAbsolutePath(setup.jsBundle().getSourcePathToSourceMap()).toString()));
+  }
+
+  @Test
+  public void addsSourceMapOutAsEnvironmentVariable() {
     setUpWithRewriteSourceMap();
 
     SourcePathResolver pathResolver = sourcePathResolver();
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, builder);
-    ImmutableMap<String, String> env = builder.build();
 
     assertThat(
-        env,
-        hasEntry(
-            "SOURCEMAP",
-            pathResolver.getAbsolutePath(setup.jsBundle().getSourcePathToSourceMap()).toString()));
-    assertThat(
-        env,
+        builder.build(),
         hasEntry(
             "SOURCEMAP_OUT",
             pathResolver.getAbsolutePath(setup.genrule().getSourcePathToSourceMap()).toString()));
@@ -650,6 +652,105 @@ public class JsBundleGenruleDescriptionTest {
             context
                 .getSourcePathResolver()
                 .getRelativePath(setup.genrule().getSourcePathToMisc())));
+  }
+
+  @Test
+  public void exposeDepsFileOfJsBundleWithSpecialFlavor() {
+    setUp(JsFlavors.DEPENDENCY_FILE);
+    DefaultSourcePathResolver pathResolver = sourcePathResolver();
+
+    assertEquals(
+        pathResolver.getRelativePath(setup.jsBundleDepsFile().getSourcePathToOutput()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+  }
+
+  @Test
+  public void addsDepsFileAsEnvironmentVariable() {
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertThat(
+        env,
+        hasEntry(
+            "DEPENDENCIES",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToDepsFile()).toString()));
+  }
+
+  @Test
+  public void addsDepsFileAndDepsFileOutAsEnvironmentVariableOnRewrite() {
+    setUpWithRewriteDepsFile();
+
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertThat(
+        env,
+        hasEntry(
+            "DEPENDENCIES",
+            pathResolver
+                .getAbsolutePath(setup.jsBundleDepsFile().getSourcePathToOutput())
+                .toString()));
+    assertThat(
+        env,
+        hasEntry(
+            "DEPENDENCIES_OUT",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToDepsFile()).toString()));
+  }
+
+  @Test
+  public void specialDepsFileTargetPointsToOwnDepsFile() {
+    setUp(JsFlavors.DEPENDENCY_FILE);
+
+    DefaultSourcePathResolver pathResolver = sourcePathResolver();
+
+    assertEquals(
+        pathResolver.getRelativePath(setup.genrule().getSourcePathToDepsFile()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+
+    assertEquals(
+        pathResolver.getRelativePath(setup.jsBundleDepsFile().getSourcePathToOutput()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+  }
+
+  @Test
+  public void specialDepsFileTargetPointsToOwnDepsFileOnRewrite() {
+    setUpWithRewriteDepsFile(JsFlavors.DEPENDENCY_FILE);
+
+    DefaultSourcePathResolver pathResolver = sourcePathResolver();
+
+    assertEquals(
+        pathResolver.getRelativePath(setup.genrule().getSourcePathToDepsFile()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+
+    assertNotEquals(
+        pathResolver.getRelativePath(setup.jsBundleDepsFile().getSourcePathToOutput()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+  }
+
+  @Test
+  public void recordsDepsFile() {
+    setUpWithRewriteDepsFile();
+
+    BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    setup.genrule().getBuildSteps(context, buildableContext);
+
+    assertThat(
+        buildableContext.getRecordedArtifacts(),
+        hasItem(
+            context
+                .getSourcePathResolver()
+                .getRelativePath(setup.genrule().getSourcePathToDepsFile())));
+  }
+
+  @Test
+  public void dependsOnDepsFile() {
+    setUp();
+    assertThat(setup.genrule().getBuildDeps(), hasItem(setup.jsBundleDepsFile()));
   }
 
   private JsBundleGenruleBuilder.Options builderOptions(

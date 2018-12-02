@@ -43,8 +43,7 @@ abstract class AbstractDiffAbisStep implements Step {
   protected abstract JavaBuckConfig.SourceAbiVerificationMode getVerificationMode();
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Path classAbiPath = getClassAbiPath();
     Path sourceAbiPath = getSourceAbiPath();
 

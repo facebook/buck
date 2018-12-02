@@ -44,7 +44,6 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
-import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
@@ -626,7 +625,7 @@ public class DefaultIjModuleFactoryTest {
 
   @Test
   public void testAndroidPrebuiltAar() {
-    SourcePath androidSupportBinaryPath = FakeSourcePath.of("third_party/java/support/support.aar");
+    SourcePath androidSupportBinaryPath = FakeSourcePath.of("buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/classes.jar");
     Path androidSupportSourcesPath = Paths.get("third_party/java/support/support-sources.jar");
     String androidSupportJavadocUrl = "file:///support/docs";
     TargetNode<?> androidPrebuiltAar =
@@ -672,32 +671,15 @@ public class DefaultIjModuleFactoryTest {
 
   private IjModuleFactory createIjModuleFactory(BuckConfig buckConfig) {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    IjProjectConfig projectConfig =
+    IjProjectConfig.Builder builder =
         buckConfig == null
-            ? IjProjectBuckConfig.create(
-                FakeBuckConfig.builder().build(),
-                AggregationMode.AUTO,
-                null,
-                "",
-                "",
-                false,
-                false,
-                false,
-                false,
-                true,
-                false)
-            : IjProjectBuckConfig.create(
-                buckConfig,
-                AggregationMode.AUTO,
-                null,
-                "",
-                "",
-                false,
-                false,
-                false,
-                false,
-                true,
-                false);
+            ? IjTestProjectConfig.createBuilder(FakeBuckConfig.builder().build())
+            : IjTestProjectConfig.createBuilder(buckConfig);
+    IjProjectConfig projectConfig =
+        builder
+            .setKeepModuleFilesInModuleDirsEnabled(false)
+            .setExcludeArtifactsEnabled(false)
+            .build();
     JavaPackageFinder packageFinder =
         (buckConfig == null)
             ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(Collections.emptyList())

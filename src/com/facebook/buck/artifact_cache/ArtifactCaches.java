@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -89,6 +90,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private final ListeningExecutorService httpFetchExecutorService;
   private final ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService;
   private List<ArtifactCache> artifactCaches = new ArrayList<>();
+  private final ListeningExecutorService dirWriteExecutorService;
   private final TaskManagerScope managerScope;
   private final String producerId;
   private final String producerHostname;
@@ -136,6 +138,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
    * @param buckEventBus event bus
    * @param projectFilesystem filesystem to store files on
    * @param wifiSsid current WiFi ssid to decide if we want the http cache or not
+   * @param dirWriteExecutorService executor service used for dir cache stores
    * @param producerId free-form identifier of a user or machine uploading artifacts, can be used on
    *     cache server side for monitoring
    * @param clientCertificateHandler container for client certificate information
@@ -148,6 +151,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
       ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService,
+      ListeningExecutorService dirWriteExecutorService,
       TaskManagerScope managerScope,
       String producerId,
       String producerHostname,
@@ -159,6 +163,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     this.httpWriteExecutorService = httpWriteExecutorService;
     this.httpFetchExecutorService = httpFetchExecutorService;
     this.downloadHeavyBuildHttpFetchExecutorService = downloadHeavyBuildHttpFetchExecutorService;
+    this.dirWriteExecutorService = dirWriteExecutorService;
     this.managerScope = managerScope;
     this.producerId = producerId;
     this.producerHostname = producerHostname;
@@ -224,6 +229,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             isDownloadHeavyBuild
                 ? downloadHeavyBuildHttpFetchExecutorService
                 : httpFetchExecutorService,
+            dirWriteExecutorService,
             cacheTypeBlacklist,
             distributedBuildModeEnabled,
             producerId,
@@ -246,6 +252,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         httpWriteExecutorService,
         httpFetchExecutorService,
         downloadHeavyBuildHttpFetchExecutorService,
+        dirWriteExecutorService,
         managerScope,
         producerId,
         producerHostname,
@@ -263,7 +270,13 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ArtifactCacheBuckConfig buckConfig, ProjectFilesystem projectFilesystem) {
     return buckConfig
         .getServedLocalCache()
-        .map(input -> createDirArtifactCache(Optional.empty(), input, projectFilesystem));
+        .map(
+            input ->
+                createDirArtifactCache(
+                    Optional.empty(),
+                    input,
+                    projectFilesystem,
+                    MoreExecutors.newDirectExecutorService()));
   }
 
   private static ArtifactCache newInstanceInternal(
@@ -273,6 +286,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
+      ListeningExecutorService dirWriteExecutorService,
       ImmutableSet<CacheType> cacheTypeBlacklist,
       boolean distributedBuildModeEnabled,
       String producerId,
@@ -293,7 +307,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         case unknown:
           break;
         case dir:
-          initializeDirCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
+          initializeDirCaches(
+              cacheEntries, buckEventBus, projectFilesystem, builder, dirWriteExecutorService);
           break;
         case http:
           initializeDistributedCaches(
@@ -333,6 +348,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                       buckEventBus.getBuildId(),
                       getMultiFetchLimit(buckConfig, buckEventBus),
                       buckConfig.getHttpFetchConcurrency(),
+                      buckConfig.getMultiCheckEnabled(),
                       producerId,
                       producerHostname),
               mode,
@@ -367,10 +383,15 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ArtifactCacheEntries artifactCacheEntries,
       BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
-      ImmutableList.Builder<ArtifactCache> builder) {
+      ImmutableList.Builder<ArtifactCache> builder,
+      ListeningExecutorService storeExecutorService) {
     for (DirCacheEntry cacheEntry : artifactCacheEntries.getDirCacheEntries()) {
       builder.add(
-          createDirArtifactCache(Optional.ofNullable(buckEventBus), cacheEntry, projectFilesystem));
+          createDirArtifactCache(
+              Optional.ofNullable(buckEventBus),
+              cacheEntry,
+              projectFilesystem,
+              storeExecutorService));
     }
   }
 
@@ -428,7 +449,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static ArtifactCache createDirArtifactCache(
       Optional<BuckEventBus> buckEventBus,
       DirCacheEntry dirCacheConfig,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      ListeningExecutorService storeExecutorService) {
     Path cacheDir = dirCacheConfig.getCacheDir();
     try {
       DirArtifactCache dirArtifactCache =
@@ -437,7 +459,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
               projectFilesystem,
               cacheDir,
               dirCacheConfig.getCacheReadMode(),
-              dirCacheConfig.getMaxSizeBytes());
+              dirCacheConfig.getMaxSizeBytes(),
+              storeExecutorService);
 
       if (!buckEventBus.isPresent()) {
         return dirArtifactCache;

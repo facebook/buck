@@ -81,7 +81,7 @@ public class GenruleIntegrationTest {
 
     // "(?s)" enables multiline matching for ".*". Parens have to be escaped.
     String outputPattern =
-        "(?s).*Build failed: Command failed with exit code 1\\.(?s).*"
+        "(?s).*Command failed with exit code 1\\.(?s).*"
             + "When running <\\(cd buck-out/gen/fail__srcs && "
             + "/bin/bash -e .*/buck-out/tmp/genrule-[0-9]*\\.sh\\)>(?s).*";
 

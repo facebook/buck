@@ -72,8 +72,7 @@ public class SymlinkTreeMergeStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
 
     for (Entry<Path, Path> sourceToRelative : links.entries()) {
       merge(sourceToRelative.getKey(), sourceToRelative.getValue());

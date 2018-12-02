@@ -60,7 +60,7 @@ public class ManifestServiceConfigTest {
   public void testCorrectConfig() throws IOException {
     Reader reader =
         new StringReader(
-            Joiner.on('\n')
+            Joiner.on(System.lineSeparator())
                 .join(
                     "[manifestservice]",
                     "slb_server_pool=http://localhost:8080",

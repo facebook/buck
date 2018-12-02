@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright 2004-2015, Martian Software, Inc.
+# Copyright 2017-Present Facebook, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,7 +56,7 @@ def bytes_to_str(bytes_to_convert):
 #
 # Please try to keep this working on Python 2.6.
 
-NAILGUN_VERSION = "0.9.3"
+NAILGUN_VERSION = "1.0.0"
 BUFSIZE = 2048
 NAILGUN_PORT_DEFAULT = 2113
 CHUNK_HEADER_LEN = 5
@@ -171,6 +172,9 @@ if os.name == "nt":
     # Overlapped I/O operation is in progress. (997)
     ERROR_IO_PENDING = 0x000003E5
     ERROR_PIPE_BUSY = 231
+
+    # No process is on the other end of the pipe error on Windows
+    ERROR_NO_PROCESS_ON_OTHER_END_OF_PIPE = 233
 
     # The pointer size follows the architecture
     # We use WPARAM since this type is already conditionally defined
@@ -360,8 +364,14 @@ class WindowsNamedPipeTransport(Transport):
 
         immediate = ReadFile(self.pipe, buf, nbytes, None, olap)
 
+        err = GetLastError()
+
+        if err == ERROR_NO_PROCESS_ON_OTHER_END_OF_PIPE:
+            raise NailgunException(
+                "No process on the other end of pipe", NailgunException.CONNECTION_BROKEN
+            )
+
         if not immediate:
-            err = GetLastError()
             if err != ERROR_IO_PENDING:
                 self._raise_win_err("failed to read %d bytes" % nbytes, GetLastError())
 

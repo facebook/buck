@@ -78,6 +78,7 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
     }
     addDepsAndTestSources(target, true /* wantsPackagePrefix */, context, resourcePaths);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
+    context.setJavaLanguageLevel(JavaLibraryRuleHelper.getLanguageLevel(projectConfig, target));
   }
 
   @Override

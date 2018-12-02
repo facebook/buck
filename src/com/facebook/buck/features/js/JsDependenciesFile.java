@@ -20,11 +20,9 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -41,7 +39,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements JsDependenciesOutputs {
 
   @AddToRuleKey private final ImmutableSet<String> entryPoints;
 
@@ -112,8 +111,6 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(
-        getBuildTarget(),
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.deps"));
+    return JsDependenciesOutputs.super.getSourcePathToDepsFile();
   }
 }

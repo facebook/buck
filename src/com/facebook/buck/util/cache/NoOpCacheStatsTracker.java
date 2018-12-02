@@ -25,67 +25,67 @@ public class NoOpCacheStatsTracker implements CacheStatsTracker {
   }
 
   @Override
-  public Long getTotalHitCount() {
+  public long getTotalHitCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalMissCount() {
+  public long getTotalMissCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalMissMatchCount() {
+  public long getTotalMissMatchCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalEvictionCount() {
+  public long getTotalEvictionCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalInvalidationCount() {
+  public long getTotalInvalidationCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalLoadSuccessCount() {
+  public long getTotalLoadSuccessCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalLoadExceptionCount() {
+  public long getTotalLoadExceptionCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalRetrievalTime() {
+  public long getTotalRetrievalTime() {
     return 0L;
   }
 
   @Override
-  public Long getTotalLoadTime() {
+  public long getTotalLoadTime() {
     return 0L;
   }
 
   @Override
-  public Long getTotalMissTime() {
+  public long getTotalMissTime() {
     return 0L;
   }
 
   @Override
-  public Long getAverageRetrievalTime() {
+  public long getAverageRetrievalTime() {
     return 0L;
   }
 
   @Override
-  public Long getAverageMissTime() {
+  public long getAverageMissTime() {
     return 0L;
   }
 
   @Override
-  public Long getAverageLoadTime() {
+  public long getAverageLoadTime() {
     return 0L;
   }
 

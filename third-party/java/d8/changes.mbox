@@ -1,24 +1,24 @@
-From 305e86cbf58409e84c035dc9e275eba014e4283c Mon Sep 17 00:00:00 2001
+From 315dbe04373a3ce2346980104e67bfb5ef4506bd Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
 Date: Tue, 21 Nov 2017 22:52:39 -0800
-Subject: [PATCH] Compute referenced resources in D8 and bypass default
- interface method desugaring
+Subject: [PATCH] Compute referenced resources in D8
 
 - Computing referenced resources is used to trim the Uber R.java.
-- Default interface method desugaring requires classpaths available during dexing which is not possible with buck currently.
 - Set default min sdk for D8 to Api level J
+- Fix Lambda Descriptor name handling to be compatible with buck's predexing
 ---
  .../java/com/android/tools/r8/D8Command.java     |  8 +++++++-
  .../android/tools/r8/graph/DexItemFactory.java   | 14 ++++++++++++++
- .../tools/r8/ir/desugar/ClassProcessor.java      | 16 ++++------------
+ .../tools/r8/ir/conversion/IRConverter.java      |  2 +-
+ .../tools/r8/ir/desugar/LambdaDescriptor.java    |  7 +------
  .../android/tools/r8/utils/AndroidApiLevel.java  |  3 ++-
- 4 files changed, 27 insertions(+), 14 deletions(-)
+ 6 files changed, 29 insertions(+), 21 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
-index 1a081137..a7b643fc 100644
+index e0f330dd1..ed32eaf3b 100644
 --- a/src/main/java/com/android/tools/r8/D8Command.java
 +++ b/src/main/java/com/android/tools/r8/D8Command.java
-@@ -150,6 +150,11 @@ public final class D8Command extends BaseCompilerCommand {
+@@ -164,6 +164,11 @@ public final class D8Command extends BaseCompilerCommand {
    static final String USAGE_MESSAGE = D8CommandParser.USAGE_MESSAGE;
  
    private boolean intermediate = false;
@@ -30,7 +30,7 @@ index 1a081137..a7b643fc 100644
  
    public static Builder builder() {
      return new Builder();
-@@ -217,7 +222,8 @@ public final class D8Command extends BaseCompilerCommand {
+@@ -231,7 +236,8 @@ public final class D8Command extends BaseCompilerCommand {
  
    @Override
    InternalOptions getInternalOptions() {
@@ -41,10 +41,10 @@ index 1a081137..a7b643fc 100644
      internal.debug = getMode() == CompilationMode.DEBUG;
      internal.programConsumer = getProgramConsumer();
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index 4b40c148..dafdf7d0 100644
+index 3b7386d9a..1e4445f02 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-@@ -29,6 +29,7 @@ import java.util.ArrayList;
+@@ -32,6 +32,7 @@ import java.util.ArrayList;
  import java.util.Arrays;
  import java.util.Collection;
  import java.util.HashMap;
@@ -52,7 +52,7 @@ index 4b40c148..dafdf7d0 100644
  import java.util.IdentityHashMap;
  import java.util.List;
  import java.util.Map;
-@@ -853,4 +854,17 @@ public class DexItemFactory {
+@@ -963,4 +964,17 @@ public class DexItemFactory {
    synchronized public void forAllTypes(Consumer<DexType> f) {
      new ArrayList<>(types.values()).forEach(f);
    }
@@ -70,35 +70,46 @@ index 4b40c148..dafdf7d0 100644
 +    return resourceNames;
 +  }
  }
-diff --git a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-index 0ca4f164..f5f7374e 100644
---- a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-+++ b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-@@ -174,18 +174,10 @@ final class ClassProcessor {
-         if (superClass != null) {
-           current = superClass;
-         } else {
--          String message = "Default method desugaring of `" + clazz.toSourceString() + "` failed";
--          if (current == clazz) {
--            message += " because its super class `" +
--                clazz.superType.toSourceString() + "` is missing";
--          } else {
--            message +=
--                " because it's hierarchy is incomplete. The class `"
--                    + current.superType.toSourceString()
--                    + "` is missing and it is the declared super class of `"
--                    + current.toSourceString() + "`";
--          }
--          throw new CompilationError(message);
-+          // If we cannot find the superClass, just break since we dont want to actually desugar
-+          // default interface methods as it requires classpath to be passed in to D8 and hurts
-+          // build performance
-+          break;
-         }
-       }
+diff --git a/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java b/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
+index e188f2989..c25902180 100644
+--- a/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
++++ b/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
+@@ -248,7 +248,7 @@ public class IRConverter {
+   }
+ 
+   private boolean enableTwrCloseResourceDesugaring() {
+-    return enableTryWithResourcesDesugaring() && !options.canUseTwrCloseResourceMethod();
++    return false;
+   }
+ 
+   private boolean enableTryWithResourcesDesugaring() {
+diff --git a/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java b/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java
+index 6836ad33c..6296bbd4b 100644
+--- a/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java
++++ b/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java
+@@ -168,11 +168,6 @@ public final class LambdaDescriptor {
+       return false;
      }
+ 
+-    if (implHandle.type.isInvokeInterface()) {
+-      // Interface methods must be public.
+-      return false;
+-    }
+-
+     boolean staticTarget = implHandle.type.isInvokeStatic();
+     boolean instanceTarget = implHandle.type.isInvokeInstance() || implHandle.type.isInvokeDirect();
+     boolean initTarget = implHandle.type.isInvokeConstructor();
+@@ -192,7 +187,7 @@ public final class LambdaDescriptor {
+         boolean accessedFromSamePackage =
+             accessedFrom.getPackageDescriptor().equals(
+                 implHandle.asMethod().holder.getPackageDescriptor());
+-        return !accessedFromSamePackage;
++        return !accessedFromSamePackage || accessedFrom.getPackageDescriptor().isEmpty();
+       }
+ 
+       // Since instance method was not found, always generate an accessor
 diff --git a/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java b/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
-index 135e961d..05f6ec64 100644
+index 135e961d1..05f6ec64c 100644
 --- a/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
 +++ b/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
 @@ -56,7 +56,8 @@ public enum AndroidApiLevel {

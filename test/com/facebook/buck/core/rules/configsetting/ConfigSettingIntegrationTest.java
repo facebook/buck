@@ -29,9 +29,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class ConfigSettingIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testSelectWorksWithConfigurationValues() throws IOException {
@@ -57,7 +59,7 @@ public class ConfigSettingIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            "None of the conditions in attribute \"srcs\" match the configuration. Checked conditions:\n"
+            "None of the conditions in attribute \"srcs\" of //:cat match the configuration.\nChecked conditions:\n"
                 + " //:a\n"
                 + " //:b"));
   }
@@ -119,7 +121,10 @@ public class ConfigSettingIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            "Multiple matches found when resolving configurable attribute \"cmd\" in //:echo_with_one_none"));
+            "Multiple matches found when resolving configurable attribute \"cmd\" in //:echo_with_one_none:\n"
+                + "//:c\n"
+                + "//:a\n"
+                + "Multiple matches are not allowed unless one is unambiguously more specialized."));
   }
 
   @Test
@@ -190,8 +195,133 @@ public class ConfigSettingIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            "None of the conditions in attribute \"srcs\" match the configuration. Checked conditions:\n"
+            "None of the conditions in attribute \"srcs\" of //:cat match the configuration.\nChecked conditions:\n"
                 + " //:osx_config\n"
                 + " //:linux_aarch64_config"));
+  }
+
+  @Test
+  public void testConfigSettingUsesMoreSpecializedConstraints() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_constraints", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput(
+            "--target-platforms", "//:osx_x86-64", ":cat_with_specialized_constraints");
+    assertEquals("b", Files.readAllLines(output).get(0));
+  }
+
+  @Test
+  public void testConfigSettingUsesMoreSpecializedConfig() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_constraints", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput(
+            "-c",
+            "cat.file=a",
+            "-c",
+            "cat.file2=b",
+            "--target-platforms",
+            "//:osx_x86-64",
+            ":cat_with_specialized_config");
+    assertEquals("b", Files.readAllLines(output).get(0));
+  }
+
+  @Test
+  public void testStringAttributeCanBeConcatenatedUsingSelects() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput("-c", "cat.file=a", ":echo_with_concatenation_in_out");
+    assertEquals("aac", output.getFileName().toString());
+
+    output = workspace.buildAndReturnOutput("-c", "cat.file=b", ":echo_with_concatenation_in_out");
+    assertEquals("abc", output.getFileName().toString());
+  }
+
+  @Test
+  public void testOptionalAttributeCanBeConcatenatedUsingSelects() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    workspace
+        .runBuckBuild("-c", "java.version=7", ":java_library_with_target_version")
+        .assertFailure();
+
+    workspace
+        .runBuckBuild("-c", "java.version=8", ":java_library_with_target_version")
+        .assertSuccess();
+  }
+
+  @Test
+  public void testStringWithMacrosAttributeCanBeConcatenatedUsingSelects() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput("-c", "cat.file=a", ":echo_with_concatenation_in_cmd");
+    assertEquals("a", Files.readAllLines(output).get(0).trim());
+
+    output = workspace.buildAndReturnOutput("-c", "cat.file=b", ":echo_with_concatenation_in_cmd");
+    assertEquals("b", Files.readAllLines(output).get(0).trim());
+  }
+
+  @Test
+  public void testMapAttributeCanBeConcatenatedUsingSelects() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand("test", "-c", "cat.file=a", ":java_test_with_select_in_env")
+        .assertSuccess();
+
+    workspace
+        .runBuckBuild("test", "-c", "cat.file=b", ":java_test_with_select_in_env")
+        .assertFailure();
+  }
+
+  @Test
+  public void testFailureWithDuplicateMapAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand(
+            "test", "-c", "cat.file=a", ":java_test_with_duplicate_keys_in_select_in_env")
+        .assertFailure("Duplicate keys found when trying to concatenate attributes: VARA");
+  }
+
+  @Test
+  public void testBuildWorksWithNonExistingFiles() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput("-c", "cat.file=a", ":genrule_with_non_existent_src");
+    assertEquals("a", Files.readAllLines(output).get(0));
+  }
+
+  @Test
+  public void testBuildFailsWithNonExistingFiles() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    workspace
+        .runBuckBuild("-c", "cat.file=b", ":genrule_with_non_existent_src")
+        .assertFailure(
+            "//:genrule_with_non_existent_src references non-existing file or directory 'd.txt'");
   }
 }

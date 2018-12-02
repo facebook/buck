@@ -56,7 +56,7 @@ public class PreDexedFilesSorterTest {
   private APKModule extraModule;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() {
     moduleGraph =
         new APKModuleGraph(
             TargetGraph.EMPTY,

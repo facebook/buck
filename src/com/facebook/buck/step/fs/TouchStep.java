@@ -41,8 +41,7 @@ public class TouchStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     filesystem.touch(fileToTouch);
     return StepExecutionResults.SUCCESS;
   }

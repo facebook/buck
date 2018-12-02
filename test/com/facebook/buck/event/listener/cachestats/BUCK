@@ -15,7 +15,6 @@ standard_java_test(
         "//src/com/facebook/buck/event/listener/cachestats:cachestats",
         "//test/com/facebook/buck/core/rules/impl:testutil",
         "//test/com/facebook/buck/event:testutil",
-        "//test/com/facebook/buck/rules:testutil",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-core",
         "//third-party/java/jackson:jackson-databind",

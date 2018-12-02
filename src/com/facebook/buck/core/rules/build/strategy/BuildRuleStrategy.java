@@ -16,20 +16,47 @@
 
 package com.facebook.buck.core.rules.build.strategy;
 
-import com.facebook.buck.core.build.engine.BuildExecutorRunner;
+import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.rules.BuildRule;
-import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Optional;
 
 /** Interface for injecting customized behavior into the CachingBuildEngine. */
 public interface BuildRuleStrategy extends Closeable {
   @Override
   void close() throws IOException;
 
-  /** This must call executorRunner.runWithExecutor() or executorRunner.runWithDefaultExecutor(). */
-  void build(ListeningExecutorService service, BuildRule rule, BuildExecutorRunner executorRunner);
+  /** Builds the rule. */
+  StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext);
 
   /** A rule will be built by the custom strategy only if canBuild() returns true. */
   boolean canBuild(BuildRule instance);
+
+  /** A simple interface for build results exposing an explicit cancellation. */
+  interface StrategyBuildResult {
+    /**
+     * Indicates that the caller is no longer interested in the result and the strategy is free to
+     * cancel pending work.
+     */
+    void cancel();
+
+    /** A ListenableFuture for the build result. */
+    ListenableFuture<Optional<BuildResult>> getBuildResult();
+
+    /** A simple helper to make a StrategyBuildResult that can't be cancelled. */
+    static StrategyBuildResult nonCancellable(ListenableFuture<Optional<BuildResult>> result) {
+      return new StrategyBuildResult() {
+        @Override
+        public void cancel() {}
+
+        @Override
+        public ListenableFuture<Optional<BuildResult>> getBuildResult() {
+          return result;
+        }
+      };
+    }
+  }
 }

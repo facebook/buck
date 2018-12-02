@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -32,6 +33,7 @@ public class TestArtifactCaches {
         TestProjectFilesystems.createProjectFilesystem(filesystemRoot),
         cacheDir,
         CacheReadMode.READWRITE,
-        Optional.empty());
+        Optional.empty(),
+        MoreExecutors.newDirectExecutorService());
   }
 }

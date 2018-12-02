@@ -100,7 +100,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
 
       Map<String, List<String>> params = session.getUpgradeRequest().getParameterMap();
       List<String> events = params.get("event");
-      if (events == null || events.size() == 0) {
+      if (events == null || events.isEmpty()) {
         // Return empty set meaning subscribe to all events.
         return;
       }

@@ -56,7 +56,6 @@ import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -136,8 +135,7 @@ public abstract class DistBuildFactory {
       ScheduledExecutorService sourceFileMultiFetchScheduler,
       ListeningExecutorService executorService,
       ProjectFilesystemFactory projectFilesystemFactory,
-      Optional<Path> globalCacheDir)
-      throws IOException, InterruptedException {
+      Optional<Path> globalCacheDir) {
     return new MultiSourceContentsProvider(
         new ServerContentsProvider(
             service,
@@ -228,6 +226,7 @@ public abstract class DistBuildFactory {
             .setHealthCheckStatsTracker(healthCheckStatsTracker)
             .setRuleKeyCacheScope(ruleKeyCacheScope)
             .setRemoteCommand(state.getRemoteState().getCommand())
+            .setTraceInfoProvider(params.getTraceInfoProvider())
             .build());
   }
 }

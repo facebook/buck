@@ -18,6 +18,7 @@ package com.facebook.buck.remoteexecution.factory;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionType;
@@ -25,6 +26,7 @@ import com.facebook.buck.remoteexecution.grpc.GrpcExecutionFactory;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.util.OutOfProcessIsolatedExecutionClients;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Factory for creating all manner of different remote execution clients (grpc, in-process, etc).
@@ -37,7 +39,8 @@ public class RemoteExecutionClientsFactory {
   }
 
   /** Creates the RemoteExecutionClients based on the held configs. */
-  public RemoteExecutionClients create(BuckEventBus eventBus) throws IOException {
+  public RemoteExecutionClients create(
+      BuckEventBus eventBus, Optional<TraceInfoProvider> traceInfoProvider) throws IOException {
     RemoteExecutionType type = remoteExecutionConfig.getType();
 
     switch (type) {
@@ -51,7 +54,14 @@ public class RemoteExecutionClientsFactory {
             remoteExecutionConfig.getRemotePort(),
             remoteExecutionConfig.getCasHost(),
             remoteExecutionConfig.getCasPort(),
-            remoteExecutionConfig.getTraceID(),
+            remoteExecutionConfig.getInsecure(),
+            remoteExecutionConfig.getCasInsecure(),
+            remoteExecutionConfig.getRemoteHostSNIName(),
+            remoteExecutionConfig.getCasHostSNIName(),
+            remoteExecutionConfig.getCertFile(),
+            remoteExecutionConfig.getKeyFile(),
+            remoteExecutionConfig.getCAsFile(),
+            traceInfoProvider,
             eventBus);
       case DEBUG_GRPC_IN_PROCESS:
         return OutOfProcessIsolatedExecutionClients.create(new GrpcProtocol(), eventBus);

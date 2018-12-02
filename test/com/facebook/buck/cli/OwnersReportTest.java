@@ -36,6 +36,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.Parser;
@@ -109,7 +110,7 @@ public class OwnersReportTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   }
 
@@ -265,7 +266,7 @@ public class OwnersReportTest {
             .build(getBuildFileTrees(cell), ImmutableSet.of(input));
 
     assertEquals(1, report.nonExistentInputs.size());
-    assertTrue(report.nonExistentInputs.contains(input));
+    assertTrue(report.nonExistentInputs.contains(MorePaths.pathWithPlatformSeparators(input)));
   }
 
   private ImmutableMap<Cell, BuildFileTree> getBuildFileTrees(Cell rootCell) {

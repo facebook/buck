@@ -31,6 +31,7 @@ import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -66,18 +67,7 @@ public class ArtifactCachesTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
-        new ArtifactCaches(
-                cacheConfig,
-                buckEventBus,
-                projectFilesystem,
-                Optional.empty(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                managerScope,
-                "test://",
-                "hostname",
-                ClientCertificateHandler.fromConfiguration(cacheConfig))
+        newArtifactCache(cacheConfig, projectFilesystem, buckEventBus, Optional.empty())
             .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
     artifactCache.close();
@@ -91,18 +81,7 @@ public class ArtifactCachesTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
-        new ArtifactCaches(
-                cacheConfig,
-                buckEventBus,
-                projectFilesystem,
-                Optional.empty(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                managerScope,
-                "test://",
-                "hostname",
-                ClientCertificateHandler.fromConfiguration(cacheConfig))
+        newArtifactCache(cacheConfig, projectFilesystem, buckEventBus, Optional.empty())
             .newInstance();
 
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
@@ -119,18 +98,7 @@ public class ArtifactCachesTest {
         TestProjectFilesystems.createProjectFilesystem(tempDir.getRoot());
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
-        new ArtifactCaches(
-                cacheConfig,
-                buckEventBus,
-                projectFilesystem,
-                Optional.empty(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                managerScope,
-                "test://",
-                "hostname",
-                ClientCertificateHandler.fromConfiguration(cacheConfig))
+        newArtifactCache(cacheConfig, projectFilesystem, buckEventBus, Optional.empty())
             .newInstance();
 
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(SQLiteArtifactCache.class));
@@ -154,18 +122,7 @@ public class ArtifactCachesTest {
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
         stripDecorators(
-            new ArtifactCaches(
-                    cacheConfig,
-                    buckEventBus,
-                    projectFilesystem,
-                    Optional.empty(),
-                    MoreExecutors.newDirectExecutorService(),
-                    MoreExecutors.newDirectExecutorService(),
-                    MoreExecutors.newDirectExecutorService(),
-                    managerScope,
-                    "test://",
-                    "hostname",
-                    ClientCertificateHandler.fromConfiguration(cacheConfig))
+            newArtifactCache(cacheConfig, projectFilesystem, buckEventBus, Optional.empty())
                 .newInstance());
 
     assertThat(artifactCache, Matchers.instanceOf(MultiArtifactCache.class));
@@ -206,18 +163,7 @@ public class ArtifactCachesTest {
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
         stripDecorators(
-            new ArtifactCaches(
-                    cacheConfig,
-                    buckEventBus,
-                    projectFilesystem,
-                    Optional.empty(),
-                    MoreExecutors.newDirectExecutorService(),
-                    MoreExecutors.newDirectExecutorService(),
-                    MoreExecutors.newDirectExecutorService(),
-                    managerScope,
-                    "test://",
-                    "hostname",
-                    ClientCertificateHandler.fromConfiguration(cacheConfig))
+            newArtifactCache(cacheConfig, projectFilesystem, buckEventBus, Optional.empty())
                 .newInstance());
 
     assertThat(artifactCache, Matchers.instanceOf(MultiArtifactCache.class));
@@ -252,18 +198,7 @@ public class ArtifactCachesTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
-        new ArtifactCaches(
-                cacheConfig,
-                buckEventBus,
-                projectFilesystem,
-                Optional.empty(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                managerScope,
-                "test://",
-                "hostname",
-                ClientCertificateHandler.fromConfiguration(cacheConfig))
+        newArtifactCache(cacheConfig, projectFilesystem, buckEventBus, Optional.empty())
             .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(MultiArtifactCache.class));
     artifactCache.close();
@@ -278,18 +213,7 @@ public class ArtifactCachesTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
-        new ArtifactCaches(
-                cacheConfig,
-                buckEventBus,
-                projectFilesystem,
-                Optional.of("evilwifi"),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                managerScope,
-                "test://",
-                "hostname",
-                ClientCertificateHandler.fromConfiguration(cacheConfig))
+        newArtifactCache(cacheConfig, projectFilesystem, buckEventBus, Optional.of("evilwifi"))
             .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
     artifactCache.close();
@@ -303,18 +227,7 @@ public class ArtifactCachesTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
-        new ArtifactCaches(
-                cacheConfig,
-                buckEventBus,
-                projectFilesystem,
-                Optional.empty(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                managerScope,
-                "test://",
-                "hostname",
-                ClientCertificateHandler.fromConfiguration(cacheConfig))
+        newArtifactCache(cacheConfig, projectFilesystem, buckEventBus, Optional.empty())
             .remoteOnlyInstance(false, false);
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
     artifactCache.close();
@@ -328,18 +241,7 @@ public class ArtifactCachesTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
-        new ArtifactCaches(
-                cacheConfig,
-                buckEventBus,
-                projectFilesystem,
-                Optional.empty(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService(),
-                managerScope,
-                "test://",
-                "hostname",
-                ClientCertificateHandler.fromConfiguration(cacheConfig))
+        newArtifactCache(cacheConfig, projectFilesystem, buckEventBus, Optional.empty())
             .localOnlyInstance(false, false);
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
     artifactCache.close();
@@ -361,5 +263,26 @@ public class ArtifactCachesTest {
       return stripDecorators(cacheDecorator.getDelegate());
     }
     return artifactCache;
+  }
+
+  private ArtifactCaches newArtifactCache(
+      ArtifactCacheBuckConfig cacheConfig,
+      ProjectFilesystem projectFilesystem,
+      BuckEventBus buckEventBus,
+      Optional<String> wifiSsid)
+      throws IOException {
+    return new ArtifactCaches(
+        cacheConfig,
+        buckEventBus,
+        projectFilesystem,
+        wifiSsid,
+        MoreExecutors.newDirectExecutorService(),
+        MoreExecutors.newDirectExecutorService(),
+        MoreExecutors.newDirectExecutorService(),
+        MoreExecutors.newDirectExecutorService(),
+        managerScope,
+        "test://",
+        "hostname",
+        ClientCertificateHandler.fromConfiguration(cacheConfig));
   }
 }

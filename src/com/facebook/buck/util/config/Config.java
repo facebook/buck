@@ -469,6 +469,7 @@ public class Config {
     StringBuilder stringBuilder = new StringBuilder();
     boolean inQuotes = false;
     int quoteIndex = 0;
+    boolean seenChar = false;
     for (int i = 0; i < input.length(); i++) {
       char c = input.charAt(i);
       if (inQuotes) {
@@ -519,9 +520,11 @@ public class Config {
       } else if (c == '"') {
         quoteIndex = i;
         inQuotes = true;
+        seenChar = true;
         continue;
       } else if (splitChar.isPresent() && c == splitChar.get()) {
-        listBuilder.add(stringBuilder.toString());
+        if (seenChar) listBuilder.add(stringBuilder.toString());
+        seenChar = false;
         stringBuilder = new StringBuilder();
         continue;
       } else if (stringBuilder.length() == 0 && c == ' ' || c == '\t') {
@@ -529,6 +532,7 @@ public class Config {
         continue;
       }
       // default case: add the actual character
+      seenChar = true;
       stringBuilder.append(c);
     }
 

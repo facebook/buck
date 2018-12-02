@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeFalse;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
@@ -57,6 +58,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -90,15 +92,12 @@ public class ModernBuildRuleStrategyIntegrationTest {
     return ImmutableList.<Object[]>builder()
         .add(new Object[] {ModernBuildRuleBuildStrategy.NONE, RemoteExecutionType.NONE})
         .add(
-            new Object[] {
-              ModernBuildRuleBuildStrategy.DEBUG_ISOLATED_IN_PROCESS, RemoteExecutionType.NONE
-            })
-        .add(
             new Object[] {ModernBuildRuleBuildStrategy.DEBUG_RECONSTRUCT, RemoteExecutionType.NONE})
         .add(
             new Object[] {ModernBuildRuleBuildStrategy.DEBUG_PASSTHROUGH, RemoteExecutionType.NONE})
         // Remote execution strategies.
         .add(new Object[] {ModernBuildRuleBuildStrategy.REMOTE, RemoteExecutionType.GRPC})
+        .add(new Object[] {ModernBuildRuleBuildStrategy.HYBRID_LOCAL, RemoteExecutionType.GRPC})
         // TODO(shivanker): We don't have a dummy implementation for Thrift in this repository.
         // Probably add this in the future to be able to have unit tests.
         // .add(new Object[] {ModernBuildRuleBuildStrategy.REMOTE, RemoteExecutionType.THRIFT})
@@ -292,18 +291,17 @@ public class ModernBuildRuleStrategyIntegrationTest {
         return ImmutableList.of(
             new AbstractExecutionStep("throwing_step") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context)
-                  throws IOException, InterruptedException {
-                throw new RuntimeException(FAILING_STEP_MESSAGE);
+              public StepExecutionResult execute(ExecutionContext context) {
+                throw new HumanReadableException(FAILING_STEP_MESSAGE);
               }
             });
       }
-      throw new RuntimeException(FAILING_RULE_MESSAGE);
+      throw new HumanReadableException(FAILING_RULE_MESSAGE);
     }
   }
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     // MBR strategies use a ContentAddressedStorage that doesn't work correctly on Windows.
     assumeFalse(Platform.detect().equals(Platform.WINDOWS));
     workspace =
@@ -326,15 +324,38 @@ public class ModernBuildRuleStrategyIntegrationTest {
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
     workspace.addBuckConfigLocalOption("remoteexecution", "type", executionType.toString());
+
+    int remotePort = -1;
+
+    if (executionType == RemoteExecutionType.GRPC) {
+      // TODO(cjhopman): newer versions of grpc can find us a port.
+      for (int i = 0; i < 100; i++) {
+        if (server.isPresent()) {
+          break;
+        }
+        try (ServerSocket socket = new ServerSocket(0)) {
+          remotePort = socket.getLocalPort();
+        }
+        try {
+          server = Optional.of(new GrpcServer(remotePort));
+        } catch (Exception e) { // NOPMD
+        }
+      }
+      Preconditions.checkState(server.isPresent());
+    }
+
     workspace.addBuckConfigLocalOption(
-        "remoteexecution", "remote_port", Integer.toString(REMOTE_PORT));
-    workspace.addBuckConfigLocalOption(
-        "remoteexecution", "cas_port", Integer.toString(REMOTE_PORT));
+        "remoteexecution", "remote_port", Integer.toString(remotePort));
+    workspace.addBuckConfigLocalOption("remoteexecution", "cas_port", Integer.toString(remotePort));
 
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    if (executionType == RemoteExecutionType.GRPC) {
-      server = Optional.of(new GrpcServer(REMOTE_PORT));
+    if (strategy == ModernBuildRuleBuildStrategy.HYBRID_LOCAL) {
+      workspace.addBuckConfigLocalOption(
+          "modern_build_rule#remote", "strategy", ModernBuildRuleBuildStrategy.REMOTE.toString());
+      workspace.addBuckConfigLocalOption("modern_build_rule", "local_jobs", "0");
+      workspace.addBuckConfigLocalOption("modern_build_rule", "delegate_jobs", "1");
+      workspace.addBuckConfigLocalOption("modern_build_rule", "delegate", "remote");
     }
   }
 
@@ -432,8 +453,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
             }
 
             @Override
-            public StepExecutionResult execute(ExecutionContext context)
-                throws IOException, InterruptedException {
+            public StepExecutionResult execute(ExecutionContext context) throws IOException {
               writeOutput(output1);
               writeOutput(output2);
               return StepExecutionResults.SUCCESS;

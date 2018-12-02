@@ -49,7 +49,7 @@ public class CommandToolRuleKeyTest {
   private SourcePathResolver pathResolver;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     resolver = new TestActionGraphBuilder();
     ruleFinder = new SourcePathRuleFinder(resolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);

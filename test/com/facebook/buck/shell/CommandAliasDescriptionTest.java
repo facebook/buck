@@ -46,6 +46,7 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
+import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -490,6 +491,26 @@ public class CommandAliasDescriptionTest {
         };
 
     assertNotEquals(ruleKeyForArg.apply("abc"), ruleKeyForArg.apply("def"));
+  }
+
+  @Test
+  public void supportsEnvWithExeMacro() {
+    ImmutableMap<String, StringWithMacros> env =
+        ImmutableSortedMap.of(
+            "apples", StringWithMacrosUtils.format("some"),
+            "pears", StringWithMacrosUtils.format("%s", ExecutableMacro.of(macroTarget)));
+
+    CommandAliasBuilder.BuildResult result =
+        builder()
+            .setExe(new ShBinaryBuilder(delegate).setMain(FakeSourcePath.of("sh/binary")).build())
+            .setEnv(env)
+            .addTarget(new ShBinaryBuilder(macroTarget).setMain(FakeSourcePath.of("exe")).build())
+            .buildResult();
+
+    assertThat(
+        result.getEnvironment(),
+        equalTo(ImmutableSortedMap.of("apples", "some", "pears", result.pathOf(macroTarget))));
+    assertThat(result.getRuntimeDeps(), hasItem(macroTarget));
   }
 
   @Test

@@ -24,6 +24,8 @@ import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -35,18 +37,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final String SECTION = "remoteexecution";
   public static final String OLD_SECTION = ModernBuildRuleConfig.SECTION;
 
-  public static final String CONSOLE_CAS_ENABLED_CONFIG = "show_cas_stats_on_console";
-  public static final String CONSOLE_ACTIONS_ENABLED_CONFIG = "show_action_stats_on_console";
-
   public static final int DEFAULT_REMOTE_PORT = 19030;
   public static final int DEFAULT_CAS_PORT = 19031;
 
   public int getMaxNumberOfRemoteWorkers() {
     return getDelegate().getInteger(SECTION, "max_number_of_remote_workers").orElse(80);
-  }
-
-  public boolean useClientPool() {
-    return getDelegate().getBooleanValue(SECTION, "enable_client_pool", true);
   }
 
   public boolean useWorkerThreadPool() {
@@ -69,6 +64,37 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     return getValueWithFallback("cas_port").map(Integer::parseInt).orElse(DEFAULT_CAS_PORT);
   }
 
+  public boolean getInsecure() {
+    return getDelegate().getBooleanValue(SECTION, "insecure", true);
+  }
+
+  public boolean getCasInsecure() {
+    return getDelegate().getBooleanValue(SECTION, "cas_insecure", true);
+  }
+
+  public Optional<String> getRemoteHostSNIName() {
+    return getDelegate().getValue(SECTION, "remote_host_sni_name");
+  }
+
+  public Optional<String> getCasHostSNIName() {
+    return getDelegate().getValue(SECTION, "cas_host_sni_name");
+  }
+
+  /** client TLS certificate file in PEM format */
+  public Optional<Path> getCertFile() {
+    return getFileOption("cert");
+  }
+
+  /** client TLS private key in PEM format */
+  public Optional<Path> getKeyFile() {
+    return getFileOption("key");
+  }
+
+  /** file containing all TLS authorities to verify server certificate with (PEM format) */
+  public Optional<Path> getCAsFile() {
+    return getFileOption("ca");
+  }
+
   public RemoteExecutionType getType() {
     Optional<RemoteExecutionType> specifiedType =
         getDelegate().getEnum(SECTION, "type", RemoteExecutionType.class);
@@ -80,9 +106,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
         getDelegate().getView(ModernBuildRuleConfig.class).getBuildStrategy();
     // Try the old modern_build_rule way.
     switch (fallbackStrategy) {
+      case HYBRID_LOCAL:
       case DEBUG_RECONSTRUCT:
       case DEBUG_PASSTHROUGH:
-      case DEBUG_ISOLATED_IN_PROCESS:
       case REMOTE:
       case NONE:
         break;
@@ -112,10 +138,6 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     return specifiedType.get();
   }
 
-  public Optional<String> getTraceID() {
-    return getValueWithFallback("trace_id");
-  }
-
   public Optional<String> getValueWithFallback(String key) {
     Optional<String> value = getDelegate().getValue(SECTION, key);
     if (value.isPresent()) {
@@ -130,18 +152,12 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     return value;
   }
 
+  public Optional<Path> getFileOption(String key) {
+    return getDelegate().getValue(SECTION, key).map(Paths::get);
+  }
+
   /** Whether SuperConsole output of Remote Execution information is enabled. */
   public boolean isSuperConsoleEnabled() {
-    return isSuperConsoleEnabledForActionStats() || isSuperConsoleEnabledForCasStats();
-  }
-
-  /** Print CAS statistics to the Super Console. */
-  public boolean isSuperConsoleEnabledForCasStats() {
-    return getDelegate().getBooleanValue(SECTION, CONSOLE_CAS_ENABLED_CONFIG, true);
-  }
-
-  /** Print Action statistics to the Super Console. */
-  public boolean isSuperConsoleEnabledForActionStats() {
-    return getDelegate().getBooleanValue(SECTION, CONSOLE_ACTIONS_ENABLED_CONFIG, true);
+    return getType() != RemoteExecutionType.NONE;
   }
 }

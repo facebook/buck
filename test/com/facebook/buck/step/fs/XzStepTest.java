@@ -56,8 +56,8 @@ public class XzStepTest {
   @Test
   public void testXzStep() throws InterruptedException, IOException {
     Path sourceFile =
-        TestDataHelper.getTestDataScenario(this, "xz_with_rm_and_check").resolve("xzstep.data");
-    File destinationFile = tmp.newFile("xzstep.data.xz");
+        TestDataHelper.getTestDataScenario(this, "compression_test").resolve("step.data");
+    File destinationFile = tmp.newFile("step.data.xz");
 
     XzStep step =
         new XzStep(
@@ -89,10 +89,10 @@ public class XzStepTest {
   @Test
   public void testXzStepDeletesOriginal() throws InterruptedException, IOException {
     Path sourceFileOriginal =
-        TestDataHelper.getTestDataScenario(this, "xz_with_rm_and_check").resolve("xzstep.data");
-    Path sourceFile = tmp.newFile("xzstep.data").toPath();
+        TestDataHelper.getTestDataScenario(this, "compression_test").resolve("step.data");
+    Path sourceFile = tmp.newFile("step.data").toPath();
     Files.copy(sourceFileOriginal, sourceFile, StandardCopyOption.REPLACE_EXISTING);
-    File destinationFile = tmp.newFile("xzstep.data.xz");
+    File destinationFile = tmp.newFile("step.data.xz");
 
     XzStep step =
         new XzStep(

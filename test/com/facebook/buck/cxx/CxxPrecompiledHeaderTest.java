@@ -81,7 +81,8 @@ public class CxxPrecompiledHeaderTest {
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 compiler,
-                CxxToolFlags.of()),
+                CxxToolFlags.of(),
+                Optional.empty()),
             CxxToolFlags.of(),
             FakeSourcePath.of("foo.h"),
             CxxSource.Type.C,

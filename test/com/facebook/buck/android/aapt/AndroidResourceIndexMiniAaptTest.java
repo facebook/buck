@@ -62,7 +62,7 @@ public class AndroidResourceIndexMiniAaptTest {
   private MiniAapt aapt;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
@@ -75,7 +75,6 @@ public class AndroidResourceIndexMiniAaptTest {
             FakeSourcePath.of(filesystem, "res"),
             Paths.get("android_resources.json"),
             ImmutableSet.of(),
-            false,
             false,
             MiniAapt.ResourceCollectionType.ANDROID_RESOURCE_INDEX);
   }

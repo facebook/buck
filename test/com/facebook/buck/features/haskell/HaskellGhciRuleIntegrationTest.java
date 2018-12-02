@@ -84,4 +84,10 @@ public class HaskellGhciRuleIntegrationTest {
     workspace.runBuckBuild("//:foo").assertSuccess();
     workspace.verify(Paths.get("foo_output.expected"), genPath);
   }
+
+  @Test
+  public void enableProfiling() throws IOException {
+    workspace.runBuckBuild("//:foo_prof").assertSuccess();
+    workspace.verify(Paths.get("foo_prof_output.expected"), genPath);
+  }
 }

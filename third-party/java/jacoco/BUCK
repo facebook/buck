@@ -3,7 +3,7 @@ java_library(
     exported_deps = [
         ":core",
         ":report",
-        "//third-party/java/asm:asm"
+        "//third-party/java/asm:asm",
     ],
     visibility = [
         "//src/com/facebook/buck/jvm/java/coverage:coverage",

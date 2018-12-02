@@ -83,7 +83,10 @@ code {
     letter-spacing: 0.02em;
     border: 1px solid #ededed;
     border-radius: 3px;
-    padding: 0.1em;
+    padding-top: 0.0em;
+    padding-bottom: 0.01em;
+    padding-left: 0.1em;
+    padding-right: 0.1em;
 }
 
 /*

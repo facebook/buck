@@ -17,71 +17,26 @@
 package com.facebook.buck.core.graph.transformation;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executor;
-import java.util.function.Function;
 
 /**
  * A computation environment that {@link GraphTransformer} can access. This class provides ability
- * of {@link GraphTransformer}s to request and execute their dependencies on the engine, without
- * exposing blocking operations.
+ * of {@link GraphTransformer}s to access their dependencies.
  */
 final class DefaultTransformationEnvironment<ComputeKey, ComputeResult>
     implements TransformationEnvironment<ComputeKey, ComputeResult> {
 
-  private final DefaultGraphTransformationEngine<ComputeKey, ComputeResult> engine;
-
-  private final Executor executor;
+  private final ImmutableMap<ComputeKey, ComputeResult> deps;
 
   /**
    * Package protected constructor so only {@link DefaultGraphTransformationEngine} can create the
    * environment
-   *
-   * @param engine the {@link DefaultGraphTransformationEngine} that manages this environment
-   * @param executor the {@link Executor} the engine uses to execute tasks
    */
-  DefaultTransformationEnvironment(
-      DefaultGraphTransformationEngine<ComputeKey, ComputeResult> engine, Executor executor) {
-    this.engine = engine;
-    this.executor = executor;
+  DefaultTransformationEnvironment(ImmutableMap<ComputeKey, ComputeResult> deps) {
+    this.deps = deps;
   }
 
   @Override
-  public final CompletionStage<ComputeResult> evaluate(
-      ComputeKey key, Function<ComputeResult, ComputeResult> asyncTransformation) {
-    return engine.compute(key).thenApplyAsync(asyncTransformation, executor);
-  }
-
-  @Override
-  public final CompletionStage<ComputeResult> evaluateAll(
-      Iterable<ComputeKey> keys,
-      Function<ImmutableMap<ComputeKey, ComputeResult>, ComputeResult> asyncTransformation) {
-    return collectAsyncAndRunInternal(engine.computeAll(keys), asyncTransformation);
-  }
-
-  @Override
-  public CompletionStage<ComputeResult> evaluateAllAndCollectAsync(
-      Iterable<ComputeKey> computeKeys, AsyncSink<ComputeKey, ComputeResult> sink) {
-    return engine
-        .collectFutures(
-            Maps.transformEntries(
-                engine.computeAll(computeKeys),
-                (key, value) ->
-                    value.thenApplyAsync(
-                        partialResult -> {
-                          sink.sink(key, partialResult);
-                          return new Object();
-                        },
-                        executor)))
-        .thenApplyAsync(ignored -> sink.collect(), executor);
-  }
-
-  private CompletionStage<ComputeResult> collectAsyncAndRunInternal(
-      Map<ComputeKey, CompletableFuture<ComputeResult>> toCollect,
-      Function<ImmutableMap<ComputeKey, ComputeResult>, ComputeResult> thenFunc) {
-    return engine.collectFutures(toCollect).thenApplyAsync(thenFunc, executor);
+  public ImmutableMap<ComputeKey, ComputeResult> getDeps() {
+    return deps;
   }
 }

@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -48,14 +49,16 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class JsBundleGenrule extends Genrule
-    implements AndroidPackageable, HasRuntimeDeps, JsBundleOutputs {
+    implements AndroidPackageable, HasRuntimeDeps, JsBundleOutputs, JsDependenciesOutputs {
 
   @AddToRuleKey final SourcePath jsBundleSourcePath;
   @AddToRuleKey final boolean rewriteSourcemap;
   @AddToRuleKey final boolean rewriteMisc;
+  @AddToRuleKey final boolean rewriteDepsFile;
   @AddToRuleKey final boolean skipResources;
   @AddToRuleKey private final String bundleName;
   private final JsBundleOutputs jsBundle;
+  private final JsDependenciesOutputs jsDependencies;
 
   public JsBundleGenrule(
       BuildTarget buildTarget,
@@ -72,6 +75,7 @@ public class JsBundleGenrule extends Genrule
       Optional<AndroidNdk> androidNdk,
       Optional<AndroidSdkLocation> androidSdkLocation,
       JsBundleOutputs jsBundle,
+      JsDependenciesOutputs jsDependencies,
       String bundleName) {
     super(
         buildTarget,
@@ -93,9 +97,11 @@ public class JsBundleGenrule extends Genrule
         androidSdkLocation,
         false);
     this.jsBundle = jsBundle;
+    this.jsDependencies = jsDependencies;
     this.jsBundleSourcePath = jsBundle.getSourcePathToOutput();
     this.rewriteSourcemap = args.getRewriteSourcemap();
     this.rewriteMisc = args.getRewriteMisc();
+    this.rewriteDepsFile = args.getRewriteDepsFile();
     this.skipResources = args.getSkipResources();
     this.bundleName = bundleName;
   }
@@ -118,19 +124,25 @@ public class JsBundleGenrule extends Genrule
                 .orElse(""))
         .put("RELEASE", getBuildTarget().getFlavors().contains(JsFlavors.RELEASE) ? "1" : "")
         .put(
-            "RES_DIR",
-            pathResolver.getAbsolutePath(jsBundle.getSourcePathToResources()).toString());
+            "RES_DIR", pathResolver.getAbsolutePath(jsBundle.getSourcePathToResources()).toString())
+        .put(
+            "SOURCEMAP",
+            pathResolver.getAbsolutePath(jsBundle.getSourcePathToSourceMap()).toString())
+        .put(
+            "DEPENDENCIES",
+            pathResolver.getAbsolutePath(jsDependencies.getSourcePathToDepsFile()).toString());
 
     if (rewriteSourcemap) {
-      environmentVariablesBuilder.put(
-          "SOURCEMAP",
-          pathResolver.getAbsolutePath(jsBundle.getSourcePathToSourceMap()).toString());
       environmentVariablesBuilder.put(
           "SOURCEMAP_OUT", pathResolver.getAbsolutePath(getSourcePathToSourceMap()).toString());
     }
     if (rewriteMisc) {
       environmentVariablesBuilder.put(
           "MISC_OUT", pathResolver.getAbsolutePath(getSourcePathToMisc()).toString());
+    }
+    if (rewriteDepsFile) {
+      environmentVariablesBuilder.put(
+          "DEPENDENCIES_OUT", pathResolver.getAbsolutePath(getSourcePathToDepsFile()).toString());
     }
   }
 
@@ -190,6 +202,13 @@ public class JsBundleGenrule extends Genrule
                   sourcePathResolver.getRelativePath(miscDirPath))));
     }
 
+    if (rewriteDepsFile) {
+      // If the genrule rewrites the dependencies file, we have to record its contents
+
+      SourcePath dependenciesFilePath = getSourcePathToDepsFile();
+      buildableContext.recordArtifact(sourcePathResolver.getRelativePath(dependenciesFilePath));
+    }
+
     // Last, we add all remaining genrule commands after the last RmStep
     return builder.addAll(buildSteps.subList(lastRmStep.getAsInt() + 1, buildSteps.size())).build();
   }
@@ -214,6 +233,13 @@ public class JsBundleGenrule extends Genrule
   }
 
   @Override
+  public SourcePath getSourcePathToDepsFile() {
+    return rewriteDepsFile
+        ? JsDependenciesOutputs.super.getSourcePathToDepsFile()
+        : jsDependencies.getSourcePathToDepsFile();
+  }
+
+  @Override
   public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
     return !this.skipResources && jsBundle instanceof AndroidPackageable
         ? ((AndroidPackageable) jsBundle).getRequiredPackageables(ruleResolver)
@@ -233,5 +259,10 @@ public class JsBundleGenrule extends Genrule
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.of(jsBundle.getBuildTarget());
+  }
+
+  @Override
+  public JsDependenciesOutputs getJsDependenciesOutputs(ActionGraphBuilder graphBuilder) {
+    return this;
   }
 }

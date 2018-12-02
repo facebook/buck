@@ -134,7 +134,7 @@ function_call ::=  function_name function_call_suffix
 
 function_name ::= ('glob' | IDENTIFIER)
 
-dot_suffix ::= '.' IDENTIFIER [function_call_suffix]
+dot_suffix ::= '.' (function_call | IDENTIFIER)
 
 function_call_suffix ::= '(' argument_list? ')'
 

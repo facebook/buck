@@ -36,7 +36,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 /** Used for materialzing outputs from the CAS. */
@@ -55,7 +54,7 @@ public class OutputsMaterializer {
   }
 
   /** Materialize the outputs of an action into a directory. */
-  public void materialize(
+  public ListenableFuture<Void> materialize(
       Collection<OutputDirectory> outputDirectories,
       Collection<Protocol.OutputFile> outputFiles,
       Path root)
@@ -88,11 +87,7 @@ public class OutputsMaterializer {
               }));
     }
 
-    try {
-      Futures.whenAllSucceed(pending.build()).call(() -> null).get();
-    } catch (InterruptedException | ExecutionException e) {
-      throw new RuntimeException(e);
-    }
+    return Futures.whenAllSucceed(pending.build()).call(() -> null);
   }
 
   private void materializeDirectory(

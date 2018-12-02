@@ -18,12 +18,12 @@ package com.facebook.buck.cxx.toolchain.elf;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.ElfFile;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,22 +43,18 @@ public class ElfVerDefTest {
 
   @Test
   public void test() throws IOException {
-    try (FileChannel channel = FileChannel.open(workspace.resolve("libfoo.so"))) {
-      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      ElfSection stringTable =
-          elf.getMandatorySectionByName(channel.toString(), ".dynstr").getSection();
-      ElfSection section =
-          elf.getMandatorySectionByName(channel.toString(), ".gnu.version_d").getSection();
-      assertThat(section.header.sh_type, Matchers.is(ElfSectionHeader.SHType.SHT_GNU_VERDEF));
-      ElfVerDef verDef = ElfVerDef.parse(elf.header.ei_class, section.body);
-      assertThat(verDef.entries, Matchers.hasSize(2));
-      assertThat(
-          stringTable.lookupString(verDef.entries.get(0).getSecond().get(0).vda_name),
-          Matchers.equalTo("libfoo.so"));
-      assertThat(
-          stringTable.lookupString(verDef.entries.get(1).getSecond().get(0).vda_name),
-          Matchers.equalTo("VERS_1.0"));
-    }
+    Path elfFilePath = workspace.resolve("libfoo.so");
+    Elf elf = ElfFile.mapReadOnly(elfFilePath);
+    ElfSection stringTable = elf.getMandatorySectionByName(elfFilePath, ".dynstr").getSection();
+    ElfSection section = elf.getMandatorySectionByName(elfFilePath, ".gnu.version_d").getSection();
+    assertThat(section.header.sh_type, Matchers.is(ElfSectionHeader.SHType.SHT_GNU_VERDEF));
+    ElfVerDef verDef = ElfVerDef.parse(elf.header.ei_class, section.body);
+    assertThat(verDef.entries, Matchers.hasSize(2));
+    assertThat(
+        stringTable.lookupString(verDef.entries.get(0).getSecond().get(0).vda_name),
+        Matchers.equalTo("libfoo.so"));
+    assertThat(
+        stringTable.lookupString(verDef.entries.get(1).getSecond().get(0).vda_name),
+        Matchers.equalTo("VERS_1.0"));
   }
 }

@@ -11,6 +11,8 @@ import subprocess
 import sys
 from collections import namedtuple
 
+from six import PY3
+
 
 def is_in_dir(filepath, directory):
     """Returns true if `filepath` is in `directory`."""
@@ -41,7 +43,12 @@ def get_caller_frame(skip=None):
 def cygwin_adjusted_path(path):
     """Convert windows paths to unix paths if running within cygwin."""
     if sys.platform == "cygwin":
-        return subprocess.check_output(["cygpath", path]).rstrip()
+        cygwin_path = subprocess.check_output(["cygpath", path]).rstrip()
+        if PY3:
+            # in Python 3 check_output returns bytes, which should be decoded
+            # into strings before returned back to the client
+            cygwin_path = cygwin_path.decode("ascii")
+        return cygwin_path
     else:
         return path
 

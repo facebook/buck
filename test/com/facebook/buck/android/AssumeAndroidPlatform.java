@@ -74,7 +74,7 @@ public class AssumeAndroidPlatform {
     assumeTrue(comparator.compare(androidNdk.get().getNdkVersion(), "14") >= 0);
   }
 
-  public static void assumeSdkIsAvailable() throws InterruptedException {
+  public static void assumeSdkIsAvailable() {
     try {
       assumeNotNull(getAndroidSdkLocation().getSdkRootPath());
     } catch (HumanReadableException e) {
@@ -94,7 +94,7 @@ public class AssumeAndroidPlatform {
    * <p>It seems that this option appeared in build-tools 26.0.2 and the check only verifies the
    * version of build tools, it doesn't run aapt2 to verify it actually supports the option.
    */
-  public static void assumeAapt2WithOutputTextSymbolsIsAvailable() throws InterruptedException {
+  public static void assumeAapt2WithOutputTextSymbolsIsAvailable() {
     AndroidSdkLocation androidSdkLocation = getAndroidSdkLocation();
 
     assumeBuildToolsIsNewer(androidSdkLocation, "26.0.2");

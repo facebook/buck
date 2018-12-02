@@ -32,7 +32,7 @@ import org.junit.Test;
 public class ShBinaryDescriptionTest {
 
   @Test
-  public void mainIsIncludedInCommand() throws Exception {
+  public void mainIsIncludedInCommand() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     PathSourcePath main = FakeSourcePath.of("main.sh");
     ShBinary shBinary =
@@ -46,7 +46,7 @@ public class ShBinaryDescriptionTest {
   }
 
   @Test
-  public void resourcesAreIncludedInCommand() throws Exception {
+  public void resourcesAreIncludedInCommand() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     PathSourcePath main = FakeSourcePath.of("main.sh");
     PathSourcePath resource = FakeSourcePath.of("resource.dat");

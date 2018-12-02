@@ -25,13 +25,13 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 
 public class TestAndroidSdkLocationFactory {
   public static AndroidSdkLocation create(ProjectFilesystem filesystem) {
     ToolchainCreationContext toolchainCreationContext =
         ToolchainCreationContext.of(
-            ImmutableMap.copyOf(System.getenv()),
+            EnvVariablesProvider.getSystemEnv(),
             FakeBuckConfig.builder().build(),
             filesystem,
             new DefaultProcessExecutor(new TestConsole()),

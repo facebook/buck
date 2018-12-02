@@ -21,7 +21,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.watchman.AbstractWatchmanPathEvent.Kind;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -98,7 +98,7 @@ public class WatchmanWatcher {
   public WatchmanWatcher(
       Watchman watchman,
       EventBus fileChangeEventBus,
-      ImmutableSet<PathOrGlobMatcher> ignorePaths,
+      ImmutableSet<PathMatcher> ignorePaths,
       Map<Path, WatchmanCursor> cursors,
       int numThreads) {
     this(
@@ -129,7 +129,7 @@ public class WatchmanWatcher {
   @VisibleForTesting
   static ImmutableMap<Path, WatchmanQuery> createQueries(
       ImmutableMap<Path, ProjectWatch> projectWatches,
-      ImmutableSet<PathOrGlobMatcher> ignorePaths,
+      ImmutableSet<PathMatcher> ignorePaths,
       Set<Capability> watchmanCapabilities) {
     ImmutableMap.Builder<Path, WatchmanQuery> watchmanQueryBuilder = ImmutableMap.builder();
     for (Map.Entry<Path, ProjectWatch> entry : projectWatches.entrySet()) {
@@ -142,7 +142,7 @@ public class WatchmanWatcher {
   @VisibleForTesting
   static WatchmanQuery createQuery(
       ProjectWatch projectWatch,
-      ImmutableSet<PathOrGlobMatcher> ignorePaths,
+      ImmutableSet<PathMatcher> ignorePaths,
       Set<Capability> watchmanCapabilities) {
     String watchRoot = projectWatch.getWatchRoot();
     Optional<String> watchPrefix = projectWatch.getProjectPrefix();
@@ -159,7 +159,7 @@ public class WatchmanWatcher {
     // not currently OK to exclude .git in .watchmanconfig). This id
     // because watchman's .git cookie magic is done before the query
     // is applied.
-    for (PathOrGlobMatcher ignorePathOrGlob : ignorePaths) {
+    for (PathMatcher ignorePathOrGlob : ignorePaths) {
       excludeAnyOf.add(ignorePathOrGlob.toWatchmanMatchQuery(watchmanCapabilities));
     }
 

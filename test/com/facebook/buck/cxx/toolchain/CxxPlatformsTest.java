@@ -56,7 +56,8 @@ public class CxxPlatformsTest {
     CompilerProvider compiler =
         new CompilerProvider(
             Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))),
-            Optional.of(CxxToolProvider.Type.GCC));
+            Optional.of(CxxToolProvider.Type.GCC),
+            false);
     PreprocessorProvider preprocessor =
         new PreprocessorProvider(
             Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))),

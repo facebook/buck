@@ -29,16 +29,10 @@ import java.util.Objects;
 
 /** Provides output lines to the console about the current state of Remote Execution. */
 public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLineProvider {
-  private final boolean showActionsStatsLine;
-  private final boolean showCasStatsLine;
+
   private final RemoteExecutionStatsProvider statsProvider;
 
-  public RemoteExecutionConsoleLineProvider(
-      boolean showCasStatsLine,
-      boolean showActionsStatsLine,
-      RemoteExecutionStatsProvider statsProvider) {
-    this.showCasStatsLine = showCasStatsLine;
-    this.showActionsStatsLine = showActionsStatsLine;
+  public RemoteExecutionConsoleLineProvider(RemoteExecutionStatsProvider statsProvider) {
     this.statsProvider = statsProvider;
   }
 
@@ -51,25 +45,21 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
       return lines.build();
     }
 
-    if (showActionsStatsLine) {
-      String actionsLine =
-          String.format(
-              "RE Actions: Local=%d Remote=[%s]",
-              getLocallyBuiltRules(statsProvider.getTotalRulesBuilt(), actionsPerState),
-              getStatesString(actionsPerState));
-      lines.add(actionsLine);
-    }
+    String actionsLine =
+        String.format(
+            "[RE] Actions: Local=%d Remote=[%s]",
+            getLocallyBuiltRules(statsProvider.getTotalRulesBuilt(), actionsPerState),
+            getStatesString(actionsPerState));
+    lines.add(actionsLine);
 
-    if (showCasStatsLine) {
-      String casLine =
-          String.format(
-              "RE CAS: Upl=[Count:%d Size=%s] Dwl=[Count:%d Size=%s]",
-              statsProvider.getCasUploads(),
-              prettyPrintSize(statsProvider.getCasUploadSizeBytes()),
-              statsProvider.getCasDownloads(),
-              prettyPrintSize(statsProvider.getCasDownloadSizeBytes()));
-      lines.add(casLine);
-    }
+    String casLine =
+        String.format(
+            "[RE] CAS: Upl=[Count:%d Size=%s] Dwl=[Count:%d Size=%s]",
+            statsProvider.getCasUploads(),
+            prettyPrintSize(statsProvider.getCasUploadSizeBytes()),
+            statsProvider.getCasDownloads(),
+            prettyPrintSize(statsProvider.getCasDownloadSizeBytes()));
+    lines.add(casLine);
 
     return lines.build();
   }
@@ -97,7 +87,7 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
     return Joiner.on(" ").join(states);
   }
 
-  private static String prettyPrintSize(long sizeBytes) {
+  public static String prettyPrintSize(long sizeBytes) {
     return SizeUnit.toHumanReadableString(
         SizeUnit.getHumanReadableSize(sizeBytes, SizeUnit.BYTES), Locale.getDefault());
   }

@@ -46,7 +46,7 @@ public class SelectorListFactoryTest {
   private SelectorListFactory selectorListFactory;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
     selectorListFactory =
         new SelectorListFactory(new SelectorFactory(new BuildTargetTypeCoercer()::coerce));

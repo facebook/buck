@@ -16,8 +16,7 @@
 
 package com.facebook.buck.util;
 
-import java.util.Objects;
-import java.util.Optional;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import java.util.function.Supplier;
 
 /**
@@ -25,26 +24,9 @@ import java.util.function.Supplier;
  * MoreSuppliers.MemoizingSupplier}. See {@link WeakMemoizer} for a weak reference version of this
  * class.
  */
-public class Memoizer<T> {
-  private volatile Optional<T> value = Optional.empty();
+public class Memoizer<T> extends AbstractMemoizer<T, RuntimeException> {
 
-  /**
-   * Get the value and memoize the result. Constructs the value if it hasn't been memoized before,
-   * or if the previously memoized value has been collected.
-   *
-   * @param delegate delegate for constructing the value
-   * @return the value
-   */
   public T get(Supplier<T> delegate) {
-    if (!value.isPresent()) {
-      synchronized (this) {
-        if (!value.isPresent()) {
-          T t = Objects.requireNonNull(delegate.get());
-          value = Optional.of(t);
-          return t;
-        }
-      }
-    }
-    return Objects.requireNonNull(value.get());
+    return get(ThrowingSupplier.fromSupplier(delegate), RuntimeException.class);
   }
 }

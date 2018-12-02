@@ -44,7 +44,7 @@ import org.junit.Test;
 public class CommandToolTest {
 
   @Test
-  public void buildTargetSourcePath() throws Exception {
+  public void buildTargetSourcePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);

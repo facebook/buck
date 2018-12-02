@@ -49,8 +49,7 @@ public class FileScrubberStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Path filePath = filesystem.resolve(input);
     try {
       for (FileScrubber scrubber : scrubbers) {

@@ -12,6 +12,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/android:helpers",
+        "//src/com/facebook/buck/util/environment:environment",
         "//test/com/facebook/buck/android:utils",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/toolchain/impl:testutil",

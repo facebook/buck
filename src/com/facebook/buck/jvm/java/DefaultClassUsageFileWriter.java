@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,6 +38,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       CellPathResolver cellPathResolver) {
     ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
     try {
+      Preconditions.checkState(filesystem.exists(relativePath.getParent()));
       ObjectMappers.WRITER.writeValue(
           filesystem.resolve(relativePath).toFile(),
           relativizeMap(classUsageMap, filesystem, cellPathResolver));

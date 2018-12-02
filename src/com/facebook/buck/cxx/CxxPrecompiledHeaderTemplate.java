@@ -16,11 +16,14 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.android.packageable.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -40,7 +43,7 @@ import java.util.function.Function;
  * rule R uses a precompiled header rule P, then all of P's {@code deps} will get merged into R's
  * {@code deps} list.
  */
-public class CxxPrecompiledHeaderTemplate extends PreInclude {
+public class CxxPrecompiledHeaderTemplate extends PreInclude implements AndroidPackageable {
   CxxPrecompiledHeaderTemplate(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -113,5 +116,15 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
         ImmutableSortedSet.of(
             cxxPlatform.getFlavor(), InternalFlavor.of(Flavor.replaceInvalidCharacters(pchBaseID))),
         graphBuilder);
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+    return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    collector.addNativeLinkable(this);
   }
 }

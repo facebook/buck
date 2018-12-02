@@ -274,7 +274,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
         /* leadingIncludePaths */ Optional.empty(),
         Optional.empty(),
-        ImmutableSortedSet.of());
+        cxxPlatform.getConflictingHeaderBasenameWhitelist());
   }
 
   public abstract CxxPrecompiledHeader getPrecompiledHeader(
@@ -329,7 +329,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
                       CxxSourceTypes.getCompiler(
                               cxxPlatform, CxxSourceTypes.getPreprocessorOutputType(sourceType))
                           .resolve(graphBuilder),
-                      compilerFlags);
+                      compilerFlags,
+                      cxxPlatform.getUseArgFile());
               depsBuilder.add(compilerDelegate);
 
               depsBuilder.add(getHeaderSourcePath());

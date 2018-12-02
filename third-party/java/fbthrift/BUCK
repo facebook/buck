@@ -9,8 +9,8 @@ prebuilt_jar(
     name = "fbthrift",
     binary_jar = "java-thrift-dependencies.jar",
     visibility = [
-        "//src-gen/com/facebook/remoteexecution/...",
         "//src-gen:thrift",
+        "//src-gen/com/facebook/remoteexecution/...",
         "//src/com/facebook/buck/eden/...",
         "//src/com/facebook/buck/remoteexecution/...",
         "//src/com/facebook/buck/rules/modern/builders/...",

@@ -15,102 +15,85 @@
  */
 package com.facebook.buck.intellij.ideabuck.actions.select;
 
-import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
-import com.intellij.icons.AllIcons;
+import com.intellij.ide.highlighter.JavaFileType;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.util.IconLoader;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiKeyword;
+import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiTypeParameterList;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/** Class denoting the lines that can create buck test configurations. */
+/**
+ * Creates runnable line markers for classes/methods that can be run by a buck test configurations.
+ */
 public class SelectedTestRunLineMarkerContributor extends RunLineMarkerContributor {
-
-  private static final String[] TEST_ANNOTATIONS = {
-    "org.junit.Test", "org.testng.annotations.Test"
-  };
 
   @Nullable
   @Override
-  public RunLineMarkerContributor.Info getInfo(PsiElement psiElement) {
-    if (psiElement instanceof PsiKeyword) {
+  public RunLineMarkerContributor.Info getInfo(@NotNull PsiElement psiElement) {
+    if (psiElement.getContainingFile().getFileType() != JavaFileType.INSTANCE) {
+      return null;
+    }
+    // Mark the PsiIdentifier so that the buck action will share the same element
+    // as com.intellij.testIntegration.TestRunLineMarkerProvider
+    if (psiElement instanceof PsiIdentifier) {
       PsiElement parent = psiElement.getParent();
       if (parent instanceof PsiClass) {
         PsiClass psiClass = (PsiClass) parent;
-        for (PsiMethod method : psiClass.getAllMethods()) {
-          if (isTestMethod(method)) {
-            return createInfo(psiElement);
-          }
+        if (BuckTestDetector.isTestClass(psiClass)) {
+          return createInfo(psiClass, null);
         }
-      }
-    }
-    if (psiElement instanceof PsiTypeParameterList) {
-      PsiElement parent = psiElement.getParent();
-      if (parent instanceof PsiMethod && isTestMethod((PsiMethod) parent)) {
-        return createInfo(psiElement);
+      } else if (parent instanceof PsiMethod) {
+        PsiMethod psiMethod = (PsiMethod) parent;
+        PsiClass psiClass = psiMethod.getContainingClass();
+        if (BuckTestDetector.isTestMethod(psiMethod)) {
+          return createInfo(psiClass, psiMethod);
+        }
       }
     }
     return null;
   }
 
-  private Info createInfo(PsiElement psiElement) {
-    PsiElement parent = psiElement.getParent();
-    String name = "";
-    if (parent instanceof PsiMethod) {
-      name = ((PsiMethod) parent).getName();
-    } else if (parent instanceof PsiClass) {
-      name = ((PsiClass) parent).getName();
-    } else {
-      return null;
-    }
+  private Info createInfo(PsiClass psiClass, PsiMethod psiMethod) {
+    // TODO: Verify that this file is part of a buck test target
     return new Info(
         IconLoader.getIcon("/icons/buck_icon.png"),
-        psiElement1 -> "Run Test(s)",
-        new RunSelectedTestAction(
-            "Run " + name + " with Buck",
-            "Run " + name + " with Buck",
-            AllIcons.RunConfigurations.TestState.Run,
-            false,
-            parent),
-        new RunSelectedTestAction(
-            "Debug " + name + " with Buck",
-            "Debug " + name + " with Buck",
-            IconLoader.getIcon("/icons/actions/Debug.png"),
-            true,
-            parent));
+        new AnAction[] {
+          new FixedBuckTestAction(psiClass, psiMethod, false),
+          new FixedBuckTestAction(psiClass, psiMethod, true),
+        },
+        RunLineMarkerContributor.RUN_TEST_TOOLTIP_PROVIDER);
   }
 
-  /**
-   * Check that a method is annotated @Test.
-   *
-   * @param method a {@link PsiMethod} to check.
-   * @return {@code true} if the method has the junit Test annotation. {@code false} otherwise.
-   */
-  private boolean isTestMethod(PsiMethod method) {
-    if (method.getContext() == null) {
-      return false;
+  /** Implementation of {@link AbstractBuckTestAction} that runs a fixed class/method. */
+  class FixedBuckTestAction extends AbstractBuckTestAction {
+    private PsiClass psiClass;
+    private @Nullable PsiMethod psiMethod;
+    private boolean debug;
+
+    FixedBuckTestAction(PsiClass psiClass, @Nullable PsiMethod psiMethod, boolean debug) {
+      this.psiClass = psiClass;
+      this.psiMethod = psiMethod;
+      this.debug = debug;
     }
-    if (method.getContext().getContainingFile() == null) {
-      return false;
+
+    @Override
+    boolean isDebug() {
+      return debug;
     }
-    VirtualFile buckFile =
-        BuckFileUtil.getBuckFile(method.getContext().getContainingFile().getVirtualFile());
-    if (buckFile == null) {
-      return false;
+
+    @Override
+    public void update(AnActionEvent e) {
+      updatePresentation(e.getPresentation(), psiClass, psiMethod);
     }
-    PsiAnnotation[] annotations = method.getModifierList().getAnnotations();
-    for (PsiAnnotation annotation : annotations) {
-      for (String testAnnotation : TEST_ANNOTATIONS) {
-        if (testAnnotation.equals(annotation.getQualifiedName())) {
-          return true;
-        }
-      }
+
+    @Override
+    public void actionPerformed(AnActionEvent anActionEvent) {
+      setupAndExecuteTestConfiguration(psiClass, psiMethod);
     }
-    return false;
   }
 }

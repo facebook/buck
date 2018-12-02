@@ -30,20 +30,24 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryTarget;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.concurrent.FakeListeningExecutorService;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -71,8 +75,13 @@ public class QueryCommandTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
+      getManifestSupplier() {
+    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
+  }
+
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     TestConsole console = new TestConsole();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
@@ -95,20 +104,23 @@ public class QueryCommandTest {
             eventBus,
             FakeBuckConfig.builder().build(),
             Platform.detect(),
-            ImmutableMap.copyOf(System.getenv()),
+            EnvVariablesProvider.getSystemEnv(),
             new FakeJavaPackageFinder(),
             Optional.empty());
 
     ListeningExecutorService executorService = new FakeListeningExecutorService();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PerBuildState perBuildState =
-        new PerBuildStateFactory(
+        PerBuildStateFactory.createFactory(
                 typeCoercerFactory,
-                new ConstructorArgMarshaller(typeCoercerFactory),
+                new DefaultConstructorArgMarshaller(typeCoercerFactory),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
+                cell.getBuckConfig(),
                 WatchmanFactory.NULL_WATCHMAN,
-                eventBus)
+                eventBus,
+                getManifestSupplier(),
+                new FakeFileHashCache(ImmutableMap.of()))
             .create(
                 params.getParser().getPermState(),
                 executorService,

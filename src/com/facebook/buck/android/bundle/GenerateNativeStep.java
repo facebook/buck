@@ -46,8 +46,7 @@ public class GenerateNativeStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Path path = filesystem.resolve(output);
     try (OutputStream outputFile = filesystem.newFileOutputStream(path)) {
       createNativeLibraries().writeTo(outputFile);

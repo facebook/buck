@@ -5,6 +5,8 @@ java_test(
     srcs = glob(["*Test.java"]),
     deps = [
         "//src/com/facebook/buck/core/rules/configsetting:configsetting",
+        "//src/com/facebook/buck/cxx/toolchain/impl:impl",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/junit:junit",

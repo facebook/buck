@@ -163,7 +163,7 @@ public class CxxLibraryTest {
   }
 
   @Test
-  public void headerOnlyExports() throws Exception {
+  public void headerOnlyExports() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -220,7 +220,7 @@ public class CxxLibraryTest {
   }
 
   @Test
-  public void postLinkerArgumentsExistWhenPassed() throws Exception {
+  public void postLinkerArgumentsExistWhenPassed() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();

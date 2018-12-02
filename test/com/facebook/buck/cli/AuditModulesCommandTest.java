@@ -46,7 +46,7 @@ public class AuditModulesCommandTest {
   private BuckModuleManager moduleManager;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     console = new TestConsole();
 
     ImmutableMap.Builder<String, ModuleInformation> modules = ImmutableMap.builder();

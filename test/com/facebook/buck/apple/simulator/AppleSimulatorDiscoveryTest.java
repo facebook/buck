@@ -100,6 +100,12 @@ public class AppleSimulatorDiscoveryTest {
                     .build())
             .add(
                 AppleSimulator.builder()
+                    .setName("iPhone SE Trailing Whitespace")
+                    .setUdid("CBB0391A-118C-39BA-CA29-11405CA10BC1")
+                    .setSimulatorState(AppleSimulatorState.SHUTDOWN)
+                    .build())
+            .add(
+                AppleSimulator.builder()
                     .setName("iPhone ANSI Color")
                     .setUdid("7313DF34-884C-49F7-8261-B26377F9FC23")
                     .setSimulatorState(AppleSimulatorState.SHUTDOWN)

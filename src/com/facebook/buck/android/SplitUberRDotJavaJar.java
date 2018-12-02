@@ -116,8 +116,7 @@ public class SplitUberRDotJavaJar extends ModernBuildRule<SplitUberRDotJavaJar>
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       ClassNameFilter primaryDexFilter =
           ClassNameFilter.fromConfiguration(dexSplitMode.getPrimaryDexPatterns());
 

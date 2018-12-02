@@ -16,6 +16,8 @@
 
 package com.facebook.buck.intellij.ideabuck.icons;
 
+import com.intellij.icons.AllIcons.Actions;
+import com.intellij.icons.AllIcons.RunConfigurations.TestState;
 import com.intellij.openapi.util.IconLoader;
 import javax.swing.Icon;
 
@@ -39,4 +41,8 @@ public final class BuckIcons {
   public static final Icon ACTION_TEST = load("/icons/actions/Test.png");
   public static final Icon ACTION_UNINSTALL = load("/icons/actions/Uninstall.png");
   public static final Icon CONFIGURATION_TEST = load("/icons/runConfigurations/test.png");
+
+  // Gutter icons for running unit tests
+  public static final Icon RUN_BUCK_TEST = TestState.Run;
+  public static final Icon DEBUG_BUCK_TEST = Actions.StartDebugger;
 }

@@ -274,7 +274,7 @@ public class AndroidPackageableCollectorTest {
    * override values).
    */
   @Test
-  public void testGetAndroidResourceDeps() throws Exception {
+  public void testGetAndroidResourceDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     BuildRule c =
@@ -363,7 +363,7 @@ public class AndroidPackageableCollectorTest {
   }
 
   @Test
-  public void testGetAndroidResourceDepsWithDuplicateResourcePaths() throws Exception {
+  public void testGetAndroidResourceDepsWithDuplicateResourcePaths() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     PathSourcePath resPath = FakeSourcePath.of("res");
@@ -423,7 +423,7 @@ public class AndroidPackageableCollectorTest {
    * the keystore's android_library should not contribute to the classpath of the android_binary.
    */
   @Test
-  public void testGraphForAndroidBinaryExcludesKeystoreDeps() throws Exception {
+  public void testGraphForAndroidBinaryExcludesKeystoreDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));

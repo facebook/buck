@@ -39,10 +39,10 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.maven.aether.Repository;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.PythonDslProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -54,6 +54,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
@@ -201,11 +202,11 @@ public class ResolverIntegrationTest {
     HashCode seen = MorePaths.asByteSource(jarFile).hash(Hashing.sha1());
     assertEquals(expected, seen);
 
-    List<Map<String, Object>> rules =
+    Map<String, Map<String, Object>> rules =
         buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
 
     assertEquals(1, rules.size());
-    Map<String, Object> rule = rules.get(0);
+    Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
     // Name is derived from the project identifier
     assertEquals("no-deps", rule.get("name"));
 
@@ -227,10 +228,10 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:with-sources:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
-    List<Map<String, Object>> rules =
+    Map<String, Map<String, Object>> rules =
         buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
 
-    Map<String, Object> rule = rules.get(0);
+    Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
     assertEquals("with-sources-1.0-sources.jar", rule.get("sourceJar"));
   }
 
@@ -240,16 +241,18 @@ public class ResolverIntegrationTest {
 
     Path exampleDir = thirdPartyRelative.resolve("example");
     Map<String, Object> withDeps =
-        buildFileParser
-            .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
-            .getTargets()
-            .get(0);
+        Iterables.getOnlyElement(
+            buildFileParser
+                .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
+                .getTargets()
+                .values());
     Path otherDir = thirdPartyRelative.resolve("othercorp");
     Map<String, Object> noDeps =
-        buildFileParser
-            .getBuildFileManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
-            .getTargets()
-            .get(0);
+        Iterables.getOnlyElement(
+            buildFileParser
+                .getBuildFileManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
+                .getTargets()
+                .values());
 
     @SuppressWarnings("unchecked")
     List<String> visibility = (List<String>) noDeps.get("visibility");
@@ -274,20 +277,15 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:deps-in-same-project:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
-    List<Map<String, Object>> allTargets =
+    Map<String, Map<String, Object>> allTargets =
         buildFileParser
             .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
             .getTargets();
 
     assertEquals(2, allTargets.size());
 
-    Map<String, Object> noDeps = null;
-    for (Map<String, Object> target : allTargets) {
-      if ("no-deps".equals(target.get("name"))) {
-        noDeps = target;
-        break;
-      }
-    }
+    Map<String, Object> noDeps = allTargets.get("no-deps");
+
     assertNotNull(noDeps);
 
     // Although the "deps-in-same-project" could be in the visibility param, it doesn't need to be

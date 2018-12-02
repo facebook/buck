@@ -56,7 +56,8 @@ public class ExceptionHandlerRegistryFactory {
               public ExitCode handleException(IOException e) {
                 if (e instanceof FileSystemLoopException) {
                   return ExitCode.FATAL_GENERIC;
-                } else if (e.getMessage().startsWith("No space left on device")) {
+                } else if (e.getMessage() != null
+                    && e.getMessage().startsWith("No space left on device")) {
                   return ExitCode.FATAL_DISK_FULL;
                 } else {
                   return ExitCode.FATAL_IO;

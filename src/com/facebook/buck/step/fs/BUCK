@@ -16,7 +16,9 @@ java_immutables_library(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
+        "//third-party/java/commons-compress:commons-compress",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/xz-java-1.5:xz",
+        "//third-party/java/zstd-jni:zstd-jni",
     ],
 )

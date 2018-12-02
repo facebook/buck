@@ -162,4 +162,9 @@ public final class MoreStrings {
         .map(Pair::getFirst)
         .collect(ImmutableList.toImmutableList());
   }
+
+  /** Removes carriage return characters from the string with preserving new line characters. */
+  public static String replaceCR(String text) {
+    return text.replace("\r\n", "\n").replace('\r', '\n');
+  }
 }

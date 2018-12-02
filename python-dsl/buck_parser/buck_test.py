@@ -277,6 +277,7 @@ class TestBuckSubdirGlobMixin(object):
             None,
             False,
             False,
+            {},
         )
         search_base = self.fake_path(
             "foo",
@@ -314,6 +315,7 @@ class TestBuckSubdirGlobMixin(object):
             None,
             False,
             False,
+            {},
         )
         search_base = self.fake_path(
             "foo", glob_results={"lib/bar/*.h": ["lib/bar/A.h", "lib/bar/B.h"]}

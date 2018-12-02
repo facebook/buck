@@ -36,7 +36,9 @@ public class CxxSourceTypes {
         || sourceType == CxxSource.Type.OBJC
         || sourceType == CxxSource.Type.OBJCXX
         || sourceType == CxxSource.Type.CUDA
-        || sourceType == CxxSource.Type.ASM_WITH_CPP;
+        || sourceType == CxxSource.Type.HIP
+        || sourceType == CxxSource.Type.ASM_WITH_CPP
+        || sourceType == CxxSource.Type.PCM;
   }
 
   /**
@@ -49,6 +51,7 @@ public class CxxSourceTypes {
         || sourceType == CxxSource.Type.OBJC_CPP_OUTPUT
         || sourceType == CxxSource.Type.OBJCXX_CPP_OUTPUT
         || sourceType == CxxSource.Type.CUDA_CPP_OUTPUT
+        || sourceType == CxxSource.Type.HIP_CPP_OUTPUT
         || sourceType == CxxSource.Type.ASM
         || sourceType == CxxSource.Type.PCM;
   }
@@ -65,6 +68,7 @@ public class CxxSourceTypes {
         preprocessor = cxxPlatform.getCpp();
         break;
       case CXX:
+      case PCM:
         preprocessor = cxxPlatform.getCxxpp();
         break;
       case OBJC:
@@ -78,6 +82,12 @@ public class CxxSourceTypes {
           throw new HumanReadableException("%s: no cuda preprocessor set", cxxPlatform.getFlavor());
         }
         preprocessor = cxxPlatform.getCudapp().get();
+        break;
+      case HIP:
+        if (!cxxPlatform.getHippp().isPresent()) {
+          throw new HumanReadableException("%s: no hip preprocessor set", cxxPlatform.getFlavor());
+        }
+        preprocessor = cxxPlatform.getHippp().get();
         break;
       case ASM_WITH_CPP:
         if (!cxxPlatform.getAsmpp().isPresent()) {
@@ -107,6 +117,7 @@ public class CxxSourceTypes {
         flags.addAll(cxxPlatform.getCppflags());
         break;
       case CXX:
+      case PCM:
         flags.addAll(cxxPlatform.getCxxppflags());
         break;
       case OBJC:
@@ -117,6 +128,9 @@ public class CxxSourceTypes {
         break;
       case CUDA:
         flags.addAll(cxxPlatform.getCudappflags());
+        break;
+      case HIP:
+        flags.addAll(cxxPlatform.getHipppflags());
         break;
       case ASM_WITH_CPP:
         flags.addAll(cxxPlatform.getAsmppflags());
@@ -152,8 +166,14 @@ public class CxxSourceTypes {
       case CUDA:
         outputType = CxxSource.Type.CUDA_CPP_OUTPUT;
         break;
+      case HIP:
+        outputType = CxxSource.Type.HIP_CPP_OUTPUT;
+        break;
       case ASM_WITH_CPP:
         outputType = CxxSource.Type.ASM;
+        break;
+      case PCM:
+        outputType = CxxSource.Type.PCM;
         break;
         // $CASES-OMITTED$
       default:
@@ -161,6 +181,11 @@ public class CxxSourceTypes {
     }
 
     return outputType;
+  }
+
+  /** @return whether this source type supports dep files. */
+  public static boolean supportsDepFiles(CxxSource.Type type) {
+    return type != CxxSource.Type.PCM;
   }
 
   /** @return the appropriate compiler for the given language type. */
@@ -189,6 +214,12 @@ public class CxxSourceTypes {
           throw new HumanReadableException("%s: no cuda compiler set", cxxPlatform.getFlavor());
         }
         compiler = cxxPlatform.getCuda().get();
+        break;
+      case HIP_CPP_OUTPUT:
+        if (!cxxPlatform.getHip().isPresent()) {
+          throw new HumanReadableException("%s: no hip compiler set", cxxPlatform.getFlavor());
+        }
+        compiler = cxxPlatform.getHip().get();
         break;
       case ASM:
         if (!cxxPlatform.getAsm().isPresent()) {
@@ -229,6 +260,9 @@ public class CxxSourceTypes {
         break;
       case CUDA_CPP_OUTPUT:
         flags.addAll(cxxPlatform.getCudaflags());
+        break;
+      case HIP_CPP_OUTPUT:
+        flags.addAll(cxxPlatform.getHipflags());
         break;
       case ASM:
         flags.addAll(cxxPlatform.getAsmflags());

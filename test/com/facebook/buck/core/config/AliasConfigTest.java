@@ -43,8 +43,7 @@ public class AliasConfigTest {
    * the value appears multiple times.
    */
   @Test
-  public void testGetBasePathToAliasMap()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
+  public void testGetBasePathToAliasMap() throws IOException, NoSuchBuildTargetException {
     Reader reader1 =
         new StringReader(
             Joiner.on('\n')
@@ -103,8 +102,7 @@ public class AliasConfigTest {
   }
 
   @Test
-  public void testGetBuildTargetForAlias()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
+  public void testGetBuildTargetForAlias() throws IOException, NoSuchBuildTargetException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')
@@ -188,8 +186,7 @@ public class AliasConfigTest {
   }
 
   @Test
-  public void testReferentialAliases()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
+  public void testReferentialAliases() throws IOException, NoSuchBuildTargetException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')
@@ -221,8 +218,7 @@ public class AliasConfigTest {
   }
 
   @Test
-  public void testUnresolvedAliasThrows()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
+  public void testUnresolvedAliasThrows() throws IOException, NoSuchBuildTargetException {
     Reader reader =
         new StringReader(
             Joiner.on('\n').join("[alias]", "foo = //java/com/example:foo", "bar = food"));
@@ -238,7 +234,7 @@ public class AliasConfigTest {
 
   @Test
   public void testDuplicateDefinitionsDefinitionOverride()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
+      throws IOException, NoSuchBuildTargetException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')

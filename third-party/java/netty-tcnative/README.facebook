@@ -1,0 +1,5 @@
+This is a static link of a fork of Tomcat Native
+
+Acquired from the Maven central repository (search for io.netty).
+
+URL: http://central.maven.org/maven2/io/netty/netty-tcnative-boringssl-static/2.0.7.Final/

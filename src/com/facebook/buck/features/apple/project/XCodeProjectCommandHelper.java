@@ -116,6 +116,7 @@ public class XCodeProjectCommandHelper {
   private final ListeningExecutorService executorService;
   private final List<String> arguments;
   private final boolean absoluteHeaderMapPaths;
+  private final boolean sharedLibrariesInBundles;
   private final boolean enableParserProfiling;
   private final boolean withTests;
   private final boolean withoutTests;
@@ -145,6 +146,7 @@ public class XCodeProjectCommandHelper {
       List<String> arguments,
       ImmutableSet<Flavor> appleCxxFlavors,
       boolean absoluteHeaderMapPaths,
+      boolean sharedLibrariesInBundles,
       boolean enableParserProfiling,
       boolean withTests,
       boolean withoutTests,
@@ -171,6 +173,7 @@ public class XCodeProjectCommandHelper {
     this.executorService = executorService;
     this.arguments = arguments;
     this.absoluteHeaderMapPaths = absoluteHeaderMapPaths;
+    this.sharedLibrariesInBundles = sharedLibrariesInBundles;
     this.enableParserProfiling = enableParserProfiling;
     this.withTests = withTests;
     this.withoutTests = withoutTests;
@@ -248,6 +251,15 @@ public class XCodeProjectCommandHelper {
       return ExitCode.BUILD_ERROR;
     }
 
+    Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle = Optional.empty();
+
+    if (sharedLibrariesInBundles) {
+      sharedLibraryToBundle =
+          Optional.of(
+              ProjectGenerator.computeSharedLibrariesToBundles(
+                  targetGraphAndTargets.getTargetGraph().getNodes(), targetGraphAndTargets));
+    }
+
     if (dryRun) {
       for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
         console.getStdOut().println(targetNode.toString());
@@ -258,7 +270,8 @@ public class XCodeProjectCommandHelper {
 
     LOG.debug("Xcode project generation: Run the project generator");
 
-    return runXcodeProjectGenerator(executor, targetGraphAndTargets, passedInTargetsSet);
+    return runXcodeProjectGenerator(
+        executor, targetGraphAndTargets, passedInTargetsSet, sharedLibraryToBundle);
   }
 
   private static String getIDEForceKillSectionName() {
@@ -318,7 +331,8 @@ public class XCodeProjectCommandHelper {
   private ExitCode runXcodeProjectGenerator(
       ListeningExecutorService executor,
       TargetGraphAndTargets targetGraphAndTargets,
-      ImmutableSet<BuildTarget> passedInTargetsSet)
+      ImmutableSet<BuildTarget> passedInTargetsSet,
+      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
       throws IOException, InterruptedException {
     ExitCode exitCode = ExitCode.SUCCESS;
     AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
@@ -358,7 +372,8 @@ public class XCodeProjectCommandHelper {
             getFocusModules(executor),
             new HashMap<>(),
             combinedProject,
-            outputPresenter);
+            outputPresenter,
+            sharedLibraryToBundle);
     if (!requiredBuildTargets.isEmpty()) {
       ImmutableMultimap<Path, String> cellPathToCellName =
           cell.getCellPathResolver().getCellPaths().asMultimap().inverse();
@@ -411,7 +426,8 @@ public class XCodeProjectCommandHelper {
       FocusedModuleTargetMatcher focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
       boolean combinedProject,
-      PathOutputPresenter presenter)
+      PathOutputPresenter presenter,
+      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets;
     if (passedInTargetsSet.isEmpty()) {
@@ -477,7 +493,8 @@ public class XCodeProjectCommandHelper {
               halideBuckConfig,
               cxxBuckConfig,
               appleConfig,
-              swiftBuckConfig);
+              swiftBuckConfig,
+              sharedLibraryToBundle);
       Objects.requireNonNull(
           executorService, "CommandRunnerParams does not have executor for PROJECT pool");
       Path outputPath =

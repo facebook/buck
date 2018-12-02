@@ -87,6 +87,9 @@ public class CxxBuckConfig {
   private static final String CONFLICTING_HEADER_BASENAME_WHITELIST =
       "conflicting_header_basename_whitelist";
   private static final String HEADER_MODE = "header_mode";
+  private static final String DETAILED_UNTRACKED_HEADER_MESSAGES =
+      "detailed_untracked_header_messages";
+  private static final String USE_ARG_FILE = "use_arg_file";
 
   private static final String ASFLAGS = "asflags";
   private static final String ASPPFLAGS = "asppflags";
@@ -96,6 +99,8 @@ public class CxxBuckConfig {
   private static final String CXXPPFLAGS = "cxxppflags";
   private static final String CUDAFLAGS = "cudaflags";
   private static final String CUDAPPFLAGS = "cudappflags";
+  private static final String HIPFLAGS = "hipflags";
+  private static final String HIPPPFLAGS = "hipppflags";
   private static final String ASMFLAGS = "asmflags";
   private static final String ASMPPFLAGS = "asmppflags";
   private static final String LDFLAGS = "ldflags";
@@ -115,6 +120,8 @@ public class CxxBuckConfig {
   private static final String CXXPP = "cxxpp";
   private static final String CUDA = "cuda";
   private static final String CUDAPP = "cudapp";
+  private static final String HIP = "hip";
+  private static final String HIPPP = "hippp";
   private static final String ASM = "asm";
   private static final String ASMPP = "asmpp";
   private static final String LD = "ld";
@@ -239,6 +246,14 @@ public class CxxBuckConfig {
     return getFlags(CUDAPPFLAGS);
   }
 
+  public Optional<ImmutableList<String>> getHipflags() {
+    return getFlags(HIPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getHipppflags() {
+    return getFlags(HIPPPFLAGS);
+  }
+
   public Optional<ImmutableList<String>> getAsmflags() {
     return getFlags(ASMFLAGS);
   }
@@ -295,6 +310,7 @@ public class CxxBuckConfig {
               .setSource(source)
               .setBuildTarget(target.get())
               .setType(type)
+              .setPreferDependencyTree(getUseDetailedUntrackedHeaderMessages())
               .build());
     } else {
       return Optional.of(
@@ -302,6 +318,7 @@ public class CxxBuckConfig {
               .setSource(source)
               .setPath(delegate.getPathSourcePath(delegate.getRequiredPath(cxxSection, field)))
               .setType(type)
+              .setPreferDependencyTree(getUseDetailedUntrackedHeaderMessages())
               .build());
     }
   }
@@ -347,12 +364,24 @@ public class CxxBuckConfig {
     return getPreprocessorProvider(CUDAPP);
   }
 
+  public Optional<CompilerProvider> getHip() {
+    return getCompilerProvider(HIP);
+  }
+
+  public Optional<PreprocessorProvider> getHippp() {
+    return getPreprocessorProvider(HIPPP);
+  }
+
   public Optional<CompilerProvider> getAsm() {
     return getCompilerProvider(ASM);
   }
 
   public Optional<PreprocessorProvider> getAsmpp() {
     return getPreprocessorProvider(ASMPP);
+  }
+
+  public Optional<Boolean> getUseArgFile() {
+    return delegate.getBoolean(cxxSection, USE_ARG_FILE);
   }
 
   /**
@@ -526,6 +555,11 @@ public class CxxBuckConfig {
     return delegate.getEnum(cxxSection, HEADER_MODE, HeaderMode.class);
   }
 
+  /** @return whether to generate more detailed untracked header messages. */
+  public Boolean getUseDetailedUntrackedHeaderMessages() {
+    return delegate.getBooleanValue(cxxSection, DETAILED_UNTRACKED_HEADER_MESSAGES, false);
+  }
+
   public BuckConfig getDelegate() {
     return delegate;
   }
@@ -541,6 +575,8 @@ public class CxxBuckConfig {
     public abstract Optional<PathSourcePath> getPath();
 
     public abstract Optional<CxxToolProvider.Type> getType();
+
+    public abstract Optional<Boolean> getPreferDependencyTree();
 
     @Value.Check
     protected void check() {
@@ -560,9 +596,12 @@ public class CxxBuckConfig {
     public CompilerProvider getCompilerProvider() {
       if (getBuildTarget().isPresent()) {
         return new CompilerProvider(
-            new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()), getType().get());
+            new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()),
+            getType().get(),
+            false);
       } else {
-        return new CompilerProvider(getPath().get(), getType());
+        return new CompilerProvider(
+            getPath().get(), getType(), getPreferDependencyTree().orElse(false));
       }
     }
   }

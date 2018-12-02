@@ -16,10 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.support.cli.args.PluginBasedSubCommand;
 import com.facebook.buck.util.ExitCode;
-import java.io.IOException;
 import java.util.List;
 
 public abstract class ProjectSubCommand implements PluginBasedSubCommand {
@@ -28,5 +26,5 @@ public abstract class ProjectSubCommand implements PluginBasedSubCommand {
       CommandThreadManager threadManager,
       ProjectGeneratorParameters projectGeneratorParameters,
       List<String> projectCommandArguments)
-      throws IOException, InterruptedException;
+      throws Exception;
 }

@@ -22,6 +22,8 @@ import com.facebook.buck.intellij.ideabuck.build.BuckCommandHandler;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
 import com.facebook.buck.intellij.ideabuck.ui.components.BuckToolWindow;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
 import com.intellij.debugger.DebugEnvironment;
 import com.intellij.debugger.DebuggerManagerEx;
 import com.intellij.debugger.DefaultDebugEnvironment;
@@ -60,6 +62,7 @@ import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugProcessStarter;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebuggerManager;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
@@ -94,16 +97,15 @@ class TestExecutionState implements RunProfileState {
 
   private ProcessHandler runBuildCommand(Executor executor) {
     final BuckModule buckModule = mProject.getComponent(BuckModule.class);
-    final String target = mConfiguration.data.target;
+    final String targets = mConfiguration.data.targets;
     final String additionalParams = mConfiguration.data.additionalParams;
     final String testSelectors = mConfiguration.data.testSelectors;
-    final String title = "Buck Test " + target;
+    final String title = "Buck Test " + targets;
 
-    buckModule.attach(target);
+    buckModule.attach(targets);
 
     final BuckBuildCommandHandler handler =
-        new BuckBuildCommandHandler(
-            mProject, mProject.getBaseDir(), BuckCommand.TEST, /* doStartNotify */ false) {
+        new BuckBuildCommandHandler(mProject, BuckCommand.TEST, /* doStartNotify */ false) {
           @Override
           protected void notifyLines(Key outputType, Iterable<String> lines) {
             super.notifyLines(outputType, lines);
@@ -119,8 +121,13 @@ class TestExecutionState implements RunProfileState {
             }
           }
         };
-    if (!target.isEmpty()) {
-      handler.command().addParameter(target);
+    if (!targets.isEmpty()) {
+      List<String> params =
+          Splitter.on(CharMatcher.whitespace())
+              .trimResults()
+              .omitEmptyStrings()
+              .splitToList(targets);
+      handler.command().addParameters(params);
     }
     if (!testSelectors.isEmpty()) {
       handler.command().addParameter("--test-selectors");
@@ -147,6 +154,7 @@ class TestExecutionState implements RunProfileState {
             () -> {
               manager.run(
                   new Task.Backgroundable(mProject, title, true) {
+                    @Override
                     public void run(@NotNull final ProgressIndicator indicator) {
                       try {
                         result.waitFor();

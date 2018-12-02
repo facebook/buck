@@ -75,7 +75,7 @@ public class LogStateTrackerTest {
    */
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());

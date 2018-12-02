@@ -16,10 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.event.ProjectGenerationEvent;
-import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.PluginBasedCommand;
 import com.facebook.buck.support.cli.args.PluginBasedSubCommand;
 import com.facebook.buck.support.cli.args.PluginBasedSubCommands;
@@ -96,10 +94,11 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     String projectIde =
-        (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
+        ide == null
+            ? getIdeFromBuckConfig(params.getBuckConfig()).map(String::toLowerCase).orElse(null)
+            : ide.toLowerCase();
 
     if (projectIde == null) {
       throw new CommandLineException("project IDE is not specified in Buck config or --ide");
@@ -128,7 +127,20 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
       ProjectSubCommand subCommand = subcommands.get(projectIde);
 
       ProjectGeneratorParameters projectGeneratorParameters =
-          new ProjectGeneratorParametersImplementation(params);
+          ProjectGeneratorParameters.builder()
+              .setArgsParser(
+                  arguments ->
+                      parseArgumentsAsTargetNodeSpecs(
+                          params.getCell().getCellPathResolver(),
+                          params.getBuckConfig(),
+                          arguments))
+              .setCommandRunnerParams(params)
+              .setDryRun(dryRun)
+              .setEnableParserProfiling(getEnableParserProfiling())
+              .setWithoutDependenciesTests(withoutDependenciesTests)
+              .setWithoutTests(withoutTests)
+              .setWithTests(withTests)
+              .build();
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
       ExitCode result;
@@ -226,45 +238,5 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
   @Override
   public String getShortDescription() {
     return "generates project configuration files for an IDE";
-  }
-
-  private class ProjectGeneratorParametersImplementation
-      extends CommandRunnerParametersImplementation implements ProjectGeneratorParameters {
-
-    private ProjectGeneratorParametersImplementation(CommandRunnerParams parameters) {
-      super(parameters);
-    }
-
-    @Override
-    public boolean isDryRun() {
-      return dryRun;
-    }
-
-    @Override
-    public boolean isWithTests() {
-      return withTests;
-    }
-
-    @Override
-    public boolean isWithoutTests() {
-      return withoutTests;
-    }
-
-    @Override
-    public boolean isWithoutDependenciesTests() {
-      return withoutDependenciesTests;
-    }
-
-    @Override
-    public boolean getEnableParserProfiling() {
-      return ProjectCommand.this.getEnableParserProfiling();
-    }
-
-    @Override
-    public Function<Iterable<String>, ImmutableList<TargetNodeSpec>> getArgsParser() {
-      return arguments ->
-          parseArgumentsAsTargetNodeSpecs(
-              parameters.getCell().getCellPathResolver(), parameters.getBuckConfig(), arguments);
-    }
   }
 }

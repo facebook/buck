@@ -84,6 +84,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
@@ -2118,7 +2119,7 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             noisySummaryVerbosity,
             new DefaultExecutionEnvironment(
-                ImmutableMap.copyOf(System.getenv()), System.getProperties()),
+                EnvVariablesProvider.getSystemEnv(), System.getProperties()),
             Locale.US,
             logPath,
             timeZone,
@@ -2450,9 +2451,12 @@ public class SuperConsoleEventBusListenerTest {
             0L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
+    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(actionGraphStarted, 0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ActionGraphEvent.finished(ActionGraphEvent.started()),
+            ActionGraphEvent.finished(actionGraphStarted),
             0L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -3028,7 +3032,7 @@ public class SuperConsoleEventBusListenerTest {
             clock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                ImmutableMap.copyOf(System.getenv()), System.getProperties()),
+                EnvVariablesProvider.getSystemEnv(), System.getProperties()),
             Locale.US,
             logPath,
             timeZone,

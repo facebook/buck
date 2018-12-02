@@ -17,7 +17,6 @@ standard_java_test(
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/cxx/toolchain:testutil",
-        "//test/com/facebook/buck/rules:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:hamcrest-junit",
         "//third-party/java/junit:junit",

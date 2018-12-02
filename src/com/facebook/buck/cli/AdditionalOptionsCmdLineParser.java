@@ -29,6 +29,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.IllegalAnnotationError;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.ParserProperties;
 import org.kohsuke.args4j.spi.FieldSetter;
 import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Setters;
@@ -60,7 +61,13 @@ public class AdditionalOptionsCmdLineParser extends CmdLineParser {
    * @see CmdLineParser#CmdLineParser(Object)
    */
   public AdditionalOptionsCmdLineParser(PluginManager pluginManager, Object bean) {
-    super(null);
+    /**
+     * Disable '@' syntax. We convert this ourselves in {@link BuckArgsMethods#expandAtFiles}, so
+     * options passed to parseArgument() should already be properly expanded. This allows us to have
+     * things like `buck run @file //:script -- @this_goes_to_the_script`, as @file is expanded
+     * before hitting this method.
+     */
+    super(null, ParserProperties.defaults().withAtSyntax(false));
     this.pluginManager = pluginManager;
 
     // This is copied in simplified form from CmdLineParser constructor and put here to save the

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buckconfig}
 
 /**
@@ -55,6 +70,25 @@
 <a href="{ROOT}files-and-dirs/buckconfig.html#{$section}"><code>[{$section}]</code></a>
 {/template}
 
+
+/**
+ * @param title Text for heading that appears in rendered content
+ * @param id    ID string that is used to link to the heading. See
+ *              .heading_link template.
+ */
+{template .section_concept_h2}
+  <h2 id="{$id}">{$title}&nbsp;<a class="inline-link" href="#{$id}">#</a></h2>
+{/template}
+
+/**
+ * @param id             ID string for the heading to link to. See .heading template.
+ * @param rendered_text  The rendered text for the link.
+ */
+{template .section_concept_link}
+  <a href="#{$id}"><strong>{$rendered_text}</strong></a><br>
+{/template}
+
+
 /***/
 {template .dx_threads}
 {call .entry_link}
@@ -83,7 +117,7 @@
  * @param? link_text The text of the link
  */
 {template .entry_link}
-<a href="{ROOT}files-and-dirs/buckconfig.html#{$section}.{$entry}">{if isNonnull($link_text)}{$link_text}{else}{$section}.{$entry}{/if}</a>
+<a href="{ROOT}files-and-dirs/buckconfig.html#{$section}.{$entry}">{if isNonnull($link_text)}{$link_text}{else}<code>[{$section}].{$entry}</code>{/if}</a>
 {/template}
 
 /***/
@@ -182,6 +216,14 @@
 {/template}
 
 /***/
+{template .http_mode}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_mode' /}
+{/call}
+{/template}
+
+/***/
 {template .cache_mode}
 {call .entry_link}
   {param section: 'cache' /}
@@ -202,6 +244,22 @@
 {call .entry_link}
   {param section: 'cxx' /}
   {param entry: 'gtest_dep' /}
+{/call}
+{/template}
+
+/***/
+{template .should_remap_host_platform}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'should_remap_host_platform' /}
+{/call}
+{/template}
+
+/***/
+{template .host_platform}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'host_platform' /}
 {/call}
 {/template}
 
@@ -251,6 +309,21 @@
     {param section: 'project' /}
     {param entry: 'parallel_parsing' /}
 {/call}
+{/template}
+
+/***/
+{template .parser}
+{call .section_link}
+  {param section: 'parser' /}
+{/call}
+{/template}
+
+/***/
+{template .parser_polyglot_parsing_enabled}
+    {call .entry_link}
+        {param section: 'parser' /}
+        {param entry: 'polyglot_parsing_enabled' /}
+    {/call}
 {/template}
 
 /***/
@@ -304,6 +377,14 @@
 {call .entry_link}
     {param section: 'test' /}
     {param entry: 'external_runner' /}
+{/call}
+{/template}
+
+/***/
+{template .test_threads}
+{call .entry_link}
+    {param section: 'test' /}
+    {param entry: 'threads' /}
 {/call}
 {/template}
 
@@ -391,6 +472,14 @@
 {call .entry_link}
     {param section: 'ndk' /}
     {param entry: 'ndk_version' /}
+{/call}
+{/template}
+
+/***/
+{template .go_vendor_path}
+{call buckconfig.entry_link}
+  {param section: 'go' /}
+  {param entry: 'vendor_path' /}
 {/call}
 {/template}
 

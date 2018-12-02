@@ -26,7 +26,9 @@ import javax.annotation.Nullable;
 /** Build phase which represents running a shell script. */
 public class PBXShellScriptBuildPhase extends PBXBuildPhase {
   private List<String> inputPaths;
+  private List<String> inputFileListPaths;
   private List<String> outputPaths;
+  private List<String> outputFileListPaths;
   @Nullable private String shellPath;
   @Nullable private String shellScript;
 
@@ -35,7 +37,9 @@ public class PBXShellScriptBuildPhase extends PBXBuildPhase {
 
   public PBXShellScriptBuildPhase() {
     this.inputPaths = new ArrayList<>();
+    this.inputFileListPaths = new ArrayList<>();
     this.outputPaths = new ArrayList<>();
+    this.outputFileListPaths = new ArrayList<>();
   }
 
   @Override
@@ -51,12 +55,22 @@ public class PBXShellScriptBuildPhase extends PBXBuildPhase {
     return inputPaths;
   }
 
+  /** Returns the list (possibly empty) of .xcfilelist files that contain inputs for the script */
+  public List<String> getInputFileListPaths() {
+    return inputFileListPaths;
+  }
+
   /**
    * Returns the list (possibly empty) of files created as output of the shell script. May not be
    * actual paths, because they can have variable interpolations.
    */
   public List<String> getOutputPaths() {
     return outputPaths;
+  }
+
+  /** Returns the list (possibly empty) of .xcfilelist files that contain inputs for the script */
+  public List<String> getOutputFileListPaths() {
+    return outputFileListPaths;
   }
 
   /**
@@ -90,17 +104,15 @@ public class PBXShellScriptBuildPhase extends PBXBuildPhase {
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
-    NSArray inputPathsArray = new NSArray(inputPaths.size());
-    for (int i = 0; i < inputPaths.size(); i++) {
-      inputPathsArray.setValue(i, new NSString(inputPaths.get(i)));
+    s.addField("inputPaths", serializeStringList(inputPaths));
+    if (inputFileListPaths.size() > 0) {
+      s.addField("inputFileListPaths", serializeStringList(inputFileListPaths));
     }
-    s.addField("inputPaths", inputPathsArray);
 
-    NSArray outputPathsArray = new NSArray(outputPaths.size());
-    for (int i = 0; i < outputPaths.size(); i++) {
-      outputPathsArray.setValue(i, new NSString(outputPaths.get(i)));
+    s.addField("outputPaths", serializeStringList(outputPaths));
+    if (outputFileListPaths.size() > 0) {
+      s.addField("outputFileListPaths", serializeStringList(outputFileListPaths));
     }
-    s.addField("outputPaths", outputPathsArray);
 
     NSString shellPathString;
     if (shellPath == null) {
@@ -117,5 +129,14 @@ public class PBXShellScriptBuildPhase extends PBXBuildPhase {
       shellScriptString = new NSString(shellScript);
     }
     s.addField("shellScript", shellScriptString);
+  }
+
+  /** Converts List of Strings into NSArray of NSStrings */
+  protected NSArray serializeStringList(List<String> list) {
+    NSArray result = new NSArray(list.size());
+    for (int i = 0; i < list.size(); i++) {
+      result.setValue(i, new NSString(list.get(i)));
+    }
+    return result;
   }
 }

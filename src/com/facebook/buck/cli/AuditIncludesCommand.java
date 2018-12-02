@@ -55,8 +55,7 @@ public class AuditIncludesCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     try (ProjectBuildFileParser parser =
         new DefaultProjectBuildFileParserFactory(
@@ -64,7 +63,9 @@ public class AuditIncludesCommand extends AbstractCommand {
                 params.getConsole(),
                 new ParserPythonInterpreterProvider(
                     params.getCell().getBuckConfig(), params.getExecutableFinder()),
-                params.getKnownRuleTypesProvider())
+                params.getKnownRuleTypesProvider(),
+                params.getManifestServiceSupplier(),
+                params.getFileHashCache())
             .createBuildFileParser(
                 params.getBuckEventBus(), params.getCell(), params.getWatchman())) {
       PrintStream out = params.getConsole().getStdOut();

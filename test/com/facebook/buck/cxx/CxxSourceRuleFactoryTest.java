@@ -418,7 +418,8 @@ public class CxxSourceRuleFactoryTest {
               .withCxx(
                   new CompilerProvider(
                       new BinaryBuildRuleToolProvider(cxx.getBuildTarget(), ""),
-                      CxxToolProvider.Type.GCC));
+                      CxxToolProvider.Type.GCC,
+                      false));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()

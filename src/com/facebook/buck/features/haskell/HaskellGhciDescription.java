@@ -353,7 +353,8 @@ public class HaskellGhciDescription
         args.getCompilerFlags(),
         args.getGhciBinDep(),
         args.getGhciInit(),
-        args.getExtraScriptTemplates());
+        args.getExtraScriptTemplates(),
+        args.isEnableProfiling());
   }
 
   @Override

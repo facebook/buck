@@ -24,6 +24,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.hamcrest.Matchers;
@@ -54,11 +55,13 @@ public class AuditActionGraphCommandIntegrationTest {
                 .put("name", "//:bin")
                 .put("type", "genrule")
                 .put("buildDeps", ImmutableList.of("//:other"))
+                .put("outputPath", getPath("buck-out", "gen", "bin", "bin"))
                 .build(),
             ImmutableMap.builder()
                 .put("name", "//:other")
                 .put("type", "genrule")
                 .put("buildDeps", ImmutableList.of())
+                .put("outputPath", getPath("buck-out", "gen", "other", "other"))
                 .build()));
   }
 
@@ -85,6 +88,7 @@ public class AuditActionGraphCommandIntegrationTest {
                 .put("type", "python_packaged_binary")
                 .put("buildDeps", ImmutableList.of())
                 .put("runtimeDeps", ImmutableList.of("//:pylib"))
+                .put("outputPath", getPath("buck-out", "gen", "pybin.pex"))
                 .build(),
             ImmutableMap.builder()
                 .put("name", "//:pylib")
@@ -96,6 +100,36 @@ public class AuditActionGraphCommandIntegrationTest {
 
   @Test
   @SuppressWarnings("unchecked")
+  public void dumpsNodeAndDependencyInformationWithOutputPathInJsonFormat() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_action_graph", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("audit", "actiongraph", "//:pybin")
+            .assertSuccess();
+
+    String json = result.getStdout();
+    List<Map<String, Object>> root =
+        (List<Map<String, Object>>) ObjectMappers.readValue(json, List.class);
+    Assert.assertThat(
+        root,
+        Matchers.containsInAnyOrder(
+            ImmutableMap.builder()
+                .put("name", "//:pybin")
+                .put("type", "python_packaged_binary")
+                .put("buildDeps", ImmutableList.of())
+                .put("outputPath", getPath("buck-out", "gen", "pybin.pex"))
+                .build(),
+            ImmutableMap.builder()
+                .put("name", "//:pylib")
+                .put("type", "python_library")
+                .put("buildDeps", ImmutableList.of())
+                .build()));
+  }
+
+  @Test
   public void dumpsNodeAndDependencyInformationInDotFormat() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_action_graph", tmp);
@@ -111,7 +145,6 @@ public class AuditActionGraphCommandIntegrationTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void dumpsNodeAndDependencyInformationWithRuntimeDepsInDotFormat() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_action_graph", tmp);
@@ -126,5 +159,13 @@ public class AuditActionGraphCommandIntegrationTest {
     Assert.assertThat(json, Matchers.startsWith("digraph "));
     Assert.assertThat(json, Matchers.containsString("\"//:pybin\" -> \"//:pylib\""));
     Assert.assertThat(json, Matchers.endsWith("}" + System.lineSeparator()));
+  }
+
+  private String getPath(String... parts) {
+    Path p = tmp.getRoot();
+    for (String part : parts) {
+      p = p.resolve(part);
+    }
+    return p.toString();
   }
 }

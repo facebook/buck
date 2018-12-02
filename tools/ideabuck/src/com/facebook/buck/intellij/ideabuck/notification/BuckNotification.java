@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.notification;
 
 import com.intellij.notification.NotificationGroup;
+import com.intellij.notification.NotificationListener;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
@@ -37,7 +38,29 @@ public class BuckNotification {
     this.project = project;
   }
 
+  /** Show a warning balloon with the given message. */
   public void showWarningBalloon(@NotNull final String message) {
     NOTIFICATION_GROUP.createNotification(message, NotificationType.WARNING).notify(project);
+  }
+
+  /** Show an info balloon with the given message and attach the given listener. */
+  public void showInfoBalloon(@NotNull String message, NotificationListener listener) {
+    NOTIFICATION_GROUP
+        .createNotification("", message, NotificationType.INFORMATION, listener)
+        .notify(project);
+  }
+
+  /** Show a warning balloon with the given message and attach the given listener. */
+  public void showWarningBalloon(@NotNull String message, NotificationListener listener) {
+    NOTIFICATION_GROUP
+        .createNotification("", message, NotificationType.WARNING, listener)
+        .notify(project);
+  }
+
+  /** Show an error balloon with the given message and attach the given listener. */
+  public void showErrorBalloon(@NotNull String message, NotificationListener listener) {
+    NOTIFICATION_GROUP
+        .createNotification("", message, NotificationType.ERROR, listener)
+        .notify(project);
   }
 }

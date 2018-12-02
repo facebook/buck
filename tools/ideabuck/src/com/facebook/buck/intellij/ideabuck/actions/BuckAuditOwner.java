@@ -48,8 +48,7 @@ public class BuckAuditOwner {
                 buckModule.attach(targetsString.toString());
 
                 BuckCommandHandler handler =
-                    new ResultCallbackBuckHandler(
-                        project, project.getBaseDir(), BuckCommand.AUDIT_OWNER, futureCallback);
+                    new ResultCallbackBuckHandler(project, BuckCommand.AUDIT_OWNER, futureCallback);
                 for (String target : targets) {
                   handler.command().addParameter(target);
                 }

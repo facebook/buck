@@ -17,13 +17,11 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.util.ExitCode;
-import java.io.IOException;
 
 /** Buck subcommand to kill all buck processes. */
 public class KillAllCommand extends AbstractCommand {
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
     throw new IllegalStateException(
         "buck killall should be handled by python wrapper;"
             + " killall subcommand exists here only for buck help");

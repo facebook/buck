@@ -16,13 +16,8 @@
 
 package com.facebook.buck.util;
 
-import static com.facebook.buck.util.string.MoreStrings.linesToText;
-
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
-import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.util.exceptions.ExceptionWithContext;
 import com.facebook.buck.util.exceptions.WrapsException;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,7 +40,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class ErrorLogger {
-  private static final Logger LOG = Logger.get(ErrorLogger.class);
   private boolean suppressStackTraces = false;
 
   public ErrorLogger setSuppressStackTraces(boolean enabled) {
@@ -96,34 +90,6 @@ public class ErrorLogger {
             new HumanReadableExceptionAugmentor(ImmutableMap.of()))
         .logException(e);
     return builder.toString();
-  }
-
-  public ErrorLogger(
-      EventDispatcher dispatcher,
-      String userPrefix,
-      String verboseMessage,
-      HumanReadableExceptionAugmentor errorAugmentor) {
-    this(
-        new LogImpl() {
-          @Override
-          public void logUserVisible(String message) {
-            dispatcher.post(ConsoleEvent.severe(userPrefix + message));
-          }
-
-          @Override
-          public void logUserVisibleInternalError(String message) {
-            // TODO(cjhopman): This should be colored to make it obviously different from a user
-            // error.
-            dispatcher.post(
-                ConsoleEvent.severe(linesToText("Buck encountered an internal error", message)));
-          }
-
-          @Override
-          public void logVerbose(Throwable e) {
-            LOG.debug(e, verboseMessage);
-          }
-        },
-        errorAugmentor);
   }
 
   public ErrorLogger(LogImpl logger, HumanReadableExceptionAugmentor errorAugmentor) {
@@ -221,6 +187,7 @@ public class ErrorLogger {
 
     public boolean isNoSpaceOnDevice() {
       return rootCause instanceof IOException
+          && rootCause.getMessage() != null
           && rootCause.getMessage().startsWith("No space left on device");
     }
 

@@ -170,14 +170,26 @@ public class DefaultCxxPlatforms {
     Supplier<PathSourcePath> defaultCxxFrontendSupplier =
         MoreSuppliers.memoize(() -> config.getSourcePath(defaultCxxFrontend));
     PreprocessorProvider aspp = new PreprocessorProvider(defaultCFrontendSupplier, defaultToolType);
-    CompilerProvider as = new CompilerProvider(defaultCFrontendSupplier, defaultToolType);
+    CompilerProvider as =
+        new CompilerProvider(
+            defaultCFrontendSupplier,
+            defaultToolType,
+            config.getUseDetailedUntrackedHeaderMessages());
 
     PreprocessorProvider cpp = new PreprocessorProvider(defaultCFrontendSupplier, defaultToolType);
-    CompilerProvider cc = new CompilerProvider(defaultCFrontendSupplier, defaultToolType);
+    CompilerProvider cc =
+        new CompilerProvider(
+            defaultCFrontendSupplier,
+            defaultToolType,
+            config.getUseDetailedUntrackedHeaderMessages());
 
     PreprocessorProvider cxxpp =
         new PreprocessorProvider(defaultCxxFrontendSupplier, defaultToolType);
-    CompilerProvider cxx = new CompilerProvider(defaultCxxFrontendSupplier, defaultToolType);
+    CompilerProvider cxx =
+        new CompilerProvider(
+            defaultCxxFrontendSupplier,
+            defaultToolType,
+            config.getUseDetailedUntrackedHeaderMessages());
 
     return CxxPlatforms.build(
         FLAVOR,

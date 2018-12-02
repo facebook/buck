@@ -1,0 +1,17 @@
+java_library(
+    name = "impl",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/graph/transformation/executor:executor",
+    ],
+    tests = [
+        "//test/com/facebook/buck/core/graph/transformation/executor/impl:impl",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/util/log:log",
+        "//third-party/java/guava:guava",
+    ],
+)

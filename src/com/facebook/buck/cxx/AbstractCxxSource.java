@@ -53,12 +53,14 @@ public abstract class AbstractCxxSource { // NOPMD
     OBJC("objective-c", "objective-c-cpp-output", Optional.of("objective-c-header"), "m"),
     OBJCXX("objective-c++", "objective-c++-cpp-output", Optional.of("objective-c++-header"), "mm"),
     CUDA("cuda", "cuda-cpp-output", "cu"),
+    HIP("hip", "hip-cpp-output", "hcc"),
 
     C_CPP_OUTPUT("cpp-output", "cpp-output", "i"),
     CXX_CPP_OUTPUT("c++-cpp-output", "c++-cpp-output", "ii"),
     OBJC_CPP_OUTPUT("objective-c-cpp-output", "objective-c-cpp-output", "mi"),
     OBJCXX_CPP_OUTPUT("objective-c++-cpp-output", "objective-c++-cpp-output", "mii"),
     CUDA_CPP_OUTPUT("cuda-cpp-output", "cuda-cpp-output", "cui"),
+    HIP_CPP_OUTPUT("hip-cpp-output", "hip-cpp-output", "hii"),
 
     // Note, this is declared before ASSEMBLER so .s files are recognized as needing preprocessor.
     ASSEMBLER_WITH_CPP("assembler-with-cpp", "assembler", "s", "S"),

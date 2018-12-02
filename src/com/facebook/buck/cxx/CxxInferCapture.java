@@ -226,8 +226,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       getProjectFilesystem()
           .writeLinesToPath(
               Iterables.transform(getCompilerArgs(), Escaper.ARGFILE_ESCAPER::apply), getArgfile());

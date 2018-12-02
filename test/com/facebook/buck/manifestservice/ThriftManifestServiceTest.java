@@ -132,8 +132,7 @@ public class ThriftManifestServiceTest {
       implements HybridThriftOverHttpService<BuckCacheRequest, BuckCacheResponse> {
 
     public interface RequestHandlerCallback {
-      void makeRequest(BuckCacheRequest thriftRequest, BuckCacheResponse thriftResponse)
-          throws IOException;
+      void makeRequest(BuckCacheRequest thriftRequest, BuckCacheResponse thriftResponse);
     }
 
     private RequestHandlerCallback callback;
@@ -170,6 +169,6 @@ public class ThriftManifestServiceTest {
     }
 
     @Override
-    public void close() throws IOException {}
+    public void close() {}
   }
 }

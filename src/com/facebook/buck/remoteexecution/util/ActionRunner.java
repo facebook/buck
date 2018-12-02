@@ -186,7 +186,7 @@ public class ActionRunner {
 
         ThrowingSupplier<InputStream, IOException> dataSupplier =
             () -> new FileInputStream(path.toFile());
-        outputFilesBuilder.add(protocol.newOutputFile(output, digest, isExecutable, dataSupplier));
+        outputFilesBuilder.add(protocol.newOutputFile(output, digest, isExecutable));
         requiredDataBuilder.put(digest, dataSupplier);
       }
     }

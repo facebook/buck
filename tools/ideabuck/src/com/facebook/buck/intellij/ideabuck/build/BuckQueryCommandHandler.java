@@ -32,12 +32,20 @@ public class BuckQueryCommandHandler extends BuckCommandHandler {
 
   private Function<List<String>, Void> actionsToExecute;
 
+  /** @deprecated Use {@link BuckQueryCommandHandler(Project, BuckCommand, Function)}. */
+  @Deprecated
   public BuckQueryCommandHandler(
       final Project project,
       final VirtualFile root,
       final BuckCommand command,
       Function<List<String>, Void> actionsToExecute) {
     super(project, VfsUtil.virtualToIoFile(root), command, true);
+    this.actionsToExecute = actionsToExecute;
+  }
+
+  public BuckQueryCommandHandler(
+      Project project, BuckCommand command, Function<List<String>, Void> actionsToExecute) {
+    super(project, command, true);
     this.actionsToExecute = actionsToExecute;
   }
 

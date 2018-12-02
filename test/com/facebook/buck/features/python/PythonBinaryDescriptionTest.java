@@ -132,7 +132,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void thatMainSourcePathPropagatesToDeps() throws Exception {
+  public void thatMainSourcePathPropagatesToDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
@@ -546,7 +546,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void packageStyleParam() throws Exception {
+  public void packageStyleParam() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     PythonBinary pythonBinary =
         PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
@@ -774,7 +774,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void pexToolBuilderAddedToRuntimeDeps() throws Exception {
+  public void pexToolBuilderAddedToRuntimeDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(TargetGraphFactory.newInstance());
 
     ShBinary pyTool =

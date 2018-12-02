@@ -34,7 +34,7 @@ public class JavacErrorParserTest {
   JavacErrorParser javacErrorParser;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     JavaPackageFinder javaPackageFinder =

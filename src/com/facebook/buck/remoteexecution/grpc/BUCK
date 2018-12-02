@@ -16,6 +16,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//src/com/facebook/buck/remoteexecution/config:config",
         "//src/com/facebook/buck/remoteexecution/util:util",
@@ -28,7 +29,9 @@ java_immutables_library(
         "//third-party/java/remote-apis:remote-apis",
         # Nothing in here explicitly uses netty, but grpc picks it up dynamically when trying to
         # connect to a remote server.
-        "//third-party/java/grpc:grpc-netty",
+        "//third-party/java/grpc:grpc-netty-shaded",
+        "//third-party/java/netty-handler:netty-handler",
+        "//third-party/java/netty-tcnative:netty-tcnative",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jsr:jsr305",

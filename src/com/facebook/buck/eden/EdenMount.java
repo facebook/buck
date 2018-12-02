@@ -107,7 +107,7 @@ public class EdenMount {
     List<String> bindMounts;
     try {
       bindMounts = pool.getClient().getBindMounts(mountPoint);
-    } catch (EdenError | IOException | TException e) {
+    } catch (IOException | TException e) {
       throw new RuntimeException(e);
     }
 

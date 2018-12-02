@@ -39,9 +39,9 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
 import java.io.File;
@@ -73,7 +73,7 @@ public class AndroidNdkHelper {
               .createToolchain(
                   new ToolchainProviderBuilder().build(),
                   ToolchainCreationContext.of(
-                      ImmutableMap.copyOf(System.getenv()),
+                      EnvVariablesProvider.getSystemEnv(),
                       FakeBuckConfig.builder().build(),
                       filesystem,
                       new DefaultProcessExecutor(new TestConsole()),

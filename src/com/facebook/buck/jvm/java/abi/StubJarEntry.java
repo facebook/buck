@@ -33,7 +33,7 @@ public abstract class StubJarEntry {
     return null;
   }
 
-  public abstract void write(StubJarWriter writer) throws IOException;
+  public abstract void write(StubJarWriter writer);
 
   private static boolean isStubbableResource(LibraryReader input, Path path) {
     return input.isResource(path);

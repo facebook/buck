@@ -1,16 +1,16 @@
 digraph result_graph {
-  "//example:one" [style=filled,color="#D6D3F5"];
+  "//example:one" [style=filled,color=indianred1];
   "//example:one" -> "//example:three";
   "//example:one" -> "//example:two";
-  "//example:three" [style=filled,color="#D6D3F5"];
+  "//example:three" [style=filled,color=indianred1];
   "//example:three" -> "//example:five";
   "//example:three" -> "//example:four";
   "//example:three" -> "//example:six";
-  "//example:two" [style=filled,color="#D6D3F5"];
+  "//example:two" [style=filled,color=indianred1];
   "//example:two" -> "//example:four";
-  "//example:five" [style=filled,color="#D6D3F5"];
+  "//example:five" [style=filled,color=indianred1];
   "//example:five" -> "//example:six";
-  "//example:four" [style=filled,color="#D6D3F5"];
+  "//example:four" [style=filled,color=indianred1];
   "//example:four" -> "//example:six";
-  "//example:six" [style=filled,color="#D6D3F5"];
+  "//example:six" [style=filled,color=indianred1];
 }

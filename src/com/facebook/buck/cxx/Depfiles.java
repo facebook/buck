@@ -68,6 +68,11 @@ class Depfiles {
           + "from \"headers\", \"exported_headers\" or \"raw_headers\" "
           + System.lineSeparator()
           + "in the appropriate build rule.";
+  private static final String UNTRACKED_HEADER_ERROR_DETAILED_SUGGESTION =
+      System.lineSeparator()
+          + "Consider using -c cxx.detailed_untracked_header_messages=true "
+          + System.lineSeparator()
+          + "to get more information about these headers.";
 
   /**
    * Parses the input as a .d Makefile as emitted by {@code gcc -MD} and returns the (target, [dep,
@@ -207,6 +212,7 @@ class Depfiles {
           ImmutableList<String> includes = prereqs.subList(inputIndex + 1, prereqs.size());
           return includes;
         }
+      case SHOW_HEADERS:
       case SHOW_INCLUDES:
         // An intermediate depfile in `show_include` mode contains a source file + used headers
         // (see CxxPreprocessAndCompileStep for details).
@@ -322,8 +328,13 @@ class Depfiles {
       String errorMessage =
           String.format(
               "%s%n%n%s",
-              errors.stream().collect(Collectors.joining(System.lineSeparator())),
+              errors
+                  .stream()
+                  .collect(Collectors.joining(System.lineSeparator() + System.lineSeparator())),
               UNTRACKED_HEADER_ERROR_TIPS);
+      if (!untrackedHeaderReporter.isDetailed()) {
+        errorMessage += UNTRACKED_HEADER_ERROR_DETAILED_SUGGESTION;
+      }
       eventBus.post(
           ConsoleEvent.create(
               headerVerification.getMode() == HeaderVerification.Mode.ERROR

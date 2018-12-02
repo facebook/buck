@@ -90,6 +90,7 @@ RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
     "path_to_pywatchman": "//third-party/py/pywatchman:pywatchman-archive",
     "path_to_sh_binary_template": "//src/com/facebook/buck/shell:sh_binary_template",
     "path_to_typing": "//third-party/py:typing-archive",
+    "path_to_six_py": "//third-party/py/six:six.py",
 }
 
 BUCK_MODULES = {

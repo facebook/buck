@@ -418,23 +418,21 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         Optional.of(this.minimumDurationMillisecondsToShowWatchman),
         lines);
 
-    long parseTime =
-        logEventPair(
+    boolean parseFinished =
+        addLineFromEvents(
             "Parsing buck files",
             /* suffix */ Optional.empty(),
             currentTimeMillis,
-            /* offsetMs */ 0L,
             buckFilesParsingEvents.values(),
             getEstimatedProgressOfParsingBuckFiles(),
             Optional.of(this.minimumDurationMillisecondsToShowParse),
             lines);
 
-    long actionGraphTime =
-        logEventPair(
+    boolean actionGraphFinished =
+        addLineFromEvents(
             "Creating action graph",
             /* suffix */ Optional.empty(),
             currentTimeMillis,
-            /* offsetMs */ 0L,
             actionGraphEvents.values(),
             getEstimatedProgressOfParsingBuckFiles(),
             Optional.of(this.minimumDurationMillisecondsToShowActionGraph),
@@ -452,9 +450,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         lines);
 
     // If parsing has not finished, then there is no build rule information to print yet.
-    if (buildStarted == null
-        || parseTime == UNFINISHED_EVENT_PAIR
-        || actionGraphTime == UNFINISHED_EVENT_PAIR) {
+    if (buildStarted == null || !parseFinished || !actionGraphFinished) {
       return lines.build();
     }
 

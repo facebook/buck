@@ -218,7 +218,20 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
     ProcessResult processResult =
         workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs");
     processResult.assertFailure();
-    assertThat(processResult.getStderr(), containsString("Error: Dependency cycle detected"));
+    String stderr = processResult.getStderr();
+    assertThat(stderr, containsString("Error: Dependency cycle detected"));
+    assertThat(
+        stderr,
+        containsString(
+            "Dependencies between merge:libbroken.so and no-merge://native/merge:D:\n"
+                + "  //native/merge:C -> //native/merge:D\n"));
+    // We need to split the assertion because the order in which
+    // these occur in the output is not deterministic.
+    assertThat(
+        stderr,
+        containsString(
+            "Dependencies between no-merge://native/merge:D and merge:libbroken.so:\n"
+                + "  //native/merge:D -> //native/merge:F"));
   }
 
   @Test
@@ -379,7 +392,15 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
     assertThat(syms.global, not(hasItem("x86_only_function")));
   }
 
-  private SymbolGetter getSymbolGetter() throws IOException, InterruptedException {
+  @Test
+  public void canBuildNativeMergedLibraryWithPrecompiledHeader()
+      throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProcessResult result = workspace.runBuckBuild("//apps/sample:native_merge_lib_with_pch");
+    result.assertSuccess();
+  }
+
+  private SymbolGetter getSymbolGetter() throws IOException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));

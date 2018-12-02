@@ -39,6 +39,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -94,7 +95,7 @@ public class WindowsClangCxxIntegrationTest {
   }
 
   @Test
-  public void testThinArchives() throws IOException, InterruptedException {
+  public void testThinArchives() throws IOException {
     workspace.enableDirCache();
     workspace.runBuckCommand("clean");
     workspace
@@ -267,5 +268,41 @@ public class WindowsClangCxxIntegrationTest {
           }
         });
     return files.build();
+  }
+
+  @Test
+  public void errorVerifyHeaders() throws IOException {
+    ProcessResult result;
+    result =
+        workspace.runBuckBuild(
+            "-c",
+            "cxx.untracked_headers=error",
+            "-c",
+            "cxx.untracked_headers_whitelist=/usr/include/stdc-predef\\.h",
+            "//header_check:untracked_header#windows-x86_64");
+    result.assertFailure();
+    Assert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "header_check\\untracked_header.cpp: included an untracked header \"header_check\\untracked_header.h\""));
+  }
+
+  @Test
+  public void errorVerifyNestedHeaders() throws IOException {
+    ProcessResult result;
+    result =
+        workspace.runBuckBuild(
+            "-c",
+            "cxx.untracked_headers=error",
+            "-c",
+            "cxx.untracked_headers_whitelist=/usr/include/stdc-predef\\.h",
+            "//header_check:nested_untracked_header#windows-x86_64");
+    result.assertFailure();
+    Assert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "header_check\\nested_untracked_header.cpp: included an untracked header \"header_check\\untracked_header.h\", which is included by:\n"
+                + "\t\"header_check\\untracked_header_includer.h\", which is included by:\n"
+                + "\t\"header_check\\parent_header.h\""));
   }
 }

@@ -51,7 +51,6 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -62,7 +61,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   private final Locale locale;
   private final BuildId buildId;
   private final Optional<String> buildDetailsTemplate;
-  private final AtomicLong parseTime;
   private final TestResultFormatter testFormatter;
   private final ImmutableList.Builder<TestStatusMessage> testStatusMessageBuilder =
       ImmutableList.builder();
@@ -97,7 +95,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     this.locale = locale;
     this.buildId = buildId;
     this.buildDetailsTemplate = buildDetailsTemplate;
-    this.parseTime = new AtomicLong(0);
     this.hideSucceededRules = hideSucceededRules;
 
     this.testFormatter =
@@ -133,16 +130,14 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       return;
     }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    this.parseTime.set(
-        logEventPair(
-            "PARSING BUCK FILES",
-            /* suffix */ Optional.empty(),
-            clock.currentTimeMillis(),
-            0L,
-            buckFilesParsingEvents.values(),
-            getEstimatedProgressOfParsingBuckFiles(),
-            Optional.empty(),
-            lines));
+    addLineFromEvents(
+        "PARSING BUCK FILES",
+        /* suffix */ Optional.empty(),
+        clock.currentTimeMillis(),
+        buckFilesParsingEvents.values(),
+        getEstimatedProgressOfParsingBuckFiles(),
+        Optional.empty(),
+        lines);
     printLines(lines);
   }
 
@@ -154,16 +149,14 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       return;
     }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    this.parseTime.set(
-        logEventPair(
-            "CREATING ACTION GRAPH",
-            /* suffix */ Optional.empty(),
-            clock.currentTimeMillis(),
-            0L,
-            actionGraphEvents.values(),
-            Optional.empty(),
-            Optional.empty(),
-            lines));
+    addLineFromEvents(
+        "CREATING ACTION GRAPH",
+        /* suffix */ Optional.empty(),
+        clock.currentTimeMillis(),
+        actionGraphEvents.values(),
+        Optional.empty(),
+        Optional.empty(),
+        lines);
     printLines(lines);
   }
 
@@ -415,10 +408,12 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     // Print through the {@code DirtyPrintStreamDecorator} so printing from the simple console
     // is considered to dirty stderr and stdout and so it gets synchronized to avoid interlacing
     // output.
-    if (lines.size() == 0) {
+    if (lines.isEmpty()) {
       return;
     }
-    console.getStdErr().println(String.join(System.lineSeparator(), lines));
+    if (console.getVerbosity().shouldPrintStandardInformation()) {
+      console.getStdErr().println(String.join(System.lineSeparator(), lines));
+    }
   }
 
   @Override

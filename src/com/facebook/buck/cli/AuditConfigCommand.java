@@ -154,8 +154,7 @@ public class AuditConfigCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     ImmutableSortedSet<ConfigValue> configs = readConfig(params);
 
     if (shouldGenerateJsonOutput()) {

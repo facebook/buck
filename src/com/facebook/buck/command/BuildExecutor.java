@@ -33,15 +33,12 @@ public interface BuildExecutor {
    *
    * @param targetsToBuild
    * @return exit code.
-   * @throws IOException
-   * @throws InterruptedException
    */
   ExitCode buildLocallyAndReturnExitCode(
-      Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport)
-      throws IOException, InterruptedException;
+      Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport) throws Exception;
 
   ExitCode buildTargets(Iterable<BuildTarget> targetsToBuild, Optional<Path> pathToBuildReport)
-      throws IOException, InterruptedException;
+      throws Exception;
 
   /**
    * Starts building the given targets, but does not wait for them to finish
@@ -62,7 +59,8 @@ public interface BuildExecutor {
   ExitCode waitForBuildToFinish(
       Iterable<String> targetsToBuild,
       List<BuildEngineResult> resultFutures,
-      Optional<Path> pathToBuildReport);
+      Optional<Path> pathToBuildReport)
+      throws Exception;
 
   /**
    * Accessor method for the {@link CachingBuildEngine} instance being used by this {@link
@@ -73,8 +71,6 @@ public interface BuildExecutor {
   /**
    * Destroy any resources associated with this builder. Call this once only, when all
    * buildLocallyAndReturnExitCode calls have finished.
-   *
-   * @throws IOException
    */
-  void shutdown() throws IOException;
+  void shutdown();
 }

@@ -21,6 +21,7 @@ import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.Protocol.OutputFile;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -28,11 +29,11 @@ import java.util.List;
 
 /** This is a simple ContentAddressedStorage interface used for remote execution. */
 public interface ContentAddressedStorage {
-  void addMissing(ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data)
-      throws IOException;
+  ListenableFuture<Void> addMissing(
+      ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data) throws IOException;
 
   /** Materializes the outputFiles and outputDirectories into root. */
-  void materializeOutputs(
+  ListenableFuture<Void> materializeOutputs(
       List<OutputDirectory> outputDirectories, List<OutputFile> outputFiles, Path root)
       throws IOException;
 }

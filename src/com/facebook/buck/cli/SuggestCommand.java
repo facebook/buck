@@ -22,7 +22,6 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.Iterables;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.kohsuke.args4j.Argument;
@@ -37,8 +36,7 @@ public class SuggestCommand extends AbstractCommand {
    * FineGrainedJavaDependencySuggester}.
    */
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     if (arguments.size() != 1) {
       throw new CommandLineException("must specify exactly one argument to 'buck suggest'");
     }

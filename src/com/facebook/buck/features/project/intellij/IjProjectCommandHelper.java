@@ -16,9 +16,10 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectTestsMode;
-import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -43,6 +44,8 @@ import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.parser.BuildFileSpec;
+import com.facebook.buck.parser.BuildTargetPattern;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -55,6 +58,7 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.buck.versions.VersionedTargetGraphAndTargets;
@@ -423,6 +427,43 @@ public class IjProjectCommandHelper {
     } else {
       nodes = projectRoots;
     }
-    return TargetGraphAndTargets.getExplicitTestTargets(nodes.iterator());
+    ImmutableSet<BuildTarget> tests =
+        TargetGraphAndTargets.getExplicitTestTargets(nodes.iterator());
+
+    return filterTests(
+        tests,
+        cell.getCellPathResolver(),
+        projectConfig.getIncludeTestPatterns(),
+        projectConfig.getExcludeTestPatterns());
+  }
+
+  public static ImmutableSet<BuildTarget> filterTests(
+      ImmutableSet<BuildTarget> testTargets,
+      CellPathResolver cellPathResolver,
+      ImmutableSet<String> includes,
+      ImmutableSet<String> excludes) {
+    BuildTargetPatternParser<BuildTargetPattern> parser =
+        BuildTargetPatternParser.forVisibilityArgument();
+    ImmutableSet<BuildTargetPattern> includePatterns =
+        getPatterns(parser, cellPathResolver, includes);
+    ImmutableSet<BuildTargetPattern> excludePatterns =
+        getPatterns(parser, cellPathResolver, excludes);
+    return RichStream.from(testTargets)
+        .filter(
+            test ->
+                (includePatterns.isEmpty()
+                        || includePatterns.stream().anyMatch(pattern -> pattern.matches(test)))
+                    && (excludePatterns.isEmpty()
+                        || excludePatterns.stream().noneMatch(pattern -> pattern.matches(test))))
+        .toImmutableSet();
+  }
+
+  private static ImmutableSet<BuildTargetPattern> getPatterns(
+      BuildTargetPatternParser<BuildTargetPattern> parser,
+      CellPathResolver cellPathResolver,
+      ImmutableSet<String> patterns) {
+    return RichStream.from(patterns)
+        .map(pattern -> parser.parse(cellPathResolver, pattern))
+        .toImmutableSet();
   }
 }

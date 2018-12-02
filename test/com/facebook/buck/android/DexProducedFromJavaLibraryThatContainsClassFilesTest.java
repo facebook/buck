@@ -209,7 +209,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
   }
 
   @Test
-  public void testObserverMethods() throws Exception {
+  public void testObserverMethods() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     DefaultJavaLibrary accumulateClassNames =
         JavaLibraryBuilder.createBuilder("//foo:bar").build(graphBuilder);

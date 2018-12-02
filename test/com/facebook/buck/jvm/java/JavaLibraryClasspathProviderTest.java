@@ -236,8 +236,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
       String target,
       Iterable<String> srcs,
       Iterable<TargetNode<?>> deps,
-      ProjectFilesystem filesystem)
-      throws Exception {
+      ProjectFilesystem filesystem) {
     return makeRule(target, srcs, deps, null, filesystem);
   }
 

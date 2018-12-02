@@ -47,10 +47,9 @@ public class IjProjectWriterTest {
 
   private final long TIMESTAMP_A = 12111;
   private final long TIMESTAMP_B = 22122;
-  private final Path PROJECT_ROOT = Paths.get("projectRoot");
-  private final Path MODULES_XML = PROJECT_ROOT.resolve(".idea/modules.xml");
-  private final Path WORKSPACE_XML = PROJECT_ROOT.resolve(".idea/workspace.xml");
-  private final Path TARGET_MODULES_JSON = PROJECT_ROOT.resolve(".idea/target-modules.json");
+  private final Path MODULES_XML = Paths.get(".idea/modules.xml");
+  private final Path WORKSPACE_XML = Paths.get(".idea/workspace.xml");
+  private final Path TARGET_MODULES_JSON = Paths.get(".idea/target-modules.json");
 
   @Test
   public void testModuleChangeOverwrite() throws IOException {
@@ -104,6 +103,28 @@ public class IjProjectWriterTest {
             "//java/com/example/base:base", "java_com_example_base",
             "//third_party/guava:guava", "third_party_guava"));
 
+    writer(filesystem, filesystem, moduleGraph2()).write();
+    targetModuleMap =
+        readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
+    assertEquals(
+        targetModuleMap,
+        ImmutableMap.of(
+            "//java/com/example/base:base", "java_com_example_base",
+            "//java/com/example/base2:base2", "java_com_example_base2"));
+  }
+
+  @Test
+  public void testTargetModuleMapUpdate() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    writer(filesystem, filesystem, moduleGraph1()).write();
+    Map<String, String> targetModuleMap =
+        readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
+    assertEquals(
+        targetModuleMap,
+        ImmutableMap.of(
+            "//java/com/example/base:base", "java_com_example_base",
+            "//third_party/guava:guava", "third_party_guava"));
+
     writer(filesystem, filesystem, moduleGraph2()).update();
     targetModuleMap =
         readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
@@ -135,11 +156,17 @@ public class IjProjectWriterTest {
   private IjModuleGraph moduleGraph2() {
     TargetNode<?> baseTargetNode =
         JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/example/base:base"))
+            .addSrc(Paths.get("java/com/example/base/BaseChanged.java"))
+            .build();
+
+    TargetNode<?> base2TargetNode =
+        JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base2:base2"))
             .addSrc(Paths.get("java/com/example/base/Base.java"))
             .build();
 
-    return IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode));
+    return IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode, base2TargetNode));
   }
 
   private IjProjectWriter writer(
@@ -161,21 +188,13 @@ public class IjProjectWriterTest {
   }
 
   private IjProjectConfig projectConfig() {
-    return IjProjectBuckConfig.create(
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of("intellij", ImmutableMap.of("generate_target_module_map", "true")))
-            .build(),
-        null,
-        null,
-        PROJECT_ROOT.toString(),
-        "modules",
-        false,
-        false,
-        true,
-        false,
-        true,
-        false);
+    return IjTestProjectConfig.createBuilder(
+            FakeBuckConfig.builder()
+                .setSections(
+                    ImmutableMap.of(
+                        "intellij", ImmutableMap.of("generate_target_module_map", "true")))
+                .build())
+        .build();
   }
 
   // Mutable FakeClock, to provide distinct timestamps to a single FakeProjectFileSystem

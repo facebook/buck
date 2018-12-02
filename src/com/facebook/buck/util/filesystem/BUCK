@@ -5,7 +5,7 @@ java_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/util/function:function",
         "//src/com/facebook/buck/util/types:types",
-        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/bazel:bazel",
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-databind",
     ],

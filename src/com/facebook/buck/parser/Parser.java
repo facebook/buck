@@ -67,10 +67,7 @@ public interface Parser {
   @Nullable
   @Deprecated
   SortedMap<String, Object> getTargetNodeRawAttributes(
-      Cell cell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      TargetNode<?> targetNode)
+      Cell cell, ListeningExecutorService executor, TargetNode<?> targetNode)
       throws BuildFileParseException;
 
   TargetGraph buildTargetGraph(
@@ -95,11 +92,25 @@ public interface Parser {
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
    * @return the target graph containing the build targets and their related targets.
    */
-  TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
+  TargetGraphAndBuildTargets buildTargetGraphWithoutConfigurationTargets(
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      boolean excludeUnsupportedTargets,
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      throws BuildFileParseException, IOException, InterruptedException;
+
+  /**
+   * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
+   * @return the target graph containing the build targets and their related targets.
+   */
+  TargetGraphAndBuildTargets buildTargetGraphWithConfigurationTargets(
+      Cell rootCell,
+      boolean enableProfiling,
+      ListeningExecutorService executor,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      boolean excludeUnsupportedTargets,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, IOException, InterruptedException;
 

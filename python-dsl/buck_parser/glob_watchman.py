@@ -3,7 +3,8 @@ import os.path
 import re
 
 import pywatchman
-from util import Diagnostic, memoized
+
+from .util import Diagnostic, memoized
 
 COLLAPSE_SLASHES = re.compile(r"/+")
 

@@ -20,11 +20,13 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.api.Syntax;
+import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -36,6 +38,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public static final String DEFAULT_BUILD_FILE_NAME = "BUCK";
   public static final String BUILDFILE_SECTION_NAME = "buildfile";
   public static final String INCLUDES_PROPERTY_NAME = "includes";
+  public static final String PACKAGE_INCLUDES_PROPERTY_NAME = "package_includes";
 
   private static final long NUM_PARSING_THREADS_DEFAULT = 1L;
   private static final int TARGET_PARSER_THRESHOLD = 100000;
@@ -106,6 +109,17 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
         getDelegate().getEntriesForSection(BUILDFILE_SECTION_NAME);
     String includes = Strings.nullToEmpty(entries.get(INCLUDES_PROPERTY_NAME));
     return Splitter.on(' ').trimResults().omitEmptyStrings().split(includes);
+  }
+
+  @Value.Lazy
+  public ImmutableMap<String, ImplicitInclude> getPackageImplicitIncludes() {
+    return getDelegate()
+        .getMap(BUILDFILE_SECTION_NAME, PACKAGE_INCLUDES_PROPERTY_NAME)
+        .entrySet()
+        .stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                Map.Entry::getKey, e -> ImplicitInclude.fromConfigurationString(e.getValue())));
   }
 
   @Value.Lazy

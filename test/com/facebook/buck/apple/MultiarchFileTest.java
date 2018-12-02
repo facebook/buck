@@ -165,7 +165,7 @@ public class MultiarchFileTest {
   }
 
   @Test
-  public void descriptionWithMultipleDifferentSdksShouldFail() throws Exception {
+  public void descriptionWithMultipleDifferentSdksShouldFail() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     HumanReadableException exception = null;
     try {
@@ -184,7 +184,7 @@ public class MultiarchFileTest {
   }
 
   @Test
-  public void ruleWithSpecialBuildActionShouldFail() throws Exception {
+  public void ruleWithSpecialBuildActionShouldFail() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     HumanReadableException exception = null;
     Iterable<Flavor> forbiddenFlavors =

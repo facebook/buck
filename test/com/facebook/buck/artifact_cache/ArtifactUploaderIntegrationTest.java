@@ -41,7 +41,7 @@ public class ArtifactUploaderIntegrationTest {
   private static final BuildTarget BUILD_TARGET = BuildTargetFactory.newInstance("//foo:bar");
 
   @Test
-  public void testPerformUploadToArtifactCache() throws IOException, InterruptedException {
+  public void testPerformUploadToArtifactCache() throws IOException {
     Path cacheDir = Files.createTempDirectory("root");
     ArtifactCache artifactCache =
         TestArtifactCaches.createDirCacheForTest(cacheDir, Paths.get("cache"));

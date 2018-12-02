@@ -50,11 +50,6 @@
 
   <property name="eclipse.dir" value="${basedir}/third-party/java/eclipse" />
 
-  <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
-  <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
-  <property name="typing.dir" value="${third-party.dir}/py/typing/python2" />
-  <property name="nailgun.dir" value="${third-party.dir}/nailgun" />
-
   <property name="immutables-builder-standalone.jar" value="${third-party.dir}/java/immutables/builder-2.5.7-SNAPSHOT.jar" />
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.5.7-SNAPSHOT.jar" />
   <property name="pf4j-standalone.jar" value="${third-party.dir}/java/pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
@@ -98,15 +93,18 @@
     else="${ecj.compiler.path}">
     <istrue value="${error.prone}" />
   </condition>
+  <condition property="jdk10_or_higher">
+    <hasmethod classname="java.util.List" method="copyOf"/>
+  </condition>
 
   <!-- Javadoc in 1.8 became stricter about parsing the docs. This disables some of those checks -->
-  <available property="jdk1.8" classname="java.util.stream.Stream"/>
+  <available property="jdk8_or_higher" classname="java.util.stream.Stream"/>
   <condition
           property="javadoc.doclint"
           value="-Xdoclint:-reference"
           else="">
     <and>
-      <isset property="jdk1.8"/>
+      <isset property="jdk8_or_higher"/>
     </and>
   </condition>
 
@@ -121,11 +119,11 @@
     <include name="jackson/jackson-datatype-jdk8-2.7.8.jar" />
     <include name="jackson/jackson-datatype-guava-2.7.8.jar" />
     <include name="android/sdklib-25.3.0.jar" />
-    <include name="nailgun/nailgun-server-0.9.3-SNAPSHOT.jar" />
+    <include name="nailgun/nailgun-server-1.0.0.jar" />
     <include name="jna/jna-4.5.1.jar" />
     <include name="jna/jna-platform-4.5.1.jar" />
     <include name="sqlite/sqlite-jdbc-3.20.0.jar" />
-    <include name="bazel/skylark-lang_deploy.jar" />
+    <include name="bazel/bazel_deploy.jar" />
     <include name="remote-apis/remote-apis.jar" />
   </fileset>
 
@@ -137,10 +135,10 @@
     <include name="aopalliance/aopalliance.jar" />
     <include name="aosp/apksig.jar" />
     <include name="asm/asm*-6.2.1.jar" />
-    <include name="bazel/skylark-lang_deploy.jar" />
+    <include name="bazel/bazel_deploy.jar" />
     <include name="bundletool/bundle.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
-    <include name="commons-compress/commons-compress-1.17.jar" />
+    <include name="commons-compress/commons-compress-1.18.jar" />
     <include name="commons-logging/commons-logging-1.2.jar" />
     <include name="concurrent-locks/concurrent-locks-1.0.0.jar" />
     <include name="d8/d8.jar" />
@@ -162,10 +160,13 @@
     <include name="grpc/grpc-context-1.11.0.jar" />
     <include name="grpc/grpc-core-1.10.1.jar" />
     <include name="grpc/grpc-netty-1.10.1.jar" />
+    <include name="grpc/grpc-netty-shaded-1.10.1.jar" />
     <include name="grpc/grpc-protobuf-1.10.1.jar" />
     <include name="grpc/grpc-protobuf-lite-1.11.0.jar" />
     <include name="grpc/grpc-stub-1.10.1.jar" />
     <include name="netty/netty-all-4.1.24.Final.jar" />
+    <include name="netty-handler/netty-handler-4.0.17.Final.jar" />
+    <include name="netty-tcnative/netty-tcnative-boringssl-static-2.0.7.Final.jar" />
     <include name="gson/gson-2.8.2.jar" />
     <include name="guice/guice-3.0.jar" />
     <include name="guice/guice-assistedinject-3.0.jar" />
@@ -395,7 +396,12 @@
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/PropagatesNullable.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/*.java" />
+        <include name="com/facebook/buck/jvm/java/abi/source/java8/*.java" />
+        <include name="com/facebook/buck/jvm/java/abi/source/java10/*.java" />
         <include name="com/facebook/buck/jvm/java/plugin/adapter/**/*.java" />
+        <!-- Conditional compilation so we can simultaneously build against Java 8 and 10. -->
+        <exclude name="com/facebook/buck/**/java8/*.java" if="jdk10_or_higher"/>
+        <exclude name="com/facebook/buck/**/java10/*.java" unless="jdk10_or_higher"/>
       </javac-params>
     </compiler>
     <jar destfile="${javac-plugin.jar}">
@@ -466,7 +472,7 @@
         <compilerarg value="-Xlint:unchecked" />
         <compilerarg value="-time" compiler="${ecj.compiler}" />
         <compilerclasspath>
-          <pathelement location="${buck.build.compiler.jar.path}" />
+            <pathelement location="${buck.build.compiler.jar.path}" />
         </compilerclasspath>
         <compilerarg value="-s" />
         <compilerarg value="@{gensrcdir}" />
@@ -522,6 +528,10 @@
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
+
+          <!-- Conditional compilation so we can simultaneously build against Java 8 and 10. -->
+          <exclude name="com/facebook/buck/jvm/java/abi/java8/**" if="jdk10_or_higher"/>
+          <exclude name="com/facebook/buck/jvm/java/abi/java10/**" unless="jdk10_or_higher"/>
         </patternset>
       </javac-params>
     </compiler>
@@ -1008,7 +1018,7 @@
         gensrcdir="@{module-gen-dir}">
         <javac-params>
           <compilerarg value="-processorpath" />
-          <compilerarg value="${module.processorpath}" />
+          <compilerarg value="${module.processorpath}" /> 
           <compilerarg value="${pf4j-annotation-processor-storage-config}" />
           <module-javac-params/>
         </javac-params>
@@ -1071,6 +1081,9 @@
         <fileset dir="${src.dir}">
           <include name="**/*.java" />
           <exclude name="com/facebook/buck/android/support/exopackage/**" />
+          <!-- Conditional compilation so we can simultaneously build against Java 8 and 10. -->
+          <exclude name="com/facebook/buck/**/java8/*.java" if="jdk10_or_higher"/>
+          <exclude name="com/facebook/buck/**/java10/*.java" unless="jdk10_or_higher"/>
         </fileset>
         <fileset dir="${gensrc.dir}" />
         <fileset dir="${buck.modules.classes.dir}/gen/" />

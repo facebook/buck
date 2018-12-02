@@ -33,7 +33,7 @@ public class QueryCoercerTest {
   @Test
   public void traverseBuildTargets() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    QueryCoercer coercer = new QueryCoercer();
+    QueryCoercer coercer = new QueryCoercer(new DefaultTypeCoercerFactory());
     Query query = Query.of("deps(//:a)");
     List<Object> traversed = new ArrayList<>();
     coercer.traverse(createCellRoots(filesystem), query, traversed::add);

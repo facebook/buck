@@ -83,7 +83,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   private CustomToolchainProvider toolchainProvider;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     resolver = createStrictMock(SourcePathResolver.class);
     ruleFinder = createStrictMock(SourcePathRuleFinder.class);
     cellResolver = createMock(CellPathResolver.class);

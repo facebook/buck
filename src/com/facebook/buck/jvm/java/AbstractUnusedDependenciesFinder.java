@@ -75,8 +75,7 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   public abstract UnusedDependenciesAction getUnusedDependenciesAction();
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Preconditions.checkState(getUnusedDependenciesAction() != UnusedDependenciesAction.IGNORE);
 
     ImmutableSet<Path> usedJars = loadUsedJarPaths();

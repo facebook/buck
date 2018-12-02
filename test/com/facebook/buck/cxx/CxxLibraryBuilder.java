@@ -209,6 +209,18 @@ public class CxxLibraryBuilder
     return this;
   }
 
+  public CxxLibraryBuilder setPlatformHeaders(
+      PatternMatchedCollection<SourceSortedSet> platformHeaders) {
+    getArgForPopulating().setPlatformHeaders(platformHeaders);
+    return this;
+  }
+
+  public CxxLibraryBuilder setExportedPlatformHeaders(
+      PatternMatchedCollection<SourceSortedSet> exportedPlatformHeaders) {
+    getArgForPopulating().setExportedPlatformHeaders(exportedPlatformHeaders);
+    return this;
+  }
+
   public CxxLibraryBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
     getArgForPopulating()
         .setCompilerFlags(

@@ -2,7 +2,7 @@ java_library(
     name = "skylark",
     srcs = glob(["*.java"]),
     exported_deps = [
-        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/bazel:bazel",
     ],
     visibility = ["PUBLIC"],
     deps = [

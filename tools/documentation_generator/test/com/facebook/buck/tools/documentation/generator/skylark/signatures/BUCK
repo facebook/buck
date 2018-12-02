@@ -3,6 +3,6 @@ java_library(
     srcs = ["DummyFunction.java"],
     visibility = ["//tools/documentation_generator/test/..."],
     deps = [
-        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/bazel:bazel",
     ],
 )

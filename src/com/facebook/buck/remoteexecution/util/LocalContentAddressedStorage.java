@@ -32,6 +32,7 @@ import com.facebook.buck.remoteexecution.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.Protocol.SymlinkNode;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -126,7 +127,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
               @Override
               public void materializeFile(Path root, FileNode file) throws IOException {
                 Path path = getPath(file.getDigest().getHash());
-                Preconditions.checkState(Files.exists(path));
+                Preconditions.checkState(Files.exists(path), "Path %s doesn't exist.", path);
                 // As this file could potentially be materialized as both executable and
                 // non-executable, and
                 // links share that, we need two concrete versions of the file.
@@ -145,7 +146,9 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
                   path = exePath;
                 }
                 Path target = root.resolve(file.getName());
-                Preconditions.checkState(target.normalize().startsWith(root));
+                Path normalized = target.normalize();
+                Preconditions.checkState(
+                    normalized.startsWith(root), "%s doesn't start with %s.", normalized, root);
                 Files.createLink(target, path);
               }
 
@@ -184,20 +187,19 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
   }
 
   @Override
-  public void addMissing(
-      ImmutableMap<Protocol.Digest, ThrowingSupplier<InputStream, IOException>> data)
-      throws IOException {
-    uploader.addMissing(data);
+  public ListenableFuture<Void> addMissing(
+      ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data) throws IOException {
+    return uploader.addMissing(data);
   }
 
   /**
    * Materializes the outputs into the build root. All required data must be present (or inlined).
    */
   @Override
-  public void materializeOutputs(
+  public ListenableFuture<Void> materializeOutputs(
       List<OutputDirectory> outputDirectories, List<OutputFile> outputFiles, Path root)
       throws IOException {
-    outputsMaterializer.materialize(outputDirectories, outputFiles, root);
+    return outputsMaterializer.materialize(outputDirectories, outputFiles, root);
   }
 
   public Protocol.Action materializeAction(Protocol.Digest actionDigest) throws IOException {
@@ -260,9 +262,19 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
 
       Files.createDirectories(root);
       for (FileNode file : dir.getFilesList()) {
-        delegate.materializeFile(root, file);
+        try {
+          delegate.materializeFile(root, file);
+        } catch (Exception e) {
+          throw new BuckUncheckedExecutionException(
+              e, "When materializing %s/%s.", root, file.getName());
+        }
       }
       for (DirectoryNode child : dir.getDirectoriesList()) {
+        Preconditions.checkState(
+            !child.getName().equals(".") && !child.getName().equals(".."),
+            "Tried to create invalid path %s/%s.",
+            root,
+            child.getName());
         materializeInputs(root.resolve(child.getName()), child.getDigest(), commandDigest);
       }
       for (SymlinkNode symlink : dir.getSymlinksList()) {

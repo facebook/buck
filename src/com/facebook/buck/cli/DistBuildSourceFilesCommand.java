@@ -16,15 +16,21 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.cli.BuildCommand.ActionGraphCreationException;
+import com.facebook.buck.cli.BuildCommand.GraphsAndBuildTargets;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
+import com.facebook.buck.distributed.thrift.RemoteCommand;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThrowingPrintWriter;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -86,8 +92,7 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     Optional<StampedeId> stampedeId = getStampedeIdOptional();
     if (stampedeId.isPresent()) {
       runUsingStampedeId(params, stampedeId.get());
@@ -107,8 +112,7 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
         new CommandThreadManager(
             "DistBuildSourceFiles", getConcurrencyLimit(params.getBuckConfig())); ) {
       BuildJobState jobState =
-          BuildCommand.getAsyncDistBuildState(
-                  arguments, params, pool.getWeightedListeningExecutorService())
+          getAsyncDistBuildState(arguments, params, pool.getWeightedListeningExecutorService())
               .get();
       outputResultToTempFile(params, jobState);
     } catch (ExecutionException e) {
@@ -160,5 +164,36 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
         .printSuccess(
             "A total of [%d] source file paths were saved to [%s].",
             writtenLineCount, outputFileAbs.toAbsolutePath().toString());
+  }
+
+  /**
+   * Create the serializable {@link BuildJobState} for distributed builds.
+   *
+   * @param buildTargets - Top level targets.
+   * @param params - Client side parameters.
+   * @param executor - Executor for async ops.
+   * @return - New instance of serializable {@link BuildJobState}.
+   * @throws InterruptedException
+   * @throws IOException
+   */
+  static ListenableFuture<BuildJobState> getAsyncDistBuildState(
+      List<String> buildTargets,
+      CommandRunnerParams params,
+      WeightedListeningExecutorService executor)
+      throws InterruptedException, IOException {
+    BuildCommand buildCommand = new BuildCommand(buildTargets);
+    buildCommand.assertArguments(params);
+
+    GraphsAndBuildTargets graphsAndBuildTargets = null;
+    try {
+      graphsAndBuildTargets =
+          buildCommand.createGraphsAndTargets(params, executor, Optional.empty());
+    } catch (ActionGraphCreationException e) {
+      throw BuildFileParseException.createForUnknownParseError(e.getMessage());
+    }
+
+    return AsyncJobStateFactory.computeDistBuildState(
+            params, graphsAndBuildTargets, executor, Optional.empty(), RemoteCommand.BUILD)
+        .getAsyncJobState();
   }
 }

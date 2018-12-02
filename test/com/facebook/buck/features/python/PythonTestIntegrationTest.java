@@ -64,7 +64,7 @@ public class PythonTestIntegrationTest {
   public ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
 
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_test", tmp);
@@ -126,7 +126,7 @@ public class PythonTestIntegrationTest {
   }
 
   @Test
-  public void testPythonSkippedResult() throws IOException, InterruptedException {
+  public void testPythonSkippedResult() throws IOException {
     assumePythonVersionIsAtLeast("2.7", "unittest skip support was added in Python-2.7");
     ProcessResult result = workspace.runBuckCommand("test", "//:test-skip").assertSuccess();
     assertThat(result.getStderr(), containsString("1 Skipped"));
@@ -141,7 +141,7 @@ public class PythonTestIntegrationTest {
   }
 
   @Test
-  public void testPythonSetupClassFailure() throws IOException, InterruptedException {
+  public void testPythonSetupClassFailure() throws IOException {
     assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
     ProcessResult result = workspace.runBuckCommand("test", "//:test-setup-class-failure");
     result.assertSpecialExitCode(
@@ -167,7 +167,7 @@ public class PythonTestIntegrationTest {
   }
 
   @Test
-  public void testPythonSetupClassFailureWithTestSuite() throws IOException, InterruptedException {
+  public void testPythonSetupClassFailureWithTestSuite() throws IOException {
     assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
     ProcessResult result =
         workspace.runBuckCommand("test", "//:test-setup-class-failure-with-test-suite");

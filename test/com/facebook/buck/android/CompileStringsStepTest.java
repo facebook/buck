@@ -460,7 +460,7 @@ public class CompileStringsStepTest {
 
     private ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder = ImmutableMap.builder();
 
-    public FakeProjectFileSystem() throws InterruptedException {
+    public FakeProjectFileSystem() {
       this(Paths.get(".").toAbsolutePath());
     }
 

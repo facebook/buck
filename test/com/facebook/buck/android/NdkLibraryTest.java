@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.FakeExecutableFinder;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
@@ -38,6 +39,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.environment.PlatformType;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Path;
@@ -52,7 +54,9 @@ public class NdkLibraryTest {
   private ProjectFilesystem projectFilesystem;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+
     projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
 
@@ -60,11 +64,14 @@ public class NdkLibraryTest {
   }
 
   @Test
-  public void testSimpleNdkLibraryRule() throws Exception {
+  public void testSimpleNdkLibraryRule() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildContext context = FakeBuildContext.NOOP_CONTEXT;
 
-    Path androidNdk = Paths.get("/android/ndk");
+    Path androidNdk =
+        Platform.detect().getType() == PlatformType.WINDOWS
+            ? Paths.get("C:\\android\\ndk")
+            : Paths.get("/android/ndk");
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(
@@ -105,15 +112,15 @@ public class NdkLibraryTest {
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(
             String.format(
-                "%s/ndk-build -j %d -C %s flag1 flag2 "
+                "%s -j %d -C %s flag1 flag2 "
                     + "APP_PROJECT_PATH=%s "
                     + "APP_BUILD_SCRIPT=%s "
                     + "NDK_OUT=%s "
                     + "NDK_LIBS_OUT=%s "
-                    + "BUCK_PROJECT_DIR=../../../../.. "
+                    + "BUCK_PROJECT_DIR=%s "
                     + "host-echo-build-step=%s "
                     + "--silent",
-                androidNdk,
+                androidNdk.resolve("ndk-build"),
                 Runtime.getRuntime().availableProcessors(),
                 Paths.get(basePath).toString(),
                 /* APP_PROJECT_PATH */ projectFilesystem.resolve(libbase) + File.separator,
@@ -121,6 +128,7 @@ public class NdkLibraryTest {
                     NdkLibraryDescription.getGeneratedMakefilePath(target, projectFilesystem)),
                 /* NDK_OUT */ projectFilesystem.resolve(libbase) + File.separator,
                 /* NDK_LIBS_OUT */ projectFilesystem.resolve(Paths.get(libbase, "libs")),
+                /* BUCK_PROJECT_DIR */ MorePaths.pathWithPlatformSeparators("../../../../.."),
                 /* host-echo-build-step */ Platform.detect() == Platform.WINDOWS ? "@REM" : "@#")),
         steps.subList(3, 4),
         executionContext);

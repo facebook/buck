@@ -81,7 +81,7 @@ public class TestConfiguration extends LocatableConfigurationBase
   }
 
   public static class Data {
-    public String target = "";
+    public String targets = "";
     public String additionalParams = "";
     public String testSelectors = "";
   }

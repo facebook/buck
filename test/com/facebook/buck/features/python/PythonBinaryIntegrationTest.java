@@ -104,7 +104,7 @@ public class PythonBinaryIntegrationTest {
   public ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
 
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_binary", tmp);

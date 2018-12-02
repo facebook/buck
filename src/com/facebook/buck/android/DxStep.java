@@ -29,6 +29,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -74,6 +75,8 @@ public class DxStep extends ShellStep {
 
     /** Run DX with the --no-locals flag. */
     NO_LOCALS,
+    /** Disable java 8 desugaring when running D8 dexing tool. */
+    NO_DESUGAR,
     ;
   }
 
@@ -92,6 +95,7 @@ public class DxStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
   private final AndroidPlatformTarget androidPlatformTarget;
+  @VisibleForTesting final @Nullable Collection<Path> classpathFiles;
   private final Path outputDexFile;
   private final Set<Path> filesToDex;
   private final Set<Option> options;
@@ -162,9 +166,41 @@ public class DxStep extends ShellStep {
       Optional<String> maxHeapSize,
       String dexTool,
       boolean intermediate) {
+    this(
+        filesystem,
+        androidPlatformTarget,
+        outputDexFile,
+        filesToDex,
+        options,
+        maxHeapSize,
+        dexTool,
+        intermediate,
+        null);
+  }
+
+  /**
+   * @param outputDexFile path to the file where the generated classes.dex should go.
+   * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
+   *     files, or a directory of .class files.
+   * @param options to pass to {@code dx}.
+   * @param maxHeapSize The max heap size used for out of process dex.
+   * @param dexTool the tool used to perform dexing.
+   * @param classpathFiles specifies classpath for interface static and default methods desugaring.
+   */
+  public DxStep(
+      ProjectFilesystem filesystem,
+      AndroidPlatformTarget androidPlatformTarget,
+      Path outputDexFile,
+      Iterable<Path> filesToDex,
+      EnumSet<Option> options,
+      Optional<String> maxHeapSize,
+      String dexTool,
+      boolean intermediate,
+      @Nullable Collection<Path> classpathFiles) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.androidPlatformTarget = androidPlatformTarget;
+    this.classpathFiles = classpathFiles;
     this.outputDexFile = filesystem.resolve(outputDexFile);
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
@@ -301,7 +337,16 @@ public class DxStep extends ShellStep {
                     options.contains(Option.NO_OPTIMIZE)
                         ? CompilationMode.DEBUG
                         : CompilationMode.RELEASE)
-                .setOutput(output, OutputMode.DexIndexed);
+                .setOutput(output, OutputMode.DexIndexed)
+                .setDisableDesugaring(options.contains(Option.NO_DESUGAR));
+        if (classpathFiles != null && !classpathFiles.isEmpty()) {
+          // classpathFiles is needed only for D8 java 8 desugar
+          ImmutableSet.Builder<Path> absolutePaths = ImmutableSet.builder();
+          for (Path classpathFile : classpathFiles) {
+            absolutePaths.add(filesystem.getPathForRelativeExistingPath(classpathFile));
+          }
+          builder.addClasspathFiles(absolutePaths.build());
+        }
         D8Command d8Command = builder.build();
         com.android.tools.r8.D8.run(d8Command);
 

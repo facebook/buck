@@ -22,7 +22,6 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
-import java.io.IOException;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,7 +35,7 @@ public class RemoteBuildModeRunnerTest {
       EasyMock.createNiceMock(HeartbeatService.class);
 
   @Test
-  public void testFinalBuildStatusIsSet() throws IOException, InterruptedException {
+  public void testFinalBuildStatusIsSet() throws Exception {
     ExitCode expectedExitCode = ExitCode.BUILD_ERROR;
 
     BuildExecutor buildExecutor = EasyMock.createMock(BuildExecutor.class);

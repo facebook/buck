@@ -7,7 +7,7 @@ java_library(
     ],
     visibility = ["//tools/documentation_generator/..."],
     deps = [
-        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/bazel:bazel",
         "//third-party/java/guava:guava",
         "//third-party/java/stringtemplate:stringtemplate",
     ],

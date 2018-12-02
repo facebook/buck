@@ -36,6 +36,7 @@ class UntrackedHeaderReporterWithFallback implements UntrackedHeaderReporter {
       Path sourceDepFile,
       Path inputPath) {
     switch (dependencyTrackingMode) {
+      case SHOW_HEADERS:
       case SHOW_INCLUDES:
         this.headerReporter =
             new UntrackedHeaderReporterWithShowIncludes(
@@ -53,6 +54,11 @@ class UntrackedHeaderReporterWithFallback implements UntrackedHeaderReporter {
             dependencyTrackingMode);
         throw new IllegalStateException();
     }
+  }
+
+  @Override
+  public boolean isDetailed() {
+    return headerReporter.isDetailed();
   }
 
   @Override

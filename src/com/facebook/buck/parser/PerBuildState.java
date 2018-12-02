@@ -19,14 +19,13 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.file.Path;
-import java.util.Map;
 
 public class PerBuildState implements AutoCloseable {
 
@@ -69,11 +68,8 @@ public class PerBuildState implements AutoCloseable {
     return targetNodeParsePipeline.getAllNodesJob(cell, buildFile);
   }
 
-  ImmutableMap<String, Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)
-      throws BuildFileParseException {
+  BuildFileManifest getBuildFileManifest(Cell cell, Path buildFile) throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
-
-    // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
     return buildFileRawNodeParsePipeline.getAllNodes(cell, buildFile);
   }
 

@@ -1075,3 +1075,18 @@ genrule(
     # tools available.
     bash = "`dirname $DX`/aapt dump xmltree $(location :app_with_merged_manifest) AndroidManifest.xml > $OUT",
 )
+
+android_binary(
+    name = "native_merge_lib_with_pch",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifestNoRes.xml",
+    native_library_merge_map = {
+        "libtest1.so": [
+            ".*.so",
+        ],
+    },
+    deps = [
+        "//native/cxx:libtest1",
+        "//native/cxx:libtest2",
+    ],
+)

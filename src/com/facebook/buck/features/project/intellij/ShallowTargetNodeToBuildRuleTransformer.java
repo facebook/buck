@@ -16,6 +16,10 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.android.AndroidInstrumentationApkDescription;
+import com.facebook.buck.android.AndroidInstrumentationTestDescription;
+import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.ImmutableBuildRuleCreationContextWithTargetGraph;
@@ -26,8 +30,10 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.GenruleDescriptionArg;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
@@ -36,6 +42,16 @@ import com.google.common.collect.ImmutableSortedSet;
  * files.
  */
 public class ShallowTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
+
+  // These build rules are expensive to build and building them does not add any extra information
+  // (source folders etc.) to the action graph that is needed by module rules.
+  private static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
+      UNUSED_BUILD_RULE_DESCRIPTION_CLASSES =
+          ImmutableSet.of(
+              AndroidBinaryDescription.class,
+              AndroidInstrumentationApkDescription.class,
+              AndroidInstrumentationTestDescription.class,
+              AndroidManifestDescription.class);
 
   public ShallowTargetNodeToBuildRuleTransformer() {}
 
@@ -50,25 +66,33 @@ public class ShallowTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
 
     T arg = targetNode.getConstructorArg();
 
-    if (description.getClass().equals(GenruleDescription.class)) {
+    if (UNUSED_BUILD_RULE_DESCRIPTION_CLASSES.contains(description.getClass())
+        || description.getClass().getSuperclass().equals(AbstractGenruleDescription.class)) {
+      String outputPath;
+      if (description.getClass().equals(GenruleDescription.class)) {
+        outputPath = ((GenruleDescriptionArg) arg).getOut();
+      } else {
+        // This path is never used, but it needs to be unique, to prevent conflicts creating
+        // resource maps while creating java build rules.
+        outputPath =
+            Util.normalizeIntelliJName(targetNode.getBuildTarget().getFullyQualifiedName());
+      }
       return new EmptyBuildRule(
-          targetNode.getBuildTarget(),
-          targetNode.getFilesystem(),
-          ((GenruleDescriptionArg) arg).getOut());
+          targetNode.getBuildTarget(), targetNode.getFilesystem(), outputPath);
+    } else {
+      BuildRuleParams params =
+          new BuildRuleParams(
+              ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of());
+
+      BuildRuleCreationContextWithTargetGraph context =
+          ImmutableBuildRuleCreationContextWithTargetGraph.of(
+              targetGraph,
+              graphBuilder,
+              targetNode.getFilesystem(),
+              targetNode.getCellNames(),
+              toolchainProvider);
+
+      return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
     }
-
-    BuildRuleParams params =
-        new BuildRuleParams(
-            ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of());
-
-    BuildRuleCreationContextWithTargetGraph context =
-        ImmutableBuildRuleCreationContextWithTargetGraph.of(
-            targetGraph,
-            graphBuilder,
-            targetNode.getFilesystem(),
-            targetNode.getCellNames(),
-            toolchainProvider);
-
-    return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
   }
 }

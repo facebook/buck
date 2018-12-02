@@ -16,31 +16,29 @@
 
 package com.facebook.buck.android;
 
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
-import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.json.ObjectMappers;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.facebook.buck.testutil.integration.ZipInspector;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 /** Tests for AndroidLibraryDescription with query_deps */
 public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiCompilationModeTest {
+
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectWorkspace workspace;
+  private Path output;
 
   @Before
   public void setUp() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_library_as_ap_host", tmpFolder);
@@ -52,11 +50,10 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
 
   @Test
   public void testAddingResourceFileInvalidatesManifestBasedCacheHit() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Build once to warm cache
-    workspace.runBuckCommand("build", "//:top_level").assertSuccess();
+    output = workspace.buildAndReturnOutput("//:top_level");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
-    expectGenruleOutputContains("//:extract_resulting_config", "res1");
+    assertZipFileContains(output, "res1");
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     // Now, add a new config and assert we get a cache miss and the new file is read
@@ -64,47 +61,45 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
-    expectGenruleOutputContains("//:extract_resulting_config", "res2");
+    assertZipFileContains(output, "res2");
   }
 
   @Test
   public void testAddingDepInvalidatesManifestBasedCacheHit() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Build once to warm cache
-    workspace.runBuckCommand("build", "//:top_level").assertSuccess();
+    output = workspace.buildAndReturnOutput("//:top_level");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
-    expectGenruleOutputContains("//:extract_resulting_config", "res1");
+    assertZipFileContains(output, "res1");
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     // Now, add a new config via a dep and assert we get a cache miss and the new file is read
     workspace.replaceFileContents("BUCK", "#add_dep", "");
-    workspace.runBuckCommand("build", "//:top_level").assertSuccess();
+    workspace.buildAndReturnOutput("//:top_level");
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib2");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
-    expectGenruleOutputContains("//:extract_resulting_config", "res2");
+    assertZipFileContains(output, "res2");
   }
 
   @Test
   public void testAddingResourceFileRebuildsDependents() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Build once to warm cache
-    workspace.runBuckCommand("build", "//:top_level").assertSuccess();
+    output = workspace.buildAndReturnOutput("//:top_level");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
-    expectGenruleOutputContains("//:extract_resulting_config", "res1");
+    assertZipFileContains(output, "res1");
 
     // Now, edit a config and assert we rebuild
     workspace.replaceFileContents("res/META-INF/res1.json", "res1", "replaced");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
-    expectGenruleOutputContains("//:extract_resulting_config", "replaced");
+    assertZipFileContains(output, "replaced");
 
     // Now, add a new config and assert we re-run the processor
     workspace.replaceFileContents("BUCK", "#add_res", "");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
-    expectGenruleOutputContains("//:extract_resulting_config", "res2");
+    assertZipFileContains(output, "res2");
 
     // Now, add an unrelated file and assert dep files are working
     workspace.replaceFileContents("BUCK", "#add_file", "");
@@ -115,32 +110,30 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
 
   @Test
   public void testAddingDepRebuildsDependents() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Build once to warm cache
-    workspace.runBuckCommand("build", "//:top_level").assertSuccess();
+    output = workspace.buildAndReturnOutput("//:top_level");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
-    expectGenruleOutputContains("//:extract_resulting_config", "res1");
+    assertZipFileContains(output, "res1");
 
     // Now, edit a used config and assert we rebuild
     workspace.replaceFileContents("res/META-INF/res1.json", "res1", "replaced");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
-    expectGenruleOutputContains("//:extract_resulting_config", "replaced");
+    assertZipFileContains(output, "replaced");
 
     // Now, add a new config via a dep and assert we re-run the processor
     workspace.replaceFileContents("BUCK", "#add_dep", "");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib2");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
-    expectGenruleOutputContains("//:extract_resulting_config", "res2");
+    assertZipFileContains(output, "res2");
   }
 
   @Test
   public void testAddingNonResourceFileDoesNotRebuildDependents() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Build once to warm cache
-    workspace.runBuckCommand("build", "//:top_level").assertSuccess();
+    output = workspace.buildAndReturnOutput("//:top_level");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
 
     // Now, add an unrelated file and assert dep files are working
@@ -152,7 +145,6 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
 
   @Test
   public void testEditingUnreadResourceFileDoesNotRebuildDependents() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
@@ -166,7 +158,6 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
 
   @Test
   public void testEditingUnreadResourceFileDoesNotChangeManifestKey() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
@@ -179,26 +170,9 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.getBuildLog().assertTargetWasFetchedFromCacheByManifestMatch("//:top_level");
   }
 
-  private void expectGenruleOutputContains(String genrule, String expectedOutputFragment)
-      throws Exception {
-    ProcessResult buildResult = workspace.runBuckCommand("build", genrule);
-    buildResult.assertSuccess();
-
-    String outputFileContents = workspace.getFileContents(getOutputFile(genrule));
-    assertThat(outputFileContents, Matchers.containsString(expectedOutputFragment));
-  }
-
-  private Path getOutputFile(String targetName) {
-    try {
-      ProcessResult buildResult =
-          workspace.runBuckCommand("targets", targetName, "--show-full-output", "--json");
-      buildResult.assertSuccess();
-      JsonNode jsonNode = ObjectMappers.READER.readTree(buildResult.getStdout()).get(0);
-      assert jsonNode.has("buck.outputPath");
-      return Paths.get(jsonNode.get("buck.outputPath").asText());
-    } catch (Exception e) {
-      fail(e.getMessage());
-      return Paths.get("");
-    }
+  private void assertZipFileContains(Path file, String content) throws IOException {
+    new ZipInspector(file)
+        .assertFileContains(
+            Paths.get("com/facebook/example/config/collected_configs.json"), content);
   }
 }

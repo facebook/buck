@@ -37,7 +37,7 @@ public class ManifestEntriesTypeCoercerTest {
   private Path basePath = Paths.get("java/com/facebook/buck/example");
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
     TypeCoercer<?> typeCoercer = factory.typeCoercerForType(ManifestEntries.class);
     assertTrue(typeCoercer instanceof ManifestEntriesTypeCoercer);

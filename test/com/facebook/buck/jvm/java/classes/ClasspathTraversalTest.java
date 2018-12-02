@@ -66,8 +66,7 @@ public class ClasspathTraversalTest {
     return completeList.build();
   }
 
-  private void verifyFileLike(int expectedFiles, File... paths)
-      throws InterruptedException, IOException {
+  private void verifyFileLike(int expectedFiles, File... paths) throws IOException {
     int fileLikeCount = 0;
     for (Map.Entry<FileLike, String> entry : traverse(Lists.newArrayList(paths)).entrySet()) {
       assertEquals(

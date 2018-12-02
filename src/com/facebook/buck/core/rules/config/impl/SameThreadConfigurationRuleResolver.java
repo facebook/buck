@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.config.impl;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
@@ -55,12 +56,12 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
       return configurationRule;
     }
     configurationRule = mappingFunction.apply(target);
-    configurationRuleIndex.put(target, configurationRule);
-    return configurationRule;
+    ConfigurationRule previousRule = configurationRuleIndex.putIfAbsent(target, configurationRule);
+    return previousRule == null ? configurationRule : previousRule;
   }
 
   @Override
-  public synchronized ConfigurationRule getRule(BuildTarget buildTarget) {
+  public ConfigurationRule getRule(BuildTarget buildTarget) {
     return computeIfAbsent(buildTarget, this::createConfigurationRule);
   }
 
@@ -68,10 +69,11 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
     Cell cell = cellProvider.apply(buildTarget);
     @SuppressWarnings("unchecked")
     TargetNode<T> targetNode = (TargetNode<T>) targetNodeSupplier.apply(cell, buildTarget);
-    Preconditions.checkState(
-        targetNode.getDescription() instanceof ConfigurationRuleDescription,
-        "Invalid type of target node description: %s",
-        targetNode.getDescription().getClass());
+    if (!(targetNode.getDescription() instanceof ConfigurationRuleDescription)) {
+      throw new HumanReadableException(
+          "%s was used to resolve configurable attribute but it is not a configuration rule",
+          buildTarget);
+    }
     ConfigurationRuleDescription<T> configurationRuleDescription =
         (ConfigurationRuleDescription<T>) targetNode.getDescription();
     ConfigurationRule configurationRule =

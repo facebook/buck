@@ -160,7 +160,7 @@ public class AndroidResourceDescriptionTest {
   }
 
   @Test
-  public void testResourceRulesCreateSymlinkTrees() throws Exception {
+  public void testResourceRulesCreateSymlinkTrees() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(tmpFolder.getRoot().toPath());
     filesystem.mkdirs(Paths.get("res"));
     filesystem.mkdirs(Paths.get("assets"));

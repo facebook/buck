@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -167,5 +168,11 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
   @Override
   public String getBundleName() {
     return bundleName;
+  }
+
+  @Override
+  public JsDependenciesOutputs getJsDependenciesOutputs(ActionGraphBuilder graphBuilder) {
+    BuildTarget target = getBuildTarget().withAppendedFlavors(JsFlavors.DEPENDENCY_FILE);
+    return (JsDependenciesOutputs) graphBuilder.requireRule(target);
   }
 }

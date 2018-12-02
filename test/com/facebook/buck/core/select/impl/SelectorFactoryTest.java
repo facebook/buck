@@ -43,7 +43,7 @@ public class SelectorFactoryTest {
   private SelectorFactory selectorFactory;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
     selectorFactory = new SelectorFactory(new BuildTargetTypeCoercer()::coerce);
   }

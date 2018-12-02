@@ -202,8 +202,7 @@ public class InstallCommand extends BuildCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     assertArguments(params);
 
     BuildRunResult buildRunResult;
@@ -537,7 +536,7 @@ public class InstallCommand extends BuildCommand {
     AppleDeviceHelper helper = new AppleDeviceHelper(processExecutor, helperPath);
     ImmutableMap<String, String> connectedDevices = helper.getConnectedDevices();
 
-    if (connectedDevices.size() == 0) {
+    if (connectedDevices.isEmpty()) {
       params
           .getConsole()
           .printBuildFailure(

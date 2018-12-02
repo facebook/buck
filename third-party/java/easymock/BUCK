@@ -5,8 +5,8 @@ prebuilt_jar(
         "LICENSE",
     ],
     visibility = [
-        "//tools/ideabuck/tests/...",
         "//test/...",
+        "//tools/ideabuck/tests/...",
     ],
     deps = [
         "//third-party/java/cglib:cglib",

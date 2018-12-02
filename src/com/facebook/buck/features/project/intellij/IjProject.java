@@ -32,7 +32,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.util.Set;
 
 /** Top-level class for IntelliJ project generation. */
 public class IjProject {
@@ -102,7 +104,7 @@ public class IjProject {
    * @throws IOException
    */
   private ImmutableSet<BuildTarget> performWriteOrUpdate(boolean updateOnly) throws IOException {
-    final ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
+    final Set<BuildTarget> requiredBuildTargets = Sets.newConcurrentHashSet();
     IjLibraryFactory libraryFactory =
         new DefaultIjLibraryFactory(
             new DefaultIjLibraryFactoryResolver(
@@ -163,14 +165,14 @@ public class IjProject {
       cleaner.writeFilesToKeepToFile(projectConfig.getGeneratedFilesListFilename().get());
     }
 
-    return requiredBuildTargets.build();
+    return ImmutableSet.copyOf(requiredBuildTargets);
   }
 
   /**
    * Run the cleaner after a successful call to write(). This removes stale project files from
    * previous runs.
    */
-  private void clean() throws IOException {
+  private void clean() {
     cleaner.clean(
         projectConfig.getBuckConfig(),
         projectConfig.getProjectPaths().getIdeaConfigDir(),

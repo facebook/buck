@@ -23,7 +23,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import java.io.IOException;
 
 public class ApkInstallStep implements Step {
 
@@ -36,8 +35,7 @@ public class ApkInstallStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     AndroidDevicesHelper adbHelper = context.getAndroidDevicesHelper().get();
     if (adbHelper.getDevices(true).isEmpty()) {
       return StepExecutionResults.SUCCESS;
@@ -56,18 +54,15 @@ public class ApkInstallStep implements Step {
   public String getDescription(ExecutionContext context) {
     StringBuilder builder = new StringBuilder();
 
-    try {
-      AndroidDevicesHelper adbHelper = context.getAndroidDevicesHelper().get();
-      for (AndroidDevice device : adbHelper.getDevices(true)) {
-        if (builder.length() != 0) {
-          builder.append("\n");
-        }
-        builder.append("adb -s ");
-        builder.append(device.getSerialNumber());
-        builder.append(" install ");
-        builder.append(hasInstallableApk.getApkInfo().getApkPath());
+    AndroidDevicesHelper adbHelper = context.getAndroidDevicesHelper().get();
+    for (AndroidDevice device : adbHelper.getDevices(true)) {
+      if (builder.length() != 0) {
+        builder.append("\n");
       }
-    } catch (InterruptedException e) {
+      builder.append("adb -s ");
+      builder.append(device.getSerialNumber());
+      builder.append(" install ");
+      builder.append(hasInstallableApk.getApkInfo().getApkPath());
     }
     return builder.toString();
   }

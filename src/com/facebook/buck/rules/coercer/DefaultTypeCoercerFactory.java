@@ -92,7 +92,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   public DefaultTypeCoercerFactory(
       PathTypeCoercer.PathExistenceVerificationMode pathExistenceVerificationMode) {
     this.pathExistenceVerificationMode = pathExistenceVerificationMode;
-    TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
+    TypeCoercer<String> stringTypeCoercer = new StringTypeCoercer();
     TypeCoercer<Flavor> flavorTypeCoercer = new FlavorTypeCoercer();
     // This has no implementation, but is here so that constructor succeeds so that it can be
     // queried. This is only used for the visibility field, which is not actually handled by the
@@ -115,7 +115,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           }
         };
     TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
-    PathTypeCoercer pathTypeCoercer = new PathTypeCoercer(pathExistenceVerificationMode);
+    PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
     TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer =
@@ -125,7 +125,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
             intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
-    TypeCoercer<Query> queryTypeCoercer = new QueryCoercer();
+    TypeCoercer<Query> queryTypeCoercer = new QueryCoercer(this);
     TypeCoercer<ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
         new ListTypeCoercer<>(buildTargetTypeCoercer);
     nonParameterizedTypeCoercers =

@@ -23,6 +23,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.BufferedReader;
@@ -35,6 +36,7 @@ import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /** Finds the package for a given file by looking at its contents first. */
 public abstract class ParsingJavaPackageFinder {
@@ -61,11 +63,14 @@ public abstract class ParsingJavaPackageFinder {
     JavaPackagePathCache packagePathCache = new JavaPackagePathCache();
     PackagePathResolver packagePathResolver =
         new PackagePathResolver(javaFileParser, projectFilesystem);
-    for (Path path : ImmutableSortedSet.copyOf(new PathComponentCountOrder(), filesToParse)) {
-      packagePathResolver
-          .getPackagePathFromSource(path)
-          .ifPresent(javaPackagePath -> packagePathCache.insert(path, javaPackagePath));
-    }
+
+    ImmutableSortedSet.copyOf(new PathComponentCountOrder(), filesToParse)
+        .parallelStream()
+        .map(path -> new Pair<>(path, packagePathResolver.getPackagePathFromSource(path)))
+        .filter(pair -> pair.getSecond().isPresent())
+        .collect(Collectors.toList())
+        .forEach(pair -> packagePathCache.insert(pair.getFirst(), pair.getSecond().get()));
+
     return new CacheBasedPackageFinder(fallbackPackageFinder, packagePathCache);
   }
 

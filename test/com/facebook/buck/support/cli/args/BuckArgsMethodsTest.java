@@ -309,4 +309,17 @@ public class BuckArgsMethodsTest {
         ImmutableList.of("--py-foo", "py-bar ", "--py-baz"),
         BuckArgsMethods.expandAtFiles(ImmutableList.of("@" + pythonArgs.toString()), cellMapping));
   }
+
+  @Test
+  public void testHandlesAtSymbolAfterTwoDashes() throws IOException {
+    Path arg = tmp.newFile("argsfile");
+    Files.write(arg, ImmutableList.of("arg2", "arg3"));
+    String atArg = "@" + arg.toString();
+
+    assertThat(
+        BuckArgsMethods.expandAtFiles(
+            ImmutableList.of("arg1", atArg, "--", atArg),
+            ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
+        Matchers.contains("arg1", "arg2", "arg3", "--", atArg));
+  }
 }

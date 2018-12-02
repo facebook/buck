@@ -369,15 +369,24 @@ public class AppleCxxPlatforms {
     PreprocessorProvider aspp =
         new PreprocessorProvider(new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG);
     CompilerProvider as =
-        new CompilerProvider(new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG);
+        new CompilerProvider(
+            new ConstantToolProvider(clangPath),
+            CxxToolProvider.Type.CLANG,
+            config.getUseDetailedUntrackedHeaderMessages());
     PreprocessorProvider cpp =
         new PreprocessorProvider(new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG);
     CompilerProvider cc =
-        new CompilerProvider(new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG);
+        new CompilerProvider(
+            new ConstantToolProvider(clangPath),
+            CxxToolProvider.Type.CLANG,
+            config.getUseDetailedUntrackedHeaderMessages());
     PreprocessorProvider cxxpp =
         new PreprocessorProvider(new ConstantToolProvider(clangXxPath), CxxToolProvider.Type.CLANG);
     CompilerProvider cxx =
-        new CompilerProvider(new ConstantToolProvider(clangXxPath), CxxToolProvider.Type.CLANG);
+        new CompilerProvider(
+            new ConstantToolProvider(clangXxPath),
+            CxxToolProvider.Type.CLANG,
+            config.getUseDetailedUntrackedHeaderMessages());
     ImmutableList.Builder<String> whitelistBuilder = ImmutableList.builder();
     whitelistBuilder.add("^" + Pattern.quote(sdkPaths.getSdkPath().toString()) + "\\/.*");
     whitelistBuilder.add(

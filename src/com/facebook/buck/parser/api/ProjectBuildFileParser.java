@@ -19,6 +19,7 @@ package com.facebook.buck.parser.api;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -42,7 +43,7 @@ public interface ProjectBuildFileParser extends AutoCloseable {
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
-  ImmutableList<String> getIncludedFiles(Path buildFile)
+  ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException;
 
   /**

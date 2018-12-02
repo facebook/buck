@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
@@ -42,7 +41,7 @@ import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -109,13 +108,7 @@ public class CxxCompilationDatabaseTest {
             .build();
 
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
-    class FrameworkPathAppendableFunction
-        implements RuleKeyAppendableFunction<FrameworkPath, Path> {
-      @Override
-      public void appendToRuleKey(RuleKeyObjectSink sink) {
-        // Do nothing.
-      }
-
+    class FrameworkPathFunction implements AddsToRuleKeyFunction<FrameworkPath, Path> {
       @Override
       public Path apply(FrameworkPath input) {
         throw new UnsupportedOperationException("should not be called");
@@ -135,7 +128,7 @@ public class CxxCompilationDatabaseTest {
                         new HashedFileTool(
                             PathSourcePath.of(filesystem, Paths.get("preprocessor")))),
                     preprocessorFlags,
-                    new FrameworkPathAppendableFunction(),
+                    new FrameworkPathFunction(),
                     /* leadingIncludePaths */ Optional.empty(),
                     Optional.of(
                         new DependencyAggregation(
@@ -146,8 +139,10 @@ public class CxxCompilationDatabaseTest {
                 new CompilerDelegate(
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                     new GccCompiler(
-                        new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("compiler")))),
-                    CxxToolFlags.of()),
+                        new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("compiler"))),
+                        false),
+                    CxxToolFlags.of(),
+                    Optional.empty()),
                 "test.o",
                 FakeSourcePath.of(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,

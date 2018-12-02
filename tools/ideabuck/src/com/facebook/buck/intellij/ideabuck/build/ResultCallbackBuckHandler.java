@@ -27,12 +27,21 @@ public class ResultCallbackBuckHandler extends BuckCommandHandler {
   private final Consumer<String> futureCallback;
   private StringBuilder stdout;
 
+  /** @deprecated Use {@link ResultCallbackBuckHandler(Project, BuckCommand, Consumer<String>)}. */
+  @Deprecated
   public ResultCallbackBuckHandler(
       final Project project,
       final VirtualFile root,
       final BuckCommand command,
       final Consumer<String> futureCallback) {
     super(project, VfsUtil.virtualToIoFile(root), command, true);
+    this.futureCallback = futureCallback;
+    this.stdout = new StringBuilder();
+  }
+
+  public ResultCallbackBuckHandler(
+      Project project, BuckCommand command, Consumer<String> futureCallback) {
+    super(project, command, true);
     this.futureCallback = futureCallback;
     this.stdout = new StringBuilder();
   }

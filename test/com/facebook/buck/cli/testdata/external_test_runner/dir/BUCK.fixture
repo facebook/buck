@@ -21,6 +21,20 @@ python_test(
   ],
 )
 
+python_test(
+  name = 'python-cxx-additional-coverage',
+  srcs = [
+    'test_simple.py'
+  ],
+  deps = [
+    ':python_lib',
+    ':cpp_binary',
+  ],
+  additional_coverage_targets = [
+    ':cpp_binary',
+  ],
+)
+
 cxx_binary(
   name = 'cpp_binary',
   srcs = [

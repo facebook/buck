@@ -24,12 +24,22 @@ import org.immutables.value.Value;
 /** Various configuration for ModernBuildRule behavior. */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractModernBuildRuleConfig implements ConfigView<BuckConfig> {
+abstract class AbstractModernBuildRuleConfig
+    implements ConfigView<BuckConfig>, ModernBuildRuleStrategyConfig {
   public static final String SECTION = "modern_build_rule";
 
+  @Value.Derived
+  public ModernBuildRuleStrategyConfig getDefaultStrategyConfig() {
+    return new ModernBuildRuleStrategyConfigFromSection(getDelegate(), SECTION);
+  }
+
+  @Override
   public ModernBuildRuleBuildStrategy getBuildStrategy() {
-    return getDelegate()
-        .getEnum(SECTION, "strategy", ModernBuildRuleBuildStrategy.class)
-        .orElse(ModernBuildRuleBuildStrategy.DEFAULT);
+    return getDefaultStrategyConfig().getBuildStrategy();
+  }
+
+  @Override
+  public HybridLocalBuildStrategyConfig getHybridLocalConfig() {
+    return getDefaultStrategyConfig().getHybridLocalConfig();
   }
 }

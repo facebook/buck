@@ -261,13 +261,11 @@ public class NativeLinkables {
       nativeLinkables.put(nativeLinkable.getBuildTarget(), nativeLinkable);
     }
 
-    MutableDirectedGraph<BuildTarget> graph = new MutableDirectedGraph<>();
     AbstractBreadthFirstTraversal<BuildTarget> visitor =
         new AbstractBreadthFirstTraversal<BuildTarget>(nativeLinkables.keySet()) {
           @Override
           public Iterable<BuildTarget> visit(BuildTarget target) {
             NativeLinkable nativeLinkable = Objects.requireNonNull(nativeLinkables.get(target));
-            graph.addNode(target);
             ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
             for (NativeLinkable dep :
                 Iterables.concat(
@@ -275,7 +273,6 @@ public class NativeLinkables {
                     nativeLinkable.getNativeLinkableExportedDepsForPlatform(
                         cxxPlatform, graphBuilder))) {
               BuildTarget depTarget = dep.getBuildTarget();
-              graph.addEdge(target, depTarget);
               deps.add(depTarget);
               nativeLinkables.put(depTarget, dep);
             }

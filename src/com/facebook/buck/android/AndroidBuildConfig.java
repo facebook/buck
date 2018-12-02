@@ -234,8 +234,7 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       values = BuildConfigFields.fromFieldDeclarations(filesystem.readLines(valuesFile));
       return StepExecutionResults.SUCCESS;
     }

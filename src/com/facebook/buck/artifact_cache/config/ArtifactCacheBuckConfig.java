@@ -133,6 +133,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String DEFAULT_SCHEDULE_TYPE = "none";
   public static final String MULTI_FETCH = "multi_fetch";
   private static final String MULTI_FETCH_LIMIT = "multi_fetch_limit";
+  public static final String MULTI_CHECK = "multi_check";
   private static final int DEFAULT_MULTI_FETCH_LIMIT = 100;
 
   private static final String DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS =
@@ -155,6 +156,10 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return buckConfig
         .getEnum(CACHE_SECTION_NAME, MULTI_FETCH, MultiFetchType.class)
         .orElse(MultiFetchType.DEFAULT);
+  }
+
+  public boolean getMultiCheckEnabled() {
+    return buckConfig.getBooleanValue(CACHE_SECTION_NAME, MULTI_CHECK, false);
   }
 
   @Override
@@ -389,7 +394,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
    * <p>Both the key and certificate must be set for client TLS certificates to be used
    */
   public Optional<Path> getClientTlsCertificate() {
-    return buckConfig.getValue("cache", "http_client_tls_cert").map(Paths::get);
+    return buckConfig.getValue(CACHE_SECTION_NAME, "http_client_tls_cert").map(Paths::get);
   }
 
   /**
@@ -400,7 +405,22 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
    * <p>Both the key and certificate must be set for client TLS certificates to be used
    */
   public Optional<Path> getClientTlsKey() {
-    return buckConfig.getValue("cache", "http_client_tls_key").map(Paths::get);
+    return buckConfig.getValue(CACHE_SECTION_NAME, "http_client_tls_key").map(Paths::get);
+  }
+
+  /** Thread pools that are available for task execution. */
+  public enum Executor {
+    /** @see com.google.common.util.concurrent.MoreExecutors#directExecutor() */
+    DIRECT,
+    /** an executor responsible for carrying out only disk-related operations */
+    DISK_IO,
+  }
+
+  /** @return The thread pool dir cache store operations should be executed on. */
+  public Executor getDirCacheStoreExecutor() {
+    return buckConfig
+        .getEnum(CACHE_SECTION_NAME, "dir_cache_store_executor", Executor.class)
+        .orElse(Executor.DIRECT);
   }
 
   private boolean getServingLocalCacheEnabled() {
@@ -424,8 +444,9 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   private ImmutableMap<String, String> getCacheHeaders(String section, String fieldName) {
-    ImmutableMap.Builder<String, String> headerBuilder = ImmutableMap.builder();
     ImmutableList<String> rawHeaders = buckConfig.getListWithoutComments(section, fieldName, ';');
+    ImmutableMap.Builder<String, String> headerBuilder =
+        ImmutableMap.builderWithExpectedSize(rawHeaders.size());
     for (String rawHeader : rawHeaders) {
       List<String> splitHeader =
           Splitter.on(':').omitEmptyStrings().trimResults().splitToList(rawHeader);

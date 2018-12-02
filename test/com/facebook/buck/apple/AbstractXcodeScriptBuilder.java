@@ -38,8 +38,23 @@ public abstract class AbstractXcodeScriptBuilder<
     return getThis();
   }
 
+  public T setInputs(ImmutableSortedSet<String> inputs) {
+    getArgForPopulating().setInputs(inputs);
+    return getThis();
+  }
+
+  public T setInputFileLists(ImmutableSortedSet<String> inputFileLists) {
+    getArgForPopulating().setInputFileLists(inputFileLists);
+    return getThis();
+  }
+
   public T setOutputs(ImmutableSortedSet<String> outputs) {
     getArgForPopulating().setOutputs(outputs);
+    return getThis();
+  }
+
+  public T setOutputFileLists(ImmutableSortedSet<String> outputFileLists) {
+    getArgForPopulating().setOutputFileLists(outputFileLists);
     return getThis();
   }
 

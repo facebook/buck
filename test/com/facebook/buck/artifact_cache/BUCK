@@ -1,4 +1,8 @@
-load("//tools/build_rules:java_rules.bzl", "java_test", "standard_java_test")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_test",
+    "standard_java_test",
+)
 
 java_library(
     name = "testutil",
@@ -9,7 +13,9 @@ java_library(
             "*Test.java",
         ],
     ),
-    visibility = ["//test/..."],
+    visibility = [
+        "//test/...",
+    ],
     deps = [
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
@@ -161,7 +167,6 @@ standard_java_test(
         "//test/com/facebook/buck/event/listener:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
-        "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/support/bgtasks:testutil",
         "//test/com/facebook/buck/testutil:testutil",
@@ -190,7 +195,6 @@ standard_java_test(
         "//third-party/java/junit:junit",
         "//third-party/java/maven:maven-model",
         "//third-party/java/nailgun:nailgun",
-        "//third-party/java/netty:netty",
         "//third-party/java/nuprocess:nuprocess",
         "//third-party/java/okhttp:okhttp",
         "//third-party/java/okhttp:okhttp-tls",
@@ -202,7 +206,9 @@ standard_java_test(
 
 java_library(
     name = "artifact_cache_benchmark_lib",
-    srcs = ["SQLiteArtifactCacheBenchmark.java"],
+    srcs = [
+        "SQLiteArtifactCacheBenchmark.java",
+    ],
     exported_deps = [
         "//src/com/facebook/buck/artifact_cache:impl",
         "//src/com/facebook/buck/core/build/engine/buildinfo:buildinfo",
@@ -228,7 +234,9 @@ java_library(
 
 java_test(
     name = "artifact_cache_benchmark",
-    srcs = ["SQLiteArtifactCacheBenchmark.java"],
+    srcs = [
+        "SQLiteArtifactCacheBenchmark.java",
+    ],
     deps = [
         ":artifact_cache_benchmark_lib",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",

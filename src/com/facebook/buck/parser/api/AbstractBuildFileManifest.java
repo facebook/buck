@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -30,11 +31,11 @@ import org.immutables.value.Value;
 abstract class AbstractBuildFileManifest {
   /** @return a list of targets defined in the build file. */
   @Value.Parameter
-  public abstract ImmutableList<Map<String, Object>> getTargets();
+  public abstract ImmutableMap<String, Map<String, Object>> getTargets();
 
   /** @return a set of extension files read during parsing. */
   @Value.Parameter
-  public abstract ImmutableList<String> getIncludes();
+  public abstract ImmutableSortedSet<String> getIncludes();
 
   /**
    * @return a map from configuration section to configuration key to the value returned during
@@ -50,22 +51,4 @@ abstract class AbstractBuildFileManifest {
   /** @return A list of the glob operations performed with their results. */
   @Value.Parameter
   public abstract ImmutableList<GlobSpecWithResult> getGlobManifest();
-
-  /**
-   * Converts targets and their metadata into a single set of raw nodes.
-   *
-   * <p>This is for a temporary solution until all clients switch to using build file manifest.
-   */
-  public ImmutableMap<String, Map<String, Object>> toRawNodes() {
-    ImmutableMap.Builder<String, Map<String, Object>> builder = ImmutableMap.builder();
-    getTargets().forEach(target -> builder.put((String) target.get("name"), target));
-
-    builder.put(MetaRules.INCLUDES_NAME, ImmutableMap.of(MetaRules.INCLUDES, getIncludes()));
-    builder.put(MetaRules.CONFIGS_NAME, ImmutableMap.of(MetaRules.CONFIGS, getConfigs()));
-
-    if (getEnv().isPresent()) {
-      builder.put(MetaRules.ENV_NAME, ImmutableMap.of(MetaRules.ENV, getEnv().get()));
-    }
-    return builder.build();
-  }
 }

@@ -16,7 +16,7 @@ python_binary(
     deps = [":build-lib"],
 )
 
-export_files(["VERIFICATION.TXT"])
+export_files(["VERIFICATION.txt"])
 
 genrule(
     name = "chocolatey",
@@ -35,7 +35,7 @@ genrule(
         "--license-file",
         "$(location //:LICENSE)",
         "--verification-txt",
-        "$(location :VERIFICATION.TXT)",
+        "$(location :VERIFICATION.txt)",
         "--version",
         version,
         "--timestamp",

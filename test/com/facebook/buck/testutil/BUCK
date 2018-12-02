@@ -18,6 +18,7 @@ java_library(
     ],
     visibility = [
         "//test/...",
+        "//test/com/facebook/buck/parser/cache/impl:cache",
         "//tools/...",
     ],
     deps = [

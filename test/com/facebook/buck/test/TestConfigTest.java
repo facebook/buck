@@ -41,7 +41,7 @@ public class TestConfigTest {
   }
 
   @Test
-  public void testReadsSummaryVerbosity() throws InterruptedException, IOException {
+  public void testReadsSummaryVerbosity() throws IOException {
 
     Reader reader =
         new StringReader(

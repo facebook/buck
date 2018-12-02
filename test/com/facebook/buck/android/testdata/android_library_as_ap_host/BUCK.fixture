@@ -49,9 +49,3 @@ android_library(
         #add_dep ':lib2',
     ],
 )
-
-genrule(
-    name = "extract_resulting_config",
-    out = "collected_configs.json",
-    cmd = "unzip -p $(location :top_level) com/facebook/example/config/collected_configs.json > $OUT",
-)

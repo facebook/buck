@@ -21,6 +21,7 @@ import static com.facebook.buck.features.apple.project.ProjectGeneratorTestUtils
 import static com.facebook.buck.features.apple.project.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.features.apple.project.ProjectGeneratorTestUtils.getSingletonPhaseByType;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -338,7 +339,10 @@ public class NewNativeTargetProjectMutatorTest {
     TargetNode<?> prebuildNode =
         XcodePrebuildScriptBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:script"))
             .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("script/input.png")))
+            .setInputs(ImmutableSortedSet.of("$(SRCROOT)/helloworld.md"))
+            .setInputFileLists(ImmutableSortedSet.of("$(SRCROOT)/foo-inputs.xcfilelist"))
             .setOutputs(ImmutableSortedSet.of("helloworld.txt"))
+            .setOutputFileLists(ImmutableSortedSet.of("$(SRCROOT)/foo-outputs.xcfilelist"))
             .setCmd("echo \"hello world!\"")
             .build();
 
@@ -349,14 +353,23 @@ public class NewNativeTargetProjectMutatorTest {
 
     PBXShellScriptBuildPhase phase =
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
+    assertThat("Should set input paths correctly", phase.getInputPaths().size(), is(equalTo(2)));
     assertThat(
         "Should set input paths correctly",
-        "../script/input.png",
-        is(equalTo(Iterables.getOnlyElement(phase.getInputPaths()))));
+        phase.getInputPaths(),
+        is(hasItems("../script/input.png", "$(SRCROOT)/helloworld.md")));
+    assertThat(
+        "Should set input file list paths correctly",
+        Iterables.getOnlyElement(phase.getInputFileListPaths()),
+        is(equalTo("$(SRCROOT)/foo-inputs.xcfilelist")));
     assertThat(
         "Should set output paths correctly",
         "helloworld.txt",
         is(equalTo(Iterables.getOnlyElement(phase.getOutputPaths()))));
+    assertThat(
+        "Should set output file list paths correctly",
+        Iterables.getOnlyElement(phase.getOutputFileListPaths()),
+        is(equalTo("$(SRCROOT)/foo-outputs.xcfilelist")));
     assertEquals("should set script correctly", "echo \"hello world!\"", phase.getShellScript());
   }
 

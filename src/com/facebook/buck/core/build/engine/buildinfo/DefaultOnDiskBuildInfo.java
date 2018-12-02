@@ -235,7 +235,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     Hasher hasher = Hashing.sha1().newHasher();
     for (Path path : pathsForArtifact) {
       String pathString = path.toString();
-      HashCode fileHash = fileHashCache.get(projectFilesystem.resolve(path));
+      HashCode fileHash = fileHashCache.get(projectFilesystem, path);
       hasher.putBytes(pathString.getBytes(Charsets.UTF_8));
       hasher.putBytes(fileHash.asBytes());
       outputHashes.put(pathString, fileHash.toString());

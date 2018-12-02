@@ -7,7 +7,7 @@
         <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="/../../buck-out/android/modules/android_res2/gen" />
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="/../../buck-out/android/modules/android_res2/gen" />
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="/../../buck-out/android/modules/android_res2/gen/com/test/AndroidManifest.xml" />
-        <option name="RES_FOLDERS_RELATIVE_PATH" value="file://$MODULE_DIR$/res" />
+        <option name="RES_FOLDERS_RELATIVE_PATH" value="/res" />
         <option name="LIBRARY_PROJECT" value="true" />
         <option name="PROJECT_TYPE" value="1" />
         <option name="UPDATE_PROPERTY_FILES" value="false" />

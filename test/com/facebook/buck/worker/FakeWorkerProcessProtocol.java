@@ -36,7 +36,7 @@ public class FakeWorkerProcessProtocol {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
       isClosed = true;
     }
 
@@ -66,7 +66,7 @@ public class FakeWorkerProcessProtocol {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
       isClosed = true;
     }
 

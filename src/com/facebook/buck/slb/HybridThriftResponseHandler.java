@@ -33,7 +33,7 @@ public abstract class HybridThriftResponseHandler<ThriftResponse extends TBase<?
         response,
         new ThrowingConsumer<ThriftResponse, IOException>() {
           @Override
-          public void accept(ThriftResponse thriftResponse) throws IOException {
+          public void accept(ThriftResponse thriftResponse) {
             // no-op.
           }
         });

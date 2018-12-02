@@ -1,0 +1,34 @@
+python_binary(
+    name = "bin",
+    main_module = "bin",
+    deps = [
+        ":ext",
+    ],
+)
+
+cxx_python_extension(
+    name = "ext",
+    srcs = [
+        "ext.c",
+    ],
+    deps = [
+        ":lib",
+    ],
+)
+
+python_library(
+    name = "lib",
+    platform_deps = [
+        (
+            "DO NOT MATCH ANYTHING",
+            [":bad_lib"],
+        ),
+    ],
+)
+
+cxx_library(
+    name = "bad_lib",
+    exported_preprocessor_flags = [
+        "FLAG THAT BREAKS COMPILATION",
+    ],
+)

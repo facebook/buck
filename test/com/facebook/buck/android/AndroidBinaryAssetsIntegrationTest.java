@@ -28,6 +28,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -115,7 +116,9 @@ public class AndroidBinaryAssetsIntegrationTest extends AbiCompilationModeTest {
     workspace.writeContentsToPath("some contents", "res/com/sample/base/buck-assets/zipped.gz");
 
     ProcessResult result = workspace.runBuckBuild(SIMPLE_TARGET);
-    result.assertFailure();
+    // This is IllegalStateException so exit code 10; it should probably be some another exception
+    // type
+    result.assertExitCode(null, ExitCode.FATAL_GENERIC);
     assertTrue(result.getStderr().contains("zipped.gz"));
   }
 

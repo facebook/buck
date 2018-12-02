@@ -28,6 +28,7 @@ import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutor.LaunchedProcessImpl;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -130,7 +131,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   private ImmutableMap<String, String> overrideSystemEnvironment(
       Boolean buckdEnabled, ImmutableMap<String, String> environmentOverrides) {
     ImmutableMap.Builder<String, String> environmentBuilder = ImmutableMap.builder();
-    for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+    for (Map.Entry<String, String> entry : EnvVariablesProvider.getSystemEnv().entrySet()) {
       if ("NO_BUCKD".equals(entry.getKey())) {
         continue;
       }
@@ -398,7 +399,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   }
 
   /** Replaces platform-specific placeholders configurations with their appropriate replacements */
-  private void postAddPlatformConfiguration() throws IOException {
+  private void postAddPlatformConfiguration() {
     platformUtils.checkAssumptions();
   }
 

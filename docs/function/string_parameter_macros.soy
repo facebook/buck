@@ -1,3 +1,18 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.string_parameter_macros}
 
 /***/
@@ -27,10 +42,11 @@ Examples of rules that use string parameter macros are:
 </p>
 
 <ul>
-<li>{call buck.ruleLink}{param name : 'genrule' /}{/call}</li>
-<li>{call buck.ruleLink}{param name : 'apk_genrule' /}{/call}</li>
-<li>{call buck.ruleLink}{param name : 'cxx_genrule' /}{/call}</li>
+<li>{call buck.genrule /}</li>
+<li>{call buck.apk_genrule /}</li>
+<li>{call buck.cxx_genrule /}</li>
 </ul>
+
 
 String parameter macros have the form 
 
@@ -152,6 +168,7 @@ The <code>query_*</code> macros accept a quoted query expression which supports 
   <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'filter'/}{/call}</code></li>
   <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'set-operations'/}{param rendered_text: 'intersect' /}{/call}</code></li>
   <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'kind'/}{/call}</code></li>
+  <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'rdeps'/}{/call}</code></li>
   <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'set'/}{/call}</code></li>
   <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'union'/}{/call}</code></li>
 </ul>

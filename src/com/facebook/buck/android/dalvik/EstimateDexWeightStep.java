@@ -71,8 +71,7 @@ public class EstimateDexWeightStep implements Step, Supplier<Integer> {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Path path = filesystem.resolve(pathToJarOrClassesDirectory);
     AtomicInteger totalWeightEstimate = new AtomicInteger();
     ClasspathTraversal traversal =

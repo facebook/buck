@@ -22,13 +22,12 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ExitCode;
-import java.io.IOException;
 import org.junit.Test;
 
 public class RootCommandTest {
 
   @Test
-  public void testPrintsProjectRootToStdout() throws IOException, InterruptedException {
+  public void testPrintsProjectRootToStdout() throws Exception {
     TestConsole console = new TestConsole();
     CommandRunnerParams commandRunnerParams =
         CommandRunnerParamsForTesting.builder().setConsole(console).build();

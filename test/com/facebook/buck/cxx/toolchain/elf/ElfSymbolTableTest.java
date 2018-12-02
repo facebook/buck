@@ -18,12 +18,11 @@ package com.facebook.buck.cxx.toolchain.elf;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.ElfFile;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -69,12 +68,9 @@ public class ElfSymbolTableTest {
   }
 
   private ElfSymbolTable parseSymbolTable(String file) throws IOException {
-    try (FileChannel channel = FileChannel.open(workspace.resolve(file))) {
-      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      return ElfSymbolTable.parse(
-          elf.header.ei_class,
-          elf.getSectionByName(".symtab").orElseThrow(RuntimeException::new).getSection().body);
-    }
+    Elf elf = ElfFile.mapReadOnly(workspace.resolve(file));
+    return ElfSymbolTable.parse(
+        elf.header.ei_class,
+        elf.getSectionByName(".symtab").orElseThrow(RuntimeException::new).getSection().body);
   }
 }

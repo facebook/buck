@@ -45,8 +45,7 @@ public class CalculateClassAbiStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     try {
       Path binJar = filesystem.resolve(binaryJar);
       new StubJar(binJar).setCompatibilityMode(compatibilityMode).writeTo(filesystem, abiJar);

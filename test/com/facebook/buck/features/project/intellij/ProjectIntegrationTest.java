@@ -49,7 +49,7 @@ public class ProjectIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder2 = new TemporaryPaths();
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     // These tests consistently fail on Windows due to path separator issues.
     Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
   }
@@ -150,6 +150,7 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("project_with_java_resources");
   }
 
+  @Test
   public void testVersion2BuckProjectWithExtraOutputModules()
       throws InterruptedException, IOException {
     runBuckProjectAndVerify("project_with_extra_output_modules");

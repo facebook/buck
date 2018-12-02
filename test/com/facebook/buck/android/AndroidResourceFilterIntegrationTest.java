@@ -102,7 +102,7 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
@@ -289,7 +289,7 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   @Test
-  public void testStringArtifactsAreCached() throws InterruptedException, IOException {
+  public void testStringArtifactsAreCached() throws IOException {
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();

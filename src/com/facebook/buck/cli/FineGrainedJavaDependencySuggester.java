@@ -239,7 +239,7 @@ class FineGrainedJavaDependencySuggester {
         }
 
         Set<TargetNode<?>> depProviders = dependencyInfo.symbolToProviders.get(requiredSymbol);
-        if (depProviders == null || depProviders.size() == 0) {
+        if (depProviders == null || depProviders.isEmpty()) {
           console.getStdErr().printf("# Suspicious: no provider for '%s'\n", requiredSymbol);
           continue;
         }

@@ -152,7 +152,8 @@ public class HaskellBinaryDescription
           args.getCompilerFlags(),
           Optional.empty(),
           Optional.empty(),
-          ImmutableList.of());
+          ImmutableList.of(),
+          args.isEnableProfiling());
     }
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);

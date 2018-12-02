@@ -50,7 +50,7 @@ public interface AndroidDevicesHelper extends Closeable {
   void adbCall(String description, AdbDeviceCallable func, boolean quiet)
       throws InterruptedException;
 
-  ImmutableList<AndroidDevice> getDevices(boolean quiet) throws InterruptedException;
+  ImmutableList<AndroidDevice> getDevices(boolean quiet);
 
   /**
    * Install apk on all matching devices. This functions performs device filtering based on three
@@ -84,5 +84,5 @@ public interface AndroidDevicesHelper extends Closeable {
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,
       boolean waitForDebugger)
-      throws IOException, InterruptedException;
+      throws IOException;
 }

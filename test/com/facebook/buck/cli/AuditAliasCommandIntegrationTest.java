@@ -39,7 +39,7 @@ public class AuditAliasCommandIntegrationTest {
   private ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "alias", tmp);
     workspace.setUp();
 

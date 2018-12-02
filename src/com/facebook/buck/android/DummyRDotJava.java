@@ -283,7 +283,7 @@ public class DummyRDotJava extends AbstractBuildRule
         JarParameters.builder()
             .setJarPath(outputJar)
             .setEntriesToJar(ImmutableSortedSet.of(rDotJavaClassesFolder))
-            .setMergeManifests(true)
+            .setMergeManifests(false)
             .setHashEntries(true)
             .build();
     steps.add(new JarDirectoryStep(getProjectFilesystem(), jarParameters));
@@ -319,8 +319,7 @@ public class DummyRDotJava extends AbstractBuildRule
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
       try (ZipFile jar = new ZipFile(getProjectFilesystem().resolve(outputJar).toFile())) {
         for (ZipEntry zipEntry : Collections.list(jar.entries())) {
           if (zipEntry.getName().endsWith(".class")) {
@@ -370,7 +369,7 @@ public class DummyRDotJava extends AbstractBuildRule
     return BuildTargetPaths.getGenPath(filesystem, buildTarget, "__%s_dummyrdotjava_output__");
   }
 
-  private static Path getOutputJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  public static Path getOutputJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return getPathToOutputDir(buildTarget, filesystem)
         .resolve(String.format("%s.jar", buildTarget.getShortNameAndFlavorPostfix()));
   }

@@ -61,6 +61,7 @@ import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -225,12 +226,9 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         "-o",
         objectFilePath.toString());
 
-    // Do not use swiftBuckConfig's version by definition
     version.ifPresent(
         v -> {
-          // Compiler only accepts major version
-          String majorVersion = v.length() > 1 ? v.substring(0, 1) : v;
-          compilerCommand.add("-swift-version", majorVersion);
+          compilerCommand.add("-swift-version", validVersionString(v));
         });
 
     compilerCommand.addAll(Arg.stringify(compilerFlags, resolver));
@@ -245,6 +243,32 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
         projectFilesystem.getRootPath(), ImmutableMap.of(), compilerCommand.build());
+  }
+
+  @VisibleForTesting
+  static String validVersionString(String originalVersionString) {
+    // Swiftc officially only accepts the major version, but it respects the minor
+    // version if the version is 4.2.
+    String[] versions = originalVersionString.split("\\.");
+    if (versions.length > 2) {
+      versions = Arrays.copyOfRange(versions, 0, 2);
+    }
+    if (versions.length == 2) {
+      Integer majorVersion = Integer.parseInt(versions[0]);
+      Integer minorVersion = Integer.parseInt(versions[1]);
+
+      if (majorVersion > 4 || (majorVersion >= 4 && minorVersion >= 2)) {
+        return String.format("%d.%d", majorVersion, minorVersion);
+      } else {
+        return originalVersionString.length() > 1
+            ? originalVersionString.substring(0, 1)
+            : originalVersionString;
+      }
+    } else {
+      return originalVersionString.length() > 1
+          ? originalVersionString.substring(0, 1)
+          : originalVersionString;
+    }
   }
 
   private SwiftCompileStep makeModulewrapStep(SourcePathResolver resolver) {

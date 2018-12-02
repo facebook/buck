@@ -44,7 +44,7 @@ public class PrebuiltPythonLibraryIntegrationTest {
   public ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
 
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_package", tmp);

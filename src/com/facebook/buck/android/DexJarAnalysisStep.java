@@ -43,8 +43,7 @@ class DexJarAnalysisStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
 
     try (ZipFile zf = new ZipFile(filesystem.resolve(dexPath).toFile())) {
       ZipEntry classesDexEntry = zf.getEntry("classes.dex");

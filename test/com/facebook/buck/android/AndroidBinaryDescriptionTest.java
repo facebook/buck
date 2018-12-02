@@ -86,7 +86,7 @@ public class AndroidBinaryDescriptionTest {
   }
 
   @Test
-  public void turkishCaseRulesDoNotCrashConstructor() throws Exception {
+  public void turkishCaseRulesDoNotCrashConstructor() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:keystore");
     Keystore keystore =

@@ -65,6 +65,7 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
@@ -77,6 +78,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -129,17 +131,13 @@ public abstract class IsolatedBuildableBuilder {
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
 
     // Root filesystemCell doesn't require embedded buck-out info.
-    ProjectFilesystem filesystem;
-    try {
-      filesystem = projectFilesystemFactory.createProjectFilesystem(canonicalProjectRoot, config);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    ProjectFilesystem filesystem =
+        projectFilesystemFactory.createProjectFilesystem(canonicalProjectRoot, config);
 
     Architecture architecture = Architecture.detect();
     Platform platform = Platform.detect();
 
-    ImmutableMap<String, String> clientEnvironment = ImmutableMap.copyOf(System.getenv());
+    ImmutableMap<String, String> clientEnvironment = EnvVariablesProvider.getSystemEnv();
 
     DefaultCellPathResolver cellPathResolver =
         DefaultCellPathResolver.of(filesystem.getRootPath(), config);
@@ -251,7 +249,9 @@ public abstract class IsolatedBuildableBuilder {
 
               fs.mkdirs(configuredPaths.getTmpDir());
               fs.mkdirs(configuredPaths.getBuckOut());
-              fs.createSymLink(configuredPaths.getProjectRootDir(), fs.getRootPath(), true);
+              fs.deleteFileAtPathIfExists(configuredPaths.getProjectRootDir());
+              fs.writeContentsToPath(
+                  fs.getRootPath().toString(), configuredPaths.getProjectRootDir());
 
               if (!configuredPaths.getConfiguredBuckOut().equals(configuredPaths.getBuckOut())
                   && buckConfig.getBuckOutCompatLink()
@@ -278,6 +278,7 @@ public abstract class IsolatedBuildableBuilder {
 
   /** Deserializes the BuildableAndTarget corresponding to hash and builds it. */
   public void build(HashCode hash) throws IOException, StepFailedException, InterruptedException {
+    final Instant start = Instant.now();
     Deserializer deserializer =
         new Deserializer(
             filesystemFunction,
@@ -308,10 +309,12 @@ public abstract class IsolatedBuildableBuilder {
                 }
               }));
 
+      final Instant deserializationComplete = Instant.now();
       LOG.info(
           String.format(
-              "Finished deserializing the rule at [%s]. Running the build now.",
-              new java.util.Date()));
+              "Finished deserializing the rule at [%s], took %d ms. Running the build now.",
+              new java.util.Date(),
+              deserializationComplete.minusMillis(start.toEpochMilli()).toEpochMilli()));
 
       for (Step step :
           ModernBuildRule.stepsForBuildable(
@@ -322,7 +325,9 @@ public abstract class IsolatedBuildableBuilder {
 
       LOG.info(
           String.format(
-              "Finished running the build at [%s]. Exiting buck now.", new java.util.Date()));
+              "Finished running the build at [%s], took %d ms. Exiting buck now.",
+              new java.util.Date(),
+              Instant.now().minusMillis(deserializationComplete.toEpochMilli()).toEpochMilli()));
     }
   }
 

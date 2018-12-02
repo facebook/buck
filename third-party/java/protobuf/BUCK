@@ -11,9 +11,9 @@ prebuilt_jar(
     name = "protobuf-lite",
     binary_jar = "protobuf-lite-3.0.1.jar",
     licenses = ["LICENSE"],
+    provided = True,
     source_jar = "protobuf-lite-3.0.1-sources.jar",
     visibility = ["PUBLIC"],
-    provided = True,
     deps = [],
 )
 
@@ -25,4 +25,3 @@ prebuilt_jar(
     visibility = ["PUBLIC"],
     deps = [],
 )
-

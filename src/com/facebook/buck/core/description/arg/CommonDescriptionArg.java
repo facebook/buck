@@ -23,7 +23,7 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 import org.immutables.value.Value;
 
-public interface CommonDescriptionArg {
+public interface CommonDescriptionArg extends HasTargetCompatibleWith {
   String getName();
 
   ImmutableSet<SourcePath> getLicenses();

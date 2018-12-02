@@ -73,7 +73,7 @@ import org.junit.Test;
 public class AndroidBinaryTest {
 
   @Test
-  public void testAndroidBinaryNoDx() throws Exception {
+  public void testAndroidBinaryNoDx() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -253,7 +253,7 @@ public class AndroidBinaryTest {
   }
 
   @Test
-  public void testGetUnsignedApkPath() throws Exception {
+  public void testGetUnsignedApkPath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -284,7 +284,7 @@ public class AndroidBinaryTest {
   }
 
   @Test
-  public void testGetProguardOutputFromInputClasspath() throws Exception {
+  public void testGetProguardOutputFromInputClasspath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign");
@@ -324,7 +324,7 @@ public class AndroidBinaryTest {
   }
 
   @Test
-  public void testDexingCommand() throws Exception {
+  public void testDexingCommand() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     AndroidBinary splitDexRule =
         AndroidBinaryBuilder.createBuilder(
@@ -375,7 +375,7 @@ public class AndroidBinaryTest {
   }
 
   @Test
-  public void testDexingCommandWithIntraDexReorder() throws Exception {
+  public void testDexingCommandWithIntraDexReorder() {
     SourcePath reorderTool = FakeSourcePath.of("/tools#reorder_tool");
     SourcePath reorderData = FakeSourcePath.of("/tools#reorder_data");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
@@ -429,7 +429,7 @@ public class AndroidBinaryTest {
   }
 
   @Test
-  public void testAddPostFilterCommandSteps() throws Exception {
+  public void testAddPostFilterCommandSteps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -465,7 +465,7 @@ public class AndroidBinaryTest {
   }
 
   @Test
-  public void noDxParametersAreHintsAndNotHardDependencies() throws Exception {
+  public void noDxParametersAreHintsAndNotHardDependencies() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule keystoreRule = addKeystoreRule(graphBuilder);
 
@@ -478,7 +478,7 @@ public class AndroidBinaryTest {
   }
 
   @Test
-  public void transitivePrebuiltJarsAreFirstOrderDeps() throws Exception {
+  public void transitivePrebuiltJarsAreFirstOrderDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule keystoreRule = addKeystoreRule(graphBuilder);
 

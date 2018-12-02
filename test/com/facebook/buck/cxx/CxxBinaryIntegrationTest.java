@@ -58,6 +58,7 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -365,7 +366,12 @@ public class CxxBinaryIntegrationTest {
     buildLog = workspace.getBuildLog();
     targetsBuilder =
         ImmutableSortedSet.<BuildTarget>naturalOrder()
-            .add(aggregatedDepsTarget, captureBuildTarget, inferAnalysisTarget, inferReportTarget);
+            .add(
+                aggregatedDepsTarget,
+                captureBuildTarget,
+                inferAnalysisTarget,
+                inferReportTarget,
+                headerSymlinkTreeTarget);
     assertEquals(buildLog.getAllTargets(), targetsBuilder.build());
     buildLog.assertTargetBuiltLocally(captureBuildTarget.toString());
     buildLog.assertTargetBuiltLocally(inferAnalysisTarget.toString());
@@ -521,6 +527,8 @@ public class CxxBinaryIntegrationTest {
                 topCaptureBuildTarget, // cached
                 depTwoInferAnalysisTarget, // cached
                 depOneAggregatedDepsTarget,
+                depOneHeaderSymlinkTreeTarget,
+                depOneExportedHeaderSymlinkTreeTarget,
                 depOneCaptureBuildTarget, // capture of the changed file runs again
                 depOneInferAnalysisTarget // analysis of the library runs again
                 );
@@ -1325,7 +1333,7 @@ public class CxxBinaryIntegrationTest {
     String executable = Platform.detect() == Platform.MACOS ? "clang++" : "g++";
     Path executableLocation =
         new ExecutableFinder()
-            .getOptionalExecutable(Paths.get(executable), ImmutableMap.copyOf(System.getenv()))
+            .getOptionalExecutable(Paths.get(executable), EnvVariablesProvider.getSystemEnv())
             .orElse(Paths.get("/usr/bin", executable));
 
     // Write script as faux clang++/g++ binary
@@ -1509,7 +1517,7 @@ public class CxxBinaryIntegrationTest {
     buildLog = workspace.getBuildLog();
     assertEquals(
         ImmutableSet.<BuildTarget>builder()
-            .add(aggregatedDepsTarget, compileTarget, binaryTarget, target)
+            .add(aggregatedDepsTarget, compileTarget, binaryTarget, headerSymlinkTreeTarget, target)
             .build(),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget.toString());
@@ -1530,7 +1538,7 @@ public class CxxBinaryIntegrationTest {
     buildLog = workspace.getBuildLog();
     assertEquals(
         ImmutableSet.<BuildTarget>builder()
-            .add(aggregatedDepsTarget, compileTarget, binaryTarget, target)
+            .add(aggregatedDepsTarget, compileTarget, binaryTarget, headerSymlinkTreeTarget, target)
             .build(),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget.toString());
@@ -1751,6 +1759,8 @@ public class CxxBinaryIntegrationTest {
         depCompileTarget,
         depArchiveTarget,
         depTarget,
+        depHeaderExportedSymlinkTreeTarget,
+        depHeaderSymlinkTreeTarget,
         compileTarget,
         binaryTarget,
         target);
@@ -1872,7 +1882,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void ndkCxxPlatforms() throws InterruptedException, IOException {
+  public void ndkCxxPlatforms() throws IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
@@ -2363,6 +2373,22 @@ public class CxxBinaryIntegrationTest {
     workspace
         .runBuckCommand("query", "-c", "cxx.declared_platforms=my-favorite-platform", "//:simple")
         .assertSuccess();
+  }
+
+  @Test
+  public void testDeclaredPlatformsWithDefaultPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "declared_platforms", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckCommand("query", "-c", "cxx.declared_platforms=my-favorite-platform", "//:defaults")
+        .assertSuccess();
+
+    // Currently failing
+    workspace
+        .runBuckCommand(
+            "query", "-c", "cxx.declared_platforms=my-favorite-platform", "//:default_platform")
+        .assertFailure();
   }
 
   @Test

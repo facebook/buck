@@ -123,7 +123,7 @@ public class RemoteBuildRuleSynchronizer
 
   private void triggerCacheChecksForBackedOffBuildRulesWithSyncedCache() {
     synchronized (this) {
-      if (backedOffBuildRulesWaitingForCacheSync.size() == 0) {
+      if (backedOffBuildRulesWaitingForCacheSync.isEmpty()) {
         return;
       }
     }

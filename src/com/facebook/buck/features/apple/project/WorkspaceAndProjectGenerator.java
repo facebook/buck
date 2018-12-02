@@ -111,6 +111,7 @@ public class WorkspaceAndProjectGenerator {
   private final CxxBuckConfig cxxBuckConfig;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle;
 
   public WorkspaceAndProjectGenerator(
       XCodeDescriptions xcodeDescriptions,
@@ -131,7 +132,8 @@ public class WorkspaceAndProjectGenerator {
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
       AppleConfig appleConfig,
-      SwiftBuckConfig swiftBuckConfig) {
+      SwiftBuckConfig swiftBuckConfig,
+      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle) {
     this.xcodeDescriptions = xcodeDescriptions;
     this.rootCell = cell;
     this.projectGraph = projectGraph;
@@ -153,6 +155,7 @@ public class WorkspaceAndProjectGenerator {
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.appleConfig = appleConfig;
+    this.sharedLibraryToBundle = sharedLibraryToBundle;
 
     this.focusModules =
         focusModules.map(
@@ -486,7 +489,8 @@ public class WorkspaceAndProjectGenerator {
                 halideBuckConfig,
                 cxxBuckConfig,
                 appleConfig,
-                swiftBuckConfig);
+                swiftBuckConfig,
+                sharedLibraryToBundle);
         projectGenerators.put(projectDirectory, generator);
         shouldGenerateProjects = true;
       }
@@ -544,7 +548,8 @@ public class WorkspaceAndProjectGenerator {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            sharedLibraryToBundle);
     combinedProjectGenerator = Optional.of(generator);
     generator.createXcodeProjects();
 
@@ -955,7 +960,8 @@ public class WorkspaceAndProjectGenerator {
               targetToProjectPathMap,
               schemeConfigArg.getEnvironmentVariables(),
               schemeConfigArg.getAdditionalSchemeActions(),
-              schemeConfigArg.getLaunchStyle().orElse(XCScheme.LaunchAction.LaunchStyle.AUTO));
+              schemeConfigArg.getLaunchStyle().orElse(XCScheme.LaunchAction.LaunchStyle.AUTO),
+              schemeConfigArg.getWatchInterface());
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }

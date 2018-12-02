@@ -35,6 +35,7 @@ import com.facebook.buck.distributed.thrift.RemoteCommand;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -47,6 +48,7 @@ import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -117,6 +119,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
   public abstract HealthCheckStatsTracker getHealthCheckStatsTracker();
 
   public abstract RemoteCommand getRemoteCommand();
+
+  public abstract Optional<TraceInfoProvider> getTraceInfoProvider();
 
   public int getBuildThreadCount() {
     return getState()

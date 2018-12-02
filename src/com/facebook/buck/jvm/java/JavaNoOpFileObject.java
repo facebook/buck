@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.util.zip.JarBuilder;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -62,7 +61,7 @@ public class JavaNoOpFileObject extends JarFileObject {
   }
 
   @Override
-  public Writer openWriter() throws IOException {
+  public Writer openWriter() {
     return new OutputStreamWriter(openOutputStream());
   }
 

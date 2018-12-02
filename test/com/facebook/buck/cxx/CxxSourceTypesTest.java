@@ -36,6 +36,7 @@ public class CxxSourceTypesTest {
     assertTrue(CxxSourceTypes.isPreprocessableType(CxxSource.Type.OBJC));
     assertTrue(CxxSourceTypes.isPreprocessableType(CxxSource.Type.CUDA));
     assertTrue(CxxSourceTypes.isPreprocessableType(CxxSource.Type.ASM_WITH_CPP));
+    assertTrue(CxxSourceTypes.isPreprocessableType(CxxSource.Type.PCM));
   }
 
   @Test
@@ -46,7 +47,6 @@ public class CxxSourceTypesTest {
     assertFalse(CxxSourceTypes.isPreprocessableType(CxxSource.Type.OBJC_CPP_OUTPUT));
     assertFalse(CxxSourceTypes.isPreprocessableType(CxxSource.Type.CUDA_CPP_OUTPUT));
     assertFalse(CxxSourceTypes.isPreprocessableType(CxxSource.Type.ASM));
-    assertFalse(CxxSourceTypes.isPreprocessableType(CxxSource.Type.PCM));
   }
 
   @Test
@@ -81,6 +81,9 @@ public class CxxSourceTypesTest {
         Matchers.is(cxxPlatform.getCpp()));
     assertThat(
         CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.CXX),
+        Matchers.is(cxxPlatform.getCxxpp()));
+    assertThat(
+        CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.PCM),
         Matchers.is(cxxPlatform.getCxxpp()));
     assertThat(
         CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.OBJC),

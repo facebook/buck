@@ -428,8 +428,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     protected abstract Arg expand(
-        ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
-        throws MacroException;
+        ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules, Optional<Pattern> filter);
 
     @Override
     public Arg expandFrom(

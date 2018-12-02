@@ -165,7 +165,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
       Thread.currentThread().interrupt();
       throw new RuntimeException(ex);
     } catch (ExecutionException ex) {
-      LOG.verbose(ex, "some pings failed");
+      LOG.warn(ex, "Some pings failed");
     }
   }
 

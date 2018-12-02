@@ -177,7 +177,7 @@ public class PreDexedFilesSorter {
 
       // If this is the first class in the dex, initialize it with a canary and add it to the set of
       // dexes.
-      if (currentDexContents.size() == 0) {
+      if (currentDexContents.isEmpty()) {
         DexWithClasses canary =
             createCanary(
                 filesystem, apkModule.getCanaryClassName(), dexesContents.size() + 1, steps);

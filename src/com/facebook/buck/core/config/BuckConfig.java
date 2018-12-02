@@ -45,6 +45,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -104,7 +105,12 @@ public class BuckConfig {
     ignoreFieldsForDaemonRestartBuilder.put("project", ImmutableSet.of("ide_prompt"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "ui",
-        ImmutableSet.of("superconsole", "thread_line_limit", "thread_line_output_max_columns"));
+        ImmutableSet.of(
+            "superconsole",
+            "thread_line_limit",
+            "thread_line_output_max_columns",
+            "warn_on_config_file_overrides",
+            "warn_on_config_file_overrides_ignored_files"));
     ignoreFieldsForDaemonRestartBuilder.put("color", ImmutableSet.of("ui"));
     IGNORE_FIELDS_FOR_DAEMON_RESTART = ignoreFieldsForDaemonRestartBuilder.build();
   }
@@ -203,7 +209,7 @@ public class BuckConfig {
 
   public ImmutableList<BuildTarget> getBuildTargetList(String section, String key) {
     ImmutableList<String> targetsToForce = getListWithoutComments(section, key);
-    if (targetsToForce.size() == 0) {
+    if (targetsToForce.isEmpty()) {
       return ImmutableList.of();
     }
     // TODO(cjhopman): Should this be moved to AliasConfig? It depends on that. Should AliasConfig
@@ -571,10 +577,20 @@ public class BuckConfig {
   }
 
   /**
-   * @return the number of threads Buck should use for testing. This will use the build
-   *     parallelization settings if not configured.
+   * @return the number of threads Buck should use for testing. This will use the test.threads
+   *     setting if it exists. Otherwise, this will use the build parallelization settings if not
+   *     configured.
    */
   public int getNumTestThreads() {
+    OptionalInt numTestThreads = config.getInteger("test", "threads");
+    if (numTestThreads.isPresent()) {
+      int num = numTestThreads.getAsInt();
+      if (num <= 0) {
+        throw new HumanReadableException(
+            "test.threads must be greater than zero (was " + num + ")");
+      }
+      return num;
+    }
     double ratio = config.getFloat(TEST_SECTION_HEADER, "thread_utilization_ratio").orElse(1.0F);
     if (ratio <= 0.0F) {
       throw new HumanReadableException(
@@ -884,5 +900,17 @@ public class BuckConfig {
 
   public ProjectFilesystem getFilesystem() {
     return projectFilesystem;
+  }
+
+  public boolean getWarnOnConfigFileOverrides() {
+    return config.getBooleanValue("ui", "warn_on_config_file_overrides", true);
+  }
+
+  public ImmutableSet<Path> getWarnOnConfigFileOverridesIgnoredFiles() {
+    return config
+        .getListWithoutComments("ui", "warn_on_config_file_overrides_ignored_files", ',')
+        .stream()
+        .map(Paths::get)
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

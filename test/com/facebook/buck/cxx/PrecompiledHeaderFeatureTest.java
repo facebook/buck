@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
@@ -294,6 +295,30 @@ public class PrecompiledHeaderFeatureTest {
           "Build target flavor generator should account for preprocessor flags",
           firstRule.getBuildTarget(),
           secondRule.getBuildTarget());
+    }
+
+    @Test
+    public void noPrecompiledHeaderForAsmInputs() {
+      ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+      CxxSourceRuleFactory factory =
+          preconfiguredSourceRuleFactoryBuilder(graphBuilder)
+              .setCxxPlatform(PLATFORM_SUPPORTING_PCH)
+              .setCxxBuckConfig(buildConfig(/* pchEnabled */ true))
+              .setPrefixHeader(FakeSourcePath.of(("foo.h")))
+              .build();
+      BuildRule rule =
+          factory.requireCompileBuildRule(
+              "foo.S",
+              CxxSource.builder()
+                  .setType(CxxSource.Type.ASSEMBLER)
+                  .setPath(FakeSourcePath.of("foo.S"))
+                  .build());
+      CxxPrecompiledHeader headerRule =
+          FluentIterable.from(rule.getBuildDeps())
+              .filter(CxxPrecompiledHeader.class)
+              .first()
+              .orNull();
+      assertNull("Asm files shouldn't support precompiled headers", headerRule);
     }
   }
 

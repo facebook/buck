@@ -103,6 +103,11 @@ public class JsBundleGenruleDescription
         output =
             ((JsBundleOutputs) graphBuilder.requireRule(buildTarget.withoutFlavors(JsFlavors.MISC)))
                 .getSourcePathToMisc();
+      } else if (args.getRewriteDepsFile() && flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
+        output =
+            ((JsDependenciesOutputs)
+                    graphBuilder.requireRule(buildTarget.withoutFlavors(JsFlavors.DEPENDENCY_FILE)))
+                .getSourcePathToDepsFile();
       } else {
         output =
             Preconditions.checkNotNull(
@@ -132,6 +137,8 @@ public class JsBundleGenruleDescription
 
     Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
     JsBundleOutputs bundleOutputs = (JsBundleOutputs) jsBundle;
+    JsDependenciesOutputs jsDepsFileRule = bundleOutputs.getJsDependenciesOutputs(graphBuilder);
+
     return new JsBundleGenrule(
         buildTarget,
         projectFilesystem,
@@ -142,6 +149,7 @@ public class JsBundleGenruleDescription
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(originalExtraDeps.get())
                         .add(jsBundle)
+                        .add(jsDepsFileRule)
                         .build())),
         sandboxExecutionStrategy,
         args,
@@ -155,6 +163,7 @@ public class JsBundleGenruleDescription
         toolchainProvider.getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
         bundleOutputs,
+        jsDepsFileRule,
         args.computeBundleName(buildTarget.getFlavors(), bundleOutputs::getBundleName));
   }
 
@@ -205,6 +214,11 @@ public class JsBundleGenruleDescription
 
     @Value.Default
     default boolean getSkipResources() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean getRewriteDepsFile() {
       return false;
     }
 

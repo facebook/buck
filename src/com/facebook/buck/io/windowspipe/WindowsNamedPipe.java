@@ -75,7 +75,7 @@ public class WindowsNamedPipe implements Transport {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     api.CloseHandle(pipeHandle);
     api.CloseHandle(readerWaitable);
     api.CloseHandle(writerWaitable);

@@ -31,17 +31,29 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
       new ConsoleViewContentType(
           "BUCK_GRAY_OUTPUT", TextAttributesKey.createTextAttributesKey("CONSOLE_DARKGRAY_OUTPUT"));
 
+  /** @deprecated Use {@link BuckBuildCommandHandler(Project, BuckCommand)} */
+  @Deprecated
   public BuckBuildCommandHandler(
       final Project project, final VirtualFile root, final BuckCommand command) {
     super(project, VfsUtil.virtualToIoFile(root), command, true);
   }
 
+  /** @deprecated Use {@link BuckBuildCommandHandler(Project, BuckCommand, boolean)} */
+  @Deprecated
   public BuckBuildCommandHandler(
       final Project project,
       final VirtualFile root,
       final BuckCommand command,
       final boolean doStartNotify) {
     super(project, VfsUtil.virtualToIoFile(root), command, doStartNotify);
+  }
+
+  public BuckBuildCommandHandler(Project project, BuckCommand command) {
+    super(project, command, true);
+  }
+
+  public BuckBuildCommandHandler(Project project, BuckCommand command, boolean doStartNotify) {
+    super(project, command, doStartNotify);
   }
 
   @Override

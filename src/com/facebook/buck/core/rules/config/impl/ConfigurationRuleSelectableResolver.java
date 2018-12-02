@@ -16,13 +16,13 @@
 
 package com.facebook.buck.core.rules.config.impl;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.select.ProvidesSelectable;
 import com.facebook.buck.core.select.Selectable;
 import com.facebook.buck.core.select.SelectableResolver;
-import com.google.common.base.Preconditions;
 
 /**
  * Resolves {@link Selectable} by querying {@link ConfigurationRule}.
@@ -41,7 +41,10 @@ public class ConfigurationRuleSelectableResolver implements SelectableResolver {
   @Override
   public Selectable getSelectable(BuildTarget buildTarget) {
     ConfigurationRule configurationRule = configurationRuleResolver.getRule(buildTarget);
-    Preconditions.checkArgument(configurationRule instanceof ProvidesSelectable);
+    if (!(configurationRule instanceof ProvidesSelectable)) {
+      throw new HumanReadableException(
+          "%s is used to resolve configurable attributes but it has the wrong type", buildTarget);
+    }
     return ((ProvidesSelectable) configurationRule).getSelectable();
   }
 }

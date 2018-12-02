@@ -25,7 +25,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="modules_dep1" scope="COMPILE" />
     <orderEntry type="library" name="library_modules_dep2_extra_classpath" scope="COMPILE" level="project" />
+    <orderEntry type="module" module-name="modules_dep1" scope="COMPILE" />
   </component>
 </module>

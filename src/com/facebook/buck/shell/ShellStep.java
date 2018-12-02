@@ -87,7 +87,7 @@ public abstract class ShellStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws InterruptedException, IOException {
     ImmutableList<String> command = getShellCommand(context);
-    if (command.size() == 0) {
+    if (command.isEmpty()) {
       return StepExecutionResult.of(0);
     }
 

@@ -67,8 +67,7 @@ public class DownloadStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     BuckEventBus eventBus = context.getBuckEventBus();
     Path resolved = filesystem.resolve(output);
 

@@ -38,36 +38,36 @@ public class CacheStatsTrackerTest {
     CacheStatsTracker.CacheRequest request = tracker.startRequest();
     clock.setCurrentTimeMillis(2);
     request.recordHit();
-    assertEquals((Long) 1L, tracker.getTotalHitCount());
-    assertEquals((Long) 0L, tracker.getTotalMissCount());
-    assertEquals((Long) 0L, tracker.getTotalMissMatchCount());
-    assertEquals((Long) 0L, tracker.getTotalEvictionCount());
-    assertEquals((Long) 0L, tracker.getTotalInvalidationCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadSuccessCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadExceptionCount());
-    assertEquals((Long) 2L, tracker.getTotalRetrievalTime());
-    assertEquals((Long) 0L, tracker.getTotalLoadTime());
-    assertEquals((Long) 0L, tracker.getTotalMissTime());
-    assertEquals((Long) 2L, tracker.getAverageRetrievalTime());
-    assertEquals((Long) 0L, tracker.getAverageLoadTime());
-    assertEquals((Long) 0L, tracker.getAverageMissTime());
+    assertEquals(1L, tracker.getTotalHitCount());
+    assertEquals(0L, tracker.getTotalMissCount());
+    assertEquals(0L, tracker.getTotalMissMatchCount());
+    assertEquals(0L, tracker.getTotalEvictionCount());
+    assertEquals(0L, tracker.getTotalInvalidationCount());
+    assertEquals(0L, tracker.getTotalLoadSuccessCount());
+    assertEquals(0L, tracker.getTotalLoadExceptionCount());
+    assertEquals(2L, tracker.getTotalRetrievalTime());
+    assertEquals(0L, tracker.getTotalLoadTime());
+    assertEquals(0L, tracker.getTotalMissTime());
+    assertEquals(2L, tracker.getAverageRetrievalTime());
+    assertEquals(0L, tracker.getAverageLoadTime());
+    assertEquals(0L, tracker.getAverageMissTime());
 
     request = tracker.startRequest();
     clock.setCurrentTimeMillis(5);
     request.recordHit();
-    assertEquals((Long) 2L, tracker.getTotalHitCount());
-    assertEquals((Long) 0L, tracker.getTotalMissCount());
-    assertEquals((Long) 0L, tracker.getTotalMissMatchCount());
-    assertEquals((Long) 0L, tracker.getTotalEvictionCount());
-    assertEquals((Long) 0L, tracker.getTotalInvalidationCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadSuccessCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadExceptionCount());
-    assertEquals((Long) 5L, tracker.getTotalRetrievalTime());
-    assertEquals((Long) 0L, tracker.getTotalLoadTime());
-    assertEquals((Long) 0L, tracker.getTotalMissTime());
-    assertEquals((Long) (5L / 2L), tracker.getAverageRetrievalTime());
-    assertEquals((Long) 0L, tracker.getAverageLoadTime());
-    assertEquals((Long) 0L, tracker.getAverageMissTime());
+    assertEquals(2L, tracker.getTotalHitCount());
+    assertEquals(0L, tracker.getTotalMissCount());
+    assertEquals(0L, tracker.getTotalMissMatchCount());
+    assertEquals(0L, tracker.getTotalEvictionCount());
+    assertEquals(0L, tracker.getTotalInvalidationCount());
+    assertEquals(0L, tracker.getTotalLoadSuccessCount());
+    assertEquals(0L, tracker.getTotalLoadExceptionCount());
+    assertEquals(5L, tracker.getTotalRetrievalTime());
+    assertEquals(0L, tracker.getTotalLoadTime());
+    assertEquals(0L, tracker.getTotalMissTime());
+    assertEquals((5L / 2L), tracker.getAverageRetrievalTime());
+    assertEquals(0L, tracker.getAverageLoadTime());
+    assertEquals(0L, tracker.getAverageMissTime());
   }
 
   @Test
@@ -75,36 +75,36 @@ public class CacheStatsTrackerTest {
     CacheStatsTracker.CacheRequest request = tracker.startRequest();
     clock.setCurrentTimeMillis(5);
     request.recordMiss();
-    assertEquals((Long) 0L, tracker.getTotalHitCount());
-    assertEquals((Long) 1L, tracker.getTotalMissCount());
-    assertEquals((Long) 0L, tracker.getTotalMissMatchCount());
-    assertEquals((Long) 0L, tracker.getTotalEvictionCount());
-    assertEquals((Long) 0L, tracker.getTotalInvalidationCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadSuccessCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadExceptionCount());
-    assertEquals((Long) 0L, tracker.getTotalRetrievalTime());
-    assertEquals((Long) 0L, tracker.getTotalLoadTime());
-    assertEquals((Long) 5L, tracker.getTotalMissTime());
-    assertEquals((Long) 0L, tracker.getAverageRetrievalTime());
-    assertEquals((Long) 0L, tracker.getAverageLoadTime());
-    assertEquals((Long) 5L, tracker.getAverageMissTime());
+    assertEquals(0L, tracker.getTotalHitCount());
+    assertEquals(1L, tracker.getTotalMissCount());
+    assertEquals(0L, tracker.getTotalMissMatchCount());
+    assertEquals(0L, tracker.getTotalEvictionCount());
+    assertEquals(0L, tracker.getTotalInvalidationCount());
+    assertEquals(0L, tracker.getTotalLoadSuccessCount());
+    assertEquals(0L, tracker.getTotalLoadExceptionCount());
+    assertEquals(0L, tracker.getTotalRetrievalTime());
+    assertEquals(0L, tracker.getTotalLoadTime());
+    assertEquals(5L, tracker.getTotalMissTime());
+    assertEquals(0L, tracker.getAverageRetrievalTime());
+    assertEquals(0L, tracker.getAverageLoadTime());
+    assertEquals(5L, tracker.getAverageMissTime());
 
     request = tracker.startRequest();
     clock.setCurrentTimeMillis(6);
     request.recordMiss();
-    assertEquals((Long) 0L, tracker.getTotalHitCount());
-    assertEquals((Long) 2L, tracker.getTotalMissCount());
-    assertEquals((Long) 0L, tracker.getTotalMissMatchCount());
-    assertEquals((Long) 0L, tracker.getTotalEvictionCount());
-    assertEquals((Long) 0L, tracker.getTotalInvalidationCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadSuccessCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadExceptionCount());
-    assertEquals((Long) 0L, tracker.getTotalRetrievalTime());
-    assertEquals((Long) 0L, tracker.getTotalLoadTime());
-    assertEquals((Long) 6L, tracker.getTotalMissTime());
-    assertEquals((Long) 0L, tracker.getAverageRetrievalTime());
-    assertEquals((Long) 0L, tracker.getAverageLoadTime());
-    assertEquals((Long) (6L / 2L), tracker.getAverageMissTime());
+    assertEquals(0L, tracker.getTotalHitCount());
+    assertEquals(2L, tracker.getTotalMissCount());
+    assertEquals(0L, tracker.getTotalMissMatchCount());
+    assertEquals(0L, tracker.getTotalEvictionCount());
+    assertEquals(0L, tracker.getTotalInvalidationCount());
+    assertEquals(0L, tracker.getTotalLoadSuccessCount());
+    assertEquals(0L, tracker.getTotalLoadExceptionCount());
+    assertEquals(0L, tracker.getTotalRetrievalTime());
+    assertEquals(0L, tracker.getTotalLoadTime());
+    assertEquals(6L, tracker.getTotalMissTime());
+    assertEquals(0L, tracker.getAverageRetrievalTime());
+    assertEquals(0L, tracker.getAverageLoadTime());
+    assertEquals((6L / 2L), tracker.getAverageMissTime());
   }
 
   @Test
@@ -113,36 +113,36 @@ public class CacheStatsTrackerTest {
     CacheStatsTracker.CacheRequest request = tracker.startRequest();
     clock.setCurrentTimeMillis(5);
     request.recordMissMatch();
-    assertEquals((Long) 0L, tracker.getTotalHitCount());
-    assertEquals((Long) 0L, tracker.getTotalMissCount());
-    assertEquals((Long) 1L, tracker.getTotalMissMatchCount());
-    assertEquals((Long) 0L, tracker.getTotalEvictionCount());
-    assertEquals((Long) 0L, tracker.getTotalInvalidationCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadSuccessCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadExceptionCount());
-    assertEquals((Long) 0L, tracker.getTotalRetrievalTime());
-    assertEquals((Long) 0L, tracker.getTotalLoadTime());
-    assertEquals((Long) 3L, tracker.getTotalMissTime());
-    assertEquals((Long) 0L, tracker.getAverageRetrievalTime());
-    assertEquals((Long) 0L, tracker.getAverageLoadTime());
-    assertEquals((Long) 3L, tracker.getAverageMissTime());
+    assertEquals(0L, tracker.getTotalHitCount());
+    assertEquals(0L, tracker.getTotalMissCount());
+    assertEquals(1L, tracker.getTotalMissMatchCount());
+    assertEquals(0L, tracker.getTotalEvictionCount());
+    assertEquals(0L, tracker.getTotalInvalidationCount());
+    assertEquals(0L, tracker.getTotalLoadSuccessCount());
+    assertEquals(0L, tracker.getTotalLoadExceptionCount());
+    assertEquals(0L, tracker.getTotalRetrievalTime());
+    assertEquals(0L, tracker.getTotalLoadTime());
+    assertEquals(3L, tracker.getTotalMissTime());
+    assertEquals(0L, tracker.getAverageRetrievalTime());
+    assertEquals(0L, tracker.getAverageLoadTime());
+    assertEquals(3L, tracker.getAverageMissTime());
 
     request = tracker.startRequest();
     clock.setCurrentTimeMillis(6);
     request.recordMissMatch();
-    assertEquals((Long) 0L, tracker.getTotalHitCount());
-    assertEquals((Long) 0L, tracker.getTotalMissCount());
-    assertEquals((Long) 2L, tracker.getTotalMissMatchCount());
-    assertEquals((Long) 0L, tracker.getTotalEvictionCount());
-    assertEquals((Long) 0L, tracker.getTotalInvalidationCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadSuccessCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadExceptionCount());
-    assertEquals((Long) 0L, tracker.getTotalRetrievalTime());
-    assertEquals((Long) 0L, tracker.getTotalLoadTime());
-    assertEquals((Long) 4L, tracker.getTotalMissTime());
-    assertEquals((Long) 0L, tracker.getAverageRetrievalTime());
-    assertEquals((Long) 0L, tracker.getAverageLoadTime());
-    assertEquals((Long) (4L / 2L), tracker.getAverageMissTime());
+    assertEquals(0L, tracker.getTotalHitCount());
+    assertEquals(0L, tracker.getTotalMissCount());
+    assertEquals(2L, tracker.getTotalMissMatchCount());
+    assertEquals(0L, tracker.getTotalEvictionCount());
+    assertEquals(0L, tracker.getTotalInvalidationCount());
+    assertEquals(0L, tracker.getTotalLoadSuccessCount());
+    assertEquals(0L, tracker.getTotalLoadExceptionCount());
+    assertEquals(0L, tracker.getTotalRetrievalTime());
+    assertEquals(0L, tracker.getTotalLoadTime());
+    assertEquals(4L, tracker.getTotalMissTime());
+    assertEquals(0L, tracker.getAverageRetrievalTime());
+    assertEquals(0L, tracker.getAverageLoadTime());
+    assertEquals((4L / 2L), tracker.getAverageMissTime());
   }
 
   @Test
@@ -153,38 +153,38 @@ public class CacheStatsTrackerTest {
     request.recordMiss();
     clock.setCurrentTimeMillis(6);
     request.recordLoadSuccess();
-    assertEquals((Long) 0L, tracker.getTotalHitCount());
-    assertEquals((Long) 1L, tracker.getTotalMissCount());
-    assertEquals((Long) 0L, tracker.getTotalMissMatchCount());
-    assertEquals((Long) 0L, tracker.getTotalEvictionCount());
-    assertEquals((Long) 0L, tracker.getTotalInvalidationCount());
-    assertEquals((Long) 1L, tracker.getTotalLoadSuccessCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadExceptionCount());
-    assertEquals((Long) 0L, tracker.getTotalRetrievalTime());
-    assertEquals((Long) 1L, tracker.getTotalLoadTime());
-    assertEquals((Long) 4L, tracker.getTotalMissTime());
-    assertEquals((Long) 0L, tracker.getAverageRetrievalTime());
-    assertEquals((Long) 1L, tracker.getAverageLoadTime());
-    assertEquals((Long) 4L, tracker.getAverageMissTime());
+    assertEquals(0L, tracker.getTotalHitCount());
+    assertEquals(1L, tracker.getTotalMissCount());
+    assertEquals(0L, tracker.getTotalMissMatchCount());
+    assertEquals(0L, tracker.getTotalEvictionCount());
+    assertEquals(0L, tracker.getTotalInvalidationCount());
+    assertEquals(1L, tracker.getTotalLoadSuccessCount());
+    assertEquals(0L, tracker.getTotalLoadExceptionCount());
+    assertEquals(0L, tracker.getTotalRetrievalTime());
+    assertEquals(1L, tracker.getTotalLoadTime());
+    assertEquals(4L, tracker.getTotalMissTime());
+    assertEquals(0L, tracker.getAverageRetrievalTime());
+    assertEquals(1L, tracker.getAverageLoadTime());
+    assertEquals(4L, tracker.getAverageMissTime());
 
     request = tracker.startRequest();
     clock.setCurrentTimeMillis(7);
     request.recordMissMatch();
     clock.setCurrentTimeMillis(9);
     request.recordLoadSuccess();
-    assertEquals((Long) 0L, tracker.getTotalHitCount());
-    assertEquals((Long) 1L, tracker.getTotalMissCount());
-    assertEquals((Long) 1L, tracker.getTotalMissMatchCount());
-    assertEquals((Long) 0L, tracker.getTotalEvictionCount());
-    assertEquals((Long) 0L, tracker.getTotalInvalidationCount());
-    assertEquals((Long) 2L, tracker.getTotalLoadSuccessCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadExceptionCount());
-    assertEquals((Long) 0L, tracker.getTotalRetrievalTime());
-    assertEquals((Long) 3L, tracker.getTotalLoadTime());
-    assertEquals((Long) 7L, tracker.getTotalMissTime());
-    assertEquals((Long) 0L, tracker.getAverageRetrievalTime());
-    assertEquals((Long) (3L / 2L), tracker.getAverageLoadTime());
-    assertEquals((Long) (7L / 2L), tracker.getAverageMissTime());
+    assertEquals(0L, tracker.getTotalHitCount());
+    assertEquals(1L, tracker.getTotalMissCount());
+    assertEquals(1L, tracker.getTotalMissMatchCount());
+    assertEquals(0L, tracker.getTotalEvictionCount());
+    assertEquals(0L, tracker.getTotalInvalidationCount());
+    assertEquals(2L, tracker.getTotalLoadSuccessCount());
+    assertEquals(0L, tracker.getTotalLoadExceptionCount());
+    assertEquals(0L, tracker.getTotalRetrievalTime());
+    assertEquals(3L, tracker.getTotalLoadTime());
+    assertEquals(7L, tracker.getTotalMissTime());
+    assertEquals(0L, tracker.getAverageRetrievalTime());
+    assertEquals((3L / 2L), tracker.getAverageLoadTime());
+    assertEquals((7L / 2L), tracker.getAverageMissTime());
   }
 
   @Test
@@ -195,38 +195,38 @@ public class CacheStatsTrackerTest {
     request.recordMiss();
     clock.setCurrentTimeMillis(6);
     request.recordLoadFail();
-    assertEquals((Long) 0L, tracker.getTotalHitCount());
-    assertEquals((Long) 1L, tracker.getTotalMissCount());
-    assertEquals((Long) 0L, tracker.getTotalMissMatchCount());
-    assertEquals((Long) 0L, tracker.getTotalEvictionCount());
-    assertEquals((Long) 0L, tracker.getTotalInvalidationCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadSuccessCount());
-    assertEquals((Long) 1L, tracker.getTotalLoadExceptionCount());
-    assertEquals((Long) 0L, tracker.getTotalRetrievalTime());
-    assertEquals((Long) 0L, tracker.getTotalLoadTime());
-    assertEquals((Long) 4L, tracker.getTotalMissTime());
-    assertEquals((Long) 0L, tracker.getAverageRetrievalTime());
-    assertEquals((Long) 0L, tracker.getAverageLoadTime());
-    assertEquals((Long) 4L, tracker.getAverageMissTime());
+    assertEquals(0L, tracker.getTotalHitCount());
+    assertEquals(1L, tracker.getTotalMissCount());
+    assertEquals(0L, tracker.getTotalMissMatchCount());
+    assertEquals(0L, tracker.getTotalEvictionCount());
+    assertEquals(0L, tracker.getTotalInvalidationCount());
+    assertEquals(0L, tracker.getTotalLoadSuccessCount());
+    assertEquals(1L, tracker.getTotalLoadExceptionCount());
+    assertEquals(0L, tracker.getTotalRetrievalTime());
+    assertEquals(0L, tracker.getTotalLoadTime());
+    assertEquals(4L, tracker.getTotalMissTime());
+    assertEquals(0L, tracker.getAverageRetrievalTime());
+    assertEquals(0L, tracker.getAverageLoadTime());
+    assertEquals(4L, tracker.getAverageMissTime());
 
     request = tracker.startRequest();
     clock.setCurrentTimeMillis(7);
     request.recordMissMatch();
     clock.setCurrentTimeMillis(9);
     request.recordLoadFail();
-    assertEquals((Long) 0L, tracker.getTotalHitCount());
-    assertEquals((Long) 1L, tracker.getTotalMissCount());
-    assertEquals((Long) 1L, tracker.getTotalMissMatchCount());
-    assertEquals((Long) 0L, tracker.getTotalEvictionCount());
-    assertEquals((Long) 0L, tracker.getTotalInvalidationCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadSuccessCount());
-    assertEquals((Long) 2L, tracker.getTotalLoadExceptionCount());
-    assertEquals((Long) 0L, tracker.getTotalRetrievalTime());
-    assertEquals((Long) 0L, tracker.getTotalLoadTime());
-    assertEquals((Long) 7L, tracker.getTotalMissTime());
-    assertEquals((Long) 0L, tracker.getAverageRetrievalTime());
-    assertEquals((Long) 0L, tracker.getAverageLoadTime());
-    assertEquals((Long) (7L / 2L), tracker.getAverageMissTime());
+    assertEquals(0L, tracker.getTotalHitCount());
+    assertEquals(1L, tracker.getTotalMissCount());
+    assertEquals(1L, tracker.getTotalMissMatchCount());
+    assertEquals(0L, tracker.getTotalEvictionCount());
+    assertEquals(0L, tracker.getTotalInvalidationCount());
+    assertEquals(0L, tracker.getTotalLoadSuccessCount());
+    assertEquals(2L, tracker.getTotalLoadExceptionCount());
+    assertEquals(0L, tracker.getTotalRetrievalTime());
+    assertEquals(0L, tracker.getTotalLoadTime());
+    assertEquals(7L, tracker.getTotalMissTime());
+    assertEquals(0L, tracker.getAverageRetrievalTime());
+    assertEquals(0L, tracker.getAverageLoadTime());
+    assertEquals((7L / 2L), tracker.getAverageMissTime());
   }
 
   @Test
@@ -238,32 +238,32 @@ public class CacheStatsTrackerTest {
     // the old request should have no effect on new tracker
     request.recordMiss();
 
-    assertEquals((Long) 0L, tracker.getTotalHitCount());
-    assertEquals((Long) 0L, tracker.getTotalMissCount());
-    assertEquals((Long) 0L, tracker.getTotalMissMatchCount());
-    assertEquals((Long) 0L, tracker.getTotalEvictionCount());
-    assertEquals((Long) 0L, tracker.getTotalInvalidationCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadSuccessCount());
-    assertEquals((Long) 0L, tracker.getTotalLoadExceptionCount());
-    assertEquals((Long) 0L, tracker.getTotalRetrievalTime());
-    assertEquals((Long) 0L, tracker.getTotalLoadTime());
-    assertEquals((Long) 0L, tracker.getTotalMissTime());
-    assertEquals((Long) 0L, tracker.getAverageRetrievalTime());
-    assertEquals((Long) 0L, tracker.getAverageLoadTime());
-    assertEquals((Long) 0L, tracker.getAverageMissTime());
+    assertEquals(0L, tracker.getTotalHitCount());
+    assertEquals(0L, tracker.getTotalMissCount());
+    assertEquals(0L, tracker.getTotalMissMatchCount());
+    assertEquals(0L, tracker.getTotalEvictionCount());
+    assertEquals(0L, tracker.getTotalInvalidationCount());
+    assertEquals(0L, tracker.getTotalLoadSuccessCount());
+    assertEquals(0L, tracker.getTotalLoadExceptionCount());
+    assertEquals(0L, tracker.getTotalRetrievalTime());
+    assertEquals(0L, tracker.getTotalLoadTime());
+    assertEquals(0L, tracker.getTotalMissTime());
+    assertEquals(0L, tracker.getAverageRetrievalTime());
+    assertEquals(0L, tracker.getAverageLoadTime());
+    assertEquals(0L, tracker.getAverageMissTime());
   }
 
   @Test
   public void testEvictionAndInvalidation() {
     tracker.recordInvalidation();
-    assertEquals((Long) 1L, tracker.getTotalInvalidationCount());
+    assertEquals(1L, tracker.getTotalInvalidationCount());
     tracker.recordInvalidation(4);
-    assertEquals((Long) 5L, tracker.getTotalInvalidationCount());
+    assertEquals(5L, tracker.getTotalInvalidationCount());
 
     tracker.recordEviction(7);
-    assertEquals((Long) 7L, tracker.getTotalEvictionCount());
+    assertEquals(7L, tracker.getTotalEvictionCount());
     tracker.recordEviction();
-    assertEquals((Long) 8L, tracker.getTotalEvictionCount());
+    assertEquals(8L, tracker.getTotalEvictionCount());
   }
 
   @Test(expected = IllegalStateException.class)

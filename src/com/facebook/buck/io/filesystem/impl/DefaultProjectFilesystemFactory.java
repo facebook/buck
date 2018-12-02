@@ -19,8 +19,10 @@ package com.facebook.buck.io.filesystem.impl;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.GlobPatternMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Platform;
@@ -29,8 +31,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -75,18 +77,20 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     return createProjectFilesystem(root, new Config());
   }
 
-  private static ImmutableSet<PathOrGlobMatcher> extractIgnorePaths(
+  private static ImmutableSet<PathMatcher> extractIgnorePaths(
       Path root, Config config, BuckPaths buckPaths) {
-    ImmutableSet.Builder<PathOrGlobMatcher> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<PathMatcher> builder = ImmutableSet.builder();
 
-    builder.add(new PathOrGlobMatcher(Paths.get(".idea")));
+    FileSystem rootFs = root.getFileSystem();
+
+    builder.add(RecursiveFileMatcher.of(rootFs.getPath(".idea")));
 
     String projectKey = "project";
     String ignoreKey = "ignore";
 
     String buckdDirProperty = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
     if (!Strings.isNullOrEmpty(buckdDirProperty)) {
-      addPathMatcherRelativeToRepo(root, builder, Paths.get(buckdDirProperty));
+      addPathMatcherRelativeToRepo(root, builder, rootFs.getPath(buckdDirProperty));
     }
 
     Path cacheDir =
@@ -105,23 +109,23 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
               }
 
               if (GLOB_CHARS.matcher(input).find()) {
-                builder.add(new PathOrGlobMatcher(input));
+                builder.add(GlobPatternMatcher.of(input));
                 return;
               }
-              addPathMatcherRelativeToRepo(root, builder, Paths.get(input));
+              addPathMatcherRelativeToRepo(root, builder, rootFs.getPath(input));
             });
 
     return builder.build();
   }
 
   private static void addPathMatcherRelativeToRepo(
-      Path root, Builder<PathOrGlobMatcher> builder, Path pathToAdd) {
+      Path root, Builder<PathMatcher> builder, Path pathToAdd) {
     if (!pathToAdd.isAbsolute()
         || pathToAdd.normalize().startsWith(root.toAbsolutePath().normalize())) {
       if (pathToAdd.isAbsolute()) {
         pathToAdd = root.relativize(pathToAdd);
       }
-      builder.add(new PathOrGlobMatcher(pathToAdd));
+      builder.add(RecursiveFileMatcher.of(pathToAdd));
     }
   }
 

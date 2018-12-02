@@ -24,14 +24,14 @@ public class ActionGraphPerfStatEvent extends AbstractBuckEvent {
 
   private static final String EVENT_NAME = "ActionGraphPerfStats";
 
-  private final Long elapsedTime;
+  private final long elapsedTime;
   private final int numberNodesGenerated;
   private final long numNoopNodesGenerated;
   private final String targetNodeDescriptionName;
   private final String buildTargetName;
 
   private ActionGraphPerfStatEvent(
-      Long time,
+      long time,
       int generatedNodesCount,
       long generatedNoopNodesCount,
       String descriptionName,
@@ -83,7 +83,7 @@ public class ActionGraphPerfStatEvent extends AbstractBuckEvent {
     return EVENT_NAME;
   }
 
-  public Long getElapsedTime() {
+  public long getElapsedTime() {
     return elapsedTime;
   }
 
@@ -106,7 +106,7 @@ public class ActionGraphPerfStatEvent extends AbstractBuckEvent {
   /** Class representing the start of timing */
   public static class Start {
 
-    private final Long startTime;
+    private final long startTime;
     private Clock clock;
 
     private Start(Clock clock) {

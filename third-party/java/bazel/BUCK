@@ -1,13 +1,13 @@
 prebuilt_jar(
-    name = "skylark-lang",
-    binary_jar = "skylark-lang_deploy.jar",
+    name = "bazel",
+    binary_jar = "bazel_deploy.jar",
     licenses = ["LICENSE"],
-    source_jar = "skylark-lang_deploy-src.jar",
+    source_jar = "bazel_deploy-src.jar",
     visibility = ["PUBLIC"],
     deps = [
-        "//third-party/java/objenesis:objenesis",
         "//third-party/java/errorprone:error-prone-annotations",
         "//third-party/java/guava:guava",
+        "//third-party/java/objenesis:objenesis",
         "//third-party/java/protobuf:protobuf",
-    ]
+    ],
 )

@@ -49,8 +49,7 @@ public class BuckTestAction extends BuckBaseAction {
     }
 
     // Initiate a buck test
-    BuckBuildCommandHandler handler =
-        new BuckBuildCommandHandler(project, project.getBaseDir(), BuckCommand.TEST);
+    BuckBuildCommandHandler handler = new BuckBuildCommandHandler(project, BuckCommand.TEST);
     handler.command().addParameter(target);
     buildManager.runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }

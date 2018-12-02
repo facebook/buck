@@ -79,7 +79,7 @@ public class HybridThriftOverHttpServiceImplTest {
             }
 
             @Override
-            public InputStream getPayloadStream(int index) throws IOException {
+            public InputStream getPayloadStream(int index) {
               switch (index) {
                 case 0:
                   return new ByteArrayInputStream(payload1);

@@ -49,7 +49,7 @@ public class AaptPackageResourcesIntegrationTest {
   private static final String MAIN_BUILD_TARGET = "//apps/sample:app";
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();

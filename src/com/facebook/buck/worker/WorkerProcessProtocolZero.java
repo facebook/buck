@@ -32,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class WorkerProcessProtocolZero {
   public static class CommandSender implements WorkerProcessProtocol.CommandSender {
@@ -40,15 +41,21 @@ public class WorkerProcessProtocolZero {
     private final Optional<Path> stdErr;
     private final Runnable onClose;
     private boolean isClosed = false;
+    private final Supplier<Boolean> isAlive;
 
     public CommandSender(
-        OutputStream processStdin, InputStream processStdout, Path stdErr, Runnable onClose) {
+        OutputStream processStdin,
+        InputStream processStdout,
+        Path stdErr,
+        Runnable onClose,
+        Supplier<Boolean> isAlive) {
       this.processStdinWriter =
           new JsonWriter(new BufferedWriter(new OutputStreamWriter(processStdin)));
       this.processStdoutReader =
           new JsonReader(new BufferedReader(new InputStreamReader(processStdout)));
       this.stdErr = Optional.of(stdErr);
       this.onClose = onClose;
+      this.isAlive = isAlive;
     }
 
     @VisibleForTesting
@@ -166,7 +173,7 @@ public class WorkerProcessProtocolZero {
     }
 
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
       Preconditions.checkArgument(
           !isClosed,
           "%s (%d) has been already closed",
@@ -178,6 +185,11 @@ public class WorkerProcessProtocolZero {
         processStdoutReader.endArray();
         processStdoutReader.close();
       } finally {
+        if (!isAlive.get()) {
+          throw new HumanReadableException(
+              "%s (%d)'s process was already killed",
+              getClass().getSimpleName(), System.identityHashCode(this));
+        }
         onClose.run();
         isClosed = true;
       }
