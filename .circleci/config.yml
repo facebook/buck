@@ -7,31 +7,13 @@ jobs:
     working_directory: ~/repo
 
     environment:
-      CI_ACTION: build
-    
-    steps:
-      - checkout
-      - run:
-          name: Install ant
-          command: |
-            sudo apt update -y -qq
-            sudo apt install --no-install-recommends -y -qq ant
-      - run: ./scripts/travisci_run.sh
-  
-  unit:
-    docker:
-      - image: circleci/android:api-23-alpha
-
-    working_directory: ~/repo
-
-    environment:
       CI_ACTION: unit
       GROOVY_HOME: /usr/share/groovy/
     
     steps:
       - checkout
       - run:
-          name: Install ant
+          name: Install dependencies
           command: |
             sudo apt update -y -qq
             sudo apt install --no-install-recommends -y -qq ant groovy
