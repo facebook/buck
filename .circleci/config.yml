@@ -17,4 +17,9 @@ jobs:
     
     steps:
       - checkout
+      - run:
+          name: Install ant
+          command: |
+            sudo apt update -y -qq
+            sudo apt install --no-install-recommends -y -qq ant
       - run: ./scripts/travisci_run.sh
