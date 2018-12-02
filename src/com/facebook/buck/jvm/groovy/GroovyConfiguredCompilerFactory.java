@@ -16,13 +16,17 @@
 
 package com.facebook.buck.jvm.groovy;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
+import com.facebook.buck.util.Optionals;
+import com.google.common.collect.ImmutableCollection;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -30,8 +34,17 @@ import javax.annotation.Nullable;
 public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final GroovyBuckConfig groovyBuckConfig;
 
+  private @Nullable Tool groovyc;
+
   public GroovyConfiguredCompilerFactory(GroovyBuckConfig groovyBuckConfig) {
     this.groovyBuckConfig = groovyBuckConfig;
+  }
+
+  private Tool getGroovyc() {
+    if (groovyc == null) {
+      groovyc = groovyBuckConfig.getGroovyc();
+    }
+    return groovyc;
   }
 
   @Override
@@ -42,8 +55,13 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ToolchainProvider toolchainProvider) {
     GroovyLibraryDescription.CoreArg groovyArgs = (CoreArg) Objects.requireNonNull(args);
     return new GroovycToJarStepFactory(
-        Objects.requireNonNull(groovyBuckConfig).getGroovyCompiler().get(),
-        Optional.of(groovyArgs.getExtraGroovycArguments()),
-        javacOptions);
+        getGroovyc(), Optional.of(groovyArgs.getExtraGroovycArguments()), javacOptions);
+  }
+
+  @Override
+  public void addTargetDeps(
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    Optionals.addIfPresent(groovyBuckConfig.getGroovycTarget(), extraDepsBuilder);
   }
 }
