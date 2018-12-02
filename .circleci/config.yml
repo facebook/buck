@@ -27,7 +27,7 @@ jobs:
     environment:
       CI_ACTION: unit
       GROOVY_HOME: /usr/share/groovy/
-    
+
     steps:
       - checkout
       - run:
@@ -45,7 +45,25 @@ jobs:
 
     environment:
       CI_ACTION: ant
-    
+
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt update -y -qq
+            sudo apt install --no-install-recommends -y -qq ant
+      - run: ./scripts/travisci_run.sh
+
+  ndk_17:
+    docker:
+      - image: circleci/android:api-23-ndk-r17b
+
+    working_directory: ~/repo
+
+    environment:
+      CI_ACTION: android_ndk_17
+
     steps:
       - checkout
       - run:
@@ -62,3 +80,4 @@ workflows:
       - build
       - unit
       - ant
+      - ndk_17
