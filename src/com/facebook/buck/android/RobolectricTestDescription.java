@@ -70,7 +70,6 @@ public class RobolectricTestDescription
     implements DescriptionWithTargetGraph<RobolectricTestDescriptionArg>,
         ImplicitDepsInferringDescription<RobolectricTestDescriptionArg> {
 
-
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
@@ -274,7 +273,7 @@ public class RobolectricTestDescription
   interface AbstractRobolectricTestDescriptionArg
       extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg {
 
-    Optional<String> getRobolectricRuntimeDependency();
+    Optional<SourcePath> getRobolectricRuntimeDependency();
 
     Optional<SourcePath> getRobolectricManifest();
 
@@ -289,6 +288,5 @@ public class RobolectricTestDescription
     default boolean isForceFinalResourceIds() {
       return true;
     }
-
   }
 }
