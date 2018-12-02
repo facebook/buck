@@ -2,13 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      # specify the version you desire here
       - image: circleci/android:api-23-alpha
-      
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
 
     working_directory: ~/repo
 
@@ -22,4 +16,23 @@ jobs:
           command: |
             sudo apt update -y -qq
             sudo apt install --no-install-recommends -y -qq ant
+      - run: ./scripts/travisci_run.sh
+  
+  unit:
+    docker:
+      - image: circleci/android:api-23-alpha
+
+    working_directory: ~/repo
+
+    environment:
+      CI_ACTION: unit
+      GROOVY_HOME: /usr/share/groovy/
+    
+    steps:
+      - checkout
+      - run:
+          name: Install ant
+          command: |
+            sudo apt update -y -qq
+            sudo apt install --no-install-recommends -y -qq ant groovy
       - run: ./scripts/travisci_run.sh
