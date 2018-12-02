@@ -17,10 +17,13 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import java.util.Optional;
 
 public class ProGuardConfig {
+  private final String SECTION = "tools";
+  private final String PROGUARD_CONFIG = "proguard";
 
   private final BuckConfig delegate;
 
@@ -33,16 +36,20 @@ public class ProGuardConfig {
    *     specified, the Android platform proguard.jar will be used.
    */
   public Optional<SourcePath> getProguardJarOverride() {
-    return delegate.getSourcePath("tools", "proguard");
+    return delegate.getSourcePath(SECTION, PROGUARD_CONFIG);
+  }
+
+  public Optional<BuildTarget> getProguardTarget() {
+    return delegate.getMaybeBuildTarget(SECTION, PROGUARD_CONFIG);
   }
 
   /** @return The upper heap size limit for Proguard if specified. */
   public String getProguardMaxHeapSize() {
-    return delegate.getValue("tools", "proguard-max-heap-size").orElse("1024M");
+    return delegate.getValue(SECTION, "proguard-max-heap-size").orElse("1024M");
   }
 
   /** @return The agentpath for profiling if specified. */
   public Optional<String> getProguardAgentPath() {
-    return delegate.getValue("tools", "proguard-agentpath");
+    return delegate.getValue(SECTION, "proguard-agentpath");
   }
 }

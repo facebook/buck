@@ -47,6 +47,7 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -237,12 +238,13 @@ public class AndroidBinaryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
     javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+
+    Optionals.addIfPresent(proGuardConfig.getProguardTarget(), extraDepsBuilder);
+
     if (constructorArg.getRedex()) {
       // If specified, this option may point to either a BuildTarget or a file.
       Optional<BuildTarget> redexTarget = androidBuckConfig.getRedexTarget();
-      if (redexTarget.isPresent()) {
-        extraDepsBuilder.add(redexTarget.get());
-      }
+      redexTarget.ifPresent(extraDepsBuilder::add);
     }
   }
 
