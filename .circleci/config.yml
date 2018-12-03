@@ -6,6 +6,7 @@ defaults: &defaults
 version: 2
 jobs:
   build:
+    <<: *defaults
     environment:
       CI_ACTION: build
     
@@ -19,6 +20,7 @@ jobs:
       - run: ./scripts/travisci_run.sh
 
   unit:
+    <<: *defaults
     environment:
       CI_ACTION: unit
       GROOVY_HOME: /usr/share/groovy/
@@ -33,6 +35,7 @@ jobs:
       - run: ./scripts/travisci_run.sh
 
   ant:
+    <<: *defaults
     environment:
       CI_ACTION: ant
 
@@ -46,6 +49,7 @@ jobs:
       - run: ./scripts/travisci_run.sh
 
   ndk_17:
+    <<: *defaults
     docker:
       - image: circleci/android:api-23-ndk-r17b
 
