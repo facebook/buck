@@ -66,11 +66,6 @@ def java_test(
     else:
         env = {}
 
-    if "//src/com/facebook/buck/step/external:external" in deps:
-        env["EXTERNAL_STEP_RUNNER_JAR_FOR_BUCK_TEST"] = (
-            "$(location //src/com/facebook/buck/step/external:executor)"
-        )
-
     native.java_test(
         name = name,
         deps = deps + [
