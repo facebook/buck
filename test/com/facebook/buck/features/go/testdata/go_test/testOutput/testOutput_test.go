@@ -10,5 +10,5 @@ func TestUnprintableChars(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Errorf("%v is not printable", string(dat[:10]))
+	t.Errorf("%v is not printable", string(dat))
 }
