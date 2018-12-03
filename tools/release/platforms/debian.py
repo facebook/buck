@@ -2,7 +2,6 @@ import logging
 import os
 
 import dateutil.parser
-
 from platforms.common import (
     copy_from_docker_linux,
     docker,

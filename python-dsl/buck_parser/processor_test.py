@@ -6,10 +6,9 @@ import tempfile
 import unittest
 from typing import Sequence
 
+from pywatchman import WatchmanError
 from six import iteritems
 from six.moves import StringIO, builtins
-
-from pywatchman import WatchmanError
 
 from .buck import (
     BuildFileFailError,

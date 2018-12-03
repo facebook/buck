@@ -2,7 +2,6 @@ import logging
 import os
 
 import requests
-
 from platforms.common import (
     ReleaseException,
     copy_from_docker_windows,

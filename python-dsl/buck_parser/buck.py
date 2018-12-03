@@ -32,13 +32,12 @@ from typing import (
     Union,
 )
 
+import pywatchman
+from pywatchman import WatchmanError
 from six import PY3, iteritems, itervalues, string_types
 
 # Python 2.6, 2.7, use iterator filter from Python 3
 from six.moves import builtins, filter
-
-import pywatchman
-from pywatchman import WatchmanError
 
 from .deterministic_set import DeterministicSet
 from .glob_internal import glob_internal

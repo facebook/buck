@@ -7,7 +7,6 @@ import shutil
 import tempfile
 
 import requests
-
 from platforms.common import ReleaseException, run, temp_move_file
 from releases import get_version_and_timestamp_from_release
 
