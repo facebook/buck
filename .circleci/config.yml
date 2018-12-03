@@ -1,3 +1,9 @@
+aliases:
+  - &run-ci-script
+    name: Run CI script
+    command: |
+      ./scripts/travisci_run.sh
+
 defaults: &defaults
   docker:
     - image: circleci/android:api-23-alpha
@@ -17,7 +23,7 @@ jobs:
           command: |
             sudo apt update -y -qq
             sudo apt install --no-install-recommends -y -qq ant
-      - run: ./scripts/travisci_run.sh
+      - run: *run-ci-script
 
   unit:
     <<: *defaults
@@ -32,29 +38,12 @@ jobs:
           command: |
             sudo apt update -y -qq
             sudo apt install --no-install-recommends -y -qq ant groovy
-      - run: ./scripts/travisci_run.sh
+      - run: *run-ci-script
 
   ant:
     <<: *defaults
     environment:
       CI_ACTION: ant
-
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            sudo apt update -y -qq
-            sudo apt install --no-install-recommends -y -qq ant
-      - run: ./scripts/travisci_run.sh
-
-  ndk_17:
-    <<: *defaults
-    docker:
-      - image: circleci/android:api-23-ndk-r17b
-
-    environment:
-      CI_ACTION: android_ndk_17
 
     steps:
       - checkout
@@ -71,3 +60,4 @@ workflows:
     jobs:
       - build
       - unit
+      - ant
