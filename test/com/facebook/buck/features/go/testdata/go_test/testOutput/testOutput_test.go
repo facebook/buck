@@ -1,12 +1,12 @@
 package testOutput
 
 import (
-	"io/ioutil"
+	"encoding/hex"
 	"testing"
 )
 
 func TestUnprintableChars(t *testing.T) {
-	dat, err := ioutil.ReadFile("file.dat")
+	dat, err := hex.DecodeString("ffd8ffe000104a464946")
 	if err != nil {
 		t.Fatal(err)
 	}
