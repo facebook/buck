@@ -33,7 +33,7 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
   public static final String PROJECT_ADD_AST_PATHS = "project_add_ast_paths";
   public static final String COPY_STDLIB_TO_FRAMEWORKS = "copy_stdlib_to_frameworks";
-
+  public static final String EMIT_SWIFTDOCS = "emit_swiftdocs";
   private final BuckConfig delegate;
 
   @Override
@@ -105,5 +105,13 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getCopyStdlibToFrameworks() {
     return delegate.getBooleanValue(SECTION_NAME, COPY_STDLIB_TO_FRAMEWORKS, false);
+  }
+
+  /**
+   * If enabled, a .swiftdoc file will be generated along with the .swiftmodule file. This is
+   * necessary for Xcode to display the documentation for the libraries prebuilt with buck.
+   */
+  public boolean getEmitSwiftdocs() {
+    return delegate.getBooleanValue(SECTION_NAME, EMIT_SWIFTDOCS, false);
   }
 }
