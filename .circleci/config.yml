@@ -1,11 +1,11 @@
+defaults: &defaults
+  docker:
+    - image: circleci/android:api-23-alpha
+  working_directory: ~/buck
+
 version: 2
 jobs:
   build:
-    docker:
-      - image: circleci/android:api-23-alpha
-
-    working_directory: ~/repo
-
     environment:
       CI_ACTION: build
     
@@ -19,11 +19,6 @@ jobs:
       - run: ./scripts/travisci_run.sh
 
   unit:
-    docker:
-      - image: circleci/android:api-23-alpha
-
-    working_directory: ~/repo
-
     environment:
       CI_ACTION: unit
       GROOVY_HOME: /usr/share/groovy/
@@ -36,13 +31,8 @@ jobs:
             sudo apt update -y -qq
             sudo apt install --no-install-recommends -y -qq ant groovy
       - run: ./scripts/travisci_run.sh
-  
+
   ant:
-    docker:
-      - image: circleci/android:api-23-alpha
-
-    working_directory: ~/repo
-
     environment:
       CI_ACTION: ant
 
@@ -58,8 +48,6 @@ jobs:
   ndk_17:
     docker:
       - image: circleci/android:api-23-ndk-r17b
-
-    working_directory: ~/repo
 
     environment:
       CI_ACTION: android_ndk_17
@@ -79,5 +67,3 @@ workflows:
     jobs:
       - build
       - unit
-      - ant
-      - ndk_17
