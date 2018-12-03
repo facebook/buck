@@ -40,24 +40,9 @@ jobs:
             sudo apt install --no-install-recommends -y -qq ant groovy
       - run: *run-ci-script
 
-  ant:
-    <<: *defaults
-    environment:
-      CI_ACTION: ant
-
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            sudo apt update -y -qq
-            sudo apt install --no-install-recommends -y -qq ant
-      - run: ./scripts/travisci_run.sh
-
 workflows:
   version: 2
   build_and_test:
     jobs:
       - build
       - unit
-      - ant
