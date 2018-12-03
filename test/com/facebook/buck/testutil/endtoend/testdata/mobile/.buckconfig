@@ -16,7 +16,7 @@
   app_platform = android-21
 
 [android]
-  target = Google Inc.:Google APIs:23
+  target = android-26
 
 [java]
   src_roots = /android/java/
