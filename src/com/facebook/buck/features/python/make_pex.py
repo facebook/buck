@@ -24,10 +24,10 @@ if not zipfile.is_zipfile(sys.argv[0]):
     append_sys_path(os.sep.join(__file__.split(os.sep)[:-4]))
     append_sys_path(os.sep.join(__file__.split(os.sep)[:-7]))
 
-import pkg_resources  # noqa
+import pkg_resources  # noqa isort:skip
 
-from pex.interpreter import PythonIdentity, PythonInterpreter  # noqa
-from pex.pex_builder import PEXBuilder  # noqa
+from pex.interpreter import PythonIdentity, PythonInterpreter  # noqa isort:skip
+from pex.pex_builder import PEXBuilder  # noqa isort:skip
 
 
 def dereference_symlinks(src):
