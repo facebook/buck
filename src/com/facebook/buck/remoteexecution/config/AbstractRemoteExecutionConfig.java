@@ -40,13 +40,10 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final int DEFAULT_REMOTE_PORT = 19030;
   public static final int DEFAULT_CAS_PORT = 19031;
 
-  public int getMaxNumberOfRemoteWorkers() {
-    return getDelegate().getInteger(SECTION, "max_number_of_remote_workers").orElse(80);
-  }
-
-  public boolean useWorkerThreadPool() {
-    return getDelegate().getBooleanValue(SECTION, "enable_worker_thread_pool", true);
-  }
+  public static final int DEFAULT_REMOTE_STRATEGY_THREADS = 12;
+  public static final int DEFAULT_REMOTE_CONCURRENT_ACTION_COMPUTATIONS = 4;
+  public static final int DEFAULT_REMOTE_CONCURRENT_EXECUTIONS = 80;
+  public static final int DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING = 6;
 
   public String getRemoteHost() {
     return getValueWithFallback("remote_host").orElse("localhost");
@@ -93,6 +90,55 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   /** file containing all TLS authorities to verify server certificate with (PEM format) */
   public Optional<Path> getCAsFile() {
     return getFileOption("ca");
+  }
+
+  @Value.Derived
+  public RemoteExecutionStrategyConfig getStrategyConfig() {
+    return new RemoteExecutionStrategyConfig() {
+      /**
+       * Number of threads for the strategy to do its work. This doesn't need to be a lot, but
+       * should probably be greater than concurrent_result_handling below.
+       */
+      @Override
+      public int getThreads() {
+        return getDelegate()
+            .getInteger(SECTION, "worker_threads")
+            .orElse(DEFAULT_REMOTE_STRATEGY_THREADS);
+      }
+
+      /**
+       * Number of actions to compute at a time. These should be <25ms average, but require I/O and
+       * cpu.
+       */
+      @Override
+      public int getMaxConcurrentActionComputations() {
+        return getDelegate()
+            .getInteger(SECTION, "concurrent_action_computations")
+            .orElse(DEFAULT_REMOTE_CONCURRENT_ACTION_COMPUTATIONS);
+      }
+
+      /**
+       * Limit on the number of outstanding execution requests. This is probably the value that's
+       * most likely to be non-default.
+       */
+      @Override
+      public int getMaxConcurrentExecutions() {
+        return getDelegate()
+            .getInteger(SECTION, "concurrent_executions")
+            .orElse(DEFAULT_REMOTE_CONCURRENT_EXECUTIONS);
+      }
+
+      /**
+       * Number of results to concurrently handle at a time. This is mostly just downloading outputs
+       * which is currently a blocking operation.
+       */
+      @Override
+      public int getMaxConcurrentResultHandling() {
+        return getDelegate()
+            .getInteger(SECTION, "concurrent_result_handling")
+            .orElse(DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING);
+      }
+    };
   }
 
   public RemoteExecutionType getType() {

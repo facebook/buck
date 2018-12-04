@@ -35,12 +35,15 @@ import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionService.ExecutionResult;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.concurrent.JobLimiter;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.types.Either;
@@ -75,20 +78,30 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final BuckEventBus eventBus;
   private final RemoteExecutionClients executionClients;
   private final ModernBuildRuleRemoteExecutionHelper mbrHelper;
-  private final Optional<ListeningExecutorService> executorService;
   private final Path cellPathPrefix;
+
+  private final ListeningExecutorService service;
+
+  private final JobLimiter computeActionLimiter;
+  private final JobLimiter executionLimiter;
+  private final JobLimiter handleResultLimiter;
 
   RemoteExecutionStrategy(
       BuckEventBus eventBus,
+      RemoteExecutionStrategyConfig strategyConfig,
       RemoteExecutionClients executionClients,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher,
-      Optional<ListeningExecutorService> executorService)
+      ThrowingFunction<Path, HashCode, IOException> fileHasher)
       throws IOException {
     this.executionClients = executionClients;
-    this.executorService = executorService;
+    this.service =
+        MoreExecutors.listeningDecorator(
+            MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads()));
+    this.computeActionLimiter = new JobLimiter(strategyConfig.getMaxConcurrentActionComputations());
+    this.executionLimiter = new JobLimiter(strategyConfig.getMaxConcurrentExecutions());
+    this.handleResultLimiter = new JobLimiter(strategyConfig.getMaxConcurrentResultHandling());
     this.eventBus = eventBus;
 
     ImmutableSet<Optional<String>> cellNames =
@@ -124,7 +137,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   /** Creates a BuildRuleStrategy for a particular */
   static BuildRuleStrategy createRemoteExecutionStrategy(
       BuckEventBus eventBus,
-      Optional<ListeningExecutorService> remoteExecutorService,
+      RemoteExecutionStrategyConfig strategyConfig,
       RemoteExecutionClients clients,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
@@ -132,7 +145,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       ThrowingFunction<Path, HashCode, IOException> fileHasher)
       throws IOException {
     return new RemoteExecutionStrategy(
-        eventBus, clients, ruleFinder, cellResolver, rootCell, fileHasher, remoteExecutorService);
+        eventBus, strategyConfig, clients, ruleFinder, cellResolver, rootCell, fileHasher);
   }
 
   @Override
@@ -145,10 +158,10 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     Preconditions.checkState(rule instanceof ModernBuildRule);
     BuildTarget buildTarget = rule.getBuildTarget();
 
-    ListeningExecutorService service = executorService.orElse(strategyContext.getExecutorService());
-
     ListenableFuture<RemoteExecutionActionInfo> actionInfoFuture =
-        service.submit(() -> getRemoteExecutionActionInfo(rule, strategyContext));
+        computeActionLimiter.schedule(
+            service,
+            () -> Futures.immediateFuture(getRemoteExecutionActionInfo(rule, strategyContext)));
 
     // guard should only be set once. The left value indicates that it has been cancelled and holds
     // the reason, a right value indicates that it has passed the point of no return and can no
@@ -163,7 +176,6 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                     rule,
                     strategyContext,
                     buildTarget,
-                    service,
                     actionInfo,
                     () -> {
                       if (guard.compareAndSet(null, Either.ofRight(new Object()))) {
@@ -197,7 +209,6 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       BuildRule rule,
       BuildStrategyContext strategyContext,
       BuildTarget buildTarget,
-      ListeningExecutorService service,
       RemoteExecutionActionInfo actionInfo,
       Callable<Throwable> tryStart)
       throws IOException {
@@ -225,7 +236,6 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               strategyContext,
               buildTarget,
               tryStart,
-              service,
               actionDigest,
               actionOutputs);
         },
@@ -253,12 +263,12 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       BuildStrategyContext strategyContext,
       BuildTarget buildTarget,
       Callable<Throwable> tryStart,
-      ListeningExecutorService service,
       Digest actionDigest,
       Iterable<? extends Path> actionOutputs) {
     AtomicReference<Throwable> cancelled = new AtomicReference<>(null);
     ListenableFuture<ExecutionResult> executionResult =
-        Futures.submitAsync(
+        executionLimiter.schedule(
+            service,
             () -> {
               cancelled.set(tryStart.call());
               boolean isCancelled = cancelled.get() != null;
@@ -276,8 +286,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                     executingScope.close();
                     return result;
                   });
-            },
-            executorService.orElse(strategyContext.getExecutorService()));
+            });
 
     return Futures.transformAsync(
         executionResult,
@@ -286,8 +295,16 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             return Futures.immediateFuture(
                 Optional.of(strategyContext.createCancelledResult(cancelled.get())));
           }
-          return handleExecutionResult(
-              filesystem, strategyContext, buildTarget, result, actionDigest, actionOutputs);
+          return handleResultLimiter.schedule(
+              service,
+              () ->
+                  handleExecutionResult(
+                      filesystem,
+                      strategyContext,
+                      buildTarget,
+                      result,
+                      actionDigest,
+                      actionOutputs));
         },
         service);
   }

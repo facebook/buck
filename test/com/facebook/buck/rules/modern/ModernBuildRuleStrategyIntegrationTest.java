@@ -39,7 +39,6 @@ import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionType;
 import com.facebook.buck.remoteexecution.grpc.server.GrpcServer;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
@@ -74,10 +73,6 @@ import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class ModernBuildRuleStrategyIntegrationTest {
-  // By default, the tests will start up a remote execution service and connect to that. This value
-  // can be changed to connect to a different service.
-  private static final int REMOTE_PORT = RemoteExecutionConfig.DEFAULT_REMOTE_PORT;
-
   private String simpleTarget = "//:simple";
   private String failingTarget = "//:failing";
   private String failingStepTarget = "//:failing_step";

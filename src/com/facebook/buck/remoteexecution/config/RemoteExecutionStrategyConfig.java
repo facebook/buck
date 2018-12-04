@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,11 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.facebook.buck.remoteexecution.config;
 
-package com.facebook.buck.step;
+/** Configuration for the remote execution strategy. */
+public interface RemoteExecutionStrategyConfig {
+  int getThreads();
 
-public enum ExecutorPool {
-  CPU,
-  NETWORK,
-  PROJECT
+  int getMaxConcurrentActionComputations();
+
+  int getMaxConcurrentExecutions();
+
+  int getMaxConcurrentResultHandling();
 }
