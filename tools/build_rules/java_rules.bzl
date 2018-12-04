@@ -78,7 +78,7 @@ def java_test(
         vm_args = [
             # Add -XX:-UseSplitVerifier by default to work around:
             # http://arihantwin.blogspot.com/2012/08/getting-error-illegal-local-variable.html
-            # "-XX:-UseSplitVerifier",
+            "-XX:-UseSplitVerifier",
 
             # Don't use the system-installed JNA; extract it from the local jar.
             "-Djna.nosys=true",
