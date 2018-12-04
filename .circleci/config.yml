@@ -2,8 +2,8 @@ aliases:
   - &apt-dependencies
     name: Install APT dependencies
     command: |
-      sudo apt update -y
-      sudo apt install -y --no-install-recommends ant git groovy python unzip wget
+      apt update -y
+      apt install -y --no-install-recommends ant git groovy python unzip wget
   - &run-ci-script
     name: Run CI script
     command: |
