@@ -263,4 +263,17 @@ class Foo {
       ]]>
     </example>
   </rule>
+  <rule name="BlacklistedSystemGetenv"
+    message="Use com.facebook.buck.util.environment.EnvVariablesProvider instead of System.getenv()"
+    class="com.liveramp.pmd_extensions.BlacklistMethods">
+    <description>
+      System.getenv() returns environment variables with names that may be case-insensitive on some
+      OSes (for example, Windows). EnvVariablesProvider.getSystemEnv() returns unified variables
+      with names converted to upper cases.
+    </description>
+    <priority>1</priority>
+    <properties>
+      <property name="BlacklistMethods.BlacklistedMethods" value="System:getenv:0;com.facebook.buck.util.environment.EnvVariablesProvider:getSystemEnv"/>
+    </properties>
+  </rule>
 </ruleset>

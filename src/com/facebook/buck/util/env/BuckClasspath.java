@@ -49,17 +49,23 @@ public class BuckClasspath {
     return envVarValue;
   }
 
+  // BUCK_TEST_CLASSPATH_FILE is internal variable, no need to use EnvVariablesProvider
+  @SuppressWarnings("PMD.BlacklistedSystemGetenv")
   private static Optional<String> getBuckTestClasspath() {
     String envVarValue = System.getenv(TEST_ENV_VAR_NAME);
     return Optional.ofNullable(envVarValue);
   }
 
   @Nullable
+  // BUCK_CLASSPATH is internal variable, no need to use EnvVariablesProvider
+  @SuppressWarnings("PMD.BlacklistedSystemGetenv")
   public static String getBuckClasspathFromEnvVarOrNull() {
     return System.getenv(ENV_VAR_NAME);
   }
 
   @Nullable
+  // CLASSPATH is internal variable, no need to use EnvVariablesProvider
+  @SuppressWarnings("PMD.BlacklistedSystemGetenv")
   public static String getBuckBootstrapClasspathFromEnvVarOrNull() {
     return System.getenv(BOOTSTRAP_ENV_VAR_NAME);
   }

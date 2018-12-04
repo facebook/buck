@@ -141,6 +141,8 @@ public class FatJarMain {
   }
 
   @Nullable
+  // Avoid using EnvVariablesProvider to avoid extra dependencies.
+  @SuppressWarnings("PMD.BlacklistedSystemGetenv")
   private static String getEnvValue(String envVariableName) {
     if (isWindowsOs(getOsPlatform())) {
       return findMapValueIgnoreKeyCase(envVariableName, System.getenv());

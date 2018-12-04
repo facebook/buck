@@ -63,7 +63,9 @@ public final class ClassLoaderBootstrapper {
     }
   }
 
+  @SuppressWarnings("PMD.BlacklistedSystemGetenv")
   private static ClassLoader createClassLoader() {
+    // BUCK_CLASSPATH is not set by a user, no need to use EnvVariablesProvider.
     String classPath = System.getenv("BUCK_CLASSPATH");
     if (classPath == null) {
       throw new RuntimeException("BUCK_CLASSPATH not set");
