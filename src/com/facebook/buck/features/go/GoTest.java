@@ -54,6 +54,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -69,12 +72,14 @@ import java.util.stream.Stream;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
+
   private static final Pattern TEST_START_PATTERN = Pattern.compile("^=== RUN\\s+(?<name>.*)$");
   private static final Pattern TEST_FINISHED_PATTERN =
       Pattern.compile(
           "^\\s*--- (?<status>PASS|FAIL|SKIP): (?<name>.+) \\((?<duration>\\d+\\.\\d+)(?: seconds|s)\\)$");
   // Extra time to wait for the process to exit on top of the test timeout
   private static final int PROCESS_TIMEOUT_EXTRA_MS = 5000;
+  private static final String NON_PRINTABLE_REPLACEMENT = "囧";
 
   private final GoBinary testMain;
 
@@ -159,9 +164,14 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private ImmutableList<TestResultSummary> parseTestResults() throws IOException {
     ImmutableList.Builder<TestResultSummary> summariesBuilder = ImmutableList.builder();
+    CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
+    decoder.onMalformedInput(CodingErrorAction.REPLACE);
+    decoder.replaceWith(NON_PRINTABLE_REPLACEMENT);
     try (BufferedReader reader =
-        Files.newBufferedReader(
-            getProjectFilesystem().resolve(getPathToTestResults()), Charsets.UTF_8)) {
+        new BufferedReader(
+            new InputStreamReader(
+                Files.newInputStream(getProjectFilesystem().resolve(getPathToTestResults())),
+                decoder))) {
       Set<String> currentTests = new HashSet<>();
       List<String> stdout = new ArrayList<>();
       List<String> stackTrace = new ArrayList<>();
