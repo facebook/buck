@@ -629,7 +629,11 @@ public class DefaultParserTest {
         FakeBuckConfig.builder()
             .setFilesystem(filesystem)
             .setEnvironment(
-                ImmutableMap.of("Some Key", "Some Value", "PATH", System.getenv("PATH")))
+                ImmutableMap.of(
+                    "Some Key",
+                    "Some Value",
+                    "PATH",
+                    EnvVariablesProvider.getSystemEnv().get("PATH")))
             .build();
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();

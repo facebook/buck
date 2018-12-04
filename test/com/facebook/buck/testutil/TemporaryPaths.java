@@ -17,6 +17,7 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -39,7 +40,7 @@ public class TemporaryPaths extends ExternalResource {
   private Path root;
 
   public TemporaryPaths() {
-    this("1".equals(System.getenv("BUCK_TEST_KEEP_TEMPORARY_PATHS")));
+    this("1".equals(EnvVariablesProvider.getSystemEnv().get("BUCK_TEST_KEEP_TEMPORARY_PATHS")));
   }
 
   public TemporaryPaths(boolean keepContents) {

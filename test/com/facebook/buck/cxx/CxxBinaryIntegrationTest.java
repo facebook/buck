@@ -1369,7 +1369,7 @@ public class CxxBinaryIntegrationTest {
                     + pathSeparator
                     + secondCompilerPath
                     + pathSeparator
-                    + System.getenv("PATH")),
+                    + EnvVariablesProvider.getSystemEnv().get("PATH")),
             "build",
             target.getFullyQualifiedName())
         .assertSuccess();
@@ -1391,7 +1391,7 @@ public class CxxBinaryIntegrationTest {
                     + pathSeparator
                     + secondCompilerPath
                     + pathSeparator
-                    + System.getenv("PATH")),
+                    + EnvVariablesProvider.getSystemEnv().get("PATH")),
             "build",
             target.getFullyQualifiedName())
         .assertSuccess();

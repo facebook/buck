@@ -22,6 +22,7 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -62,7 +63,7 @@ public class TestWithBuckd extends ExternalResource {
 
   private static ImmutableMap<String, String> getWatchmanEnv() {
     ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
-    String systemPath = System.getenv("PATH");
+    String systemPath = EnvVariablesProvider.getSystemEnv().get("PATH");
     if (systemPath != null) {
       envBuilder.put("PATH", systemPath);
     }

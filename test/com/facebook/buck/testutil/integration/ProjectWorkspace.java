@@ -484,7 +484,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
               "TMP");
       Map<String, String> envBuilder = new HashMap<>();
       for (String variable : inheritedEnvVars) {
-        String value = System.getenv(variable);
+        String value = EnvVariablesProvider.getSystemEnv().get(variable);
         if (value != null) {
           envBuilder.put(variable, value);
         }

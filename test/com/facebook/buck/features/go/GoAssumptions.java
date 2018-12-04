@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -54,7 +55,7 @@ abstract class GoAssumptions {
       ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 
       FakeBuckConfig.Builder baseConfig = FakeBuckConfig.builder();
-      String goRoot = System.getenv("GOROOT");
+      String goRoot = EnvVariablesProvider.getSystemEnv().get("GOROOT");
       if (goRoot != null) {
         baseConfig.setSections("[go]", "  root = " + goRoot);
         // This should really act like some kind of readonly bind-mount onto the real filesystem.

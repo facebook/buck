@@ -24,6 +24,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -105,7 +106,11 @@ public class ExternalJavacIntegrationTest {
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toAbsolutePath().toString());
     workspace
         .runBuckdCommand(
-            ImmutableMap.of("CHECK_THIS_VARIABLE", "1", "PATH", System.getenv("PATH")),
+            ImmutableMap.of(
+                "CHECK_THIS_VARIABLE",
+                "1",
+                "PATH",
+                EnvVariablesProvider.getSystemEnv().get("PATH")),
             "build",
             "example")
         .assertSuccess();

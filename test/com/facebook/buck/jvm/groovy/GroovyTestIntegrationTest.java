@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,7 +35,7 @@ public class GroovyTestIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(System.getenv("GROOVY_HOME") != null);
+    assumeTrue(EnvVariablesProvider.getSystemEnv().get("GROOVY_HOME") != null);
 
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "groovy_test_description", tmp);

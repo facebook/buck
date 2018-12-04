@@ -27,6 +27,7 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -68,7 +69,9 @@ public class KotlinBuckConfigTest {
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
-                ImmutableMap.of("PATH", kotlinHome + pathSeparator + System.getenv("PATH")))
+                ImmutableMap.of(
+                    "PATH",
+                    kotlinHome + pathSeparator + EnvVariablesProvider.getSystemEnv().get("PATH")))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
@@ -87,7 +90,9 @@ public class KotlinBuckConfigTest {
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
-                ImmutableMap.of("PATH", kotlinHome + pathSeparator + System.getenv("PATH")))
+                ImmutableMap.of(
+                    "PATH",
+                    kotlinHome + pathSeparator + EnvVariablesProvider.getSystemEnv().get("PATH")))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
@@ -236,7 +241,10 @@ public class KotlinBuckConfigTest {
             .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
                 ImmutableMap.of(
-                    "PATH", kotlinCompiler.getParent() + pathSeparator + System.getenv("PATH")))
+                    "PATH",
+                    kotlinCompiler.getParent()
+                        + pathSeparator
+                        + EnvVariablesProvider.getSystemEnv().get("PATH")))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);

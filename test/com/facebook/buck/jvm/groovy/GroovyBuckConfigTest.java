@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.config.RawConfig;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -67,7 +68,7 @@ public class GroovyBuckConfigTest {
 
   @Test
   public void byDefaultFindGroovycFromGroovyHome() {
-    String systemGroovyHome = System.getenv("GROOVY_HOME");
+    String systemGroovyHome = EnvVariablesProvider.getSystemEnv().get("GROOVY_HOME");
     assumeTrue(systemGroovyHome != null);
 
     ImmutableMap<String, String> environment = ImmutableMap.of("GROOVY_HOME", systemGroovyHome);
@@ -80,7 +81,7 @@ public class GroovyBuckConfigTest {
 
   @Test
   public void explicitConfigurationOverridesTheEnvironment() {
-    String systemGroovyHome = System.getenv("GROOVY_HOME");
+    String systemGroovyHome = EnvVariablesProvider.getSystemEnv().get("GROOVY_HOME");
     assumeTrue(systemGroovyHome != null);
 
     // deliberately break the env
