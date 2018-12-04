@@ -835,12 +835,18 @@ class CachingBuildRuleBuilder {
 
           @Override
           public ListeningExecutorService getExecutorService() {
-            return service;
+            return serviceByAdjustingDefaultWeightsTo(
+                CachingBuildEngine.SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS);
           }
 
           @Override
           public BuildResult createBuildResult(BuildRuleSuccessType successType) {
             return success(successType, cacheResult);
+          }
+
+          @Override
+          public BuildResult createCancelledResult(Throwable throwable) {
+            return canceled(throwable);
           }
 
           @Override
@@ -1336,7 +1342,7 @@ class CachingBuildRuleBuilder {
     // TODO(cjhopman): There's a small race here where we might delegate to the strategy after
     // checking here if it's null. I don't think we care, though.
     if (strategyResult != null) {
-      Objects.requireNonNull(strategyResult).cancel();
+      Objects.requireNonNull(strategyResult).cancel(throwable);
     }
   }
 

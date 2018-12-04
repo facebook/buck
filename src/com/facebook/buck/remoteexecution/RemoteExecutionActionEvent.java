@@ -43,7 +43,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     EXECUTING("exec"),
     MATERIALIZING_OUTPUTS("dwl"),
     ACTION_SUCCEEDED("suc"),
-    ACTION_FAILED("fail");
+    ACTION_FAILED("fail"),
+    ACTION_CANCELLED("cncl");
 
     private final String abbreviateName;
 

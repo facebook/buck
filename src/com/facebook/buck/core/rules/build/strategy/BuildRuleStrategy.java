@@ -41,7 +41,16 @@ public interface BuildRuleStrategy extends Closeable {
      * Indicates that the caller is no longer interested in the result and the strategy is free to
      * cancel pending work.
      */
-    void cancel();
+    void cancel(Throwable cause);
+
+    /**
+     * Tries to cancel the execution if work has not yet begun.
+     *
+     * @return Whether cancellation was successful. If successful, the strategy might continue doing
+     *     more work, but it must not make changes to any rule outputs. If cancellation is
+     *     unsuccessful, the strategy should continue execution of the rule.
+     */
+    boolean cancelIfNotStarted(Throwable reason);
 
     /** A ListenableFuture for the build result. */
     ListenableFuture<Optional<BuildResult>> getBuildResult();
@@ -50,7 +59,14 @@ public interface BuildRuleStrategy extends Closeable {
     static StrategyBuildResult nonCancellable(ListenableFuture<Optional<BuildResult>> result) {
       return new StrategyBuildResult() {
         @Override
-        public void cancel() {}
+        public void cancel(Throwable cause) {
+          // ignored.
+        }
+
+        @Override
+        public boolean cancelIfNotStarted(Throwable reason) {
+          return false;
+        }
 
         @Override
         public ListenableFuture<Optional<BuildResult>> getBuildResult() {

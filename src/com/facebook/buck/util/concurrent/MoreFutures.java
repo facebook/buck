@@ -29,6 +29,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -158,15 +159,23 @@ public class MoreFutures {
    *     error.
    */
   public static <V> FutureCallback<V> finallyCallback(Runnable runnable) {
+    return finallyCallback(ignored -> runnable.run());
+  }
+
+  /**
+   * @return a {@link FutureCallback} which executes the given {@link Consumer} on both success and
+   *     error. This just makes it simpler to add unconditional callbacks.
+   */
+  public static <V> FutureCallback<V> finallyCallback(Consumer<ListenableFuture<V>> callable) {
     return new FutureCallback<V>() {
       @Override
       public void onSuccess(@Nullable V result) {
-        runnable.run();
+        callable.accept(Futures.immediateFuture(result));
       }
 
       @Override
       public void onFailure(@Nonnull Throwable t) {
-        runnable.run();
+        callable.accept(Futures.immediateFailedFuture(t));
       }
     };
   }

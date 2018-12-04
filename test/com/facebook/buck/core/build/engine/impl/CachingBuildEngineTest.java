@@ -1979,7 +1979,12 @@ public class CachingBuildEngineTest {
               builder.get().build(strategyContext.getExecutorService(), rule, strategyContext);
           return new StrategyBuildResult() {
             @Override
-            public void cancel() {
+            public boolean cancelIfNotStarted(Throwable reason) {
+              return false;
+            }
+
+            @Override
+            public void cancel(Throwable cause) {
               cancelCallback.run();
             }
 

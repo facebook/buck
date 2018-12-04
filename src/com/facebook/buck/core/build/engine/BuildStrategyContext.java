@@ -36,6 +36,8 @@ public interface BuildStrategyContext {
 
   BuildResult createBuildResult(BuildRuleSuccessType successType);
 
+  BuildResult createCancelledResult(Throwable throwable);
+
   ExecutionContext getExecutionContext();
 
   Scope buildRuleScope();

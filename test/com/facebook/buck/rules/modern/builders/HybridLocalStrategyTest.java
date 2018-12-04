@@ -35,6 +35,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -89,11 +90,16 @@ public class HybridLocalStrategyTest {
 
         waiting.release(3);
         assertTrue(finished.tryAcquire(3, 1, TimeUnit.SECONDS));
+        assertFalse(finished.tryAcquire(20, TimeUnit.MILLISECONDS));
 
         waiting.release(7);
         assertTrue(finished.tryAcquire(7, 1, TimeUnit.SECONDS));
 
         Futures.allAsList(results).get(1, TimeUnit.SECONDS);
+        for (ListenableFuture<Optional<BuildResult>> r : results) {
+          assertTrue(r.isDone());
+          assertTrue(r.get().get().isSuccess());
+        }
       }
     } finally {
       service.shutdownNow();
@@ -124,11 +130,159 @@ public class HybridLocalStrategyTest {
 
         waiting.release(3);
         assertTrue(finished.tryAcquire(3, 1, TimeUnit.SECONDS));
+        assertFalse(finished.tryAcquire(20, TimeUnit.MILLISECONDS));
 
         waiting.release(7);
         assertTrue(finished.tryAcquire(7, 1, TimeUnit.SECONDS));
 
         Futures.allAsList(results).get(1, TimeUnit.SECONDS);
+        for (ListenableFuture<Optional<BuildResult>> r : results) {
+          assertTrue(r.isDone());
+          assertTrue(r.get().get().isSuccess());
+        }
+      }
+    } finally {
+      service.shutdownNow();
+    }
+  }
+
+  @Test
+  public void testCanStealJobs() throws Exception {
+    Semaphore waiting = new Semaphore(0);
+    Semaphore finished = new Semaphore(0);
+    Semaphore cancelled = new Semaphore(0);
+    Semaphore delegateStarted = new Semaphore(0);
+
+    int maxJobs = 1;
+    ListeningExecutorService service =
+        MoreExecutors.listeningDecorator(MostExecutors.newMultiThreadExecutor("test", 4));
+
+    try {
+      BuildRuleStrategy delegate =
+          new SimpleBuildRuleStrategy() {
+            @Override
+            public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
+              delegateStarted.release();
+              return new StrategyBuildResult() {
+                SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
+
+                @Override
+                public void cancel(Throwable cause) {}
+
+                @Override
+                public boolean cancelIfNotStarted(Throwable reason) {
+                  System.err.println("Cancelling test strategy.");
+                  cancelled.release();
+                  future.set(Optional.of(strategyContext.createCancelledResult(reason)));
+                  return true;
+                }
+
+                @Override
+                public ListenableFuture<Optional<BuildResult>> getBuildResult() {
+                  return future;
+                }
+              };
+            }
+          };
+      JobLimitingStrategyContextFactory contextFactory =
+          new JobLimitingStrategyContextFactory(waiting, finished, maxJobs, service);
+
+      try (HybridLocalStrategy strategy = new HybridLocalStrategy(1, 10, delegate)) {
+        List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+          FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
+          results.add(
+              Futures.submitAsync(
+                  () -> strategy.build(rule, contextFactory.createContext(rule)).getBuildResult(),
+                  service));
+        }
+
+        assertTrue(delegateStarted.tryAcquire(9, 1, TimeUnit.SECONDS));
+        waiting.release(3);
+        assertTrue(finished.tryAcquire(3, 1, TimeUnit.SECONDS));
+        assertTrue(cancelled.tryAcquire(3, 1, TimeUnit.SECONDS));
+
+        assertFalse(finished.tryAcquire(20, TimeUnit.MILLISECONDS));
+
+        waiting.release(7);
+        assertTrue(finished.tryAcquire(7, 1, TimeUnit.SECONDS));
+        assertTrue(cancelled.tryAcquire(6, 1, TimeUnit.SECONDS));
+
+        Futures.allAsList(results).get(1, TimeUnit.SECONDS);
+        for (ListenableFuture<Optional<BuildResult>> r : results) {
+          assertTrue(r.isDone());
+          assertTrue(r.get().get().isSuccess());
+        }
+      }
+    } finally {
+      service.shutdownNow();
+    }
+  }
+
+  @Test
+  public void testWhenCancelIfNotStartedReturnsFalseJobsArentStolen() throws Exception {
+    Semaphore waiting = new Semaphore(0);
+    Semaphore finished = new Semaphore(0);
+    Semaphore cancelled = new Semaphore(0);
+    Semaphore delegateStarted = new Semaphore(0);
+
+    int maxJobs = 1;
+    ListeningExecutorService service =
+        MoreExecutors.listeningDecorator(MostExecutors.newMultiThreadExecutor("test", 4));
+
+    try {
+      BuildRuleStrategy delegate =
+          new SimpleBuildRuleStrategy() {
+            @Override
+            public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
+              return new StrategyBuildResult() {
+                SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
+
+                @Override
+                public void cancel(Throwable cause) {}
+
+                @Override
+                public boolean cancelIfNotStarted(Throwable reason) {
+                  cancelled.release();
+                  future.set(
+                      Optional.of(
+                          strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY)));
+                  return false;
+                }
+
+                @Override
+                public ListenableFuture<Optional<BuildResult>> getBuildResult() {
+                  delegateStarted.release();
+                  return future;
+                }
+              };
+            }
+          };
+      JobLimitingStrategyContextFactory contextFactory =
+          new JobLimitingStrategyContextFactory(waiting, finished, maxJobs, service);
+
+      try (HybridLocalStrategy strategy = new HybridLocalStrategy(1, 10, delegate)) {
+        List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+          FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
+          results.add(
+              Futures.submitAsync(
+                  () -> strategy.build(rule, contextFactory.createContext(rule)).getBuildResult(),
+                  service));
+        }
+
+        assertTrue(delegateStarted.tryAcquire(9, 1, TimeUnit.SECONDS));
+        waiting.release(1);
+        assertTrue(finished.tryAcquire(1, 1, TimeUnit.SECONDS));
+        assertFalse(finished.tryAcquire(20, TimeUnit.MILLISECONDS));
+
+        // After releasing 1, the HybridLocal strategy should've gone through and tried to steal
+        // everything from the delegate which should've triggered them all to complete.
+        Futures.allAsList(results).get(1, TimeUnit.SECONDS);
+        for (ListenableFuture<Optional<BuildResult>> r : results) {
+          assertTrue(r.isDone());
+          assertTrue(r.get().get().isSuccess());
+        }
       }
     } finally {
       service.shutdownNow();
@@ -263,6 +417,16 @@ public class HybridLocalStrategyTest {
           .setRule(rule)
           .setStatus(BuildRuleStatus.SUCCESS)
           .setSuccessOptional(successType)
+          .build();
+    }
+
+    @Override
+    public BuildResult createCancelledResult(Throwable throwable) {
+      return BuildResult.builder()
+          .setCacheResult(CacheResult.miss())
+          .setRule(rule)
+          .setStatus(BuildRuleStatus.CANCELED)
+          .setFailureOptional(throwable)
           .build();
     }
 
