@@ -28,6 +28,7 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -158,6 +159,19 @@ public class GrpcProtocol implements Protocol {
     public boolean getIsExecutable() {
       return fileNode.getIsExecutable();
     }
+
+    @Override
+    public int hashCode() {
+      return fileNode.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof GrpcFileNode)) {
+        return false;
+      }
+      return fileNode.equals(((GrpcFileNode) obj).fileNode);
+    }
   }
 
   private static class GrpcDirectory implements Directory {
@@ -168,12 +182,12 @@ public class GrpcProtocol implements Protocol {
     }
 
     @Override
-    public Iterable<FileNode> getFilesList() {
+    public Collection<FileNode> getFilesList() {
       return directory.getFilesList().stream().map(GrpcFileNode::new).collect(Collectors.toList());
     }
 
     @Override
-    public Iterable<DirectoryNode> getDirectoriesList() {
+    public Collection<DirectoryNode> getDirectoriesList() {
       return directory
           .getDirectoriesList()
           .stream()
@@ -182,7 +196,7 @@ public class GrpcProtocol implements Protocol {
     }
 
     @Override
-    public Iterable<SymlinkNode> getSymlinksList() {
+    public Collection<SymlinkNode> getSymlinksList() {
       return directory
           .getSymlinksList()
           .stream()
@@ -206,6 +220,19 @@ public class GrpcProtocol implements Protocol {
     @Override
     public String getTarget() {
       return node.getTarget();
+    }
+
+    @Override
+    public int hashCode() {
+      return node.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof GrpcSymlinkNode)) {
+        return false;
+      }
+      return node.equals(((GrpcSymlinkNode) obj).node);
     }
   }
 
@@ -391,7 +418,7 @@ public class GrpcProtocol implements Protocol {
 
   @Override
   public Directory newDirectory(
-      List<DirectoryNode> children, List<FileNode> files, List<SymlinkNode> symlinks) {
+      List<DirectoryNode> children, Collection<FileNode> files, Collection<SymlinkNode> symlinks) {
     return new GrpcDirectory(
         build.bazel.remote.execution.v2.Directory.newBuilder()
             .addAllFiles(files.stream().map(GrpcProtocol::get).collect(Collectors.toList()))

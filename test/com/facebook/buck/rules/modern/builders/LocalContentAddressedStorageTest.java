@@ -20,17 +20,15 @@ import static org.junit.Assert.*;
 
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
+import com.facebook.buck.remoteexecution.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
-import com.facebook.buck.remoteexecution.util.FileTreeBuilder;
-import com.facebook.buck.remoteexecution.util.FileTreeBuilder.InputFile;
-import com.facebook.buck.remoteexecution.util.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
+import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache;
+import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.Futures;
 import java.io.ByteArrayInputStream;
@@ -39,6 +37,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -49,7 +49,6 @@ public class LocalContentAddressedStorageTest {
   private LocalContentAddressedStorage storage;
   private Path storageDir;
   private final Protocol protocol = new GrpcProtocol();
-  private HashFunction hasher = Hashing.sipHash24();
 
   @Before
   public void setUp() {
@@ -95,18 +94,29 @@ public class LocalContentAddressedStorageTest {
 
   @Test
   public void addingAndMaterializingFullInputsWorks() throws IOException {
-    FileTreeBuilder inputsBuilder = new FileTreeBuilder();
+    Map<Path, FileNode> files = new HashMap<>();
     Path somePath = Paths.get("dir/some.path");
     byte[] someData = "hello world!".getBytes(Charsets.UTF_8);
-    inputsBuilder.addFile(somePath, () -> newFileNode(someData, false));
+    files.put(somePath, newFileNode(someData, somePath, false));
     Path otherPath = Paths.get("dir/other.path");
     byte[] otherData = "goodbye world!".getBytes(Charsets.UTF_8);
-    inputsBuilder.addFile(otherPath, () -> newFileNode(otherData, false));
+    files.put(otherPath, newFileNode(otherData, otherPath, false));
+
+    MerkleTreeNodeCache nodeCache = new MerkleTreeNodeCache(protocol);
+    MerkleTreeNode node = nodeCache.createNode(files, ImmutableMap.of());
+    Digest rootDigest = nodeCache.getData(node).getDigest();
 
     ImmutableMap.Builder<Digest, ThrowingSupplier<InputStream, IOException>> requiredData =
         ImmutableMap.builder();
-    Digest rootDigest =
-        inputsBuilder.buildTree(new ProtocolTreeBuilder(requiredData::put, dir -> {}, protocol));
+
+    requiredData.put(protocol.computeDigest(someData), () -> new ByteArrayInputStream(someData));
+    requiredData.put(protocol.computeDigest(otherData), () -> new ByteArrayInputStream(otherData));
+    nodeCache.forAllData(
+        node,
+        data ->
+            requiredData.put(
+                data.getDigest(),
+                () -> new ByteArrayInputStream(protocol.toByteArray(data.getDirectory()))));
 
     Futures.getUnchecked(storage.addMissing(requiredData.build()));
 
@@ -117,11 +127,8 @@ public class LocalContentAddressedStorageTest {
     assertDataEquals(otherData, Files.readAllBytes(inputsDir.resolve(otherPath)));
   }
 
-  private InputFile newFileNode(byte[] bytes, boolean isExecutable) {
-    return new InputFile(
-        hasher.hashBytes(bytes).toString(),
-        bytes.length,
-        isExecutable,
-        () -> new ByteArrayInputStream(bytes));
+  private FileNode newFileNode(byte[] bytes, Path path, boolean isExecutable) {
+    return protocol.newFileNode(
+        protocol.computeDigest(bytes), path.getFileName().toString(), isExecutable);
   }
 }

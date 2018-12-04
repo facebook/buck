@@ -23,6 +23,7 @@ import com.google.common.hash.HashFunction;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -40,7 +41,6 @@ public interface Protocol {
 
   /** Represents a possibly executable file in directories/trees. */
   interface FileNode {
-
     String getName();
 
     Digest getDigest();
@@ -57,7 +57,6 @@ public interface Protocol {
 
   /** Represents a child of a Directory. */
   interface DirectoryNode {
-
     String getName();
 
     Digest getDigest();
@@ -65,12 +64,11 @@ public interface Protocol {
 
   /** A Directory consists of a list of files and child DirectoryNodes. */
   interface Directory {
+    Collection<FileNode> getFilesList();
 
-    Iterable<FileNode> getFilesList();
+    Collection<DirectoryNode> getDirectoriesList();
 
-    Iterable<DirectoryNode> getDirectoriesList();
-
-    Iterable<SymlinkNode> getSymlinksList();
+    Collection<SymlinkNode> getSymlinksList();
   }
 
   /** A Tree contains all Directories in a merkle tree in a single structure. */
@@ -148,7 +146,7 @@ public interface Protocol {
   DirectoryNode newDirectoryNode(String name, Digest child);
 
   Directory newDirectory(
-      List<DirectoryNode> children, List<FileNode> files, List<SymlinkNode> symlinks);
+      List<DirectoryNode> children, Collection<FileNode> files, Collection<SymlinkNode> symlinks);
 
   byte[] toByteArray(Directory directory);
 
