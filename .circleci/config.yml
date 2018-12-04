@@ -24,11 +24,6 @@ jobs:
     steps:
       - run: *apt-dependencies
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            sudo apt update -y -qq
-            sudo apt install --no-install-recommends -y -qq ant
       - run: *run-ci-script
 
   unit:
@@ -40,11 +35,6 @@ jobs:
     steps:
       - run: *apt-dependencies
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            sudo apt update -y -qq
-            sudo apt install --no-install-recommends -y -qq ant groovy
       - run: *run-ci-script
 
 workflows:
