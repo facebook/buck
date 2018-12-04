@@ -80,23 +80,38 @@ public class RemoteExecutionEventListener
 
   /** Event specific subscriber method. */
   @Subscribe
+  public void onActionScheduled(
+      @SuppressWarnings("unused") RemoteExecutionActionEvent.Scheduled event) {
+    hasFirstRemoteActionStarted.set(true);
+    getStateCount(State.WAITING).incrementAndGet();
+  }
+
+  /** Event specific subscriber method. */
+  @Subscribe
   public void onActionEventTerminal(RemoteExecutionActionEvent.Terminal event) {
     hasFirstRemoteActionStarted.set(true);
-    actionStateCount.get(event.getState()).incrementAndGet();
+    getStateCount(State.WAITING).decrementAndGet();
+    getStateCount(event.getState()).incrementAndGet();
   }
 
   /** Event specific subscriber method. */
   @Subscribe
   public void onActionEventStarted(RemoteExecutionActionEvent.Started event) {
     hasFirstRemoteActionStarted.set(true);
-    actionStateCount.get(event.getState()).incrementAndGet();
+    getStateCount(State.WAITING).decrementAndGet();
+    getStateCount(event.getState()).incrementAndGet();
+  }
+
+  public AtomicInteger getStateCount(State waiting) {
+    return Objects.requireNonNull(actionStateCount.get(waiting));
   }
 
   /** Event specific subscriber method. */
   @Subscribe
   public void onActionEventFinished(RemoteExecutionActionEvent.Finished event) {
     hasFirstRemoteActionStarted.set(true);
-    actionStateCount.get(event.getStartedEvent().getState()).decrementAndGet();
+    getStateCount(State.WAITING).incrementAndGet();
+    getStateCount(event.getStartedEvent().getState()).decrementAndGet();
   }
 
   @Override
@@ -105,10 +120,7 @@ public class RemoteExecutionEventListener
         actionStateCount
             .entrySet()
             .stream()
-            .collect(
-                Collectors.toMap(
-                    entry -> entry.getKey(),
-                    entry -> Objects.requireNonNull(entry.getValue().get()))));
+            .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue().get())));
   }
 
   @Override

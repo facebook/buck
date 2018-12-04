@@ -43,7 +43,7 @@ public class RemoteExecutionConsoleLineProviderTest {
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(2, lines.size());
     Assert.assertEquals(
-        "[RE] Actions: Local=0 Remote=[del=0 comp=0 upl=0 exec=0 dwl=0 suc=84 fail=0 cncl=0]",
+        "[RE] Actions: Local=0 Remote=[wait=0 del=0 comp=0 upl=0 exec=0 dwl=0 suc=84 fail=0 cncl=0]",
         lines.get(0));
     Assert.assertEquals(
         "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(1));

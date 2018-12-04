@@ -158,6 +158,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     Preconditions.checkState(rule instanceof ModernBuildRule);
     BuildTarget buildTarget = rule.getBuildTarget();
 
+    RemoteExecutionActionEvent.sendScheduledEvent(eventBus, rule.getBuildTarget());
+
     ListenableFuture<RemoteExecutionActionInfo> actionInfoFuture =
         computeActionLimiter.schedule(
             service,

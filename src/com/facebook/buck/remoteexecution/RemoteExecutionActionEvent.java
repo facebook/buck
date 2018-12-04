@@ -37,6 +37,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
   /** The current state of a Remote Execution Actions. */
   public enum State {
+    WAITING("wait"),
     DELETING_STALE_OUTPUTS("del"),
     COMPUTING_ACTION("comp"),
     UPLOADING_INPUTS("upl"),
@@ -83,8 +84,14 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     eventBus.post(event);
   }
 
+  public static void sendScheduledEvent(BuckEventBus eventBus, BuildTarget buildTarget) {
+    eventBus.post(new Scheduled(buildTarget));
+  }
+
   public static boolean isTerminalState(State state) {
-    return state == State.ACTION_FAILED || state == State.ACTION_SUCCEEDED;
+    return state == State.ACTION_FAILED
+        || state == State.ACTION_SUCCEEDED
+        || state == State.ACTION_CANCELLED;
   }
 
   /** Sends a one off terminal event for a Remote Execution Action. */
@@ -156,6 +163,29 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     @Override
     protected String getValueString() {
       return state.toString();
+    }
+  }
+
+  /**
+   * Indicates that a remote execution event has been scheduled. This should be sent once for every
+   * build target that will have any other remote execution action events (and should be sent before
+   * any others).
+   */
+  public static class Scheduled extends RemoteExecutionActionEvent {
+    private final BuildTarget buildTarget;
+
+    protected Scheduled(BuildTarget buildTarget) {
+      super(EventKey.unique());
+      this.buildTarget = buildTarget;
+    }
+
+    @Override
+    protected String getValueString() {
+      return "scheduled";
+    }
+
+    public BuildTarget getBuildTarget() {
+      return buildTarget;
     }
   }
 
