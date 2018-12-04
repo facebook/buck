@@ -6,7 +6,7 @@ aliases:
 
 defaults: &defaults
   docker:
-    - image: circleci/android:api-23-alpha
+    - image: openjdk:8-slim
   working_directory: ~/buck
 
 version: 2
