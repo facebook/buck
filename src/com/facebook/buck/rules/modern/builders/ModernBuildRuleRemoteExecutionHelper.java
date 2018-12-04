@@ -288,11 +288,35 @@ public class ModernBuildRuleRemoteExecutionHelper {
 
     FileInputsAdder inputsAdder =
         new FileInputsAdder(
-            inputsBuilder,
-            cellPathPrefix,
-            fileHasher,
-            this::getDirectoryContents,
-            this::getSymlinkTarget);
+            new FileInputsAdder.Delegate() {
+              @Override
+              public void addFile(Path path) throws IOException {
+                inputsBuilder.addFile(
+                    cellPathPrefix.relativize(path),
+                    () ->
+                        new InputFile(
+                            fileHasher.apply(path).toString(),
+                            (int) Files.size(path),
+                            Files.isExecutable(path),
+                            () -> new FileInputStream(path.toFile())));
+              }
+
+              @Override
+              public void addSymlink(Path symlink, Path fixedTarget) {
+                inputsBuilder.addSymlink(cellPathPrefix.relativize(symlink), fixedTarget);
+              }
+
+              @Override
+              public Iterable<Path> getDirectoryContents(Path target) throws IOException {
+                return getCachedDirectoryContents(target);
+              }
+
+              @Override
+              public Path getSymlinkTarget(Path path) throws IOException {
+                return getCachedSymlinkTarget(path);
+              }
+            },
+            cellPathPrefix);
     for (SourcePath inputSourcePath : converted.computeInputs()) {
       Path resolved =
           buildContext.getSourcePathResolver().getAbsolutePath(inputSourcePath).normalize();
@@ -301,7 +325,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   }
 
   @Nullable
-  private Path getSymlinkTarget(Path path) throws IOException {
+  private Path getCachedSymlinkTarget(Path path) throws IOException {
     try {
       Preconditions.checkState(path.startsWith(cellPathPrefix));
       return symlinkTargets.computeIfAbsent(
@@ -323,7 +347,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   }
 
   @Nullable
-  private Iterable<Path> getDirectoryContents(Path path) throws IOException {
+  private Iterable<Path> getCachedDirectoryContents(Path path) throws IOException {
     try {
       Preconditions.checkState(path.startsWith(cellPathPrefix));
       return directoryContents.computeIfAbsent(

@@ -19,7 +19,9 @@ package com.facebook.buck.rules.modern.builders;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.remoteexecution.util.FileTreeBuilder;
+import com.facebook.buck.remoteexecution.util.FileTreeBuilder.InputFile;
 import com.facebook.buck.remoteexecution.util.FileTreeBuilder.TreeBuilder;
+import com.facebook.buck.rules.modern.builders.FileInputsAdder.Delegate;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.CreateSymlinksForTests;
@@ -27,6 +29,7 @@ import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -43,6 +46,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class FileInputsAdderTest {
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private final Map<Path, HashCode> fileHashes = new HashMap<>();
@@ -91,20 +95,43 @@ public class FileInputsAdderTest {
 
   @Before
   public void setUp() {
+    Path root = tmp.getRoot();
     adder =
         new FileInputsAdder(
-            builder,
-            tmp.getRoot(),
-            fileHashes::get,
-            dir -> {
-              if (!Files.isDirectory(dir)) {
-                return null;
+            new Delegate() {
+              @Override
+              public void addFile(Path path) throws IOException {
+                builder.addFile(
+                    root.relativize(path),
+                    () ->
+                        new InputFile(
+                            fileHashes.get(path).toString(),
+                            (int) Files.size(path),
+                            Files.isExecutable(path),
+                            () -> new FileInputStream(path.toFile())));
               }
-              try (Stream<Path> listing = Files.list(dir)) {
-                return listing.collect(Collectors.toList());
+
+              @Override
+              public void addSymlink(Path symlink, Path fixedTarget) {
+                builder.addSymlink(root.relativize(symlink), fixedTarget);
+              }
+
+              @Override
+              public Iterable<Path> getDirectoryContents(Path dir) throws IOException {
+                if (!Files.isDirectory(dir)) {
+                  return null;
+                }
+                try (Stream<Path> listing = Files.list(dir)) {
+                  return listing.collect(Collectors.toList());
+                }
+              }
+
+              @Override
+              public Path getSymlinkTarget(Path path) throws IOException {
+                return Files.isSymbolicLink(path) ? Files.readSymbolicLink(path) : null;
               }
             },
-            link -> Files.isSymbolicLink(link) ? Files.readSymbolicLink(link) : null);
+            tmp.getRoot());
   }
 
   @Test
