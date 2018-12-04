@@ -229,6 +229,16 @@ public class JavaTestIntegrationTest {
   }
 
   @Test
+  public void macrosExpandedInVmArgsTest() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "vm_args_with_macro", temp);
+    workspace.setUp();
+
+    ProcessResult buildResult = workspace.runBuckCommand("test", "//:simple");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
   public void testWithJni() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace =

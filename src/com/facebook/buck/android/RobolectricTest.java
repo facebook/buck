@@ -93,7 +93,7 @@ public class RobolectricTest extends JavaTest {
       Set<String> labels,
       Set<String> contacts,
       TestType testType,
-      List<String> vmArgs,
+      List<Arg> vmArgs,
       Map<String, String> nativeLibsEnvironment,
       Optional<DummyRDotJava> optionalDummyRDotJava,
       Optional<Long> testRuleTimeoutMs,

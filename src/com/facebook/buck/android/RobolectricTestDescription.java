@@ -48,6 +48,7 @@ import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.MoreSuppliers;
@@ -57,6 +58,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Collections;
 import java.util.Objects;
@@ -153,7 +155,17 @@ public class RobolectricTestDescription
             args.isUseOldStyleableFormat(),
             /* skipNonUnionRDotJava */ false);
 
-    ImmutableList<String> vmArgs = args.getVmArgs();
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(context.getCellPathResolver())
+            .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
+            .build();
+    ImmutableList<Arg> vmArgs =
+        ImmutableList.copyOf(
+            Lists.transform(
+                args.getVmArgs(), vmArg -> macrosConverter.convert(vmArg, graphBuilder)));
+
 
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
@@ -206,13 +218,6 @@ public class RobolectricTestDescription
                 .setJavacOptions(javacOptions)
                 .build()
                 .buildLibrary());
-
-    StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
-            .build();
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(

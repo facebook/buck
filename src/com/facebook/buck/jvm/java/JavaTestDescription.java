@@ -55,6 +55,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.Map;
@@ -170,7 +171,7 @@ public class JavaTestDescription
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
         javaOptionsForTests.get().getJavaRuntimeLauncher(graphBuilder),
-        args.getVmArgs(),
+        Lists.transform(args.getVmArgs(), vmArg -> macrosConverter.convert(vmArg, graphBuilder)),
         cxxLibraryEnhancement.nativeLibsEnvironment,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
@@ -201,7 +202,7 @@ public class JavaTestDescription
   }
 
   public interface CoreArg extends HasContacts, HasTestTimeout, JavaLibraryDescription.CoreArg {
-    ImmutableList<String> getVmArgs();
+    ImmutableList<StringWithMacros> getVmArgs();
 
     Optional<TestType> getTestType();
 

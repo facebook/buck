@@ -26,8 +26,10 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -137,8 +139,13 @@ public class JavaTestRuleTest {
   }
 
   private JavaTest newRule(ImmutableList<String> vmArgs) throws NoSuchBuildTargetException {
+    ImmutableList<StringWithMacros> vmArgMacros =
+        vmArgs
+            .stream()
+            .map(arg -> StringWithMacros.of(ImmutableList.of(Either.ofLeft(arg))))
+            .collect(ImmutableList.toImmutableList());
     return JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//example:test"))
-        .setVmArgs(vmArgs)
+        .setVmArgs(vmArgMacros)
         .addSrc(Paths.get("ExampleTest.java"))
         .build(new TestActionGraphBuilder());
   }

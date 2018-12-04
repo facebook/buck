@@ -114,7 +114,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries;
   private final Tool javaRuntimeLauncher;
 
-  private final ImmutableList<String> vmArgs;
+  private final ImmutableList<Arg> vmArgs;
 
   private final ImmutableMap<String, String> nativeLibsEnvironment;
 
@@ -159,7 +159,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Set<String> contacts,
       TestType testType,
       Tool javaRuntimeLauncher,
-      List<String> vmArgs,
+      List<Arg> vmArgs,
       Map<String, String> nativeLibsEnvironment,
       Optional<Long> testRuleTimeoutMs,
       Optional<Long> testCaseTimeoutMs,
@@ -232,7 +232,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     ImmutableList<String> properVmArgs =
         amendVmArgs(
-            this.vmArgs,
+            Arg.stringify(this.vmArgs, pathResolver),
             pathResolver,
             executionContext.getTargetDevice(),
             options.getJavaTempDir());

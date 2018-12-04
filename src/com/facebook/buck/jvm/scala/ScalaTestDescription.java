@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -149,7 +150,7 @@ public class ScalaTestDescription
         args.getContacts(),
         args.getTestType().isPresent() ? args.getTestType().get() : TestType.JUNIT,
         javaOptionsForTests.get().getJavaRuntimeLauncher(graphBuilder),
-        args.getVmArgs(),
+        Lists.transform(args.getVmArgs(), vmArg -> macrosConverter.convert(vmArg, graphBuilder)),
         cxxLibraryEnhancement.nativeLibsEnvironment,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
