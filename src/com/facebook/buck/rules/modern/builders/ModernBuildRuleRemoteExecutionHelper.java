@@ -16,17 +16,19 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
+import com.facebook.buck.remoteexecution.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.util.FileTreeBuilder;
 import com.facebook.buck.remoteexecution.util.FileTreeBuilder.InputFile;
 import com.facebook.buck.remoteexecution.util.FileTreeBuilder.ProtocolTreeBuilder;
@@ -65,7 +67,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -81,6 +82,7 @@ import javax.annotation.Nullable;
  * OutOfProcessIsolatedBuilder} (via trampoline.sh).
  */
 public class ModernBuildRuleRemoteExecutionHelper {
+
   private static final Path TRAMPOLINE =
       Paths.get(
           System.getProperty(
@@ -89,25 +91,55 @@ public class ModernBuildRuleRemoteExecutionHelper {
 
   private static final String pluginResources = System.getProperty("buck.module.resources");
   private static final String pluginRoot = System.getProperty("pf4j.pluginsDir");
+  public static final Path TRAMPOLINE_PATH = Paths.get("__trampoline__.sh");
 
-  private final byte[] trampoline;
+  /**
+   * Used to store information about the common files required by all rules (classpaths, plugin
+   * files, configuration, etc).
+   */
+  private static class RequiredFile {
+    private final Path path;
+    private final InputFile inputFile;
+
+    RequiredFile(
+        Path path, FileNode fileNode, ThrowingSupplier<InputStream, IOException> dataSupplier) {
+      this.path = path;
+      this.inputFile =
+          new InputFile(
+              fileNode.getDigest().getHash(),
+              fileNode.getDigest().getSize(),
+              fileNode.getIsExecutable(),
+              dataSupplier);
+    }
+  }
+
+  private static class ClassPath {
+    private final ImmutableList<RequiredFile> requiredFiles;
+    private final ImmutableList<Path> classpath;
+
+    ClassPath(ImmutableList<RequiredFile> requiredFiles, ImmutableList<Path> classpath) {
+      this.requiredFiles = requiredFiles;
+      this.classpath = classpath;
+    }
+  }
+
+  private final ThrowingSupplier<RequiredFile, IOException> trampoline;
 
   // TODO(cjhopman): We need to figure out a way to only hash these files once-per-daemon, not
   // once-per-command.
-  private final ImmutableMap<Path, Supplier<InputFile>> classPath;
-  private final ImmutableMap<Path, Supplier<InputFile>> bootstrapClassPath;
-  private final ImmutableMap<Path, Supplier<InputFile>> pluginFiles;
+  private final ThrowingSupplier<ClassPath, IOException> classPath;
+  private final ThrowingSupplier<ClassPath, IOException> bootstrapClassPath;
+  private final ThrowingSupplier<ClassPath, IOException> pluginFiles;
+  private final ThrowingSupplier<ImmutableList<RequiredFile>, IOException> configFiles;
 
   private final BuckEventBus eventBus;
 
+  private final SourcePathResolver pathResolver;
   private final CellPathResolver cellResolver;
   private final ThrowingFunction<Path, HashCode, IOException> fileHasher;
   private final Serializer serializer;
-  private final Map<Optional<String>, byte[]> cellToConfig;
-  private final Map<Optional<String>, String> configHashes;
   private final Path cellPathPrefix;
   private final Path projectRoot;
-  private final Set<Optional<String>> cellNames;
   private final Map<HashCode, Node> nodeMap;
   private final HashFunction hasher;
 
@@ -125,28 +157,19 @@ public class ModernBuildRuleRemoteExecutionHelper {
       Cell rootCell,
       ImmutableSet<Optional<String>> cellNames,
       Path cellPathPrefix,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher)
-      throws IOException {
+      ThrowingFunction<Path, HashCode, IOException> fileHasher) {
     this.eventBus = eventBus;
     this.protocol = protocol;
-    this.classPath = prepareClassPath(BuckClasspath.getClasspath());
-    this.bootstrapClassPath = prepareClassPath(BuckClasspath.getBootstrapClasspath());
-    this.trampoline = Files.readAllBytes(TRAMPOLINE);
 
     this.cellResolver = cellResolver;
-    this.cellNames = cellNames;
+    this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+
     this.cellPathPrefix = cellPathPrefix;
     this.projectRoot = cellPathPrefix.relativize(rootCell.getRoot());
 
     this.nodeMap = new ConcurrentHashMap<>();
     this.hasher = protocol.getHashFunction();
     this.fileHasher = fileHasher;
-
-    if (pluginResources == null || pluginRoot == null) {
-      pluginFiles = ImmutableMap.of();
-    } else {
-      pluginFiles = prepareClassPath(findPlugins());
-    }
 
     Delegate delegate =
         (instance, data, children) -> {
@@ -164,35 +187,56 @@ public class ModernBuildRuleRemoteExecutionHelper {
         };
     this.serializer = new Serializer(ruleFinder, cellResolver, delegate);
 
-    this.cellToConfig =
-        cellNames
-            .stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    v -> v,
-                    name ->
-                        serializeConfig(
-                            rootCell
-                                .getCellProvider()
-                                .getCellByPath(Optionals.require(cellResolver.getCellPath(name)))
-                                .getBuckConfig())));
+    this.classPath = prepareClassPath(BuckClasspath::getClasspath);
+    this.bootstrapClassPath = prepareClassPath(BuckClasspath::getBootstrapClasspath);
+    this.trampoline =
+        MoreSuppliers.memoize(
+            () ->
+                new RequiredFile(
+                    TRAMPOLINE_PATH,
+                    protocol.newFileNode(
+                        protocol.computeDigest(Files.readAllBytes(TRAMPOLINE)),
+                        TRAMPOLINE_PATH.getFileName().toString(),
+                        true),
+                    () -> new FileInputStream(TRAMPOLINE.toFile())),
+            IOException.class);
+    if (pluginResources == null || pluginRoot == null) {
+      pluginFiles = () -> new ClassPath(ImmutableList.of(), ImmutableList.of());
+    } else {
+      pluginFiles = prepareClassPath(() -> findPlugins());
+    }
 
-    this.configHashes =
-        cellToConfig
-            .entrySet()
-            .stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    entry -> entry.getKey(),
-                    entry -> hasher.hashBytes(entry.getValue()).toString()));
+    this.configFiles =
+        MoreSuppliers.memoize(
+            () -> {
+              ImmutableList.Builder<RequiredFile> filesBuilder = ImmutableList.builder();
+              for (Optional<String> cellName : cellNames) {
+                Path configPath = getPrefixRelativeCellPath(cellName).resolve(".buckconfig");
+                byte[] bytes =
+                    serializeConfig(
+                        rootCell
+                            .getCellProvider()
+                            .getCellByPath(cellResolver.getCellPath(cellName).get())
+                            .getBuckConfig());
+                filesBuilder.add(
+                    new RequiredFile(
+                        configPath,
+                        protocol.newFileNode(
+                            protocol.computeDigest(bytes),
+                            configPath.getFileName().toString(),
+                            false),
+                        () -> new ByteArrayInputStream(bytes)));
+              }
+              return filesBuilder.build();
+            },
+            IOException.class);
   }
 
   /**
    * Gets all the information needed to run the rule via Remote Execution (inputs merkle tree,
    * action and digest, outputs).
    */
-  RemoteExecutionActionInfo prepareRemoteExecution(
-      ModernBuildRule<?> rule, BuildContext buildRuleBuildContext) throws IOException {
+  RemoteExecutionActionInfo prepareRemoteExecution(ModernBuildRule<?> rule) throws IOException {
     Set<Path> outputs;
     HashCode hash;
     FileTreeBuilder inputsBuilder = new FileTreeBuilder();
@@ -203,9 +247,10 @@ public class ModernBuildRuleRemoteExecutionHelper {
     }
 
     try (Scope ignored = LeafEvents.scope(eventBus, "constructing_inputs_tree")) {
-      addBuckConfigInputs(inputsBuilder);
+      addSharedFilesData(inputsBuilder);
+
       addDeserializationInputs(hash, inputsBuilder);
-      addRuleInputs(inputsBuilder, rule, buildRuleBuildContext);
+      addRuleInputs(inputsBuilder, rule);
 
       outputs = new HashSet<>();
       rule.recordOutputs(
@@ -213,23 +258,13 @@ public class ModernBuildRuleRemoteExecutionHelper {
               outputs.add(cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(path))));
     }
 
-    ImmutableList<Path> isolatedClasspath =
-        processClasspath(inputsBuilder, cellPathPrefix, classPath);
-    ImmutableList<Path> isolatedBootstrapClasspath =
-        processClasspath(inputsBuilder, cellPathPrefix, bootstrapClassPath);
-    processClasspath(inputsBuilder, cellPathPrefix, pluginFiles);
+    ImmutableList<Path> isolatedClasspath = classPath.get().classpath;
+    ImmutableList<Path> isolatedBootstrapClasspath = bootstrapClassPath.get().classpath;
 
-    Path trampolinePath = Paths.get("./__trampoline__.sh");
-    ImmutableList<String> command = getBuilderCommand(trampolinePath, projectRoot, hash.toString());
+    ImmutableList<String> command = getBuilderCommand(projectRoot, hash.toString());
     ImmutableSortedMap<String, String> commandEnvironment =
         getBuilderEnvironmentOverrides(
             isolatedBootstrapClasspath, isolatedClasspath, cellPathPrefix);
-
-    inputsBuilder.addFile(
-        trampolinePath,
-        () -> trampoline,
-        data -> protocol.getHashFunction().hashBytes(data).toString(),
-        true);
 
     Protocol.Command actionCommand = protocol.newCommand(command, commandEnvironment, outputs);
 
@@ -251,6 +286,22 @@ public class ModernBuildRuleRemoteExecutionHelper {
         actionDigest, ImmutableMap.copyOf(requiredDataBuilder), outputs);
   }
 
+  private void addSharedFilesData(FileTreeBuilder fileTreeBuilder) throws IOException {
+    for (RequiredFile requiredFile : classPath.get().requiredFiles) {
+      fileTreeBuilder.addFile(requiredFile.path, () -> requiredFile.inputFile);
+    }
+    for (RequiredFile requiredFile : bootstrapClassPath.get().requiredFiles) {
+      fileTreeBuilder.addFile(requiredFile.path, () -> requiredFile.inputFile);
+    }
+    for (RequiredFile requiredFile : pluginFiles.get().requiredFiles) {
+      fileTreeBuilder.addFile(requiredFile.path, () -> requiredFile.inputFile);
+    }
+    for (RequiredFile f : configFiles.get()) {
+      fileTreeBuilder.addFile(f.path, () -> f.inputFile);
+    }
+    fileTreeBuilder.addFile(trampoline.get().path, () -> trampoline.get().inputFile);
+  }
+
   private static ImmutableList<Path> findPlugins() throws IOException {
     ImmutableList.Builder<Path> pathsBuilder = ImmutableList.builder();
     try (Stream<Path> files = Files.walk(Paths.get(pluginRoot))) {
@@ -266,24 +317,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
     return cellPathPrefix.relativize(Optionals.require(cellResolver.getCellPath(name)));
   }
 
-  private void addBuckConfigInputs(FileTreeBuilder inputsBuilder) throws IOException {
-    for (Optional<String> cell : cellNames) {
-      Path configPath = getPrefixRelativeCellPath(cell).resolve(".buckconfig");
-      inputsBuilder.addFile(
-          configPath,
-          () -> {
-            byte[] data = Objects.requireNonNull(cellToConfig.get(cell));
-            return new InputFile(
-                Objects.requireNonNull(configHashes.get(cell)),
-                data.length,
-                false,
-                () -> new ByteArrayInputStream(data));
-          });
-    }
-  }
-
-  private void addRuleInputs(
-      FileTreeBuilder inputsBuilder, ModernBuildRule<?> converted, BuildContext buildContext)
+  private void addRuleInputs(FileTreeBuilder inputsBuilder, ModernBuildRule<?> converted)
       throws IOException {
 
     FileInputsAdder inputsAdder =
@@ -318,8 +352,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
             },
             cellPathPrefix);
     for (SourcePath inputSourcePath : converted.computeInputs()) {
-      Path resolved =
-          buildContext.getSourcePathResolver().getAbsolutePath(inputSourcePath).normalize();
+      Path resolved = pathResolver.getAbsolutePath(inputSourcePath).normalize();
       inputsAdder.addInput(resolved);
     }
   }
@@ -453,57 +486,42 @@ public class ModernBuildRuleRemoteExecutionHelper {
         "0");
   }
 
-  private ImmutableList<String> getBuilderCommand(
-      Path trampolinePath, Path projectRoot, String hash) {
+  private static ImmutableList<String> getBuilderCommand(Path projectRoot, String hash) {
     String rootString = projectRoot.toString();
     if (rootString.isEmpty()) {
       rootString = "./";
     }
-    return ImmutableList.of(trampolinePath.toString(), rootString, hash);
+    return ImmutableList.of("./" + TRAMPOLINE_PATH.toString(), rootString, hash);
   }
 
-  private ImmutableMap<Path, Supplier<InputFile>> prepareClassPath(ImmutableList<Path> classpath) {
-    ImmutableMap.Builder<Path, Supplier<InputFile>> resultBuilder = ImmutableMap.builder();
-    for (Path path : classpath) {
-      resultBuilder.put(
-          path,
-          MoreSuppliers.memoize(
-              () -> {
-                try {
-                  return new InputFile(
-                      protocol.getHashFunction().hashBytes(Files.readAllBytes(path)).toString(),
-                      (int) Files.size(path),
-                      false,
-                      () -> new FileInputStream(path.toFile()));
-                } catch (IOException e) {
-                  throw new RuntimeException(e);
-                }
-              }));
-    }
-    return resultBuilder.build();
+  private ThrowingSupplier<ClassPath, IOException> prepareClassPath(
+      ThrowingSupplier<ImmutableList<Path>, IOException> classpath) {
+    return MoreSuppliers.memoize(
+        () -> {
+          ImmutableList.Builder<Path> pathsBuilder = ImmutableList.builder();
+          ImmutableList.Builder<RequiredFile> filesBuilder = ImmutableList.builder();
+
+          for (Path path : classpath.get()) {
+            if (path.startsWith(cellPathPrefix)) {
+              Path relative = cellPathPrefix.relativize(path);
+              pathsBuilder.add(relative);
+              byte[] data = Files.readAllBytes(path);
+              filesBuilder.add(
+                  new RequiredFile(
+                      relative,
+                      protocol.newFileNode(
+                          protocol.computeDigest(data), path.getFileName().toString(), false),
+                      () -> new FileInputStream(path.toFile())));
+            } else {
+              pathsBuilder.add(path);
+            }
+          }
+          return new ClassPath(filesBuilder.build(), pathsBuilder.build());
+        },
+        IOException.class);
   }
 
-  private String classpathArg(Iterable<Path> classpath) {
+  private static String classpathArg(Iterable<Path> classpath) {
     return Joiner.on(File.pathSeparator).join(classpath);
-  }
-
-  private ImmutableList<Path> processClasspath(
-      FileTreeBuilder inputsBuilder,
-      Path cellPrefix,
-      ImmutableMap<Path, Supplier<InputFile>> classPath)
-      throws IOException {
-    ImmutableList.Builder<Path> resolvedBuilder = ImmutableList.builder();
-    for (Map.Entry<Path, Supplier<InputFile>> entry : classPath.entrySet()) {
-      Path path = entry.getKey();
-      Preconditions.checkState(path.isAbsolute());
-      if (!path.startsWith(cellPrefix)) {
-        resolvedBuilder.add(path);
-      } else {
-        Path relative = cellPrefix.relativize(path);
-        inputsBuilder.addFile(relative, () -> entry.getValue().get());
-        resolvedBuilder.add(relative);
-      }
-    }
-    return resolvedBuilder.build();
   }
 }

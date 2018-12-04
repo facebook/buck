@@ -252,9 +252,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       try (Scope ignored1 =
           RemoteExecutionActionEvent.sendEvent(
               eventBus, State.COMPUTING_ACTION, rule.getBuildTarget(), Optional.empty())) {
-        actionInfo =
-            mbrHelper.prepareRemoteExecution(
-                (ModernBuildRule<?>) rule, strategyContext.getBuildRuleBuildContext());
+        actionInfo = mbrHelper.prepareRemoteExecution((ModernBuildRule<?>) rule);
       }
       return actionInfo;
     }
