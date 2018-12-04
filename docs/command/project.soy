@@ -164,6 +164,17 @@
     specified.
   {/param}
 {/call}
+
+{call buck.param}
+  {param name: 'project-schemes' /}
+  {param desc}
+    Enables the generation of separate schemes for all projects included in the generated workspace.
+    Each project's scheme is constrained to the set of build and test targets that are members or
+    deps of the associated project.
+    You can specify the default value using by adding <code>project_schemes = true</code> to the
+    <code>[project]</code> section of your <code>.buckconfig</code> file.
+  {/param}
+{/call}
 </ul>
 
 {/param}

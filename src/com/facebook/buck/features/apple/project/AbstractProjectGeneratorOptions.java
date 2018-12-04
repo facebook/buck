@@ -35,6 +35,12 @@ interface AbstractProjectGeneratorOptions {
     return false;
   }
 
+  /** Create schemes for each project's contained build and test targets. */
+  @Value.Default
+  default boolean shouldGenerateProjectSchemes() {
+    return false;
+  }
+
   /** Generate read-only project files */
   @Value.Default
   default boolean shouldGenerateReadOnlyFiles() {

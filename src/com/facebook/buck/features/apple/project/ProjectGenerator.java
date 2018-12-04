@@ -409,6 +409,16 @@ public class ProjectGenerator {
     return buildTargetToPbxTargetMap.build();
   }
 
+  /** @return Map from the generated project to all contained targets. */
+  public ImmutableSetMultimap<PBXProject, PBXTarget> getGeneratedProjectToGeneratedTargets() {
+    Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
+    ImmutableSetMultimap.Builder<PBXProject, PBXTarget> generatedProjectToPbxTargetsBuilder =
+        ImmutableSetMultimap.builder();
+    generatedProjectToPbxTargetsBuilder.putAll(
+        getGeneratedProject(), targetNodeToGeneratedProjectTargetBuilder.build().values());
+    return generatedProjectToPbxTargetsBuilder.build();
+  }
+
   public ImmutableSet<BuildTarget> getRequiredBuildTargets() {
     Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
     return requiredBuildTargetsBuilder.build();

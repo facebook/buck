@@ -35,6 +35,7 @@ import org.kohsuke.args4j.Option;
 public class XCodeProjectSubCommand extends ProjectSubCommand {
 
   private static final boolean DEFAULT_READ_ONLY_VALUE = false;
+  private static final boolean DEFAULT_PROJECT_SCHEMES = false;
   private static final boolean DEFAULT_ABSOLUTE_HEADER_MAP_PATHS = false;
   private static final boolean DEFAULT_SHARED_LIBRARIES_AS_DYNAMIC_FRAMEWORKS = false;
 
@@ -42,6 +43,11 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
       name = "--combined-project",
       usage = "Generate an xcode project of a target and its dependencies.")
   private boolean combinedProject;
+
+  @Option(
+      name = "--project-schemes",
+      usage = "Generate an xcode scheme for each sub-project with its targets and tests.")
+  private boolean projectSchemes = false;
 
   @Option(
       name = "--focus",
@@ -118,6 +124,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
             projectGeneratorParameters.isWithoutDependenciesTests(),
             modulesToFocusOn,
             combinedProject,
+            getProjectSchemes(params.getBuckConfig()),
             projectGeneratorParameters.isDryRun(),
             getReadOnly(params.getBuckConfig()),
             new PrintStreamPathOutputPresenter(
@@ -137,6 +144,12 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
       throws Exception {
     BuildCommand buildCommand = new BuildCommand(arguments);
     return buildCommand.run(params);
+  }
+
+  private boolean getProjectSchemes(BuckConfig buckConfig) {
+    // command line arg takes precedence over buck config
+    return projectSchemes
+        || buckConfig.getBooleanValue("project", "project_schemes", DEFAULT_PROJECT_SCHEMES);
   }
 
   private boolean getReadOnly(BuckConfig buckConfig) {

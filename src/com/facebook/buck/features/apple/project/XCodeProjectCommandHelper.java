@@ -123,6 +123,7 @@ public class XCodeProjectCommandHelper {
   private final boolean withoutDependenciesTests;
   private final String modulesToFocusOn;
   private final boolean combinedProject;
+  private final boolean createProjectSchemes;
   private final boolean dryRun;
   private final boolean readOnly;
   private final PathOutputPresenter outputPresenter;
@@ -153,6 +154,7 @@ public class XCodeProjectCommandHelper {
       boolean withoutDependenciesTests,
       String modulesToFocusOn,
       boolean combinedProject,
+      boolean createProjectSchemes,
       boolean dryRun,
       boolean readOnly,
       PathOutputPresenter outputPresenter,
@@ -180,6 +182,7 @@ public class XCodeProjectCommandHelper {
     this.withoutDependenciesTests = withoutDependenciesTests;
     this.modulesToFocusOn = modulesToFocusOn;
     this.combinedProject = combinedProject;
+    this.createProjectSchemes = createProjectSchemes;
     this.dryRun = dryRun;
     this.readOnly = readOnly;
     this.outputPresenter = outputPresenter;
@@ -353,6 +356,7 @@ public class XCodeProjectCommandHelper {
                 appleConfig.shouldGenerateMissingUmbrellaHeaders())
             .setShouldUseShortNamesForTargets(true)
             .setShouldCreateDirectoryStructure(combinedProject)
+            .setShouldGenerateProjectSchemes(createProjectSchemes)
             .build();
 
     LOG.debug("Xcode project generation: Generates workspaces for targets");
