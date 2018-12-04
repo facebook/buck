@@ -24,6 +24,7 @@
  */
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -50,7 +51,7 @@ public class FatJarMain {
    */
   private static void updateEnvironment(Map<String, String> env, Path libDir) {
     String librarySearchPathName = getLibrarySearchPathName();
-    String originalLibPath = System.getenv(librarySearchPathName);
+    String originalLibPath = getEnvValue(librarySearchPathName);
     String newlibPath =
         libDir + (originalLibPath == null ? "" : File.pathSeparator + originalLibPath);
     env.put(librarySearchPathName, newlibPath);
@@ -125,18 +126,45 @@ public class FatJarMain {
    * @return the platform specific environment variable for setting the native library search path.
    */
   private static String getLibrarySearchPathName() {
-    String platform = Objects.requireNonNull(System.getProperty("os.name"));
+    String platform = getOsPlatform();
     if (platform.startsWith("Linux")) {
       return "LD_LIBRARY_PATH";
     } else if (platform.startsWith("Mac OS")) {
       return "DYLD_LIBRARY_PATH";
-    } else if (platform.startsWith("Windows")) {
+    } else if (isWindowsOs(platform)) {
       return "PATH";
     } else {
       System.err.println(
           "WARNING: using \"LD_LIBRARY_PATH\" for unrecognized platform " + platform);
       return "LD_LIBRARY_PATH";
     }
+  }
+
+  @Nullable
+  private static String getEnvValue(String envVariableName) {
+    if (isWindowsOs(getOsPlatform())) {
+      return findMapValueIgnoreKeyCase(envVariableName, System.getenv());
+    } else {
+      return System.getenv(envVariableName);
+    }
+  }
+
+  @Nullable
+  private static String findMapValueIgnoreKeyCase(String key, Map<String, String> map) {
+    for (Map.Entry<String, String> entry : map.entrySet()) {
+      if (entry.getKey().equalsIgnoreCase(key)) {
+        return entry.getValue();
+      }
+    }
+    return null;
+  }
+
+  private static String getOsPlatform() {
+    return Objects.requireNonNull(System.getProperty("os.name"));
+  }
+
+  private static boolean isWindowsOs(String osPlatform) {
+    return osPlatform.startsWith("Windows");
   }
 
   /**
