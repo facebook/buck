@@ -411,6 +411,44 @@ public class SuperConsoleEventBusListenerTest {
             "Building... 0.5 sec",
             " - //banana:stand... 0.3 sec (running doing_something[0.1 sec])"));
 
+    String innerStepShortName = "doing_something_inner";
+    String innerStepDescription = "working hard (for real)";
+    UUID innerStepUuid = UUID.randomUUID();
+    StepEvent.Started innerStepEventStarted =
+        StepEvent.started(innerStepShortName, innerStepDescription, innerStepUuid);
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            innerStepEventStarted, 800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    // Should now show the inner step.
+    validateBuildIdConsole(
+        listener,
+        900L,
+        ImmutableList.of(
+            parsingLine,
+            actionGraphLine,
+            formatCacheStatsLine(true, 1, 23f, 0f),
+            "Building... 0.5 sec",
+            " - //banana:stand... 0.3 sec (running doing_something_inner[0.1 sec])"));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            StepEvent.finished(innerStepEventStarted, 0),
+            900L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    // Should now return to showing the outer step.
+    validateBuildIdConsole(
+        listener,
+        900L,
+        ImmutableList.of(
+            parsingLine,
+            actionGraphLine,
+            formatCacheStatsLine(true, 1, 23f, 0f),
+            "Building... 0.5 sec",
+            " - //banana:stand... 0.3 sec (running doing_something[0.1 sec])"));
+
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             StepEvent.finished(stepEventStarted, 0),
