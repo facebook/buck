@@ -29,22 +29,24 @@ import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.Protocol.FileNode;
-import com.facebook.buck.remoteexecution.util.FileTreeBuilder;
-import com.facebook.buck.remoteexecution.util.FileTreeBuilder.InputFile;
-import com.facebook.buck.remoteexecution.util.FileTreeBuilder.ProtocolTreeBuilder;
+import com.facebook.buck.remoteexecution.Protocol.SymlinkNode;
+import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache;
+import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.Serializer;
 import com.facebook.buck.rules.modern.Serializer.Delegate;
+import com.facebook.buck.rules.modern.impl.InputsMapBuilder;
+import com.facebook.buck.rules.modern.impl.InputsMapBuilder.Data;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -60,16 +62,16 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 
 /**
  * ModernBuildRuleRemoteExecutionHelper is used to create remote execution actions for a {@link
@@ -93,23 +95,22 @@ public class ModernBuildRuleRemoteExecutionHelper {
   private static final String pluginRoot = System.getProperty("pf4j.pluginsDir");
   public static final Path TRAMPOLINE_PATH = Paths.get("__trampoline__.sh");
 
+  private final InputsMapBuilder inputsMapBuilder;
+
   /**
    * Used to store information about the common files required by all rules (classpaths, plugin
    * files, configuration, etc).
    */
   private static class RequiredFile {
     private final Path path;
-    private final InputFile inputFile;
+    private final FileNode fileNode;
+    private final ThrowingSupplier<InputStream, IOException> dataSupplier;
 
     RequiredFile(
         Path path, FileNode fileNode, ThrowingSupplier<InputStream, IOException> dataSupplier) {
       this.path = path;
-      this.inputFile =
-          new InputFile(
-              fileNode.getDigest().getHash(),
-              fileNode.getDigest().getSize(),
-              fileNode.getIsExecutable(),
-              dataSupplier);
+      this.fileNode = fileNode;
+      this.dataSupplier = dataSupplier;
     }
   }
 
@@ -132,6 +133,10 @@ public class ModernBuildRuleRemoteExecutionHelper {
   private final ThrowingSupplier<ClassPath, IOException> pluginFiles;
   private final ThrowingSupplier<ImmutableList<RequiredFile>, IOException> configFiles;
 
+  private final ThrowingSupplier<MerkleTreeNode, IOException> sharedFilesNode;
+
+  private final MerkleTreeNodeCache nodeCache;
+
   private final BuckEventBus eventBus;
 
   private final SourcePathResolver pathResolver;
@@ -144,10 +149,6 @@ public class ModernBuildRuleRemoteExecutionHelper {
   private final HashFunction hasher;
 
   private final Protocol protocol;
-
-  // These are used to cache the results of some expensive I/O operations.
-  private Map<Path, Path> symlinkTargets = new ConcurrentHashMap<>();
-  private Map<Path, Iterable<Path>> directoryContents = new ConcurrentHashMap<>();
 
   public ModernBuildRuleRemoteExecutionHelper(
       BuckEventBus eventBus,
@@ -187,6 +188,8 @@ public class ModernBuildRuleRemoteExecutionHelper {
         };
     this.serializer = new Serializer(ruleFinder, cellResolver, delegate);
 
+    this.nodeCache = new MerkleTreeNodeCache(protocol);
+
     this.classPath = prepareClassPath(BuckClasspath::getClasspath);
     this.bootstrapClassPath = prepareClassPath(BuckClasspath::getBootstrapClasspath);
     this.trampoline =
@@ -205,6 +208,8 @@ public class ModernBuildRuleRemoteExecutionHelper {
     } else {
       pluginFiles = prepareClassPath(() -> findPlugins());
     }
+
+    this.inputsMapBuilder = new InputsMapBuilder();
 
     this.configFiles =
         MoreSuppliers.memoize(
@@ -230,6 +235,28 @@ public class ModernBuildRuleRemoteExecutionHelper {
               return filesBuilder.build();
             },
             IOException.class);
+
+    this.sharedFilesNode =
+        MoreSuppliers.memoize(
+            () -> {
+              Map<Path, FileNode> sharedRequiredFiles = new HashMap<>();
+              classPath
+                  .get()
+                  .requiredFiles
+                  .forEach(file -> sharedRequiredFiles.put(file.path, file.fileNode));
+              bootstrapClassPath
+                  .get()
+                  .requiredFiles
+                  .forEach(file -> sharedRequiredFiles.put(file.path, file.fileNode));
+              pluginFiles
+                  .get()
+                  .requiredFiles
+                  .forEach(file -> sharedRequiredFiles.put(file.path, file.fileNode));
+              sharedRequiredFiles.put(trampoline.get().path, trampoline.get().fileNode);
+              configFiles.get().forEach(file -> sharedRequiredFiles.put(file.path, file.fileNode));
+              return nodeCache.createNode(sharedRequiredFiles, ImmutableMap.of());
+            },
+            IOException.class);
   }
 
   /**
@@ -239,18 +266,30 @@ public class ModernBuildRuleRemoteExecutionHelper {
   RemoteExecutionActionInfo prepareRemoteExecution(ModernBuildRule<?> rule) throws IOException {
     Set<Path> outputs;
     HashCode hash;
-    FileTreeBuilder inputsBuilder = new FileTreeBuilder();
 
     try (Scope ignored = LeafEvents.scope(eventBus, "serializing")) {
       Buildable original = rule.getBuildable();
       hash = serializer.serialize(new BuildableAndTarget(original, rule.getBuildTarget()));
     }
 
-    try (Scope ignored = LeafEvents.scope(eventBus, "constructing_inputs_tree")) {
-      addSharedFilesData(inputsBuilder);
+    ImmutableList<Path> isolatedClasspath = classPath.get().classpath;
+    ImmutableList<Path> isolatedBootstrapClasspath = bootstrapClassPath.get().classpath;
 
-      addDeserializationInputs(hash, inputsBuilder);
-      addRuleInputs(inputsBuilder, rule);
+    List<MerkleTreeNode> allNodes = new ArrayList<>();
+    allNodes.add(sharedFilesNode.get());
+
+    HashMap<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder =
+        new HashMap<>();
+
+    try (Scope ignored2 = LeafEvents.scope(eventBus, "constructing_inputs_tree")) {
+      addSharedFilesData(requiredDataBuilder);
+
+      allNodes.add(getSerializationTreeAndInputs(hash, requiredDataBuilder));
+
+      MerkleTreeNode inputsMerkleTree = resolveInputs(inputsMapBuilder.getInputs(rule));
+
+      allNodes.add(inputsMerkleTree);
+      addFileInputs(inputsMerkleTree, requiredDataBuilder);
 
       outputs = new HashSet<>();
       rule.recordOutputs(
@@ -258,48 +297,121 @@ public class ModernBuildRuleRemoteExecutionHelper {
               outputs.add(cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(path))));
     }
 
-    ImmutableList<Path> isolatedClasspath = classPath.get().classpath;
-    ImmutableList<Path> isolatedBootstrapClasspath = bootstrapClassPath.get().classpath;
+    try (Scope ignored2 = LeafEvents.scope(eventBus, "constructing_action_info")) {
+      ImmutableList<String> command = getBuilderCommand(projectRoot, hash.toString());
+      ImmutableSortedMap<String, String> commandEnvironment =
+          getBuilderEnvironmentOverrides(
+              isolatedBootstrapClasspath, isolatedClasspath, cellPathPrefix);
 
-    ImmutableList<String> command = getBuilderCommand(projectRoot, hash.toString());
-    ImmutableSortedMap<String, String> commandEnvironment =
-        getBuilderEnvironmentOverrides(
-            isolatedBootstrapClasspath, isolatedClasspath, cellPathPrefix);
+      Protocol.Command actionCommand = protocol.newCommand(command, commandEnvironment, outputs);
 
-    Protocol.Command actionCommand = protocol.newCommand(command, commandEnvironment, outputs);
+      MerkleTreeNode mergedMerkleTree = nodeCache.mergeNodes(allNodes);
 
-    HashMap<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder =
-        new HashMap<>();
-    ProtocolTreeBuilder grpcTreeBuilder =
-        new ProtocolTreeBuilder(requiredDataBuilder::put, directory -> {}, protocol);
-    Digest inputsRootDigest = inputsBuilder.buildTree(grpcTreeBuilder);
-    byte[] commandData = protocol.toByteArray(actionCommand);
-    Digest commandDigest = protocol.computeDigest(commandData);
-    requiredDataBuilder.put(commandDigest, () -> new ByteArrayInputStream(commandData));
+      nodeCache.forAllData(
+          mergedMerkleTree,
+          childData ->
+              requiredDataBuilder.put(
+                  childData.getDigest(),
+                  () -> new ByteArrayInputStream(protocol.toByteArray(childData.getDirectory()))));
 
-    Protocol.Action action = protocol.newAction(commandDigest, inputsRootDigest);
-    byte[] actionData = protocol.toByteArray(action);
-    Digest actionDigest = protocol.computeDigest(actionData);
-    requiredDataBuilder.put(actionDigest, () -> new ByteArrayInputStream(actionData));
+      Digest inputsRootDigest = nodeCache.getData(mergedMerkleTree).getDigest();
 
-    return RemoteExecutionActionInfo.of(
-        actionDigest, ImmutableMap.copyOf(requiredDataBuilder), outputs);
+      byte[] commandData = protocol.toByteArray(actionCommand);
+      Digest commandDigest = protocol.computeDigest(commandData);
+      requiredDataBuilder.put(commandDigest, () -> new ByteArrayInputStream(commandData));
+
+      Protocol.Action action = protocol.newAction(commandDigest, inputsRootDigest);
+      byte[] actionData = protocol.toByteArray(action);
+      Digest actionDigest = protocol.computeDigest(actionData);
+      requiredDataBuilder.put(actionDigest, () -> new ByteArrayInputStream(actionData));
+
+      return RemoteExecutionActionInfo.of(
+          actionDigest, ImmutableMap.copyOf(requiredDataBuilder), outputs);
+    }
   }
 
-  private void addSharedFilesData(FileTreeBuilder fileTreeBuilder) throws IOException {
+  private void addFileInputs(
+      MerkleTreeNode inputsMerkleTree,
+      Map<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder) {
+    inputsMerkleTree.forAllFiles(
+        cellPathPrefix,
+        (path, fileNode) ->
+            requiredDataBuilder.put(
+                fileNode.getDigest(), () -> new FileInputStream(path.toFile())));
+  }
+
+  private void addSharedFilesData(
+      Map<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder)
+      throws IOException {
     for (RequiredFile requiredFile : classPath.get().requiredFiles) {
-      fileTreeBuilder.addFile(requiredFile.path, () -> requiredFile.inputFile);
+      requiredDataBuilder.put(requiredFile.fileNode.getDigest(), requiredFile.dataSupplier);
     }
     for (RequiredFile requiredFile : bootstrapClassPath.get().requiredFiles) {
-      fileTreeBuilder.addFile(requiredFile.path, () -> requiredFile.inputFile);
+      requiredDataBuilder.put(requiredFile.fileNode.getDigest(), requiredFile.dataSupplier);
     }
     for (RequiredFile requiredFile : pluginFiles.get().requiredFiles) {
-      fileTreeBuilder.addFile(requiredFile.path, () -> requiredFile.inputFile);
+      requiredDataBuilder.put(requiredFile.fileNode.getDigest(), requiredFile.dataSupplier);
     }
     for (RequiredFile f : configFiles.get()) {
-      fileTreeBuilder.addFile(f.path, () -> f.inputFile);
+      requiredDataBuilder.put(f.fileNode.getDigest(), f.dataSupplier);
     }
-    fileTreeBuilder.addFile(trampoline.get().path, () -> trampoline.get().inputFile);
+    requiredDataBuilder.put(trampoline.get().fileNode.getDigest(), trampoline.get().dataSupplier);
+  }
+
+  private ConcurrentHashMap<Data, MerkleTreeNode> resolvedInputsCache = new ConcurrentHashMap<>();
+
+  private MerkleTreeNode resolveInputs(Data inputs) {
+    MerkleTreeNode cached = resolvedInputsCache.get(inputs);
+    if (cached != null) {
+      return cached;
+    }
+
+    // Ensure the children are computed.
+    inputs.getChildren().forEach(this::resolveInputs);
+
+    return resolvedInputsCache.computeIfAbsent(
+        inputs,
+        ignored -> {
+          try {
+            HashMap<Path, FileNode> files = new HashMap<>();
+            HashMap<Path, SymlinkNode> symlinks = new HashMap<>();
+
+            FileInputsAdder inputsAdder =
+                new FileInputsAdder(
+                    new FileInputsAdder.AbstractDelegate() {
+                      @Override
+                      public void addFile(Path path) throws IOException {
+                        files.put(
+                            cellPathPrefix.relativize(path),
+                            protocol.newFileNode(
+                                protocol.newDigest(
+                                    fileHasher.apply(path).toString(), (int) Files.size(path)),
+                                path.getFileName().toString(),
+                                Files.isExecutable(path)));
+                      }
+
+                      @Override
+                      public void addSymlink(Path path, Path fixedTarget) {
+                        symlinks.put(
+                            cellPathPrefix.relativize(path),
+                            protocol.newSymlinkNode(path.getFileName().toString(), fixedTarget));
+                      }
+                    },
+                    cellPathPrefix);
+
+            for (SourcePath path : inputs.getPaths()) {
+              inputsAdder.addInput(pathResolver.getAbsolutePath(path));
+            }
+
+            List<MerkleTreeNode> nodes = new ArrayList<>();
+            nodes.add(nodeCache.createNode(files, symlinks));
+
+            inputs.getChildren().forEach(child -> nodes.add(resolveInputs(child)));
+            return nodeCache.mergeNodes(nodes);
+          } catch (IOException e) {
+            throw new BuckUncheckedExecutionException(e);
+          }
+        });
   }
 
   private static ImmutableList<Path> findPlugins() throws IOException {
@@ -315,132 +427,6 @@ public class ModernBuildRuleRemoteExecutionHelper {
 
   private Path getPrefixRelativeCellPath(Optional<String> name) {
     return cellPathPrefix.relativize(Optionals.require(cellResolver.getCellPath(name)));
-  }
-
-  private void addRuleInputs(FileTreeBuilder inputsBuilder, ModernBuildRule<?> converted)
-      throws IOException {
-
-    FileInputsAdder inputsAdder =
-        new FileInputsAdder(
-            new FileInputsAdder.Delegate() {
-              @Override
-              public void addFile(Path path) throws IOException {
-                inputsBuilder.addFile(
-                    cellPathPrefix.relativize(path),
-                    () ->
-                        new InputFile(
-                            fileHasher.apply(path).toString(),
-                            (int) Files.size(path),
-                            Files.isExecutable(path),
-                            () -> new FileInputStream(path.toFile())));
-              }
-
-              @Override
-              public void addSymlink(Path symlink, Path fixedTarget) {
-                inputsBuilder.addSymlink(cellPathPrefix.relativize(symlink), fixedTarget);
-              }
-
-              @Override
-              public Iterable<Path> getDirectoryContents(Path target) throws IOException {
-                return getCachedDirectoryContents(target);
-              }
-
-              @Override
-              public Path getSymlinkTarget(Path path) throws IOException {
-                return getCachedSymlinkTarget(path);
-              }
-            },
-            cellPathPrefix);
-    for (SourcePath inputSourcePath : converted.computeInputs()) {
-      Path resolved = pathResolver.getAbsolutePath(inputSourcePath).normalize();
-      inputsAdder.addInput(resolved);
-    }
-  }
-
-  @Nullable
-  private Path getCachedSymlinkTarget(Path path) throws IOException {
-    try {
-      Preconditions.checkState(path.startsWith(cellPathPrefix));
-      return symlinkTargets.computeIfAbsent(
-          path,
-          ignored -> {
-            try {
-              if (!Files.isSymbolicLink(path)) {
-                return null;
-              }
-
-              return Files.readSymbolicLink(path);
-            } catch (IOException e) {
-              throw new WrappedIOException(e);
-            }
-          });
-    } catch (WrappedIOException e) {
-      throw e.getCause();
-    }
-  }
-
-  @Nullable
-  private Iterable<Path> getCachedDirectoryContents(Path path) throws IOException {
-    try {
-      Preconditions.checkState(path.startsWith(cellPathPrefix));
-      return directoryContents.computeIfAbsent(
-          path,
-          ignored -> {
-            if (!Files.isDirectory(path)) {
-              return null;
-            }
-            try (Stream<Path> list = Files.list(path)) {
-              return list.collect(Collectors.toList());
-            } catch (IOException e) {
-              throw new WrappedIOException(e);
-            }
-          });
-    } catch (WrappedIOException e) {
-      throw e.getCause();
-    }
-  }
-
-  private static class WrappedIOException extends RuntimeException {
-    private WrappedIOException(IOException cause) {
-      super(cause);
-    }
-
-    @Override
-    public synchronized IOException getCause() {
-      return (IOException) super.getCause();
-    }
-  }
-
-  private void addDeserializationInputs(HashCode hash, FileTreeBuilder inputsBuilder)
-      throws IOException {
-    class DataAdder {
-      void addData(Path root, String hash, Node node) throws IOException {
-        inputsBuilder.addFile(
-            root.resolve("__value__"),
-            () ->
-                new InputFile(
-                    hash, node.data.length, false, () -> new ByteArrayInputStream(node.data)));
-        for (Map.Entry<String, Node> child : node.children.entrySet()) {
-          addData(root.resolve(child.getKey()), child.getKey(), child.getValue());
-        }
-      }
-    }
-
-    new DataAdder()
-        .addData(
-            Paths.get("__data__").resolve(hash.toString()),
-            hash.toString(),
-            Objects.requireNonNull(nodeMap.get(hash)));
-  }
-
-  private static class Node {
-    private final byte[] data;
-    private final ImmutableSortedMap<String, Node> children;
-
-    Node(byte[] data, ImmutableSortedMap<String, Node> children) {
-      this.data = data;
-      this.children = children;
-    }
   }
 
   private static byte[] serializeConfig(BuckConfig config) {
@@ -492,6 +478,43 @@ public class ModernBuildRuleRemoteExecutionHelper {
       rootString = "./";
     }
     return ImmutableList.of("./" + TRAMPOLINE_PATH.toString(), rootString, hash);
+  }
+
+  private static class Node {
+    private final byte[] data;
+
+    private final ImmutableSortedMap<String, Node> children;
+
+    Node(byte[] data, ImmutableSortedMap<String, Node> children) {
+      this.data = data;
+      this.children = children;
+    }
+  }
+
+  private MerkleTreeNode getSerializationTreeAndInputs(
+      HashCode hash, Map<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder) {
+    Map<Path, FileNode> fileNodes = new HashMap<>();
+    class DataAdder {
+      void addData(Path root, String hash, Node node) {
+        String fileName = "__value__";
+        Path valuePath = root.resolve(fileName);
+        Digest digest = protocol.newDigest(hash, node.data.length);
+        fileNodes.put(valuePath, protocol.newFileNode(digest, fileName, false));
+        requiredDataBuilder.put(digest, () -> new ByteArrayInputStream(node.data));
+
+        for (Map.Entry<String, Node> child : node.children.entrySet()) {
+          addData(root.resolve(child.getKey()), child.getKey(), child.getValue());
+        }
+      }
+    }
+
+    new DataAdder()
+        .addData(
+            Paths.get("__data__").resolve(hash.toString()),
+            hash.toString(),
+            Objects.requireNonNull(nodeMap.get(hash)));
+
+    return nodeCache.createNode(fileNodes, ImmutableMap.of());
   }
 
   private ThrowingSupplier<ClassPath, IOException> prepareClassPath(

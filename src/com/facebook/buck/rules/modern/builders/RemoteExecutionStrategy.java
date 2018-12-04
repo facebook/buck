@@ -93,8 +93,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher)
-      throws IOException {
+      ThrowingFunction<Path, HashCode, IOException> fileHasher) {
     this.executionClients = executionClients;
     this.service =
         MoreExecutors.listeningDecorator(
@@ -142,8 +141,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher)
-      throws IOException {
+      ThrowingFunction<Path, HashCode, IOException> fileHasher) {
     return new RemoteExecutionStrategy(
         eventBus, strategyConfig, clients, ruleFinder, cellResolver, rootCell, fileHasher);
   }
