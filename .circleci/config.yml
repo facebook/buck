@@ -17,6 +17,7 @@ aliases:
   - &run-ci-script
     name: Run CI script
     command: |
+      echo '-Xmx500m' > .buckjavaargs.local
       ./scripts/travisci_run.sh
 
 defaults: &defaults
