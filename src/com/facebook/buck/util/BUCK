@@ -129,12 +129,27 @@ java_library(
     ],
 )
 
+ISOLATED_SRCS = [
+    "JavaVersion.java",
+]
+
+java_library(
+    name = "isolated",
+    srcs = ISOLATED_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        # Do NOT add any deps here. This library is used by code that cannot depend on the rest of Buck.
+    ],
+)
+
 java_immutables_library(
     name = "util",
     srcs = glob(
         ["*.java"],
         exclude = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS +
-                  PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS,
+                  PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS + ISOLATED_SRCS,
     ),
     exported_deps = [
         "//src/com/facebook/buck/util/function:function",

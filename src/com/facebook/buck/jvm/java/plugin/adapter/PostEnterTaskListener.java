@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.plugin.adapter;
 
+import com.facebook.buck.util.JavaVersion;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskEvent;
@@ -33,9 +34,10 @@ import javax.tools.JavaFileObject;
 
 /** A {@link TaskListener} that runs some code after the final enter phase. */
 public class PostEnterTaskListener implements TaskListener {
+
   private final BuckJavacTask task;
   private final Consumer<Set<Element>> callback;
-  private final Set<Element> topLevelElements = new LinkedHashSet<Element>();
+  private final Set<Element> topLevelElements = new LinkedHashSet<>();
 
   private boolean annotationProcessing = false;
   private int pendingEnterCalls = 0;
@@ -50,10 +52,19 @@ public class PostEnterTaskListener implements TaskListener {
     switch (e.getKind()) {
       case ANNOTATION_PROCESSING:
         // The raw event stream from javac will start with this event if there are any APs present
+        if (!topLevelElements.isEmpty()) {
+          // Though we can get multiple annotation processing rounds within the context of
+          // annotation processing, annotation processing at a high level shouldn't happen more than
+          // once.
+          throw new IllegalStateException("Annotation processing happened more than once");
+        }
         annotationProcessing = true;
         break;
       case ENTER:
         if (pendingEnterCalls == 0) {
+          // We may enter the tree multiple times as part of multiple annotation processing rounds.
+          // Make sure we grab the most up-to-date top level elements from the last time they are
+          // entered.
           topLevelElements.clear();
         }
         pendingEnterCalls += 1;
@@ -102,7 +113,17 @@ public class PostEnterTaskListener implements TaskListener {
         break;
     }
 
-    if (e.getKind() == TaskEvent.Kind.ENTER && !annotationProcessing && pendingEnterCalls == 0) {
+    // For source ABI generation, we want to short circuit the compiler as early as possible to reap
+    // the performance benefits. When annotation processing isn't involved, the last ENTER finished
+    // event, which comes before the ANALYZE and GENERATE phases, tells us the right time to do
+    // this. When annotation processing is involved, the behavior is different between Java 8 and
+    // Java 9+. In Java 8, we get a bunch of ENTER events after the ANNOTATION_PROCESSING finished
+    // event, and we can do the same thing and look at the last ENTER finished event. In Java 9+,
+    // the last set of ENTER events happen right *before* the ANNOTATION_PROCESSING finished event,
+    // so we have to rely on the ANNOTATION_PROCESSING finished event itself.
+    if ((e.getKind() == TaskEvent.Kind.ENTER && !annotationProcessing && pendingEnterCalls == 0)
+        || (JavaVersion.getMajorVersion() >= 9
+            && e.getKind() == TaskEvent.Kind.ANNOTATION_PROCESSING)) {
       Set<Element> unmodifiableTopLevelElements = Collections.unmodifiableSet(topLevelElements);
       callback.accept(unmodifiableTopLevelElements);
     }
