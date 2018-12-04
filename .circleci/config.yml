@@ -1,4 +1,9 @@
 aliases:
+  - &apt-dependencies
+    name: Install APT dependencies
+    command: |
+      sudo apt update -y
+      sudo apt install -y --no-install-recommends ant git groovy python unzip wget
   - &run-ci-script
     name: Run CI script
     command: |
@@ -17,6 +22,7 @@ jobs:
       CI_ACTION: build
     
     steps:
+      - run: *apt-dependencies
       - checkout
       - run:
           name: Install dependencies
@@ -32,6 +38,7 @@ jobs:
       GROOVY_HOME: /usr/share/groovy/
 
     steps:
+      - run: *apt-dependencies
       - checkout
       - run:
           name: Install dependencies
