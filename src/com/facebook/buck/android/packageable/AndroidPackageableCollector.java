@@ -47,7 +47,7 @@ public class AndroidPackageableCollector {
   private final AndroidPackageableCollection.Builder collectionBuilder =
       AndroidPackageableCollection.builder();
 
-  private final Map<APKModule, ResourceCollector> resourceCollector = new HashMap<>();
+  private final Map<APKModule, ResourceCollector> resourceCollectors = new HashMap<>();
 
   // Map is used instead of ImmutableMap.Builder for its containsKey() method.
   private final Map<String, BuildConfigFields> buildConfigs = new HashMap<>();
@@ -85,7 +85,7 @@ public class AndroidPackageableCollector {
     this.apkModuleGraph = apkModuleGraph;
     apkModuleGraph
         .getAPKModules()
-        .forEach(module -> resourceCollector.put(module, new ResourceCollector()));
+        .forEach(module -> resourceCollectors.put(module, new ResourceCollector()));
   }
 
   /** Add packageables */
@@ -274,13 +274,13 @@ public class AndroidPackageableCollector {
         .forEach(
             apkModule ->
                 collectionBuilder.putResourceDetails(
-                    apkModule, resourceCollector.get(apkModule).getResourceDetails()));
+                    apkModule, resourceCollectors.get(apkModule).getResourceDetails()));
     return collectionBuilder.build();
   }
 
   private ResourceCollector getResourceCollector(BuildTarget owner) {
     APKModule module = apkModuleGraph.findResourceModuleForTarget(owner);
-    ResourceCollector collector = resourceCollector.get(module);
+    ResourceCollector collector = resourceCollectors.get(module);
     if (collector == null) {
       throw new RuntimeException(
           String.format(
