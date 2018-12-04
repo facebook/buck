@@ -52,9 +52,23 @@ jobs:
       - checkout
       - run: *run-ci-script
 
+  ant:
+    <<: *defaults
+    environment:
+      ANDROID_HOME: /opt/android
+      ANT_OPTS: -Xmx500m
+      CI_ACTION: ant
+
+    steps:
+      - run: *apt-dependencies
+      - run: *android-setup
+      - checkout
+      - run: *run-ci-script
+
 workflows:
   version: 2
   build_and_test:
     jobs:
       - build
       - unit
+      - ant
