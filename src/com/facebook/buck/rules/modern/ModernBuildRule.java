@@ -36,7 +36,7 @@ import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.DefaultInputRuleResolver;
 import com.facebook.buck.rules.modern.impl.DepsComputingVisitor;
-import com.facebook.buck.rules.modern.impl.InputsVisitor;
+import com.facebook.buck.rules.modern.impl.InputsMapBuilder;
 import com.facebook.buck.rules.modern.impl.OutputPathVisitor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -194,14 +194,10 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
 
   /** Computes the inputs of the build rule. */
   public ImmutableSortedSet<SourcePath> computeInputs() {
-    return computeInputs(getBuildable(), classInfo);
-  }
-
-  /** Computes the inputs of the build rule. */
-  public static <T extends Buildable> ImmutableSortedSet<SourcePath> computeInputs(
-      T buildable, ClassInfo<T> classInfo) {
     ImmutableSortedSet.Builder<SourcePath> depsBuilder = ImmutableSortedSet.naturalOrder();
-    classInfo.visit(buildable, new InputsVisitor(depsBuilder::add));
+    new InputsMapBuilder()
+        .getInputs(getBuildable())
+        .forAllData(data -> depsBuilder.addAll(data.getPaths()));
     return depsBuilder.build();
   }
 

@@ -41,13 +41,17 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.junit.Test;
 
-public class InputsVisitorTest extends AbstractValueVisitorTest {
+public class InputsMapBuilderTest extends AbstractValueVisitorTest {
   private Consumer<SourcePath> inputsConsumer = createStrictMock(Consumer.class);
 
   private void apply(Buildable value) {
     replay(inputsConsumer);
-    DefaultClassInfoFactory.forInstance(value).visit(value, new InputsVisitor(inputsConsumer));
+    consumeInputs(value, inputsConsumer);
     verify(inputsConsumer);
+  }
+
+  private void consumeInputs(AddsToRuleKey value, Consumer<SourcePath> inputsConsumer) {
+    new InputsMapBuilder().getInputs(value).forAllData(d -> d.getPaths().forEach(inputsConsumer));
   }
 
   @Override
@@ -254,8 +258,7 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
   public void customDeps() {
     WithCustomInputs withCustomInputs = new WithCustomInputs();
     ImmutableList.Builder<SourcePath> inputsBuilder = ImmutableList.builder();
-    DefaultClassInfoFactory.forInstance(withCustomInputs)
-        .visit(withCustomInputs, new InputsVisitor(inputsBuilder::add));
+    consumeInputs(withCustomInputs, inputsBuilder::add);
     assertEquals(inputsBuilder.build(), ImmutableList.of(otherPath));
   }
 
@@ -269,8 +272,7 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
         };
 
     ImmutableList.Builder<SourcePath> inputsBuilder = ImmutableList.builder();
-    DefaultClassInfoFactory.forInstance(withCustomFieldBehavior)
-        .visit(withCustomFieldBehavior, new InputsVisitor(inputsBuilder::add));
+    consumeInputs(withCustomFieldBehavior, inputsBuilder::add);
     assertEquals(ImmutableList.of(otherPath, oneMorePath), inputsBuilder.build());
   }
 
