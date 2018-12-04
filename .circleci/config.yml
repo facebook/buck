@@ -13,7 +13,7 @@ aliases:
     name: Install APT dependencies
     command: |
       apt update -qq -y
-      apt install -qq -y --no-install-recommends ant gcc g++ git groovy python ssh-client unzip wget
+      apt install -qq -y --no-install-recommends ant gcc g++ ghc ghc-dynamic git groovy python ssh-client unzip wget 
   - &run-ci-script
     name: Run CI script
     command: |
