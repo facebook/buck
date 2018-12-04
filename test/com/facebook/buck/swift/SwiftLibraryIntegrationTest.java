@@ -256,6 +256,8 @@ public class SwiftLibraryIntegrationTest {
 
   @Test
   public void testEmitModuleDocArgsAreIncludedInCompilerCommand() {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
       BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
       BuildTarget swiftCompileTarget =
           buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
