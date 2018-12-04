@@ -18,20 +18,13 @@ package com.facebook.buck.rules.modern.builders;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.remoteexecution.util.FileTreeBuilder;
-import com.facebook.buck.remoteexecution.util.FileTreeBuilder.InputFile;
-import com.facebook.buck.remoteexecution.util.FileTreeBuilder.TreeBuilder;
-import com.facebook.buck.rules.modern.builders.FileInputsAdder.Delegate;
+import com.facebook.buck.rules.modern.builders.FileInputsAdder.AbstractDelegate;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.MoreIterables;
-import com.facebook.buck.util.function.ThrowingSupplier;
-import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,8 +32,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,8 +41,9 @@ public class FileInputsAdderTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private final Map<Path, HashCode> fileHashes = new HashMap<>();
-  private final FileTreeBuilder builder = new FileTreeBuilder();
+
   private FileInputsAdder adder;
+  private final Directory rootDirectory = new Directory();
 
   private static class Directory {
     public final SortedMap<String, Directory> children = new TreeMap<>();
@@ -95,40 +87,31 @@ public class FileInputsAdderTest {
 
   @Before
   public void setUp() {
-    Path root = tmp.getRoot();
     adder =
         new FileInputsAdder(
-            new Delegate() {
+            new AbstractDelegate() {
               @Override
-              public void addFile(Path path) throws IOException {
-                builder.addFile(
-                    root.relativize(path),
-                    () ->
-                        new InputFile(
-                            fileHashes.get(path).toString(),
-                            (int) Files.size(path),
-                            Files.isExecutable(path),
-                            () -> new FileInputStream(path.toFile())));
+              public void addFile(Path path) {
+                computeDirectory(path)
+                    .files
+                    .put(path.getFileName().toString(), fileHashes.get(path).toString());
               }
 
               @Override
-              public void addSymlink(Path symlink, Path fixedTarget) {
-                builder.addSymlink(root.relativize(symlink), fixedTarget);
+              public void addSymlink(Path path, Path fixedTarget) {
+                computeDirectory(path).symlinks.put(path.getFileName().toString(), fixedTarget);
               }
 
-              @Override
-              public Iterable<Path> getDirectoryContents(Path dir) throws IOException {
-                if (!Files.isDirectory(dir)) {
-                  return null;
+              Directory computeDirectory(Path path) {
+                Directory dir = rootDirectory;
+                Path working = tmp.getRoot().relativize(path);
+                while (working.getNameCount() > 1) {
+                  Path segment = working.getName(0);
+                  dir =
+                      dir.children.computeIfAbsent(segment.toString(), ignored -> new Directory());
+                  working = segment.relativize(working);
                 }
-                try (Stream<Path> listing = Files.list(dir)) {
-                  return listing.collect(Collectors.toList());
-                }
-              }
-
-              @Override
-              public Path getSymlinkTarget(Path path) throws IOException {
-                return Files.isSymbolicLink(path) ? Files.readSymbolicLink(path) : null;
+                return dir;
               }
             },
             tmp.getRoot());
@@ -140,7 +123,7 @@ public class FileInputsAdderTest {
     fileHashes.put(file, HashCode.fromInt(1));
     adder.addInput(file);
 
-    Directory result = getTree();
+    Directory result = rootDirectory;
 
     new Directory().addFile("file", 1).assertSame(result);
   }
@@ -152,7 +135,7 @@ public class FileInputsAdderTest {
     fileHashes.put(file, HashCode.fromInt(1));
     adder.addInput(file);
 
-    Directory result = getTree();
+    Directory result = rootDirectory;
     new Directory().addChild("subdir1", new Directory().addFile("file", 1)).assertSame(result);
   }
 
@@ -166,7 +149,7 @@ public class FileInputsAdderTest {
     fileHashes.put(file2, HashCode.fromInt(2));
     adder.addInput(subdir);
 
-    Directory result = getTree();
+    Directory result = rootDirectory;
 
     new Directory()
         .addChild("subdir1", new Directory().addFile("file1", 1).addFile("file2", 2))
@@ -184,7 +167,7 @@ public class FileInputsAdderTest {
 
     adder.addInput(link1);
 
-    Directory result = getTree();
+    Directory result = rootDirectory;
     new Directory()
         .addChild("subdir1", new Directory().addSymlink("link1", "../file1"))
         .addFile("file1", 1)
@@ -199,7 +182,7 @@ public class FileInputsAdderTest {
 
     adder.addInput(link1);
 
-    Directory result = getTree();
+    Directory result = rootDirectory;
 
     new Directory().addSymlink("link1", absoluteTarget.toString()).assertSame(result);
   }
@@ -215,12 +198,10 @@ public class FileInputsAdderTest {
 
     adder.addInput(link1.resolve("file1"));
 
-    Directory result = getTree();
-
     new Directory()
         .addChild("subdir1", new Directory().addFile("file1", 1))
         .addSymlink("link1", "subdir1")
-        .assertSame(result);
+        .assertSame(rootDirectory);
   }
 
   @Test
@@ -239,57 +220,11 @@ public class FileInputsAdderTest {
 
     adder.addInput(link1);
 
-    Directory result = getTree();
-
     new Directory()
         .addSymlink("link1", "link2")
         .addSymlink("link2", "link3")
         .addSymlink("link3", "file1")
         .addFile("file1", 1)
-        .assertSame(result);
-  }
-
-  private Directory getTree() {
-    return builder.buildTree(getTreeBuilder(new Directory()));
-  }
-
-  private TreeBuilder<Directory> getTreeBuilder(Directory self) {
-    return new TreeBuilder<Directory>() {
-      private void assertFree(String name) {
-        Preconditions.checkState(!self.files.containsKey(name));
-        Preconditions.checkState(!self.symlinks.containsKey(name));
-        Preconditions.checkState(!self.children.containsKey(name));
-      }
-
-      @Override
-      public TreeBuilder<Directory> addDirectory(String name) {
-        assertFree(name);
-        Directory child = new Directory();
-        self.children.put(name, child);
-        return getTreeBuilder(child);
-      }
-
-      @Override
-      public void addFile(
-          String name,
-          String hash,
-          int size,
-          boolean isExecutable,
-          ThrowingSupplier<InputStream, IOException> dataSupplier) {
-        assertFree(name);
-        self.files.put(name, hash);
-      }
-
-      @Override
-      public void addSymlink(String name, Path path) {
-        assertFree(name);
-        self.symlinks.put(name, path);
-      }
-
-      @Override
-      public Directory build() {
-        return self;
-      }
-    };
+        .assertSame(rootDirectory);
   }
 }

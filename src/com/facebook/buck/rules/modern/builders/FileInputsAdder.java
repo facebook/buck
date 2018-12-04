@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /**
  * Used to add "complex" inputs to a FileTreeBuilder.
@@ -39,8 +42,10 @@ class FileInputsAdder {
 
     void addSymlink(Path symlink, Path fixedTarget);
 
+    @Nullable
     Iterable<Path> getDirectoryContents(Path target) throws IOException;
 
+    @Nullable
     Path getSymlinkTarget(Path path) throws IOException;
   }
 
@@ -140,5 +145,26 @@ class FileInputsAdder {
     }
     map.put(path, path);
     return path;
+  }
+
+  /**
+   * A simple base delegate implementation when nothing special needs to be done for the filesystem
+   * operations.
+   */
+  public abstract static class AbstractDelegate implements Delegate {
+    @Override
+    public Iterable<Path> getDirectoryContents(Path target) throws IOException {
+      if (!Files.isDirectory(target)) {
+        return null;
+      }
+      try (Stream<Path> listing = Files.list(target)) {
+        return listing.collect(Collectors.toList());
+      }
+    }
+
+    @Override
+    public Path getSymlinkTarget(Path path) throws IOException {
+      return Files.isSymbolicLink(path) ? Files.readSymbolicLink(path) : null;
+    }
   }
 }
