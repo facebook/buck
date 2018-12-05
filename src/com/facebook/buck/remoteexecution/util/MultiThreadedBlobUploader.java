@@ -91,11 +91,7 @@ public class MultiThreadedBlobUploader {
     }
   }
 
-  /**
-   * Uploads missing items to the CAS.
-   *
-   * @param data
-   */
+  /** Uploads missing items to the CAS. */
   public ListenableFuture<Void> addMissing(ImmutableMap<Digest, UploadDataSupplier> data) {
     data = ImmutableMap.copyOf(Maps.filterKeys(data, k -> !containedHashes.contains(k.getHash())));
     if (data.isEmpty()) {
@@ -204,7 +200,9 @@ public class MultiThreadedBlobUploader {
               } else {
                 pendingUpload.future.setException(
                     new IOException(
-                        String.format("Failed uploading with message: %s", result.message)));
+                        String.format(
+                            "Failed uploading with message: %s. When uploading blob: %s.",
+                            result.message, pendingUpload.uploadData.data.describe())));
               }
             });
         data.forEach((k, pending) -> pending.future.setException(new RuntimeException("idk")));

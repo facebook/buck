@@ -59,6 +59,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -200,7 +201,23 @@ public class ModernBuildRuleRemoteExecutionHelper {
                         protocol.computeDigest(Files.readAllBytes(TRAMPOLINE)),
                         TRAMPOLINE_PATH.getFileName().toString(),
                         true),
-                    () -> new FileInputStream(TRAMPOLINE.toFile())),
+                    new UploadDataSupplier() {
+                      @Override
+                      public InputStream get() throws IOException {
+                        return new FileInputStream(TRAMPOLINE.toFile());
+                      }
+
+                      @Override
+                      public String describe() {
+                        try {
+                          return String.format(
+                              "MBR trampoline (path: %s size:%s).",
+                              TRAMPOLINE, Files.size(TRAMPOLINE));
+                        } catch (IOException e) {
+                          return String.format("failed to describe (%s)", e.getMessage());
+                        }
+                      }
+                    }),
             IOException.class);
     if (pluginResources == null || pluginRoot == null) {
       pluginFiles = () -> new ClassPath(ImmutableList.of(), ImmutableList.of());
@@ -229,7 +246,19 @@ public class ModernBuildRuleRemoteExecutionHelper {
                             protocol.computeDigest(bytes),
                             configPath.getFileName().toString(),
                             false),
-                        () -> new ByteArrayInputStream(bytes)));
+                        new UploadDataSupplier() {
+                          @Override
+                          public InputStream get() {
+                            return new ByteArrayInputStream(bytes);
+                          }
+
+                          @Override
+                          public String describe() {
+                            return String.format(
+                                "Serialized .buckconfig (cell: %s size:%s).",
+                                cellName.orElse("root"), bytes.length);
+                          }
+                        }));
               }
               return filesBuilder.build();
             },
@@ -334,7 +363,22 @@ public class ModernBuildRuleRemoteExecutionHelper {
         cellPathPrefix,
         (path, fileNode) ->
             requiredDataBuilder.put(
-                fileNode.getDigest(), () -> new FileInputStream(path.toFile())));
+                fileNode.getDigest(),
+                new UploadDataSupplier() {
+                  @Override
+                  public InputStream get() throws IOException {
+                    return new FileInputStream(path.toFile());
+                  }
+
+                  @Override
+                  public String describe() {
+                    try {
+                      return String.format("File (path:%s size:%s)", path, Files.size(path));
+                    } catch (IOException e) {
+                      return String.format("failed to describe (%s)", e.getMessage());
+                    }
+                  }
+                }));
   }
 
   private void addSharedFilesData(Map<Digest, UploadDataSupplier> requiredDataBuilder)
@@ -496,7 +540,19 @@ public class ModernBuildRuleRemoteExecutionHelper {
         Path valuePath = root.resolve(fileName);
         Digest digest = protocol.newDigest(hash, node.data.length);
         fileNodes.put(valuePath, protocol.newFileNode(digest, fileName, false));
-        requiredDataBuilder.put(digest, () -> new ByteArrayInputStream(node.data));
+        requiredDataBuilder.put(
+            digest,
+            new UploadDataSupplier() {
+              @Override
+              public InputStream get() {
+                return new ByteArrayInputStream(node.data);
+              }
+
+              @Override
+              public String describe() {
+                return String.format("Serialized java object (size:%s).", node.data.length);
+              }
+            });
 
         for (Map.Entry<String, Node> child : node.children.entrySet()) {
           addData(root.resolve(child.getKey()), child.getKey(), child.getValue());

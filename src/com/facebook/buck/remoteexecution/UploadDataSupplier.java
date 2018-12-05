@@ -21,4 +21,13 @@ import java.io.InputStream;
 /** Used for wrapping access to data for uploads. */
 public interface UploadDataSupplier {
   InputStream get() throws IOException;
+
+  /**
+   * Describe what data is being uploaded. It may be helpful to include the size/hash/contents of
+   * the data. If doing so, those values should be recomputed (one major use of including that data
+   * would be to diagnose cases where the server claims that the data doesn't match the digest).
+   */
+  default String describe() {
+    return "???";
+  }
 }

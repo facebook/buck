@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 /** GRPC implementation of the CasBlobUploader. */
 public class GrpcCasBlobUploader implements CasBlobUploader {
@@ -99,8 +100,10 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
       return resultBuilder.build();
     } catch (InterruptedException | ExecutionException e) {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);
-      e.printStackTrace();
-      throw new BuckUncheckedExecutionException(e);
+      throw new BuckUncheckedExecutionException(
+          e,
+          "When uploading a batch of blobs: <%s>.",
+          blobs.stream().map(b -> b.data.describe()).collect(Collectors.joining(">, <")));
     }
   }
 }
