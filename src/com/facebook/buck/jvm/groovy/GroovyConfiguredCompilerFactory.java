@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.groovy;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
@@ -33,17 +32,9 @@ import javax.annotation.Nullable;
 
 public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   @Nullable private final GroovyBuckConfig groovyBuckConfig;
-  @Nullable private Tool groovyc;
 
   public GroovyConfiguredCompilerFactory(@Nullable GroovyBuckConfig groovyBuckConfig) {
     this.groovyBuckConfig = groovyBuckConfig;
-  }
-
-  private Tool getGroovyc() {
-    if (groovyc == null && groovyBuckConfig != null) {
-      groovyc = groovyBuckConfig.getGroovyc();
-    }
-    return groovyc;
   }
 
   @Override
@@ -54,7 +45,9 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ToolchainProvider toolchainProvider) {
     GroovyLibraryDescription.CoreArg groovyArgs = (CoreArg) Objects.requireNonNull(args);
     return new GroovycToJarStepFactory(
-        getGroovyc(), Optional.of(groovyArgs.getExtraGroovycArguments()), javacOptions);
+        groovyBuckConfig.getGroovyc(),
+        Optional.of(groovyArgs.getExtraGroovycArguments()),
+        javacOptions);
   }
 
   @Override
