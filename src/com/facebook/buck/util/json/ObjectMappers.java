@@ -19,7 +19,7 @@ package com.facebook.buck.util.json;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.parser.cache.json.module.BuildFileManifestModule;
 import com.facebook.buck.skylark.json.SkylarkModule;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -29,6 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import java.io.BufferedInputStream;
@@ -140,7 +142,7 @@ public class ObjectMappers {
     // Disable automatic flush() after mapper.write() call, because it is usually unnecessary,
     // and it makes BufferedOutputStreams to be useless
     mapper.disable(SerializationFeature.FLUSH_AFTER_WRITE_VALUE);
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
+    mapper.setSerializationInclusion(Include.NON_ABSENT);
     mapper.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
     // Add support for serializing Guava collections.
     mapper.registerModule(new GuavaModule());
@@ -149,6 +151,15 @@ public class ObjectMappers {
     mapper.registerModule(new SkylarkModule());
     // Add support for serializing BuildFileManifest types.
     mapper.registerModule(new BuildFileManifestModule());
+
+    // With some version of Jackson JDK8 module, it starts to serialize Path objects using
+    // getURI() function, this results for serialized paths to be absolute paths with 'file:///'
+    // prefix. That does not work well with custom filesystems that Buck uses. Following hack
+    // restores legacy behavior to serialize Paths using toString().
+    SimpleModule pathModule = new SimpleModule("PathToString");
+    pathModule.addSerializer(Path.class, new ToStringSerializer());
+    mapper.registerModule(pathModule);
+
     return mapper;
   }
 

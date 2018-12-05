@@ -23,18 +23,18 @@ java_library(
 
 prebuilt_jar(
     name = "value",
-    binary_jar = "value-2.5.7-SNAPSHOT.jar",
+    binary_jar = "value-2.7.3.jar",
     licenses = [
         "COPYING",
     ],
-    source_jar = "value-2.5.7-SNAPSHOT-sources.jar",
+    source_jar = "value-2.7.3-sources.jar",
 )
 
 prebuilt_jar(
     name = "builder",
-    binary_jar = "builder-2.5.7-SNAPSHOT.jar",
+    binary_jar = "builder-2.7.3.jar",
     licenses = [
         "COPYING",
     ],
-    source_jar = "builder-2.5.7-SNAPSHOT-sources.jar",
+    source_jar = "builder-2.7.3-sources.jar",
 )

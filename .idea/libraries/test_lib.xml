@@ -10,7 +10,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-23.3-jre.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/caliper/caliper-1.0-all.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.7.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.9.7.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
