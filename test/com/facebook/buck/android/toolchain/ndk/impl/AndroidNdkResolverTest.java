@@ -454,6 +454,26 @@ public class AndroidNdkResolverTest {
     assertEquals(expectedPath, resolver.getNdkOrThrow());
   }
 
+  @Test
+  public void testExactMatchBeforePrefixMatch() throws IOException {
+    Path expectedPath =
+        createTmpNdkVersions(
+            NDK_POST_R11_VERSION_FILENAME,
+            "ndk-dir-r17c1",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1",
+            "ndk-dir-r17c",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734",
+            "ndk-dir-r17c2",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.2")[1];
+    AndroidNdkResolver resolver =
+        new AndroidNdkResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
+            FakeAndroidBuckConfig.builder().setNdkVersion("17.2.4988734").build());
+
+    assertEquals(expectedPath, resolver.getNdkOrThrow());
+  }
+
   private Path[] createTmpNdkVersions(String filename, String... directoryNamesAndVersionStrings)
       throws IOException {
     Path[] ret = new Path[directoryNamesAndVersionStrings.length / 2];

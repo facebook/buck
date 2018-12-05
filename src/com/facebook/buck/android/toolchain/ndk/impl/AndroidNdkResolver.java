@@ -145,7 +145,8 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
     if (!version.isPresent() && ndkErrorMessage.isPresent()) {
       return Optional.empty();
     } else if (version.isPresent()) {
-      if (targetNdkVersion.isPresent() && !versionsMatch(targetNdkVersion.get(), version.get())) {
+      if (targetNdkVersion.isPresent()
+          && !versionStartsWith(targetNdkVersion.get(), version.get())) {
         ndkErrorMessage =
             Optional.of(
                 "Buck is configured to use Android NDK version "
@@ -211,7 +212,16 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
       Optional<Path> targetNdkPath =
           availableNdks
               .stream()
-              .filter(p -> versionsMatch(targetNdkVersion.get(), p.getSecond().get()))
+              .filter(p -> versionEquals(targetNdkVersion.get(), p.getSecond().get()))
+              .map(Pair::getFirst)
+              .findFirst();
+      if (targetNdkPath.isPresent()) {
+        return targetNdkPath;
+      }
+      targetNdkPath =
+          availableNdks
+              .stream()
+              .filter(p -> versionStartsWith(targetNdkVersion.get(), p.getSecond().get()))
               .map(Pair::getFirst)
               .findFirst();
       if (targetNdkPath.isPresent()) {
@@ -285,9 +295,14 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
     }
   }
 
-  private boolean versionsMatch(String expected, String candidate) {
+  private boolean versionStartsWith(String expected, String candidate) {
     return !(Strings.isNullOrEmpty(expected) || Strings.isNullOrEmpty(candidate))
         && candidate.startsWith(expected);
+  }
+
+  private boolean versionEquals(String expected, String candidate) {
+    return !(Strings.isNullOrEmpty(expected) || Strings.isNullOrEmpty(candidate))
+        && candidate.equals(expected);
   }
 
   @Override
