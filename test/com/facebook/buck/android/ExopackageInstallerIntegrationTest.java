@@ -432,8 +432,8 @@ public class ExopackageInstallerIntegrationTest {
             currentBuildState.resourcesContents,
             currentBuildState.modularDexesContents);
 
-    // TODO(cjhopman): fix exo install when library is renamed but content remains the same.
-    // checkExoInstall(0, 0, 1, 0);
+    // Note: zero libs installed.  The content is already on device, so only metadata changes.
+    checkExoInstall(0, 0, 0, 0, 0);
   }
 
   @Test
@@ -471,6 +471,29 @@ public class ExopackageInstallerIntegrationTest {
             currentBuildState.modularDexesContents);
 
     checkExoInstall(0, 0, 0, 0, 0);
+  }
+
+  @Test
+  public void testExoInstallWithDuplicateNativeLibs() throws Exception {
+    setDefaultFullBuildState();
+
+    checkExoInstall(1, 2, 2, 3, 2);
+
+    currentBuildState =
+        new ExoState(
+            currentBuildState.apkContent,
+            currentBuildState.manifestContent,
+            currentBuildState.secondaryDexesContents,
+            ImmutableSortedMap.of(
+                "libs/" + SdkConstants.ABI_INTEL_ATOM + "/libone.so", "libfake\n",
+                "libs/" + SdkConstants.ABI_INTEL_ATOM + "/libtwo.so", "libfake\n",
+                "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libone.so", "libfake\n",
+                "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libtwo.so", "libfake\n"),
+            currentBuildState.resourcesContents,
+            currentBuildState.modularDexesContents);
+
+    // Note: Just one lib installed.  They are identical, so we only install 1.
+    checkExoInstall(0, 0, 1, 0, 0);
   }
 
   private void debug(String msg) {

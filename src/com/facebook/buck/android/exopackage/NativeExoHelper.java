@@ -28,7 +28,9 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 public class NativeExoHelper {
@@ -51,21 +53,31 @@ public class NativeExoHelper {
 
   public ImmutableMap<Path, Path> getFilesToInstall() throws Exception {
     ImmutableMap.Builder<Path, Path> filesToInstallBuilder = ImmutableMap.builder();
-    ImmutableMap<String, ImmutableMap<String, Path>> filesByHashForAbis = getFilesByHashForAbis();
+    ImmutableMap<String, ImmutableMultimap<String, Path>> filesByHashForAbis =
+        getFilesByHashForAbis();
     for (String abi : filesByHashForAbis.keySet()) {
-      ImmutableMap<String, Path> filesByHash = Objects.requireNonNull(filesByHashForAbis.get(abi));
+      ImmutableMultimap<String, Path> filesByHash =
+          Objects.requireNonNull(filesByHashForAbis.get(abi));
       Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
-      filesToInstallBuilder.putAll(
-          ExopackageUtil.applyFilenameFormat(filesByHash, abiDir, "native-%s.so"));
+      for (Entry<Path, Collection<Path>> entry :
+          ExopackageUtil.applyFilenameFormat(filesByHash, abiDir, "native-%s.so")
+              .asMap()
+              .entrySet()) {
+        // The files in the getValue collection should all be identical
+        // (because the key in their hash), so just pick the first one.
+        filesToInstallBuilder.put(entry.getKey(), entry.getValue().iterator().next());
+      }
     }
     return filesToInstallBuilder.build();
   }
 
   public ImmutableMap<Path, String> getMetadataToInstall() throws Exception {
-    ImmutableMap<String, ImmutableMap<String, Path>> filesByHashForAbis = getFilesByHashForAbis();
+    ImmutableMap<String, ImmutableMultimap<String, Path>> filesByHashForAbis =
+        getFilesByHashForAbis();
     ImmutableMap.Builder<Path, String> metadataBuilder = ImmutableMap.builder();
     for (String abi : filesByHashForAbis.keySet()) {
-      ImmutableMap<String, Path> filesByHash = Objects.requireNonNull(filesByHashForAbis.get(abi));
+      ImmutableMultimap<String, Path> filesByHash =
+          Objects.requireNonNull(filesByHashForAbis.get(abi));
       Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
       metadataBuilder.put(
           abiDir.resolve("metadata.txt"), getNativeLibraryMetadataContents(filesByHash));
@@ -80,14 +92,14 @@ public class NativeExoHelper {
         projectFilesystem);
   }
 
-  private ImmutableMap<String, ImmutableMap<String, Path>> getFilesByHashForAbis()
+  private ImmutableMap<String, ImmutableMultimap<String, Path>> getFilesByHashForAbis()
       throws Exception {
-    ImmutableMap.Builder<String, ImmutableMap<String, Path>> filesByHashForAbisBuilder =
+    ImmutableMap.Builder<String, ImmutableMultimap<String, Path>> filesByHashForAbisBuilder =
         ImmutableMap.builder();
     ImmutableMultimap<String, Path> allLibraries = getAllLibraries();
     ImmutableSet.Builder<String> providedLibraries = ImmutableSet.builder();
     for (String abi : device.getDeviceAbis()) {
-      ImmutableMap<String, Path> filesByHash =
+      ImmutableMultimap<String, Path> filesByHash =
           getRequiredLibrariesForAbi(allLibraries, abi, providedLibraries.build());
       if (filesByHash.isEmpty()) {
         continue;
@@ -98,7 +110,7 @@ public class NativeExoHelper {
     return filesByHashForAbisBuilder.build();
   }
 
-  private ImmutableMap<String, Path> getRequiredLibrariesForAbi(
+  private ImmutableMultimap<String, Path> getRequiredLibrariesForAbi(
       ImmutableMultimap<String, Path> allLibraries,
       String abi,
       ImmutableSet<String> ignoreLibraries) {
@@ -110,12 +122,12 @@ public class NativeExoHelper {
   }
 
   @VisibleForTesting
-  public static ImmutableMap<String, Path> filterLibrariesForAbi(
+  public static ImmutableMultimap<String, Path> filterLibrariesForAbi(
       Path nativeLibsDir,
       ImmutableMultimap<String, Path> allLibraries,
       String abi,
       ImmutableSet<String> ignoreLibraries) {
-    ImmutableMap.Builder<String, Path> filteredLibraries = ImmutableMap.builder();
+    ImmutableMultimap.Builder<String, Path> filteredLibraries = ImmutableMultimap.builder();
     for (Map.Entry<String, Path> entry : allLibraries.entries()) {
       Path relativePath = nativeLibsDir.relativize(entry.getValue());
       // relativePath is of the form libs/x86/foo.so, or assetLibs/x86/foo.so etc.
@@ -132,10 +144,10 @@ public class NativeExoHelper {
     return filteredLibraries.build();
   }
 
-  private String getNativeLibraryMetadataContents(ImmutableMap<String, Path> libraries) {
+  private String getNativeLibraryMetadataContents(ImmutableMultimap<String, Path> libraries) {
     return Joiner.on('\n')
         .join(
-            FluentIterable.from(libraries.entrySet())
+            FluentIterable.from(libraries.entries())
                 .transform(
                     input -> {
                       String hash = input.getKey();
