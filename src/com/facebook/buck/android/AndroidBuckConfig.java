@@ -36,6 +36,11 @@ import java.util.function.Supplier;
 
 public class AndroidBuckConfig {
 
+  private static final String CONFIG_ENTRY_IN_SDK_PATH_SEARCH_ORDER = "<CONFIG>";
+
+  private static final ImmutableList<String> DEFAULT_SDK_PATH_SEARCH_ORDER =
+      ImmutableList.of("ANDROID_SDK", "ANDROID_HOME", CONFIG_ENTRY_IN_SDK_PATH_SEARCH_ORDER);
+
   private static final String ANDROID_SECTION = "android";
   private static final String REDEX = "redex";
 
@@ -61,6 +66,35 @@ public class AndroidBuckConfig {
 
   public Optional<String> getSdkPath() {
     return delegate.getValue("android", "sdk_path");
+  }
+
+  /**
+   * Defines the order of search of the path to Android SDK.
+   *
+   * <p>The order is the list of elements that can either be {@code <CONFIG>} (to indicate the entry
+   * from {@code .buckconfig}) or the name of an environment variable that contains path to Android
+   * SDK (for example, {@code ANDROID_SDK}).
+   *
+   * <p>If nothing is specified in {@code .buckconfig} the default order is: {@code ANDROID_SDK},
+   * {@code ANDROID_HOME}, {@code <CONFIG>}
+   */
+  public ImmutableList<String> getSdkPathSearchOrder() {
+    return delegate
+        .getOptionalListWithoutComments("android", "sdk_path_search_order")
+        .orElse(DEFAULT_SDK_PATH_SEARCH_ORDER);
+  }
+
+  /**
+   * Given the entry to from the order of search of the Android SDK location returns the name of the
+   * configuration option that contains SDK path if the entry instructs to get that value from
+   * {@code .buckconfig} (i.e. it's {@code <CONFIG>}) or {@code Optional.empty()} in other cases.
+   */
+  public Optional<String> getSdkPathConfigOptionFromSearchOrderEntry(String entry) {
+    if (CONFIG_ENTRY_IN_SDK_PATH_SEARCH_ORDER.equals(entry)) {
+      return Optional.of("android.sdk_path");
+    } else {
+      return Optional.empty();
+    }
   }
 
   public Optional<String> getNdkVersion() {

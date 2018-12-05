@@ -51,6 +51,11 @@ public class FakeAndroidBuckConfig {
     return this;
   }
 
+  public FakeAndroidBuckConfig setSdkPathSearchOrder(String searchOrder) {
+    androidSection.put("sdk_path_search_order", searchOrder);
+    return this;
+  }
+
   public FakeAndroidBuckConfig setBuildToolsVersion(String buildToolsVersion) {
     androidSection.put("build_tools_version", buildToolsVersion);
     return this;

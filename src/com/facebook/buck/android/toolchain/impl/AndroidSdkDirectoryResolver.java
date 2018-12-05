@@ -56,12 +56,8 @@ public class AndroidSdkDirectoryResolver extends BaseAndroidToolchainResolver {
   private Optional<Path> findSdk(AndroidBuckConfig config) {
     Optional<Path> sdkPath;
     try {
-      sdkPath =
-          findFirstDirectory(
-              ImmutableList.of(
-                  getEnvironmentVariable("ANDROID_SDK"),
-                  getEnvironmentVariable("ANDROID_HOME"),
-                  new Pair<String, Optional<String>>("android.sdk_path", config.getSdkPath())));
+      ImmutableList<Pair<String, Optional<String>>> paths = getSdkPathsFromConfig(config);
+      sdkPath = findFirstDirectory(paths);
     } catch (RuntimeException e) {
       sdkErrorMessage = Optional.of(e.getMessage());
       return Optional.empty();
@@ -71,6 +67,21 @@ public class AndroidSdkDirectoryResolver extends BaseAndroidToolchainResolver {
       sdkErrorMessage = Optional.of(SDK_NOT_FOUND_MESSAGE);
     }
     return sdkPath;
+  }
+
+  private ImmutableList<Pair<String, Optional<String>>> getSdkPathsFromConfig(
+      AndroidBuckConfig config) {
+    ImmutableList.Builder<Pair<String, Optional<String>>> paths = ImmutableList.builder();
+    for (String searchOrderEntry : config.getSdkPathSearchOrder()) {
+      Optional<String> sdkPathConfigOption =
+          config.getSdkPathConfigOptionFromSearchOrderEntry(searchOrderEntry);
+      if (sdkPathConfigOption.isPresent()) {
+        paths.add(new Pair<>(sdkPathConfigOption.get(), config.getSdkPath()));
+      } else {
+        paths.add(getEnvironmentVariable(searchOrderEntry));
+      }
+    }
+    return paths.build();
   }
 
   @Override

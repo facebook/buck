@@ -31,6 +31,7 @@ import org.junit.rules.ExpectedException;
 public class AndroidSdkDirectoryResolverTest {
 
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpDir2 = new TemporaryPaths();
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
@@ -88,5 +89,45 @@ public class AndroidSdkDirectoryResolverTest {
             "ANDROID_SDK",
             sdkDir.resolve("also-wrong")));
     resolver.getSdkOrThrow();
+  }
+
+  @Test
+  public void testBuckConfigEntryInSdkPathSearchOrderIsUsed() throws IOException {
+    Path sdkDir = tmpDir.newFolder("sdk");
+    Path envDir = tmpDir2.newFolder("sdk");
+    AndroidSdkDirectoryResolver resolver =
+        new AndroidSdkDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_SDK", envDir.toString()),
+            FakeAndroidBuckConfig.builder()
+                .setSdkPath(sdkDir.toString())
+                .setSdkPathSearchOrder("<CONFIG>, ANDROID_SDK")
+                .build());
+    assertEquals(sdkDir, resolver.getSdkOrThrow());
+  }
+
+  @Test
+  public void testEnvVariableInSdkPathSearchOrderIsUsed() throws IOException {
+    Path envDir = tmpDir.newFolder("sdk");
+    AndroidSdkDirectoryResolver resolver =
+        new AndroidSdkDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_SDK", envDir.toString()),
+            FakeAndroidBuckConfig.builder().setSdkPathSearchOrder("<CONFIG>, ANDROID_SDK").build());
+    assertEquals(envDir, resolver.getSdkOrThrow());
+  }
+
+  @Test
+  public void testFirstEnvVariableInSdkPathSearchOrderIsUsed() throws IOException {
+    Path env1Dir = tmpDir.newFolder("sdk");
+    Path env2Dir = tmpDir2.newFolder("sdk");
+    AndroidSdkDirectoryResolver resolver =
+        new AndroidSdkDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_SDK", env1Dir.toString(), "ANDROID_HOME", env2Dir.toString()),
+            FakeAndroidBuckConfig.builder()
+                .setSdkPathSearchOrder("ANDROID_SDK, ANDROID_HOME")
+                .build());
+    assertEquals(env1Dir, resolver.getSdkOrThrow());
   }
 }
