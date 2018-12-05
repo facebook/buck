@@ -20,8 +20,8 @@ import com.facebook.buck.remoteexecution.CasBlobUploader;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadData;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
+import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.util.concurrent.MoreFutures;
-import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +31,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -92,9 +91,12 @@ public class MultiThreadedBlobUploader {
     }
   }
 
-  /** Uploads missing items to the CAS. */
-  public ListenableFuture<Void> addMissing(
-      ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data) {
+  /**
+   * Uploads missing items to the CAS.
+   *
+   * @param data
+   */
+  public ListenableFuture<Void> addMissing(ImmutableMap<Digest, UploadDataSupplier> data) {
     data = ImmutableMap.copyOf(Maps.filterKeys(data, k -> !containedHashes.contains(k.getHash())));
     if (data.isEmpty()) {
       return Futures.immediateFuture(null);
@@ -102,10 +104,9 @@ public class MultiThreadedBlobUploader {
     return enqueue(data);
   }
 
-  private ListenableFuture<Void> enqueue(
-      ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data) {
+  private ListenableFuture<Void> enqueue(ImmutableMap<Digest, UploadDataSupplier> data) {
     ImmutableList.Builder<ListenableFuture<Void>> futures = ImmutableList.builder();
-    for (Entry<Digest, ThrowingSupplier<InputStream, IOException>> entry : data.entrySet()) {
+    for (Entry<Digest, UploadDataSupplier> entry : data.entrySet()) {
       Digest digest = entry.getKey();
       ListenableFuture<Void> resultFuture =
           pendingUploads.computeIfAbsent(

@@ -17,11 +17,9 @@
 package com.facebook.buck.remoteexecution;
 
 import com.facebook.buck.remoteexecution.Protocol.Digest;
-import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -50,9 +48,9 @@ public interface CasBlobUploader {
    */
   class UploadData {
     public final Digest digest;
-    public final ThrowingSupplier<InputStream, IOException> data;
+    public final UploadDataSupplier data;
 
-    public UploadData(Digest digest, ThrowingSupplier<InputStream, IOException> data) {
+    public UploadData(Digest digest, UploadDataSupplier data) {
       this.digest = digest;
       this.data = data;
     }

@@ -18,10 +18,8 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
-import com.facebook.buck.util.function.ThrowingSupplier;
+import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -31,7 +29,7 @@ import org.immutables.value.Value;
 interface AbstractRemoteExecutionActionInfo {
   Digest getActionDigest();
 
-  ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> getRequiredData();
+  ImmutableMap<Digest, UploadDataSupplier> getRequiredData();
 
   Iterable<? extends Path> getOutputs();
 }

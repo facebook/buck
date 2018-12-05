@@ -16,17 +16,17 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.Protocol.FileNode;
+import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
@@ -106,8 +106,7 @@ public class LocalContentAddressedStorageTest {
     MerkleTreeNode node = nodeCache.createNode(files, ImmutableMap.of());
     Digest rootDigest = nodeCache.getData(node).getDigest();
 
-    ImmutableMap.Builder<Digest, ThrowingSupplier<InputStream, IOException>> requiredData =
-        ImmutableMap.builder();
+    ImmutableMap.Builder<Digest, UploadDataSupplier> requiredData = ImmutableMap.builder();
 
     requiredData.put(protocol.computeDigest(someData), () -> new ByteArrayInputStream(someData));
     requiredData.put(protocol.computeDigest(otherData), () -> new ByteArrayInputStream(otherData));

@@ -30,6 +30,7 @@ import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.Protocol.SymlinkNode;
+import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;
 import com.facebook.buck.rules.modern.Buildable;
@@ -58,7 +59,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -104,10 +104,9 @@ public class ModernBuildRuleRemoteExecutionHelper {
   private static class RequiredFile {
     private final Path path;
     private final FileNode fileNode;
-    private final ThrowingSupplier<InputStream, IOException> dataSupplier;
+    private final UploadDataSupplier dataSupplier;
 
-    RequiredFile(
-        Path path, FileNode fileNode, ThrowingSupplier<InputStream, IOException> dataSupplier) {
+    RequiredFile(Path path, FileNode fileNode, UploadDataSupplier dataSupplier) {
       this.path = path;
       this.fileNode = fileNode;
       this.dataSupplier = dataSupplier;
@@ -278,8 +277,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
     List<MerkleTreeNode> allNodes = new ArrayList<>();
     allNodes.add(sharedFilesNode.get());
 
-    HashMap<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder =
-        new HashMap<>();
+    Map<Digest, UploadDataSupplier> requiredDataBuilder = new HashMap<>();
 
     try (Scope ignored2 = LeafEvents.scope(eventBus, "constructing_inputs_tree")) {
       addSharedFilesData(requiredDataBuilder);
@@ -331,8 +329,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   }
 
   private void addFileInputs(
-      MerkleTreeNode inputsMerkleTree,
-      Map<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder) {
+      MerkleTreeNode inputsMerkleTree, Map<Digest, UploadDataSupplier> requiredDataBuilder) {
     inputsMerkleTree.forAllFiles(
         cellPathPrefix,
         (path, fileNode) ->
@@ -340,8 +337,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
                 fileNode.getDigest(), () -> new FileInputStream(path.toFile())));
   }
 
-  private void addSharedFilesData(
-      Map<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder)
+  private void addSharedFilesData(Map<Digest, UploadDataSupplier> requiredDataBuilder)
       throws IOException {
     for (RequiredFile requiredFile : classPath.get().requiredFiles) {
       requiredDataBuilder.put(requiredFile.fileNode.getDigest(), requiredFile.dataSupplier);
@@ -492,7 +488,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   }
 
   private MerkleTreeNode getSerializationTreeAndInputs(
-      HashCode hash, Map<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder) {
+      HashCode hash, Map<Digest, UploadDataSupplier> requiredDataBuilder) {
     Map<Path, FileNode> fileNodes = new HashMap<>();
     class DataAdder {
       void addData(Path root, String hash, Node node) {

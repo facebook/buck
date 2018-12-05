@@ -29,9 +29,9 @@ import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionService.ExecutionResult;
+import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +49,6 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -161,7 +160,7 @@ public class GrpcRemoteExecutionClientsTest {
 
     setupServer();
 
-    Map<Digest, ThrowingSupplier<InputStream, IOException>> requiredData = new HashMap<>();
+    Map<Digest, UploadDataSupplier> requiredData = new HashMap<>();
 
     String data1 = "data1";
     Digest digest1 = protocol.computeDigest(data1.getBytes(Charsets.UTF_8));

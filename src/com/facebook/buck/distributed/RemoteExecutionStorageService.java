@@ -33,11 +33,9 @@ import com.facebook.buck.slb.HybridThriftRequestHandler;
 import com.facebook.buck.slb.HybridThriftResponseHandler;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -196,7 +194,6 @@ public class RemoteExecutionStorageService implements AsyncBlobFetcher, CasBlobU
   public ImmutableList<UploadResult> batchUpdateBlobs(final ImmutableList<UploadData> blobs) {
     RemoteExecutionStoreRequest request = new RemoteExecutionStoreRequest();
     final AtomicLong totalPayloadsSizeBytes = new AtomicLong(0);
-    List<ThrowingSupplier<InputStream, IOException>> payloads = Lists.newArrayList();
     for (UploadData item : blobs) {
       com.facebook.buck.distributed.thrift.Digest digest = convertDigest(item.digest);
       new com.facebook.buck.distributed.thrift.Digest();
@@ -204,7 +201,6 @@ public class RemoteExecutionStorageService implements AsyncBlobFetcher, CasBlobU
       DigestAndContent digestAndContent = new DigestAndContent();
       digestAndContent.setDigest(digest);
       request.addToDigests(digestAndContent);
-      payloads.add(item.data);
     }
 
     FrontendRequest frontendRequest =

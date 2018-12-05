@@ -30,10 +30,10 @@ import com.facebook.buck.remoteexecution.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.Protocol.SymlinkNode;
+import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -187,8 +187,8 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
   }
 
   @Override
-  public ListenableFuture<Void> addMissing(
-      ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data) throws IOException {
+  public ListenableFuture<Void> addMissing(ImmutableMap<Digest, UploadDataSupplier> data)
+      throws IOException {
     return uploader.addMissing(data);
   }
 

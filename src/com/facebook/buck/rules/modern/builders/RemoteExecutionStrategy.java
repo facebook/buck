@@ -35,6 +35,7 @@ import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionService.ExecutionResult;
+import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -45,7 +46,6 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.JobLimiter;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.function.ThrowingFunction;
-import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -57,7 +57,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -218,8 +217,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     // very, very large.
     Digest actionDigest = actionInfo.getActionDigest();
     Iterable<? extends Path> actionOutputs = actionInfo.getOutputs();
-    ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> requiredData =
-        actionInfo.getRequiredData();
+    ImmutableMap<Digest, UploadDataSupplier> requiredData = actionInfo.getRequiredData();
     Scope uploadingInputsScope =
         RemoteExecutionActionEvent.sendEvent(
             eventBus, State.UPLOADING_INPUTS, buildTarget, Optional.of(actionDigest));
