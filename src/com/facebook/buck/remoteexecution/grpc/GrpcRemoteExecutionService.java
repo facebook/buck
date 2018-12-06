@@ -20,6 +20,7 @@ import build.bazel.remote.execution.v2.ActionResult;
 import build.bazel.remote.execution.v2.ExecuteRequest;
 import build.bazel.remote.execution.v2.ExecuteResponse;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
@@ -51,6 +52,8 @@ import javax.annotation.Nullable;
 
 /** Implementation of the GRPC client for the Remote Execution service. */
 public class GrpcRemoteExecutionService implements RemoteExecutionService {
+  private static final Logger LOG = Logger.get(GrpcRemoteExecutionService.class);
+
   private static final Key<? super String> TRACE_ID_KEY =
       Metadata.Key.of("trace-id", Metadata.ASCII_STRING_MARSHALLER);
   private static final Key<? super String> EDGE_ID_KEY =
@@ -141,6 +144,10 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
   }
 
   private ExecutionResult getExecutionResult(ActionResult actionResult) {
+    if (actionResult.getExitCode() != 0) {
+      LOG.debug(
+          "Got failed action from worker %s", actionResult.getExecutionMetadata().getWorker());
+    }
     return new ExecutionResult() {
       @Override
       public List<OutputDirectory> getOutputDirectories() {
