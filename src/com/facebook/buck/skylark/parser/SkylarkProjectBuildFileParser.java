@@ -21,6 +21,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.BuildFileManifestPojoizer;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -146,11 +147,20 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public BuildFileManifest getBuildFileManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     ParseResult parseResult = parseBuildFile(buildFile);
+
+    // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.
+    // ParseResult.getRawRules() returns ImmutableMap<String, Map<String, Object>>, so it is
+    // a safe downcast here
+    ImmutableMap<String, Map<String, Object>> targets =
+        (ImmutableMap<String, Map<String, Object>>)
+            BuildFileManifestPojoizer.of().convertToPojo(parseResult.getRawRules());
+
     return BuildFileManifest.of(
-        parseResult.getRawRules(),
+        targets,
         ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
         parseResult.getReadConfigurationOptions(),
         Optional.empty(),
