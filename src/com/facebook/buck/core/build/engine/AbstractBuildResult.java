@@ -65,6 +65,7 @@ abstract class AbstractBuildResult {
         (getStatus() == BuildRuleStatus.FAIL || getStatus() == BuildRuleStatus.CANCELED)
             == getFailureOptional().isPresent(),
         "must provide failure value exclusively for failures/cancellations");
+    getCacheResult().ifPresent(result -> result.getType().verifyValidFinalType());
   }
 
   private static Builder successBuilder(

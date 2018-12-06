@@ -959,6 +959,8 @@ class CachingBuildRuleBuilder {
         Futures.transform(
             performRuleKeyCacheCheck(/* cacheHitExpected */ false),
             cacheResult -> {
+              Objects.requireNonNull(cacheResult);
+              cacheResult.getType().verifyValidFinalType();
               rulekeyCacheResult.set(cacheResult);
               return getBuildResultForRuleKeyCacheResult(cacheResult);
             });
@@ -1354,6 +1356,7 @@ class CachingBuildRuleBuilder {
     @Nullable private final T pipelineState;
 
     public BuildRuleSteps(CacheResult cacheResult, @Nullable T pipelineState) {
+      cacheResult.getType().verifyValidFinalType();
       this.cacheResult = cacheResult;
       this.pipelineState = pipelineState;
       this.ruleExecutionContext =
