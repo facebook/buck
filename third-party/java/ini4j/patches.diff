@@ -1,0 +1,223 @@
+Index: pom.xml
+===================================================================
+--- pom.xml	(revision 205)
++++ pom.xml	(working copy)
+@@ -459,8 +459,8 @@
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-compiler-plugin</artifactId>
+                 <configuration>
+-                    <source>1.5</source>
+-                    <target>1.5</target>
++                    <source>7</source>
++                    <target>7</target>
+                     <encoding>UTF-8</encoding>
+                     <compilerArgument>-Xlint</compilerArgument>
+                 </configuration>
+Index: src/main/java/org/ini4j/BasicProfile.java
+===================================================================
+--- src/main/java/org/ini4j/BasicProfile.java	(revision 205)
++++ src/main/java/org/ini4j/BasicProfile.java	(working copy)
+@@ -139,7 +139,7 @@
+         return remove((Object) section.getName());
+     }
+ 
+-    @Override public String remove(Object sectionName, Object optionName)
++    @Override public String removeValue(Object sectionName, Object optionName)
+     {
+         Section sec = get(sectionName);
+ 
+Index: src/main/java/org/ini4j/Profile.java
+===================================================================
+--- src/main/java/org/ini4j/Profile.java	(revision 205)
++++ src/main/java/org/ini4j/Profile.java	(working copy)
+@@ -43,7 +43,7 @@
+ 
+     Section remove(Profile.Section section);
+ 
+-    String remove(Object sectionName, Object optionName);
++    String removeValue(Object sectionName, Object optionName);
+ 
+     interface Section extends OptionMap
+     {
+Index: src/main/java/org/ini4j/spi/AbstractParser.java
+===================================================================
+--- src/main/java/org/ini4j/spi/AbstractParser.java	(revision 205)
++++ src/main/java/org/ini4j/spi/AbstractParser.java	(working copy)
+@@ -22,8 +22,10 @@
+ import java.io.InputStream;
+ import java.io.Reader;
+ 
++import java.net.URISyntaxException;
+ import java.net.URL;
+ 
++import java.nio.file.Paths;
+ import java.util.Locale;
+ 
+ abstract class AbstractParser
+@@ -48,9 +50,20 @@
+         _config = value;
+     }
+ 
+-    protected void parseError(String line, int lineNumber) throws InvalidFileFormatException
++    protected void parseError(String line, URL url, int lineNumber) throws InvalidFileFormatException
+     {
+-        throw new InvalidFileFormatException("parse error (at line: " + lineNumber + "): " + line);
++        String message;
++        if(url == null) {
++            message = String.format("parse error (at line: %d): %s", lineNumber, line);
++        } else {
++            try {
++                // Handle windows paths, without this conversion, they look like /C:/foo/bar
++                message = String.format("parse error (in %s at line %d): %s", Paths.get(url.toURI()), lineNumber, line);
++            } catch (URISyntaxException e) {
++                message = String.format("parse error (in %s at line %d): %s", url, lineNumber, line);
++            }
++        }
++        throw new InvalidFileFormatException(message);
+     }
+ 
+     IniSource newIniSource(InputStream input, HandlerBase handler)
+@@ -68,7 +81,7 @@
+         return new IniSource(input, handler, _comments, getConfig());
+     }
+ 
+-    void parseOptionLine(String line, HandlerBase handler, int lineNumber) throws InvalidFileFormatException
++    void parseOptionLine(String line, HandlerBase handler, URL url, int lineNumber) throws InvalidFileFormatException
+     {
+         int idx = indexOfOperator(line);
+         String name = null;
+@@ -82,7 +95,7 @@
+             }
+             else
+             {
+-                parseError(line, lineNumber);
++                parseError(line, url, lineNumber);
+             }
+         }
+         else
+@@ -93,7 +106,7 @@
+ 
+         if (name.length() == 0)
+         {
+-            parseError(line, lineNumber);
++            parseError(line, url, lineNumber);
+         }
+ 
+         if (getConfig().isLowerCaseOption())
+Index: src/main/java/org/ini4j/spi/IniParser.java
+===================================================================
+--- src/main/java/org/ini4j/spi/IniParser.java	(revision 205)
++++ src/main/java/org/ini4j/spi/IniParser.java	(working copy)
+@@ -94,11 +94,11 @@
+                     }
+                     else
+                     {
+-                        parseError(line, source.getLineNumber());
++                        parseError(line, source.getUrl(), source.getLineNumber());
+                     }
+                 }
+ 
+-                parseOptionLine(line, handler, source.getLineNumber());
++                parseOptionLine(line, handler, source.getUrl(), source.getLineNumber());
+             }
+         }
+ 
+@@ -116,13 +116,13 @@
+ 
+         if (line.charAt(line.length() - 1) != SECTION_END)
+         {
+-            parseError(line, source.getLineNumber());
++            parseError(line, source.getUrl(), source.getLineNumber());
+         }
+ 
+         sectionName = unescapeKey(line.substring(1, line.length() - 1).trim());
+         if ((sectionName.length() == 0) && !getConfig().isUnnamedSection())
+         {
+-            parseError(line, source.getLineNumber());
++            parseError(line, source.getUrl(), source.getLineNumber());
+         }
+ 
+         if (getConfig().isLowerCaseSection())
+Index: src/main/java/org/ini4j/spi/IniSource.java
+===================================================================
+--- src/main/java/org/ini4j/spi/IniSource.java	(revision 205)
++++ src/main/java/org/ini4j/spi/IniSource.java	(working copy)
+@@ -56,6 +56,16 @@
+         _base = input;
+     }
+ 
++    URL getUrl() {
++        if (_chain != null) {
++            return _chain.getUrl();
++        } else if (_base != null) {
++            return _base;
++        } else {
++            return null;
++        }
++    }
++
+     int getLineNumber()
+     {
+         int ret;
+Index: src/main/java/org/ini4j/spi/OptionsParser.java
+===================================================================
+--- src/main/java/org/ini4j/spi/OptionsParser.java	(revision 205)
++++ src/main/java/org/ini4j/spi/OptionsParser.java	(working copy)
+@@ -68,7 +68,7 @@
+         handler.startOptions();
+         for (String line = source.readLine(); line != null; line = source.readLine())
+         {
+-            parseOptionLine(line, handler, source.getLineNumber());
++            parseOptionLine(line, handler, source.getUrl(), source.getLineNumber());
+         }
+ 
+         handler.endOptions();
+Index: src/test/java/org/ini4j/BasicProfileTest.java
+===================================================================
+--- src/test/java/org/ini4j/BasicProfileTest.java	(revision 205)
++++ src/test/java/org/ini4j/BasicProfileTest.java	(working copy)
+@@ -86,10 +86,10 @@
+         prof.add(SECTION, Dwarf.PROP_FORTUNE_NUMBER, DwarfsData.sneezy.fortuneNumber[2]);
+         prof.add(SECTION, Dwarf.PROP_FORTUNE_NUMBER, DwarfsData.sneezy.fortuneNumber[3]);
+         Helper.assertEquals(DwarfsData.sneezy, prof.get(SECTION).as(Dwarf.class));
+-        assertNotNull(prof.remove(SECTION, Dwarf.PROP_FORTUNE_NUMBER));
++        assertNotNull(prof.removeValue(SECTION, Dwarf.PROP_FORTUNE_NUMBER));
+         assertEquals(0, prof.get(SECTION).length(Dwarf.PROP_FORTUNE_NUMBER));
+         assertNotNull(prof.remove(SECTION));
+-        assertNull(prof.remove(SECTION, Dwarf.PROP_FORTUNE_NUMBER));
++        assertNull(prof.removeValue(SECTION, Dwarf.PROP_FORTUNE_NUMBER));
+     }
+ 
+     @Test public void testFirstUpper()
+Index: src/test/java/org/ini4j/RegTest.java
+===================================================================
+--- src/test/java/org/ini4j/RegTest.java	(revision 205)
++++ src/test/java/org/ini4j/RegTest.java	(working copy)
+@@ -126,27 +126,6 @@
+         }
+     }
+ 
+-    @Test public void testNonWindwosExec() throws Exception
+-    {
+-        if (isSkip(isWindows(), "testNonWindwosExec"))
+-        {
+-            return;
+-        }
+-
+-        Reg reg = new Reg();
+-
+-        reg.exec(new String[] { "/bin/true" });
+-        try
+-        {
+-            reg.exec(new String[] { "/bin/ls", "no such file" });
+-            fail("IOException expected");
+-        }
+-        catch (IOException x)
+-        {
+-            assert true;
+-        }
+-    }
+-
+     @Test public void testReadException() throws Exception
+     {
+         if (!isWindows())

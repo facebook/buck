@@ -1,6 +1,6 @@
 prebuilt_jar(
     name = "ini4j",
-    binary_jar = "ini4j-0.5.2.jar",
+    binary_jar = "ini4j-0.5.5-SNAPSHOT.jar",
     licenses = [
         "LICENSE",
     ],

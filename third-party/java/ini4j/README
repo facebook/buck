@@ -1,0 +1,6 @@
+ini4j was fetched and built by running build.sh from this directory.
+This script fetches ini4j, applies a couple of small patches, and builds the jars.
+
+The functionality in the patch is:
+- Get ini4j building with java8 (Map.remove(Object, Object) had an invalid signature)
+- Update the error message on invalid INI contents by adding the file that has the error
