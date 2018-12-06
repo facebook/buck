@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.groovy;
 
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -26,6 +28,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.AbstractGroovyLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -33,24 +36,26 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 public class GroovyLibraryDescription
-    implements DescriptionWithTargetGraph<GroovyLibraryDescriptionArg> {
+    implements DescriptionWithTargetGraph<GroovyLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<AbstractGroovyLibraryDescriptionArg> {
 
   private final ToolchainProvider toolchainProvider;
-  private final GroovyBuckConfig groovyBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final GroovyConfiguredCompilerFactory compilerFactory;
 
   public GroovyLibraryDescription(
       ToolchainProvider toolchainProvider,
       GroovyBuckConfig groovyBuckConfig,
       JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
-    this.groovyBuckConfig = groovyBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.compilerFactory = new GroovyConfiguredCompilerFactory(groovyBuckConfig);
   }
 
   @Override
@@ -82,7 +87,7 @@ public class GroovyLibraryDescription
                 params,
                 graphBuilder,
                 context.getCellPathResolver(),
-                new GroovyConfiguredCompilerFactory(groovyBuckConfig),
+                compilerFactory,
                 javaBuckConfig,
                 args)
             .setJavacOptions(javacOptions)
@@ -91,6 +96,16 @@ public class GroovyLibraryDescription
     return JavaAbis.isAbiTarget(buildTarget)
         ? defaultJavaLibraryRules.buildAbi()
         : graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AbstractGroovyLibraryDescriptionArg constructorArg,
+      Builder<BuildTarget> extraDepsBuilder,
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    compilerFactory.addTargetDeps(extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 
   public interface CoreArg extends JavaLibraryDescription.CoreArg {

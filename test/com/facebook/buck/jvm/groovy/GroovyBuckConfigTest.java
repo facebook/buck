@@ -49,7 +49,7 @@ public class GroovyBuckConfigTest {
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig = ImmutableMap.of();
     GroovyBuckConfig groovyBuckConfig = createGroovyConfig(environment, rawConfig);
 
-    groovyBuckConfig.getGroovyCompiler();
+    groovyBuckConfig.getGroovyc();
   }
 
   @Test
@@ -63,7 +63,7 @@ public class GroovyBuckConfigTest {
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig = ImmutableMap.of();
     GroovyBuckConfig groovyBuckConfig = createGroovyConfig(environment, rawConfig);
 
-    groovyBuckConfig.getGroovyCompiler();
+    groovyBuckConfig.getGroovyc();
   }
 
   @Test
@@ -76,7 +76,7 @@ public class GroovyBuckConfigTest {
     GroovyBuckConfig groovyBuckConfig = createGroovyConfig(environment, rawConfig);
 
     // it's enough that this doesn't throw.
-    groovyBuckConfig.getGroovyCompiler();
+    groovyBuckConfig.getGroovyc();
   }
 
   @Test
@@ -91,7 +91,7 @@ public class GroovyBuckConfigTest {
     GroovyBuckConfig groovyBuckConfig = createGroovyConfig(environment, rawConfig);
 
     // it's enough that this doesn't throw.
-    groovyBuckConfig.getGroovyCompiler();
+    groovyBuckConfig.getGroovyc();
   }
 
   private GroovyBuckConfig createGroovyConfig(
