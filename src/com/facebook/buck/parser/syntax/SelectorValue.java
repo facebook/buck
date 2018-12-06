@@ -16,20 +16,25 @@
 
 package com.facebook.buck.parser.syntax;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /** The value of a select statement. Buck API equivalent of Bazel's Skylark SelectorValue */
 @Value.Immutable(builder = false, copy = false)
+@JsonDeserialize
 public abstract class SelectorValue {
 
   /** Return a map with select choices and appropriate values */
   @Value.Parameter
+  @JsonProperty("dictionary")
   public abstract ImmutableMap<String, Object> getDictionary();
 
   /** Provide an error message to show if select choices are not matched */
   @Value.Parameter
+  @JsonProperty("noMatchError")
   public abstract String getNoMatchError();
 
   @Override

@@ -16,20 +16,24 @@
 
 package com.facebook.buck.parser.syntax;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /** An attribute that holds the concatenation of native values with {@link AbstractSelectorValue} */
 @Value.Immutable(builder = false, copy = false)
+@JsonDeserialize
 public abstract class SelectorList {
-
   /** Ordered list of elements in expression, can be native type or {@link AbstractSelectorValue} */
   @Value.Parameter
+  @JsonProperty("elements")
   public abstract ImmutableList<Object> getElements();
 
   /** Type of the data in selector values */
   @Value.Parameter
+  @JsonProperty("type")
   public abstract Class<?> getType();
 
   @Override
