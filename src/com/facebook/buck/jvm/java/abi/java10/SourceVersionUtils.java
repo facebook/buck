@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import javax.lang.model.SourceVersion;
 import org.objectweb.asm.Opcodes;
 
@@ -48,6 +49,34 @@ public class SourceVersionUtils {
         return Opcodes.V10;
       default:
         throw new IllegalArgumentException(String.format("Unexpected source version: %s", version));
+    }
+  }
+
+  /** Gets the source version corresponding to the given target string. */
+  public static SourceVersion getSourceVersionFromTarget(String target) {
+    switch (target) {
+      case "1.3":
+        return SourceVersion.RELEASE_3;
+      case "1.4":
+        return SourceVersion.RELEASE_4;
+      case "1.5":
+      case "5":
+        return SourceVersion.RELEASE_5;
+      case "1.6":
+      case "6":
+        return SourceVersion.RELEASE_6;
+      case "1.7":
+      case "7":
+        return SourceVersion.RELEASE_7;
+      case "1.8":
+      case "8":
+        return SourceVersion.RELEASE_8;
+      case "9":
+        return SourceVersion.RELEASE_9;
+      case "10":
+        return SourceVersion.RELEASE_10;
+      default:
+        throw new HumanReadableException("target %s not supported", target);
     }
   }
 }

@@ -23,6 +23,7 @@ import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
+import com.facebook.buck.jvm.java.abi.SourceVersionUtils;
 import com.facebook.buck.jvm.java.abi.StubGenerator;
 import com.facebook.buck.jvm.java.abi.source.api.FrontendOnlyJavacTaskProxy;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
@@ -673,26 +674,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       if (option.equals("-target")) {
         foundTarget = true;
       } else if (foundTarget) {
-        switch (option) {
-          case "1.3":
-            return SourceVersion.RELEASE_3;
-          case "1.4":
-            return SourceVersion.RELEASE_4;
-          case "1.5":
-          case "5":
-            return SourceVersion.RELEASE_5;
-          case "1.6":
-          case "6":
-            return SourceVersion.RELEASE_6;
-          case "1.7":
-          case "7":
-            return SourceVersion.RELEASE_7;
-          case "1.8":
-          case "8":
-            return SourceVersion.RELEASE_8;
-          default:
-            throw new HumanReadableException("target %s not supported", option);
-        }
+        return SourceVersionUtils.getSourceVersionFromTarget(option);
       }
     }
 
