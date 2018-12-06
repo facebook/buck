@@ -161,7 +161,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       CommandRunnerParams params,
       PerBuildState parserState,
       ListeningExecutorService executor,
-      boolean enableProfiling) {
+      boolean enableProfiling,
+      boolean excludeUnsupportedTargets) {
     return from(
         params.getCell(),
         OwnersReport.builder(params.getCell(), params.getParser(), parserState),
@@ -169,7 +170,11 @@ public class BuckQueryEnvironment implements QueryEnvironment {
         parserState,
         executor,
         new TargetPatternEvaluator(
-            params.getCell(), params.getBuckConfig(), params.getParser(), enableProfiling),
+            params.getCell(),
+            params.getBuckConfig(),
+            params.getParser(),
+            enableProfiling,
+            excludeUnsupportedTargets),
         params.getBuckEventBus(),
         params.getTypeCoercerFactory());
   }

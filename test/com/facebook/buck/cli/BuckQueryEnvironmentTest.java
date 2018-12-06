@@ -135,7 +135,7 @@ public class BuckQueryEnvironmentTest {
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
-            cell, FakeBuckConfig.builder().build(), parser, /* enableProfiling */ false);
+            cell, FakeBuckConfig.builder().build(), parser, /* enableProfiling */ false, false);
     OwnersReport.Builder ownersReportBuilder = OwnersReport.builder(cell, parser, parserState);
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     buckQueryEnvironment =

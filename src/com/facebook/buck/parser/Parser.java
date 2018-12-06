@@ -122,4 +122,14 @@ public interface Parser {
       SpeculativeParsing speculativeParsing,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, InterruptedException, IOException;
+
+  ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
+      Cell rootCell,
+      boolean enableProfiling,
+      ListeningExecutorService executor,
+      Iterable<? extends TargetNodeSpec> specs,
+      SpeculativeParsing speculativeParsing,
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode,
+      boolean excludeUnsupportedTargets)
+      throws BuildFileParseException, InterruptedException, IOException;
 }

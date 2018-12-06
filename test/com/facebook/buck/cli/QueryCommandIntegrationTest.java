@@ -1302,4 +1302,32 @@ public class QueryCommandIntegrationTest {
                     + "  }\n"
                     + "}\n")));
   }
+
+  @Test
+  public void testExcludeIncompatibleTargetsFiltersTargetsByConstraints() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_incompatible_targets", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "kind(genrule, //:)",
+            "--target-platforms",
+            "//:linux_platform",
+            "--exclude-incompatible-targets");
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("//:a\n")));
+
+    result =
+        workspace.runBuckCommand(
+            "query",
+            "kind(genrule, //:)",
+            "--target-platforms",
+            "//:osx_platform",
+            "--exclude-incompatible-targets");
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("//:b\n")));
+  }
 }

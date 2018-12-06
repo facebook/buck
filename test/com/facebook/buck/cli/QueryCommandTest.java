@@ -136,7 +136,7 @@ public class QueryCommandTest {
             perBuildState,
             executorService,
             new TargetPatternEvaluator(
-                params.getCell(), params.getBuckConfig(), params.getParser(), false),
+                params.getCell(), params.getBuckConfig(), params.getParser(), false, false),
             eventBus,
             typeCoercerFactory);
   }

@@ -95,7 +95,11 @@ public class AuditTestsCommand extends AbstractCommand {
                     SpeculativeParsing.ENABLED)) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
-              params, parserState, pool.getListeningExecutorService(), getEnableParserProfiling());
+              params,
+              parserState,
+              pool.getListeningExecutorService(),
+              getEnableParserProfiling(),
+              getExcludeIncompatibleTargets());
       return QueryCommand.runMultipleQuery(
           params,
           env,

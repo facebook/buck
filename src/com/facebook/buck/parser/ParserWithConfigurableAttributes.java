@@ -43,6 +43,7 @@ import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.util.Map;
 import java.util.SortedMap;
@@ -175,6 +176,51 @@ class ParserWithConfigurableAttributes extends DefaultParser {
 
     return selectorListResolver.resolveList(
         configurationContext, buildTarget, attributeName, selectorList);
+  }
+
+  @Override
+  public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
+      Cell rootCell,
+      boolean enableProfiling,
+      ListeningExecutorService executor,
+      Iterable<? extends TargetNodeSpec> specs,
+      SpeculativeParsing speculativeParsing,
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode,
+      boolean excludeUnsupportedTargets)
+      throws BuildFileParseException, InterruptedException, IOException {
+
+    try (PerBuildStateWithConfigurableAttributes state =
+        (PerBuildStateWithConfigurableAttributes)
+            perBuildStateFactory.create(
+                permState,
+                executor,
+                rootCell,
+                targetPlatforms.get(),
+                enableProfiling,
+                speculativeParsing)) {
+      TargetNodeFilterForSpecResolver<TargetNode<?>> targetNodeFilter =
+          (spec, nodes) -> spec.filter(nodes);
+      if (excludeUnsupportedTargets) {
+        Platform targetPlatform = state.getTargetPlatform().get();
+        ConstraintResolver constraintResolver = state.getConstraintResolver();
+        targetNodeFilter =
+            new TargetNodeFilterForSpecResolverWithNodeFiltering<>(
+                targetNodeFilter,
+                node -> targetNodeMatchesPlatform(constraintResolver, node, targetPlatform));
+      }
+
+      TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
+          createTargetNodeProviderForSpecResolver(state);
+      return targetSpecResolver.resolveTargetSpecs(
+          eventBus,
+          rootCell,
+          watchman,
+          specs,
+          (buildTarget, targetNode, targetType) ->
+              applyDefaultFlavors(buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
+          targetNodeProvider,
+          targetNodeFilter);
+    }
   }
 
   @Override

@@ -471,6 +471,20 @@ class DefaultParser implements Parser {
     }
   }
 
+  @Override
+  public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
+      Cell rootCell,
+      boolean enableProfiling,
+      ListeningExecutorService executor,
+      Iterable<? extends TargetNodeSpec> specs,
+      SpeculativeParsing speculativeParsing,
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode,
+      boolean excludeUnsupportedTargets)
+      throws BuildFileParseException, InterruptedException, IOException {
+    return resolveTargetSpecs(
+        rootCell, enableProfiling, executor, specs, speculativeParsing, applyDefaultFlavorsMode);
+  }
+
   @VisibleForTesting
   static BuildTarget applyDefaultFlavors(
       BuildTarget target,
