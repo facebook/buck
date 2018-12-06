@@ -17,18 +17,23 @@
 package com.facebook.buck.skylark.io;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Set;
 import org.immutables.value.Value;
 
 /** Set of globs performed while executing the build spec and the results they produce. */
 @Value.Immutable(builder = false)
 @BuckStyleImmutable
+@JsonDeserialize
 abstract class AbstractGlobSpecWithResult {
   /** return the GlobSpec for this glob operation. */
   @Value.Parameter
+  @JsonProperty("globSpec")
   public abstract GlobSpec getGlobSpec();
 
   /** return the file paths that the glob operation returned. */
   @Value.Parameter
+  @JsonProperty("filePaths")
   public abstract Set<String> getFilePaths();
 }

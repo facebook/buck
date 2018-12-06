@@ -18,6 +18,8 @@ package com.facebook.buck.parser.api;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -28,13 +30,16 @@ import org.immutables.value.Value;
 /** Describes the content of a build file, which includes defined targets and their metadata. */
 @BuckStyleImmutable
 @Value.Immutable(builder = false)
+@JsonDeserialize
 abstract class AbstractBuildFileManifest {
   /** @return a list of targets defined in the build file. */
   @Value.Parameter
+  @JsonProperty("targets")
   public abstract ImmutableMap<String, Map<String, Object>> getTargets();
 
   /** @return a set of extension files read during parsing. */
   @Value.Parameter
+  @JsonProperty("includes")
   public abstract ImmutableSortedSet<String> getIncludes();
 
   /**
@@ -42,13 +47,16 @@ abstract class AbstractBuildFileManifest {
    *     parsing.
    */
   @Value.Parameter
+  @JsonProperty("configs")
   public abstract ImmutableMap<String, Object> getConfigs();
 
   /** @return an optional map from environment variable to a value read during parsing (if any). */
   @Value.Parameter
+  @JsonProperty("env")
   public abstract Optional<ImmutableMap<String, Optional<String>>> getEnv();
 
   /** @return A list of the glob operations performed with their results. */
   @Value.Parameter
+  @JsonProperty("globManifest")
   public abstract ImmutableList<GlobSpecWithResult> getGlobManifest();
 }

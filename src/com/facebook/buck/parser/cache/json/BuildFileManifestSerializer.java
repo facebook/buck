@@ -37,7 +37,7 @@ public class BuildFileManifestSerializer {
    * @throws JsonProcessingException
    */
   public static byte[] serialize(BuildFileManifest buildFileManifest) throws IOException {
-    return ObjectMappers.WRITER.writeValueAsBytes(buildFileManifest);
+    return ObjectMappers.WRITER_WITH_TYPE.writeValueAsBytes(buildFileManifest);
   }
 
   /**
@@ -49,6 +49,8 @@ public class BuildFileManifestSerializer {
    * @throws IOException
    */
   public static BuildFileManifest deserialize(byte[] buildFileManifestBytes) throws IOException {
-    return ObjectMappers.READER.forType(BuildFileManifest.class).readValue(buildFileManifestBytes);
+    return ObjectMappers.READER_WITH_TYPE
+        .forType(BuildFileManifest.class)
+        .readValue(buildFileManifestBytes);
   }
 }
