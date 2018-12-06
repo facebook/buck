@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
-import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
 import java.nio.file.Path;
 import java.util.Collection;
 
@@ -54,9 +53,6 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
       throws CoerceFailedException {
     if (object instanceof Collection) {
       Iterable<?> iterable = (Iterable<?>) object;
-      fill(cellRoots, filesystem, pathRelativeToProjectRoot, builder, iterable);
-    } else if (object instanceof SkylarkNestedSet) {
-      Iterable<?> iterable = ((SkylarkNestedSet) object).toCollection();
       fill(cellRoots, filesystem, pathRelativeToProjectRoot, builder, iterable);
     } else {
       throw CoerceFailedException.simple(object, getOutputClass());

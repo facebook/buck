@@ -32,7 +32,6 @@ import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -227,9 +226,6 @@ public class AuditRulesCommand extends AbstractCommand {
   }
 
   private static String createDisplayString(String indent, @Nullable Object value) {
-    if (value instanceof SkylarkNestedSet) {
-      value = ((SkylarkNestedSet) value).toCollection();
-    }
     if (value == null) {
       return "None";
     } else if (value instanceof Boolean) {

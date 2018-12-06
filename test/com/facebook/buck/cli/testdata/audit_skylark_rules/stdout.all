@@ -2,7 +2,5 @@
 
 java_library(
   name = "java-lib",
-  srcs = [
-  ],
 )
 

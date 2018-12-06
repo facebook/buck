@@ -181,6 +181,15 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
                       pojoizer.convertToPojo(skylarkSelectorValue.getDictionary());
               return ImmutableSelectorValue.of(dictionary, skylarkSelectorValue.getNoMatchError());
             }));
+    pojoizer.addPojoTransformer(
+        PojoTransformer.of(
+            com.google.devtools.build.lib.syntax.SkylarkNestedSet.class,
+            obj -> {
+              com.google.devtools.build.lib.syntax.SkylarkNestedSet skylarkNestedSet =
+                  (com.google.devtools.build.lib.syntax.SkylarkNestedSet) obj;
+              // recursively convert set elements
+              return pojoizer.convertToPojo(skylarkNestedSet.toCollection());
+            }));
 
     // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.
     // ParseResult.getRawRules() returns ImmutableMap<String, Map<String, Object>>, so it is
