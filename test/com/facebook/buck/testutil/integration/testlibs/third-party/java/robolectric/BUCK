@@ -87,3 +87,11 @@ android_library(
         "PUBLIC",
     ],
 )
+
+filegroup(
+    name = "robolectric_dir",
+    srcs = glob(["*.jar"]),
+    visibility = [
+        "PUBLIC",
+    ],
+)

@@ -1096,6 +1096,9 @@ java_test(
     ),
     fork_mode = "PER_TEST",
     labels = ["long_running"],
+    module_deps = [
+        "//src/com/facebook/buck/features/filegroup:filegroup",
+    ],
     resources = glob(
         ["testdata/**"],
     ),

@@ -100,7 +100,7 @@ robolectric_test(
         "PUBLIC",
     ],
     vm_args = [
-        "-Drobolectric.dependency.dir=" + read_config("test", "robolectric_location", "") + "/third-party/java/robolectric",
+        "-Drobolectric.dependency.dir=$(location buck//third-party/java/robolectric:robolectric_dir)",
     ],
     deps = [
         "buck//third-party/java/asm:asm",
