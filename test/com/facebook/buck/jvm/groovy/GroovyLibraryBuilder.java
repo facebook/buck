@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.groovy;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -48,7 +49,7 @@ public class GroovyLibraryBuilder
                     JavacOptionsProvider.DEFAULT_NAME,
                     JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
                 .build(),
-            null,
+            new GroovyBuckConfig(FakeBuckConfig.builder().build()),
             null),
         target,
         projectFilesystem,

@@ -25,16 +25,15 @@ import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.util.Optionals;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
-  @Nullable private final GroovyBuckConfig groovyBuckConfig;
+  private final GroovyBuckConfig groovyBuckConfig;
 
-  public GroovyConfiguredCompilerFactory(@Nullable GroovyBuckConfig groovyBuckConfig) {
+  public GroovyConfiguredCompilerFactory(GroovyBuckConfig groovyBuckConfig) {
     this.groovyBuckConfig = groovyBuckConfig;
   }
 
@@ -45,13 +44,6 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       BuildRuleResolver buildRuleResolver,
       ToolchainProvider toolchainProvider) {
     GroovyLibraryDescription.CoreArg groovyArgs = (CoreArg) Objects.requireNonNull(args);
-
-    Preconditions.checkNotNull(
-        groovyBuckConfig,
-        "groovyBuckConfig is required to be not null when configuring the compile to jar step.");
-    Preconditions.checkNotNull(
-        groovyBuckConfig.getGroovyc(),
-        "groovyc is required to be not null when configuring the compile to jar step.");
 
     return new GroovycToJarStepFactory(
         groovyBuckConfig.getGroovyc(),

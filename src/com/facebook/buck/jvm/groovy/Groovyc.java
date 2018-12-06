@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 
 public class Groovyc implements Tool {
 
@@ -39,7 +38,7 @@ public class Groovyc implements Tool {
     this.external = external;
   }
 
-  public Groovyc(@Nullable SourcePath path, boolean external) {
+  public Groovyc(SourcePath path, boolean external) {
     this(() -> Objects.requireNonNull(path), external);
   }
 
