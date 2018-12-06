@@ -42,6 +42,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public static final int DEFAULT_REMOTE_STRATEGY_THREADS = 12;
   public static final int DEFAULT_REMOTE_CONCURRENT_ACTION_COMPUTATIONS = 4;
+  public static final int DEFAULT_REMOTE_CONCURRENT_PENDING_UPLOADS = 100;
   public static final int DEFAULT_REMOTE_CONCURRENT_EXECUTIONS = 80;
   public static final int DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING = 6;
 
@@ -115,6 +116,18 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
         return getDelegate()
             .getInteger(SECTION, "concurrent_action_computations")
             .orElse(DEFAULT_REMOTE_CONCURRENT_ACTION_COMPUTATIONS);
+      }
+
+      /**
+       * Number of pending uploads at a time. While an action is pending uploads, it may hold a
+       * reference to some large-ish data (>1MB). If this limit is reached, it will also block
+       * future action computations until uploads finish.
+       */
+      @Override
+      public int getMaxConcurrentPendingUploads() {
+        return getDelegate()
+            .getInteger(SECTION, "concurrent_pending_uploads")
+            .orElse(DEFAULT_REMOTE_CONCURRENT_PENDING_UPLOADS);
       }
 
       /**

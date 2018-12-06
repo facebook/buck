@@ -24,4 +24,6 @@ public interface RemoteExecutionStrategyConfig {
   int getMaxConcurrentExecutions();
 
   int getMaxConcurrentResultHandling();
+
+  int getMaxConcurrentPendingUploads();
 }

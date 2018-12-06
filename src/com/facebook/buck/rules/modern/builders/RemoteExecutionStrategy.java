@@ -82,6 +82,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final ListeningExecutorService service;
 
   private final JobLimiter computeActionLimiter;
+  private final JobLimiter pendingUploadsLimiter;
   private final JobLimiter executionLimiter;
   private final JobLimiter handleResultLimiter;
 
@@ -98,6 +99,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         MoreExecutors.listeningDecorator(
             MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads()));
     this.computeActionLimiter = new JobLimiter(strategyConfig.getMaxConcurrentActionComputations());
+    this.pendingUploadsLimiter = new JobLimiter(strategyConfig.getMaxConcurrentPendingUploads());
     this.executionLimiter = new JobLimiter(strategyConfig.getMaxConcurrentExecutions());
     this.handleResultLimiter = new JobLimiter(strategyConfig.getMaxConcurrentResultHandling());
     this.eventBus = eventBus;
@@ -158,9 +160,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     RemoteExecutionActionEvent.sendScheduledEvent(eventBus, rule.getBuildTarget());
 
     ListenableFuture<RemoteExecutionActionInfo> actionInfoFuture =
-        computeActionLimiter.schedule(
-            service,
-            () -> Futures.immediateFuture(getRemoteExecutionActionInfo(rule, strategyContext)));
+        pendingUploadsLimiter.schedule(
+            service, () -> computeActionAndUpload(rule, strategyContext));
 
     // guard should only be set once. The left value indicates that it has been cancelled and holds
     // the reason, a right value indicates that it has passed the point of no return and can no
@@ -202,6 +203,37 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         return buildResult;
       }
     };
+  }
+
+  private ListenableFuture<RemoteExecutionActionInfo> computeActionAndUpload(
+      BuildRule rule, BuildStrategyContext strategyContext) {
+    ListenableFuture<RemoteExecutionActionInfo> actionInfoFuture =
+        computeActionLimiter.schedule(
+            service,
+            () -> Futures.immediateFuture(getRemoteExecutionActionInfo(rule, strategyContext)));
+    return Futures.transformAsync(
+        actionInfoFuture, actionInfo -> uploadInputs(rule.getBuildTarget(), actionInfo));
+  }
+
+  private ListenableFuture<RemoteExecutionActionInfo> uploadInputs(
+      BuildTarget buildTarget, RemoteExecutionActionInfo actionInfo) throws IOException {
+    Objects.requireNonNull(actionInfo);
+    Digest actionDigest = actionInfo.getActionDigest();
+    ImmutableMap<Digest, UploadDataSupplier> requiredData = actionInfo.getRequiredData();
+    Scope uploadingInputsScope =
+        RemoteExecutionActionEvent.sendEvent(
+            eventBus, State.UPLOADING_INPUTS, buildTarget, Optional.of(actionDigest));
+    ListenableFuture<Void> inputsUploadedFuture =
+        executionClients.getContentAddressedStorage().addMissing(requiredData);
+    return Futures.transform(
+        inputsUploadedFuture,
+        ignored -> {
+          uploadingInputsScope.close();
+          // The actionInfo may be very large, so explicitly clear out the unneeded parts.
+          // actionInfo.getRequiredData() in particular may be very, very large and is unneeded once
+          // uploading has completed.
+          return actionInfo.withRequiredData(ImmutableMap.of());
+        });
   }
 
   private ListenableFuture<Optional<BuildResult>> handleActionInfo(
