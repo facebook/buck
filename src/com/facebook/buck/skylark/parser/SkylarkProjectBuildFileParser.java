@@ -22,12 +22,15 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.BuildFileManifestPojoizer;
+import com.facebook.buck.parser.api.PojoTransformer;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.parser.syntax.ImmutableSelectorList;
+import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.Globber;
@@ -152,12 +155,39 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       throws BuildFileParseException, InterruptedException, IOException {
     ParseResult parseResult = parseBuildFile(buildFile);
 
+    // Convert Skylark-specific classes to Buck API POJO classes to decouple them from parser
+    // implementation. BuildFileManifest should only have POJO classes.
+    BuildFileManifestPojoizer pojoizer = BuildFileManifestPojoizer.of();
+    pojoizer.addPojoTransformer(
+        PojoTransformer.of(
+            com.google.devtools.build.lib.syntax.SelectorList.class,
+            obj -> {
+              com.google.devtools.build.lib.syntax.SelectorList skylarkSelectorList =
+                  (com.google.devtools.build.lib.syntax.SelectorList) obj;
+              // recursively convert list elements
+              ImmutableList<Object> elements =
+                  (ImmutableList<Object>) pojoizer.convertToPojo(skylarkSelectorList.getElements());
+              return ImmutableSelectorList.of(elements, skylarkSelectorList.getType());
+            }));
+    pojoizer.addPojoTransformer(
+        PojoTransformer.of(
+            com.google.devtools.build.lib.syntax.SelectorValue.class,
+            obj -> {
+              com.google.devtools.build.lib.syntax.SelectorValue skylarkSelectorValue =
+                  (com.google.devtools.build.lib.syntax.SelectorValue) obj;
+              // recursively convert dictionary elements
+              ImmutableMap<String, Object> dictionary =
+                  (ImmutableMap<String, Object>)
+                      pojoizer.convertToPojo(skylarkSelectorValue.getDictionary());
+              return ImmutableSelectorValue.of(dictionary, skylarkSelectorValue.getNoMatchError());
+            }));
+
     // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.
     // ParseResult.getRawRules() returns ImmutableMap<String, Map<String, Object>>, so it is
     // a safe downcast here
     ImmutableMap<String, Map<String, Object>> targets =
         (ImmutableMap<String, Map<String, Object>>)
-            BuildFileManifestPojoizer.of().convertToPojo(parseResult.getRawRules());
+            pojoizer.convertToPojo(parseResult.getRawRules());
 
     return BuildFileManifest.of(
         targets,

@@ -151,7 +151,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     // com.google.devtools.build.lib.syntax.SelectorList} is not generic class, but an instance
     // contains all necessry information to coerce the value into an instance of {@link
     // com.facebook.buck.core.select.SelectorList} which is a generic class.
-    if (rawValue instanceof com.google.devtools.build.lib.syntax.SelectorList) {
+    if (rawValue instanceof com.facebook.buck.parser.syntax.SelectorList) {
       coercer =
           typeCoercerFactory.typeCoercerForParameterizedType(
               "SelectorList",

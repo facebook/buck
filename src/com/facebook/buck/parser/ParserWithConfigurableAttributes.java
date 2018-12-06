@@ -158,12 +158,12 @@ class ParserWithConfigurableAttributes extends DefaultParser {
       String attributeName,
       Object jsonObject)
       throws CoerceFailedException {
-    if (!(jsonObject instanceof com.google.devtools.build.lib.syntax.SelectorList)) {
+    if (!(jsonObject instanceof com.facebook.buck.parser.syntax.SelectorList)) {
       return jsonObject;
     }
 
-    com.google.devtools.build.lib.syntax.SelectorList list =
-        (com.google.devtools.build.lib.syntax.SelectorList) jsonObject;
+    com.facebook.buck.parser.syntax.SelectorList list =
+        (com.facebook.buck.parser.syntax.SelectorList) jsonObject;
 
     SelectorList<Object> selectorList =
         selectorListFactory.create(

@@ -28,6 +28,7 @@ import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
@@ -35,7 +36,6 @@ import com.facebook.buck.rules.coercer.ListTypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.devtools.build.lib.syntax.SelectorValue;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -134,8 +134,9 @@ public class SelectorListFactoryTest {
     String flavorName1 = "test1";
     String flavorName2 = "test2";
     String message = "message about incorrect conditions";
-    SelectorValue selectorValue =
-        new SelectorValue(ImmutableMap.of("DEFAULT", Lists.newArrayList(flavorName1)), message);
+    ImmutableSelectorValue selectorValue =
+        ImmutableSelectorValue.of(
+            ImmutableMap.of("DEFAULT", Lists.newArrayList(flavorName1)), message);
 
     SelectorList<ImmutableList<Flavor>> selectors =
         selectorListFactory.create(

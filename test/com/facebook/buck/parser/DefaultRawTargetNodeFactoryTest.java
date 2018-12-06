@@ -34,13 +34,13 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.visibility.BuildTargetVisibilityPattern;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.SelectorValue;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -75,14 +75,16 @@ public class DefaultRawTargetNodeFactoryTest {
                 .put("deps", ImmutableList.of("//a/b:d", "//a/b:e"))
                 .put(
                     "resources",
-                    com.google.devtools.build.lib.syntax.SelectorList.of(
-                        new SelectorValue(
-                            ImmutableMap.of(
-                                "//c:a",
-                                ImmutableList.of("//a/b:file1", "//a/b:file2"),
-                                "//c:b",
-                                ImmutableList.of("//a/b:file3", "//a/b:file4")),
-                            "")))
+                    com.facebook.buck.parser.syntax.ImmutableSelectorList.of(
+                        ImmutableList.of(
+                            ImmutableSelectorValue.of(
+                                ImmutableMap.of(
+                                    "//c:a",
+                                    ImmutableList.of("//a/b:file1", "//a/b:file2"),
+                                    "//c:b",
+                                    ImmutableList.of("//a/b:file3", "//a/b:file4")),
+                                "")),
+                        ImmutableList.class))
                 .put("visibility", ImmutableList.of("//a/..."))
                 .put("within_view", ImmutableList.of("//b/..."))
                 .build(),

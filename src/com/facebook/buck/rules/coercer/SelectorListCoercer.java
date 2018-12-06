@@ -90,8 +90,8 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    com.google.devtools.build.lib.syntax.SelectorList list =
-        (com.google.devtools.build.lib.syntax.SelectorList) object;
+    com.facebook.buck.parser.syntax.SelectorList list =
+        (com.facebook.buck.parser.syntax.SelectorList) object;
     return selectorListFactory.create(
         cellRoots, filesystem, pathRelativeToProjectRoot, list.getElements(), elementTypeCoercer);
   }

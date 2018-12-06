@@ -59,6 +59,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/parser/syntax:syntax",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/macros:types",

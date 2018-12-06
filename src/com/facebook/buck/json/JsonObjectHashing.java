@@ -16,11 +16,11 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.parser.syntax.SelectorList;
+import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.util.hashing.StringHashing;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
-import com.google.devtools.build.lib.syntax.SelectorList;
-import com.google.devtools.build.lib.syntax.SelectorValue;
 import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
 import java.util.Collection;
 import java.util.List;

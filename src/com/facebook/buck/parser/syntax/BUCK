@@ -1,0 +1,14 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "syntax",
+    srcs = glob([
+        "*.java",
+    ]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+)

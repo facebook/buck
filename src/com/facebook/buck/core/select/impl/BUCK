@@ -10,6 +10,8 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/parser/api:api",
+        "//src/com/facebook/buck/parser/syntax:syntax",
         "//third-party/java/bazel:bazel",
         "//third-party/java/jsr:jsr305",
     ],
