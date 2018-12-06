@@ -1,1 +1,1 @@
-load('//:included_java_rules.bzl', 'my_rule')
+load("//:included_java_rules.bzl", "my_rule")
