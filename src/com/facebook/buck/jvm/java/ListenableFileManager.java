@@ -25,7 +25,9 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileObject;
@@ -113,9 +115,13 @@ class ListenableFileManager extends ForwardingStandardJavaFileManager {
   }
 
   @Override
+  @Nullable
   public JavaFileObject getJavaFileForInput(
       Location location, String className, JavaFileObject.Kind kind) throws IOException {
     JavaFileObject javaFileObject = super.getJavaFileForInput(location, className, kind);
+    if (javaFileObject == null) {
+      return null;
+    }
     if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
       return javaFileObject;
     } else {
@@ -204,7 +210,7 @@ class ListenableFileManager extends ForwardingStandardJavaFileManager {
     }
 
     public JavaFileObject wrap(JavaFileObject inner) {
-      return new ListenableJavaFileObject(inner);
+      return new ListenableJavaFileObject(Objects.requireNonNull(inner));
     }
   }
 

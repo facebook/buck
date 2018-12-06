@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.jimfs.Configuration;
@@ -66,6 +67,11 @@ public class ListenableFileManagerTest {
     for (String fileName : FILE_NAMES) {
       fakeFileManager.addFile(TEST_JAR_PATH, fileName, JavaFileObject.Kind.CLASS);
     }
+  }
+
+  @Test
+  public void testGetNonExistentJavaFileReturnsNull() throws IOException {
+    assertNull(fileManager.getJavaFileForInput(null, "InvalidClass", JavaFileObject.Kind.CLASS));
   }
 
   @Test
