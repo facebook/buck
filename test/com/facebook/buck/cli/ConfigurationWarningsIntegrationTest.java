@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.util.regex.Pattern;
 import org.junit.Rule;
 import org.junit.Test;
@@ -140,5 +141,61 @@ public class ConfigurationWarningsIntegrationTest {
         result.getStderr(),
         containsString(
             "Invalidating internal cached state: Buck configuration options changed between invocations. This may cause slower builds."));
+  }
+
+  @Test
+  public void printsIniFileOnInvalidConfigFormat() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "configuration_warnings", tmp);
+    workspace.setUp();
+    workspace.writeContentsToPath("[foo]\nbar = baz\nno_value", ".buckconfig");
+
+    String expected =
+        String.format(
+            "parse error (in %s at line 3): no_value",
+            tmp.getRoot().resolve(".buckconfig").toString());
+
+    ProcessResult result = workspace.runBuckdCommand("query", "//...").assertFailure();
+
+    assertThat(result.getStderr(), containsString(expected));
+  }
+
+  @Test
+  public void printsErrorsOnInvalidIncludedConfigFormat() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "configuration_warnings", tmp);
+    workspace.setUp();
+    workspace.writeContentsToPath("[foo]\nbar = baz\n<file:included.bcfg>", ".buckconfig");
+    workspace.writeContentsToPath("[foo]\nbar1=baz1\nno_value", "included.bcfg");
+
+    String expected =
+        String.format(
+            "parse error (in %s at line 3): no_value",
+            tmp.getRoot().resolve("included.bcfg").toString());
+
+    ProcessResult result = workspace.runBuckdCommand("query", "//...").assertFailure();
+
+    assertThat(result.getStderr(), containsString(expected));
+  }
+
+  @Test
+  public void printsErrorsOnIncludingInvalidPath() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "configuration_warnings", tmp);
+    workspace.setUp();
+    workspace.writeContentsToPath("[foo]\nbar = baz\n<file:other.bcfg>", ".buckconfig");
+
+    String expected =
+        String.format(
+            "Error while reading %s: %s (",
+            tmp.getRoot().resolve(".buckconfig").toString(),
+            tmp.getRoot().resolve("other.bcfg").toString());
+
+    ProcessResult result = workspace.runBuckdCommand("query", "//...").assertFailure();
+
+    assertThat(result.getStderr(), containsString(expected));
   }
 }

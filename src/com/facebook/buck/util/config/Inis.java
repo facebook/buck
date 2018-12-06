@@ -16,13 +16,18 @@
 
 package com.facebook.buck.util.config;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Paths;
 import org.ini4j.Config;
 import org.ini4j.Ini;
+import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Profile;
 
 class Inis {
@@ -37,9 +42,21 @@ class Inis {
   // config; and if the include is an absolute path, it will also be handled correctly.
   public static ImmutableMap<String, ImmutableMap<String, String>> read(URL config)
       throws IOException {
-    Ini ini = makeIniParser(/*enable_includes=*/ true);
-    ini.load(config);
-    return toMap(ini);
+    try {
+      Ini ini = makeIniParser(/*enable_includes=*/ true);
+      ini.load(config);
+      return toMap(ini);
+    } catch (InvalidFileFormatException e) {
+      throw new HumanReadableException(e, e.getMessage());
+    } catch (FileNotFoundException e) {
+      try {
+        // Handle windows paths, without this conversion, they look like /C:/foo/bar
+        throw new HumanReadableException(
+            "Error while reading %s: %s", Paths.get(config.toURI()), e.getMessage());
+      } catch (URISyntaxException uriEx) {
+        throw e;
+      }
+    }
   }
 
   // This method should be used by tests only in order to construct an in-memory
