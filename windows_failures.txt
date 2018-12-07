@@ -1,13 +1,10 @@
-!com.facebook.buck.android.AaptPackageResourcesIntegrationTest
 !com.facebook.buck.cli.DaemonIntegrationTest
 !com.facebook.buck.cli.ExternalTestRunnerIntegrationTest
-!com.facebook.buck.cli.RunCommandIntegrationTest
 !com.facebook.buck.cxx.ArchiveStepIntegrationTest#thatGeneratedArchivesAreDeterministic
 !com.facebook.buck.cxx.CxxBinaryDescriptionTest#binaryShouldLinkOwnRequiredLibraries
 !com.facebook.buck.cxx.CxxBinaryDescriptionTest#binaryShouldLinkOwnRequiredLibraries.*
 !com.facebook.buck.cxx.CxxBinaryDescriptionTest#createBuildRule
 !com.facebook.buck.cxx.CxxBinaryDescriptionTest#createBuildRule.*
-!com.facebook.buck.cxx.CxxBinaryIntegrationTest
 !com.facebook.buck.cxx.CxxCompilationDatabaseIntegrationTest
 !com.facebook.buck.cxx.CxxCompilationDatabaseTest
 !com.facebook.buck.cxx.CxxCompileStepIntegrationTest
@@ -29,13 +26,8 @@
 !com.facebook.buck.cxx.ToolTest
 !com.facebook.buck.cxx.toolchain.DebugPathSanitizerTest
 !com.facebook.buck.jvm.java.ExternalJavacIntegrationTest#whenBuckdUsesExternalJavacThenClientEnvironmentUsed
-!com.facebook.buck.step.fs.SymCopyStepTest#testSymCopyStep
-!com.facebook.buck.thrift.ThriftLibraryIntegrationTest#shouldBeAbleToConstructACxxLibraryFromThrift
 !com.facebook.buck.util.ListeningProcessExecutorTest#clearsEnvWhenExplicitlySet
-!com.facebook.buck.intellij.ideabuck.config.BuckExecutableDetectorTest
-!com.facebook.buck.io.filesystem.skylark.SkylarkFilesystemTest
 !com.facebook.buck.jvm.java.JavacStepTest
-!com.facebook.buck.cli.QueryCommandIntegrationTest
 !com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest
 !com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest.*
 !com.facebook.buck.core.model.graph.action.computation.ActionGraphCacheIntegrationTest
