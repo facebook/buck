@@ -21,10 +21,9 @@
   {param name: 'show-output' /}
   {param desc}
   <p>
-    Prints the relative paths to the output for each target after the 
-    target name. Some rules&mdash;such as {call buck.genrule /}&mdash;generate 
-    sources instead of build artifacts. In these cases, paths to output 
-    artifacts are printed first, followed by paths to generated sources.
+    Print the relative paths to the output for each target after the target 
+    name. Note that some rules&mdash;such as {call buck.genrule /}&mdash;generate 
+    sources instead of build artifacts. 
   </p>
   {/param}
 {/call}
