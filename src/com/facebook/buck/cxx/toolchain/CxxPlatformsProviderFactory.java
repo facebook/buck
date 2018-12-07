@@ -78,7 +78,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
 
     Map<Flavor, CxxPlatform> cxxOverridePlatformsMap =
         updateCxxPlatformsWithOptionsFromBuckConfig(
-            platform, config, cxxSystemPlatformsMap, defaultHostCxxPlatform);
+            platform, config, cxxSystemPlatformsMap, defaultHostCxxPlatform, cxxBuckConfig);
 
     CxxPlatform hostCxxPlatform = getHostCxxPlatform(cxxBuckConfig, cxxOverridePlatformsMap);
     cxxOverridePlatformsMap.put(hostCxxPlatform.getFlavor(), hostCxxPlatform);
@@ -119,10 +119,15 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
       Platform platform,
       BuckConfig config,
       ImmutableMap<Flavor, CxxPlatform> cxxSystemPlatformsMap,
-      CxxPlatform defaultHostCxxPlatform) {
+      CxxPlatform defaultHostCxxPlatform,
+      CxxBuckConfig cxxBuckConfig) {
     ImmutableSet<Flavor> possibleHostFlavors = CxxPlatforms.getAllPossibleHostFlavors();
     HashMap<Flavor, CxxPlatform> cxxOverridePlatformsMap = new HashMap<>(cxxSystemPlatformsMap);
-    ImmutableSet<Flavor> cxxFlavors = CxxBuckConfig.getCxxFlavors(config);
+    ImmutableSet<Flavor> cxxFlavors =
+        ImmutableSet.<Flavor>builder()
+            .addAll(CxxBuckConfig.getCxxFlavors(config))
+            .addAll(cxxBuckConfig.getDeclaredPlatforms())
+            .build();
     for (Flavor flavor : cxxFlavors) {
       CxxPlatform baseCxxPlatform = cxxSystemPlatformsMap.get(flavor);
       if (baseCxxPlatform == null) {

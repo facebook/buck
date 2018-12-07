@@ -2380,15 +2380,14 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "declared_platforms", tmp);
     workspace.setUp();
+
     workspace
         .runBuckCommand("query", "-c", "cxx.declared_platforms=my-favorite-platform", "//:defaults")
         .assertSuccess();
-
-    // Currently failing
     workspace
         .runBuckCommand(
             "query", "-c", "cxx.declared_platforms=my-favorite-platform", "//:default_platform")
-        .assertFailure();
+        .assertSuccess();
   }
 
   @Test
