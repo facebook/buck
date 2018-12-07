@@ -46,6 +46,33 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final int DEFAULT_REMOTE_CONCURRENT_EXECUTIONS = 80;
   public static final int DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING = 6;
 
+  /**
+   * Limit on the number of outstanding execution requests. This is probably the value that's most
+   * likely to be non-default.
+   */
+  public static final String CONCURRENT_EXECUTIONS_KEY = "concurrent_executions";
+  /**
+   * Number of actions to compute at a time. These should be <25ms average, but require I/O and cpu.
+   */
+  public static final String CONCURRENT_ACTION_COMPUTATIONS_KEY = "concurrent_action_computations";
+  /**
+   * Number of results to concurrently handle at a time. This is mostly just downloading outputs
+   * which is currently a blocking operation.
+   */
+  public static final String CONCURRENT_RESULT_HANDLING_KEY = "concurrent_result_handling";
+  /**
+   * Number of threads for the strategy to do its work. This doesn't need to be a lot, but should
+   * probably be greater than concurrent_result_handling below.
+   */
+  public static final String STRATEGY_WORKER_THREADS_KEY = "worker_threads";
+
+  /**
+   * Number of pending uploads at a time. While an action is pending uploads, it may hold a
+   * reference to some large-ish data (>1MB). If this limit is reached, it will also block future
+   * action computations until uploads finish.
+   */
+  public static final String CONCURRENT_PENDING_UPLOADS_KEY = "concurrent_pending_uploads";
+
   public String getRemoteHost() {
     return getValueWithFallback("remote_host").orElse("localhost");
   }
@@ -95,61 +122,91 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   @Value.Derived
   public RemoteExecutionStrategyConfig getStrategyConfig() {
+    int workerThreads =
+        getDelegate()
+            .getInteger(SECTION, STRATEGY_WORKER_THREADS_KEY)
+            .orElse(DEFAULT_REMOTE_STRATEGY_THREADS);
+
+    int concurrentActionComputations =
+        getDelegate()
+            .getInteger(SECTION, CONCURRENT_ACTION_COMPUTATIONS_KEY)
+            .orElse(DEFAULT_REMOTE_CONCURRENT_ACTION_COMPUTATIONS);
+
+    int concurrentPendingUploads =
+        getDelegate()
+            .getInteger(SECTION, CONCURRENT_PENDING_UPLOADS_KEY)
+            .orElse(DEFAULT_REMOTE_CONCURRENT_PENDING_UPLOADS);
+
+    int concurrentExecutions =
+        getDelegate()
+            .getInteger(SECTION, CONCURRENT_EXECUTIONS_KEY)
+            .orElse(DEFAULT_REMOTE_CONCURRENT_EXECUTIONS);
+
+    int concurrentResultHandling =
+        getDelegate()
+            .getInteger(SECTION, CONCURRENT_RESULT_HANDLING_KEY)
+            .orElse(DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING);
+
+    // Some of these values are also limited by other ones (e.g. synchronous work is limited by the
+    // number of threads). We detect some of these cases and log an error to the user to help them
+    // understand the behavior.
+    if (workerThreads < concurrentActionComputations) {
+      LOG.error(
+          "%s.%s=%d will be limited by %s.%s=%d",
+          SECTION,
+          CONCURRENT_ACTION_COMPUTATIONS_KEY,
+          concurrentActionComputations,
+          SECTION,
+          STRATEGY_WORKER_THREADS_KEY,
+          workerThreads);
+    }
+
+    if (workerThreads < concurrentResultHandling) {
+      LOG.error(
+          "%s.%s=%d will be limited by %s.%s=%d",
+          SECTION,
+          CONCURRENT_ACTION_COMPUTATIONS_KEY,
+          concurrentResultHandling,
+          SECTION,
+          STRATEGY_WORKER_THREADS_KEY,
+          workerThreads);
+    }
+
+    if (concurrentPendingUploads < concurrentActionComputations) {
+      LOG.error(
+          "%s.%s=%d will be limited by %s.%s=%d",
+          SECTION,
+          CONCURRENT_ACTION_COMPUTATIONS_KEY,
+          concurrentActionComputations,
+          SECTION,
+          STRATEGY_WORKER_THREADS_KEY,
+          concurrentPendingUploads);
+    }
+
     return new RemoteExecutionStrategyConfig() {
-      /**
-       * Number of threads for the strategy to do its work. This doesn't need to be a lot, but
-       * should probably be greater than concurrent_result_handling below.
-       */
       @Override
       public int getThreads() {
-        return getDelegate()
-            .getInteger(SECTION, "worker_threads")
-            .orElse(DEFAULT_REMOTE_STRATEGY_THREADS);
+        return workerThreads;
       }
 
-      /**
-       * Number of actions to compute at a time. These should be <25ms average, but require I/O and
-       * cpu.
-       */
       @Override
       public int getMaxConcurrentActionComputations() {
-        return getDelegate()
-            .getInteger(SECTION, "concurrent_action_computations")
-            .orElse(DEFAULT_REMOTE_CONCURRENT_ACTION_COMPUTATIONS);
+        return concurrentActionComputations;
       }
 
-      /**
-       * Number of pending uploads at a time. While an action is pending uploads, it may hold a
-       * reference to some large-ish data (>1MB). If this limit is reached, it will also block
-       * future action computations until uploads finish.
-       */
       @Override
       public int getMaxConcurrentPendingUploads() {
-        return getDelegate()
-            .getInteger(SECTION, "concurrent_pending_uploads")
-            .orElse(DEFAULT_REMOTE_CONCURRENT_PENDING_UPLOADS);
+        return concurrentPendingUploads;
       }
 
-      /**
-       * Limit on the number of outstanding execution requests. This is probably the value that's
-       * most likely to be non-default.
-       */
       @Override
       public int getMaxConcurrentExecutions() {
-        return getDelegate()
-            .getInteger(SECTION, "concurrent_executions")
-            .orElse(DEFAULT_REMOTE_CONCURRENT_EXECUTIONS);
+        return concurrentExecutions;
       }
 
-      /**
-       * Number of results to concurrently handle at a time. This is mostly just downloading outputs
-       * which is currently a blocking operation.
-       */
       @Override
       public int getMaxConcurrentResultHandling() {
-        return getDelegate()
-            .getInteger(SECTION, "concurrent_result_handling")
-            .orElse(DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING);
+        return concurrentResultHandling;
       }
     };
   }
