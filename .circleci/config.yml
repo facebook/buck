@@ -4,6 +4,7 @@ aliases:
   - &restore-android-sdk
     keys:
       - android-sdk-{{ checksum "scripts/android-sdk-setup.sh" }}
+      - android-sdk
   - &save-android-sdk
     paths:
       - /opt/android
