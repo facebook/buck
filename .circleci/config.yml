@@ -81,10 +81,13 @@ jobs:
       - run: *run-ci-script
 
 workflows:
-   version: 2
-   build_and_test:
-     jobs:
-       - build
-       - unit:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - unit:
+          requires:
+            - build
+      - integration:
           requires:
             - build
