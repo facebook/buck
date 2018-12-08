@@ -64,6 +64,7 @@ jobs:
 
     steps:
       - run: *apt-dependencies
+      - checkout
       - *attach_workspace
       - restore-cache: *restore-android-sdk
       - run: *android-setup
