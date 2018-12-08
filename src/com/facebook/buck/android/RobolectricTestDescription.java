@@ -165,7 +165,6 @@ public class RobolectricTestDescription
             Lists.transform(
                 args.getVmArgs(), vmArg -> macrosConverter.convert(vmArg, graphBuilder)));
 
-
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
             graphBuilder, /* createBuildableIfEmpty */ true);
