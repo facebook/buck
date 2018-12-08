@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if [! -d $ANDROID_HOME]; then
     wget -q https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip -O /tmp/sdk.zip
