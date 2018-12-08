@@ -1,0 +1,59 @@
+aliases:
+  - &android-setup
+     name: Setup Android SDK
+     command: |
+       wget -q https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip -O /tmp/sdk.zip
+       mkdir $ANDROID_HOME
+       unzip -q -d $ANDROID_HOME /tmp/sdk.zip
+       rm /tmp/sdk.zip
+       yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses && $ANDROID_HOME/tools/bin/sdkmanager --update
+       $ANDROID_HOME/tools/bin/sdkmanager 'tools' 'platform-tools' 'build-tools;23.0.3' 'platforms;android-23' 'platforms;android-21'  'add-ons;addon-google_apis-google-21' 'add-ons;addon-google_apis-google-23' 'extras;android;m2repository'
+  - &apt-dependencies
+    name: Install APT dependencies
+    command: |
+      apt-get -qq -y update
+      apt install -qq -y --no-install-recommends ant gcc g++ git groovy python2.7 ssh-client unzip wget
+  - &run-ci-script
+    name: Run CI script
+    command: |
+      echo '-Xmx500m' > .buckjavaargs.local
+      ./scripts/travisci_run.sh
+
+defaults: &defaults
+   docker:
+     - image: openjdk:8-slim
+   working_directory: ~/buck
+
+version: 2
+ jobs:
+   build:
+     <<: *defaults
+     environment:
+       CI_ACTION: build
+       ANDROID_HOME: /opt/android
+     
+     steps:
+       - run: *apt-dependencies
+       - run: *android-setup
+       - checkout
+       - run: *run-ci-script
+
+   unit:
+     <<: *defaults
+     environment:
+       ANDROID_HOME: /opt/android
+       CI_ACTION: unit
+       GROOVY_HOME: /usr/share/groovy/
+
+     steps:
+       - run: *apt-dependencies
+       - run: *android-setup
+       - checkout
+       - run: *run-ci-script
+
+workflows:
+   version: 2
+   build_and_test:
+     jobs:
+       - build
+       - unit
