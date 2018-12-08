@@ -92,25 +92,11 @@ public class Console {
   }
 
   /**
-   * Prints the message of the {@link Throwable} as a build failure.
-   *
-   * @see #printBuildFailure(String)
-   */
-  public void printBuildFailureWithoutStacktraceDontUnwrap(Throwable t) {
-    LOG.warn(t, "Build error caused by exception");
-    printBuildFailureInternal(t.getMessage());
-  }
-
-  /**
    * Prints an error message prefixed with {@code BUILD FAILED} to stderr that will be highlighted
    * in red if stderr is a tty.
    */
   public void printBuildFailure(String failureMessage) {
     LOG.warn("Build failure: %s", failureMessage);
-    printBuildFailureInternal(failureMessage);
-  }
-
-  private void printBuildFailureInternal(String failureMessage) {
     ansi.printlnHighlightedFailureText(stdErr, String.format("BUILD FAILED: %s", failureMessage));
   }
 
@@ -118,17 +104,5 @@ public class Console {
   public void printFailure(String failureMessage) {
     LOG.warn("Command failure: %s", failureMessage);
     ansi.printlnHighlightedFailureText(stdErr, failureMessage);
-  }
-
-  /** Prints error message to console in red, also logs stacktrace but does not display it */
-  public void printFailure(Throwable t, String failureMessage) {
-    LOG.warn(t, failureMessage);
-    ansi.printlnHighlightedFailureText(stdErr, failureMessage);
-  }
-
-  /** Prints error message to console in red, logs and displays stacktrace */
-  public void printFailureWithStacktrace(Throwable t, String failureMessage) {
-    printFailure(t, failureMessage);
-    t.printStackTrace(stdErr);
   }
 }
