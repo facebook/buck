@@ -26,6 +26,9 @@ aliases:
 references:
   workspace_root: &workspace_root
       ~/buck
+  attach_workspace: &attach_workspace
+    attach_workspace:
+      at: *workspace_root
 
 defaults: &defaults
    docker:
@@ -46,6 +49,11 @@ jobs:
       - run: *android-setup
       - save-cache: *save-android-sdk
       - run: *run-ci-script
+      - persist_to_workspace:
+          root: *workspace_root
+          paths:
+            - ant-out
+            - buck-out
 
   unit:
     <<: *defaults
@@ -56,7 +64,7 @@ jobs:
 
     steps:
       - run: *apt-dependencies
-      - checkout
+      - *attach_workspace
       - restore-cache: *restore-android-sdk
       - run: *android-setup
       - save-cache: *save-android-sdk
