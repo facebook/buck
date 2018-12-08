@@ -23,10 +23,14 @@ aliases:
       echo '-Xmx500m' > .buckjavaargs.local
       ./scripts/travisci_run.sh
 
+references:
+  workspace_root: &workspace_root
+      ~/buck
+
 defaults: &defaults
    docker:
      - image: openjdk:8-slim
-   working_directory: ~/buck
+   working_directory: *workspace_root
 
 jobs:
   build:
