@@ -52,8 +52,10 @@ jobs:
 
     steps:
       - run: *apt-dependencies
-      - run: *android-setup
       - checkout
+      - restore-cache: *restore-android-sdk
+      - run: *android-setup
+      - save-cache: *save-android-sdk
       - run: *run-ci-script
 
 workflows:
