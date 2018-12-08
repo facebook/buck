@@ -1,15 +1,16 @@
 version: 2
 
 aliases:
+  - &restore-android-sdk
+    keys:
+      - android-sdk-{{ checksum ".circleci/android-sdk-setup.sh" }}
+  - &save-android-sdk
+    paths:
+      - /opt/android
+    key: android-sdk-{{ checksum ".circleci/android-sdk-setup.sh" }}
   - &android-setup
      name: Setup Android SDK
-     command: |
-       wget -q https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip -O /tmp/sdk.zip
-       mkdir $ANDROID_HOME
-       unzip -q -d $ANDROID_HOME /tmp/sdk.zip
-       rm /tmp/sdk.zip
-       yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses && $ANDROID_HOME/tools/bin/sdkmanager --update
-       $ANDROID_HOME/tools/bin/sdkmanager 'tools' 'platform-tools' 'build-tools;23.0.3' 'platforms;android-23' 'platforms;android-21'  'add-ons;addon-google_apis-google-21' 'add-ons;addon-google_apis-google-23' 'extras;android;m2repository'
+     command: ./.circleci/android-sdk-setup.sh
   - &apt-dependencies
     name: Install APT dependencies
     command: |
@@ -35,7 +36,9 @@ jobs:
      
     steps:
       - run: *apt-dependencies
+      - restore-cache: *restore-android-sdk
       - run: *android-setup
+      - save-cache: *save-android-sdk
       - checkout
       - run: *run-ci-script
 
