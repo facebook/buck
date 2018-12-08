@@ -3,14 +3,14 @@ version: 2
 aliases:
   - &restore-android-sdk
     keys:
-      - android-sdk-{{ checksum ".circleci/android-sdk-setup.sh" }}
+      - android-sdk-{{ checksum "scripts/android-sdk-setup.sh" }}
   - &save-android-sdk
     paths:
       - /opt/android
-    key: android-sdk-{{ checksum ".circleci/android-sdk-setup.sh" }}
+    key: android-sdk-{{ checksum "scripts/android-sdk-setup.sh" }}
   - &android-setup
      name: Setup Android SDK
-     command: ./.circleci/android-sdk-setup.sh
+     command: ./scripts/android-sdk-setup.sh
   - &apt-dependencies
     name: Install APT dependencies
     command: |
