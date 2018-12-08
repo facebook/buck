@@ -395,7 +395,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     Objects.requireNonNull(buckPyProcessInput);
     long alreadyReadBytes = buckPyProcessInput.getCount();
 
-    ParseBuckFileEvent.Started parseBuckFileStarted = ParseBuckFileEvent.started(buildFile);
+    ParseBuckFileEvent.Started parseBuckFileStarted =
+        ParseBuckFileEvent.started(buildFile, this.getClass());
     buckEventBus.post(parseBuckFileStarted);
 
     ImmutableList<Map<String, Object>> values = ImmutableList.of();

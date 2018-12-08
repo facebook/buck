@@ -215,7 +215,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private ParseResult parseBuildFile(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     ImmutableMap<String, Map<String, Object>> rules = ImmutableMap.of();
-    ParseBuckFileEvent.Started startEvent = ParseBuckFileEvent.started(buildFile);
+    ParseBuckFileEvent.Started startEvent = ParseBuckFileEvent.started(buildFile, this.getClass());
     buckEventBus.post(startEvent);
     ParseResult parseResult;
     try {

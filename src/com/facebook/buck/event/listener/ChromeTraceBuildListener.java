@@ -463,7 +463,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             "processed_bytes",
             Long.toString(finished.getProcessedBytes()),
             "python_profile",
-            finished.getProfile().orElse("")),
+            finished.getProfile().orElse(""),
+            "parser",
+            finished.getParserClass().getSimpleName()),
         finished);
   }
 
