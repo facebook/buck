@@ -1,3 +1,5 @@
+version: 2
+
 aliases:
   - &android-setup
      name: Setup Android SDK
@@ -24,32 +26,31 @@ defaults: &defaults
      - image: openjdk:8-slim
    working_directory: ~/buck
 
-version: 2
- jobs:
-   build:
-     <<: *defaults
-     environment:
-       CI_ACTION: build
-       ANDROID_HOME: /opt/android
+jobs:
+  build:
+    <<: *defaults
+    environment:
+      CI_ACTION: build
+      ANDROID_HOME: /opt/android
      
-     steps:
-       - run: *apt-dependencies
-       - run: *android-setup
-       - checkout
-       - run: *run-ci-script
+    steps:
+      - run: *apt-dependencies
+      - run: *android-setup
+      - checkout
+      - run: *run-ci-script
 
-   unit:
-     <<: *defaults
-     environment:
-       ANDROID_HOME: /opt/android
-       CI_ACTION: unit
-       GROOVY_HOME: /usr/share/groovy/
+  unit:
+    <<: *defaults
+    environment:
+      ANDROID_HOME: /opt/android
+      CI_ACTION: unit
+      GROOVY_HOME: /usr/share/groovy/
 
-     steps:
-       - run: *apt-dependencies
-       - run: *android-setup
-       - checkout
-       - run: *run-ci-script
+    steps:
+      - run: *apt-dependencies
+      - run: *android-setup
+      - checkout
+      - run: *run-ci-script
 
 workflows:
    version: 2
