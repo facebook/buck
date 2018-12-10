@@ -147,7 +147,7 @@ public class AndroidPlatformTargetProducerTest {
   public void testLooksForOptionalLibraries() throws IOException {
     File androidSdkDir = tempDir.newFolder();
     Path pathToAndroidSdkDir = androidSdkDir.toPath();
-    File buildToolsDir = new File(new File(androidSdkDir, "build-tools"), "23.0.1");
+    File buildToolsDir = new File(new File(androidSdkDir, "build-tools"), "26.0.2");
     buildToolsDir.mkdirs();
     File optionalLibsDir = new File(androidSdkDir, "platforms/android-26/optional");
     optionalLibsDir.mkdirs();
