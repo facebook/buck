@@ -62,8 +62,8 @@ for BUCKFILE in `find . -name BUCK.fixture` ; do
 done
 cat >.buckconfig <<EOF
 [java]
-  source_level = 7
-  target_level = 7
+  source_level = 8
+  target_level = 8
 [ndk]
   cxx_runtime = system
   cpu_abis = armv7, x86
