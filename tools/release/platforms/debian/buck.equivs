@@ -7,7 +7,7 @@ Package: buck
 Version: v<VERSION>
 Maintainer: team@buckaroo.pm
 Recommends: watchman, nailgun
-Depends: openjdk-8-jre, python2.7
+Depends: openjdk-8-jre-headless, python2.7
 Architecture: all
 Copyright: LICENSE
 Readme: README.md
