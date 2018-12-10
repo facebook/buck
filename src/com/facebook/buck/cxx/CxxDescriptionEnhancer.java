@@ -1051,6 +1051,7 @@ public class CxxDescriptionEnhancer {
               projectFilesystem,
               graphBuilder,
               stripStyle.get(),
+              cxxBuckConfig.shouldCacheStrip(),
               cxxLink,
               cxxPlatform,
               outputRootName);
@@ -1107,6 +1108,7 @@ public class CxxDescriptionEnhancer {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       StripStyle stripStyle,
+      boolean isCacheable,
       BuildRule unstrippedBinaryRule,
       CxxPlatform cxxPlatform,
       Optional<String> outputRootName) {
@@ -1124,6 +1126,7 @@ public class CxxDescriptionEnhancer {
                     new SourcePathRuleFinder(graphBuilder),
                     stripStyle,
                     cxxPlatform.getStrip(),
+                    isCacheable,
                     CxxDescriptionEnhancer.getBinaryOutputPath(
                         stripBuildTarget,
                         projectFilesystem,

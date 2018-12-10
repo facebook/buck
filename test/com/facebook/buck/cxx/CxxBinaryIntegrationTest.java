@@ -2180,7 +2180,7 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testStrippedBinaryCanBeFetchedFromCacheAlone() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), oneOf(Platform.LINUX, Platform.MACOS));
 
     BuildTarget strippedTarget =
         BuildTargetFactory.newInstance("//:test")
@@ -2214,6 +2214,55 @@ public class CxxBinaryIntegrationTest {
 
     assertThat(Files.exists(strippedPath), Matchers.equalTo(true));
     assertThat(Files.exists(unstrippedPath), Matchers.equalTo(false));
+  }
+
+  @Test
+  public void stripRuleCanBeMadeUncachable() throws Exception {
+    assumeThat(Platform.detect(), oneOf(Platform.LINUX, Platform.MACOS));
+
+    BuildTarget strippedTarget =
+        BuildTargetFactory.newInstance("//:test")
+            .withFlavors(StripStyle.DEBUGGING_SYMBOLS.getFlavor());
+    BuildTarget unstrippedTarget =
+        strippedTarget.withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors());
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "header_namespace", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    workspace
+        .runBuckCommand(
+            "build",
+            "--config",
+            "cxx.cxxflags=-g",
+            "--config",
+            "cxx.cache_strips=false",
+            strippedTarget.getFullyQualifiedName())
+        .assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
+    workspace
+        .runBuckCommand(
+            "build",
+            "--config",
+            "cxx.cxxflags=-g",
+            "--config",
+            "cxx.cache_strips=false",
+            strippedTarget.getFullyQualifiedName())
+        .assertSuccess();
+
+    Path strippedPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, strippedTarget.withAppendedFlavors(CxxStrip.RULE_FLAVOR), "%s"));
+    Path unstrippedPath =
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, unstrippedTarget, "%s"));
+
+    // The unstripped path should be materialized because the strip rule is set to not cache.
+    assertTrue(Files.exists(strippedPath));
+    assertTrue(Files.exists(unstrippedPath));
   }
 
   @Test
