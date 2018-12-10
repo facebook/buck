@@ -15,8 +15,8 @@ matrix:
       components:
         - tools
         - platform-tools
-        - build-tools-23.0.2
-        - android-23
+        - build-tools-26.0.2
+        - android-26
   - os: linux
     jdk: openjdk8
     dist: trusty
@@ -30,8 +30,8 @@ matrix:
       components:
         - tools
         - platform-tools
-        - build-tools-23.0.2
-        - android-23
+        - build-tools-26.0.2
+        - android-26
   - os: linux
     jdk: openjdk8
     dist: trusty
@@ -46,8 +46,8 @@ matrix:
       components:
         - tools
         - platform-tools
-        - build-tools-23.0.2
-        - android-23
+        - build-tools-26.0.2
+        - android-26
   - os: linux
     jdk: openjdk8
     dist: trusty
@@ -61,8 +61,8 @@ matrix:
       components:
         - tools
         - platform-tools
-        - build-tools-23.0.2
-        - android-23
+        - build-tools-26.0.2
+        - android-26
   - os: linux
     jdk: openjdk8
     dist: trusty
@@ -85,19 +85,17 @@ matrix:
       components:
         - tools
         - platform-tools
-        - build-tools-23.0.2
-        - android-23
+        - build-tools-26.0.2
+        - android-26
   - os: linux
     jdk: openjdk8
     android:
       components:
         - tools
         - platform-tools
-        - build-tools-23.0.2
-        - android-23
+        - build-tools-26.0.2
+        - android-26
         - addon-google_apis-google-23
-        - android-21
-        - addon-google_apis-google-21
         - extra-android-support
     dist: trusty
     addons:
@@ -130,11 +128,9 @@ matrix:
       components:
         - tools
         - platform-tools
-        - build-tools-23.0.2
-        - android-23
+        - build-tools-26.0.2
+        - android-26
         - addon-google_apis-google-23
-        - android-21
-        - addon-google_apis-google-21
         - extra-android-support
     dist: trusty
     addons:
@@ -162,11 +158,9 @@ matrix:
       components:
         - tools
         - platform-tools
-        - build-tools-23.0.2
-        - android-23
+        - build-tools-26.0.2
+        - android-26
         - addon-google_apis-google-23
-        - android-21
-        - addon-google_apis-google-21
         - extra-android-support
     dist: trusty
     addons:
@@ -194,11 +188,9 @@ matrix:
       components:
         - tools
         - platform-tools
-        - build-tools-23.0.2
-        - android-23
+        - build-tools-26.0.2
+        - android-26
         - addon-google_apis-google-23
-        - android-21
-        - addon-google_apis-google-21
         - extra-android-support
     dist: trusty
     addons:
