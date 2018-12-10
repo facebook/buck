@@ -136,16 +136,19 @@ public class TargetSpecResolver {
         parsingIgnores.addAll(filesystem.getBlacklistedPaths());
         parsingIgnores.add(RecursiveFileMatcher.of(filesystem.getBuckPaths().getBuckOut()));
         for (Path subCellRoots : cell.getKnownRoots()) {
-          parsingIgnores.add(RecursiveFileMatcher.of(filesystem.relativize(subCellRoots)));
+          if (!subCellRoots.equals(cell.getRoot())) {
+            parsingIgnores.add(RecursiveFileMatcher.of(filesystem.relativize(subCellRoots)));
+          }
         }
 
         buildFiles =
             spec.getBuildFileSpec()
                 .findBuildFiles(
                     cell.getBuildFileName(),
-                    filesystem.asView().withView(Paths.get(""), parsingIgnores.build()),
+                    filesystem.asView().withView(Paths.get(""), ImmutableSet.of()),
                     watchman,
-                    buildFileSearchMethod);
+                    buildFileSearchMethod,
+                    parsingIgnores.build());
       }
       for (Path buildFile : buildFiles) {
         perBuildFileSpecs.put(buildFile, index);
