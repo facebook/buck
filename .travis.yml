@@ -96,6 +96,7 @@ matrix:
         - build-tools-26.0.2
         - android-26
         - addon-google_apis-google-23
+        - addon-google_apis-google-21
         - extra-android-support
     dist: trusty
     addons:
@@ -131,6 +132,7 @@ matrix:
         - build-tools-26.0.2
         - android-26
         - addon-google_apis-google-23
+        - addon-google_apis-google-21
         - extra-android-support
     dist: trusty
     addons:
@@ -161,6 +163,7 @@ matrix:
         - build-tools-26.0.2
         - android-26
         - addon-google_apis-google-23
+        - addon-google_apis-google-21
         - extra-android-support
     dist: trusty
     addons:
@@ -191,6 +194,7 @@ matrix:
         - build-tools-26.0.2
         - android-26
         - addon-google_apis-google-23
+        - addon-google_apis-google-21
         - extra-android-support
     dist: trusty
     addons:
