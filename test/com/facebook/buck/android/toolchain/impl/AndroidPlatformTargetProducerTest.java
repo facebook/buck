@@ -149,7 +149,7 @@ public class AndroidPlatformTargetProducerTest {
     Path pathToAndroidSdkDir = androidSdkDir.toPath();
     File buildToolsDir = new File(new File(androidSdkDir, "build-tools"), "23.0.1");
     buildToolsDir.mkdirs();
-    File optionalLibsDir = new File(androidSdkDir, "platforms/android-23/optional");
+    File optionalLibsDir = new File(androidSdkDir, "platforms/android-26/optional");
     optionalLibsDir.mkdirs();
     Files.touch(new File(optionalLibsDir, "httpclient.jar"));
     Files.touch(new File(optionalLibsDir, "telemetry.jar"));
@@ -173,15 +173,15 @@ public class AndroidPlatformTargetProducerTest {
     assertEquals(platformId, androidPlatformTarget.getPlatformName());
     assertEquals(
         ImmutableList.of(
-            pathToAndroidSdkDir.resolve("platforms/android-23/android.jar"),
-            pathToAndroidSdkDir.resolve("platforms/android-23/optional/httpclient.jar"),
-            pathToAndroidSdkDir.resolve("platforms/android-23/optional/telemetry.jar"),
+            pathToAndroidSdkDir.resolve("platforms/android-26/android.jar"),
+            pathToAndroidSdkDir.resolve("platforms/android-26/optional/httpclient.jar"),
+            pathToAndroidSdkDir.resolve("platforms/android-26/optional/telemetry.jar"),
             pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-23/libs/effects.jar"),
             pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-23/libs/maps.jar"),
             pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-23/libs/usb.jar")),
         androidPlatformTarget.getBootclasspathEntries());
     assertEquals(
-        pathToAndroidSdkDir.resolve("platforms/android-23/android.jar"),
+        pathToAndroidSdkDir.resolve("platforms/android-26/android.jar"),
         androidPlatformTarget.getAndroidJar());
   }
 
