@@ -60,4 +60,15 @@ public class RobolectricTestRuleIntegrationTest {
     workspace.setUp();
     workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
   }
+
+  @Test
+  public void testRobolectricTestWithExternalRunnerWithRobolectricRuntimeDependencyArgument()
+      throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+    workspace.setUp();
+    workspace.runBuckTest("//java/com/sample/lib:test_robolectric_runtime_dep").assertSuccess();
+  }
 }
