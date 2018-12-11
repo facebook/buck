@@ -1,24 +1,24 @@
-From cbbb6d92f0131de22f5acd288cea1b830ae7bfa9 Mon Sep 17 00:00:00 2001
+From 315dbe04373a3ce2346980104e67bfb5ef4506bd Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
-Date: Tue, 4 Dec 2018 17:21:07 -0800
+Date: Tue, 21 Nov 2017 22:52:39 -0800
 Subject: [PATCH] Compute referenced resources in D8
 
 - Computing referenced resources is used to trim the Uber R.java.
 - Set default min sdk for D8 to Api level J
 - Fix Lambda Descriptor name handling to be compatible with buck's predexing
 ---
- src/main/java/com/android/tools/r8/D8Command.java  |  8 +++++++-
- .../com/android/tools/r8/graph/DexItemFactory.java | 14 ++++++++++++++
- .../tools/r8/ir/conversion/IRConverter.java        |  2 +-
- .../tools/r8/ir/desugar/LambdaDescriptor.java      | 11 +++--------
- .../android/tools/r8/utils/AndroidApiLevel.java    |  3 ++-
- 5 files changed, 27 insertions(+), 11 deletions(-)
+ .../java/com/android/tools/r8/D8Command.java     |  8 +++++++-
+ .../android/tools/r8/graph/DexItemFactory.java   | 14 ++++++++++++++
+ .../tools/r8/ir/conversion/IRConverter.java      |  2 +-
+ .../tools/r8/ir/desugar/LambdaDescriptor.java    |  7 +------
+ .../android/tools/r8/utils/AndroidApiLevel.java  |  3 ++-
+ 6 files changed, 29 insertions(+), 21 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
-index f0217b950..d190ec99a 100644
+index e0f330dd1..ed32eaf3b 100644
 --- a/src/main/java/com/android/tools/r8/D8Command.java
 +++ b/src/main/java/com/android/tools/r8/D8Command.java
-@@ -167,6 +167,11 @@ public final class D8Command extends BaseCompilerCommand {
+@@ -164,6 +164,11 @@ public final class D8Command extends BaseCompilerCommand {
    static final String USAGE_MESSAGE = D8CommandParser.USAGE_MESSAGE;
  
    private boolean intermediate = false;
@@ -30,7 +30,7 @@ index f0217b950..d190ec99a 100644
  
    public static Builder builder() {
      return new Builder();
-@@ -236,7 +241,8 @@ public final class D8Command extends BaseCompilerCommand {
+@@ -231,7 +236,8 @@ public final class D8Command extends BaseCompilerCommand {
  
    @Override
    InternalOptions getInternalOptions() {
@@ -41,10 +41,10 @@ index f0217b950..d190ec99a 100644
      internal.debug = getMode() == CompilationMode.DEBUG;
      internal.programConsumer = getProgramConsumer();
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index 1c04f9dcf..0e1742a8d 100644
+index 3b7386d9a..1e4445f02 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-@@ -36,6 +36,7 @@ import java.util.ArrayList;
+@@ -32,6 +32,7 @@ import java.util.ArrayList;
  import java.util.Arrays;
  import java.util.Collection;
  import java.util.HashMap;
@@ -52,7 +52,7 @@ index 1c04f9dcf..0e1742a8d 100644
  import java.util.IdentityHashMap;
  import java.util.List;
  import java.util.Map;
-@@ -1064,4 +1065,17 @@ public class DexItemFactory {
+@@ -963,4 +964,17 @@ public class DexItemFactory {
    synchronized public void forAllTypes(Consumer<DexType> f) {
      new ArrayList<>(types.values()).forEach(f);
    }
@@ -71,10 +71,10 @@ index 1c04f9dcf..0e1742a8d 100644
 +  }
  }
 diff --git a/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java b/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
-index 1541f8042..7c170ff2d 100644
+index e188f2989..c25902180 100644
 --- a/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
 +++ b/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
-@@ -279,7 +279,7 @@ public class IRConverter {
+@@ -248,7 +248,7 @@ public class IRConverter {
    }
  
    private boolean enableTwrCloseResourceDesugaring() {
@@ -84,7 +84,7 @@ index 1541f8042..7c170ff2d 100644
  
    private boolean enableTryWithResourcesDesugaring() {
 diff --git a/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java b/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java
-index 6836ad33c..894ce7712 100644
+index 6836ad33c..6296bbd4b 100644
 --- a/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java
 +++ b/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java
 @@ -168,11 +168,6 @@ public final class LambdaDescriptor {
@@ -108,24 +108,6 @@ index 6836ad33c..894ce7712 100644
        }
  
        // Since instance method was not found, always generate an accessor
-@@ -206,7 +201,7 @@ public final class LambdaDescriptor {
-     if (flags.isPrivate()) {
-       return true;
-     }
--    if (flags.isPublic()) {
-+    if (flags.isPublic() && !accessedFrom.getPackageDescriptor().isEmpty()) {
-       return false;
-     }
- 
-@@ -214,7 +209,7 @@ public final class LambdaDescriptor {
-         accessedFrom.getPackageDescriptor().equals(
-             targetMethod.method.holder.getPackageDescriptor());
-     assert flags.isProtected() || accessedFromSamePackage;
--    return flags.isProtected() && !accessedFromSamePackage;
-+    return (flags.isProtected() && !accessedFromSamePackage) || accessedFrom.getPackageDescriptor().isEmpty();
-   }
- 
-   /**
 diff --git a/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java b/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
 index 135e961d1..05f6ec64c 100644
 --- a/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
@@ -141,5 +123,5 @@ index 135e961d1..05f6ec64c 100644
  
    public DexVersion getDexVersion() {
 -- 
-2.19.2
+2.18.0
 
