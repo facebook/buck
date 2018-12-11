@@ -20,8 +20,6 @@
 
 [java]
   src_roots = /android/java/
-  source_level = 6
-  target_level = 6
 
 [project]
     default_android_manifest = //android/AndroidManifest.xml
