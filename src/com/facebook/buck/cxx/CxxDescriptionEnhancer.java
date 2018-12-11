@@ -976,7 +976,7 @@ public class CxxDescriptionEnhancer {
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
-      Path absLinkOut = target.getCellPath().resolve(linkOutput);
+      Path absLinkOut = projectFilesystem.resolve(linkOutput);
       argsBuilder.addAll(
           StringArg.from(
               Linkers.iXlinker(
