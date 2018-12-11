@@ -27,23 +27,23 @@ public final class MoreAtomics {
    * Update atomic variable if provided value is greater than value stored in atomic variable.
    * Implementation is lock-free.
    *
-   * @param value New value to check against atomic value
+   * @param value A value to check against atomic value
    * @param atomicValue Atomic variable that will keep a maximum of two values
-   * @return True if {@code value > atomicValue} and {@code atomicValue} was updated, false
-   *     otherwise
+   * @return New value of {@code atomicValue}
    */
-  public static boolean setMax(long value, AtomicLong atomicValue) {
-    while (true) {
-      long current = atomicValue.get();
+  public static long setMaxAndGet(long value, AtomicLong atomicValue) {
+    return atomicValue.updateAndGet(cur -> Math.max(cur, value));
+  }
 
-      if (current >= value) {
-        return false;
-      }
-
-      boolean wasSet = atomicValue.compareAndSet(current, value);
-      if (wasSet) {
-        return true;
-      }
-    }
+  /**
+   * Update atomic variable if provided value is less than value stored in atomic variable.
+   * Implementation is lock-free.
+   *
+   * @param value A value to check against atomic value
+   * @param atomicValue Atomic variable that will keep a minimum of two values
+   * @return New value of {@code atomicValue}
+   */
+  public static long setMinAndGet(long value, AtomicLong atomicValue) {
+    return atomicValue.updateAndGet(cur -> Math.min(cur, value));
   }
 }
