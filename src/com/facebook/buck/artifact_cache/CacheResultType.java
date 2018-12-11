@@ -54,7 +54,6 @@ public enum CacheResultType {
   }
 
   public void verifyValidFinalType() {
-    Verify.verify(this != SKIPPED, "SKIPPED is not a valid final cache result type.");
     Verify.verify(this != CONTAINS, "CONTAINS is not a valid final cache result type.");
   }
 }
