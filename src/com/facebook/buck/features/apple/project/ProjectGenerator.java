@@ -1908,9 +1908,6 @@ public class ProjectGenerator {
 
     Map<BuildTarget, TargetNode<?>> sharedLibraryToBundle = new HashMap<>();
     for (TargetNode<?> targetNode : targetNodes) {
-      if (targetNode.getBuildTarget().isFlavored()) {
-        continue;
-      }
       Optional<TargetNode<CxxLibraryDescription.CommonArg>> binaryNode =
           TargetNodes.castArg(targetNode, AppleBundleDescriptionArg.class)
               .flatMap(bundleNode -> bundleNode.getConstructorArg().getBinary())
