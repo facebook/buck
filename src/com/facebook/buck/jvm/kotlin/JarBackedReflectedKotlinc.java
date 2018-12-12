@@ -102,13 +102,18 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   }
 
   @Override
-  public Path getAnnotationProcessorPath() {
+  public Path getAnnotationProcessorPath(SourcePathResolver sourcePathResolver) {
     return annotationProcessingClassPath;
   }
 
   @Override
-  public Path getStdlibPath() {
+  public Path getStdlibPath(SourcePathResolver sourcePathResolver) {
     return standardLibraryClasspath;
+  }
+
+  @Override
+  public Set<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver) {
+    return ImmutableSet.of(getStdlibPath(sourcePathResolver));
   }
 
   @Override

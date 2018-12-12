@@ -35,10 +35,12 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /** kotlinc implemented as a separate binary. */
@@ -175,13 +177,18 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   }
 
   @Override
-  public Path getAnnotationProcessorPath() {
+  public Path getAnnotationProcessorPath(SourcePathResolver sourcePathResolver) {
     throw new IllegalStateException("Not supported yet");
   }
 
   @Override
-  public Path getStdlibPath() {
+  public Path getStdlibPath(SourcePathResolver sourcePathResolver) {
     throw new IllegalStateException("Not supported yet");
+  }
+
+  @Override
+  public Set<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver) {
+    return ImmutableSet.of();
   }
 
   @Override

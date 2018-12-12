@@ -37,7 +37,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.Optionals;
-import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -113,12 +112,14 @@ public class RobolectricTest extends JavaTest {
         projectFilesystem,
         buildRuleParams,
         compiledTestsLibrary,
-        optionalDummyRDotJava
-            .map(
-                r ->
-                    ImmutableSet.<Either<SourcePath, Path>>of(
-                        Either.ofLeft(r.getSourcePathToOutput())))
-            .orElse(ImmutableSet.of()),
+        Optional.of(
+            resolver ->
+                optionalDummyRDotJava
+                    .map(
+                        dummyRDotJava ->
+                            ImmutableSet.of(
+                                resolver.getAbsolutePath(dummyRDotJava.getSourcePathToOutput())))
+                    .orElseGet(ImmutableSet::of)),
         labels,
         contacts,
         testType,
