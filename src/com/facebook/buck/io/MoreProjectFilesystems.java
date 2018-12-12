@@ -20,6 +20,8 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.security.DigestInputStream;
@@ -92,5 +94,39 @@ public class MoreProjectFilesystems {
       }
       return dis.getMessageDigest().digest();
     }
+  }
+
+  /**
+   * Verify a file exists and also check the case of file path which {@link Files#exists(Path,
+   * LinkOption...)} failed to do so for case-insensitive file systems.
+   *
+   * @param path An absolute path to a file. Exception will be thrown if path is relative.
+   * @return boolean if the file exist
+   */
+  public static boolean pathExistsCaseSensitive(Path path) throws IOException {
+    if (!path.isAbsolute()) {
+      throw new IllegalArgumentException("Must provide filesystem if the path is not absolute");
+    }
+    return pathExistsCaseSensitive(path, null);
+  }
+  /**
+   * Verify a file exists and also check the case of file path which {@link Files#exists(Path,
+   * LinkOption...)} failed to do so for case-insensitive file systems.
+   *
+   * @param path A file name
+   * @param fs file system of the project
+   * @return boolean if the file exist
+   */
+  public static boolean pathExistsCaseSensitive(Path path, ProjectFilesystem fs)
+      throws IOException {
+    if (!path.isAbsolute()) {
+      return pathExistsCaseSensitive(fs.resolve(path), fs);
+    }
+
+    if (!Files.exists(path)) {
+      return false;
+    }
+
+    return path.toRealPath().toString().equals(path.toString());
   }
 }

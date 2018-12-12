@@ -36,9 +36,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class MorePathsTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -361,6 +365,77 @@ public class MorePathsTest {
         MorePaths.splitOnCommonPrefix(ImmutableList.of(first, second, third));
 
     assertFalse(result.isPresent());
+  }
+
+  @Test
+  public void testAbsolutePath() throws IOException {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    tmp.newFolder("folder");
+    tmp.newFile("folder/file.txt");
+    Path fileExists = projectFilesystem.resolve(Paths.get("folder/file.txt"));
+    assertTrue(MoreProjectFilesystems.pathExistsCaseSensitive(fileExists, projectFilesystem));
+
+    Path fileNotExists = projectFilesystem.resolve(Paths.get("file/not/exist.txt"));
+    assertFalse(MoreProjectFilesystems.pathExistsCaseSensitive(fileNotExists, projectFilesystem));
+  }
+
+  @Test
+  public void testRelativePath() throws IOException {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    tmp.newFolder("folder");
+    tmp.newFile("folder/file.txt");
+    Path fileExists = Paths.get("folder/file.txt");
+    assertTrue(MoreProjectFilesystems.pathExistsCaseSensitive(fileExists, projectFilesystem));
+
+    Path fileNotExists = Paths.get("file/not/exist/file.txt");
+    assertFalse(MoreProjectFilesystems.pathExistsCaseSensitive(fileNotExists, projectFilesystem));
+  }
+
+  @Test
+  public void testPathExistsRoot() throws IOException {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    assertTrue(MoreProjectFilesystems.pathExistsCaseSensitive(tmp.getRoot(), projectFilesystem));
+    assertFalse(
+        MoreProjectFilesystems.pathExistsCaseSensitive(
+            Paths.get("/rootNotExist"), projectFilesystem));
+  }
+
+  @Test
+  @Parameters({
+    "alpha/beta/gamma, delta.txt, "
+        + "alpha/beta/gamma/delta.txt, "
+        + "Alpha/beta/gamma/delta.txt, "
+        + "alpha/Beta/gamma/delta.txt, "
+        + "alpha/beta/Gamma/delta.txt, "
+        + "alpha/beta/gamma/Delta.txt",
+    "Alpha/Beta/Gamma, Delta.txt, "
+        + "Alpha/Beta/Gamma/Delta.txt, "
+        + "alpha/Beta/Gamma/Delta.txt, "
+        + "Alpha/beta/Gamma/Delta.txt, "
+        + "Alpha/Beta/gamma/Delta.txt, "
+        + "Alpha/Beta/Gamma/delta.txt",
+  })
+  public void testPathExistsCaseMismatched(
+      String folder, String fileName, String matchedPath, String... misMatchedPaths)
+      throws IOException {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    tmp.newFolder(folder.split("/"));
+    tmp.newFolder(folder.concat("/").concat(fileName));
+
+    Path pathToFileCaseMatched = projectFilesystem.resolve(Paths.get(matchedPath));
+    assertTrue(
+        MoreProjectFilesystems.pathExistsCaseSensitive(pathToFileCaseMatched, projectFilesystem));
+
+    for (String misMatchedPath : misMatchedPaths) {
+      Path pathToFileCaseMismatched = projectFilesystem.resolve(Paths.get(misMatchedPath));
+      assertFalse(
+          MoreProjectFilesystems.pathExistsCaseSensitive(
+              pathToFileCaseMismatched, projectFilesystem));
+    }
   }
 
   private void validateSymlinklTarget(

@@ -29,6 +29,7 @@ import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -86,6 +87,42 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     assertThat(
         processResult.getStderr(),
         Matchers.containsString("//simple/.... references non-existent directory simple"));
+  }
+
+  @Test
+  public void targetsTypo() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "command_line_parser", tmp);
+    workspace.setUp();
+
+    // First check for correct usage.
+    ProcessResult result = workspace.runBuckCommand("targets", "//simple:").assertSuccess();
+    assertEquals(
+        ImmutableSet.of("//simple:simple"),
+        ImmutableSet.copyOf(
+            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(result.getStdout())));
+
+    // Check for some expected failure cases.
+    result = workspace.runBuckCommand("targets", "//sImple:");
+    result.assertFailure();
+
+    Matcher<String> caseSensitiveFileSystemErrorMessageMatcher =
+        Matchers.containsString("//sImple: references non-existent directory");
+
+    Matcher<String> caseInsensitiveFileSystemErrorMessageMatcher =
+        Matchers.allOf(
+            Matchers.containsString("The case of the build path provided"),
+            Matchers.containsString("sImple"),
+            Matchers.containsString(
+                "does not match the actual path. "
+                    + "This is an issue even on case-insensitive file systems. "
+                    + "Please check the spelling of the provided path."));
+    System.out.println(result.getStderr());
+    assertThat(
+        result.getStderr(),
+        Matchers.anyOf(
+            caseInsensitiveFileSystemErrorMessageMatcher,
+            caseSensitiveFileSystemErrorMessageMatcher));
   }
 
   @Test
