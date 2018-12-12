@@ -47,7 +47,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
-import org.hamcrest.core.IsCollectionContaining;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -487,7 +486,7 @@ public class RecordingFileHashLoaderTest {
 
     assertThat(
         fileHashes.getEntries(),
-        IsCollectionContaining.hasItems(
+        Matchers.containsInAnyOrder(
             new FileHashEntryMatcher("a", true),
             new FileHashEntryMatcher("a/b", true),
             new FileHashEntryMatcher("a/b/c", false),
