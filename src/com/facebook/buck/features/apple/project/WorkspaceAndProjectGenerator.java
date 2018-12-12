@@ -23,6 +23,7 @@ import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
+import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
@@ -811,16 +812,16 @@ public class WorkspaceAndProjectGenerator {
 
   private static ImmutableSet<BuildTarget> filterRulesForProjectDirectory(
       TargetGraph projectGraph, ImmutableSet<BuildTarget> projectBuildTargets) {
-    // ProjectGenerator implicitly generates targets for all apple_binary rules which
-    // are referred to by apple_bundle rules' 'binary' field.
-    //
-    // We used to support an explicit xcode_project_config() which
-    // listed all dependencies explicitly, but now that we synthesize
-    // one, we need to ensure we continue to only pass apple_binary
-    // targets which do not belong to apple_bundle rules.
-    ImmutableSet.Builder<BuildTarget> binaryTargetsInsideBundlesBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildTarget> excludedTargetsBuilder = ImmutableSet.builder();
     for (TargetNode<?> projectTargetNode : projectGraph.getAll(projectBuildTargets)) {
       if (projectTargetNode.getDescription() instanceof AppleBundleDescription) {
+        // ProjectGenerator implicitly generates targets for all apple_binary rules which
+        // are referred to by apple_bundle rules' 'binary' field.
+        //
+        // We used to support an explicit xcode_project_config() which
+        // listed all dependencies explicitly, but now that we synthesize
+        // one, we need to ensure we continue to only pass apple_binary
+        // targets which do not belong to apple_bundle rules.
         AppleBundleDescriptionArg appleBundleDescriptionArg =
             (AppleBundleDescriptionArg) projectTargetNode.getConstructorArg();
         // We don't support apple_bundle rules referring to apple_binary rules
@@ -838,15 +839,15 @@ public class WorkspaceAndProjectGenerator {
             projectTargetNode.getBuildTarget(),
             appleBundleDescriptionArg.getBinary(),
             projectTargetNode.getBuildTarget().getBasePath());
-        binaryTargetsInsideBundlesBuilder.add(binaryTarget);
+        excludedTargetsBuilder.add(binaryTarget);
+      } else if (projectTargetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
+        // prebuilt frameworks are unbuildable, they just propagate linker flags and dependencies
+        excludedTargetsBuilder.add(projectTargetNode.getBuildTarget());
       }
     }
-    ImmutableSet<BuildTarget> binaryTargetsInsideBundles =
-        binaryTargetsInsideBundlesBuilder.build();
 
-    // Remove all apple_binary targets which are inside bundles from
-    // the rest of the build targets in the project.
-    return ImmutableSet.copyOf(Sets.difference(projectBuildTargets, binaryTargetsInsideBundles));
+    ImmutableSet<BuildTarget> excludedBuildTargets = excludedTargetsBuilder.build();
+    return ImmutableSet.copyOf(Sets.difference(projectBuildTargets, excludedBuildTargets));
   }
 
   /**

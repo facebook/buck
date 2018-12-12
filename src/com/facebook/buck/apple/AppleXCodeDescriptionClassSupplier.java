@@ -34,6 +34,7 @@ public class AppleXCodeDescriptionClassSupplier implements XCodeDescriptionClass
         AppleBinaryDescription.class,
         AppleBundleDescription.class,
         AppleTestDescription.class,
-        SwiftLibraryDescription.class);
+        SwiftLibraryDescription.class,
+        PrebuiltAppleFrameworkDescription.class);
   }
 }

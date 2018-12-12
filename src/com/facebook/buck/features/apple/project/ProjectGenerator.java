@@ -16,6 +16,8 @@
 
 package com.facebook.buck.features.apple.project;
 
+import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage.STATIC;
+
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
@@ -117,7 +119,6 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
@@ -864,18 +865,6 @@ public class ProjectGenerator {
               .ifPresent(
                   appleBundleNode -> {
                     if (isFrameworkBundle(appleBundleNode.getConstructorArg())) {
-                      filteredRules.add(node);
-                    }
-                  });
-          TargetNodes.castArg(node, PrebuiltAppleFrameworkDescriptionArg.class)
-              .ifPresent(
-                  prebuiltFramework -> {
-                    // Technically (see Apple Tech Notes 2435), static frameworks are lies. In case
-                    // a static framework is used, they can escape the incorrect project generation
-                    // by marking its preferred linkage static (what does preferred linkage even
-                    // mean for a prebuilt thing? none of this makes sense anyways).
-                    if (prebuiltFramework.getConstructorArg().getPreferredLinkage()
-                        != NativeLinkable.Linkage.STATIC) {
                       filteredRules.add(node);
                     }
                   });
@@ -2332,7 +2321,7 @@ public class ProjectGenerator {
                                 + resolveSourcePath(prebuilt.getConstructorArg().getFramework())
                                     .getParent());
                         if (prebuilt.getConstructorArg().getPreferredLinkage()
-                            != NativeLinkable.Linkage.STATIC) {
+                            != STATIC) {
                           // Frameworks that are copied into the binary.
                           iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
                           iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
@@ -3190,6 +3179,11 @@ public class ProjectGenerator {
       return Optional.of(
           CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.RESOURCES));
     } else if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
+      PrebuiltAppleFrameworkDescriptionArg frameworkDescriptionArg =
+        (PrebuiltAppleFrameworkDescriptionArg)targetNode.getConstructorArg();
+      if (frameworkDescriptionArg.getPreferredLinkage() == STATIC) {
+        return Optional.empty();
+      }
       return Optional.of(
           CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS));
     } else {
