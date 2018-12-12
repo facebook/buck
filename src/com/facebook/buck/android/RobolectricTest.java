@@ -117,9 +117,9 @@ public class RobolectricTest extends JavaTest {
                 optionalDummyRDotJava
                     .map(
                         dummyRDotJava ->
-                            ImmutableSet.of(
+                            ImmutableList.of(
                                 resolver.getAbsolutePath(dummyRDotJava.getSourcePathToOutput())))
-                    .orElseGet(ImmutableSet::of)),
+                    .orElseGet(ImmutableList::of)),
         labels,
         contacts,
         testType,

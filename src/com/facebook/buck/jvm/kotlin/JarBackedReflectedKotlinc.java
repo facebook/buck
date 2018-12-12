@@ -40,6 +40,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -112,8 +113,8 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   }
 
   @Override
-  public Set<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver) {
-    return ImmutableSet.of(getStdlibPath(sourcePathResolver));
+  public List<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver) {
+    return ImmutableList.of(getStdlibPath(sourcePathResolver));
   }
 
   @Override

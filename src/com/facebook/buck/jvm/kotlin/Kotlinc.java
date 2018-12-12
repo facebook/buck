@@ -32,8 +32,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /** Interface for a kotlin compiler. */
 public interface Kotlinc extends Tool {
@@ -61,7 +61,7 @@ public interface Kotlinc extends Tool {
 
   Path getStdlibPath(SourcePathResolver sourcePathResolver);
 
-  Set<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver);
+  List<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver);
 
   default ImmutableList<Path> getExpandedSourcePaths(
       ProjectFilesystem projectFilesystem,

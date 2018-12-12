@@ -688,7 +688,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                                     e ->
                                         e.getAdditionalClasspathEntries(
                                             buildContext.getSourcePathResolver()))
-                                .orElse(ImmutableSet.of()))
+                                .orElse(ImmutableList.of()))
                         .build();
                 getProjectFilesystem()
                     .writeLinesToPath(
@@ -701,6 +701,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public interface AdditionalClasspathEntriesProvider {
-    Set<Path> getAdditionalClasspathEntries(SourcePathResolver resolver);
+    List<Path> getAdditionalClasspathEntries(SourcePathResolver resolver);
   }
 }
