@@ -56,6 +56,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -124,6 +125,7 @@ public class AppleTestDescription
   private final ToolchainProvider toolchainProvider;
   private final XCodeDescriptions xcodeDescriptions;
   private final AppleConfig appleConfig;
+  private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
   private final AppleLibraryDescription appleLibraryDescription;
 
@@ -131,11 +133,13 @@ public class AppleTestDescription
       ToolchainProvider toolchainProvider,
       XCodeDescriptions xcodeDescriptions,
       AppleConfig appleConfig,
+      CxxBuckConfig cxxBuckConfig,
       SwiftBuckConfig swiftBuckConfig,
       AppleLibraryDescription appleLibraryDescription) {
     this.toolchainProvider = toolchainProvider;
     this.xcodeDescriptions = xcodeDescriptions;
     this.appleConfig = appleConfig;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
     this.appleLibraryDescription = appleLibraryDescription;
   }
@@ -330,7 +334,8 @@ public class AppleTestDescription
                         args.getCodesignIdentity(),
                         Optional.empty(),
                         appleConfig.getCodesignTimeout(),
-                        swiftBuckConfig.getCopyStdlibToFrameworks())));
+                        swiftBuckConfig.getCopyStdlibToFrameworks(),
+                        cxxBuckConfig.shouldCacheStrip())));
 
     Optional<SourcePath> xctool = getXctool(projectFilesystem, params, graphBuilder);
 
