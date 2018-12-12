@@ -695,12 +695,19 @@ class CachingBuildRuleBuilder {
             getBuildInfoRecorder()
                 .addBuildMetadata(
                     BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
+
+            long buildTimeMs =
+                buildTimestampsMillis == null
+                    ? -1
+                    : buildTimestampsMillis.getSecond() - buildTimestampsMillis.getFirst();
+
             ManifestStoreResult manifestStoreResult =
                 manifestRuleKeyManager.updateAndStoreManifest(
                     depFileRuleKeyAndInputs.get().getRuleKey(),
                     depFileRuleKeyAndInputs.get().getInputs(),
                     manifestKey.get(),
-                    artifactCache);
+                    artifactCache,
+                    buildTimeMs);
             this.buildRuleScopeManager.setManifestStoreResult(manifestStoreResult);
             if (manifestStoreResult.getStoreFuture().isPresent()) {
               uploadCompleteFuture = manifestStoreResult.getStoreFuture().get();

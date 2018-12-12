@@ -112,7 +112,8 @@ public class ManifestRuleKeyManager {
       RuleKey key,
       ImmutableSet<SourcePath> inputs,
       RuleKeyAndInputs manifestKey,
-      ArtifactCache cache)
+      ArtifactCache cache,
+      long artifactBuildTimeMs)
       throws IOException {
 
     Preconditions.checkState(useManifestCaching());
@@ -174,6 +175,7 @@ public class ManifestRuleKeyManager {
                 ArtifactInfo.builder()
                     .addRuleKeys(manifestKey.getRuleKey())
                     .setManifest(true)
+                    .setBuildTimeMs(artifactBuildTimeMs)
                     .build(),
                 BorrowablePath.borrowablePath(tempFile)),
             MoreFutures.finallyCallback(
