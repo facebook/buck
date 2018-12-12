@@ -20,13 +20,11 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -90,20 +88,7 @@ public class CommandLineTargetNodeSpecParser {
   private void validateTargetSpec(TargetNodeSpec spec, String buildTarget) {
     Path cellPath = spec.getBuildFileSpec().getCellPath();
     Path basePath = spec.getBuildFileSpec().getBasePath();
-    Path buildTargetPath = cellPath.resolve(basePath);
-    if (Files.exists(buildTargetPath)) {
-      try {
-        if (!MoreProjectFilesystems.pathExistsCaseSensitive(buildTargetPath)) {
-          throw new HumanReadableException(
-              "The case of the build path provided (%s) does not match the actual path. "
-                  + "This is an issue even on case-insensitive file systems. "
-                  + "Please check the spelling of the provided path.",
-              buildTargetPath);
-        }
-      } catch (IOException e) {
-        throw new HumanReadableException(e, e.getMessage());
-      }
-    } else {
+    if (!Files.exists(cellPath.resolve(basePath))) {
       throw new HumanReadableException(
           "%s references non-existent directory %s", buildTarget, basePath);
     }
