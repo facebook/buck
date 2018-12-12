@@ -1,3 +1,11 @@
+apple_bundle(
+    name = "TestAppBundle",
+    binary = ":TestApp",
+    extension = "app",
+    info_plist = "Info.plist",
+    product_name = "TestApp",
+)
+
 apple_binary(
     name = "TestApp",
     srcs = ["main.m"],
