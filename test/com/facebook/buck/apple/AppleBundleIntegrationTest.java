@@ -131,8 +131,10 @@ public class AppleBundleIntegrationTest {
             this, "simple_application_bundle_no_debug", tmp);
     workspace.setUp();
 
-    String bundleTarget = "//:DemoApp#iphonesimulator-x86_64,iphonesimulator-i386,no-debug,no-include-frameworks";
-    String binaryTarget = "//:DemoAppBinary#iphonesimulator-x86_64,iphonesimulator-i386,strip-non-global";
+    String bundleTarget =
+        "//:DemoApp#iphonesimulator-x86_64,iphonesimulator-i386,no-debug,no-include-frameworks";
+    String binaryTarget =
+        "//:DemoAppBinary#iphonesimulator-x86_64,iphonesimulator-i386,strip-non-global";
 
     workspace.enableDirCache();
     workspace.runBuckBuild("-c", "cxx.cache_links=false", bundleTarget).assertSuccess();
