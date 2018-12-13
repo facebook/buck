@@ -421,16 +421,20 @@ android_binary(
 </pre>{/literal}
 
 <h2 id="redex-overview">ReDex</h2>
+
 <p>
 Buck makes it easy to run <a href="http://fbredex.com/">ReDex</a> as part
 of <code>android_binary()</code>. ReDex is an Android bytecode optimizer
-that can help reduce the size of your release builds. Please refer to
-<a href="http://fbredex.com/">ReDex</a> for instructions on how to create a ReDex executable.
+that can help reduce the size of your release builds. 
+Please refer to <a href="http://fbredex.com/">ReDex</a> for instructions 
+on how to create a ReDex executable.
 </p>
+
 <p>
 Currently, the path to ReDex must be
 specified as a path (or build target) in <code>.buckconfig</code>:
 </p>
+
 {literal}<pre class="prettyprint lang-ini">
 [android]
   # In this example, we assume that you have ReDex packaged as a single
@@ -469,13 +473,28 @@ Other ReDex configuration options on <code>android_binary()</code> include:
 
 {/call} // close buck.rule
 
+<h2>Fast DEX merging for Android</h2>
+
+<p>
+Buck includes a customized version of the Android DEX 
+compiler, <code>dx</code>, which includes significant performance 
+improvements.  It uses a faster algorithm for merging many DEX files, which is
+especially effective because of Buck's support for fine-grained
+libraries.
+</p>
+
+<p>
+The custom version of <code>dx</code> also supports running multiple 
+copies of <code>dx</code> concurrently within a single 
+long-lived <code>buckd</code> process, which eliminates most 
+of <code>dx's</code> start-up time.
+</p>
+
     {/param}
   {/call}
 {/template}
 
 /***/
 {template .redexLink}
-<p>
-See the <a href="#redex-overview">ReDex overview</a> for more on using ReDex in Buck.
-</p>
 {/template}
+
