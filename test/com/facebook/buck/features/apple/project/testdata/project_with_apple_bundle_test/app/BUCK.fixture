@@ -1,0 +1,42 @@
+apple_bundle(
+    name = "bundle",
+    binary = ":binary",
+    extension = "app",
+    info_plist = "Info.plist",
+    tests = [
+        ':barTests'
+    ]
+)
+
+apple_binary(
+    name = "binary",
+    srcs = glob([
+        "*.m",
+    ]),
+    compiler_flags = ["-Wno-objc-designated-initializers"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/Cocoa.framework",
+    ],
+    headers = glob([
+        "*.h",
+    ]),
+    preprocessor_flags = ["-fobjc-arc"],
+)
+
+apple_test(
+    name = 'barTests',
+    info_plist = 'tests/Info.plist',
+    test_host_app = ':bundle',
+    headers = glob([
+        'tests/*.h',
+    ]),
+    srcs = glob([
+        'tests/*.m',
+    ]),
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        '$SDKROOT/System/Library/Frameworks/Cocoa.framework',
+        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+    ],
+)

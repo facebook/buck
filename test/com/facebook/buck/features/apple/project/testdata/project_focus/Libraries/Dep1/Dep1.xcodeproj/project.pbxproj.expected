@@ -24,6 +24,19 @@
 			<key>explicitFileType</key>
 			<string>text.xcconfig</string>
 		</dict>
+		<key>1DD70E290CF44C0B00000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>Dep1_1-Profile.xcconfig</string>
+			<key>path</key>
+			<string>../../buck-out/gen/Libraries/Dep1/Dep1_1-Profile.xcconfig</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.xcconfig</string>
+		</dict>
 		<key>1DD70E29808AF76D00000000</key>
 		<dict>
 			<key>isa</key>
@@ -48,6 +61,7 @@
 			<key>children</key>
 			<array>
 				<string>1DD70E29184868E100000000</string>
+				<string>1DD70E290CF44C0B00000000</string>
 				<string>1DD70E29808AF76D00000000</string>
 			</array>
 		</dict>
@@ -170,6 +184,18 @@
 			<key>baseConfigurationReference</key>
 			<string>1DD70E29184868E100000000</string>
 		</dict>
+		<key>4952437350C7218900000000</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Profile</string>
+			<key>buildSettings</key>
+			<dict>
+			</dict>
+			<key>baseConfigurationReference</key>
+			<string>1DD70E290CF44C0B00000000</string>
+		</dict>
 		<key>49524373A439BFE700000000</key>
 		<dict>
 			<key>isa</key>
@@ -189,6 +215,7 @@
 			<key>buildConfigurations</key>
 			<array>
 				<string>4952437303EDA63300000000</string>
+				<string>4952437350C7218900000000</string>
 				<string>49524373A439BFE700000000</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
@@ -256,6 +283,16 @@
 			<dict>
 			</dict>
 		</dict>
+		<key>4952437350C7218900000001</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Profile</string>
+			<key>buildSettings</key>
+			<dict>
+			</dict>
+		</dict>
 		<key>49524373A439BFE700000001</key>
 		<dict>
 			<key>isa</key>
@@ -273,6 +310,7 @@
 			<key>buildConfigurations</key>
 			<array>
 				<string>4952437303EDA63300000001</string>
+				<string>4952437350C7218900000001</string>
 				<string>49524373A439BFE700000001</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>

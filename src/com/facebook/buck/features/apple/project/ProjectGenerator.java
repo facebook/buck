@@ -684,13 +684,14 @@ public class ProjectGenerator {
     defaultSettingsBuilder.put(PRODUCT_NAME, productName);
 
     Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
-        getXcodeBuildConfigurationsForTargetNode(targetNode, appendedConfig);
+        getXcodeBuildConfigurationsForTargetNode(targetNode);
     PBXNativeTarget target = targetBuilderResult.target;
     setTargetBuildConfigurations(
         buildTarget,
         target,
         project.getMainGroup(),
         configs.get(),
+        getTargetCxxBuildConfigurationForTargetNode(targetNode, appendedConfig),
         extraSettings,
         defaultSettingsBuilder.build(),
         appendedConfig);
@@ -1845,12 +1846,13 @@ public class ProjectGenerator {
         ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
 
         Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
-            getXcodeBuildConfigurationsForTargetNode(targetNode, appendedConfig);
+            getXcodeBuildConfigurationsForTargetNode(targetNode);
         setTargetBuildConfigurations(
             buildTarget,
             target,
             project.getMainGroup(),
             configs.get(),
+            getTargetCxxBuildConfigurationForTargetNode(targetNode, appendedConfig),
             extraSettingsBuilder.build(),
             defaultSettingsBuilder.build(),
             appendedConfig);
@@ -2497,8 +2499,7 @@ public class ProjectGenerator {
   }
 
   private Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>>
-      getXcodeBuildConfigurationsForTargetNode(
-          TargetNode<?> targetNode, ImmutableMap<String, String> appendedConfig) {
+      getXcodeBuildConfigurationsForTargetNode(TargetNode<?> targetNode) {
     Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs = Optional.empty();
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
         TargetNodes.castArg(targetNode, AppleNativeTargetDescriptionArg.class);
@@ -2509,15 +2510,61 @@ public class ProjectGenerator {
     } else if (halideTargetNode.isPresent()) {
       configs = Optional.of(halideTargetNode.get().getConstructorArg().getConfigs());
     }
-    if (!configs.isPresent()
-        || (configs.isPresent() && configs.get().isEmpty())
-        || targetNode.getDescription() instanceof CxxLibraryDescription) {
-      ImmutableMap<String, ImmutableMap<String, String>> defaultConfig =
-          CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-              defaultCxxPlatform, appendedConfig);
-      configs = Optional.of(ImmutableSortedMap.copyOf(defaultConfig));
+
+    HashMap<String, HashMap<String, String>> combinedConfig =
+        new HashMap<String, HashMap<String, String>>();
+    combinedConfig.put(
+        CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME,
+        new HashMap<String, String>(getDefaultDebugBuildConfiguration()));
+    combinedConfig.put(
+        CxxPlatformXcodeConfigGenerator.PROFILE_BUILD_CONFIGURATION_NAME,
+        new HashMap<String, String>());
+    combinedConfig.put(
+        CxxPlatformXcodeConfigGenerator.RELEASE_BUILD_CONFIGURATION_NAME,
+        new HashMap<String, String>());
+
+    if (configs.isPresent()
+        && !configs.get().isEmpty()
+        && !(targetNode.getDescription() instanceof CxxLibraryDescription)) {
+      for (Map.Entry<String, ImmutableMap<String, String>> targetLevelConfig :
+          configs.get().entrySet()) {
+        HashMap<String, String> pendingConfig =
+            new HashMap<String, String>(targetLevelConfig.getValue());
+        String configTarget = targetLevelConfig.getKey();
+        if (combinedConfig.containsKey(configTarget)) {
+          combinedConfig.get(configTarget).putAll(pendingConfig);
+        } else {
+          combinedConfig.put(configTarget, pendingConfig);
+        }
+      }
     }
-    return configs;
+
+    ImmutableSortedMap.Builder<String, ImmutableMap<String, String>> configBuilder =
+        ImmutableSortedMap.naturalOrder();
+    for (Map.Entry<String, HashMap<String, String>> config : combinedConfig.entrySet()) {
+      configBuilder.put(config.getKey(), ImmutableMap.copyOf(config.getValue()));
+    }
+
+    return Optional.of(configBuilder.build());
+  }
+
+  private static ImmutableMap<String, String> getDefaultDebugBuildConfiguration() {
+    return new ImmutableMap.Builder<String, String>()
+        .put("DEAD_CODE_STRIPPING", "NO")
+        .put("ONLY_ACTIVE_ARCH", "YES")
+        .put("GCC_SYMBOLS_PRIVATE_EXTERN", "NO")
+        .build();
+  }
+
+  private ImmutableMap<String, String> getTargetCxxBuildConfigurationForTargetNode(
+      TargetNode<?> targetNode, Map<String, String> appendedConfig) {
+    if (targetNode.getDescription() instanceof CxxLibraryDescription) {
+      return CxxPlatformXcodeConfigGenerator.getCxxXcodeTargetBuildConfigurationsFromCxxPlatform(
+          defaultCxxPlatform, appendedConfig);
+    } else {
+      return CxxPlatformXcodeConfigGenerator.getAppleXcodeTargetBuildConfigurationsFromCxxPlatform(
+          defaultCxxPlatform, appendedConfig);
+    }
   }
 
   private void addEntitlementsPlistIntoTarget(
@@ -2609,6 +2656,7 @@ public class ProjectGenerator {
       PBXTarget target,
       PBXGroup targetGroup,
       ImmutableMap<String, ImmutableMap<String, String>> configurations,
+      ImmutableMap<String, String> cxxPlatformXcodeBuildSettings,
       ImmutableMap<String, String> overrideBuildSettings,
       ImmutableMap<String, String> defaultBuildSettings,
       ImmutableMap<String, String> appendBuildSettings)
@@ -2630,6 +2678,13 @@ public class ProjectGenerator {
               .getUnchecked(configurationEntry.getKey());
 
       HashMap<String, String> combinedOverrideConfigs = new HashMap<>(overrideBuildSettings);
+      for (Map.Entry<String, String> entry : cxxPlatformXcodeBuildSettings.entrySet()) {
+        String existingSetting = targetLevelInlineSettings.get(entry.getKey());
+        if (existingSetting == null) {
+          combinedOverrideConfigs.put(entry.getKey(), entry.getValue());
+        }
+      }
+
       for (Map.Entry<String, String> entry : defaultBuildSettings.entrySet()) {
         String existingSetting = targetLevelInlineSettings.get(entry.getKey());
         if (existingSetting == null) {
