@@ -183,7 +183,7 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
       return FluentIterable.from(stream)
           .filter(this::shouldExplorePaths)
-          .transform(absolutePath -> MorePaths.relativize(projectRoot, absolutePath))
+          .transform(absolutePath -> MorePaths.relativize(resolvedProjectRoot, absolutePath))
           .toSortedList(Comparator.naturalOrder());
     }
   }
