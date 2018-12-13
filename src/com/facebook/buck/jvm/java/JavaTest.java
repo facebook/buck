@@ -689,6 +689,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                                         e.getAdditionalClasspathEntries(
                                             buildContext.getSourcePathResolver()))
                                 .orElse(ImmutableList.of()))
+                        .addAll(getBootClasspathEntries())
                         .build();
                 getProjectFilesystem()
                     .writeLinesToPath(
