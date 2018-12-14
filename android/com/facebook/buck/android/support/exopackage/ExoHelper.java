@@ -31,11 +31,15 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.os.Process;
 import android.view.View;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Support and Utility Functions for Exopackage, including hotswap helper functions */
 public class ExoHelper {
+
+  private static boolean sIsHotswapSetup = false;
+
   private static final List<OnModulesChangedCallback> sCallbacks =
       new ArrayList<OnModulesChangedCallback>();
 
@@ -236,10 +240,16 @@ public class ExoHelper {
    * "modules" exopackage mode, and the initial call to {@link
    * ExopackageDexLoader#loadExopackageJars(Context, boolean)} passed true as the second arg
    */
-  public static void setupHotswap(Application application) {
-    application.registerReceiver(
-        new ModularDexChangedReceiver(),
-        ModularDexChangedReceiver.getIntentFilter(application.getPackageName()));
+  public static synchronized void setupHotswap(Application application) {
+    if (!sIsHotswapSetup) {
+      final File dexOptDir = application.getDir("exopackage_modular_dex_opt", Context.MODE_PRIVATE);
+      DelegatingClassLoader.getInstance().setDexOptDir(dexOptDir);
+      application.registerReceiver(
+          new ModularDexChangedReceiver(),
+          ModularDexChangedReceiver.getIntentFilter(application.getPackageName()));
+
+      sIsHotswapSetup = true;
+    }
   }
 
   /**
