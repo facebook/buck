@@ -7,11 +7,18 @@ java_library(
     ],
 )
 
+java_library(
+    name = "jreemul",
+    resources = ["com/example/gwt/jreemul.gwt.xml"] + glob(["com/example/gwt/emul/**/*.java"]),
+    resources_root = ".",
+)
+
 gwt_binary(
     name = "binary",
     draft_compile = True,
     module_deps = [
         ":a",
+        ":jreemul",
     ],
     modules = ["com/example/gwt/A"],
     optimize = 0,
