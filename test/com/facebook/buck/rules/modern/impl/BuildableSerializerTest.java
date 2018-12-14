@@ -361,7 +361,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Test
   public void excluded() throws Exception {
     expectedException.expect(Exception.class);
-    expectedException.expectMessage(Matchers.containsString("Cannot create excluded fields."));
+    expectedException.expectMessage(Matchers.containsString("Cannot serialize excluded fields."));
     test(new WithExcluded());
   }
 
@@ -383,7 +383,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Test
   public void stringified() throws Exception {
     expectedException.expect(Exception.class);
-    expectedException.expectMessage(Matchers.containsString("Cannot create excluded fields."));
+    expectedException.expectMessage(Matchers.containsString("Cannot serialize excluded fields."));
     test(new WithStringified());
   }
 

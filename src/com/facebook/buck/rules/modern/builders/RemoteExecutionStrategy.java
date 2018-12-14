@@ -148,6 +148,15 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   }
 
   @Override
+  public boolean canBuild(BuildRule instance) {
+    if (instance instanceof ModernBuildRule) {
+      return super.canBuild(instance)
+          && mbrHelper.supportsRemoteExecution((ModernBuildRule<?>) instance);
+    }
+    return false;
+  }
+
+  @Override
   public void close() throws IOException {
     executionClients.close();
   }

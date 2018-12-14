@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.remoteexecution.Protocol;
@@ -44,6 +45,7 @@ import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.util.exceptions.WrapsException;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Charsets;
@@ -85,7 +87,7 @@ import java.util.stream.Stream;
  * OutOfProcessIsolatedBuilder} (via trampoline.sh).
  */
 public class ModernBuildRuleRemoteExecutionHelper {
-
+  private static final Logger LOG = Logger.get(ModernBuildRuleRemoteExecutionHelper.class);
   private static final Path TRAMPOLINE =
       Paths.get(
           System.getProperty(
@@ -143,6 +145,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   private final CellPathResolver cellResolver;
   private final ThrowingFunction<Path, HashCode, IOException> fileHasher;
   private final Serializer serializer;
+  private final Map<Class<?>, Map<String, Boolean>> loggedMessagesByClass;
   private final Path cellPathPrefix;
   private final Path projectRoot;
   private final Map<HashCode, Node> nodeMap;
@@ -171,6 +174,8 @@ public class ModernBuildRuleRemoteExecutionHelper {
     this.nodeMap = new ConcurrentHashMap<>();
     this.hasher = protocol.getHashFunction();
     this.fileHasher = fileHasher;
+
+    this.loggedMessagesByClass = new ConcurrentHashMap<>();
 
     Delegate delegate =
         (instance, data, children) -> {
@@ -285,6 +290,32 @@ public class ModernBuildRuleRemoteExecutionHelper {
               return nodeCache.createNode(sharedRequiredFiles, ImmutableMap.of());
             },
             IOException.class);
+  }
+
+  boolean supportsRemoteExecution(ModernBuildRule<?> rule) {
+    // TODO(cjhopman): We may want to extend this to support returning more information about what
+    // is required from the RE system (i.e. toolchains/platforms/etc).
+    try {
+      // We don't use the result of serialization here, we're just verifying that it succeeds. The
+      // serializer will memoize the results so we won't recompute it when we need it later.
+      serializer.serialize(rule.getBuildable());
+      return true;
+    } catch (Exception e) {
+      String message = WrapsException.getRootCause(e).getMessage();
+      loggedMessagesByClass
+          .computeIfAbsent(rule.getClass(), ignored -> new ConcurrentHashMap<>())
+          .computeIfAbsent(
+              message == null ? "" : message,
+              ignored -> {
+                LOG.warn(
+                    e,
+                    "Remote Execution not supported for instance of %s due to serialization failure.",
+                    rule.getClass());
+                return true;
+              });
+
+      return false;
+    }
   }
 
   /**
