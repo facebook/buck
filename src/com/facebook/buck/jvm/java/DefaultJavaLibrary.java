@@ -287,6 +287,11 @@ public class DefaultJavaLibrary
   }
 
   @Override
+  public Optional<String> getResourcesRoot() {
+    return getBuildable().getResourcesRoot();
+  }
+
+  @Override
   public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
     return firstOrderPackageableDeps;
   }

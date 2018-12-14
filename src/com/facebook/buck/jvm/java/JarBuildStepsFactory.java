@@ -180,6 +180,10 @@ public class JarBuildStepsFactory
     return resources;
   }
 
+  public Optional<String> getResourcesRoot() {
+    return resourcesParameters.getResourcesRoot();
+  }
+
   @Nullable
   public SourcePath getSourcePathToOutput(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return getOutputJarPath(buildTarget, filesystem)
