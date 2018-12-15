@@ -11,7 +11,7 @@ aliases:
     key: android-sdk-{{ checksum "scripts/android-sdk-setup.sh" }}
   - &android-setup
      name: Setup Android SDK
-     command: ./scripts/android-sdk-setup.sh
+     command: sdkmanager 'build-tools;23.0.2' 'platforms;android-23' 'platforms;android-21'  'add-ons;addon-google_apis-google-21' 'add-ons;addon-google_apis-google-23'
   - &apt-dependencies
     name: Install APT dependencies
     command: |
