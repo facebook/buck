@@ -99,6 +99,8 @@ interface AbstractCxxPlatform extends FlavorConvertible {
 
   ArchiverProvider getAr();
 
+  ArchiveContents getArchiveContents();
+
   List<String> getArflags();
 
   Optional<ToolProvider> getRanlib();

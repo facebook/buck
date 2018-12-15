@@ -115,7 +115,6 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform platform,
-      ArchiveContents contents,
       Path output,
       ImmutableList<SourcePath> inputs,
       boolean cacheable) {
@@ -127,7 +126,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         platform.getArflags(),
         platform.getRanlib().map(r -> r.resolve(resolver)),
         platform.getRanlibflags(),
-        contents,
+        platform.getArchiveContents(),
         output,
         inputs,
         cacheable);

@@ -88,6 +88,7 @@ public class CxxPlatforms {
       Iterable<String> ldFlags,
       Tool strip,
       ArchiverProvider ar,
+      ArchiveContents archiveContents,
       Optional<ToolProvider> ranlib,
       SymbolNameTool nm,
       ImmutableList<String> asflags,
@@ -156,6 +157,8 @@ public class CxxPlatforms {
               }
             }));
 
+    builder.setArchiveContents(config.getArchiveContents().orElse(archiveContents));
+
     builder.setSharedLibraryInterfaceParams(getSharedLibraryInterfaceParams(config, platform));
 
     builder.addAllCflags(cflags);
@@ -188,6 +191,7 @@ public class CxxPlatforms {
         defaultPlatform.getLdflags(),
         defaultPlatform.getStrip(),
         defaultPlatform.getAr(),
+        defaultPlatform.getArchiveContents(),
         defaultPlatform.getRanlib(),
         defaultPlatform.getSymbolNameTool(),
         defaultPlatform.getAsflags(),

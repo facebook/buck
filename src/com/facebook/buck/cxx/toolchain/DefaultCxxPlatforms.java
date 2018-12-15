@@ -208,6 +208,7 @@ public class DefaultCxxPlatforms {
         ImmutableList.of(),
         getHashedFileTool(config, "strip", DEFAULT_STRIP, env),
         ArchiverProvider.from(archiver),
+        ArchiveContents.NORMAL,
         ranlib,
         new PosixNmSymbolNameTool(getHashedFileTool(config, "nm", DEFAULT_NM, env)),
         ImmutableList.of(),

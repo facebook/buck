@@ -864,7 +864,6 @@ public class CxxLibraryFactory {
         graphBuilder,
         ruleFinder,
         cxxPlatform,
-        cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
         ImmutableList.copyOf(objects),
         /* cacheable */ true);

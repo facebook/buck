@@ -445,10 +445,8 @@ public class CxxBuckConfig {
     return delegate.getBooleanValue(cxxSection, PCH_ENABLED, true);
   }
 
-  public ArchiveContents getArchiveContents() {
-    return delegate
-        .getEnum(cxxSection, ARCHIVE_CONTENTS, ArchiveContents.class)
-        .orElse(ArchiveContents.NORMAL);
+  public Optional<ArchiveContents> getArchiveContents() {
+    return delegate.getEnum(cxxSection, ARCHIVE_CONTENTS, ArchiveContents.class);
   }
 
   public ImmutableMap<String, Flavor> getDefaultFlavorsForRuleType(RuleType type) {

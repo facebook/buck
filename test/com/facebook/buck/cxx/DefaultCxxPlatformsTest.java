@@ -17,9 +17,11 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -47,5 +49,17 @@ public class DefaultCxxPlatformsTest {
     assertThat(cxxPlatform.getCppflags(), containsInAnyOrder("-DCFOO"));
     assertThat(cxxPlatform.getCxxflags(), containsInAnyOrder("-std=c++11"));
     assertThat(cxxPlatform.getCxxppflags(), containsInAnyOrder("-DCXXFOO"));
+  }
+
+  @Test
+  public void archiveContentsDefault() {
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(
+                FakeBuckConfig.builder()
+                    .setSections(
+                        ImmutableMap.of("cxx", ImmutableMap.of("archive_contents", "thin")))
+                    .build()));
+    assertEquals(cxxPlatform.getArchiveContents(), ArchiveContents.THIN);
   }
 }

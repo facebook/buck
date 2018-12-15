@@ -36,6 +36,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.BsdArchiver;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
@@ -424,6 +425,7 @@ public class AppleCxxPlatforms {
             ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
             strip,
             ArchiverProvider.from(new BsdArchiver(ar)),
+            ArchiveContents.NORMAL,
             Optional.of(new ConstantToolProvider(ranlib)),
             new PosixNmSymbolNameTool(nm),
             cflagsBuilder.build(),

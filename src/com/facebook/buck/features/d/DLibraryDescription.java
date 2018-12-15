@@ -161,7 +161,6 @@ public class DLibraryDescription
         graphBuilder,
         ruleFinder,
         cxxPlatform,
-        cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
         compiledSources,
         /* cacheable */ true);

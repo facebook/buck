@@ -226,7 +226,6 @@ public class HalideLibraryDescription
         graphBuilder,
         ruleFinder,
         platform,
-        cxxBuckConfig.getArchiveContents(),
         CxxDescriptionEnhancer.getStaticLibraryPath(
             projectFilesystem,
             buildTarget,

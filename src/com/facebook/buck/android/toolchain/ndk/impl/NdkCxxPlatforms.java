@@ -37,6 +37,7 @@ import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -533,6 +534,7 @@ public class NdkCxxPlatforms {
         .setAr(
             ArchiverProvider.from(
                 new GnuArchiver(getGccTool(toolchainPaths, "ar", version, executableFinder))))
+        .setArchiveContents(config.getArchiveContents().orElse(ArchiveContents.NORMAL))
         .setRanlib(
             new ConstantToolProvider(
                 getGccTool(toolchainPaths, "ranlib", version, executableFinder)))

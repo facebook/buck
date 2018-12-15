@@ -39,6 +39,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -1199,22 +1200,23 @@ public class CxxLibraryDescriptionTest {
   @Test
   public void thinArchiveSettingIsPropagatedToArchive() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM.withArchiveContents(ArchiveContents.THIN);
+    FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ Platforms", cxxPlatform);
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//:rule")
             .withFlavors(
                 CxxDescriptionEnhancer.STATIC_FLAVOR,
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
+                cxxPlatform.getFlavor());
     CxxLibraryBuilder libBuilder =
         new CxxLibraryBuilder(
             target,
-            new CxxBuckConfig(
-                FakeBuckConfig.builder().setSections("[cxx]", "archive_contents=thin").build()),
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            cxxPlatforms);
     libBuilder.setSrcs(
         ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of(filesystem, "test.cpp"))));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     Archive lib = (Archive) libBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(lib.getContents(), equalTo(ArchiveContents.THIN));
   }

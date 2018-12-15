@@ -41,7 +41,6 @@ import com.facebook.buck.cxx.CxxSourceTypes;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.ExplicitCxxToolFlags;
 import com.facebook.buck.cxx.PreprocessorFlags;
-import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
@@ -356,7 +355,6 @@ public class HaskellDescriptionUtils {
                 graphBuilder,
                 ruleFinder,
                 platform.getCxxPlatform(),
-                ArchiveContents.NORMAL,
                 BuildTargetPaths.getGenPath(projectFilesystem, emptyArchiveTarget, "%s/libempty.a"),
                 emptyCompiledModule.getObjects(),
                 /* cacheable */ true));
