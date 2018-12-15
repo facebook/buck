@@ -564,12 +564,17 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   @Override
   public ImmutableCollection<Path> getDirectoryContents(Path pathToUse) throws IOException {
     Path path = getPathForRelativePath(pathToUse);
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
+    try (DirectoryStream<Path> stream = getDirectoryContentsStream(path)) {
       return FluentIterable.from(stream)
           .filter(input -> !isIgnored(relativize(input)))
           .transform(absolutePath -> MorePaths.relativize(projectRoot, absolutePath))
           .toSortedList(Comparator.naturalOrder());
     }
+  }
+
+  /** @return returns sorted absolute paths of everything under the given directory */
+  DirectoryStream<Path> getDirectoryContentsStream(Path absolutePath) throws IOException {
+    return Files.newDirectoryStream(absolutePath);
   }
 
   @VisibleForTesting

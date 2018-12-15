@@ -413,19 +413,44 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
 
   /** Does not support symlinks. */
   @Override
-  public final ImmutableCollection<Path> getDirectoryContents(Path pathRelativeToProjectRoot) {
+  public final ImmutableCollection<Path> getDirectoryContents(Path pathRelativeToProjectRoot)
+      throws IOException {
     Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
-    return FluentIterable.from(fileContents.keySet())
-        .append(directories)
-        .filter(
-            input -> {
-              if (input.equals(Paths.get(""))
-                  || (input.isAbsolute() && input.getParent() == null)) {
-                return false;
-              }
-              return MorePaths.getParentOrEmpty(input).equals(pathRelativeToProjectRoot);
-            })
-        .toSortedList(Comparator.naturalOrder());
+    try (DirectoryStream<Path> directoryStream =
+        getDirectoryContentsStream(resolve(pathRelativeToProjectRoot))) {
+      return FluentIterable.from(directoryStream)
+          .transform(absolutePath -> relativize(absolutePath))
+          .toSortedList(Comparator.naturalOrder());
+    }
+  }
+
+  /** @return returns sorted absolute paths of everything under the given directory */
+  @Override
+  DirectoryStream<Path> getDirectoryContentsStream(Path absolutePath) {
+    Preconditions.checkState(isDirectory(relativize(absolutePath)));
+    return new DirectoryStream<Path>() {
+
+      private FluentIterable<Path> iterable =
+          FluentIterable.from(fileContents.keySet())
+              .append(directories)
+              .filter(
+                  input -> {
+                    if (input.equals(Paths.get(""))
+                        || (input.isAbsolute() && input.getParent() == null)) {
+                      return false;
+                    }
+                    return MorePaths.getParentOrEmpty(input).equals(relativize(absolutePath));
+                  })
+              .transform(FakeProjectFilesystem.this::resolve);
+
+      @Override
+      public void close() {}
+
+      @Override
+      public Iterator<Path> iterator() {
+        return iterable.iterator();
+      }
+    };
   }
 
   @Override
