@@ -625,7 +625,9 @@ public class DefaultIjModuleFactoryTest {
 
   @Test
   public void testAndroidPrebuiltAar() {
-    SourcePath androidSupportBinaryPath = FakeSourcePath.of("buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/classes.jar");
+    SourcePath androidSupportBinaryPath =
+        FakeSourcePath.of(
+            "buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/classes.jar");
     Path androidSupportSourcesPath = Paths.get("third_party/java/support/support-sources.jar");
     String androidSupportJavadocUrl = "file:///support/docs";
     TargetNode<?> androidPrebuiltAar =
@@ -726,12 +728,6 @@ public class DefaultIjModuleFactoryTest {
 
               @Override
               public Optional<Path> getAnnotationOutputPath(
-                  TargetNode<? extends JvmLibraryArg> targetNode) {
-                return Optional.empty();
-              }
-
-              @Override
-              public Optional<Path> getAbiAnnotationOutputPath(
                   TargetNode<? extends JvmLibraryArg> targetNode) {
                 return Optional.empty();
               }
