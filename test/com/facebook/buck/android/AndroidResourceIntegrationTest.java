@@ -24,9 +24,11 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -94,5 +96,18 @@ public class AndroidResourceIntegrationTest {
     workspace.writeContentsToPath("", "generated_res/input_res/raw/empty.txt");
     workspace.runBuckBuild(buildTarget).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(buildTarget);
+  }
+
+  @Test
+  public void testResourcesAreNotIgnored() throws IOException {
+    workspace.addBuckConfigLocalOption("project", "ignore", "buck-out/");
+    Path output = workspace.buildAndReturnOutput("//res3:res");
+    assertTrue(Files.isDirectory(output));
+    Path rTxt = output.resolve("R.txt");
+    assertTrue(Files.exists(rTxt));
+    assertTrue(
+        Joiner.on(System.lineSeparator()).join(Files.readAllLines(rTxt)).contains("some_name"));
+    assertTrue(
+        Joiner.on(System.lineSeparator()).join(Files.readAllLines(rTxt)).contains("another_name"));
   }
 }
