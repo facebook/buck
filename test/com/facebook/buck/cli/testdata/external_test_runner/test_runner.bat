@@ -1,1 +1,1 @@
-python2 test_runner.py %*
+python test_runner.py %*
