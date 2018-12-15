@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.project.intellij.BaseIjModuleRule;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
+import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
@@ -27,6 +28,7 @@ import com.facebook.buck.features.project.intellij.model.folders.IjResourceFolde
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.JavaTestDescription.CoreArg;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -84,5 +86,11 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
   @Override
   public IjModuleType detectModuleType(TargetNode<JavaTestDescription.CoreArg> targetNode) {
     return IjModuleType.JAVA_MODULE;
+  }
+
+  @Override
+  public void applyDuringAggregation(AggregationContext context, TargetNode<CoreArg> targetNode) {
+    super.applyDuringAggregation(context, targetNode);
+    JavaLibraryRuleHelper.addLanguageAggregationKeyIfNeeded(projectConfig, targetNode, context);
   }
 }
