@@ -1169,6 +1169,20 @@ public class AppleCxxPlatformsTest {
     assertNotEquals(ibtoolRuleKey1, ibtoolRuleKey2);
   }
 
+  @Test
+  public void useFlavoredCxxSections() {
+    AppleCxxPlatform appleCxxPlatform =
+        buildAppleCxxPlatform(
+            projectFilesystem.getPath("/Developer1"),
+            FakeBuckConfig.builder()
+                .setSections(
+                    ImmutableMap.of(
+                        "cxx#iphonesimulator8.0-armv7", ImmutableMap.of("cxxflags", "-flag"),
+                        "apple", ImmutableMap.of("use_flavored_cxx_sections", "true")))
+                .build());
+    assertThat(appleCxxPlatform.getCxxPlatform().getCxxflags(), hasItem("-flag"));
+  }
+
   private AppleCxxPlatform buildAppleCxxPlatformWithSwiftToolchain() {
     ImmutableSet<Path> knownPaths =
         ImmutableSet.<Path>builder()

@@ -290,12 +290,14 @@ public class AppleCxxPlatforms {
             .getStubBinaryPath()
             .map(input -> sdkPaths.getSdkPath().resolve(input));
 
-    CxxBuckConfig config = new CxxBuckConfig(buckConfig);
-
     UserFlavor targetFlavor =
         UserFlavor.of(
             Flavor.replaceInvalidCharacters(targetSdk.getName() + "-" + targetArchitecture),
             String.format("SDK: %s, architecture: %s", targetSdk.getName(), targetArchitecture));
+    CxxBuckConfig config =
+        appleConfig.useFlavoredCxxSections()
+            ? new CxxBuckConfig(buckConfig, targetFlavor)
+            : new CxxBuckConfig(buckConfig);
 
     ImmutableBiMap.Builder<Path, String> sanitizerPaths = ImmutableBiMap.builder();
     sanitizerPaths.put(sdkPaths.getSdkPath(), "APPLE_SDKROOT");

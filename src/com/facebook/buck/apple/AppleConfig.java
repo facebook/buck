@@ -417,6 +417,14 @@ public class AppleConfig implements ConfigView<BuckConfig> {
         .orElse(defaultToolVersion);
   }
 
+  /**
+   * @return whether to extend C/C++ platforms using config settings in <code>cxx#<flavor></code>
+   *     sections instead of the unflavored <code>cxx</code> section.
+   */
+  public boolean useFlavoredCxxSections() {
+    return delegate.getBoolean(APPLE_SECTION, "use_flavored_cxx_sections").orElse(false);
+  }
+
   @Value.Immutable
   @BuckStyleTuple
   interface AbstractApplePackageConfig {

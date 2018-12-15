@@ -985,6 +985,17 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'use_flavored_cxx_sections' /}
+  {param example_value: 'true' /}
+  {param description}
+    By default, Buck uses the C/C++ toolchain and flag settings in the <code>cxx</code>
+    section to extend Apple C/C++ platform.  With this parameter set, Buck will instead
+    use settings in <code>cxx#<apple-platform-name></code> sections (e.g. <code>cxx#macosx-x86_64.cxx_flags=-foo</code>).
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'build' /}
   {param description}
