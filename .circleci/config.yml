@@ -15,8 +15,8 @@ aliases:
   - &apt-dependencies
     name: Install APT dependencies
     command: |
-      apt-get -qq -y update
-      apt install -qq -y --no-install-recommends ant gcc g++ ghc ghc-dynamic git groovy python ssh-client unzip wget
+      sudo apt-get -qq -y update
+      sudo apt install -qq -y --no-install-recommends ant gcc g++ ghc ghc-dynamic git groovy python ssh-client unzip wget
   - &run-ci-script
     name: Run CI script
     command: |
@@ -45,9 +45,9 @@ jobs:
     steps:
       - run: *apt-dependencies
       - checkout
-      - restore-cache: *restore-android-sdk
-      - run: *android-setup
-      - save-cache: *save-android-sdk
+      # - restore-cache: *restore-android-sdk
+      # - run: *android-setup
+      # - save-cache: *save-android-sdk
       - run: *run-ci-script
 
   unit:
