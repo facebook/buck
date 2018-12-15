@@ -32,8 +32,8 @@ references:
 
 defaults: &defaults
    docker:
-     - image: openjdk:8-slim
-   working_directory: *workspace_root
+     - image: circleci/android:api-26-alpha
+   working_directory: ~/buck
 
 jobs:
   build:
