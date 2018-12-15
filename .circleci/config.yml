@@ -40,8 +40,7 @@ jobs:
     <<: *defaults
     environment:
       CI_ACTION: build
-      ANDROID_HOME: /opt/android
-     
+
     steps:
       - run: *apt-dependencies
       - checkout
@@ -53,7 +52,6 @@ jobs:
   unit:
     <<: *defaults
     environment:
-      ANDROID_HOME: /opt/android
       CI_ACTION: unit
       GROOVY_HOME: /usr/share/groovy/
 
@@ -68,7 +66,6 @@ jobs:
   integration:
     <<: *defaults
     environment:
-      ANDROID_HOME: /opt/android
       CI_ACTION: integration
       GROOVY_HOME: /usr/share/groovy/
 
