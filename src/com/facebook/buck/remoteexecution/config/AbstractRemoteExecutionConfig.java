@@ -97,14 +97,6 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue(SECTION, "cas_insecure", true);
   }
 
-  public Optional<String> getRemoteHostSNIName() {
-    return getDelegate().getValue(SECTION, "remote_host_sni_name");
-  }
-
-  public Optional<String> getCasHostSNIName() {
-    return getDelegate().getValue(SECTION, "cas_host_sni_name");
-  }
-
   /** client TLS certificate file in PEM format */
   public Optional<Path> getCertFile() {
     return getFileOption("cert");
