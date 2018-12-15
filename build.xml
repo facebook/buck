@@ -223,10 +223,15 @@
     <include name="slf4j/jcl-over-slf4j-1.6.2.jar" />
     <include name="slf4j/slf4j-api-1.7.5.jar" />
   </fileset>
+  
+  <path id="provided.jars">
+
+  </path>
 
   <path id="classpath-no-src-no-aosp">
     <fileset refid="buck.jars" />
     <fileset refid="third-party.jars" />
+    <path refid="provided.jars" />
     <pathelement location="${classes.dir}" />
     <pathelement location="${dx.classes.dir}" />
     <pathelement location="${bootstrapper.jar}" />
@@ -1186,3 +1191,4 @@
   <target name="pre-checkin" depends="clean, default, lint"/>
   <target name="all" depends="default, javadoc" />
 </project>
+

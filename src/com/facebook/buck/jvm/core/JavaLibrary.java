@@ -79,6 +79,8 @@ public interface JavaLibrary
 
   ImmutableSortedSet<SourcePath> getResources();
 
+  Optional<String> getResourcesRoot();
+
   Optional<Path> getGeneratedSourcePath();
 
   class Data {

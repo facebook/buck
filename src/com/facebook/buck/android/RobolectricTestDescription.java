@@ -274,7 +274,7 @@ public class RobolectricTestDescription
   interface AbstractRobolectricTestDescriptionArg
       extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg {
 
-    Optional<String> getRobolectricRuntimeDependency();
+    Optional<SourcePath> getRobolectricRuntimeDependency();
 
     Optional<SourcePath> getRobolectricManifest();
 

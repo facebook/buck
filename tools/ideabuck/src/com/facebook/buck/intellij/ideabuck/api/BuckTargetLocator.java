@@ -106,16 +106,23 @@ public interface BuckTargetLocator extends ProjectComponent {
   Optional<BuckTargetPattern> resolve(VirtualFile sourceFile, BuckTargetPattern pattern);
 
   /**
-   * Returns a target pattern for a given file.
+   * Returns a target pattern for a given {@link VirtualFile}.
    *
-   * <p>If the file is:
+   * <p>If the given {@link VirtualFile} is:
    *
    * <ul>
-   *   <li>located in a Buck cell, and the file name is the {@link Cell#getBuildfileName()} for that
-   *       cell, returns a target pattern matching all targets in its package.
-   *   <li>located in a Buck cell, but is not a build file, returns a target suitable for loading it
-   *       as an extension file.
-   *   <li>not located in a cell, return {@link Optional#empty()}
+   *   <li>a file located in a Buck cell, and the filename is the {@link Cell#getBuildfileName()}
+   *       for that cell, returns a target pattern matching all targets in its package.
+   *   <li>a file located in a Buck cell, but is not a build file, returns a target suitable for
+   *       loading it as an extension file. (i.e., the value returned by {@link
+   *       BuckTargetPattern#getCellPath()} is the path to either the nearest ancestor build file or
+   *       the cell root, whichever is closer)
+   *   <li>a directory located under (or at the root of) a Buck cell, and the directory contains a
+   *       build file, returns a pattern with only a relative path (no rule name)
+   *   <li>a directory located under (or at the root of) a Buck cell, where the directory does *not*
+   *       contain a build file, returns a pattern that would be a suitable prefix for an extension
+   *       file from that directory.
+   *   <li>not located in or at a known buck cell, return {@link Optional#empty()}
    * </ul>
    */
   Optional<BuckTargetPattern> findTargetPatternForVirtualFile(VirtualFile file);

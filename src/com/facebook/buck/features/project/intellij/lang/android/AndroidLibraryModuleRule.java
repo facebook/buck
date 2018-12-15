@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
-import com.facebook.buck.features.project.intellij.aggregation.AggregationKeys;
 import com.facebook.buck.features.project.intellij.lang.java.JavaLibraryRuleHelper;
 import com.facebook.buck.features.project.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
@@ -80,12 +79,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
   public void applyDuringAggregation(
       AggregationContext context, TargetNode<AndroidLibraryDescription.CoreArg> targetNode) {
     super.applyDuringAggregation(context, targetNode);
-
-    Optional<String> languageLevel =
-        JavaLibraryRuleHelper.getLanguageLevel(projectConfig, targetNode);
-    if (languageLevel.isPresent()) {
-      context.addAggregationKey(AggregationKeys.JAVA_LANGUAGE_LEVEL, languageLevel);
-    }
+    JavaLibraryRuleHelper.addLanguageAggregationKeyIfNeeded(projectConfig, targetNode, context);
   }
 
   @Override

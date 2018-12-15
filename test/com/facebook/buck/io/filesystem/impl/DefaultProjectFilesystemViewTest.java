@@ -314,4 +314,15 @@ public class DefaultProjectFilesystemViewTest {
             EnumSet.of(FileVisitOption.FOLLOW_LINKS)),
         containsInAnyOrder());
   }
+
+  @Test
+  public void getDirectoryContentsWithEmptyRoot() throws IOException {
+    tmp.newFolder("dir1");
+    tmp.newFile("dir1/file1");
+    tmp.newFile("dir1/file2");
+
+    assertThat(
+        filesystemView.getDirectoryContents(Paths.get("dir1")),
+        containsInAnyOrder(Paths.get("dir1/file1"), Paths.get("dir1/file2")));
+  }
 }

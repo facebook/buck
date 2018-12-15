@@ -31,9 +31,12 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ExcludedValueTypeInfo;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -236,29 +239,39 @@ public class Serializer {
         ValueTypeInfo<T> valueTypeInfo,
         Optional<CustomFieldBehavior> behavior)
         throws IOException {
-      if (behavior.isPresent()) {
-        if (CustomBehaviorUtils.get(behavior.get(), DefaultFieldSerialization.class).isPresent()) {
-          @SuppressWarnings("unchecked")
-          ValueTypeInfo<T> typeInfo =
-              (ValueTypeInfo<T>)
-                  ValueTypeInfoFactory.forTypeToken(TypeToken.of(field.getGenericType()));
+      try {
+        if (behavior.isPresent()) {
+          if (CustomBehaviorUtils.get(behavior.get(), DefaultFieldSerialization.class)
+              .isPresent()) {
+            @SuppressWarnings("unchecked")
+            ValueTypeInfo<T> typeInfo =
+                (ValueTypeInfo<T>)
+                    ValueTypeInfoFactory.forTypeToken(TypeToken.of(field.getGenericType()));
 
-          typeInfo.visit(value, this);
-          return;
+            typeInfo.visit(value, this);
+            return;
+          }
+
+          Optional<?> serializerTag =
+              CustomBehaviorUtils.get(behavior.get(), CustomFieldSerialization.class);
+          if (serializerTag.isPresent()) {
+            @SuppressWarnings("unchecked")
+            CustomFieldSerialization<T> customSerializer =
+                (CustomFieldSerialization<T>) serializerTag.get();
+            customSerializer.serialize(value, this);
+            return;
+          }
         }
 
-        Optional<?> serializerTag =
-            CustomBehaviorUtils.get(behavior.get(), CustomFieldSerialization.class);
-        if (serializerTag.isPresent()) {
-          @SuppressWarnings("unchecked")
-          CustomFieldSerialization<T> customSerializer =
-              (CustomFieldSerialization<T>) serializerTag.get();
-          customSerializer.serialize(value, this);
-          return;
-        }
+        Verify.verify(
+            !(valueTypeInfo instanceof ExcludedValueTypeInfo),
+            "Cannot serialize excluded fields. Either add @AddToRuleKey or specify custom field/class serialization.");
+
+        valueTypeInfo.visit(value, this);
+      } catch (RuntimeException e) {
+        throw new BuckUncheckedExecutionException(
+            e, "When visiting %s.%s.", field.getDeclaringClass().getName(), field.getName());
       }
-
-      valueTypeInfo.visit(value, this);
     }
 
     @Override

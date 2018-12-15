@@ -21,7 +21,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.project.intellij.BaseIjModuleRule;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
-import com.facebook.buck.features.project.intellij.aggregation.AggregationKeys;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
@@ -91,11 +90,6 @@ public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescripti
   public void applyDuringAggregation(
       AggregationContext context, TargetNode<JavaLibraryDescription.CoreArg> targetNode) {
     super.applyDuringAggregation(context, targetNode);
-
-    Optional<String> languageLevel =
-        JavaLibraryRuleHelper.getLanguageLevel(projectConfig, targetNode);
-    if (languageLevel.isPresent()) {
-      context.addAggregationKey(AggregationKeys.JAVA_LANGUAGE_LEVEL, languageLevel);
-    }
+    JavaLibraryRuleHelper.addLanguageAggregationKeyIfNeeded(projectConfig, targetNode, context);
   }
 }

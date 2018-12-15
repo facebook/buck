@@ -94,6 +94,8 @@ public class CxxPlatforms {
       ImmutableList<String> asppflags,
       ImmutableList<String> cflags,
       ImmutableList<String> cppflags,
+      ImmutableList<String> cxxflags,
+      ImmutableList<String> cxxppflags,
       String sharedLibraryExtension,
       String sharedLibraryVersionedExtensionFormat,
       String staticLibraryExtension,
@@ -157,9 +159,9 @@ public class CxxPlatforms {
     builder.setSharedLibraryInterfaceParams(getSharedLibraryInterfaceParams(config, platform));
 
     builder.addAllCflags(cflags);
-    builder.addAllCxxflags(cflags);
+    builder.addAllCxxflags(cxxflags);
     builder.addAllCppflags(cppflags);
-    builder.addAllCxxppflags(cppflags);
+    builder.addAllCxxppflags(cxxppflags);
     builder.addAllAsflags(asflags);
     builder.addAllAsppflags(asppflags);
     CxxPlatforms.addToolFlagsFromConfig(config, builder);
@@ -192,6 +194,8 @@ public class CxxPlatforms {
         defaultPlatform.getAsppflags(),
         defaultPlatform.getCflags(),
         defaultPlatform.getCppflags(),
+        defaultPlatform.getCxxflags(),
+        defaultPlatform.getCxxppflags(),
         defaultPlatform.getSharedLibraryExtension(),
         defaultPlatform.getSharedLibraryVersionedExtensionFormat(),
         defaultPlatform.getStaticLibraryExtension(),

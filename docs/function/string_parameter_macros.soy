@@ -53,7 +53,7 @@ String parameter macros have the form
 <p>
 <pre>
 {literal}
-$(<em>macroname</em> [ <em>argument</em> ... ])
+$([@]<em>macroname</em> [ <em>argument</em> ... ])
 {/literal}
 </pre>
 </p>
@@ -62,6 +62,51 @@ $(<em>macroname</em> [ <em>argument</em> ... ])
 String parameter macros take a space-separated list of arguments,
 where each argument is a {call buck.build_target_pattern /}.
 </p>
+
+
+<h3>How to manage long expanded values</h3>
+
+<p>
+In some cases, the results of the expanded macro might be so long that
+they exceed a limit in your operating environment. For example, if you
+use the results of an expanded macro in Bash, it could exceed Bash's
+command-line limits.
+</p>
+
+<p>
+To work around these limits, prefix the macro name with 
+the <code>@</code> character.  Buck then writes the results of the expanded
+macro to a temporary file and replaces the macro with the path to that
+file <em>while keeping the <code>@</code> prefix</em>. For example
+</p>
+
+<p>
+<pre>
+{literal}
+$(@query_targets_and_outputs //...)
+{/literal}
+</pre>
+</p>
+
+<p>
+expands to something similar to
+</p>
+
+<p>
+<pre>
+{literal}
+@/tmp/tempfile
+{/literal}
+</pre>
+</p>
+
+<p>
+Many applications recognize the <code>@</code> prefix to mean: <em>read the
+contents of this file to obtain the necessary arguments</em>.
+</p>
+
+
+<h3>How to prevent expansion</h3>
 
 <p>
 If you need to prevent expansion of a string parameter macro, prefix the
@@ -81,9 +126,8 @@ For an example of preventing expansion in the context of a rule, see
 the <strong>Examples</strong> section below.
 </p>
 
-<h2>
-Supported macros 
-</h2>
+
+<h2>Supported macros</h2>
 
 <ul>
   <li>

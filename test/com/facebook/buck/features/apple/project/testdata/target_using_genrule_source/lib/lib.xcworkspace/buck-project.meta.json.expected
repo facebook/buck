@@ -1,1 +1,1 @@
-{"required-targets":["other_cell//:gen","//lib:gen"],"xcconfig-paths":["buck-out/gen/lib/lib#default,static-Debug.xcconfig","buck-out/gen/lib/lib#default,static-Release.xcconfig"],"copy-in-xcode":[]}
+{"required-targets":["other_cell//:gen","//lib:gen"],"xcconfig-paths":["buck-out/gen/lib/lib#default,static-Debug.xcconfig","buck-out/gen/lib/lib#default,static-Profile.xcconfig","buck-out/gen/lib/lib#default,static-Release.xcconfig"],"copy-in-xcode":[]}

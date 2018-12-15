@@ -191,16 +191,12 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
 
   @Override
   public Optional<Path> findBuckFileForPath(Path path) {
-    Path normalizedPath = path;
     return mBuckCellManager
-        .findCellByPath(normalizedPath)
+        .findCellByPath(path)
         .map(
             cell -> {
               Path cellRoot = cell.getRootPath();
-              Path packageDir =
-                  normalizedPath.toFile().isDirectory()
-                      ? normalizedPath
-                      : normalizedPath.getParent();
+              Path packageDir = path.toFile().isDirectory() ? path : path.getParent();
               while (true) {
                 if (packageDir == null) {
                   return null;
@@ -283,31 +279,37 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
                 cell.getRootDirectory()
                     .map(
                         cellRoot -> {
-                          if (virtualFile.equals(cellRoot)) {
-                            return null; // there is no target pattern for the cell root directory
-                          }
                           String buildFileName = cell.getBuildfileName();
+                          @Nullable
                           String pathToPackage; // The part between "//" and ":" in the pattern
-                          String rulePiece; // The part after the ":" in the pattern
-                          VirtualFile packageDir =
-                              virtualFile.getParent(); // Eventually, where the nearest Buck file is
-                          // defined
-                          if (buildFileName.equals(virtualFile.getName())) {
+                          @Nullable String rulePiece; // The part after the ":" in the pattern
+                          VirtualFile packageDir; // Eventually, Buck root or nearest Buck file
+                          if (virtualFile.isDirectory()) {
+                            rulePiece = null;
+                            packageDir = virtualFile;
+                          } else if (buildFileName.equals(virtualFile.getName())) {
                             rulePiece = "";
+                            packageDir = virtualFile.getParent();
                           } else {
                             rulePiece = virtualFile.getName();
-                            while (packageDir != null
-                                && !packageDir.equals(cellRoot)
-                                && packageDir.findChild(buildFileName) == null) {
-                              rulePiece = packageDir.getName() + "/" + rulePiece;
-                              packageDir = packageDir.getParent();
+                            packageDir = virtualFile.getParent();
+                          }
+                          while (packageDir != null && !packageDir.equals(cellRoot)) {
+                            VirtualFile buildFile = packageDir.findChild(buildFileName);
+                            if (buildFile != null && !buildFile.isDirectory()) {
+                              break;
                             }
+                            if (rulePiece == null) {
+                              rulePiece = "";
+                            }
+                            rulePiece = packageDir.getName() + "/" + rulePiece;
+                            packageDir = packageDir.getParent();
                           }
                           if (packageDir == null) {
                             return null;
                           }
                           if (packageDir.equals(cellRoot)) {
-                            pathToPackage = "";
+                            pathToPackage = null;
                           } else {
                             pathToPackage = packageDir.getName();
                             packageDir = packageDir.getParent();
@@ -319,43 +321,59 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
                           if (packageDir == null) {
                             return null;
                           }
-                          return cell.getName().orElse("") + "//" + pathToPackage + ":" + rulePiece;
+                          StringBuilder result = new StringBuilder();
+                          cell.getName().ifPresent(result::append);
+                          result.append("//");
+                          if (pathToPackage != null) {
+                            result.append(pathToPackage);
+                            if (rulePiece == null) {
+                              result.append("/"); // Add trailing slash to directory
+                            }
+                          }
+                          if (rulePiece != null) {
+                            result.append(":").append(rulePiece);
+                          }
+                          return result.toString();
                         }))
         .flatMap(BuckTargetPattern::parse);
   }
 
   @Override
   public Optional<BuckTargetPattern> findTargetPatternForPath(Path path) {
-    Path normalizedPath = path;
     return mBuckCellManager
-        .findCellByPath(normalizedPath)
+        .findCellByPath(path)
         .map(
             cell -> {
               Path cellRoot = cell.getRootPath();
-              if (normalizedPath.equals(cellRoot)) {
-                return null; // there is no target pattern for the cell root directory
-              }
               String buildFileName = cell.getBuildfileName();
-              String pathToPackage; // The part between "//" and ":" in the pattern
-              String rulePiece; // The part after the ":" in the pattern
-              Path packageDir =
-                  normalizedPath.getParent(); // Eventually, where the nearest Buck file is defined
-              if (buildFileName.equals(normalizedPath.getFileName().toString())) {
+              @Nullable String pathToPackage; // The part between "//" and ":" in the pattern
+              @Nullable String rulePiece; // The part after the ":" in the pattern, or null
+              Path packageDir; // Eventually, Buck root or nearest Buck file
+              if (path.toFile().isDirectory()) {
+                rulePiece = null;
+                packageDir = path;
+              } else if (buildFileName.equals(path.getFileName().toString())) {
                 rulePiece = "";
+                packageDir = path.getParent();
               } else {
-                rulePiece = normalizedPath.getFileName().toString();
-                while (packageDir != null
-                    && !packageDir.equals(cellRoot)
-                    && !packageDir.resolve(buildFileName).toFile().exists()) {
-                  rulePiece = packageDir.getFileName().toString() + "/" + rulePiece;
-                  packageDir = packageDir.getParent();
+                rulePiece = path.getFileName().toString();
+                packageDir = path.getParent();
+              }
+              while (packageDir != null && !packageDir.equals(cellRoot)) {
+                if (packageDir.resolve(buildFileName).toFile().isFile()) {
+                  break;
                 }
+                if (rulePiece == null) {
+                  rulePiece = "";
+                }
+                rulePiece = packageDir.getFileName().toString() + "/" + rulePiece;
+                packageDir = packageDir.getParent();
               }
               if (packageDir == null) {
                 return null;
               }
               if (packageDir.equals(cellRoot)) {
-                pathToPackage = "";
+                pathToPackage = null;
               } else {
                 pathToPackage = packageDir.getFileName().toString();
                 packageDir = packageDir.getParent();
@@ -367,7 +385,19 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
               if (packageDir == null) {
                 return null;
               }
-              return cell.getName().orElse("") + "//" + pathToPackage + ":" + rulePiece;
+              StringBuilder result = new StringBuilder();
+              cell.getName().ifPresent(result::append);
+              result.append("//");
+              if (pathToPackage != null) {
+                result.append(pathToPackage);
+                if (rulePiece == null) {
+                  result.append("/"); // Add trailing slash to directory
+                }
+              }
+              if (rulePiece != null) {
+                result.append(":").append(rulePiece);
+              }
+              return result.toString();
             })
         .flatMap(BuckTargetPattern::parse);
   }

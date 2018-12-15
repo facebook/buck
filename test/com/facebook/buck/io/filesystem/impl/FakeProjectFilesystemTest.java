@@ -510,4 +510,20 @@ public class FakeProjectFilesystemTest {
       return FileVisitResult.CONTINUE;
     }
   }
+
+  @Test
+  public void testFakeViewGetDirectoryContents() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    Path path1 = Paths.get("root/A.txt");
+    Path path2 = Paths.get("root/B.txt");
+    Path path3 = Paths.get("root/C");
+    filesystem.touch(path1);
+    filesystem.touch(path2);
+    filesystem.touch(path3);
+
+    assertThat(
+        filesystem.asView().getDirectoryContents(Paths.get("root")),
+        containsInAnyOrder(path1, path2, path3));
+  }
 }

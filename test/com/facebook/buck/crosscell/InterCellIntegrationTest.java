@@ -881,6 +881,15 @@ public class InterCellIntegrationTest {
     secondary.runBuckBuild("primary//:hello").assertSuccess();
   }
 
+  @Test
+  public void crossCellBinarySharedLinkCanRun() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/cxx_binary_shared/primary", "inter-cell/cxx_binary_shared/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    primary.runBuckCommand("run", "secondary//:main").assertSuccess();
+  }
+
   private static String sortLines(String input) {
     return RichStream.from(Splitter.on('\n').trimResults().omitEmptyStrings().split(input))
         .sorted()
@@ -917,6 +926,11 @@ public class InterCellIntegrationTest {
         ImmutableMap.of(
             "repositories",
             ImmutableMap.of(
-                cellName, cellToRegisterAsCellName.getPath(".").normalize().toString())));
+                cellName,
+                cellToModifyConfigOf
+                    .getDestPath()
+                    .relativize(cellToRegisterAsCellName.getPath("."))
+                    .normalize()
+                    .toString())));
   }
 }

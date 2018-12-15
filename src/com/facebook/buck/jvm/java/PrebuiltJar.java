@@ -232,6 +232,11 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public Optional<String> getResourcesRoot() {
+    return Optional.empty();
+  }
+
+  @Override
   public SortedSet<BuildRule> getExportedDeps() {
     return getDeclaredDeps();
   }

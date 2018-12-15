@@ -30,7 +30,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -179,11 +178,12 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
 
   @Override
   public ImmutableCollection<Path> getDirectoryContents(Path pathToUse) throws IOException {
-    Path path = filesystemParent.getPathForRelativePath(pathToUse);
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
+    try (DirectoryStream<Path> stream =
+        filesystemParent.getDirectoryContentsStream(
+            filesystemParent.getPathForRelativePath(pathToUse))) {
       return FluentIterable.from(stream)
           .filter(this::shouldExplorePaths)
-          .transform(absolutePath -> MorePaths.relativize(projectRoot, absolutePath))
+          .transform(absolutePath -> MorePaths.relativize(resolvedProjectRoot, absolutePath))
           .toSortedList(Comparator.naturalOrder());
     }
   }

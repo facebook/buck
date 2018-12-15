@@ -173,6 +173,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testJavaTestRule() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("java_test");
+  }
+
+  @Test
   public void testAndroidResourcesInDependencies() throws InterruptedException, IOException {
     runBuckProjectAndVerify("project_with_android_resources");
   }

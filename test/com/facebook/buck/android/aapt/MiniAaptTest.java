@@ -33,6 +33,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -609,6 +610,8 @@ public class MiniAaptTest {
 
   @Test
   public void testProcessFileNamesInDirectory() throws IOException, ResourceParseException {
+    ProjectFilesystemView filesystemView = filesystem.asView();
+
     filesystem.touch(Paths.get("res/drawable/icon.png"));
     filesystem.touch(Paths.get("res/drawable/another_icon.png.orig"));
     filesystem.touch(Paths.get("res/drawable-ldpi/nine_patch.9.png"));
@@ -628,11 +631,11 @@ public class MiniAaptTest {
             FakeSourcePath.of(filesystem, "res"),
             Paths.get("R.txt"),
             ImmutableSet.of());
-    aapt.processFileNamesInDirectory(filesystem, Paths.get("res/drawable"));
-    aapt.processFileNamesInDirectory(filesystem, Paths.get("res/drawable-ldpi"));
-    aapt.processFileNamesInDirectory(filesystem, Paths.get("res/transition-v19"));
+    aapt.processFileNamesInDirectory(filesystemView, Paths.get("res/drawable"));
+    aapt.processFileNamesInDirectory(filesystemView, Paths.get("res/drawable-ldpi"));
+    aapt.processFileNamesInDirectory(filesystemView, Paths.get("res/transition-v19"));
     aapt.processValues(
-        filesystem,
+        filesystemView,
         new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")),
         Paths.get("res/values"));
 

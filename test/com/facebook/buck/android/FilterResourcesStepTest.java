@@ -49,13 +49,13 @@ public class FilterResourcesStepTest {
 
   @Test
   public void testFilterDrawables() throws IOException, InterruptedException {
-    final String first = "/first-path/res";
-    Path baseDestination = Paths.get("/dest");
+    final String first = "first-path/res";
+    Path baseDestination = Paths.get("dest");
     ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
         ImmutableBiMap.of(
             Paths.get(first), baseDestination.resolve("1"),
-            Paths.get("/second-path/res"), baseDestination.resolve("2"),
-            Paths.get("/third-path/res"), baseDestination.resolve("3"));
+            Paths.get("second-path/res"), baseDestination.resolve("2"),
+            Paths.get("third-path/res"), baseDestination.resolve("3"));
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 

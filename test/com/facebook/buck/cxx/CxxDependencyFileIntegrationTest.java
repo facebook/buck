@@ -30,7 +30,6 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,29 +63,7 @@ public class CxxDependencyFileIntegrationTest {
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "depfiles", tmp);
     workspace.setUp();
-    String posix_config =
-        "[cxx]\n"
-            + "  cppflags = -Wall -Werror\n"
-            + "  cxxppflags = -Wall -Werror\n"
-            + "  cflags = -Wall -Werror\n"
-            + "  cxxflags = -Wall -Werror\n";
-    String windows_config =
-        "[cxx]\n"
-            + "  cc=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cc_type=windows\n"
-            + "  cpp=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cpp_type=windows\n"
-            + "  cxx=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cxx_type=windows\n"
-            + "  cxxpp=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cxxpp_type=windows\n"
-            + "  ld=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/link.exe\"\n"
-            + "  linker_platform=windows\n"
-            + "  ar=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/lib.exe\"\n"
-            + "  archiver_platform=windows\n"
-            + "  ranlib=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/lib.exe\"\n";
-    String config = Platform.detect() == Platform.WINDOWS ? windows_config : posix_config;
-    workspace.writeContentsToPath(config, ".buckconfig");
+    CxxToolchainUtilsForTests.configureCxxToolchains(workspace);
 
     // Run a build and make sure it's successful.
     runCommand("build", "//:test").assertSuccess();

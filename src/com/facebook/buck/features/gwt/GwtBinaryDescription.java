@@ -129,7 +129,8 @@ public class GwtBinaryDescription
                             context.getProjectFilesystem(),
                             params.withDeclaredDeps(deps).withoutExtraDeps(),
                             ruleFinder,
-                            filesForGwtModule);
+                            filesForGwtModule,
+                            javaLibrary.getResourcesRoot());
                       }));
         } else {
           gwtModule = Optional.empty();

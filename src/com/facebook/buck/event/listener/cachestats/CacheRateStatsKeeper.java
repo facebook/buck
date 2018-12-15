@@ -69,12 +69,11 @@ public class CacheRateStatsKeeper {
       case IGNORED:
         cacheIgnores.incrementAndGet();
         break;
-      case CONTAINS:
       case SKIPPED:
+        break;
+      case CONTAINS:
         throw new IllegalStateException(
-            String.format(
-                "BuildRules shouldn't finish with %s cache result type.",
-                cacheResult.getType().toString()));
+            String.format("BuildRules shouldn't finish with CONTAINS cache result type."));
       case LOCAL_KEY_UNCHANGED_HIT:
         cacheLocalKeyUnchangedHits.incrementAndGet();
         break;

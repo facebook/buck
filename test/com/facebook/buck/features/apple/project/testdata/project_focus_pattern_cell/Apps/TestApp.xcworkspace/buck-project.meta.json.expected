@@ -1,1 +1,1 @@
-{"required-targets":[],"xcconfig-paths":["bar/buck-out/gen/Dep2/Dep2-Debug.xcconfig","bar/buck-out/gen/Dep2/Dep2-Release.xcconfig","buck-out/gen/Apps/TestApp-Debug.xcconfig","buck-out/gen/Apps/TestApp-Release.xcconfig"],"copy-in-xcode":[]}
+{"required-targets":[],"xcconfig-paths":["bar/buck-out/gen/Dep2/Dep2-Debug.xcconfig","bar/buck-out/gen/Dep2/Dep2-Profile.xcconfig","bar/buck-out/gen/Dep2/Dep2-Release.xcconfig","buck-out/gen/Apps/TestApp-Debug.xcconfig","buck-out/gen/Apps/TestApp-Profile.xcconfig","buck-out/gen/Apps/TestApp-Release.xcconfig"],"copy-in-xcode":[]}

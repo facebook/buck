@@ -85,6 +85,7 @@ import com.facebook.buck.event.listener.RuleKeyLoggerListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
+import com.facebook.buck.event.listener.devspeed.DevspeedTelemetryPlugin;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
@@ -796,12 +797,27 @@ public final class Main {
                   projectFilesystemFactory)
               .getCellByPath(filesystem.getRootPath());
 
-      Optional<Daemon> daemon =
-          context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)
-              ? Optional.of(
-                  daemonLifecycleManager.getDaemon(
-                      rootCell, knownRuleTypesProvider, watchman, console, clock))
-              : Optional.empty();
+      Optional<Daemon> daemon = Optional.empty();
+      if (context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)) {
+        List<DevspeedTelemetryPlugin> telemetryPlugins =
+            pluginManager.getExtensions(DevspeedTelemetryPlugin.class);
+
+        daemon =
+            Optional.of(
+                daemonLifecycleManager.getDaemon(
+                    rootCell,
+                    knownRuleTypesProvider,
+                    watchman,
+                    console,
+                    clock,
+                    telemetryPlugins.isEmpty()
+                        ? Optional::empty
+                        : () ->
+                            telemetryPlugins
+                                .get(0)
+                                .newBuildListenerFactoryForDaemon(
+                                    rootCell.getFilesystem(), System.getProperties())));
+      }
 
       if (!daemon.isPresent()) {
         // Clean up the trash on a background thread if this was a
@@ -1119,6 +1135,7 @@ public final class Main {
 
           eventListeners =
               addEventListeners(
+                  daemon.flatMap(Daemon::getDevspeedDaemonListener),
                   buildEventBus,
                   daemon.map(d -> d.getFileEventBus()),
                   rootCell.getFilesystem(),
@@ -1869,6 +1886,7 @@ public final class Main {
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   private ImmutableList<BuckEventListener> addEventListeners(
+      Optional<BuckEventListener> devspeedDaemonEventListener,
       BuckEventBus buckEventBus,
       Optional<EventBus> fileEventBus,
       ProjectFilesystem projectFilesystem,
@@ -1906,6 +1924,8 @@ public final class Main {
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, buckConfig);
     ArtifactCacheBuckConfig artifactCacheConfig = new ArtifactCacheBuckConfig(buckConfig);
+
+    devspeedDaemonEventListener.ifPresent(eventListenersBuilder::add);
 
 
     CommonThreadFactoryState commonThreadFactoryState =

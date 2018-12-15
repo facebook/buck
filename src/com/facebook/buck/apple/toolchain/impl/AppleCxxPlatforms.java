@@ -428,6 +428,8 @@ public class AppleCxxPlatforms {
             ImmutableList.of(),
             cflags,
             ImmutableList.of(),
+            cflags,
+            ImmutableList.of(),
             "dylib",
             "%s.dylib",
             "a",

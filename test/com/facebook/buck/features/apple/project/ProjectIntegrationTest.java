@@ -483,6 +483,32 @@ public class ProjectIntegrationTest {
     runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
   }
 
+  @Test(timeout = 180000)
+  public void testBuckProjectWithAppleBundleTests() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_apple_bundle_test", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "//app:bundle");
+    result.assertSuccess();
+
+    ProcessExecutor.Result xcodeTestResult =
+        workspace.runCommand(
+            "xcodebuild",
+            "-workspace",
+            "app/bundle.xcworkspace",
+            "-scheme",
+            "bundle",
+            "-destination 'platform=OS X,arch=x86_64'",
+            "clean",
+            "test");
+    xcodeTestResult.getStderr().ifPresent(System.err::print);
+    assertEquals("xcodebuild should succeed", 0, xcodeTestResult.getExitCode());
+  }
+
   @Test
   public void testBuckProjectWithEmbeddedCellBuckoutAndMergedHeaderMap()
       throws IOException, InterruptedException {

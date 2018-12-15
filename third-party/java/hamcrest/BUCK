@@ -16,10 +16,11 @@ java_library(
 
 prebuilt_jar(
     name = "java-hamcrest",
-    binary_jar = "java-hamcrest-2.0.0.0.jar",
+    binary_jar = "hamcrest-2.1-rc3.jar",
     licenses = [
         "LICENSE.txt",
     ],
+    source_jar = "hamcrest-2.1-rc3-sources.jar",
     visibility = [
         "//test/...",
         "//third-party/java/junit:junit",
@@ -32,6 +33,7 @@ prebuilt_jar(
     licenses = [
         "LICENSE.txt",
     ],
+    source_jar = "hamcrest-junit-2.0.0.0-sources.jar",
     visibility = [
         "//test/...",
         "//third-party/java/junit:junit",

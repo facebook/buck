@@ -20,6 +20,7 @@ import com.facebook.buck.android.RobolectricTestDescriptionArg;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
+import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.lang.java.JavaLibraryRuleHelper;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
@@ -45,10 +46,18 @@ public class RobolectricTestModuleRule extends AndroidModuleRule<RobolectricTest
     super.apply(target, context);
     addDepsAndTestSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
+    context.setJavaLanguageLevel(JavaLibraryRuleHelper.getLanguageLevel(projectConfig, target));
   }
 
   @Override
   public IjModuleType detectModuleType(TargetNode<RobolectricTestDescriptionArg> targetNode) {
     return IjModuleType.ANDROID_MODULE;
+  }
+
+  @Override
+  public void applyDuringAggregation(
+      AggregationContext context, TargetNode<RobolectricTestDescriptionArg> targetNode) {
+    super.applyDuringAggregation(context, targetNode);
+    JavaLibraryRuleHelper.addLanguageAggregationKeyIfNeeded(projectConfig, targetNode, context);
   }
 }

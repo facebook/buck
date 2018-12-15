@@ -214,6 +214,8 @@ public class DefaultCxxPlatforms {
         ImmutableList.of(),
         ImmutableList.of(),
         ImmutableList.of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         sharedLibraryExtension,
         sharedLibraryVersionedExtensionFormat,
         staticLibraryExtension,

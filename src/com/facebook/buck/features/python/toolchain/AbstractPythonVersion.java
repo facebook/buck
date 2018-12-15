@@ -25,8 +25,8 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 public abstract class AbstractPythonVersion implements AddsToRuleKey {
 
-  // TODO(cjhopman): This should add the interpreter name to the rulekey.
   @Value.Parameter
+  @AddToRuleKey
   public abstract String getInterpreterName();
 
   @Value.Parameter

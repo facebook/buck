@@ -65,7 +65,7 @@ public class RobolectricTest extends JavaTest {
   private final AndroidPlatformTarget androidPlatformTarget;
   private final Optional<DummyRDotJava> optionalDummyRDotJava;
   private final Optional<SourcePath> robolectricManifest;
-  private final Optional<String> robolectricRuntimeDependency;
+  private final Optional<SourcePath> robolectricRuntimeDependency;
 
   /**
    * Used by robolectric test runner to get list of resource directories that can be used for tests.
@@ -104,7 +104,7 @@ public class RobolectricTest extends JavaTest {
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
       Optional<SourcePath> unbundledResourcesRoot,
-      Optional<String> robolectricRuntimeDependency,
+      Optional<SourcePath> robolectricRuntimeDependency,
       Optional<SourcePath> robolectricManifest,
       boolean passDirectoriesInFile,
       Tool javaRuntimeLauncher) {
@@ -203,7 +203,10 @@ public class RobolectricTest extends JavaTest {
             vmArgsBuilder.add(
                 String.format("-D%s=%s", ROBOLECTRIC_MANIFEST, pathResolver.getAbsolutePath(s))));
     robolectricRuntimeDependency.ifPresent(
-        s -> vmArgsBuilder.add(String.format("-D%s=%s", ROBOLECTRIC_DEPENDENCY_DIR, s)));
+        s ->
+            vmArgsBuilder.add(
+                String.format(
+                    "-D%s=%s", ROBOLECTRIC_DEPENDENCY_DIR, pathResolver.getAbsolutePath(s))));
   }
 
   @VisibleForTesting

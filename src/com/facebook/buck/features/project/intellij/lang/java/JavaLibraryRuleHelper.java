@@ -21,6 +21,8 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
+import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
+import com.facebook.buck.features.project.intellij.aggregation.AggregationKeys;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -75,6 +77,18 @@ public class JavaLibraryRuleHelper {
     T arg = targetNode.getConstructorArg();
     if (arg.getSrcs().stream().anyMatch(src -> src instanceof BuildTargetSourcePath)) {
       context.addNonSourceBuildTarget(targetNode.getBuildTarget());
+    }
+  }
+
+  /**
+   * Helper method to add aggregation key of JAVA_LANGUAGE_LEVEL if the target specifies a language
+   * level
+   */
+  public static <T extends JavaLibraryDescription.CoreArg> void addLanguageAggregationKeyIfNeeded(
+      IjProjectConfig projectConfig, TargetNode<T> target, AggregationContext context) {
+    Optional<String> languageLevel = getLanguageLevel(projectConfig, target);
+    if (languageLevel.isPresent()) {
+      context.addAggregationKey(AggregationKeys.JAVA_LANGUAGE_LEVEL, languageLevel);
     }
   }
 

@@ -49,13 +49,15 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path outputFile;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> filesForGwtModule;
   private final SourcePathRuleFinder ruleFinder;
+  @AddToRuleKey private final Optional<String> resourcesRoot;
 
   GwtModule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
-      ImmutableSortedSet<SourcePath> filesForGwtModule) {
+      ImmutableSortedSet<SourcePath> filesForGwtModule,
+      Optional<String> resourcesRoot) {
     super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.outputFile =
@@ -64,6 +66,7 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             buildTarget,
             "__gwt_module_%s__/" + buildTarget.getShortNameAndFlavorPostfix() + ".jar");
     this.filesForGwtModule = filesForGwtModule;
+    this.resourcesRoot = resourcesRoot;
   }
 
   @Override
@@ -94,7 +97,7 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                         ruleFinder,
                         getProjectFilesystem(),
                         filesForGwtModule))
-                .setResourcesRoot(Optional.empty())
+                .setResourcesRoot(resourcesRoot)
                 .build(),
             tempJarFolder));
 

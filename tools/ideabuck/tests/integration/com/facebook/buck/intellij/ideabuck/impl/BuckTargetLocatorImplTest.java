@@ -21,6 +21,7 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
 import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
+import com.google.common.collect.Lists;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.PlatformTestCase;
@@ -31,7 +32,6 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import org.gradle.internal.impldep.com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -219,6 +219,22 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
     checkFindTargetPatternFrom(createFileInDefaultCell("a.bzl"), "//:a.bzl");
     checkFindTargetPatternFrom(createFileInDefaultCell("one/a.bzl"), "//one:a.bzl");
     checkFindTargetPatternFrom(createFileInDefaultCell("one/two/a.bzl"), "//one/two:a.bzl");
+    checkFindTargetPatternFrom(
+        createFileInDefaultCell("one/two/three/a.bzl"), "//one/two:three/a.bzl");
+  }
+
+  public void testFindTargetPatternFromDirectoryInDefaultCell() {
+    Path rootDir = createFileInDefaultCell(".buckconfig").getParent();
+    Path level1Dir = createFileInDefaultCell("one/BUCK").getParent();
+    Path level2Dir = createFileInDefaultCell("one/two/BUCK").getParent();
+    Path level3Dir = createFileInDefaultCell("one/two/three/x").getParent();
+    Path level4Dir = createFileInDefaultCell("one/two/three/four/y").getParent();
+
+    checkFindTargetPatternFrom(rootDir, "//");
+    checkFindTargetPatternFrom(level1Dir, "//one/");
+    checkFindTargetPatternFrom(level2Dir, "//one/two/");
+    checkFindTargetPatternFrom(level3Dir, "//one/two:three/");
+    checkFindTargetPatternFrom(level4Dir, "//one/two:three/four/");
   }
 
   public void testFindTargetPatternFromFileInDefaultCellWithNamedBuildfile() {
@@ -229,6 +245,22 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
 
     checkFindTargetPatternFrom(buildFileOne, "//one:");
     checkFindTargetPatternFrom(buildFileTwo, "//one/two:");
+  }
+
+  public void testFindTargetPatternFromDirectoryInDefaultCellWithNamedBuildFile() {
+    defaultCell = setDefaultCell(null, null, "BUILD");
+
+    Path rootDir = createFileInDefaultCell(".buckconfig").getParent();
+    Path level1Dir = createFileInDefaultCell("one/BUILD").getParent();
+    Path level2Dir = createFileInDefaultCell("one/two/BUILD").getParent();
+    Path level3Dir = createFileInDefaultCell("one/two/three/x").getParent();
+    Path level4Dir = createFileInDefaultCell("one/two/three/four/y").getParent();
+
+    checkFindTargetPatternFrom(rootDir, "//");
+    checkFindTargetPatternFrom(level1Dir, "//one/");
+    checkFindTargetPatternFrom(level2Dir, "//one/two/");
+    checkFindTargetPatternFrom(level3Dir, "//one/two:three/");
+    checkFindTargetPatternFrom(level4Dir, "//one/two:three/four/");
   }
 
   public void testFindTargetPatternFromFileInNamedCell() {
@@ -243,5 +275,52 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
     checkFindTargetPatternFrom(createFile(cell, "a.bzl"), "foo//:a.bzl");
     checkFindTargetPatternFrom(createFile(cell, "one/a.bzl"), "foo//one:a.bzl");
     checkFindTargetPatternFrom(createFile(cell, "one/two/a.bzl"), "foo//one/two:a.bzl");
+    checkFindTargetPatternFrom(createFile(cell, "one/two/three/a.bzl"), "foo//one/two:three/a.bzl");
+  }
+
+  public void testFindTargetPatternFromDirectoryInNamedCell() {
+    BuckCell cell = addCell("foo", "x", "FOO");
+
+    Path rootDir = createFile(cell, ".buckconfig").getParent();
+    Path level1Dir = createFile(cell, "one/FOO").getParent();
+    Path level2Dir = createFile(cell, "one/two/FOO").getParent();
+    Path level3Dir = createFile(cell, "one/two/three/x").getParent();
+    Path level4Dir = createFile(cell, "one/two/three/four/y").getParent();
+
+    checkFindTargetPatternFrom(rootDir, "foo//");
+    checkFindTargetPatternFrom(level1Dir, "foo//one/");
+    checkFindTargetPatternFrom(level2Dir, "foo//one/two/");
+    checkFindTargetPatternFrom(level3Dir, "foo//one/two:three/");
+    checkFindTargetPatternFrom(level4Dir, "foo//one/two:three/four/");
+  }
+
+  public void testWhenDirectoriesAreNamedTheSameAsBuildfileName() {
+    /*
+     * For example, the BUCK repo has a directory 'src/java/com/facebook/buck', so on
+     * case-insensitive filesystems, need to be extra-sure to check whether a BUCK
+     * in the path is a file or a directory!
+     */
+
+    BuckCell cell = addCell("foo", "foo", "FOO");
+    Path buildFileOne = createFile(cell, "one/FOO");
+    Path buildFileTwo = createFile(cell, "two/FOO/FOO");
+    Path buildFileThree = createFile(cell, "three/FOO/FOO/FOO");
+
+    // Check files
+    checkFindTargetPatternFrom(buildFileOne, "foo//one:");
+    checkFindTargetPatternFrom(buildFileTwo, "foo//two/FOO:");
+    checkFindTargetPatternFrom(buildFileThree, "foo//three/FOO/FOO:");
+
+    // Check directories with build files
+    checkFindTargetPatternFrom(buildFileOne.getParent(), "foo//one/");
+    checkFindTargetPatternFrom(buildFileTwo.getParent(), "foo//two/FOO/");
+    checkFindTargetPatternFrom(buildFileThree.getParent(), "foo//three/FOO/FOO/");
+
+    // Check directories without build files
+    checkFindTargetPatternFrom(buildFileTwo.getParent().getParent(), "foo//:two/");
+    checkFindTargetPatternFrom(buildFileThree.getParent().getParent(), "foo//:three/FOO/");
+
+    // Check that a directory named the same as the buildfile.name doesn't fool us
+    checkFindTargetPatternFrom(createFile(cell, "one/x/FOO/y"), "foo//one:x/FOO/y");
   }
 }

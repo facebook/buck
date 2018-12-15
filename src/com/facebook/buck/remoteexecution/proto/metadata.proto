@@ -1,0 +1,39 @@
+// Copyright 2004-present Facebook. All Rights Reserved.
+//
+// Run the following command to regenerate the src-gen java source code:
+// $ protoc --java_out=src-gen/ --java_opt=annotate_code src/com/facebook/buck/remoteexecution/proto/metadata.proto && rm src-gen/com/facebook/buck/remoteexecution/proto/*.meta
+
+syntax = "proto3";
+
+package facebook.remote_execution;
+
+option java_multiple_files = true;
+option java_outer_classname = "RemoteExecutionMetadataProto";
+option java_package = "com.facebook.buck.remoteexecution.proto";
+
+// Contains tracing information.
+message TraceInfo {
+  // ID for all the trace information corresponding to the current session.
+  string trace_id = 1;
+
+  // ID of an edge that needs to be closed (ie, added a end point).
+  string edge_id = 2;
+}
+
+// RESessionID uniquely identifies a full remote execution session.
+message RESessionID {
+  string id = 1;
+}
+
+// Present if the execution was started by buck.
+message BuckInfo {
+  // The buck build id of the command starting the remote execution session.
+  string build_id = 1;
+}
+
+// This is propagated in GRPC header "re-metadata-bin".
+message RemoteExecutionMetadata {
+  RESessionID re_session_id = 1;
+  BuckInfo buck_info = 2;
+  TraceInfo trace_info = 3;
+}

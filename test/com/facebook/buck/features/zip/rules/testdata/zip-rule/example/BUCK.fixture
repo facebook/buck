@@ -152,3 +152,16 @@ zip_file(
         ":zip1",
     ],
 )
+
+export_file(
+    name = "beans",
+    src = "beans",
+    out = "beans",
+)
+
+zip_file(
+    name = "inputbased_dir",
+    srcs = [
+        ":beans",
+    ],
+)

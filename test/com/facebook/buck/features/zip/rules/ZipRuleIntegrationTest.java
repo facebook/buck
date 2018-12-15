@@ -17,6 +17,7 @@
 package com.facebook.buck.features.zip.rules;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -314,5 +315,19 @@ public class ZipRuleIntegrationTest {
       ZipInspector inspector = new ZipInspector(zip);
       inspector.assertFileContents(Paths.get("cake.txt"), "Guten Tag");
     }
+  }
+
+  @Test
+  public void shouldZipSrcsInBuckoutWhenBuckoutIgnored() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("project", "ignore", "buck-out/");
+
+    Path output = workspace.buildAndReturnOutput("//example:inputbased");
+    assertThat(new java.util.zip.ZipFile(output.toFile()).size(), greaterThan(0));
+
+    output = workspace.buildAndReturnOutput("//example:inputbased_dir");
+    assertThat(new java.util.zip.ZipFile(output.toFile()).size(), greaterThan(0));
   }
 }
