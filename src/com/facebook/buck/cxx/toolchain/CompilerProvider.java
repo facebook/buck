@@ -27,18 +27,42 @@ public class CompilerProvider extends CxxToolProvider<Compiler> {
   private final boolean preferDependencyTree;
 
   public CompilerProvider(ToolProvider toolProvider, Type type, boolean preferDependencyTree) {
-    super(toolProvider, type);
+    this(toolProvider, type, preferDependencyTree, false);
+  }
+
+  public CompilerProvider(
+      ToolProvider toolProvider,
+      Type type,
+      boolean preferDependencyTree,
+      boolean useUnixPathSeparator) {
+    super(toolProvider, type, useUnixPathSeparator);
     this.preferDependencyTree = preferDependencyTree;
   }
 
   public CompilerProvider(
       Supplier<PathSourcePath> path, Optional<Type> type, boolean preferDependencyTree) {
-    super(path, type);
+    this(path, type, preferDependencyTree, false);
+  }
+
+  public CompilerProvider(
+      Supplier<PathSourcePath> path,
+      Optional<Type> type,
+      boolean preferDependencyTree,
+      boolean useUnixPathSeparator) {
+    super(path, type, useUnixPathSeparator);
     this.preferDependencyTree = preferDependencyTree;
   }
 
   public CompilerProvider(PathSourcePath path, Optional<Type> type, boolean preferDependencyTree) {
-    super(Suppliers.ofInstance(path), type);
+    this(path, type, preferDependencyTree, false);
+  }
+
+  public CompilerProvider(
+      PathSourcePath path,
+      Optional<Type> type,
+      boolean preferDependencyTree,
+      boolean useUnixPathSeparator) {
+    super(Suppliers.ofInstance(path), type, useUnixPathSeparator);
     this.preferDependencyTree = preferDependencyTree;
   }
 
@@ -46,7 +70,7 @@ public class CompilerProvider extends CxxToolProvider<Compiler> {
   protected Compiler build(CxxToolProvider.Type type, Tool tool) {
     switch (type) {
       case CLANG:
-        return new ClangCompiler(tool, preferDependencyTree);
+        return new ClangCompiler(tool, preferDependencyTree, getUseUnixPathSeparator());
       case CLANG_CL:
         return new ClangClCompiler(tool);
       case CLANG_WINDOWS:

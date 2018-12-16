@@ -62,6 +62,7 @@ public abstract class CxxToolProvider<T> {
 
   private final ToolProvider toolProvider;
   private final Supplier<Type> type;
+  private final boolean useUnixFileSeparator;
 
   private final LoadingCache<BuildRuleResolver, T> cache =
       CacheBuilder.newBuilder()
@@ -74,14 +75,42 @@ public abstract class CxxToolProvider<T> {
                 }
               });
 
-  private CxxToolProvider(ToolProvider toolProvider, Supplier<Type> type) {
+  private CxxToolProvider(
+      ToolProvider toolProvider, Supplier<Type> type, boolean useUnixFileSeparator) {
     this.toolProvider = toolProvider;
     this.type = type;
+    this.useUnixFileSeparator = useUnixFileSeparator;
+  }
+
+  private CxxToolProvider(ToolProvider toolProvider, Supplier<Type> type) {
+    this(toolProvider, type, false);
+  }
+
+  /**
+   * Build using a {@link ToolProvider} and a required type. It also allows to specify to use Unix
+   * path separators for the NDK compiler.
+   */
+  public CxxToolProvider(ToolProvider toolProvider, Type type, boolean useUnixFileSeparator) {
+    this(toolProvider, Suppliers.ofInstance(type), useUnixFileSeparator);
   }
 
   /** Build using a {@link ToolProvider} and a required type. */
   public CxxToolProvider(ToolProvider toolProvider, Type type) {
     this(toolProvider, Suppliers.ofInstance(type));
+  }
+
+  /**
+   * Build using a {@link Path} and an optional type. If the type is absent, the tool will be
+   * executed to infer it. It also allows to specify to use Unix path separators for the NDK
+   * compiler.
+   */
+  public CxxToolProvider(
+      Supplier<PathSourcePath> path, Optional<Type> type, boolean useUnixFileSeparator) {
+    this(
+        new ConstantToolProvider(new HashedFileTool(path)),
+        type.map(Suppliers::ofInstance)
+            .orElseGet(() -> MoreSuppliers.memoize(() -> getTypeFromPath(path.get()))::get),
+        useUnixFileSeparator);
   }
 
   /**
@@ -92,7 +121,8 @@ public abstract class CxxToolProvider<T> {
     this(
         new ConstantToolProvider(new HashedFileTool(path)),
         type.map(Suppliers::ofInstance)
-            .orElseGet(() -> MoreSuppliers.memoize(() -> getTypeFromPath(path.get()))::get));
+            .orElseGet(() -> MoreSuppliers.memoize(() -> getTypeFromPath(path.get()))::get),
+        false);
   }
 
   private static Type getTypeFromPath(PathSourcePath path) {
@@ -156,5 +186,10 @@ public abstract class CxxToolProvider<T> {
     GCC,
     WINDOWS,
     WINDOWS_ML64
+  }
+
+  /** @returns whether the specific CxxTool is accepting paths with Unix path separator only. */
+  public boolean getUseUnixPathSeparator() {
+    return useUnixFileSeparator;
   }
 }

@@ -25,24 +25,38 @@ import java.util.function.Supplier;
 
 public class PreprocessorProvider extends CxxToolProvider<Preprocessor> {
   public PreprocessorProvider(PathSourcePath path, Optional<Type> type) {
-    super(Suppliers.ofInstance(path), type);
+    super(Suppliers.ofInstance(path), type, false);
+  }
+
+  public PreprocessorProvider(
+      PathSourcePath path, Optional<Type> type, boolean useUnixPathSeparator) {
+    super(Suppliers.ofInstance(path), type, useUnixPathSeparator);
   }
 
   public PreprocessorProvider(Supplier<PathSourcePath> path, Optional<Type> type) {
-    super(path, type);
+    super(path, type, false);
+  }
+
+  public PreprocessorProvider(
+      Supplier<PathSourcePath> path, Optional<Type> type, boolean useUnixPathSeparator) {
+    super(path, type, useUnixPathSeparator);
   }
 
   public PreprocessorProvider(ToolProvider toolProvider, Type type) {
-    super(toolProvider, type);
+    super(toolProvider, type, false);
+  }
+
+  public PreprocessorProvider(ToolProvider toolProvider, Type type, boolean useUnixPathSeparator) {
+    super(toolProvider, type, useUnixPathSeparator);
   }
 
   @Override
   protected Preprocessor build(Type type, Tool tool) {
     switch (type) {
       case CLANG:
-        return new ClangPreprocessor(tool);
+        return new ClangPreprocessor(tool, getUseUnixPathSeparator());
       case GCC:
-        return new GccPreprocessor(tool);
+        return new GccPreprocessor(tool, getUseUnixPathSeparator());
       case WINDOWS:
         return new WindowsPreprocessor(tool);
       case CLANG_WINDOWS:

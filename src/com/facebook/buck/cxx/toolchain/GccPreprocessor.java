@@ -27,8 +27,16 @@ import java.nio.file.Path;
 /** Preprocessor implementation for a gcc toolchain. */
 public class GccPreprocessor extends DelegatingTool implements Preprocessor {
 
+  private final boolean useUnixPathSeparator;
+
   public GccPreprocessor(Tool tool) {
     super(tool);
+    this.useUnixPathSeparator = false;
+  }
+
+  public GccPreprocessor(Tool tool, boolean useUnixPathSeparator) {
+    super(tool);
+    this.useUnixPathSeparator = useUnixPathSeparator;
   }
 
   @Override
@@ -72,5 +80,10 @@ public class GccPreprocessor extends DelegatingTool implements Preprocessor {
         pchFilename.endsWith(".h.gch"), "Expected a precompiled '.gch' file, got: " + pchFilename);
     String hFilename = pchFilename.substring(0, pchFilename.length() - 4);
     return ImmutableList.of("-include", hFilename);
+  }
+
+  /** @returns whether this tool requires Unix path separated paths. */
+  public boolean getUseUnixPathSeparator() {
+    return useUnixPathSeparator;
   }
 }

@@ -81,6 +81,9 @@ public abstract class DebugPathSanitizer implements AddsToRuleKey {
   public abstract ImmutableMap<String, String> getCompilationEnvironment(
       Path workingDir, boolean shouldSanitize);
 
+  public abstract ImmutableMap<String, String> getCompilationEnvironment(
+      Path workingDir, boolean shouldSanitize, boolean useUnixPathSeparator);
+
   @SuppressWarnings("unused")
   public ImmutableList<String> getCompilationFlags(
       Compiler compiler, Path workingDir, ImmutableMap<Path, Path> prefixMap) {
@@ -89,7 +92,12 @@ public abstract class DebugPathSanitizer implements AddsToRuleKey {
 
   protected abstract Iterable<Map.Entry<Path, String>> getAllPaths(Optional<Path> workingDir);
 
+  protected abstract Iterable<Map.Entry<Path, String>> getAllPaths(
+      Optional<Path> workingDir, boolean useUnixPathSeparator);
+
   public abstract String getCompilationDirectory();
+
+  public abstract String getCompilationDirectory(boolean useUnixPathSeparator);
 
   public Function<String, String> sanitize(Optional<Path> workingDir) {
     return input -> DebugPathSanitizer.this.sanitize(workingDir, input);

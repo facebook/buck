@@ -17,6 +17,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -47,13 +48,30 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
 
   @Override
   public String getCompilationDirectory() {
-    return fakeCompilationDirectory;
+    return getCompilationDirectory(false);
+  }
+
+  @Override
+  public String getCompilationDirectory(boolean useUnixPathSeparator) {
+    return useUnixPathSeparator
+        ? MorePaths.pathWithUnixSeparators(fakeCompilationDirectory)
+        : fakeCompilationDirectory;
   }
 
   @Override
   public ImmutableMap<String, String> getCompilationEnvironment(
       Path workingDir, boolean shouldSanitize) {
-    return ImmutableMap.of("PWD", workingDir.toString());
+    return getCompilationEnvironment(workingDir, shouldSanitize, false);
+  }
+
+  @Override
+  public ImmutableMap<String, String> getCompilationEnvironment(
+      Path workingDir, boolean shouldSanitize, boolean useUnixPathSeparator) {
+    return ImmutableMap.of(
+        "PWD",
+        useUnixPathSeparator
+            ? MorePaths.pathWithUnixSeparators(workingDir.toString())
+            : workingDir.toString());
   }
 
   @Override
@@ -70,6 +88,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     }
 
     ImmutableList.Builder<String> flags = ImmutableList.builder();
+    boolean useUnixPathSeparator = compiler.getUseUnixPathSeparator();
 
     // As these replacements are processed one at a time, if one is a prefix (or actually is just
     // contained in) another, it must be processed after that other one. To ensure that we can
@@ -86,7 +105,13 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
                 : prefixMap
                     .entrySet()
                     .stream()
-                    .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().toString())))
+                    .map(
+                        e ->
+                            new AbstractMap.SimpleEntry<>(
+                                e.getKey(),
+                                useUnixPathSeparator
+                                    ? MorePaths.pathWithUnixSeparators(e.getValue().toString())
+                                    : e.getValue().toString())))
         .concat(RichStream.from(getAllPaths(Optional.of(workingDir))))
         .sorted(Comparator.comparingInt(entry -> entry.getKey().toString().length()))
         .map(p -> getDebugPrefixMapFlag(p.getKey(), p.getValue()))
@@ -113,12 +138,22 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
 
   @Override
   protected Iterable<Map.Entry<Path, String>> getAllPaths(Optional<Path> workingDir) {
+    return getAllPaths(workingDir, false);
+  }
+
+  @Override
+  protected Iterable<Map.Entry<Path, String>> getAllPaths(
+      Optional<Path> workingDir, boolean useUnixPathSeparator) {
     if (!workingDir.isPresent()) {
       return other.entrySet();
     }
     return Iterables.concat(
         other.entrySet(),
         ImmutableList.of(
-            new AbstractMap.SimpleEntry<>(workingDir.get(), fakeCompilationDirectory)));
+            new AbstractMap.SimpleEntry<>(
+                workingDir.get(),
+                useUnixPathSeparator
+                    ? MorePaths.pathWithUnixSeparators(fakeCompilationDirectory)
+                    : fakeCompilationDirectory)));
   }
 }

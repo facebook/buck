@@ -49,4 +49,6 @@ public interface Compiler extends Tool {
   boolean needsToRemoveCompiledFilenamesFromOutput();
 
   Optional<String> getStderr(ProcessExecutor.Result result);
+
+  boolean getUseUnixPathSeparator();
 }

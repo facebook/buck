@@ -47,6 +47,7 @@ import com.facebook.buck.cxx.toolchain.DefaultCompiler;
 import com.facebook.buck.cxx.toolchain.GccCompiler;
 import com.facebook.buck.cxx.toolchain.GccPreprocessor;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
@@ -78,7 +79,7 @@ public class CxxPreprocessAndCompileTest {
     static final String COLOR_FLAG = "-use-color-in-compiler";
 
     public CompilerWithColorSupport(Tool tool) {
-      super(tool);
+      super(tool, false);
     }
 
     @Override
@@ -606,5 +607,62 @@ public class CxxPreprocessAndCompileTest {
         projectFilesystem.resolve(
             PathNormalizer.toWindowsPathIfNeeded(Paths.get("foo/bar.m.gcno"))),
         output);
+  }
+
+  @Test
+  public void usesUnixPathSeparatorForCompile() {
+    // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    Path includePath = PathNormalizer.toWindowsPathIfNeeded(Paths.get("/foo/bar/zap"));
+    String includedPathStr = MorePaths.pathWithUnixSeparators(includePath);
+
+    CxxToolFlags flags =
+        CxxToolFlags.explicitBuilder()
+            .addPlatformFlags(StringArg.of("-ffunction-sections"))
+            .addRuleFlags(StringArg.of("-O3"))
+            .addRuleFlags(StringArg.of("-I " + includedPathStr))
+            .build();
+    String outputName = "baz\\test.o";
+    Path input = Paths.get("foo\\test.ii");
+
+    CxxPreprocessAndCompile buildRule =
+        CxxPreprocessAndCompile.compile(
+            target,
+            projectFilesystem,
+            ruleFinder,
+            new CompilerDelegate(
+                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                new GccCompiler(
+                    new HashedFileTool(
+                        () ->
+                            PathSourcePath.of(
+                                projectFilesystem,
+                                PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/compiler")))),
+                    false,
+                    true),
+                flags,
+                DEFAULT_USE_ARG_FILE),
+            outputName,
+            FakeSourcePath.of(input.toString()),
+            DEFAULT_INPUT_TYPE,
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+
+    ImmutableList<String> expectedCompileCommand =
+        ImmutableList.<String>builder()
+            .add(PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/compiler")).toString())
+            .add("-x", "c++")
+            .add("-ffunction-sections")
+            .add("-O3")
+            .add("-I " + MorePaths.pathWithUnixSeparators(includePath))
+            .add("-o", "buck-out/gen/foo/bar__/baz/test.o")
+            .add("-c")
+            .add(MorePaths.pathWithUnixSeparators(input.toString()))
+            .build();
+    ImmutableList<String> actualCompileCommand =
+        buildRule.makeMainStep(context, false).getCommand();
+    assertEquals(expectedCompileCommand, actualCompileCommand);
   }
 }

@@ -24,7 +24,7 @@ import java.util.Optional;
 public class WindowsMl64Compiler extends DefaultCompiler {
 
   public WindowsMl64Compiler(Tool tool) {
-    super(tool);
+    super(tool, false);
   }
 
   @Override

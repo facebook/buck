@@ -29,7 +29,11 @@ public class GccCompiler extends DefaultCompiler {
   private final DependencyTrackingMode dependencyTrackingMode;
 
   public GccCompiler(Tool tool, boolean useDependencyTree) {
-    super(tool);
+    this(tool, useDependencyTree, false);
+  }
+
+  public GccCompiler(Tool tool, boolean useDependencyTree, boolean useUnixPathSeparator) {
+    super(tool, useUnixPathSeparator);
     this.useDependencyTree = useDependencyTree;
     if (useDependencyTree) {
       dependencyTrackingMode = DependencyTrackingMode.SHOW_HEADERS;

@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -150,6 +151,7 @@ class CxxPreprocessAndCompileStep implements Step {
 
   @VisibleForTesting
   ImmutableList<String> getArguments(boolean allowColorsInDiagnostics) {
+    boolean useUnixPathSeparator = compiler.getUseUnixPathSeparator();
     String inputLanguage =
         operation == Operation.GENERATE_PCH
             ? inputType.getPrecompiledHeaderLanguage().get()
@@ -165,13 +167,20 @@ class CxxPreprocessAndCompileStep implements Step {
         .addAll(
             sanitizer.getCompilationFlags(
                 compiler, filesystem.getRootPath(), headerPathNormalizer.getPrefixMap()))
-        .addAll(compiler.outputArgs(output.toString()))
+        .addAll(
+            compiler.outputArgs(
+                useUnixPathSeparator
+                    ? MorePaths.pathWithUnixSeparators(output.toString())
+                    : output.toString()))
         .add("-c")
         .addAll(
             depFile
                 .map(depFile -> compiler.outputDependenciesArgs(depFile.toString()))
                 .orElseGet(ImmutableList::of))
-        .add(input.toString())
+        .add(
+            useUnixPathSeparator
+                ? MorePaths.pathWithUnixSeparators(input.toString())
+                : input.toString())
         .build();
   }
 

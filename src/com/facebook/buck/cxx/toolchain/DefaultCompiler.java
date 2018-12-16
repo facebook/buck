@@ -26,8 +26,11 @@ import java.util.Optional;
 /** Default implementation of the Compiler interface. */
 public abstract class DefaultCompiler extends DelegatingTool implements Compiler {
 
-  public DefaultCompiler(Tool tool) {
+  private final boolean useUnixPathSeparator;
+
+  public DefaultCompiler(Tool tool, boolean useUnixPathSeparator) {
     super(tool);
+    this.useUnixPathSeparator = useUnixPathSeparator;
   }
 
   @Override
@@ -89,5 +92,10 @@ public abstract class DefaultCompiler extends DelegatingTool implements Compiler
   @Override
   public Optional<String> getStderr(ProcessExecutor.Result result) {
     return result.getStderr();
+  }
+
+  @Override
+  public boolean getUseUnixPathSeparator() {
+    return useUnixPathSeparator;
   }
 }
