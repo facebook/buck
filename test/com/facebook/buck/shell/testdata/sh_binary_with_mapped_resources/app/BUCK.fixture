@@ -1,0 +1,17 @@
+genrule(
+    name = "create_output_same_cell",
+    out = "output.txt",
+    cmd = "$(exe //node:node1) arg1 arg2 > $OUT",
+)
+
+genrule(
+    name = "create_output_different_cell",
+    out = "output.txt",
+    cmd = "$(exe @node//:node2) arg1 arg2 > $OUT",
+)
+
+genrule(
+    name = "create_output_conflicting_resources",
+    out = "output.txt",
+    cmd = "$(exe //node:conflicts) arg1 arg2 > $OUT",
+)

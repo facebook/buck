@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -27,10 +27,9 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
-import com.facebook.buck.util.environment.EnvVariablesProvider;
-import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -57,7 +56,7 @@ public class ShBinaryRuleIntegrationTest {
     Path outputFile = workspace.buildAndReturnOutput("//:run_example");
 
     // Verify contents of example_out.txt
-    String output = new String(Files.readAllBytes(outputFile), US_ASCII);
+    String output = new String(Files.readAllBytes(outputFile), UTF_8);
     assertEquals("arg1\narg2\n", output);
   }
 
@@ -100,6 +99,56 @@ public class ShBinaryRuleIntegrationTest {
   }
 
   @Test
+  public void testShBinaryWithMappedResources() throws IOException {
+    List<String> lines = testMappedResources("same_cell");
+    String expectedPlatform = Platform.detect().getPrintableName();
+    List<String> expected = ImmutableList.of(expectedPlatform, "arg1 arg2", "stuff", "fluff");
+    assertEquals(expected, lines);
+  }
+
+  @Test
+  public void testShBinaryWithMappedResourcesDifferentCell() throws IOException {
+    List<String> lines = testMappedResources("different_cell");
+    String expectedPlatform = Platform.detect().getPrintableName();
+    List<String> expected = ImmutableList.of(expectedPlatform, "arg1 arg2", "stuff", "fluff");
+    assertEquals(expected, lines);
+  }
+
+  @Test
+  public void testShBinaryWithMappedResourcesConflicting() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_mapped_resources", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult buildResult = workspace.runBuckBuild("//app:create_output_conflicting_resources");
+    assertEquals(ExitCode.BUILD_ERROR, buildResult.getExitCode());
+
+    assertTrue(
+        buildResult
+            .getStderr()
+            .contains(
+                "Duplicate resource link path '__default__/node/resource1' "
+                    + "(Resolves to both '//node:resource1' and 'node/resource1')"));
+  }
+
+  private List<String> testMappedResources(String testCase) throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_mapped_resources", temporaryFolder);
+    workspace.setUp();
+
+    Path outputFile = workspace.buildAndReturnOutput("//app:create_output_" + testCase);
+
+    // Verify contents of output.txt
+    return Files.readAllLines(outputFile, UTF_8);
+  }
+
+  @Test
   public void testShBinaryWithResources() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
@@ -111,11 +160,8 @@ public class ShBinaryRuleIntegrationTest {
     Path outputFile = workspace.buildAndReturnOutput("//app:create_output_using_node");
 
     // Verify contents of output.txt
-    List<String> lines = Files.readAllLines(outputFile, US_ASCII);
-    ExecutionEnvironment executionEnvironment =
-        new DefaultExecutionEnvironment(
-            EnvVariablesProvider.getSystemEnv(), System.getProperties());
-    String expectedPlatform = executionEnvironment.getPlatform().getPrintableName();
+    List<String> lines = Files.readAllLines(outputFile, UTF_8);
+    String expectedPlatform = Platform.detect().getPrintableName();
     assertEquals(expectedPlatform, lines.get(0));
     assertEquals("arg1 arg2", lines.get(1));
   }
