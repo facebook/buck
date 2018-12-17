@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -105,6 +106,13 @@ public class GwtBinaryDescription
           return rule.getBuildDeps();
         }
 
+        Optional<SourcePath> generatedCode =
+            javaLibrary.hasAnnotationProcessing()
+                ? javaLibrary
+                    .getGeneratedSourcePath()
+                    .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
+                : Optional.empty();
+
         Optional<BuildRule> gwtModule;
         if (javaLibrary.getSourcePathToOutput() != null) {
           gwtModule =
@@ -120,9 +128,16 @@ public class GwtBinaryDescription
                                 .addAll(javaLibrary.getSources())
                                 .addAll(javaLibrary.getResources())
                                 .build();
-                        ImmutableSortedSet<BuildRule> deps =
-                            ImmutableSortedSet.copyOf(
-                                ruleFinder.filterBuildRuleInputs(filesForGwtModule));
+                        ImmutableSortedSet.Builder<BuildRule> depsBuilder =
+                            ImmutableSortedSet.naturalOrder();
+
+                        depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(filesForGwtModule));
+
+                        if (generatedCode.isPresent()) {
+                          depsBuilder.add(javaLibrary);
+                        }
+
+                        ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 
                         return new GwtModule(
                             gwtModuleTarget,
@@ -141,6 +156,7 @@ public class GwtBinaryDescription
         if (gwtModule.isPresent()) {
           extraDeps.add(gwtModule.get());
           gwtModuleJarsBuilder.add(Objects.requireNonNull(gwtModule.get().getSourcePathToOutput()));
+          generatedCode.ifPresent(gwtModuleJarsBuilder::add);
         }
 
         // Traverse all of the deps of this rule.
