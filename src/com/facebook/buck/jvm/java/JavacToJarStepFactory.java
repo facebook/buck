@@ -252,4 +252,9 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   public JavacOptions getJavacOptions() {
     return javacOptions;
   }
+
+  @Override
+  public boolean hasAnnotationProcessing() {
+    return !javacOptions.getAnnotationProcessingParams().isEmpty();
+  }
 }

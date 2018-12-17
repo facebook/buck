@@ -83,6 +83,8 @@ public interface JavaLibrary
 
   Optional<Path> getGeneratedSourcePath();
 
+  boolean hasAnnotationProcessing();
+
   class Data {
     private final ImmutableSortedMap<String, HashCode> classNamesToHashes;
 

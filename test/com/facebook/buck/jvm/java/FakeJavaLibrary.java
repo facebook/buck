@@ -125,6 +125,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
+  public boolean hasAnnotationProcessing() {
+    return false;
+  }
+
+  @Override
   public Optional<BuildTarget> getAbiJar() {
     return Optional.empty();
   }

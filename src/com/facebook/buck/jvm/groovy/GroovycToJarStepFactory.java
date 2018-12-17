@@ -72,4 +72,9 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
             declaredClasspathEntries,
             projectFilesystem));
   }
+
+  @Override
+  public boolean hasAnnotationProcessing() {
+    return !javacOptions.getAnnotationProcessingParams().isEmpty();
+  }
 }

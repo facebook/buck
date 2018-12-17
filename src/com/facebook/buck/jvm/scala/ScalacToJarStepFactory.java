@@ -143,4 +143,9 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
               context, projectFilesystem, invokingRule, javacParameters, steps, buildableContext);
     }
   }
+
+  @Override
+  public boolean hasAnnotationProcessing() {
+    return !javacOptions.getAnnotationProcessingParams().isEmpty();
+  }
 }

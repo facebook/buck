@@ -465,4 +465,8 @@ public class JarBuildStepsFactory
         getAbiJarParameters(firstRule, context, filesystem, compilerParameters).orElse(null),
         getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null));
   }
+
+  public boolean hasAnnotationProcessing() {
+    return configuredCompiler.hasAnnotationProcessing();
+  }
 }

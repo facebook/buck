@@ -294,4 +294,6 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       /* output params */
       Builder<Step> steps,
       BuildableContext buildableContext);
+
+  public abstract boolean hasAnnotationProcessing();
 }

@@ -292,6 +292,11 @@ public class DefaultJavaLibrary
   }
 
   @Override
+  public boolean hasAnnotationProcessing() {
+    return getBuildable().hasAnnotationProcessing();
+  }
+
+  @Override
   public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
     return firstOrderPackageableDeps;
   }

@@ -221,4 +221,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       return Optional.empty();
     }
   }
+
+  public boolean hasAnnotationProcessing() {
+    return jarBuildStepsFactory.hasAnnotationProcessing();
+  }
 }

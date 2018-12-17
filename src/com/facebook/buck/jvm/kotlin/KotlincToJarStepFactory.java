@@ -426,4 +426,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       throw new RuntimeException(e);
     }
   }
+
+  @Override
+  public boolean hasAnnotationProcessing() {
+    return !javacOptions.getAnnotationProcessingParams().isEmpty();
+  }
 }
