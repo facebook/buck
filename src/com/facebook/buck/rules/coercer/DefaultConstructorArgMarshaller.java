@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -144,17 +145,15 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       Object rawValue)
       throws CoerceFailedException {
     TypeCoercer<?> coercer;
-    // When an attribute value contains an instance of {@link
-    // com.google.devtools.build.lib.syntax.SelectorList} it's
-    // coerced by a coercer for {@link com.facebook.buck.core.select.SelectorList}.
+    // When an attribute value contains an instance of {@link ListWithSelects} it's coerced by a
+    // coercer for {@link SelectorList}.
     // The reason why we cannot use coercer from {@code argumentInfo} because {@link
-    // com.google.devtools.build.lib.syntax.SelectorList} is not generic class, but an instance
-    // contains all necessry information to coerce the value into an instance of {@link
-    // com.facebook.buck.core.select.SelectorList} which is a generic class.
-    if (rawValue instanceof com.facebook.buck.parser.syntax.SelectorList) {
+    // ListWithSelects} is not generic class, but an instance contains all necessary information
+    // to coerce the value into an instance of {@link SelectorList} which is a generic class.
+    if (rawValue instanceof ListWithSelects) {
       coercer =
           typeCoercerFactory.typeCoercerForParameterizedType(
-              "SelectorList",
+              "ListWithSelects",
               SelectorList.class,
               argumentInfo.getSetter().getGenericParameterTypes());
     } else {

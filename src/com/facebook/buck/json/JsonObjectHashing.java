@@ -16,7 +16,7 @@
 
 package com.facebook.buck.json;
 
-import com.facebook.buck.parser.syntax.SelectorList;
+import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.util.hashing.StringHashing;
 import com.google.common.collect.ImmutableSortedMap;
@@ -106,10 +106,10 @@ public class JsonObjectHashing {
       }
     } else if (obj instanceof Void || obj == null) {
       hasher.putInt(HashedObjectType.NULL.ordinal());
-    } else if (obj instanceof SelectorList) {
-      SelectorList selectorList = (SelectorList) obj;
+    } else if (obj instanceof ListWithSelects) {
+      ListWithSelects listWithSelects = (ListWithSelects) obj;
       hasher.putInt(HashedObjectType.SELECTOR_LIST.ordinal());
-      List<Object> elements = selectorList.getElements();
+      List<Object> elements = listWithSelects.getElements();
       hasher.putInt(elements.size());
       for (Object collectionEntry : elements) {
         hashJsonObject(hasher, collectionEntry);

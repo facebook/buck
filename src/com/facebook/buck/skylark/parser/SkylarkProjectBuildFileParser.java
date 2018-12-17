@@ -29,7 +29,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.parser.syntax.ImmutableSelectorList;
+import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -167,7 +167,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               // recursively convert list elements
               ImmutableList<Object> elements =
                   (ImmutableList<Object>) pojoizer.convertToPojo(skylarkSelectorList.getElements());
-              return ImmutableSelectorList.of(elements, skylarkSelectorList.getType());
+              return ImmutableListWithSelects.of(elements, skylarkSelectorList.getType());
             }));
     pojoizer.addPojoTransformer(
         PojoTransformer.of(

@@ -34,6 +34,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -705,8 +706,8 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @Test
   public void convertRawAttributesCoercesSelectableValues() throws CoerceFailedException {
-    com.facebook.buck.parser.syntax.ImmutableSelectorList selectorList =
-        com.facebook.buck.parser.syntax.ImmutableSelectorList.of(
+    ImmutableListWithSelects selectorList =
+        ImmutableListWithSelects.of(
             ImmutableList.of(
                 ImmutableSelectorValue.of(ImmutableMap.of("//a:c", "b", "DEFAULT", "c"), "")),
             ImmutableMap.class);

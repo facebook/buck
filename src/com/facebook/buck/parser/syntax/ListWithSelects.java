@@ -22,11 +22,11 @@ import com.google.common.collect.ImmutableList;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
-/** An attribute that holds the concatenation of native values with {@link AbstractSelectorValue} */
+/** An attribute that holds the concatenation of native values with {@link SelectorValue} */
 @Value.Immutable(builder = false, copy = false)
 @JsonDeserialize
-public abstract class SelectorList {
-  /** Ordered list of elements in expression, can be native type or {@link AbstractSelectorValue} */
+public abstract class ListWithSelects {
+  /** Ordered list of elements in expression, can be native type or {@link SelectorValue} */
   @Value.Parameter
   @JsonProperty("elements")
   public abstract ImmutableList<Object> getElements();

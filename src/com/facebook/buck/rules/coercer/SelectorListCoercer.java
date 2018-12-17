@@ -23,6 +23,7 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.parser.syntax.ListWithSelects;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -90,8 +91,7 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    com.facebook.buck.parser.syntax.SelectorList list =
-        (com.facebook.buck.parser.syntax.SelectorList) object;
+    ListWithSelects list = (ListWithSelects) object;
     return selectorListFactory.create(
         cellRoots, filesystem, pathRelativeToProjectRoot, list.getElements(), elementTypeCoercer);
   }

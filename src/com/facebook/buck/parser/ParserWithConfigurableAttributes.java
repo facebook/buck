@@ -37,6 +37,7 @@ import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolv
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
@@ -159,12 +160,11 @@ class ParserWithConfigurableAttributes extends DefaultParser {
       String attributeName,
       Object jsonObject)
       throws CoerceFailedException {
-    if (!(jsonObject instanceof com.facebook.buck.parser.syntax.SelectorList)) {
+    if (!(jsonObject instanceof ListWithSelects)) {
       return jsonObject;
     }
 
-    com.facebook.buck.parser.syntax.SelectorList list =
-        (com.facebook.buck.parser.syntax.SelectorList) jsonObject;
+    ListWithSelects list = (ListWithSelects) jsonObject;
 
     SelectorList<Object> selectorList =
         selectorListFactory.create(

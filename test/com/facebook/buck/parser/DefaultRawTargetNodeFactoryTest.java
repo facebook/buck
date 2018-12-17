@@ -34,6 +34,7 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -75,7 +76,7 @@ public class DefaultRawTargetNodeFactoryTest {
                 .put("deps", ImmutableList.of("//a/b:d", "//a/b:e"))
                 .put(
                     "resources",
-                    com.facebook.buck.parser.syntax.ImmutableSelectorList.of(
+                    ImmutableListWithSelects.of(
                         ImmutableList.of(
                             ImmutableSelectorValue.of(
                                 ImmutableMap.of(
