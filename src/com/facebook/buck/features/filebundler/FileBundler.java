@@ -22,7 +22,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.PatternsMatcher;
@@ -31,10 +30,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -74,7 +71,7 @@ public abstract class FileBundler {
 
   static ImmutableMap<Path, Path> createRelativeMap(
       Path basePath,
-      ProjectFilesystemView filesystemView,
+      ProjectFilesystem filesystem,
       SourcePathResolver resolver,
       Iterable<SourcePath> toCopy) {
     Map<Path, Path> relativePathMap = new LinkedHashMap<>();
@@ -83,13 +80,11 @@ public abstract class FileBundler {
       Path absoluteBasePath = resolver.getAbsolutePath(sourcePath);
       try {
         if (Files.isDirectory(absoluteBasePath)) {
-          ImmutableSet<Path> files =
-              filesystemView.getFilesUnderPath(
-                  absoluteBasePath, EnumSet.of(FileVisitOption.FOLLOW_LINKS));
+          ImmutableSet<Path> files = filesystem.getFilesUnderPath(absoluteBasePath);
           Path absoluteBasePathParent = absoluteBasePath.getParent();
 
           for (Path file : files) {
-            Path absoluteFilePath = filesystemView.resolve(file);
+            Path absoluteFilePath = filesystem.resolve(file);
             findAndAddRelativePathToMap(
                 basePath, absoluteFilePath, file, absoluteBasePathParent, relativePathMap);
           }
@@ -136,8 +131,7 @@ public abstract class FileBundler {
       SourcePathResolver pathResolver,
       PatternsMatcher entriesToExclude) {
 
-    Map<Path, Path> relativeMap =
-        createRelativeMap(basePath, filesystem.asView(), pathResolver, toCopy);
+    Map<Path, Path> relativeMap = createRelativeMap(basePath, filesystem, pathResolver, toCopy);
 
     for (Map.Entry<Path, Path> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();

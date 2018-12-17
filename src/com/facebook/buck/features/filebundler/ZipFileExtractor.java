@@ -54,7 +54,7 @@ public class ZipFileExtractor {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Map<Path, Path> relativeMap =
-        createRelativeMap(target.getBasePath(), filesystem.asView(), pathResolver, toExtract);
+        createRelativeMap(target.getBasePath(), filesystem, pathResolver, toExtract);
 
     for (Map.Entry<Path, Path> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();

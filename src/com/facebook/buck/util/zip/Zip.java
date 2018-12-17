@@ -26,14 +26,12 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -146,9 +144,7 @@ public class Zip {
             return FileVisitResult.CONTINUE;
           }
         };
-    filesystem
-        .asView()
-        .walkRelativeFileTree(baseDir, EnumSet.of(FileVisitOption.FOLLOW_LINKS), pathFileVisitor);
+    filesystem.walkRelativeFileTree(baseDir, pathFileVisitor);
   }
 
   /** Writes entries to zipOut stream. */
