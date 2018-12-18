@@ -16,7 +16,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Objects;
 import java.nio.file.Path;
@@ -24,7 +24,7 @@ import org.immutables.value.Value;
 
 /** A pattern matches build targets that are all in the same directory. */
 @Value.Immutable(builder = false, copy = false)
-@BuckStyleTuple
+@BuckStylePackageVisibleTuple
 abstract class AbstractImmediateDirectoryBuildTargetPattern implements BuildTargetPattern {
 
   protected abstract Path getCellPath();

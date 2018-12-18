@@ -18,13 +18,13 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** A pattern that matches only one build target. */
 @Value.Immutable(builder = false, copy = false)
-@BuckStyleTuple
+@BuckStylePackageVisibleTuple
 abstract class AbstractSingletonBuildTargetPattern implements BuildTargetPattern {
 
   protected abstract UnflavoredBuildTarget getTarget();

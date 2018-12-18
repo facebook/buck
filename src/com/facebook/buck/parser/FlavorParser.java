@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 /** Parses a string containing one or more flavor names. */
-public class FlavorParser {
+class FlavorParser {
   private static final Logger LOG = Logger.get(FlavorParser.class);
   private static final ImmutableMap<String, String> DEPRECATED_FLAVORS =
       ImmutableMap.of("dynamic", "shared");
