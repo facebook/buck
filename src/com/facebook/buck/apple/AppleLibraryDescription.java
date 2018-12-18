@@ -440,6 +440,7 @@ public class AppleLibraryDescription
         ImmutableList.of(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks());
   }

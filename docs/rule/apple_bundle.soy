@@ -131,6 +131,14 @@ non-expired profile that matches the bundle id and entitlements.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'ibtool_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  List of flags to be passed to ibtool during interface builder file compilation.
+  {/param}
+{/call}
+
 {/param} // args
 
 {param examples}
@@ -165,6 +173,18 @@ apple_bundle(
   binary = ':DemoAppBinary',
   deps = [':DemoWatchApp#watch'],
   extension = 'app',
+  info_plist = 'Info.plist',
+)
+</pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+# iOS app using safeAreaInsets delivering to iOS 9.x
+apple_bundle(
+  name = 'DemoIBApp',
+  binary = ':DemoIBAppBinary',
+  deps = [':DemoIBAppResources'],
+  extension = 'app',
+  ibtool_flags = ["--minimum-deployment-target", "9.0"],
   info_plist = 'Info.plist',
 )
 </pre>{/literal}

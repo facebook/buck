@@ -51,6 +51,7 @@ import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -184,6 +185,7 @@ public class AppleBundleDescription
         args.getCodesignFlags(),
         args.getCodesignIdentity(),
         args.getIbtoolModuleFlag(),
+        args.getIbtoolFlags(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks());
   }
@@ -371,6 +373,8 @@ public class AppleBundleDescription
     // Module (so far, it seems to only represent swift module) contains the
     // implementation of the declared element in nib file.
     Optional<Boolean> getIbtoolModuleFlag();
+
+    Optional<ImmutableList<String>> getIbtoolFlags();
 
     @Override
     @Hint(isDep = false)

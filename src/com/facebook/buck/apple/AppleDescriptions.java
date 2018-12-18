@@ -634,6 +634,7 @@ public class AppleDescriptions {
       ImmutableList<String> codesignFlags,
       Optional<String> codesignAdhocIdentity,
       Optional<Boolean> ibtoolModuleFlag,
+      Optional<ImmutableList<String>> ibtoolFlags,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks) {
     AppleCxxPlatform appleCxxPlatform =
@@ -798,6 +799,8 @@ public class AppleDescriptions {
       appleDsym = Optional.empty();
     }
 
+    ImmutableList<String> ibtoolFlagsUnwrapped = ibtoolFlags.orElse(ImmutableList.of());
+
     ImmutableSet<BuildRule> extraBinaries =
         collectFirstLevelExtraBinariesFromDeps(
             appleCxxPlatform.getAppleSdk().getApplePlatform().getType(),
@@ -862,6 +865,7 @@ public class AppleDescriptions {
         codesignFlags,
         codesignAdhocIdentity,
         ibtoolModuleFlag,
+        ibtoolFlagsUnwrapped,
         codesignTimeout,
         copySwiftStdlibToFrameworks);
   }

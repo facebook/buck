@@ -173,13 +173,17 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path binaryPath;
   private final Path bundleBinaryPath;
 
-  private final ImmutableList<String> ibtoolModuleParams;
+  private final boolean ibtoolModuleFlag;
+  private final ImmutableList<String> ibtoolFlags;
 
   private final boolean hasBinary;
   private final boolean cacheable;
   private final boolean verifyResources;
 
   private final Duration codesignTimeout;
+  private static final ImmutableList<String> BASE_IBTOOL_FLAGS =
+      ImmutableList.of(
+          "--output-format", "human-readable-text", "--notices", "--warnings", "--errors");
 
   AppleBundle(
       BuildTarget buildTarget,
@@ -210,6 +214,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<String> codesignFlags,
       Optional<String> codesignIdentity,
       Optional<Boolean> ibtoolModuleFlag,
+      ImmutableList<String> ibtoolFlags,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks) {
     super(buildTarget, projectFilesystem, params);
@@ -258,10 +263,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.verifyResources = verifyResources;
     this.codesignFlags = codesignFlags;
     this.codesignIdentitySubjectName = codesignIdentity;
-    this.ibtoolModuleParams =
-        ibtoolModuleFlag.orElse(false)
-            ? ImmutableList.of("--module", this.binaryName)
-            : ImmutableList.of();
+    this.ibtoolModuleFlag = ibtoolModuleFlag.orElse(false);
+    this.ibtoolFlags = ibtoolFlags;
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
     hasBinary = binary.isPresent() && binary.get().getSourcePathToOutput() != null;
@@ -1014,6 +1017,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path sourcePath,
       Path destinationPath,
       ImmutableList.Builder<Step> stepsBuilder) {
+    ImmutableList<String> modifiedFlags =
+        ImmutableList.<String>builder().addAll(BASE_IBTOOL_FLAGS).addAll(ibtoolFlags).build();
+
     if (platform.getName().contains("watch") || isLegacyWatchApp()) {
       LOG.debug(
           "Compiling storyboard %s to storyboardc %s and linking", sourcePath, destinationPath);
@@ -1021,13 +1027,17 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path compiledStoryboardPath =
           BuildTargetPaths.getScratchPath(
               getProjectFilesystem(), getBuildTarget(), "%s.storyboardc");
+
       stepsBuilder.add(
           new IbtoolStep(
               getProjectFilesystem(),
               ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
-              ibtoolModuleParams,
-              ImmutableList.of("--target-device", "watch", "--compile"),
+              ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
+              ImmutableList.<String>builder()
+                  .addAll(modifiedFlags)
+                  .add("--target-device", "watch", "--compile")
+                  .build(),
               sourcePath,
               compiledStoryboardPath));
 
@@ -1036,8 +1046,11 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
               getProjectFilesystem(),
               ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
-              ibtoolModuleParams,
-              ImmutableList.of("--target-device", "watch", "--link"),
+              ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
+              ImmutableList.<String>builder()
+                  .addAll(modifiedFlags)
+                  .add("--target-device", "watch", "--link")
+                  .build(),
               compiledStoryboardPath,
               destinationPath.getParent()));
 
@@ -1048,13 +1061,14 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
           Files.getNameWithoutExtension(destinationPath.toString()) + ".storyboardc";
 
       Path compiledStoryboardPath = destinationPath.getParent().resolve(compiledStoryboardFilename);
+
       stepsBuilder.add(
           new IbtoolStep(
               getProjectFilesystem(),
               ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
-              ibtoolModuleParams,
-              ImmutableList.of("--compile"),
+              ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
+              ImmutableList.<String>builder().addAll(modifiedFlags).add("--compile").build(),
               sourcePath,
               compiledStoryboardPath));
     }
@@ -1094,8 +1108,12 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem(),
                 ibtool.getEnvironment(resolver),
                 ibtool.getCommandPrefix(resolver),
-                ibtoolModuleParams,
-                ImmutableList.of("--compile"),
+                ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
+                ImmutableList.<String>builder()
+                    .addAll(BASE_IBTOOL_FLAGS)
+                    .addAll(ibtoolFlags)
+                    .addAll(ImmutableList.of("--compile"))
+                    .build(),
                 sourcePath,
                 compiledNibPath));
         break;

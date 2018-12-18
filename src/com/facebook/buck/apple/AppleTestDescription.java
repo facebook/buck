@@ -329,6 +329,7 @@ public class AppleTestDescription
                         args.getCodesignFlags(),
                         args.getCodesignIdentity(),
                         Optional.empty(),
+                        Optional.empty(),
                         appleConfig.getCodesignTimeout(),
                         swiftBuckConfig.getCopyStdlibToFrameworks())));
 

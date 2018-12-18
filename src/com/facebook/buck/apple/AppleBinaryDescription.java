@@ -392,6 +392,7 @@ public class AppleBinaryDescription
         ImmutableList.of(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks());
   }
