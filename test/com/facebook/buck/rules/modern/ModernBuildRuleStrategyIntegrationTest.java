@@ -341,7 +341,9 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
     workspace.addBuckConfigLocalOption(
         "remoteexecution", "remote_port", Integer.toString(remotePort));
+    workspace.addBuckConfigLocalOption("remoteexecution", "insecure", "yes");
     workspace.addBuckConfigLocalOption("remoteexecution", "cas_port", Integer.toString(remotePort));
+    workspace.addBuckConfigLocalOption("remoteexecution", "cas_insecure", "yes");
 
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 

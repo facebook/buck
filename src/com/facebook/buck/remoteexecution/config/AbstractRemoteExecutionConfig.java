@@ -90,11 +90,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   }
 
   public boolean getInsecure() {
-    return getDelegate().getBooleanValue(SECTION, "insecure", true);
+    return getDelegate().getBooleanValue(SECTION, "insecure", false);
   }
 
   public boolean getCasInsecure() {
-    return getDelegate().getBooleanValue(SECTION, "cas_insecure", true);
+    return getDelegate().getBooleanValue(SECTION, "cas_insecure", false);
   }
 
   /** client TLS certificate file in PEM format */
