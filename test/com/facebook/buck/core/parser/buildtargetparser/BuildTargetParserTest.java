@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.core.parser.buildtargetparser;
 
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.hamcrest.Matchers.hasItems;
@@ -28,7 +28,6 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;

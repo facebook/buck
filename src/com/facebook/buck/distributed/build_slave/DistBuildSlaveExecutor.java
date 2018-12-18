@@ -23,6 +23,7 @@ import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteB
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -36,7 +37,6 @@ import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.RemoteCommand;
 import com.facebook.buck.distributed.thrift.SchedulingEnvironmentType;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;

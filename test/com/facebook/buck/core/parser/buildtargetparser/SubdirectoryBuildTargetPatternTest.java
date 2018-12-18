@@ -13,34 +13,38 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.parser;
+package com.facebook.buck.core.parser.buildtargetparser;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
-import java.nio.file.Path;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Paths;
 import org.junit.Test;
 
-public class SingletonBuildTargetPatternTest {
+public class SubdirectoryBuildTargetPatternTest {
 
-  private static final Path ROOT = Paths.get("/opt/src/buck");
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   @Test
   public void testApply() {
-    SingletonBuildTargetPattern pattern =
-        SingletonBuildTargetPattern.of(ROOT, "//src/com/facebook/buck:buck");
+    SubdirectoryBuildTargetPattern pattern =
+        SubdirectoryBuildTargetPattern.of(
+            filesystem.getRootPath(), Paths.get("src/com/facebook/buck/"));
 
     assertTrue(
-        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "buck")));
+        pattern.matches(
+            BuildTargetFactory.newInstance(
+                filesystem.getRootPath(), "//src/com/facebook/buck:buck")));
+    assertTrue(
+        pattern.matches(
+            BuildTargetFactory.newInstance(
+                filesystem.getRootPath(), "//src/com/facebook/buck/bar:bar")));
     assertFalse(
         pattern.matches(
-            BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "otherTarget")));
-    assertFalse(
-        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/foo", "foo")));
-    assertFalse(
-        pattern.matches(
-            BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/bar", "bar")));
+            BuildTargetFactory.newInstance(
+                filesystem.getRootPath(), "//src/com/facebook/foo:foo")));
   }
 }

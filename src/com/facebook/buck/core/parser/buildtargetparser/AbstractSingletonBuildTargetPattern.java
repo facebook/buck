@@ -13,12 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.parser;
+package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import java.nio.file.Path;
 import org.immutables.value.Value;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.base.Splitter;

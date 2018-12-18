@@ -38,7 +38,6 @@ java_immutables_library(
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/core:core",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/coercer:interface",
@@ -55,6 +54,9 @@ java_library(
         ["*.java"],
         exclude = TYPES_SRCS + UTILS_SRCS,
     ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+    ],
     tests = [
         "//test/com/facebook/buck/rules/query:query",
     ],
@@ -70,7 +72,6 @@ java_library(
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/core:core",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/util:exceptions",

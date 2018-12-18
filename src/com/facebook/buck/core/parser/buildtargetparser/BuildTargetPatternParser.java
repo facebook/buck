@@ -14,13 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.UnknownCellException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.nio.file.Path;

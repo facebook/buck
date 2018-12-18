@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import java.nio.file.Path;
 
 public class BuildTargetPatternTargetNodeParser extends BuildTargetPatternParser<TargetNodeSpec> {

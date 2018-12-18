@@ -76,7 +76,6 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
-        ":rule_pattern",
         "//src-gen:thrift",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/config:config",
@@ -87,6 +86,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/core/resources:resources",
         "//src/com/facebook/buck/core/rules/config:config",
         "//src/com/facebook/buck/core/rules/config/impl:impl",
@@ -132,38 +132,5 @@ java_immutables_library(
         "//third-party/java/concurrent-locks:concurrent-locks",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
-    ],
-)
-
-java_immutables_library(
-    name = "rule_pattern",
-    srcs = [
-        "AbstractImmediateDirectoryBuildTargetPattern.java",
-        "AbstractSingletonBuildTargetPattern.java",
-        "AbstractSubdirectoryBuildTargetPattern.java",
-        "BuildTargetParser.java",
-        "BuildTargetPatternParser.java",
-        "FlavorParser.java",
-    ],
-    exported_deps = [
-        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
-    ],
-    tests = [
-        "//test/com/facebook/buck/parser:integration",
-        "//test/com/facebook/buck/parser:parser",
-        "//test/com/facebook/buck/parser:unit",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//src/com/facebook/buck/core/cell:cell",
-        "//src/com/facebook/buck/core/exceptions:exceptions",
-        "//src/com/facebook/buck/core/model/impl:impl",
-        "//src/com/facebook/buck/core/util/log:log",
-        "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:util",
-        "//third-party/java/guava:guava",
     ],
 )

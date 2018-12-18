@@ -38,11 +38,10 @@ import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.visibility.BuildTargetVisibilityPattern;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Paths;
+import com.google.common.collect.Iterables;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Test;
@@ -132,14 +131,10 @@ public class DefaultRawTargetNodeFactoryTest {
                         .collect(ImmutableList.toImmutableList()))
             .collect(ImmutableSet.toImmutableSet()));
     assertEquals(
-        ImmutableSet.of(
-            BuildTargetVisibilityPattern.of(
-                SubdirectoryBuildTargetPattern.of(cell.getRoot(), Paths.get("a")))),
-        rawTargetNode.getVisibilityPatterns());
+        "//a/...",
+        Iterables.getFirst(rawTargetNode.getVisibilityPatterns(), null).getRepresentation());
     assertEquals(
-        ImmutableSet.of(
-            BuildTargetVisibilityPattern.of(
-                SubdirectoryBuildTargetPattern.of(cell.getRoot(), Paths.get("b")))),
-        rawTargetNode.getWithinViewPatterns());
+        "//b/...",
+        Iterables.getFirst(rawTargetNode.getWithinViewPatterns(), null).getRepresentation());
   }
 }

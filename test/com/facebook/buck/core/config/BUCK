@@ -10,7 +10,6 @@ standard_java_test(
         "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util/concurrent:concurrent",
@@ -71,7 +70,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/cell/impl:impl",
-        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/filesystem:testutil",

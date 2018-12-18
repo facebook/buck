@@ -27,7 +27,6 @@ java_test(
         "//src/com/facebook/buck/jvm/java/tracing:tracing",
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/core/model:model",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/rulekey:rulekey",

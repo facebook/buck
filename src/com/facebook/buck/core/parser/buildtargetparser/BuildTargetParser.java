@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.UnknownCellException;

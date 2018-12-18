@@ -14,7 +14,6 @@ buck_module(
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step:step",

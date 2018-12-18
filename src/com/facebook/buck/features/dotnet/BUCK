@@ -14,7 +14,6 @@ buck_module(
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",

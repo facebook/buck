@@ -56,7 +56,6 @@ java_binary(
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test/result/type:type",

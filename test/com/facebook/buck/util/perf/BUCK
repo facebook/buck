@@ -19,7 +19,6 @@ standard_java_test(
         "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/log:log",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test/result/type:type",
