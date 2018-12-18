@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.parser.BuildTargetPattern;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;

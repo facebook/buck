@@ -17,7 +17,7 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.parser.BuildTargetPattern;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import java.util.Optional;
 

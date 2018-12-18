@@ -16,6 +16,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Objects;
