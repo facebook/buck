@@ -25,6 +25,11 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
+/**
+ * {@link PackageBoundaryChecker} implementation that throws an exception if any file in a set does
+ * not belong to the same package as provided build target only if cell configuration allows that,
+ * otherwise noop.
+ */
 public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
 
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
@@ -37,15 +42,17 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
   public void enforceBuckPackageBoundaries(
       Cell targetCell, BuildTarget target, ImmutableSet<Path> paths) {
 
-    if (!targetCell.isEnforcingBuckPackageBoundaries(target.getBasePath())) {
+    Path basePath = target.getBasePath();
+
+    if (!targetCell.isEnforcingBuckPackageBoundaries(basePath)) {
       return;
     }
 
     BuildFileTree buildFileTree = buildFileTrees.getUnchecked(targetCell);
-    Path basePath = target.getBasePath();
+    boolean isBasePathEmpty = basePath.equals(targetCell.getFilesystem().getPath(""));
 
     for (Path path : paths) {
-      if (!basePath.toString().isEmpty() && !path.startsWith(basePath)) {
+      if (!isBasePathEmpty && !path.startsWith(basePath)) {
         throw new HumanReadableException(
             "'%s' in '%s' refers to a parent directory.", basePath.relativize(path), target);
       }
@@ -63,6 +70,7 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
                     + "More info at:\nhttps://buckbuild.com/about/overview.html\n",
                 target, path));
       }
+
       if (!ancestor.get().equals(basePath)) {
         String buildFileName = targetCell.getBuildFileName();
         Path buckFile = ancestor.get().resolve(buildFileName);
