@@ -38,7 +38,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractProvisioningProfileMetadata implements AddsToRuleKey {
-  private static final Pattern BUNDLE_ID_PATTERN = Pattern.compile("^([A-Z0-9]{10,10})\\.(.+)$");
+  private static final Pattern BUNDLE_ID_PATTERN = Pattern.compile("^([A-Z0-9]{10})\\.(.+)$");
 
   /**
    * Returns a (prefix, identifier) pair for which the profile is valid.
