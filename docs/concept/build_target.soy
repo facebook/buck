@@ -31,10 +31,10 @@ A <em>build target</em> is a string that identifies a build rule in your
 project. Build targets are used as arguments 
 to Buck commands, such as {call buck.cmd_build /} and {call buck.cmd_run /}.
 Build targets are also used as arguments 
-to {call buck.concept_link}{param page: 'build_rule' /}{param name:
-'build rules' /}{/call} to enable one build rule to reference another. 
-For example, a build rule might use a build target to reference another 
-rule in order to specify that rule as a <em>dependency</em>.
+to {call buck.concept_link}{param page: 'build_rule' /}{param name: 'build rules' /}{/call} to 
+enable one build rule to reference another.  For example, a build rule 
+might use a build target to reference another rule in order to specify 
+that rule as a <em>dependency</em>.
 </p>
 
 
@@ -81,7 +81,7 @@ A fully-qualified build target has three components:
 Note that the name of the build file itself&mdash;usually
 BUCK&mdash;does <em>not</em> occur in the build target. All build files
 within a given Buck project must have the same name&mdash;defined 
-in the <code>[buildfile].name</code> entry of <code>.buckconfig</code>. 
+in the {call buckconfig.buildfile_name /} entry of <code>.buckconfig</code>. 
 Therefore, it is unnecessary to include the name in the target.
 </p>
 

@@ -209,6 +209,14 @@
 {/template}
 
 /***/
+{template .buildfile_name}
+{call .entry_link}
+  {param section: 'buildfile' /}
+  {param entry: 'name' /}
+{/call}
+{/template}
+
+/***/
 {template .cache}
 {call .section_link}
   {param section: 'cache' /}
