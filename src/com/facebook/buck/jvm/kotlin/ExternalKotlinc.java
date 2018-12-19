@@ -175,13 +175,18 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   }
 
   @Override
-  public Path getAnnotationProcessorPath() {
+  public Path getAnnotationProcessorPath(SourcePathResolver sourcePathResolver) {
     throw new IllegalStateException("Not supported yet");
   }
 
   @Override
-  public Path getStdlibPath() {
+  public Path getStdlibPath(SourcePathResolver sourcePathResolver) {
     throw new IllegalStateException("Not supported yet");
+  }
+
+  @Override
+  public ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver) {
+    return ImmutableList.of();
   }
 
   @Override

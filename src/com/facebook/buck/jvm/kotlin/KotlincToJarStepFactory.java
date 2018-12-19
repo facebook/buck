@@ -318,8 +318,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     ImmutableList<String> kaptPluginOptions =
         ImmutableList.<String>builder()
-            .add(AP_CLASSPATH_ARG + kotlinc.getAnnotationProcessorPath())
-            .add(AP_CLASSPATH_ARG + kotlinc.getStdlibPath())
+            .add(AP_CLASSPATH_ARG + kotlinc.getAnnotationProcessorPath(resolver))
+            .add(AP_CLASSPATH_ARG + kotlinc.getStdlibPath(resolver))
             .addAll(pluginFields)
             .add(SOURCES_ARG + filesystem.resolve(sourcesOutput))
             .add(CLASSES_ARG + filesystem.resolve(classesOutput))
@@ -345,7 +345,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             sourceFilePaths,
             pathToSrcsList,
             ImmutableSortedSet.<Path>naturalOrder()
-                .add(kotlinc.getStdlibPath())
+                .add(kotlinc.getStdlibPath(resolver))
                 .addAll(
                     Optional.ofNullable(extraClassPath.getExtraClasspath())
                         .orElse(ImmutableList.of()))
@@ -360,7 +360,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .add(LOAD_BUILTINS_FROM)
                 .add(PLUGIN)
                 .add(KAPT3_PLUGIN + APT_MODE + "stubs," + join)
-                .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath())
+                .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath(resolver))
                 .build(),
             filesystem,
             Optional.of(workingDirectory)));
@@ -373,7 +373,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             sourceFilePaths,
             pathToSrcsList,
             ImmutableSortedSet.<Path>naturalOrder()
-                .add(kotlinc.getStdlibPath())
+                .add(kotlinc.getStdlibPath(resolver))
                 .addAll(
                     Optional.ofNullable(extraClassPath.getExtraClasspath())
                         .orElse(ImmutableList.of()))
@@ -388,7 +388,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .add(LOAD_BUILTINS_FROM)
                 .add(PLUGIN)
                 .add(KAPT3_PLUGIN + APT_MODE + "apt," + join)
-                .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath())
+                .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath(resolver))
                 .build(),
             filesystem,
             Optional.of(workingDirectory)));

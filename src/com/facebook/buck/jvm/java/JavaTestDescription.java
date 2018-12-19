@@ -166,7 +166,7 @@ public class JavaTestDescription
         projectFilesystem,
         params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary)),
         testsLibrary,
-        /* additionalClasspathEntries */ ImmutableSet.of(),
+        Optional.empty(),
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),

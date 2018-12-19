@@ -61,9 +61,7 @@ import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ZipFileTraversal;
-import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -111,7 +109,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final JavaLibrary compiledTestsLibrary;
 
-  private final ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries;
+  private final Optional<AdditionalClasspathEntriesProvider> additionalClasspathEntriesProvider;
+
   private final Tool javaRuntimeLauncher;
 
   private final ImmutableList<Arg> vmArgs;
@@ -154,7 +153,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       JavaLibrary compiledTestsLibrary,
-      ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
+      Optional<AdditionalClasspathEntriesProvider> additionalClasspathEntriesProvider,
       Set<String> labels,
       Set<String> contacts,
       TestType testType,
@@ -171,17 +170,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<SourcePath> unbundledResourcesRoot) {
     super(buildTarget, projectFilesystem, params);
     this.compiledTestsLibrary = compiledTestsLibrary;
-
-    for (Either<SourcePath, Path> path : additionalClasspathEntries) {
-      if (path.isRight()) {
-        Preconditions.checkState(
-            path.getRight().isAbsolute(),
-            "Additional classpath entries must be absolute but got %s",
-            path.getRight());
-      }
-    }
-
-    this.additionalClasspathEntries = additionalClasspathEntries;
+    this.additionalClasspathEntriesProvider = additionalClasspathEntriesProvider;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
@@ -694,16 +683,12 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                                 .map(buildContext.getSourcePathResolver()::getAbsolutePath)
                                 .collect(ImmutableSet.toImmutableSet()))
                         .addAll(
-                            additionalClasspathEntries
-                                .stream()
+                            additionalClasspathEntriesProvider
                                 .map(
                                     e ->
-                                        e.isLeft()
-                                            ? buildContext
-                                                .getSourcePathResolver()
-                                                .getAbsolutePath(e.getLeft())
-                                            : e.getRight())
-                                .collect(ImmutableSet.toImmutableSet()))
+                                        e.getAdditionalClasspathEntries(
+                                            buildContext.getSourcePathResolver()))
+                                .orElse(ImmutableList.of()))
                         .addAll(getBootClasspathEntries())
                         .build();
                 getProjectFilesystem()
@@ -714,5 +699,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               }
             })
         .build();
+  }
+
+  public interface AdditionalClasspathEntriesProvider {
+    ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolver resolver);
   }
 }
