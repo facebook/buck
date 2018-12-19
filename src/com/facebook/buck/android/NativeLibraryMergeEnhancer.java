@@ -395,10 +395,7 @@ class NativeLibraryMergeEnhancer {
     for (ImmutableSet<MergedNativeLibraryConstituents> fullCycle : graph.findCycles()) {
       HashSet<MergedNativeLibraryConstituents> partialCycle = new LinkedHashSet<>();
       MergedNativeLibraryConstituents item = fullCycle.iterator().next();
-      while (true) {
-        if (partialCycle.contains(item)) {
-          break;
-        }
+      while (!partialCycle.contains(item)) {
         partialCycle.add(item);
         item =
             Sets.intersection(ImmutableSet.copyOf(graph.getOutgoingNodesFor(item)), fullCycle)
