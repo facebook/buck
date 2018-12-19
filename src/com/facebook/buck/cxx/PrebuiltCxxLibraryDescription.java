@@ -782,10 +782,7 @@ public class PrebuiltCxxLibraryDescription
         }
         Optional<Linkage> inferredLinkage =
             paths.getLinkage(projectFilesystem, graphBuilder, cellRoots, cxxPlatform);
-        if (inferredLinkage.isPresent()) {
-          return inferredLinkage.get();
-        }
-        return Linkage.ANY;
+        return inferredLinkage.orElse(Linkage.ANY);
       }
 
       @Override

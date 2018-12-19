@@ -129,10 +129,7 @@ public class FilterResourcesSteps {
     this.enableStringWhitelisting = enableStringWhitelisting;
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.locales = locales;
-    this.localizedStringFileName =
-        localizedStringFileName.isPresent()
-            ? localizedStringFileName.get()
-            : DEFAULT_STRINGS_FILE_NAME;
+    this.localizedStringFileName = localizedStringFileName.orElse(DEFAULT_STRINGS_FILE_NAME);
     this.filteredDirectoryCopier = filteredDirectoryCopier;
     this.targetDensities = targetDensities;
     this.drawableFinder = drawableFinder;

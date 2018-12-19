@@ -66,9 +66,7 @@ public class PatternMatchedCollection<T>
       TargetNodeTranslator translator) {
     Optional<ImmutableList<Pair<Pattern, T>>> translatedValues =
         translator.translate(cellPathResolver, pattern, values);
-    return translatedValues.isPresent()
-        ? Optional.of(new PatternMatchedCollection<>(translatedValues.get()))
-        : Optional.empty();
+    return translatedValues.map(PatternMatchedCollection::new);
   }
 
   public static <T> PatternMatchedCollection<T> of() {

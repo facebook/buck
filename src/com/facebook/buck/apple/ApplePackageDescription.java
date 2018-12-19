@@ -216,11 +216,10 @@ public class ApplePackageDescription
       Optional<ApplePackageConfig> packageConfig =
           config.getPackageConfigForPlatform(platform.getAppleSdk().getApplePlatform());
       packageConfigs.put(
-          packageConfig.isPresent()
-              ? Optional.of(
+          packageConfig.map(
+              applePackageConfig ->
                   ApplePackageConfigAndPlatformInfo.of(
-                      packageConfig.get(), macroExpander, platform))
-              : Optional.empty(),
+                      applePackageConfig, macroExpander, platform)),
           flavor);
     }
 

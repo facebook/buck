@@ -132,7 +132,7 @@ public class AuditInputCommand extends AbstractCommand {
       @Override
       public void visit(TargetNode<?> node) {
         Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
-        Cell cell = cellRoot.isPresent() ? cellRoot.get() : params.getCell();
+        Cell cell = cellRoot.orElse(params.getCell());
         LOG.debug("Looking at inputs for %s", node.getBuildTarget().getFullyQualifiedName());
 
         ImmutableSortedSet.Builder<Path> targetInputs =
@@ -170,7 +170,7 @@ public class AuditInputCommand extends AbstractCommand {
       @Override
       public void visit(TargetNode<?> node) {
         Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
-        Cell cell = cellRoot.isPresent() ? cellRoot.get() : params.getCell();
+        Cell cell = cellRoot.orElse(params.getCell());
         for (Path input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {

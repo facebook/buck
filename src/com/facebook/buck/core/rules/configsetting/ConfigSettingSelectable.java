@@ -128,10 +128,7 @@ public class ConfigSettingSelectable implements Selectable {
         String.format("Config option should be in format 'section.option', but given: %s", key));
 
     Optional<String> currentValue = buckConfig.getValue(keyParts[0], keyParts[1]);
-    if (!currentValue.isPresent()) {
-      return false;
-    }
-    return currentValue.get().equals(value);
+    return currentValue.map(curValue -> curValue.equals(value)).orElse(false);
   }
 
   @Override

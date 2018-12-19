@@ -62,8 +62,6 @@ public class BuildInfoStoreManager implements AutoCloseable {
     Optional<String> metadataString = filesystem.readFileIfItExists(metadataPath);
     // If we haven't written metadata.type at this point, we must be in a fresh directory.  Use the
     // default for this build engine.
-    return metadataString.isPresent()
-        ? MetadataStorage.valueOf(metadataString.get())
-        : metadataStorage;
+    return metadataString.map(MetadataStorage::valueOf).orElse(metadataStorage);
   }
 }

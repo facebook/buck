@@ -232,9 +232,7 @@ public class BuckConfig {
   /** @return the parsed BuildTarget in the given section and field, if set. */
   public Optional<BuildTarget> getBuildTarget(String section, String field) {
     Optional<String> target = getValue(section, field);
-    return target.isPresent()
-        ? Optional.of(getBuildTargetForFullyQualifiedTarget(target.get()))
-        : Optional.empty();
+    return target.map(this::getBuildTargetForFullyQualifiedTarget);
   }
 
   /**
@@ -709,13 +707,12 @@ public class BuckConfig {
 
   public Optional<Path> getPath(String sectionName, String name, boolean isCellRootRelative) {
     Optional<String> pathString = getValue(sectionName, name);
-    return pathString.isPresent()
-        ? Optional.of(
+    return pathString.map(
+        path ->
             convertPathWithError(
-                pathString.get(),
+                path,
                 isCellRootRelative,
-                String.format("Overridden %s:%s path not found", sectionName, name)))
-        : Optional.empty();
+                String.format("Overridden %s:%s path not found", sectionName, name)));
   }
 
   /**
@@ -797,10 +794,8 @@ public class BuckConfig {
 
   public Optional<ImmutableList<String>> getExternalTestRunner() {
     Optional<String> value = getValue("test", "external_runner");
-    if (!value.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get())));
+    return value.map(
+        configValue -> ImmutableList.copyOf(Splitter.on(' ').splitToList(configValue)));
   }
 
   /**

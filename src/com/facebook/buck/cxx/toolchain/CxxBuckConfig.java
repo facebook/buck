@@ -422,11 +422,8 @@ public class CxxBuckConfig {
 
   public Optional<RuleScheduleInfo> getLinkScheduleInfo() {
     Optional<Long> linkWeight = delegate.getLong(cxxSection, LINK_WEIGHT);
-    if (!linkWeight.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        RuleScheduleInfo.builder().setJobsMultiplier(linkWeight.get().intValue()).build());
+    return linkWeight.map(
+        weight -> RuleScheduleInfo.builder().setJobsMultiplier(weight.intValue()).build());
   }
 
   public boolean shouldCacheLinks() {

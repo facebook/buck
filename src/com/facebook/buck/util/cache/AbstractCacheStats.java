@@ -68,11 +68,7 @@ abstract class AbstractCacheStats {
    */
   public Optional<Double> hitRate() {
     Optional<Long> requestCount = getRequestCount();
-    if (requestCount.isPresent()) {
-      return Optional.of(
-          (requestCount.get() == 0) ? 1.0 : (double) getHitCount().get() / requestCount.get());
-    }
-    return Optional.empty();
+    return requestCount.map(aLong -> (aLong == 0) ? 1.0 : (double) getHitCount().get() / aLong);
   }
 
   /**

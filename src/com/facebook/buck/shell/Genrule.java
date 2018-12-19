@@ -206,7 +206,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     this.pathToSrcDirectory =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__srcs");
-    this.type = super.getType() + (type.isPresent() ? "_" + type.get() : "");
+    this.type = super.getType() + (type.map(typeStr -> "_" + typeStr).orElse(""));
     this.isWorkerGenrule = this.isWorkerGenrule();
     this.enableSandboxingInGenrule = enableSandboxingInGenrule;
 

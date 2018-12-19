@@ -73,13 +73,9 @@ public class WatchmanDiagReportCollector {
 
     Optional<Path> optionalExecutable =
         executableFinder.getOptionalExecutable(Paths.get("watchman-diag"), environment);
-    if (!optionalExecutable.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        new WatchmanDiagReportCollector(
-            projectFilesystem,
-            optionalExecutable.get().toAbsolutePath().toString(),
-            processExecutor));
+    return optionalExecutable.map(
+        path ->
+            new WatchmanDiagReportCollector(
+                projectFilesystem, path.toAbsolutePath().toString(), processExecutor));
   }
 }

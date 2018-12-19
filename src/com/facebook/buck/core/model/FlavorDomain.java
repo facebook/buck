@@ -83,12 +83,8 @@ public class FlavorDomain<T> {
 
   public Optional<Map.Entry<Flavor, T>> getFlavorAndValue(Set<Flavor> flavors) {
     Optional<Flavor> flavor = getFlavor(flavors);
-    if (!flavor.isPresent()) {
-      return Optional.empty();
-    }
-
-    return Optional.of(
-        new AbstractMap.SimpleImmutableEntry<>(flavor.get(), translation.get(flavor.get())));
+    return flavor.map(
+        theFlavor -> new AbstractMap.SimpleImmutableEntry<>(theFlavor, translation.get(theFlavor)));
   }
 
   public Optional<Map.Entry<Flavor, T>> getFlavorAndValue(BuildTarget buildTarget) {

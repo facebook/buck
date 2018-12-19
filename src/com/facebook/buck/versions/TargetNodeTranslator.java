@@ -163,9 +163,7 @@ public abstract class TargetNodeTranslator {
       DefaultBuildTargetSourcePath val) {
     BuildTarget target = val.getTarget();
     Optional<BuildTarget> translatedTarget = translate(cellPathResolver, pattern, target);
-    return translatedTarget.isPresent()
-        ? Optional.of(DefaultBuildTargetSourcePath.of(translatedTarget.get()))
-        : Optional.empty();
+    return translatedTarget.map(DefaultBuildTargetSourcePath::of);
   }
 
   public Optional<SourceWithFlags> translateSourceWithFlags(
@@ -174,9 +172,7 @@ public abstract class TargetNodeTranslator {
       SourceWithFlags val) {
     Optional<SourcePath> translatedSourcePath =
         translate(cellPathResolver, pattern, val.getSourcePath());
-    return translatedSourcePath.isPresent()
-        ? Optional.of(SourceWithFlags.of(translatedSourcePath.get(), val.getFlags()))
-        : Optional.empty();
+    return translatedSourcePath.map(sourcePath -> SourceWithFlags.of(sourcePath, val.getFlags()));
   }
 
   @SuppressWarnings("unchecked")

@@ -288,11 +288,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
-    if (productName.isPresent()) {
-      return productName.get();
-    } else {
-      return buildTarget.getShortName();
-    }
+    return productName.orElse(buildTarget.getShortName());
   }
 
   public static Path getBundleRoot(
@@ -446,9 +442,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new PlistProcessStep(
             getProjectFilesystem(),
             infoPlistSubstitutionTempPath,
-            assetCatalog.isPresent()
-                ? Optional.of(assetCatalog.get().getOutputPlist())
-                : Optional.empty(),
+            assetCatalog.map(AppleAssetCatalog::getOutputPlist),
             infoPlistOutputPath,
             getInfoPlistAdditionalKeys(),
             getInfoPlistOverrideKeys(),

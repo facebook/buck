@@ -211,7 +211,7 @@ public class StampedeBuildClient {
     LOG.info(
         String.format(
             "All Stampede local builds finished. Final local exit code [%d]",
-            localExitCode.isPresent() ? localExitCode.get().getCode() : -1));
+            localExitCode.map(ExitCode::getCode).orElse(-1)));
 
     return localExitCode;
   }

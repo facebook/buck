@@ -188,8 +188,7 @@ public class DistBuildRunner {
         localBuildSucceeded
             ? "finished"
             : String.format(
-                "failed [exitCode=%d]",
-                localBuildExitCode.isPresent() ? localBuildExitCode.get().getCode() : -1);
+                "failed [exitCode=%d]", localBuildExitCode.map(ExitCode::getCode).orElse(-1));
     eventBus.post(new StampedeLocalBuildStatusEvent(statusString));
 
     localBuildFinishedFirst.set(true);

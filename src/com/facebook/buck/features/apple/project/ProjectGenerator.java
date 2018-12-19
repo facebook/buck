@@ -4370,11 +4370,7 @@ public class ProjectGenerator {
   private boolean isLibraryWithSwiftSources(TargetNode<?> input) {
     Optional<TargetNode<CxxLibraryDescription.CommonArg>> library =
         getLibraryNode(targetGraph, input);
-    if (!library.isPresent()) {
-      return false;
-    }
-
-    return projGenerationStateCache.targetContainsSwiftSourceCode(library.get());
+    return library.filter(projGenerationStateCache::targetContainsSwiftSourceCode).isPresent();
   }
 
   /** @return product type of a bundle containing a dylib. */

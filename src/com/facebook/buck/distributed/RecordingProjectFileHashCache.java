@@ -357,7 +357,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
 
     LOG.info(
         "Stampede always_materialize_whitelist=[%s] cell=[%s].",
-        whitelist.isPresent() ? Joiner.on(", ").join(whitelist.get()) : "",
+        whitelist.map(whitelistStrs -> Joiner.on(", ").join(whitelistStrs)).orElse(""),
         delegate.getFilesystem().getRootPath().toString());
 
     try {

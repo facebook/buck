@@ -100,6 +100,6 @@ public class GoBuckConfig {
    */
   Optional<Path> getProjectPath() {
     Optional<String> path = delegate.getValue(SECTION, PROJECT_PATH);
-    return (path.isPresent()) ? Optional.of(Paths.get(path.get())) : Optional.empty();
+    return path.map(pathStr -> Paths.get(pathStr));
   }
 }

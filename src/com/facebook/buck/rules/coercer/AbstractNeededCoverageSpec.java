@@ -49,11 +49,8 @@ abstract class AbstractNeededCoverageSpec implements TargetTranslatable<NeededCo
       TargetNodeTranslator translator) {
     Optional<BuildTarget> newBuildTarget =
         translator.translate(cellPathResolver, pattern, getBuildTarget());
-    if (!newBuildTarget.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        NeededCoverageSpec.of(
-            getNeededCoverageRatioPercentage(), newBuildTarget.get(), getPathName()));
+    return newBuildTarget.map(
+        buildTarget ->
+            NeededCoverageSpec.of(getNeededCoverageRatioPercentage(), buildTarget, getPathName()));
   }
 }

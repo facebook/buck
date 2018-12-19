@@ -311,7 +311,7 @@ public class ResourcesXml extends ResChunk {
     String shortNs = nsMap.get(namespace);
     int nameIndex = buf.getInt(4);
     String name = strings.getString(nameIndex);
-    int resValue = refMap.isPresent() ? refMap.get().getRef(nameIndex) : -1;
+    int resValue = refMap.map(ref -> ref.getRef(nameIndex)).orElse(-1);
     int rawValueIndex = buf.getInt(8);
     String rawValue = rawValueIndex < 0 ? null : strings.getOutputNormalizedString(rawValueIndex);
     int attrType = buf.get(15);

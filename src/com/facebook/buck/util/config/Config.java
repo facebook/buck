@@ -280,12 +280,12 @@ public class Config {
 
   public Optional<Long> getLong(String sectionName, String propertyName) {
     Optional<String> value = getValue(sectionName, propertyName);
-    return value.isPresent() ? Optional.of(Long.valueOf(value.get())) : Optional.empty();
+    return value.map(Long::valueOf);
   }
 
   public OptionalInt getInteger(String sectionName, String propertyName) {
     Optional<String> value = getValue(sectionName, propertyName);
-    return value.isPresent() ? OptionalInt.of(Integer.parseInt(value.get())) : OptionalInt.empty();
+    return value.map(str -> OptionalInt.of(Integer.parseInt(str))).orElseGet(OptionalInt::empty);
   }
 
   public Optional<Float> getFloat(String sectionName, String propertyName) {

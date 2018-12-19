@@ -75,9 +75,6 @@ public class DoctorInteractiveReport extends AbstractReport {
 
   @Override
   protected Optional<UserReport> getUserReport() {
-    if (issueDescription.isPresent()) {
-      return Optional.of(UserReport.of("", issueDescription.get()));
-    }
-    return Optional.empty();
+    return issueDescription.map(issue -> UserReport.of("", issue));
   }
 }

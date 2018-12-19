@@ -105,8 +105,7 @@ public class BuildLogHelper {
       Optional<Long> finishTimestampMs =
           readObjectFieldFromLog(machineReadableLogFile, PREFIX_BUILD_FINISHED, "timestamp");
 
-      builder.setExitCode(
-          exitCode.isPresent() ? OptionalInt.of(exitCode.get()) : OptionalInt.empty());
+      builder.setExitCode(exitCode.map(OptionalInt::of).orElseGet(OptionalInt::empty));
       if (finishTimestampMs.isPresent() && startTimestampMs.isPresent()) {
         builder.setBuildTimeMs(
             OptionalInt.of((int) (finishTimestampMs.get() - startTimestampMs.get())));

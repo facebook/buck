@@ -78,10 +78,7 @@ abstract class AbstractToolConfig implements ConfigView<BuckConfig> {
 
   public Optional<Tool> getTool(String section, String field, BuildRuleResolver resolver) {
     Optional<ToolProvider> provider = getToolProvider(section, field);
-    if (!provider.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(provider.get().resolve(resolver));
+    return provider.map(toolProvider -> toolProvider.resolve(resolver));
   }
 
   public Tool getRequiredTool(String section, String field, BuildRuleResolver resolver) {

@@ -118,9 +118,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     Optional<Long> processTimeoutMs =
-        testRuleTimeoutMs.isPresent()
-            ? Optional.of(testRuleTimeoutMs.get() + PROCESS_TIMEOUT_EXTRA_MS)
-            : Optional.empty();
+        testRuleTimeoutMs.map(timeout -> timeout + PROCESS_TIMEOUT_EXTRA_MS);
 
     SourcePathResolver resolver = buildContext.getSourcePathResolver();
     ImmutableList.Builder<String> args = ImmutableList.builder();

@@ -299,7 +299,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     @JsonView(JsonViews.MachineReadableLog.class)
     public Optional<String> getSuccessTypeName() {
-      return successType.isPresent() ? Optional.of(successType.get().name()) : Optional.empty();
+      return successType.map(Enum::name);
     }
 
     @JsonIgnore

@@ -430,15 +430,13 @@ public class AdbHelper implements AndroidDevicesHelper {
           serialMatches = device.getSerialNumber().equals(getEnvironment().get(SERIAL_NUMBER_ENV));
         }
 
-        boolean deviceTypeMatches;
-        if (emulatorsOnly.isPresent()) {
-          // Only devices of specific type are accepted:
-          // either real devices only or emulators only.
-          deviceTypeMatches = (emulatorsOnly.get() == createDevice(device).isEmulator());
-        } else {
-          // All online devices match.
-          deviceTypeMatches = true;
-        }
+        // Only devices of specific type are accepted:
+        // either real devices only or emulators only.
+        // All online devices match.
+        boolean deviceTypeMatches =
+            emulatorsOnly
+                .map(isEmulatorOnly -> (isEmulatorOnly == createDevice(device).isEmulator()))
+                .orElse(true);
         passed = serialMatches && deviceTypeMatches;
       }
 

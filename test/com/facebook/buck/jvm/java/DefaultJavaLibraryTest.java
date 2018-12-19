@@ -1221,9 +1221,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps));
 
     JavacOptions javacOptions =
-        spoolMode.isPresent()
-            ? JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setSpoolMode(spoolMode.get()).build()
-            : DEFAULT_JAVAC_OPTIONS;
+        spoolMode
+            .map(spool -> JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setSpoolMode(spool).build())
+            .orElse(DEFAULT_JAVAC_OPTIONS);
 
     JavaLibraryDeps.Builder depsBuilder = new JavaLibraryDeps.Builder(graphBuilder);
     exportedDeps

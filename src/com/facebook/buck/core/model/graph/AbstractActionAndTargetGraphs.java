@@ -46,7 +46,7 @@ abstract class AbstractActionAndTargetGraphs {
       Optional<TargetGraphAndBuildTargets> versionedTargetGraph) {
     // If a versioned target graph was produced then we always use this for the local build,
     // otherwise the unversioned graph is used.
-    return versionedTargetGraph.isPresent() ? versionedTargetGraph.get() : unversionedTargetGraph;
+    return versionedTargetGraph.orElse(unversionedTargetGraph);
   }
 
   /** Helper method to get the appropriate {@link TargetGraph} to use for local builds. */

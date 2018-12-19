@@ -263,12 +263,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   private Optional<Path> getOptionalPath(String sectionName, String propertyName) {
     Optional<String> pathString = delegate.getValue(sectionName, propertyName);
-    if (pathString.isPresent()) {
-      return Optional.of(
-          delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(pathString.get())));
-    } else {
-      return Optional.empty();
-    }
+    return pathString.map(
+        path -> delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(path)));
   }
 
   public boolean shouldUseHeaderMapsInXcodeProject() {
