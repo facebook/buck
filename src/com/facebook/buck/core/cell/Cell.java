@@ -36,7 +36,7 @@ import java.util.Optional;
  */
 public interface Cell {
   /** Whether or not the cell has changed significantly enough to invalidate caches */
-  public enum IsCompatibleForCaching {
+  enum IsCompatibleForCaching {
     IS_COMPATIBLE,
     FILESYSTEM_CHANGED,
     BUCK_CONFIG_CHANGED,
