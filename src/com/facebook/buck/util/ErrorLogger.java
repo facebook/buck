@@ -178,11 +178,7 @@ public class ErrorLogger {
         return true;
       }
 
-      if (isNoSpaceOnDevice()) {
-        return true;
-      }
-
-      return false;
+      return isNoSpaceOnDevice();
     }
 
     public boolean isNoSpaceOnDevice() {

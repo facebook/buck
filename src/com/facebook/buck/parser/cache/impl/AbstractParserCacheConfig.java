@@ -142,12 +142,8 @@ public abstract class AbstractParserCacheConfig implements ConfigView<BuckConfig
   public boolean isDirParserCacheEnabled() {
     AbstractParserDirCacheEntry parserDirCacheEntry = obtainDirEntry();
 
-    if (!parserDirCacheEntry.getDirCacheLocation().isPresent()
-        || parserDirCacheEntry.getDirCacheMode() == ParserCacheAccessMode.NONE) {
-      return false;
-    }
-
-    return true;
+    return parserDirCacheEntry.getDirCacheLocation().isPresent()
+        && parserDirCacheEntry.getDirCacheMode() != ParserCacheAccessMode.NONE;
   }
 
   /** @returns {@link ParserCacheAccessMode} associated with the {@link LocalCacheStorage} */
@@ -166,11 +162,7 @@ public abstract class AbstractParserCacheConfig implements ConfigView<BuckConfig
    */
   public boolean isRemoteParserCacheEnabled() {
     AbstractParserRemoteCacheEntry parserRemoteCacheEntry = obtainRemoteEntry();
-    if (parserRemoteCacheEntry.getRemoteCacheMode() == ParserCacheAccessMode.NONE) {
-      return false;
-    }
-
-    return true;
+    return parserRemoteCacheEntry.getRemoteCacheMode() != ParserCacheAccessMode.NONE;
   }
 
   /** @returns the access mode for the {@link RemoteManifestServiceCacheStorage}. */
@@ -187,10 +179,6 @@ public abstract class AbstractParserCacheConfig implements ConfigView<BuckConfig
    * @returns {@code true} if there is a cache storage that is enabled. Otherwise, {@code false}.
    */
   public boolean isParserCacheEnabled() {
-    if (isDirParserCacheEnabled() || isRemoteParserCacheEnabled()) {
-      return true;
-    }
-
-    return false;
+    return isDirParserCacheEnabled() || isRemoteParserCacheEnabled();
   }
 }

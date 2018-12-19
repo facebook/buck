@@ -89,10 +89,7 @@ public class ScribeEventListener implements BuckEventListener {
       return false;
     }
     // If the event is BuildRuleFinished, only send if the status is enabled.
-    if (event.getEventName().equals("BuildRuleFinished")
-        && !enabledBuildRuleFinishedStatuses.contains(((Finished) event).getStatus().name())) {
-      return false;
-    }
-    return true;
+    return !event.getEventName().equals("BuildRuleFinished")
+        || enabledBuildRuleFinishedStatuses.contains(((Finished) event).getStatus().name());
   }
 }
