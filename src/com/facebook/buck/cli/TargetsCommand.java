@@ -303,7 +303,7 @@ public class TargetsCommand extends AbstractCommand {
     assertArguments();
 
     try (CommandThreadManager pool =
-        new CommandThreadManager("Targets", getConcurrencyLimit(params.getBuckConfig())); ) {
+        new CommandThreadManager("Targets", getConcurrencyLimit(params.getBuckConfig()))) {
       // Exit early if --resolve-alias is passed in: no need to parse any build files.
       if (isResolveAlias) {
         try (PerBuildState parserState =

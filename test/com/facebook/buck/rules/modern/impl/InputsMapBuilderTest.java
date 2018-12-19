@@ -236,7 +236,7 @@ public class InputsMapBuilderTest extends AbstractValueVisitorTest {
     apply(new WithBuildTarget());
   }
 
-  private static final PathSourcePath otherPath = FakeSourcePath.of("some.path");;
+  private static final PathSourcePath otherPath = FakeSourcePath.of("some.path");
   private static final PathSourcePath oneMorePath = FakeSourcePath.of("hidden");
 
   private static class HasCustomInputs implements AddsToRuleKey, HasCustomInputsLogic {

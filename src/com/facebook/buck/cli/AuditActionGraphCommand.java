@@ -79,7 +79,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     try (CommandThreadManager pool =
-        new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig())); ) {
+        new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
       // Create the target graph.
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets =
           params
@@ -167,13 +167,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
       json.writeStartArray();
       for (BuildRule node : graph.getNodes()) {
         writeJsonObjectForBuildRule(
-            json,
-            node,
-            actionGraphBuilder,
-            ruleFinder,
-            pathResolver,
-            includeRuntimeDeps,
-            nodeView);
+            json, node, actionGraphBuilder, ruleFinder, pathResolver, includeRuntimeDeps, nodeView);
       }
       json.writeEndArray();
     }

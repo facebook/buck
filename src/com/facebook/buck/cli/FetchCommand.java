@@ -71,7 +71,7 @@ public class FetchCommand extends BuildCommand {
     ExitCode exitCode;
 
     try (CommandThreadManager pool =
-        new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig())); ) {
+        new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()))) {
       ActionGraphAndBuilder actionGraphAndBuilder;
       ImmutableSet<BuildTarget> buildTargets;
       try {

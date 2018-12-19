@@ -110,7 +110,7 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
   private void runLocally(CommandRunnerParams params) throws IOException, InterruptedException {
     try (CommandThreadManager pool =
         new CommandThreadManager(
-            "DistBuildSourceFiles", getConcurrencyLimit(params.getBuckConfig())); ) {
+            "DistBuildSourceFiles", getConcurrencyLimit(params.getBuckConfig()))) {
       BuildJobState jobState =
           getAsyncDistBuildState(arguments, params, pool.getWeightedListeningExecutorService())
               .get();

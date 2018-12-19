@@ -463,7 +463,7 @@ public class TestCommand extends BuildCommand {
     LOG.debug("Running with arguments %s", getArguments());
 
     try (CommandThreadManager pool =
-        new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig())); ) {
+        new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()))) {
       BuildEvent.Started started = BuildEvent.started(getArguments());
       params.getBuckEventBus().post(started);
 
