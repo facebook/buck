@@ -884,8 +884,14 @@ class CachingBuildRuleBuilder {
     } else {
       future = Futures.submitAsync(strategyContext::runWithDefaultBehavior, service);
     }
-    buildTimestampsMillis = new Pair<>(start, System.currentTimeMillis());
-    return future;
+
+    return Futures.transform(
+        future,
+        p -> {
+          buildTimestampsMillis = new Pair<>(start, System.currentTimeMillis());
+          return p;
+        },
+        MoreExecutors.directExecutor());
   }
 
   private ListenableFuture<Optional<BuildResult>> checkManifestBasedCaches() throws IOException {
