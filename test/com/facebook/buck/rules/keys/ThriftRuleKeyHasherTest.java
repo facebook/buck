@@ -47,6 +47,7 @@ import com.google.common.hash.HashCode;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -146,7 +147,7 @@ public class ThriftRuleKeyHasherTest {
     hasher.putKey(".number_value");
     hasher.putString("string");
     hasher.putKey(".string_value");
-    hasher.putBytes("test".getBytes("utf-8"));
+    hasher.putBytes("test".getBytes(StandardCharsets.UTF_8));
     hasher.putKey(".bytes_value");
     hasher.putPattern(Pattern.compile("\\w+"));
     hasher.putKey(".pattern_value");

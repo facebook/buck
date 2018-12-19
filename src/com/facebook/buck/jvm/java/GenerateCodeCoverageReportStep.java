@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -152,7 +153,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       properties.setProperty("jacoco.excludes", coverageExcludes.get());
     }
 
-    try (Writer writer = new OutputStreamWriter(outputStream, "utf8")) {
+    try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
       properties.store(writer, "Parameters for Jacoco report generator.");
     }
   }
