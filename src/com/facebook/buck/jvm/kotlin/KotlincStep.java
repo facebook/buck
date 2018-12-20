@@ -43,6 +43,7 @@ public class KotlincStep implements Step {
   private static final String VERBOSE = "-verbose";
 
   private final Kotlinc kotlinc;
+  private final ImmutableList<Path> kotlinHomeLibraries;
   private final ImmutableSortedSet<Path> combinedClassPathEntries;
   private final Path outputDirectory;
   private final ImmutableList<String> extraArguments;
@@ -59,6 +60,7 @@ public class KotlincStep implements Step {
       Path pathToSrcsList,
       ImmutableSortedSet<Path> combinedClassPathEntries,
       Kotlinc kotlinc,
+      ImmutableList<Path> kotlinHomeLibraries,
       ImmutableList<String> extraArguments,
       ProjectFilesystem filesystem,
       Optional<Path> workingDirectory) {
@@ -67,6 +69,7 @@ public class KotlincStep implements Step {
     this.sourceFilePaths = sourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
     this.kotlinc = kotlinc;
+    this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.combinedClassPathEntries = combinedClassPathEntries;
     this.extraArguments = extraArguments;
     this.filesystem = filesystem;
@@ -93,6 +96,7 @@ public class KotlincStep implements Step {
           kotlinc.buildWithClasspath(
               firstOrderContext,
               invokingRule,
+              kotlinHomeLibraries,
               getOptions(context, combinedClassPathEntries),
               sourceFilePaths,
               pathToSrcsList,

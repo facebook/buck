@@ -42,6 +42,7 @@ public interface Kotlinc extends Tool {
   int buildWithClasspath(
       ExecutionContext context,
       BuildTarget invokingRule,
+      ImmutableList<Path> kotlinHomeLibraries,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
       Path pathToSrcsList,
@@ -61,6 +62,8 @@ public interface Kotlinc extends Tool {
   Path getStdlibPath(SourcePathResolver sourcePathResolver);
 
   ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver);
+
+  ImmutableList<Path> getHomeLibraries(SourcePathResolver sourcePathResolver);
 
   default ImmutableList<Path> getExpandedSourcePaths(
       ProjectFilesystem projectFilesystem,
