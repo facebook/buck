@@ -105,8 +105,8 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
 
   @Value.Default
   @AddToRuleKey
-  public AnnotationProcessingParams getAnnotationProcessingParams() {
-    return AnnotationProcessingParams.EMPTY;
+  public JavacPluginParams getJavaAnnotationProcessorParams() {
+    return JavacPluginParams.EMPTY;
   }
 
   @Value.Default
@@ -209,10 +209,10 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     }
 
     // Add annotation processors.
-    AnnotationProcessingParams annotationProcessingParams = getAnnotationProcessingParams();
+    JavacPluginParams annotationProcessingParams = getJavaAnnotationProcessorParams();
     if (!annotationProcessingParams.isEmpty()) {
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
-          annotationProcessingParams.getModernProcessors();
+          annotationProcessingParams.getPluginProperties();
 
       // Specify processorpath to search for processors.
       optionsConsumer.addOptionValue(
@@ -254,6 +254,41 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     } else {
       // Disable automatic annotation processor lookup
       optionsConsumer.addFlag("proc:none");
+    }
+
+    JavacPluginParams standardJavacPluginParams = getStandardJavacPluginParams();
+    if (!standardJavacPluginParams.isEmpty()) {
+      ImmutableList<ResolvedJavacPluginProperties> javacPlugins =
+          standardJavacPluginParams.getPluginProperties();
+
+      // Specify processorpath to search for processors.
+      optionsConsumer.addOptionValue(
+          "classpath",
+          javacPlugins
+              .stream()
+              .map(properties -> properties.getClasspath(pathResolver, filesystem))
+              .flatMap(Arrays::stream)
+              .distinct()
+              .map(
+                  url -> {
+                    try {
+                      return url.toURI();
+                    } catch (URISyntaxException e) {
+                      throw new RuntimeException(e);
+                    }
+                  })
+              .map(Paths::get)
+              .map(Path::toString)
+              .collect(Collectors.joining(File.pathSeparator)));
+
+      for (ResolvedJavacPluginProperties properties : javacPlugins) {
+        optionsConsumer.addFlag("Xplugin:" + properties.getProcessorNames().first());
+      }
+
+      // Add plugin parameters.
+      optionsConsumer.addExtras(standardJavacPluginParams.getParameters());
+    } else {
+      optionsConsumer.addOptionValue("classpath", "''");
     }
 
     // Add extra arguments.
