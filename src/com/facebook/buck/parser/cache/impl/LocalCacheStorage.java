@@ -103,7 +103,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
       throws IOException {
 
     Stopwatch timer = null;
-    if (LOG.isDebugEnabled()) {
+    if (LOG.isVerboseEnabled()) {
       timer = Stopwatch.createStarted();
     }
 
@@ -127,7 +127,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
       }
     } finally {
       if (timer != null) {
-        LOG.debug(
+        LOG.verbose(
             "Time to complete storeBuildFileManifest: %d ns.",
             timer.stop().elapsed(TimeUnit.NANOSECONDS));
       }
@@ -148,7 +148,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
   public Optional<BuildFileManifest> getBuildFileManifest(
       HashCode weakFingerprint, HashCode strongFingerprint) throws IOException {
     Stopwatch timer = null;
-    if (LOG.isDebugEnabled()) {
+    if (LOG.isVerboseEnabled()) {
       timer = Stopwatch.createStarted();
     }
 
@@ -169,7 +169,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
       return Optional.of(BuildFileManifestSerializer.deserialize(deserializedBuildFileManifest));
     } finally {
       if (timer != null) {
-        LOG.debug(
+        LOG.verbose(
             "Time to complete getBuildFileManifest: %d ns.",
             timer.stop().elapsed(TimeUnit.NANOSECONDS));
       }
