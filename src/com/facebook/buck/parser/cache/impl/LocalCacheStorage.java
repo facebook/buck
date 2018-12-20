@@ -27,8 +27,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -157,16 +158,21 @@ public class LocalCacheStorage implements ParserCacheStorage {
         return Optional.empty();
       }
 
-      Path weakFingerprintCachePath = localCachePath.resolve(weakFingerprint.toString());
+      Path cachedBuildFileManifestPath =
+          filesystem
+              .resolve(localCachePath)
+              .resolve(weakFingerprint.toString())
+              .resolve(strongFingerprint.toString());
 
-      if (!filesystem.exists(weakFingerprintCachePath)) {
+      byte[] data;
+      try {
+        // TODO(buck_team): Add readAllBytes to projectFileSystem and use it
+        data = Files.readAllBytes(cachedBuildFileManifestPath);
+      } catch (NoSuchFileException ex) {
         return Optional.empty();
       }
 
-      byte[] deserializedBuildFileManifest =
-          deserializeBuildFileManifest(strongFingerprint, weakFingerprintCachePath);
-
-      return Optional.of(BuildFileManifestSerializer.deserialize(deserializedBuildFileManifest));
+      return Optional.of(BuildFileManifestSerializer.deserialize(data));
     } finally {
       if (timer != null) {
         LOG.verbose(
@@ -187,18 +193,5 @@ public class LocalCacheStorage implements ParserCacheStorage {
         weakFingerprintCachePath.isAbsolute()
             ? filesystem.getRootPath().relativize(weakFingerprintCachePath)
             : weakFingerprintCachePath);
-  }
-
-  private byte[] deserializeBuildFileManifest(
-      HashCode strongFingerprint, Path weakFingerprintCachePath) throws IOException {
-    byte[] deserializedBuildFileManifest;
-    Path cachedBuildFileManifestPath =
-        weakFingerprintCachePath.resolve(strongFingerprint.toString());
-    try (InputStream fis = filesystem.newFileInputStream(cachedBuildFileManifestPath)) {
-      deserializedBuildFileManifest =
-          new byte[(int) filesystem.getFileSize(cachedBuildFileManifestPath)];
-      fis.read(deserializedBuildFileManifest);
-    }
-    return deserializedBuildFileManifest;
   }
 }
