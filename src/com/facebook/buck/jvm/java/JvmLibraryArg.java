@@ -132,15 +132,15 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
   }
 
   @Value.Derived
-  default AnnotationProcessingParams buildAnnotationProcessingParams(
+  default JavacPluginParams buildAnnotationProcessingParams(
       BuildTarget owner, BuildRuleResolver resolver) {
     if (getAnnotationProcessors().isEmpty()
         && getPlugins().isEmpty()
         && getAnnotationProcessorDeps().isEmpty()) {
-      return AnnotationProcessingParams.EMPTY;
+      return JavacPluginParams.EMPTY;
     }
 
-    AbstractAnnotationProcessingParams.Builder builder = AnnotationProcessingParams.builder();
+    AbstractJavacPluginParams.Builder builder = JavacPluginParams.builder();
     addLegacyProcessors(builder, resolver);
     addProcessors(builder, resolver, owner);
     for (String processorParam : getAnnotationProcessorParams()) {
@@ -152,20 +152,22 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
   }
 
   default void addProcessors(
-      AbstractAnnotationProcessingParams.Builder builder,
+      AbstractJavacPluginParams.Builder builder,
       BuildRuleResolver resolver,
       BuildTarget owner) {
     for (BuildTarget pluginTarget : getPlugins()) {
       BuildRule pluginRule = resolver.getRule(pluginTarget);
-      if (!(pluginRule instanceof JavaAnnotationProcessor)) {
+      if (!(pluginRule instanceof JavacPlugin)) {
         throw new HumanReadableException(
             String.format(
                 "%s: only java_annotation_processor rules can be specified as plugins. "
                     + "%s is not a java_annotation_processor.",
                 owner, pluginTarget));
       }
-      JavaAnnotationProcessor plugin = (JavaAnnotationProcessor) pluginRule;
-      builder.addModernProcessors(plugin.getProcessorProperties());
+      if (pluginRule instanceof JavaAnnotationProcessorPlugin) {
+        JavaAnnotationProcessorPlugin plugin = (JavaAnnotationProcessorPlugin) pluginRule;
+        builder.addPluginProperties(plugin.getPluginProperties());
+      }
     }
   }
 

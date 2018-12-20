@@ -47,9 +47,9 @@ public final class JavacOptionsFactory {
 
     builder.addAllExtraArguments(jvmLibraryArg.getExtraArguments());
 
-    AnnotationProcessingParams annotationParams =
+    JavacPluginParams annotationParams =
         jvmLibraryArg.buildAnnotationProcessingParams(buildTarget, resolver);
-    builder.setAnnotationProcessingParams(annotationParams);
+    builder.setJavaAnnotationProcessorParams(annotationParams);
 
     return builder.build();
   }

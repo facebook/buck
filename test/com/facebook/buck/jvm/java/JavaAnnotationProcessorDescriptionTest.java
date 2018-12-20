@@ -59,8 +59,8 @@ public class JavaAnnotationProcessorDescriptionTest {
         TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
 
     // When
-    JavaAnnotationProcessor javaAnnotationProcessor =
-        (JavaAnnotationProcessor)
+    JavaAnnotationProcessorPlugin javaAnnotationProcessorPlugin =
+        (JavaAnnotationProcessorPlugin)
             new JavaAnnotationProcessorDescription()
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
@@ -69,15 +69,15 @@ public class JavaAnnotationProcessorDescriptionTest {
                     arg);
 
     // Verify
-    JavacPluginProperties props =
-        JavacPluginProperties.builder()
+    AbstractJavacPluginProperties props =
+        AbstractJavacPluginProperties.builder()
             .setCanReuseClassLoader(true)
             .setDoesNotAffectAbi(true)
             .setSupportsAbiGenerationFromSource(true)
             .addProcessorNames("Foo.Bar")
             .build();
 
-    assertEquals(javaAnnotationProcessor.getUnresolvedProperties(), props);
+    assertEquals(javaAnnotationProcessorPlugin.getUnresolvedProperties(), props);
   }
 
   @Test
@@ -101,8 +101,8 @@ public class JavaAnnotationProcessorDescriptionTest {
         TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
 
     // When
-    JavaAnnotationProcessor javaAnnotationProcessor =
-        (JavaAnnotationProcessor)
+    JavaAnnotationProcessorPlugin javaAnnotationProcessorPlugin =
+        (JavaAnnotationProcessorPlugin)
             new JavaAnnotationProcessorDescription()
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
@@ -111,15 +111,15 @@ public class JavaAnnotationProcessorDescriptionTest {
                     arg);
 
     // Verify
-    JavacPluginProperties props =
-        JavacPluginProperties.builder()
+    AbstractJavacPluginProperties props =
+        AbstractJavacPluginProperties.builder()
             .setCanReuseClassLoader(true)
             .setDoesNotAffectAbi(true)
             .setSupportsAbiGenerationFromSource(true)
             .addProcessorNames("Foo.Bar", "Bar.Foo")
             .build();
 
-    assertEquals(javaAnnotationProcessor.getUnresolvedProperties(), props);
+    assertEquals(javaAnnotationProcessorPlugin.getUnresolvedProperties(), props);
   }
 
   @Test
@@ -144,8 +144,8 @@ public class JavaAnnotationProcessorDescriptionTest {
         TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
 
     // When
-    JavaAnnotationProcessor javaAnnotationProcessor =
-        (JavaAnnotationProcessor)
+    JavaAnnotationProcessorPlugin javaAnnotationProcessorPlugin =
+        (JavaAnnotationProcessorPlugin)
             new JavaAnnotationProcessorDescription()
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
@@ -154,15 +154,15 @@ public class JavaAnnotationProcessorDescriptionTest {
                     arg);
 
     // Verify
-    JavacPluginProperties props =
-        JavacPluginProperties.builder()
+    AbstractJavacPluginProperties props =
+        AbstractJavacPluginProperties.builder()
             .setCanReuseClassLoader(true)
             .setDoesNotAffectAbi(true)
             .setSupportsAbiGenerationFromSource(true)
             .addProcessorNames("Needle.HayStack")
             .build();
 
-    assertEquals(javaAnnotationProcessor.getUnresolvedProperties(), props);
+    assertEquals(javaAnnotationProcessorPlugin.getUnresolvedProperties(), props);
   }
 
   @Test

@@ -78,8 +78,8 @@ public class JavacOptionsTest {
 
   @Test
   public void shouldSetTheAnnotationSource() {
-    AnnotationProcessingParams params =
-        AnnotationProcessingParams.builder()
+    JavacPluginParams params =
+        JavacPluginParams.builder()
             .setLegacyAnnotationProcessorNames(Collections.singleton("processor"))
             .setProcessOnly(true)
             .build();
@@ -91,8 +91,8 @@ public class JavacOptionsTest {
 
   @Test
   public void shouldAddAllAddedAnnotationProcessors() {
-    AnnotationProcessingParams params =
-        AnnotationProcessingParams.builder()
+    JavacPluginParams params =
+        JavacPluginParams.builder()
             .setLegacyAnnotationProcessorNames(Lists.newArrayList("myproc", "theirproc"))
             .setProcessOnly(true)
             .build();

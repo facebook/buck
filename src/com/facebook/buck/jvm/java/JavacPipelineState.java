@@ -115,8 +115,8 @@ public class JavacPipelineState implements RulePipelineState {
       ImmutableList<JavacPluginJsr199Fields> pluginFields =
           ImmutableList.copyOf(
               javacOptions
-                  .getAnnotationProcessingParams()
-                  .getModernProcessors()
+                  .getJavaAnnotationProcessorParams()
+                  .getPluginProperties()
                   .stream()
                   .map(properties -> properties.getJavacPluginJsr199Fields(resolver, filesystem))
                   .collect(Collectors.toList()));
@@ -247,7 +247,7 @@ public class JavacPipelineState implements RulePipelineState {
     // Specify the output directory.
     builder.add("-d").add(filesystem.resolve(outputDirectory).toString());
 
-    if (!javacOptions.getAnnotationProcessingParams().isEmpty()) {
+    if (!javacOptions.getJavaAnnotationProcessorParams().isEmpty()) {
       builder.add("-s").add(filesystem.resolve(generatedCodeDirectory).toString());
     }
 

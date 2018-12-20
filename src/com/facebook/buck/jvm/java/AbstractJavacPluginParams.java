@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type.ANNOTATION_PROCESSOR;
+
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -31,9 +33,9 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 /**
- * Information for annotation processing.
+ * Information for javac plugins (includes annotation processors).
  *
- * <p>Annotation processing involves a set of processors, their classpath(s), and a few other
+ * <p>Javac Plugins involves a set of plugin properties, their classpath(s), and a few other
  * command-line options for javac. We want to be able to specify all this various information in a
  * BUCK configuration file and use it when we generate the javac command. This facilitates threading
  * the information through buck in a more descriptive package rather than passing all the components
@@ -41,11 +43,12 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
-  public static final AnnotationProcessingParams EMPTY = builder().build();
+abstract class AbstractJavacPluginParams implements AddsToRuleKey {
+
+  public static final JavacPluginParams EMPTY = builder().build();
 
   @AddToRuleKey
-  protected abstract ImmutableList<ResolvedJavacPluginProperties> getModernProcessors();
+  protected abstract ImmutableList<ResolvedJavacPluginProperties> getPluginProperties();
 
   @Value.NaturalOrder
   @AddToRuleKey
@@ -58,28 +61,28 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
   }
 
   public boolean isEmpty() {
-    return getModernProcessors().isEmpty() && getParameters().isEmpty();
+    return getPluginProperties().isEmpty() && getParameters().isEmpty();
   }
 
   public static Builder builder() {
     return new Builder();
   }
 
-  public AnnotationProcessingParams withAbiProcessorsOnly() {
-    return AnnotationProcessingParams.builder()
-        .setModernProcessors(
-            getModernProcessors()
+  public JavacPluginParams withAbiProcessorsOnly() {
+    return JavacPluginParams.builder()
+        .setPluginProperties(
+            getPluginProperties()
                 .stream()
-                .filter(processor -> !processor.getDoesNotAffectAbi())
+                .filter(properties -> !properties.getDoesNotAffectAbi())
                 .collect(ImmutableList.toImmutableList()))
         .setParameters(getParameters())
         .setProcessOnly(getProcessOnly())
         .build();
   }
 
-  /** A customized Builder for AnnotationProcessingParams. */
+  /** A customized Builder for JavacPluginParams. */
   @org.immutables.builder.Builder.AccessibleFields
-  public static class Builder extends AnnotationProcessingParams.Builder {
+  public static class Builder extends JavacPluginParams.Builder {
     private Set<String> legacyAnnotationProcessorNames = new LinkedHashSet<>();
     private List<BuildRule> legacyAnnotationProcessorDeps = new ArrayList<>();
 
@@ -94,9 +97,10 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
           .collect(ImmutableList.toImmutableList());
     }
 
-    private ImmutableList<JavacPluginProperties> getLegacyProcessors() {
+    private ImmutableList<AbstractJavacPluginProperties> getLegacyProcessors() {
       JavacPluginProperties.Builder legacySafeProcessorsBuilder =
           JavacPluginProperties.builder()
+              .setType(ANNOTATION_PROCESSOR)
               .setCanReuseClassLoader(true)
               .setDoesNotAffectAbi(false)
               .setSupportsAbiGenerationFromSource(false)
@@ -108,7 +112,7 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
 
       JavacPluginProperties legacySafeProcessors = legacySafeProcessorsBuilder.build();
 
-      ImmutableList.Builder<JavacPluginProperties> resultBuilder = ImmutableList.builder();
+      ImmutableList.Builder<AbstractJavacPluginProperties> resultBuilder = ImmutableList.builder();
       if (!legacySafeProcessors.isEmpty()) {
         resultBuilder.add(legacySafeProcessors);
       }
@@ -117,8 +121,8 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
     }
 
     @Override
-    public AnnotationProcessingParams build() {
-      addAllModernProcessors(resolveLegacyProcessors());
+    public JavacPluginParams build() {
+      addAllPluginProperties(resolveLegacyProcessors());
       return super.build();
     }
 

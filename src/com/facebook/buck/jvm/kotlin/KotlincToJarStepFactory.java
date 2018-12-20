@@ -31,7 +31,7 @@ import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.AnnotationProcessingParams;
+import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -154,7 +154,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     Path genOutput =
         BuildTargetPaths.getGenPath(
             projectFilesystem, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
-    boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
+    boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
 
     ImmutableSortedSet.Builder<Path> sourceBuilder =
         ImmutableSortedSet.<Path>naturalOrder().addAll(sourceFilePaths);
@@ -259,7 +259,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     switch (annotationProcessingTool) {
       case KAPT:
         finalJavacOptions =
-            javacOptions.withAnnotationProcessingParams(AnnotationProcessingParams.EMPTY);
+            javacOptions.withJavaAnnotationProcessorParams(JavacPluginParams.EMPTY);
         break;
 
       case JAVAC:
@@ -323,11 +323,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Path workingDirectory,
       SourcePathResolver resolver) {
 
-    ImmutableList<String> pluginFields =
+    ImmutableList<String> annotationProcessors =
         ImmutableList.copyOf(
             javacOptions
-                .getAnnotationProcessingParams()
-                .getModernProcessors()
+                .getJavaAnnotationProcessorParams()
+                .getPluginProperties()
                 .stream()
                 .map(
                     resolvedJavacPluginProperties ->
@@ -342,7 +342,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         ImmutableList.<String>builder()
             .add(AP_CLASSPATH_ARG + kotlinc.getAnnotationProcessorPath(resolver))
             .add(AP_CLASSPATH_ARG + kotlinc.getStdlibPath(resolver))
-            .addAll(pluginFields)
+            .addAll(annotationProcessors)
             .add(SOURCES_ARG + filesystem.resolve(sourcesOutput))
             .add(CLASSES_ARG + filesystem.resolve(classesOutput))
             .add(INCREMENTAL_ARG + filesystem.resolve(incrementalData))

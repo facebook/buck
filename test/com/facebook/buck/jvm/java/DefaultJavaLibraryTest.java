@@ -1481,13 +1481,13 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
   // Captures all the common code between the different annotation processing test scenarios.
   private class AnnotationProcessingScenario {
-    private final AbstractAnnotationProcessingParams.Builder annotationProcessingParamsBuilder;
+    private final AbstractJavacPluginParams.Builder annotationProcessingParamsBuilder;
 
     public AnnotationProcessingScenario() {
-      annotationProcessingParamsBuilder = AnnotationProcessingParams.builder();
+      annotationProcessingParamsBuilder = JavacPluginParams.builder();
     }
 
-    public AbstractAnnotationProcessingParams.Builder getAnnotationProcessingParamsBuilder() {
+    public AbstractJavacPluginParams.Builder getAnnotationProcessingParamsBuilder() {
       return annotationProcessingParamsBuilder;
     }
 
@@ -1526,7 +1526,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       String src = "android/java/src/com/facebook/Main.java";
       tmp.newFile(src);
 
-      AnnotationProcessingParams params = annotationProcessingParamsBuilder.build();
+      JavacPluginParams params = annotationProcessingParamsBuilder.build();
       JavacOptions options =
           JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setAnnotationProcessingParams(params).build();
 

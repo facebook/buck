@@ -370,8 +370,8 @@ public abstract class DefaultJavaLibraryRules {
   private boolean pluginsSupportSourceOnlyAbis() {
     ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
         Objects.requireNonNull(getJavacOptions())
-            .getAnnotationProcessingParams()
-            .getModernProcessors();
+            .getJavaAnnotationProcessorParams()
+            .getPluginProperties();
 
     for (ResolvedJavacPluginProperties annotationProcessor : annotationProcessors) {
       if (!annotationProcessor.getDoesNotAffectAbi()
@@ -539,12 +539,12 @@ public abstract class DefaultJavaLibraryRules {
   @Value.Lazy
   JavacOptions getJavacOptionsForSourceOnlyAbi() {
     JavacOptions javacOptions = getJavacOptions();
-    return javacOptions.withAnnotationProcessingParams(
-        abiProcessorsOnly(javacOptions.getAnnotationProcessingParams()));
+    return javacOptions.withJavaAnnotationProcessorParams(
+        abiProcessorsOnly(javacOptions.getJavaAnnotationProcessorParams()));
   }
 
-  private AnnotationProcessingParams abiProcessorsOnly(
-      AnnotationProcessingParams annotationProcessingParams) {
+  private JavacPluginParams abiProcessorsOnly(
+      JavacPluginParams annotationProcessingParams) {
     return annotationProcessingParams.withAbiProcessorsOnly();
   }
 

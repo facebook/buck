@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.AnnotationProcessingParams;
+import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactoryHelper;
@@ -191,7 +191,7 @@ public class AndroidLibraryGraphEnhancerTest {
             DEFAULT_JAVAC,
             JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                 .setAnnotationProcessingParams(
-                    AnnotationProcessingParams.builder().setProcessOnly(true).build())
+                    JavacPluginParams.builder().setProcessOnly(true).build())
                 .setSourceLevel("7")
                 .setTargetLevel("7")
                 .build(),

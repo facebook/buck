@@ -109,6 +109,12 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     return AnnotationProcessingParams.EMPTY;
   }
 
+  @Value.Default
+  @AddToRuleKey
+  public JavacPluginParams getStandardJavacPluginParams() {
+    return JavacPluginParams.EMPTY;
+  }
+
   @AddToRuleKey
   public abstract List<String> getExtraArguments();
 

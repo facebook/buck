@@ -39,6 +39,14 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
+
+  enum Type {
+    JAVAC_PLUGIN,
+    ANNOTATION_PROCESSOR
+  }
+
+  public abstract Type getType();
+
   @Value.NaturalOrder
   @AddToRuleKey
   public abstract ImmutableSortedSet<String> getProcessorNames();

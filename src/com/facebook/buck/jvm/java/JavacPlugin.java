@@ -22,11 +22,11 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
-public class JavaAnnotationProcessor extends NoopBuildRuleWithDeclaredAndExtraDeps {
+abstract class JavacPlugin extends NoopBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final JavacPluginProperties properties;
   private final ResolvedJavacPluginProperties resolvedProperties;
 
-  public JavaAnnotationProcessor(
+  public JavacPlugin(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -36,11 +36,11 @@ public class JavaAnnotationProcessor extends NoopBuildRuleWithDeclaredAndExtraDe
     this.resolvedProperties = new ResolvedJavacPluginProperties(properties);
   }
 
-  public JavacPluginProperties getUnresolvedProperties() {
+  public AbstractJavacPluginProperties getUnresolvedProperties() {
     return properties; // Shut up PMD
   }
 
-  public ResolvedJavacPluginProperties getProcessorProperties() {
+  public ResolvedJavacPluginProperties getPluginProperties() {
     return resolvedProperties;
   }
 }
