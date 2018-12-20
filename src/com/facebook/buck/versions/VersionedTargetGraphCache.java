@@ -54,23 +54,33 @@ public class VersionedTargetGraphCache {
       ForkJoinPool pool,
       TypeCoercerFactory typeCoercerFactory,
       VersionTargetGraphMode versionTargetGraphMode,
+      Map<VersionTargetGraphMode, Double> versionTargetGraphModeProbabilities,
       long timeoutSeconds,
       BuckEventBus eventBus)
       throws VersionException, TimeoutException, InterruptedException {
 
-    if (versionTargetGraphMode == VersionTargetGraphMode.EXPERIMENT) {
-      versionTargetGraphMode =
-          RandomizedTrial.getGroup(
-              "async_version_tg_builder",
-              eventBus.getBuildId().toString(),
-              VersionTargetGraphMode.class);
-      Preconditions.checkState(versionTargetGraphMode != VersionTargetGraphMode.EXPERIMENT);
-      eventBus.post(
-          new ExperimentEvent(
-              "async_version_tg_builder", versionTargetGraphMode.toString(), "", null, null));
+    VersionTargetGraphMode resolvedMode = versionTargetGraphMode;
+    if (resolvedMode == VersionTargetGraphMode.EXPERIMENT) {
+      if (versionTargetGraphModeProbabilities.isEmpty()) {
+        resolvedMode =
+            RandomizedTrial.getGroup(
+                "async_version_tg_builder",
+                eventBus.getBuildId().toString(),
+                VersionTargetGraphMode.class);
+      } else {
+        resolvedMode =
+            RandomizedTrial.getGroup(
+                "async_version_tg_builder",
+                eventBus.getBuildId().toString(),
+                versionTargetGraphModeProbabilities);
+      }
     }
+    Preconditions.checkState(resolvedMode != VersionTargetGraphMode.EXPERIMENT);
+    eventBus.post(
+        new ExperimentEvent(
+            "async_version_tg_builder", versionTargetGraphMode.toString(), "", null, null));
 
-    switch (versionTargetGraphMode) {
+    switch (resolvedMode) {
       case ENABLED:
         DepsAwareExecutor<TargetNode<?>, ?> executor = DefaultDepsAwareExecutor.from(pool);
         TargetGraphAndBuildTargets versionedTargetGraph =
@@ -104,6 +114,7 @@ public class VersionedTargetGraphCache {
       ForkJoinPool pool,
       TypeCoercerFactory typeCoercerFactory,
       VersionTargetGraphMode versionTargetGraphMode,
+      Map<VersionTargetGraphMode, Double> versionTargetGraphModeProbabilities,
       long timeoutSeconds,
       BuckEventBus eventBus,
       CacheStatsTracker statsTracker)
@@ -143,6 +154,7 @@ public class VersionedTargetGraphCache {
             pool,
             typeCoercerFactory,
             versionTargetGraphMode,
+            versionTargetGraphModeProbabilities,
             timeoutSeconds,
             eventBus);
     cachedVersionedTargetGraph = CachedVersionedTargetGraph.of(newInputs, newVersionedTargetGraph);
@@ -185,6 +197,7 @@ public class VersionedTargetGraphCache {
                   pool,
                   typeCoercerFactory,
                   versionBuckConfig.getVersionTargetGraphMode(),
+                  versionBuckConfig.getVersionTargetGraphModeGroups(),
                   versionBuckConfig.getVersionTargetGraphTimeoutSeconds(),
                   eventBus,
                   statsTracker);
@@ -227,6 +240,7 @@ public class VersionedTargetGraphCache {
         pool,
         typeCoercerFactory,
         VersionTargetGraphMode.DISABLED,
+        ImmutableMap.of(),
         20,
         eventBus,
         statsTracker);

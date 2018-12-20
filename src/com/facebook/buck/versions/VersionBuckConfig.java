@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
+import java.util.Map;
 
 public class VersionBuckConfig {
 
@@ -65,6 +66,11 @@ public class VersionBuckConfig {
     return delegate
         .getEnum("build", "async_version_tg_builder", VersionTargetGraphMode.class)
         .orElse(VersionTargetGraphMode.DEFAULT);
+  }
+
+  public Map<VersionTargetGraphMode, Double> getVersionTargetGraphModeGroups() {
+    return delegate.getExperimentGroups(
+        "build", "version_tg_mode_probabilities", VersionTargetGraphMode.class);
   }
 
   public long getVersionTargetGraphTimeoutSeconds() {
