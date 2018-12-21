@@ -44,6 +44,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -152,7 +153,8 @@ public class MultiarchFileInfosTest {
             TestBuildRuleParams.create(),
             buildActionGraphBuilder(filesystem, fatBuildTarget, inputs),
             multiarchFileInfo,
-            inputs);
+            inputs,
+            CxxPlatformUtils.DEFAULT_CONFIG);
 
     assertThat(outputRule, instanceOf(MultiarchFile.class));
   }
@@ -185,7 +187,8 @@ public class MultiarchFileInfosTest {
             TestBuildRuleParams.create(),
             buildActionGraphBuilder(filesystem, fatBuildTarget, inputs),
             multiarchFileInfo,
-            inputs);
+            inputs,
+            CxxPlatformUtils.DEFAULT_CONFIG);
 
     assertThat(outputRule, instanceOf(NoopBuildRule.class));
   }
@@ -218,7 +221,8 @@ public class MultiarchFileInfosTest {
             TestBuildRuleParams.create(),
             buildActionGraphBuilder(filesystem, fatBuildTarget, inputs),
             multiarchFileInfo,
-            inputs);
+            inputs,
+            CxxPlatformUtils.DEFAULT_CONFIG);
 
     assertThat(outputRule, instanceOf(MultiarchFile.class));
   }

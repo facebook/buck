@@ -452,7 +452,8 @@ public class AppleBinaryDescription
           params,
           graphBuilder,
           fatBinaryInfo.get(),
-          thinRules.build());
+          thinRules.build(),
+          cxxBuckConfig);
     } else {
       return requireThinBinary(
           context,

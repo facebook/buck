@@ -33,6 +33,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
@@ -147,7 +148,8 @@ public class MultiarchFileInfos {
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       MultiarchFileInfo info,
-      ImmutableSortedSet<BuildRule> thinRules) {
+      ImmutableSortedSet<BuildRule> thinRules,
+      CxxBuckConfig cxxBuckConfig) {
     Optional<BuildRule> existingRule = graphBuilder.getRuleOptional(info.getFatTarget());
     if (existingRule.isPresent()) {
       return existingRule.get();
@@ -175,6 +177,7 @@ public class MultiarchFileInfos {
               ruleFinder,
               info.getRepresentativePlatform().getLipo(),
               inputs,
+              cxxBuckConfig.shouldCacheLinks(),
               BuildTargetPaths.getGenPath(
                   projectFilesystem, buildTarget, multiarchOutputPathFormat));
       graphBuilder.addToIndex(multiarchFile);
