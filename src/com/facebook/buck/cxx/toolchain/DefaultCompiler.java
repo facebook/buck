@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.ProcessExecutor;
@@ -26,7 +27,7 @@ import java.util.Optional;
 /** Default implementation of the Compiler interface. */
 public abstract class DefaultCompiler extends DelegatingTool implements Compiler {
 
-  private final boolean useUnixPathSeparator;
+  @AddToRuleKey private final boolean useUnixPathSeparator;
 
   public DefaultCompiler(Tool tool, boolean useUnixPathSeparator) {
     super(tool);
