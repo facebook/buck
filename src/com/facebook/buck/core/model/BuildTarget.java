@@ -55,6 +55,8 @@ public interface BuildTarget extends Comparable<BuildTarget> {
 
   boolean isFlavored();
 
+  BuildTarget withShortName(String shortName);
+
   /**
    * Verifies that this build target has no flavors.
    *

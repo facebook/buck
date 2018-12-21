@@ -25,10 +25,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -762,14 +759,12 @@ class NativeLibraryMergeEnhancer {
         // If we're merging, construct a base target in the app's directory.
         // This ensure that all apps in this directory will
         // have a chance to share the target.
-        UnflavoredBuildTarget baseUnflavored = baseBuildTarget.getUnflavoredBuildTarget();
-        UnflavoredBuildTarget unflavored =
-            ImmutableUnflavoredBuildTarget.builder()
-                .from(baseUnflavored)
-                .setShortName(
-                    "merged_lib_" + Flavor.replaceInvalidCharacters(constituents.getSoname().get()))
-                .build();
-        initialTarget = ImmutableBuildTarget.of(unflavored);
+        initialTarget =
+            baseBuildTarget
+                .withoutFlavors()
+                .withShortName(
+                    "merged_lib_"
+                        + Flavor.replaceInvalidCharacters(constituents.getSoname().get()));
       }
 
       // Two merged libs (for different apps) can have the same constituents,
