@@ -10,8 +10,21 @@ BUCK_PROJECT_ROOT_FILE=<path_to_project_root_file>
 # This script can be cached and used on machines other than the one where it was created. That
 # means it can't contain any absolute filepaths. Expose the absolute filepath of the root of
 # the project as $BUCK_REAL_ROOT, determined at runtime.
-BUCK_REAL_ROOT="$(cd `dirname $0`; pwd)"
-BUCK_PROJECT_ROOT="$(cat $BUCK_REAL_ROOT/$BUCK_PROJECT_ROOT_FILE)"
+
+# `cd` can produce output under specific configuration (for example, when CDPATH is present),
+# redirecting its output to /dev/null
+BUCK_REAL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
+BUCK_PROJECT_ROOT_FILE_LOCATION="$BUCK_REAL_ROOT/$BUCK_PROJECT_ROOT_FILE"
+if [ ! -f "$BUCK_PROJECT_ROOT_FILE_LOCATION" ]; then
+  (>&2 echo "Failed to check that $BUCK_PROJECT_ROOT_FILE_LOCATION is a file")
+  if [ ! -e "$BUCK_PROJECT_ROOT_FILE_LOCATION" ]; then
+    (>&2 echo "$BUCK_PROJECT_ROOT_FILE_LOCATION doesn't exist")
+  fi
+  (>&2 echo "BUCK_REAL_ROOT: $BUCK_REAL_ROOT")
+  (>&2 echo "BUCK_PROJECT_ROOT_FILE: $BUCK_PROJECT_ROOT_FILE")
+  exit 1
+fi
+BUCK_PROJECT_ROOT="$(cat $BUCK_PROJECT_ROOT_FILE_LOCATION)"
 export BUCK_DEFAULT_RUNTIME_RESOURCES="$BUCK_PROJECT_ROOT/$DEFAULT_RUNTIME_RESOURCES_RELATIVE"
 export BUCK_EXTERNAL_RUNTIME_RESOURCES="$BUCK_PROJECT_ROOT/$EXTERNAL_RUNTIME_RESOURCES_RELATIVE"
 
