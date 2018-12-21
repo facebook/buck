@@ -91,6 +91,7 @@ public class AppleDescriptionProvider implements DescriptionProvider {
             xcodeDescriptions,
             swiftLibraryDescription,
             appleConfig,
+            cxxBuckConfig,
             swiftBuckConfig,
             cxxBinaryImplicitFlavors,
             cxxBinaryFactory,
@@ -114,11 +115,13 @@ public class AppleDescriptionProvider implements DescriptionProvider {
             appleBinaryDescription,
             appleLibraryDescription,
             appleConfig,
+            cxxBuckConfig,
             swiftBuckConfig),
         new AppleTestDescription(
             toolchainProvider,
             xcodeDescriptions,
             appleConfig,
+            cxxBuckConfig,
             swiftBuckConfig,
             appleLibraryDescription),
         new SceneKitAssetsDescription());

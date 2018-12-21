@@ -442,7 +442,8 @@ public class AppleLibraryDescription
         Optional.empty(),
         Optional.empty(),
         appleConfig.getCodesignTimeout(),
-        swiftBuckConfig.getCopyStdlibToFrameworks());
+        swiftBuckConfig.getCopyStdlibToFrameworks(),
+        cxxBuckConfig.shouldCacheStrip());
   }
 
   /**
@@ -523,7 +524,8 @@ public class AppleLibraryDescription
             .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries()),
         cxxPlatformsProvider,
-        getAppleCxxPlatformDomain());
+        getAppleCxxPlatformDomain(),
+        cxxBuckConfig.shouldCacheStrip());
   }
 
   private <A extends AppleNativeTargetDescriptionArg> BuildRule requireUnstrippedBuildRule(
