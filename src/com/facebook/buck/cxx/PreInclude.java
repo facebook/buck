@@ -19,9 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -306,12 +304,11 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxSource.Type sourceType,
       CxxToolFlags compilerFlags,
       DepsBuilder depsBuilder,
-      UnflavoredBuildTarget templateTarget,
-      ImmutableSortedSet<Flavor> flavors,
+      BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder) {
     return (CxxPrecompiledHeader)
         graphBuilder.computeIfAbsent(
-            ImmutableBuildTarget.of(templateTarget, flavors),
+            buildTarget,
             target -> {
               // Give the PCH a filename that looks like a header file with .gch appended to it,
               // GCC-style.

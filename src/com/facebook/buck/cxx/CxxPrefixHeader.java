@@ -80,9 +80,10 @@ public class CxxPrefixHeader extends PreInclude {
         sourceType,
         computedCompilerFlags,
         depsBuilder,
-        getBuildTarget().getUnflavoredBuildTarget(),
-        ImmutableSortedSet.of(
-            cxxPlatform.getFlavor(), InternalFlavor.of(Flavor.replaceInvalidCharacters(pchFullID))),
+        getBuildTarget()
+            .withFlavors(
+                cxxPlatform.getFlavor(),
+                InternalFlavor.of(Flavor.replaceInvalidCharacters(pchFullID))),
         graphBuilder);
   }
 }

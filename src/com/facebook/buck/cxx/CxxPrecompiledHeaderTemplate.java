@@ -112,9 +112,10 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude implements AndroidP
         sourceType,
         compilerFlags,
         depsBuilder,
-        getBuildTarget().getUnflavoredBuildTarget(),
-        ImmutableSortedSet.of(
-            cxxPlatform.getFlavor(), InternalFlavor.of(Flavor.replaceInvalidCharacters(pchBaseID))),
+        getBuildTarget()
+            .withFlavors(
+                cxxPlatform.getFlavor(),
+                InternalFlavor.of(Flavor.replaceInvalidCharacters(pchBaseID))),
         graphBuilder);
   }
 
