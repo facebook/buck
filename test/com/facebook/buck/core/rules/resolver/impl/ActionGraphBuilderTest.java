@@ -305,7 +305,7 @@ public class ActionGraphBuilderTest {
     assertEquals("transform() should be called exactly twice", 2, transformCalls.size());
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 10000)
   public void deadLockOnDependencyTest() throws ExecutionException, InterruptedException {
     Assume.assumeTrue(classUnderTest == MultiThreadedActionGraphBuilder.class);
 
