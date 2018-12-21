@@ -134,12 +134,12 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    throw new UnsupportedOperationException("Target kotlinc may not be used externally");
+    throw new UnsupportedOperationException("In memory kotlinc may not be used externally");
   }
 
   @Override
   public KotlincVersion getVersion() {
-    throw new UnsupportedOperationException("Target based kotlinc doesn't have a version");
+    throw new UnsupportedOperationException("In memory kotlinc doesn't have a version");
   }
 
   @Override
