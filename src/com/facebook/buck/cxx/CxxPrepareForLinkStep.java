@@ -19,11 +19,11 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -71,7 +71,7 @@ public class CxxPrepareForLinkStep {
                     .filter(input -> !(input instanceof FileListableLinkerInputArg))
                     .collect(ImmutableList.toImmutableList())
                 : allArgs,
-            Optional.of(Javac.ARGFILES_ESCAPER),
+            Optional.of(Escaper.SHELL_ESCAPER),
             currentCellPath,
             resolver);
 
