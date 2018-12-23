@@ -40,6 +40,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -123,6 +124,11 @@ public class ExternalJavacProvider implements JavacProvider {
     if (javacPath instanceof BuildTargetSourcePath) {
       depsConsumer.add(((BuildTargetSourcePath) javacPath).getTarget());
     }
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getBuildDeps(SourcePathRuleFinder ruleFinder) {
+    return ruleFinder.filterBuildRuleInputs(javacPath);
   }
 
   private static class NonHashingJavacTool implements Tool {

@@ -3,3 +3,18 @@ java_library(
     srcs = ["Example.java"],
     visibility = ["PUBLIC"],
 )
+
+java_binary(
+    name = "example_binary",
+    deps = [
+        ":example",
+        ":foo",
+    ],
+)
+
+cxx_library(
+    name = "foo",
+    srcs = [
+        "foo.c",
+    ],
+)

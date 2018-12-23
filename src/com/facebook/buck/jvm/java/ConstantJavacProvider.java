@@ -19,8 +19,10 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSet;
 
 public class ConstantJavacProvider implements JavacProvider, AddsToRuleKey {
   @AddToRuleKey private final Javac javac;
@@ -36,4 +38,9 @@ public class ConstantJavacProvider implements JavacProvider, AddsToRuleKey {
 
   @Override
   public void addParseTimeDeps(ImmutableCollection.Builder<BuildTarget> depsConsumer) {}
+
+  @Override
+  public ImmutableSet<BuildRule> getBuildDeps(SourcePathRuleFinder ruleFinder) {
+    return ImmutableSet.of();
+  }
 }

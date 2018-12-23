@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -142,18 +143,21 @@ public class JavaBinaryDescription
     } else {
       graphBuilder.addToIndex(javaBinary);
       SourcePath innerJar = javaBinary.getSourcePathToOutput();
+      JavacFactory javacFactory = JavacFactory.getDefault(toolchainProvider);
       rule =
           new JarFattener(
               buildTarget,
               projectFilesystem,
               params.copyAppendingExtraDeps(
                   Suppliers.<Iterable<BuildRule>>ofInstance(
-                      ruleFinder.filterBuildRuleInputs(
-                          ImmutableList.<SourcePath>builder()
-                              .add(innerJar)
-                              .addAll(nativeLibraries.values())
-                              .build()))),
-              JavacFactory.getDefault(toolchainProvider).create(ruleFinder, null),
+                      Iterables.concat(
+                          ruleFinder.filterBuildRuleInputs(
+                              ImmutableList.<SourcePath>builder()
+                                  .add(innerJar)
+                                  .addAll(nativeLibraries.values())
+                                  .build()),
+                          javacFactory.getBuildDeps(ruleFinder)))),
+              javacFactory.create(ruleFinder, null),
               toolchainProvider
                   .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                   .getJavacOptions(),

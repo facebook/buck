@@ -17,11 +17,15 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSet;
 
 public interface JavacProvider {
   Javac resolve(SourcePathRuleFinder ruleFinder);
 
   void addParseTimeDeps(ImmutableCollection.Builder<BuildTarget> depsConsumer);
+
+  ImmutableSet<BuildRule> getBuildDeps(SourcePathRuleFinder ruleFinder);
 }

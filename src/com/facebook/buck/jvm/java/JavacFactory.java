@@ -17,11 +17,13 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -63,5 +65,9 @@ public final class JavacFactory {
     if (args == null || !args.hasJavacSpec()) {
       javacProvider.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
     }
+  }
+
+  public ImmutableSet<BuildRule> getBuildDeps(SourcePathRuleFinder ruleFinder) {
+    return javacProvider.get().getBuildDeps(ruleFinder);
   }
 }

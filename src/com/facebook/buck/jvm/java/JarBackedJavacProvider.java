@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -63,4 +64,9 @@ public class JarBackedJavacProvider implements JavacProvider, AddsToRuleKey {
 
   @Override
   public void addParseTimeDeps(ImmutableCollection.Builder<BuildTarget> depsConsumer) {}
+
+  @Override
+  public ImmutableSet<BuildRule> getBuildDeps(SourcePathRuleFinder ruleFinder) {
+    return ruleFinder.filterBuildRuleInputs(javacJarPath);
+  }
 }
