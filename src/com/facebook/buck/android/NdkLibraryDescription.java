@@ -50,8 +50,11 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
@@ -59,7 +62,6 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
@@ -82,9 +84,8 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
               + MoreStrings.regexPatternForAny("mk", "h", "hpp", "c", "cpp", "cc", "cxx")
               + "$");
 
-  public static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(
-          ImmutableMap.of("env", new EnvironmentVariableMacroExpander(Platform.detect())));
+  public static final ImmutableList<AbstractMacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(new EnvironmentVariableMacroExpander(Platform.detect()));
 
   @Override
   public Class<NdkLibraryDescriptionArg> getConstructorArgType() {
@@ -352,9 +353,9 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
       NdkLibraryDescriptionArg args) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     Pair<String, Iterable<BuildRule>> makefilePair =
-        generateMakefile(
-            toolchainProvider, projectFilesystem, params, context.getActionGraphBuilder());
+        generateMakefile(toolchainProvider, projectFilesystem, params, graphBuilder);
 
     ImmutableSortedSet<SourcePath> sources;
     if (!args.getSrcs().isEmpty()) {
@@ -362,6 +363,20 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
     } else {
       sources = findSources(projectFilesystem, buildTarget.getBasePath());
     }
+
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(context.getCellPathResolver())
+            .setExpanders(MACRO_EXPANDERS)
+            .build();
+
+    ImmutableList<Arg> flags =
+        args.getFlags()
+            .stream()
+            .map(flag -> macrosConverter.convert(flag, graphBuilder))
+            .collect(ImmutableList.toImmutableList());
+
     AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
     return new NdkLibrary(
         buildTarget,
@@ -372,18 +387,16 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
         getGeneratedMakefilePath(buildTarget, projectFilesystem),
         makefilePair.getFirst(),
         sources,
-        args.getFlags(),
+        flags,
         args.getIsAsset(),
-        androidNdk.getNdkVersion(),
-        MACRO_HANDLER.getExpander(
-            buildTarget, context.getCellPathResolver(), context.getActionGraphBuilder()));
+        androidNdk.getNdkVersion());
   }
 
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractNdkLibraryDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
-    ImmutableList<String> getFlags();
+    ImmutableList<StringWithMacros> getFlags();
 
     @Value.Default
     default boolean getIsAsset() {

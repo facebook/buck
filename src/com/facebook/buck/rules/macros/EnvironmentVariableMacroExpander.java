@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
  * to be interpreted when a shell command is invoked.
  */
 public class EnvironmentVariableMacroExpander
-    extends AbstractMacroExpanderWithoutPrecomputedWork<String> {
+    extends AbstractMacroExpanderWithoutPrecomputedWork<EnvMacro> {
 
   private final Platform platform;
 
@@ -38,30 +38,31 @@ public class EnvironmentVariableMacroExpander
   }
 
   @Override
-  public Class<String> getInputClass() {
-    return String.class;
+  public Class<EnvMacro> getInputClass() {
+    return EnvMacro.class;
   }
 
   @Override
-  protected String parse(
+  protected EnvMacro parse(
       BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
     if (input.size() != 1) {
       throw new MacroException(String.format("expected a single argument: %s", input));
     }
-    return input.get(0);
+    return EnvMacro.of(input.get(0));
   }
 
   @Override
   public StringArg expandFrom(
-      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, String var) {
+      BuildTarget target,
+      CellPathResolver cellNames,
+      ActionGraphBuilder graphBuilder,
+      EnvMacro envMacro) {
     if (platform == Platform.WINDOWS) {
-      if ("pwd".equalsIgnoreCase(var)) {
-        var = "cd";
-      }
+      String var = "pwd".equalsIgnoreCase(envMacro.getVar()) ? "cd" : envMacro.getVar();
       return StringArg.of("%" + var + "%");
     } else {
-      return StringArg.of("${" + var + "}");
+      return StringArg.of("${" + envMacro.getVar() + "}");
     }
   }
 }

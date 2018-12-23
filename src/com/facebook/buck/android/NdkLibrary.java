@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -47,10 +48,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -86,13 +85,11 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> sources;
 
-  @AddToRuleKey private final ImmutableList<String> flags;
+  @AddToRuleKey private final ImmutableList<Arg> flags;
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
   private final String ndkVersion;
-
-  private final Function<String, String> macroExpander;
 
   protected NdkLibrary(
       BuildTarget buildTarget,
@@ -102,10 +99,9 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path makefile,
       String makefileContents,
       Set<SourcePath> sources,
-      List<String> flags,
+      ImmutableList<Arg> flags,
       boolean isAsset,
-      String ndkVersion,
-      Function<String, String> macroExpander) {
+      String ndkVersion) {
     super(buildTarget, projectFilesystem, params);
     this.androidNdk = androidNdk;
     this.isAsset = isAsset;
@@ -119,10 +115,9 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Preconditions.checkArgument(
         !sources.isEmpty(), "Must include at least one file (Android.mk?) in ndk_library rule");
     this.sources = ImmutableSortedSet.copyOf(sources);
-    this.flags = ImmutableList.copyOf(flags);
+    this.flags = flags;
 
     this.ndkVersion = ndkVersion;
-    this.macroExpander = macroExpander;
   }
 
   @Override
@@ -167,8 +162,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             makefile,
             buildArtifactsDirectory,
             binDirectory,
-            flags,
-            macroExpander));
+            Arg.stringify(flags, context.getSourcePathResolver())));
 
     steps.addAll(
         MakeCleanDirectoryStep.of(

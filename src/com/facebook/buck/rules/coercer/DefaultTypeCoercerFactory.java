@@ -36,6 +36,7 @@ import com.facebook.buck.rules.macros.CppFlagsMacro;
 import com.facebook.buck.rules.macros.CxxFlagsMacro;
 import com.facebook.buck.rules.macros.CxxMacro;
 import com.facebook.buck.rules.macros.CxxppFlagsMacro;
+import com.facebook.buck.rules.macros.EnvMacro;
 import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.LdMacro;
 import com.facebook.buck.rules.macros.LdflagsSharedFilterMacro;
@@ -170,6 +171,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                   .put("classpath", ClasspathMacro.class)
                   .put("classpath_abi", ClasspathAbiMacro.class)
                   .put("exe", ExecutableMacro.class)
+                  .put("env", EnvMacro.class)
                   .put("location", LocationMacro.class)
                   .put("maven_coords", MavenCoordinatesMacro.class)
                   .put("output", OutputMacro.class)
@@ -200,6 +202,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                       buildTargetTypeCoercer, ClasspathAbiMacro.class, ClasspathAbiMacro::of),
                   new BuildTargetMacroTypeCoercer<>(
                       buildTargetTypeCoercer, ExecutableMacro.class, ExecutableMacro::of),
+                  new EnvMacroTypeCoercer(),
                   new LocationMacroTypeCoercer(buildTargetTypeCoercer),
                   new BuildTargetMacroTypeCoercer<>(
                       buildTargetTypeCoercer,

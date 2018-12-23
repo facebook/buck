@@ -32,9 +32,12 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -106,7 +109,10 @@ public class NdkLibraryBuilder
   }
 
   public NdkLibraryBuilder setFlags(Iterable<String> flags) {
-    getArgForPopulating().setFlags(ImmutableList.copyOf(flags));
+    getArgForPopulating()
+        .setFlags(
+            Iterables.transform(
+                flags, flag -> StringWithMacros.of(ImmutableList.of(Either.ofLeft(flag)))));
     return this;
   }
 
