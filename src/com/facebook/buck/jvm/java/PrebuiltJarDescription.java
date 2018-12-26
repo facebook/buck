@@ -42,6 +42,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -50,7 +51,8 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class PrebuiltJarDescription
-    implements DescriptionWithTargetGraph<PrebuiltJarDescriptionArg> {
+    implements DescriptionWithTargetGraph<PrebuiltJarDescriptionArg>,
+        VersionPropagator<PrebuiltJarDescriptionArg> {
 
   @Override
   public Class<PrebuiltJarDescriptionArg> getConstructorArgType() {
@@ -88,7 +90,6 @@ public class PrebuiltJarDescription
             args.getProvided(),
             args.getRequiredForSourceOnlyAbi());
 
-    buildTarget.assertUnflavored();
     BuildTarget gwtTarget = buildTarget.withAppendedFlavors(JavaLibrary.GWT_MODULE_FLAVOR);
     BuildRuleParams gwtParams =
         params.withDeclaredDeps(ImmutableSortedSet.of(prebuilt)).withoutExtraDeps();
