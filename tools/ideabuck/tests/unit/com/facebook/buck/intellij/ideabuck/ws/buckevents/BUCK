@@ -11,6 +11,5 @@ java_test(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/junit:junit",
         "//tools/ideabuck:ideabuck-lib",
-        "//tools/ideabuck:tests-lib",
     ],
 )

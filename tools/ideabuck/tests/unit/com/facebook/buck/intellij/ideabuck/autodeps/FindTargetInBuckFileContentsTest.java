@@ -16,13 +16,19 @@
 
 package com.facebook.buck.intellij.ideabuck.autodeps;
 
-import static com.facebook.buck.intellij.ideabuck.test.TestUtil.buckFile;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNull;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Test;
 
 public class FindTargetInBuckFileContentsTest {
+
+  private static String buckFile(String... lines) {
+    return Stream.of(lines).collect(Collectors.joining("\n", "", "\n"));
+  }
+
   @Test
   public void canFindTarget() {
     String buckInput =

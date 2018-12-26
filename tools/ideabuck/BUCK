@@ -108,22 +108,3 @@ java_binary(
     ],
 )
 
-TEST_SRC = ["tests/unit/**/*Test.java"]
-
-java_library(
-    name = "tests-lib",
-    srcs = glob(
-        ["tests/unit/**/*.java"],
-        exclude = TEST_SRC,
-    ),
-    target = "1.8",
-    visibility = [
-        "//tools/ideabuck/tests/...",
-    ],
-    deps = [
-        ":ideabuck-lib",
-        "//src/com/facebook/buck/event/external:external_lib",
-        "//third-party/java/guava:guava",
-    ],
-)
-
