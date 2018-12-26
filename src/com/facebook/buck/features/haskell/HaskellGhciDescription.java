@@ -23,8 +23,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -280,13 +278,7 @@ public class HaskellGhciDescription
       Iterable<NativeLinkable> deps,
       ImmutableList<Arg> extraLdFlags) {
     return graphBuilder.computeIfAbsent(
-        ImmutableBuildTarget.of(
-            ImmutableUnflavoredBuildTarget.of(
-                baseTarget.getCellPath(),
-                Optional.empty(),
-                baseTarget.getBaseName(),
-                baseTarget.getShortName() + ".omnibus-shared-object"),
-            baseTarget.getFlavors()),
+        baseTarget.withShortName(baseTarget.getShortName() + ".omnibus-shared-object"),
         ruleTarget -> {
           ImmutableList.Builder<Arg> linkFlagsBuilder = ImmutableList.builder();
           linkFlagsBuilder.addAll(extraLdFlags);
