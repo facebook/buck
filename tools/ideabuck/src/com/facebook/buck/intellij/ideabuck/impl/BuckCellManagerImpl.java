@@ -30,7 +30,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /** Default implementation of {@link BuckCellManager}. */
 public class BuckCellManagerImpl implements BuckCellManager {
@@ -64,6 +66,15 @@ public class BuckCellManagerImpl implements BuckCellManager {
   @Override
   public Optional<CellImpl> getDefaultCell() {
     return mBuckCellSettingsProvider.getDefaultCell().map(CellImpl::new);
+  }
+
+  @Override
+  public List<CellImpl> getCells() {
+    return mBuckCellSettingsProvider
+        .getCells()
+        .stream()
+        .map(CellImpl::new)
+        .collect(Collectors.toList());
   }
 
   @Override

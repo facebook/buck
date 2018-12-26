@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.impl;
 
+import com.facebook.buck.intellij.ideabuck.api.BuckCellManager.Cell;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
 import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.impl.BuckCellManagerImpl.CellImpl;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 
@@ -113,6 +115,22 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
     assertNotNull(defaultCell);
 
     assertEquals(defaultBuckCell, defaultCell.getBuckCell());
+  }
+
+  public void testGetCells() {
+    BuckCell fooBuckCell = createCell("foo", "$PROJECT_DIR$/foo");
+    BuckCell barBuckCell = createCell("bar", "$PROJECT_DIR$/bar");
+    List<BuckCell> expectedCells = Arrays.asList(fooBuckCell, barBuckCell);
+
+    buckCellSettingsProvider.setCells(expectedCells);
+
+    BuckCellManagerImpl buckCellManager = createBuckCellManager();
+
+    List<? extends Cell> actualCells = buckCellManager.getCells();
+    assertEquals(fooBuckCell.getName(), actualCells.get(0).getName().get());
+    assertEquals(fooBuckCell.getRoot(), actualCells.get(0).getRootPath().toString());
+    assertEquals(barBuckCell.getName(), actualCells.get(1).getName().get());
+    assertEquals(barBuckCell.getRoot(), actualCells.get(1).getRootPath().toString());
   }
 
   public void testFindCellByName() {

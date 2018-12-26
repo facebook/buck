@@ -20,6 +20,7 @@ import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -60,6 +61,9 @@ public interface BuckCellManager extends ProjectComponent {
    * <p>All buck commands for this project should be run from a working directory inside this cell.
    */
   Optional<? extends Cell> getDefaultCell();
+
+  /** Returns all the cells for this project. */
+  List<? extends Cell> getCells();
 
   /** Returns a {@link Cell} with a matching name, if it exists. */
   Optional<? extends Cell> findCellByName(String name);
