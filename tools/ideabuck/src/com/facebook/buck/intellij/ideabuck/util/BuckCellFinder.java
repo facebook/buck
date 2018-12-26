@@ -20,8 +20,8 @@ import com.facebook.buck.intellij.ideabuck.config.BuckCell;
 import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Ordering;
-import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.components.PathMacroManager;
+import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -34,7 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Cross-cell navigation helper. */
-public class BuckCellFinder extends AbstractProjectComponent {
+public class BuckCellFinder implements ProjectComponent {
   public static BuckCellFinder getInstance(Project project) {
     return project.getComponent(BuckCellFinder.class);
   }
@@ -43,18 +43,14 @@ public class BuckCellFinder extends AbstractProjectComponent {
   private Function<String, String> pathMacroExpander;
 
   public BuckCellFinder(
-      Project project,
-      BuckCellSettingsProvider buckCellSettingsProvider,
-      PathMacroManager pathMacroManager) {
-    this(project, buckCellSettingsProvider, pathMacroManager::expandPath);
+      BuckCellSettingsProvider buckCellSettingsProvider, PathMacroManager pathMacroManager) {
+    this(buckCellSettingsProvider, pathMacroManager::expandPath);
   }
 
   @VisibleForTesting
   BuckCellFinder(
-      Project project,
       BuckCellSettingsProvider buckCellSettingsProvider,
       Function<String, String> pathMacroExpander) {
-    super(project);
     this.buckCellSettingsProvider = buckCellSettingsProvider;
     this.pathMacroExpander = pathMacroExpander;
   }

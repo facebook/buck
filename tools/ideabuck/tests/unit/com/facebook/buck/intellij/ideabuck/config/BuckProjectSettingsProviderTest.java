@@ -34,7 +34,7 @@ public class BuckProjectSettingsProviderTest {
     Project project = EasyMock.createMock(Project.class);
     EasyMock.expect(project.getBasePath()).andReturn("/path/to/project").anyTimes();
     EasyMock.replay(buckExecutableDetector, project);
-    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider(project);
+    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider();
 
     BuckProjectSettingsProvider projectSettings =
         new BuckProjectSettingsProvider(project, buckCellSettingsProvider, buckExecutableDetector);
@@ -62,7 +62,7 @@ public class BuckProjectSettingsProviderTest {
     Project project = EasyMock.createMock(Project.class);
     EasyMock.expect(project.getBasePath()).andReturn("/path/to/project").anyTimes();
     EasyMock.replay(buckExecutableDetector, project);
-    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider(project);
+    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider();
 
     BuckProjectSettingsProvider projectSettings =
         new BuckProjectSettingsProvider(project, buckCellSettingsProvider, buckExecutableDetector);
@@ -87,7 +87,7 @@ public class BuckProjectSettingsProviderTest {
         EasyMock.createMock(BuckExecutableDetector.class);
     EasyMock.replay(project, buckExecutableDetector);
 
-    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider(project);
+    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider();
     BuckProjectSettingsProvider.State state = new BuckProjectSettingsProvider.State();
     BuckCell cell1 = new BuckCell().withName("one").withRoot("$PROJECT_DIR$/one");
     BuckCell cell2 = new BuckCell().withName("two").withRoot("$PROJECT_DIR$/two");

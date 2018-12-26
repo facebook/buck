@@ -18,8 +18,8 @@ package com.facebook.buck.intellij.ideabuck.config;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
-import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.diagnostic.Logger;
@@ -32,9 +32,10 @@ import org.jetbrains.annotations.Nullable;
 @State(
     name = "BuckProjectSettingsProvider",
     storages = {@Storage("ideabuck.xml")})
-public class BuckProjectSettingsProvider extends AbstractProjectComponent
-    implements PersistentStateComponent<BuckProjectSettingsProvider.State> {
+public class BuckProjectSettingsProvider
+    implements ProjectComponent, PersistentStateComponent<BuckProjectSettingsProvider.State> {
 
+  private Project project;
   private BuckExecutableDetector buckExecutableDetector;
   private BuckCellSettingsProvider buckCellSettingsProvider;
   private State state = new State();
@@ -56,13 +57,13 @@ public class BuckProjectSettingsProvider extends AbstractProjectComponent
       Project project,
       BuckCellSettingsProvider buckCellSettingsProvider,
       BuckExecutableDetector buckExecutableDetector) {
-    super(project);
+    this.project = project;
     this.buckExecutableDetector = buckExecutableDetector;
     this.buckCellSettingsProvider = buckCellSettingsProvider;
   }
 
   public Project getProject() {
-    return myProject;
+    return project;
   }
 
   @Override

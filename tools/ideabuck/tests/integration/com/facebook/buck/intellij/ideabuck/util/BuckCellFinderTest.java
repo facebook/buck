@@ -38,7 +38,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     tmpDir = this.createTempDirectory();
-    buckCellSettingsProvider = new BuckCellSettingsProvider(getProject());
+    buckCellSettingsProvider = new BuckCellSettingsProvider();
   }
 
   private Path tmpDir() throws IOException {
@@ -99,7 +99,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     BuckCell thatCell = makeBuckCell("that", makeTmpDir("bar"));
     setUpCells(thisCell, thatCell);
 
-    BuckCellFinder finder = new BuckCellFinder(getProject(), buckCellSettingsProvider, s -> s);
+    BuckCellFinder finder = new BuckCellFinder(buckCellSettingsProvider, s -> s);
     Assert.assertEquals(Optional.of(thisCell), finder.findBuckCellByName("this"));
     Assert.assertEquals(Optional.of(thatCell), finder.findBuckCellByName("that"));
     Assert.assertEquals(Optional.empty(), finder.findBuckCellByName("other"));
@@ -133,7 +133,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     Path topLevelFile = makeTmpFile(cellRoot.resolve("source"));
     Path lowerLevelFile = makeTmpFile(cellRoot.resolve("deep/in/cell/source"));
     Path nonCellFile = makeTmpFile("outside/cell/source");
-    BuckCellFinder finder = new BuckCellFinder(getProject(), buckCellSettingsProvider, s -> s);
+    BuckCellFinder finder = new BuckCellFinder(buckCellSettingsProvider, s -> s);
     assertFindBuckCell(cell, finder, topLevelFile);
     assertFindBuckCell(cell, finder, lowerLevelFile);
     assertFindBuckCell(null, finder, nonCellFile);
@@ -152,7 +152,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     Path outerCellLevel1File = makeTmpFile("outer/lib/source");
     Path innerCellLevel0File = makeTmpFile("outer/lib/inner/source");
     Path innerCellLevel1File = makeTmpFile("outer/lib/inner/tools/source");
-    BuckCellFinder finder = new BuckCellFinder(getProject(), buckCellSettingsProvider, s -> s);
+    BuckCellFinder finder = new BuckCellFinder(buckCellSettingsProvider, s -> s);
     assertFindBuckCell(null, finder, nonCellFile);
     assertFindBuckCell(outerCell, finder, outerCellLevel0File);
     assertFindBuckCell(outerCell, finder, outerCellLevel1File);
@@ -187,7 +187,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     Path level2SourceFile = makeTmpFile(cellRoot.resolve("one/two/source"));
     Path level3SourceFile = makeTmpFile(cellRoot.resolve("one/two/three/source"));
     Path level4SourceFile = makeTmpFile(cellRoot.resolve("one/two/three/four/source"));
-    BuckCellFinder finder = new BuckCellFinder(getProject(), buckCellSettingsProvider, s -> s);
+    BuckCellFinder finder = new BuckCellFinder(buckCellSettingsProvider, s -> s);
     assertFindBuckFile(null, finder, level0SourceFile);
     assertFindBuckFile(level1BuckFile, finder, level1SourceFile);
     assertFindBuckFile(level1BuckFile, finder, level2SourceFile);
@@ -213,7 +213,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     Path innerCellLevel1SourceFile = makeTmpFile("outer/lib/inner/tools/source");
     Path innerCellLevel1BuckFile = makeTmpFile("outer/lib/inner/tools/INNERBUCK");
 
-    BuckCellFinder finder = new BuckCellFinder(getProject(), buckCellSettingsProvider, s -> s);
+    BuckCellFinder finder = new BuckCellFinder(buckCellSettingsProvider, s -> s);
     assertFindBuckFile(null, finder, nonCellFile);
     assertFindBuckFile(null, finder, outerCellLevel0SourceFile);
     assertFindBuckFile(outerCellLevel1BuckFile, finder, outerCellLevel1SourceFile);
@@ -243,7 +243,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     Path toLevel0 = makeTmpFile("to/TOBUCK");
     Path toLevel1 = makeTmpFile("to/bar/TOBUCK");
 
-    BuckCellFinder finder = new BuckCellFinder(getProject(), buckCellSettingsProvider, s -> s);
+    BuckCellFinder finder = new BuckCellFinder(buckCellSettingsProvider, s -> s);
 
     assertFindBuckTargetFile(fromLevel0, finder, fromLevel0, "//:any");
     assertFindBuckTargetFile(fromLevel0, finder, fromLevel1, "//:any");
@@ -296,7 +296,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
     Path toLevel0ExtFile = makeTmpFile("to/extension.bzl");
     Path toLevel1ExtFile = makeTmpFile("to/bar/extension.bzl");
 
-    BuckCellFinder finder = new BuckCellFinder(getProject(), buckCellSettingsProvider, s -> s);
+    BuckCellFinder finder = new BuckCellFinder(buckCellSettingsProvider, s -> s);
 
     assertFindBuckExtensionFile(fromLevel0ExtFile, finder, fromLevel0BuckFile, "//:extension.bzl");
     assertFindBuckExtensionFile(fromLevel0ExtFile, finder, fromLevel1BuckFile, "//:extension.bzl");
@@ -347,7 +347,6 @@ public class BuckCellFinderTest extends PlatformTestCase {
 
     BuckCellFinder finder =
         new BuckCellFinder(
-            getProject(),
             buckCellSettingsProvider,
             s ->
                 s.replace("$PROJECT_DIR$", projectDir.toString())

@@ -18,8 +18,8 @@ package com.facebook.buck.intellij.ideabuck.config;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.diagnostic.Logger;
@@ -36,28 +36,14 @@ import java.util.stream.Collectors;
 @State(
     name = "BuckCellSettingsProvider",
     storages = {@Storage("ideabuck/cells.xml")})
-public class BuckCellSettingsProvider extends AbstractProjectComponent
-    implements PersistentStateComponent<BuckCellSettingsProvider.State> {
+public class BuckCellSettingsProvider
+    implements ProjectComponent, PersistentStateComponent<BuckCellSettingsProvider.State> {
 
   private BuckCellSettingsProvider.State state = new BuckCellSettingsProvider.State();
   private static final Logger LOG = Logger.getInstance(BuckCellSettingsProvider.class);
 
   public static BuckCellSettingsProvider getInstance(Project project) {
     return project.getComponent(BuckCellSettingsProvider.class);
-  }
-
-  public BuckCellSettingsProvider(Project project) {
-    super(project);
-  }
-
-  @Override
-  public void initComponent() {}
-
-  @Override
-  public void disposeComponent() {}
-
-  public Project getProject() {
-    return myProject;
   }
 
   @Override
