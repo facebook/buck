@@ -33,7 +33,6 @@ import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -46,28 +45,22 @@ public class JavaLibraryBuilder
 
   private final ProjectFilesystem projectFilesystem;
 
-  protected JavaLibraryBuilder(
-      BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
+  protected JavaLibraryBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
     super(
         new JavaLibraryDescription(createToolchainProviderForJavaLibrary(), DEFAULT_JAVA_CONFIG),
         target,
         projectFilesystem,
-        createToolchainProviderForJavaLibrary(),
-        hashCode);
+        createToolchainProviderForJavaLibrary());
     this.projectFilesystem = projectFilesystem;
   }
 
   protected JavaLibraryBuilder(
-      BuildTarget target,
-      JavaBuckConfig javaBuckConfig,
-      ProjectFilesystem projectFilesystem,
-      HashCode hashCode) {
+      BuildTarget target, JavaBuckConfig javaBuckConfig, ProjectFilesystem projectFilesystem) {
     super(
         new JavaLibraryDescription(createToolchainProviderForJavaLibrary(), javaBuckConfig),
         target,
         projectFilesystem,
-        createToolchainProviderForJavaLibrary(),
-        hashCode);
+        createToolchainProviderForJavaLibrary());
     this.projectFilesystem = projectFilesystem;
   }
 
@@ -76,26 +69,22 @@ public class JavaLibraryBuilder
   }
 
   public static JavaLibraryBuilder createBuilder(BuildTarget target) {
-    return new JavaLibraryBuilder(target, new FakeProjectFilesystem(), null);
+    return new JavaLibraryBuilder(target, new FakeProjectFilesystem());
   }
 
   public static JavaLibraryBuilder createBuilder(
       BuildTarget target, JavaBuckConfig javaBuckConfig) {
-    return new JavaLibraryBuilder(target, javaBuckConfig, new FakeProjectFilesystem(), null);
+    return new JavaLibraryBuilder(target, javaBuckConfig, new FakeProjectFilesystem());
   }
 
   public static JavaLibraryBuilder createBuilder(
       BuildTarget target, ProjectFilesystem projectFilesystem) {
-    return new JavaLibraryBuilder(target, projectFilesystem, null);
+    return new JavaLibraryBuilder(target, projectFilesystem);
   }
 
   public static JavaLibraryBuilder createBuilder(
       BuildTarget target, JavaBuckConfig javaBuckConfig, ProjectFilesystem projectFilesystem) {
-    return new JavaLibraryBuilder(target, javaBuckConfig, projectFilesystem, null);
-  }
-
-  public static JavaLibraryBuilder createBuilder(BuildTarget target, HashCode hashCode) {
-    return new JavaLibraryBuilder(target, new FakeProjectFilesystem(), hashCode);
+    return new JavaLibraryBuilder(target, javaBuckConfig, projectFilesystem);
   }
 
   public JavaLibraryBuilder addDep(BuildTarget rule) {

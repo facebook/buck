@@ -74,8 +74,7 @@ public class AndroidBundleBuilder
             new AndroidBundleFactory(new AndroidBuckConfig(buckConfig, Platform.detect()))),
         target,
         new FakeProjectFilesystem(),
-        createToolchainProviderForAndroidBundle(),
-        null);
+        createToolchainProviderForAndroidBundle());
   }
 
   public static ToolchainProvider createToolchainProviderForAndroidBundle() {

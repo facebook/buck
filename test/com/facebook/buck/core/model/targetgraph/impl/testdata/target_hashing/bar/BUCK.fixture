@@ -1,0 +1,6 @@
+java_library(
+    name = "lib",
+    srcs = [
+        "BarLib.java",
+    ],
+)

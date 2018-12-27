@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
@@ -57,11 +56,6 @@ abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
   @Value.Parameter
   @Override
   public abstract NodeCopier getNodeCopier();
-
-  /** @return A hash of the raw input from the build file used to construct the node. */
-  @Value.Parameter
-  @Override
-  public abstract HashCode getRawInputsHashCode();
 
   // TODO(#22139496): Currently, `Descriptions` don't implement content equality, so we exclude it
   // from the `equals`/`hashCode` implementation of `TargetNode`.  This should be fine, as we

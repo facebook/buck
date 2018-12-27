@@ -115,8 +115,7 @@ class LegacyPerBuildStateFactory extends PerBuildStateFactory {
                 marshaller,
                 daemonicParserState.getBuildFileTrees(),
                 symlinkCheckers,
-                targetNodeFactory,
-                rootCell.getRuleKeyConfiguration()),
+                targetNodeFactory),
             parserConfig.getEnableParallelParsing()
                 ? executorService
                 : MoreExecutors.newDirectExecutorService(),

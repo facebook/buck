@@ -29,7 +29,6 @@ import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
@@ -46,9 +45,6 @@ public interface TargetNode<T> extends Comparable<TargetNode<?>>, ObeysVisibilit
   BuildTarget getBuildTarget();
 
   NodeCopier getNodeCopier();
-
-  /** @return A hash of the raw input from the build file used to construct the node. */
-  HashCode getRawInputsHashCode();
 
   BaseDescription<T> getDescription();
 

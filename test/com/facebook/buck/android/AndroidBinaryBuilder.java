@@ -74,8 +74,7 @@ public class AndroidBinaryBuilder
             new AndroidBinaryFactory(new AndroidBuckConfig(buckConfig, Platform.detect()))),
         target,
         new FakeProjectFilesystem(),
-        createToolchainProviderForAndroidBinary(),
-        null);
+        createToolchainProviderForAndroidBinary());
   }
 
   public static ToolchainProvider createToolchainProviderForAndroidBinary() {

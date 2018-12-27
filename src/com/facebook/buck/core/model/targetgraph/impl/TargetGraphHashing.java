@@ -25,6 +25,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.json.JsonObjectHashing;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.hashing.StringHashing;
@@ -40,11 +42,13 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -63,18 +67,24 @@ public class TargetGraphHashing {
   private final FileHashLoader fileHashLoader;
   private final Iterable<TargetNode<?>> roots;
   private final ListeningExecutorService executor;
+  private final RuleKeyConfiguration ruleKeyConfiguration;
+  private final Function<TargetNode<?>, Object> targetNodeRawAttributesProvider;
 
   public TargetGraphHashing(
       BuckEventBus eventBus,
       TargetGraph targetGraph,
       FileHashLoader fileHashLoader,
       Iterable<TargetNode<?>> roots,
-      ListeningExecutorService executor) {
+      ListeningExecutorService executor,
+      RuleKeyConfiguration ruleKeyConfiguration,
+      Function<TargetNode<?>, Object> targetNodeRawAttributesProvider) {
     this.eventBus = eventBus;
     this.targetGraph = targetGraph;
     this.fileHashLoader = fileHashLoader;
     this.roots = roots;
     this.executor = executor;
+    this.ruleKeyConfiguration = ruleKeyConfiguration;
+    this.targetNodeRawAttributesProvider = targetNodeRawAttributesProvider;
   }
 
   /**
@@ -107,9 +117,8 @@ public class TargetGraphHashing {
       // Hash the node's build target and rules.
       LOG.verbose("Hashing node %s", node);
       StringHashing.hashStringAndLength(hasher, node.getBuildTarget().toString());
-      HashCode targetRuleHashCode = node.getRawInputsHashCode();
-      LOG.verbose("Got rules hash %s", targetRuleHashCode);
-      hasher.putBytes(targetRuleHashCode.asBytes());
+      JsonObjectHashing.hashJsonObject(hasher, targetNodeRawAttributesProvider.apply(node));
+      hasher.putString(ruleKeyConfiguration.getCoreKey(), StandardCharsets.UTF_8);
 
       // Hash the contents of all input files and directories.
       ProjectFilesystem cellFilesystem = node.getFilesystem();

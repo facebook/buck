@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -48,7 +47,6 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Function;
@@ -93,7 +91,6 @@ public class OwnersReportTest {
     try {
       return new TargetNodeFactory(new DefaultTypeCoercerFactory())
           .createFromObject(
-              Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
               description,
               arg,
               filesystem,

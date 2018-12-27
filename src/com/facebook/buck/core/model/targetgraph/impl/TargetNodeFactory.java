@@ -38,7 +38,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -82,7 +81,6 @@ public class TargetNodeFactory implements NodeCopier {
    */
   @SuppressWarnings("unchecked")
   public <T, U extends BaseDescription<T>> TargetNode<T> createFromObject(
-      HashCode rawInputsHashCode,
       U description,
       Object constructorArg,
       ProjectFilesystem filesystem,
@@ -93,7 +91,6 @@ public class TargetNodeFactory implements NodeCopier {
       CellPathResolver cellRoots)
       throws NoSuchBuildTargetException {
     return create(
-        rawInputsHashCode,
         description,
         (T) constructorArg,
         filesystem,
@@ -106,7 +103,6 @@ public class TargetNodeFactory implements NodeCopier {
 
   @SuppressWarnings("unchecked")
   private <T, U extends BaseDescription<T>> TargetNode<T> create(
-      HashCode rawInputsHashCode,
       U description,
       T constructorArg,
       ProjectFilesystem filesystem,
@@ -165,7 +161,6 @@ public class TargetNodeFactory implements NodeCopier {
     return ImmutableTargetNode.of(
         buildTarget,
         this,
-        rawInputsHashCode,
         description,
         constructorArg,
         filesystem,
@@ -219,7 +214,6 @@ public class TargetNodeFactory implements NodeCopier {
       TargetNode<?> originalNode, DescriptionWithTargetGraph<T> description) {
     try {
       return create(
-          originalNode.getRawInputsHashCode(),
           description,
           (T) originalNode.getConstructorArg(),
           originalNode.getFilesystem(),
@@ -242,7 +236,6 @@ public class TargetNodeFactory implements NodeCopier {
       TargetNode<T> originalNode, ImmutableSet<Flavor> flavors) {
     try {
       return create(
-          originalNode.getRawInputsHashCode(),
           originalNode.getDescription(),
           originalNode.getConstructorArg(),
           originalNode.getFilesystem(),
