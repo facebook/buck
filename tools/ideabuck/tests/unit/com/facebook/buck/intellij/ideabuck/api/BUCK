@@ -9,6 +9,6 @@ java_test(
         "//third-party/java/guava:guava-testlib",
         "//third-party/java/intellij:intellij-plugin-sdk",
         "//third-party/java/junit:junit",
-        "//tools/ideabuck:ideabuck-lib",
+        "//tools/ideabuck:api",
     ],
 )

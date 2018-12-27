@@ -46,18 +46,42 @@ java_library(
 )
 
 java_library(
+    name = "api",
+    srcs = glob(
+        [
+            "src/com/facebook/buck/intellij/ideabuck/api/**/*.java",
+        ],
+    ),
+    provided_deps = [
+        "//third-party/java/intellij:intellij-plugin-sdk",
+        # IntelliJ will provide these, too...
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+    source = "1.8",
+    target = "1.8",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+java_library(
     name = "ideabuck-lib",
     srcs = glob(
         [
             "src/**/*.java",
         ],
         exclude = [
+            "src/com/facebook/buck/intellij/ideabuck/api/**/*.java",
             "src/com/facebook/buck/intellij/ideabuck/file/BuckFileType.java",
             "src/com/facebook/buck/intellij/ideabuck/icons/BuckIcons.java",
             "src/com/facebook/buck/intellij/ideabuck/lang/psi/*.java",
             "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
         ],
     ),
+    exported_deps = [
+        ":api",
+    ],
     provided_deps = [
         "//third-party/java/intellij:intellij-plugin-sdk",
         # IntelliJ will provide these, too...
