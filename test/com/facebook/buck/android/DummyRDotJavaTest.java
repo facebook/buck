@@ -163,7 +163,7 @@ public class DummyRDotJavaTest {
         "DummyRDotJava.getBuildSteps() must return these exact steps.",
         expectedStepDescriptions,
         steps,
-        TestExecutionContext.newInstance());com.facebook.buck.android.endtoend.AndroidEndToEndTest
+        TestExecutionContext.newInstance());
 
     assertEquals(
         ImmutableSet.of(rDotJavaBinFolder, Paths.get(rDotJavaOutputJar), rDotJavaAnnotationFolder),
