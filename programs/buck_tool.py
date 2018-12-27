@@ -333,14 +333,19 @@ class BuckTool(object):
                     )
                     if exit_code == 2:
                         env["BUCK_BUILD_ID"] = str(uuid.uuid4())
-                        if not busy_diagnostic_displayed:
+                        if busy_diagnostic_displayed:
+                            sys.stderr.write(".")
+                            sys.stderr.flush()
+                        else:
                             logging.info(
-                                "Buck daemon is busy with another command. "
-                                + "Waiting for it to become free...\n"
-                                + "You can use 'buck kill' to kill buck "
+                                "You can use 'buck kill' to kill buck "
                                 + "if you suspect buck is stuck."
                             )
                             busy_diagnostic_displayed = True
+                            env["BUCK_BUSY_DISPLAYED"] = "1"
+                            sys.stderr.write("Waiting for Buck Daemon to become free")
+                            sys.stderr.flush()
+
                         time.sleep(3)
             except NailgunException as nex:
                 if nex.code == NailgunException.CONNECTION_BROKEN:

@@ -256,6 +256,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -300,6 +301,8 @@ public final class Main {
   private final Architecture architecture;
 
   private static final Semaphore commandSemaphore = new Semaphore(1);
+  private static AtomicReference<ImmutableList<String>> activeCommandArgs = new AtomicReference<>();
+
   private static volatile Optional<NGContext> commandSemaphoreNgClient = Optional.empty();
 
   private static final DaemonLifecycleManager daemonLifecycleManager = new DaemonLifecycleManager();
@@ -642,9 +645,23 @@ public final class Main {
     // If this command is not read only, acquire the command semaphore to become the only executing
     // read/write command. Early out will also help to not rotate log on each BUSY status which
     // happens in setupLogging().
-    try (CloseableWrapper<Semaphore> semaphore = getSemaphoreWrapper(command)) {
+    ImmutableList.Builder<String> previousCommandArgsBuilder = new ImmutableList.Builder<>();
+    try (CloseableWrapper<Semaphore> semaphore =
+        getSemaphoreWrapper(command, unexpandedCommandLineArgs, previousCommandArgsBuilder)) {
       if (!command.isReadOnly() && semaphore == null) {
-        LOG.warn("Buck server was busy executing a command. Maybe retrying later will help.");
+        // buck_tool will set BUCK_BUSY_DISPLAYED if it already displayed the busy error
+        if (!clientEnvironment.containsKey("BUCK_BUSY_DISPLAYED")) {
+          String activeCommandLine = "buck " + String.join(" ", previousCommandArgsBuilder.build());
+          if (activeCommandLine.length() > 80) {
+            activeCommandLine = activeCommandLine.substring(0, 76) + "...";
+          }
+
+          System.err.println(
+              String.format("Buck Daemon is busy executing '%s'.", activeCommandLine));
+          LOG.warn(
+              "Buck server was busy executing '%s'. Maybe retrying later will help.",
+              activeCommandLine);
+        }
         return ExitCode.BUSY;
       }
 
@@ -1858,29 +1875,52 @@ public final class Main {
    * Try to acquire global semaphore if needed to do so. Attach closer to acquired semaphore in a
    * form of a wrapper object so it can be used with try-with-resources.
    *
-   * @return Semaphore wrapper object if semaphore is acquired, null otherwise
+   * @return (semaphore, previous args) If we successfully acquire the semaphore, return (semaphore,
+   *     null). If there is already a command running but the command to run is readonly, return
+   *     (null, null) and allow the execution. Otherwise, return (null, previously running command
+   *     args) and block this command.
    */
-  private @Nullable CloseableWrapper<Semaphore> getSemaphoreWrapper(BuckCommand command) {
+  private @Nullable CloseableWrapper<Semaphore> getSemaphoreWrapper(
+      BuckCommand command,
+      ImmutableList<String> currentArgs,
+      ImmutableList.Builder<String> previousArgs) {
     // we can execute read-only commands (query, targets, etc) in parallel
     if (command.isReadOnly()) {
       // using nullable instead of Optional<> to use the object with try-with-resources
       return null;
     }
 
-    if (!commandSemaphore.tryAcquire()) {
-      return null;
+    while (!commandSemaphore.tryAcquire()) {
+      ImmutableList<String> activeCommandArgsCopy = activeCommandArgs.get();
+      if (activeCommandArgsCopy != null) {
+        // Keep retrying until we either 1) successfully acquire the semaphore or 2) failed to
+        // acquire the semaphore and obtain a valid list of args for on going command.
+        // In theory, this can stuck in a loop if it never observes such state if other commands
+        // winning the race, but I consider this to be a rare corner case.
+        previousArgs.addAll(activeCommandArgsCopy);
+        return null;
+      }
+
+      // Avoid hogging CPU
+      Thread.yield();
     }
 
     commandSemaphoreNgClient = context;
 
-    return CloseableWrapper.of(
-        commandSemaphore,
-        commandSemaphore -> {
-          commandSemaphoreNgClient = Optional.empty();
-          // TODO(buck_team): have background process killer have its own lifetime management
-          BgProcessKiller.disarm();
-          commandSemaphore.release();
-        });
+    // Keep track of command that is in progress
+    activeCommandArgs.set(currentArgs);
+
+    CloseableWrapper<Semaphore> semaphore =
+        CloseableWrapper.of(
+            commandSemaphore,
+            commandSemaphore -> {
+              activeCommandArgs.set(null);
+              commandSemaphoreNgClient = Optional.empty();
+              // TODO(buck_team): have background process killer have its own lifetime management
+              BgProcessKiller.disarm();
+              commandSemaphore.release();
+            });
+    return semaphore;
   }
 
 
