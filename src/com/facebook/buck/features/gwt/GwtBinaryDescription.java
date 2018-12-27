@@ -128,16 +128,9 @@ public class GwtBinaryDescription
                                 .addAll(javaLibrary.getSources())
                                 .addAll(javaLibrary.getResources())
                                 .build();
-                        ImmutableSortedSet.Builder<BuildRule> depsBuilder =
-                            ImmutableSortedSet.naturalOrder();
-
-                        depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(filesForGwtModule));
-
-                        if (generatedCode.isPresent()) {
-                          depsBuilder.add(javaLibrary);
-                        }
-
-                        ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
+                        ImmutableSortedSet<BuildRule> deps =
+                            ImmutableSortedSet.copyOf(
+                                ruleFinder.filterBuildRuleInputs(filesForGwtModule));
 
                         return new GwtModule(
                             gwtModuleTarget,
@@ -156,7 +149,10 @@ public class GwtBinaryDescription
         if (gwtModule.isPresent()) {
           extraDeps.add(gwtModule.get());
           gwtModuleJarsBuilder.add(Objects.requireNonNull(gwtModule.get().getSourcePathToOutput()));
-          generatedCode.ifPresent(gwtModuleJarsBuilder::add);
+          if (generatedCode.isPresent()) {
+            extraDeps.add(javaLibrary);
+            gwtModuleJarsBuilder.add(generatedCode.get());
+          }
         }
 
         // Traverse all of the deps of this rule.

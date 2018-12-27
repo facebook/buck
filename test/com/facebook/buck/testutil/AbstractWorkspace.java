@@ -559,6 +559,16 @@ public abstract class AbstractWorkspace {
   }
 
   /**
+   * Deletes the directory (relative to workspace root)
+   *
+   * @param source source path of file relative to workspace root
+   * @throws IOException
+   */
+  public void deleteRecursivelyIfExists(String path) throws IOException {
+    MostFiles.deleteRecursivelyIfExists(getPath(path));
+  }
+
+  /**
    * Moves the file at source (relative to workspace root) to dest (relative to workspace root)
    *
    * @param source source path of file relative to workspace root
