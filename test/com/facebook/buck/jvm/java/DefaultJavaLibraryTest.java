@@ -63,6 +63,7 @@ import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -113,7 +114,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
-  private static final String ANNOTATION_SCENARIO_TARGET = "//android/java/src/com/facebook:fb";
+  private static final String TEST_SCENARIO_TARGET = "//android/java/src/com/facebook:fb";
 
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
   private String annotationScenarioGenPath;
@@ -168,7 +169,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testJavaLibaryThrowsIfResourceIsDirectory() {
+  public void testJavaLibraryThrowsIfResourceIsDirectory() {
     ProjectFilesystem filesystem =
         new AllExistingProjectFilesystem() {
           @Override
@@ -187,23 +188,42 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
   }
 
-  /** Verify adding an annotation processor java binary. */
-  @Test
-  public void testAddAnnotationProcessorJavaBinary() throws Exception {
-    AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
-    scenario.addAnnotationProcessorTarget(validJavaBinary);
-
-    scenario
-        .getAnnotationProcessingParamsBuilder()
-        .setLegacyAnnotationProcessorNames(ImmutableList.of("MyProcessor"));
-
-    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
-
+  private void assertCorrectAnnotationProcessorParameters(ImmutableList<String> parameters) {
     MoreAsserts.assertContainsOne(parameters, "-processorpath");
     MoreAsserts.assertContainsOne(parameters, "-processor");
     assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
     MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
+  }
+
+  /** Verify adding an annotation processor prebuilt jar. */
+  @Test
+  public void testAddAnnotationProcessorPrebuiltJar() throws Exception {
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+    scenario.addAnnotationProcessorTarget(validPrebuiltJar, "MyProcessor");
+
+    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
+    assertCorrectAnnotationProcessorParameters(parameters);
+  }
+
+  /** Verify adding an annotation processor java library. */
+  @Test
+  public void testAddAnnotationProcessorJavaLibrary() throws Exception {
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+    scenario.addAnnotationProcessorTarget(validJavaBinary, "MyProcessor");
+
+    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
+    assertCorrectAnnotationProcessorParameters(parameters);
+  }
+
+  /** Verify adding an annotation processor java binary. */
+  @Test
+  public void testAddAnnotationProcessorJavaBinary() throws Exception {
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+    scenario.addAnnotationProcessorTarget(validJavaBinary, "MyProcessor");
+
+    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
+    assertCorrectAnnotationProcessorParameters(parameters);
 
     assertEquals(
         "Expected '-processor MyProcessor' parameters",
@@ -219,63 +239,18 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
   }
 
-  /** Verify adding an annotation processor prebuilt jar. */
-  @Test
-  public void testAddAnnotationProcessorPrebuiltJar() throws Exception {
-    AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
-    scenario.addAnnotationProcessorTarget(validPrebuiltJar);
-
-    scenario
-        .getAnnotationProcessingParamsBuilder()
-        .setLegacyAnnotationProcessorNames(ImmutableList.of("MyProcessor"));
-
-    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
-
-    MoreAsserts.assertContainsOne(parameters, "-processorpath");
-    MoreAsserts.assertContainsOne(parameters, "-processor");
-    assertHasProcessor(parameters, "MyProcessor");
-    MoreAsserts.assertContainsOne(parameters, "-s");
-    MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
-  }
-
-  /** Verify adding an annotation processor java library. */
-  @Test
-  public void testAddAnnotationProcessorJavaLibrary() throws Exception {
-    AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
-    scenario.addAnnotationProcessorTarget(validPrebuiltJar);
-
-    scenario
-        .getAnnotationProcessingParamsBuilder()
-        .setLegacyAnnotationProcessorNames(ImmutableList.of("MyProcessor"));
-
-    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
-
-    MoreAsserts.assertContainsOne(parameters, "-processorpath");
-    MoreAsserts.assertContainsOne(parameters, "-processor");
-    assertHasProcessor(parameters, "MyProcessor");
-    MoreAsserts.assertContainsOne(parameters, "-s");
-    MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
-  }
-
   /** Verify adding multiple annotation processors. */
   @Test
-  public void testAddAnnotationProcessorJar() throws Exception {
-    AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
-    scenario.addAnnotationProcessorTarget(validPrebuiltJar);
-    scenario.addAnnotationProcessorTarget(validJavaBinary);
-    scenario.addAnnotationProcessorTarget(validJavaLibrary);
-
-    scenario
-        .getAnnotationProcessingParamsBuilder()
-        .setLegacyAnnotationProcessorNames(ImmutableList.of("MyProcessor"));
+  public void testAddMultipleAnnotationProcessorJar() throws Exception {
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+    scenario.addAnnotationProcessorTarget(validPrebuiltJar, "MyProcessor");
+    scenario.addAnnotationProcessorTarget(validJavaBinary, "MyOtherProcessor");
+    scenario.addAnnotationProcessorTarget(validJavaLibrary, "MyThirdProcessor");
 
     ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
-
-    MoreAsserts.assertContainsOne(parameters, "-processorpath");
-    MoreAsserts.assertContainsOne(parameters, "-processor");
-    assertHasProcessor(parameters, "MyProcessor");
-    MoreAsserts.assertContainsOne(parameters, "-s");
-    MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
+    assertCorrectAnnotationProcessorParameters(parameters);
+    assertHasProcessor(parameters, "MyOtherProcessor");
+    assertHasProcessor(parameters, "MyThirdProcessor");
   }
 
   @Test
@@ -434,7 +409,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   /** Verify adding an annotation processor java binary with options. */
   @Test
   public void testAddAnnotationProcessorWithOptions() throws Exception {
-    AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
     scenario.addAnnotationProcessorTarget(validJavaBinary);
 
     scenario
@@ -1421,10 +1396,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)));
   }
 
-  private abstract static class AnnotationProcessorTarget {
+  private abstract static class TestBuildTargetTarget {
     private final String targetName;
 
-    private AnnotationProcessorTarget(String targetName) {
+    private TestBuildTargetTarget(String targetName) {
       this.targetName = targetName;
     }
 
@@ -1435,8 +1410,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     public abstract BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException;
   }
 
-  private AnnotationProcessorTarget validPrebuiltJar =
-      new AnnotationProcessorTarget("//tools/java/src/com/facebook/library:prebuilt-processors") {
+  private TestBuildTargetTarget validPrebuiltJar =
+      new TestBuildTargetTarget("//tools/java/src/com/facebook/library:prebuilt-processors") {
         @Override
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
           return PrebuiltJarBuilder.createBuilder(target)
@@ -1445,8 +1420,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         }
       };
 
-  private AnnotationProcessorTarget validJavaBinary =
-      new AnnotationProcessorTarget("//tools/java/src/com/facebook/annotations:custom-processors") {
+  private TestBuildTargetTarget validJavaBinary =
+      new TestBuildTargetTarget("//tools/java/src/com/facebook/annotations:custom-processors") {
         @Override
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
           return new JavaBinaryRuleBuilder(target)
@@ -1455,8 +1430,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         }
       };
 
-  private AnnotationProcessorTarget validJavaLibrary =
-      new AnnotationProcessorTarget("//tools/java/src/com/facebook/somejava:library") {
+  private TestBuildTargetTarget validJavaLibrary =
+      new TestBuildTargetTarget("//tools/java/src/com/facebook/somejava:library") {
         @Override
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
           return JavaLibraryBuilder.createBuilder(target, testJavaBuckConfig)
@@ -1466,8 +1441,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         }
       };
 
-  private AnnotationProcessorTarget validJavaLibraryAbi =
-      new AnnotationProcessorTarget("//tools/java/src/com/facebook/somejava:library#class-abi") {
+  private TestBuildTargetTarget validJavaLibraryAbi =
+      new TestBuildTargetTarget("//tools/java/src/com/facebook/somejava:library#class-abi") {
         @Override
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
           return CalculateClassAbi.of(
@@ -1479,24 +1454,60 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         }
       };
 
-  // Captures all the common code between the different annotation processing test scenarios.
-  private class AnnotationProcessingScenario {
-    private final AbstractJavacPluginParams.Builder annotationProcessingParamsBuilder;
+  // Captures all the common code between the different
+  // javac plugins, either an annotation processing or a
+  // standard javac plugin, test scenarios.
+  private class TestJavaPluginScenario {
+    private final AbstractJavacPluginParams.Builder annotationProcessorParams;
+    private final AbstractJavacPluginParams.Builder standardJavacPluginParams;
 
-    public AnnotationProcessingScenario() {
-      annotationProcessingParamsBuilder = JavacPluginParams.builder();
+    public TestJavaPluginScenario() {
+      annotationProcessorParams = JavacPluginParams.builder();
+      standardJavacPluginParams = JavacPluginParams.builder();
     }
 
     public AbstractJavacPluginParams.Builder getAnnotationProcessingParamsBuilder() {
-      return annotationProcessingParamsBuilder;
+      return annotationProcessorParams;
     }
 
-    public void addAnnotationProcessorTarget(AnnotationProcessorTarget processor)
+    public AbstractJavacPluginParams.Builder getStandardJavacPluginParamsBuilder() {
+      return standardJavacPluginParams;
+    }
+
+    public void addAnnotationProcessorTarget(
+        TestBuildTargetTarget processor,
+        String... processorNames)
         throws NoSuchBuildTargetException {
       BuildTarget target = processor.createTarget();
       BuildRule rule = processor.createRule(target);
 
-      annotationProcessingParamsBuilder.addLegacyAnnotationProcessorDeps(rule);
+      JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
+      propsBuilder.addProcessorNames(processorNames);
+      propsBuilder.addDep(rule);
+      propsBuilder.setCanReuseClassLoader(true);
+      propsBuilder.setDoesNotAffectAbi(true);
+      propsBuilder.setSupportsAbiGenerationFromSource(true);
+      propsBuilder.setType(Type.ANNOTATION_PROCESSOR);
+
+      annotationProcessorParams.addPluginProperties(propsBuilder.build().resolve());
+    }
+
+    public void addStandardJavacPluginTarget(
+        TestBuildTargetTarget processor,
+        String pluginName)
+        throws NoSuchBuildTargetException {
+      BuildTarget target = processor.createTarget();
+      BuildRule rule = processor.createRule(target);
+
+      JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
+      propsBuilder.addProcessorNames(pluginName);
+      propsBuilder.addDep(rule);
+      propsBuilder.setCanReuseClassLoader(true);
+      propsBuilder.setDoesNotAffectAbi(true);
+      propsBuilder.setSupportsAbiGenerationFromSource(true);
+      propsBuilder.setType(Type.JAVAC_PLUGIN);
+
+      annotationProcessorParams.addPluginProperties(propsBuilder.build().resolve());
     }
 
     public ImmutableList<String> buildAndGetCompileParameters()
@@ -1520,15 +1531,17 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     private DefaultJavaLibrary createJavaLibraryRule(ProjectFilesystem projectFilesystem)
         throws IOException, NoSuchBuildTargetException {
-      BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);
+      BuildTarget buildTarget = BuildTargetFactory.newInstance(TEST_SCENARIO_TARGET);
 
       tmp.newFolder("android", "java", "src", "com", "facebook");
       String src = "android/java/src/com/facebook/Main.java";
       tmp.newFile(src);
 
-      JavacPluginParams params = annotationProcessingParamsBuilder.build();
       JavacOptions options =
-          JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setAnnotationProcessingParams(params).build();
+          JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
+              .setJavaAnnotationProcessorParams(annotationProcessorParams.build())
+              .setStandardJavacPluginParams(standardJavacPluginParams.build())
+              .build();
 
       BuildRuleParams buildRuleParams = TestBuildRuleParams.create();
 
