@@ -86,6 +86,8 @@ public class BuckSettingsUI extends JPanel {
 
   private TextFieldWithBrowseButton buckPathField;
   private TextFieldWithBrowseButton adbPathField;
+  private TextFieldWithBrowseButton buildifierPathField;
+  private TextFieldWithBrowseButton buildozerPathField;
   private JBTextField customizedInstallSettingField;
   private JCheckBox showDebug;
   private JCheckBox runAfterInstall;
@@ -211,9 +213,27 @@ public class BuckSettingsUI extends JPanel {
     }
   }
 
+  private Optional<String> detectBuildifierExecutable() {
+    try {
+      return Optional.ofNullable(executableDetector.getBuildifierExecutable());
+    } catch (RuntimeException e) {
+      return Optional.empty();
+    }
+  }
+
+  private Optional<String> detectBuildozerExecutable() {
+    try {
+      return Optional.ofNullable(executableDetector.getBuildozerExecutable());
+    } catch (RuntimeException e) {
+      return Optional.empty();
+    }
+  }
+
   private JPanel initExecutablesSection() {
     final Optional<String> detectedBuckExecutable = detectBuckExecutable();
     final Optional<String> detectedAdbExecutable = detectAdbExecutable();
+    final Optional<String> detectedBuildifierExecutable = detectBuildifierExecutable();
+    final Optional<String> detectedBuildozerExecutable = detectBuildozerExecutable();
     buckPathField =
         createTextFieldWithBrowseButton(
             detectedBuckExecutable.map(s -> "Default: " + s).orElse("No 'buck' found on path"),
@@ -231,6 +251,30 @@ public class BuckSettingsUI extends JPanel {
             buckProjectSettingsProvider.getProject());
     JButton testAdbPathButton =
         createExecutableFieldTestingButton("adb", detectedAdbExecutable, adbPathField);
+
+    buildifierPathField =
+        createTextFieldWithBrowseButton(
+            detectedBuildifierExecutable
+                .map(s -> "Default: " + s)
+                .orElse("No 'buildifier' found on path"),
+            "Buildifier Executable",
+            "Specify the buildifier executable to use (for this project)",
+            null);
+    JButton testBuildifierPathButton =
+        createExecutableFieldTestingButton(
+            "buildifier", detectedBuildifierExecutable, buildifierPathField);
+
+    buildozerPathField =
+        createTextFieldWithBrowseButton(
+            detectedBuildozerExecutable
+                .map(s -> "Default: " + s)
+                .orElse("No 'buildozer' found on path"),
+            "Buildozer Executable",
+            "Specify the buildozer executable to use (for this project)",
+            null);
+    JButton testBuildozerPathButton =
+        createExecutableFieldTestingButton(
+            "buildozer", detectedBuildozerExecutable, buildozerPathField);
 
     final JPanel panel = new JPanel(new GridBagLayout());
     panel.setBorder(IdeBorderFactory.createTitledBorder("Executables", true));
@@ -262,6 +306,16 @@ public class BuckSettingsUI extends JPanel {
     panel.add(new JLabel("Adb Executable:"), leftSide);
     panel.add(adbPathField, middle);
     panel.add(testAdbPathButton, rightSide);
+
+    leftSide.gridy = middle.gridy = rightSide.gridy = 2;
+    panel.add(new JLabel("Buildifer Executable:"), leftSide);
+    panel.add(buildifierPathField, middle);
+    panel.add(testBuildifierPathButton, rightSide);
+
+    leftSide.gridy = middle.gridy = rightSide.gridy = 3;
+    panel.add(new JLabel("Buildozer Executable:"), leftSide);
+    panel.add(buildozerPathField, middle);
+    panel.add(testBuildozerPathButton, rightSide);
     return panel;
   }
 
@@ -579,6 +633,12 @@ public class BuckSettingsUI extends JPanel {
         || !Comparing.equal(
             adbPathField.getText().trim(),
             buckExecutableSettingsProvider.getAdbExecutableOverride().orElse(""))
+        || !Comparing.equal(
+            buildifierPathField.getText().trim(),
+            buckExecutableSettingsProvider.getBuildifierExecutableOverride().orElse(""))
+        || !Comparing.equal(
+            buildozerPathField.getText().trim(),
+            buckExecutableSettingsProvider.getBuildozerExecutableOverride().orElse(""))
         || buckProjectSettingsProvider.isRunAfterInstall() != runAfterInstall.isSelected()
         || buckProjectSettingsProvider.isShowDebugWindow() != showDebug.isSelected()
         || buckProjectSettingsProvider.isMultiInstallMode() != multiInstallMode.isSelected()
@@ -596,6 +656,10 @@ public class BuckSettingsUI extends JPanel {
     buckExecutableSettingsProvider.setBuckExecutableOverride(
         textToOptional(buckPathField.getText()));
     buckExecutableSettingsProvider.setAdbExecutableOverride(textToOptional(adbPathField.getText()));
+    buckExecutableSettingsProvider.setBuildifierExecutableOverride(
+        textToOptional(buildifierPathField.getText()));
+    buckExecutableSettingsProvider.setBuildozerExecutableOverride(
+        textToOptional(buildozerPathField.getText()));
     buckProjectSettingsProvider.setShowDebugWindow(showDebug.isSelected());
     buckProjectSettingsProvider.setRunAfterInstall(runAfterInstall.isSelected());
     buckProjectSettingsProvider.setMultiInstallMode(multiInstallMode.isSelected());
@@ -610,6 +674,10 @@ public class BuckSettingsUI extends JPanel {
   public void reset() {
     adbPathField.setText(buckExecutableSettingsProvider.getAdbExecutableOverride().orElse(""));
     buckPathField.setText(buckExecutableSettingsProvider.getBuckExecutableOverride().orElse(""));
+    buildifierPathField.setText(
+        buckExecutableSettingsProvider.getBuildifierExecutableOverride().orElse(""));
+    buildozerPathField.setText(
+        buckExecutableSettingsProvider.getBuildozerExecutableOverride().orElse(""));
     showDebug.setSelected(buckProjectSettingsProvider.isShowDebugWindow());
     runAfterInstall.setSelected(buckProjectSettingsProvider.isRunAfterInstall());
     multiInstallMode.setSelected(buckProjectSettingsProvider.isMultiInstallMode());

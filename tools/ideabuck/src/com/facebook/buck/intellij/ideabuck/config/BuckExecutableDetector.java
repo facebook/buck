@@ -30,6 +30,10 @@ public interface BuckExecutableDetector {
 
   String getAdbExecutable();
 
+  String getBuildifierExecutable();
+
+  String getBuildozerExecutable();
+
   String getBuckExecutable();
 
   String getNamedExecutable(String name);
@@ -41,6 +45,8 @@ public interface BuckExecutableDetector {
   /** Default implementation. */
   class Impl implements BuckExecutableDetector {
     private static final Path BUCK_EXECUTABLE = Paths.get("buck");
+    private static final Path BUILDIFIER_EXECUTABLE = Paths.get("buildifier");
+    private static final Path BUILDOZER_EXECUTABLE = Paths.get("buildozer");
     private static final Path ADB_EXECUTABLE = Paths.get("adb");
     private static final ExecutableFinder EXECUTABLE_FINDER = new ExecutableFinder();
 
@@ -65,6 +71,16 @@ public interface BuckExecutableDetector {
       Map<String, String> modifiedEnv = new HashMap<>(env);
       appendAndroidSdkPlatformToolsAtEndOfPath(modifiedEnv);
       return getExecutable(ADB_EXECUTABLE, ImmutableMap.copyOf(modifiedEnv));
+    }
+
+    @Override
+    public String getBuildifierExecutable() {
+      return getExecutable(BUILDIFIER_EXECUTABLE, env);
+    }
+
+    @Override
+    public String getBuildozerExecutable() {
+      return getExecutable(BUILDOZER_EXECUTABLE, env);
     }
 
     private void appendAndroidSdkPlatformToolsAtEndOfPath(Map<String, String> env) {

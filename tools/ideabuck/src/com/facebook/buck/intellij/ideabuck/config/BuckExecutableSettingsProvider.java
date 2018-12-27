@@ -34,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
 public class BuckExecutableSettingsProvider
     implements ProjectComponent, PersistentStateComponent<BuckExecutableSettingsProvider.State> {
 
-  private BuckExecutableDetector buckExecutableDetector;
+  private BuckExecutableDetector executableDetector;
   private State state = new State();
   private static final Logger LOG = Logger.getInstance(BuckExecutableSettingsProvider.class);
 
@@ -47,8 +47,8 @@ public class BuckExecutableSettingsProvider
   }
 
   @VisibleForTesting
-  BuckExecutableSettingsProvider(BuckExecutableDetector buckExecutableDetector) {
-    this.buckExecutableDetector = buckExecutableDetector;
+  BuckExecutableSettingsProvider(BuckExecutableDetector executableDetector) {
+    this.executableDetector = executableDetector;
   }
 
   @Override
@@ -86,7 +86,7 @@ public class BuckExecutableSettingsProvider
     String executable = state.buckExecutable;
     if (executable == null) {
       try {
-        executable = buckExecutableDetector.getBuckExecutable();
+        executable = executableDetector.getBuckExecutable();
       } catch (RuntimeException e) {
         // let the user insert the path to the executable
         LOG.error(
@@ -116,7 +116,7 @@ public class BuckExecutableSettingsProvider
   }
 
   /**
-   * Returns a path to a Buck executable to use with this project, or {@code null} if none can be
+   * Returns a path to an adb executable to use with this project, or {@code null} if none can be
    * found.
    */
   @Nullable
@@ -124,13 +124,89 @@ public class BuckExecutableSettingsProvider
     String executable = state.adbExecutable;
     if (executable == null) {
       try {
-        executable = buckExecutableDetector.getAdbExecutable();
+        executable = executableDetector.getAdbExecutable();
       } catch (RuntimeException e) {
         // let the user insert the path to the executable
         LOG.error(
             e
                 + ". You can specify the adb path from "
                 + "Preferences/Settings > Tools > Buck > Adb Executable Path",
+            e);
+      }
+    }
+    return executable;
+  }
+
+  /**
+   * Returns the path to a buildifer executable that should explicitly be preferred to {@link
+   * BuckExecutableDetector#getBuildifierExecutable()} for this project.
+   */
+  public Optional<String> getBuildifierExecutableOverride() {
+    return Optional.ofNullable(state.buildifierExecutable);
+  }
+
+  /**
+   * Sets the path of a buildifier executable that should explicitly be preferred to {@link
+   * BuckExecutableDetector#getBuildifierExecutable()} for this project.
+   */
+  public void setBuildifierExecutableOverride(Optional<String> buildifierExecutableOverride) {
+    this.state.buildifierExecutable = buildifierExecutableOverride.orElse(null);
+  }
+
+  /**
+   * Returns a path to a buildifier executable to use with this project, or {@code null} if none can
+   * be found.
+   */
+  @Nullable
+  public String resolveBuildifierExecutable() {
+    String executable = state.buildifierExecutable;
+    if (executable == null) {
+      try {
+        executable = executableDetector.getBuildifierExecutable();
+      } catch (RuntimeException e) {
+        // let the user insert the path to the executable
+        LOG.error(
+            e
+                + ". You can specify the buildifier path from "
+                + "Preferences/Settings > Tools > Buck",
+            e);
+      }
+    }
+    return executable;
+  }
+
+  /**
+   * Returns the path to a buildifer executable that should explicitly be preferred to {@link
+   * BuckExecutableDetector#getBuildozerExecutable()} for this project.
+   */
+  public Optional<String> getBuildozerExecutableOverride() {
+    return Optional.ofNullable(state.buildozerExecutable);
+  }
+
+  /**
+   * Sets the path of a buildozer executable that should explicitly be preferred to {@link
+   * BuckExecutableDetector#getBuildozerExecutable()} for this project.
+   */
+  public void setBuildozerExecutableOverride(Optional<String> buildozerExecutableOverride) {
+    this.state.buildozerExecutable = buildozerExecutableOverride.orElse(null);
+  }
+
+  /**
+   * Returns a path to a buildozer executable to use with this project, or {@code null} if none can
+   * be found.
+   */
+  @Nullable
+  public String resolveBuildozerExecutable() {
+    String executable = state.buildozerExecutable;
+    if (executable == null) {
+      try {
+        executable = executableDetector.getBuildozerExecutable();
+      } catch (RuntimeException e) {
+        // let the user insert the path to the executable
+        LOG.error(
+            e
+                + ". You can specify the buildozer path from "
+                + "Preferences/Settings > Tools > Buck",
             e);
       }
     }
@@ -151,6 +227,18 @@ public class BuckExecutableSettingsProvider
     /** Optional adb executable to prefer to {@link BuckExecutableDetector#getAdbExecutable()}. */
     @Nullable public String adbExecutable = null;
 
+    /**
+     * Optional buildifier executable to prefer to {@link
+     * BuckExecutableDetector#getBuildifierExecutable()}.
+     */
+    @Nullable public String buildifierExecutable = null;
+
+    /**
+     * Optional buildozer executable to prefer to {@link
+     * BuckExecutableDetector#getBuildozerExecutable()}.
+     */
+    @Nullable public String buildozerExecutable = null;
+
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -161,12 +249,15 @@ public class BuckExecutableSettingsProvider
       }
       State state = (State) o;
       return Objects.equal(buckExecutable, state.buckExecutable)
-          && Objects.equal(adbExecutable, state.adbExecutable);
+          && Objects.equal(adbExecutable, state.adbExecutable)
+          && Objects.equal(buildifierExecutable, state.buildifierExecutable)
+          && Objects.equal(buildozerExecutable, state.buildozerExecutable);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(buckExecutable, adbExecutable);
+      return Objects.hashCode(
+          buckExecutable, adbExecutable, buildifierExecutable, buildozerExecutable);
     }
   }
 }
