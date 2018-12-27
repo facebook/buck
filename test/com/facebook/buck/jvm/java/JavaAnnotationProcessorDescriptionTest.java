@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.junit.Rule;
@@ -69,8 +70,9 @@ public class JavaAnnotationProcessorDescriptionTest {
                     arg);
 
     // Verify
-    AbstractJavacPluginProperties props =
-        AbstractJavacPluginProperties.builder()
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setType(Type.ANNOTATION_PROCESSOR)
             .setCanReuseClassLoader(true)
             .setDoesNotAffectAbi(true)
             .setSupportsAbiGenerationFromSource(true)
@@ -111,8 +113,9 @@ public class JavaAnnotationProcessorDescriptionTest {
                     arg);
 
     // Verify
-    AbstractJavacPluginProperties props =
-        AbstractJavacPluginProperties.builder()
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setType(Type.ANNOTATION_PROCESSOR)
             .setCanReuseClassLoader(true)
             .setDoesNotAffectAbi(true)
             .setSupportsAbiGenerationFromSource(true)
@@ -154,8 +157,9 @@ public class JavaAnnotationProcessorDescriptionTest {
                     arg);
 
     // Verify
-    AbstractJavacPluginProperties props =
-        AbstractJavacPluginProperties.builder()
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setType(Type.ANNOTATION_PROCESSOR)
             .setCanReuseClassLoader(true)
             .setDoesNotAffectAbi(true)
             .setSupportsAbiGenerationFromSource(true)

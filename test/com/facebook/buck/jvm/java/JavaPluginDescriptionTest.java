@@ -1,0 +1,84 @@
+package com.facebook.buck.jvm.java;
+
+import static org.junit.Assert.assertEquals;
+
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+public class JavaPluginDescriptionTest {
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+
+  @Test
+  public void testPluginClassIsPassedToJavaPlugin() {
+    // Given
+    JavaPluginDescriptionArg arg =
+        JavaPluginDescriptionArg.builder()
+            .setName("javac_plugin")
+            .setIsolateClassLoader(false)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .setPluginName("ThePlugin")
+            .build();
+
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
+
+    BuildRuleParams params =
+        TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
+
+    // When
+    StandardJavacPlugin standardJavacPlugin =
+        (StandardJavacPlugin)
+            new JavaPluginDescription()
+                .createBuildRule(
+                    TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
+                    buildTarget,
+                    params,
+                    arg);
+
+    // Verify
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setType(Type.JAVAC_PLUGIN)
+            .setCanReuseClassLoader(true)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .addProcessorNames("ThePlugin")
+            .build();
+
+    assertEquals(standardJavacPlugin.getUnresolvedProperties(), props);
+  }
+
+  @Test
+  public void testRaisesExceptionWhenNoPluginNameIsSpecified() {
+
+    // Verify
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Cannot build JavaPluginDescriptionArg, some of required attributes are not set [pluginName]");
+
+    // Given
+    JavaPluginDescriptionArg arg =
+        JavaPluginDescriptionArg.builder()
+            .setName("javac_plugin")
+            .setIsolateClassLoader(false)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .build();
+  }
+}

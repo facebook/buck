@@ -188,6 +188,175 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
   }
 
+  private void assertHasClasspath(List<String> params, String expectedClasspath) {
+    int index = params.indexOf("-classpath");
+    if (index >= params.size()) {
+      fail(String.format("No classpath argument found in %s.", params));
+    }
+
+    String realClasspath = params.get(index + 1);
+    if (!realClasspath.equals(expectedClasspath)) {
+      fail(String.format(
+          "Expected classpath:\n%s\nIs not equal to the real one in:\n%s.",
+          expectedClasspath,
+          params));
+    }
+  }
+
+  private String resolveClasspath(BuildRule rule) {
+    return resolveClasspathPath(rule).toString();
+  }
+
+  private Path resolveClasspathPath(BuildRule rule) {
+    return rule.getProjectFilesystem().resolve(
+        DefaultSourcePathResolver
+            .from(new SourcePathRuleFinder(graphBuilder))
+            .getAbsolutePath(rule.getSourcePathToOutput())
+    );
+  }
+
+  private void assertCorrectStandardJavacPluginParameters(
+      ImmutableList<String> parameters,
+      String expectedClasspath,
+      ImmutableList<String> pluginNames) {
+
+    assertHasClasspath(parameters, expectedClasspath);
+    for (String name : pluginNames) {
+      MoreAsserts.assertContainsOne(parameters, "-Xplugin:" + name);
+    }
+  }
+
+  private void testValidStandardJavacPluginFrom(
+      ImmutableList<String> pluginNames,
+      ImmutableList<TestBuildTargetTarget> testTargets) throws Exception {
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+    StringBuilder classpath = new StringBuilder();
+
+    for (int i = 0; i < testTargets.size(); i++) {
+      TestBuildTargetTarget testTarget = testTargets.get(i);
+
+      BuildTarget target = testTarget.createTarget();
+      BuildRule rule = testTarget.createRule(target);
+      scenario.addStandardJavacPluginTarget(target, rule, pluginNames.get(i));
+
+      classpath.append(resolveClasspath(rule));
+
+      if (i != testTargets.size() - 1) {
+        classpath.append(":");
+      }
+    }
+
+    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
+    assertCorrectStandardJavacPluginParameters(parameters, classpath.toString(), pluginNames);
+  }
+
+  private void testValidStandardJavacPluginFrom(String pluginName, TestBuildTargetTarget target)
+      throws Exception {
+    testValidStandardJavacPluginFrom(
+        ImmutableList.of(pluginName),
+        ImmutableList.of(target)
+    );
+  }
+
+  @Test
+  public void testAddJavacPluginPrebuiltJar() throws Exception {
+    testValidStandardJavacPluginFrom("PrebuiltPlugin", validPrebuiltJar);
+  }
+
+  @Test
+  public void testAddJavacPluginJavaLibrary() throws Exception {
+    testValidStandardJavacPluginFrom("JavaLibPlugin", validJavaLibrary);
+  }
+
+  @Test
+  public void testAddJavacPluginJavaBinary() throws Exception {
+    testValidStandardJavacPluginFrom("JavaBin", validJavaBinary);
+  }
+
+  @Test
+  public void testMultipleJavacPlugins() throws Exception {
+    testValidStandardJavacPluginFrom(
+        ImmutableList.of("Prebuilt", "JavaLib", "JavaBin"),
+        ImmutableList.of(validPrebuiltJar, validJavaLibrary, validJavaBinary)
+    );
+  }
+
+  @Test
+  public void testJavacPluginsWithOptions() throws Exception {
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+    BuildTarget target = validJavaBinary.createTarget();
+    BuildRule rule = validJavaBinary.createRule(target);
+
+    scenario.addStandardJavacPluginTarget(target, rule, "MyPlugin");
+
+    scenario.getStandardJavacPluginParamsBuilder().addParameters("MyParameter");
+    scenario.getStandardJavacPluginParamsBuilder().addParameters("MyKey=MyValue");
+
+    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
+
+    MoreAsserts.assertContainsOne(parameters, "MyParameter");
+    MoreAsserts.assertContainsOne(parameters, "MyKey=MyValue");
+  }
+
+  @Test
+  public void testNoJavacPluginAndNoDeps_WillResultInEmptyClasspath() throws Exception {
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
+    assertHasClasspath(parameters, "''");
+  }
+
+  @Test
+  public void testNoJavacPluginAndWithDeps_WillResultInDepsClasspath() throws Exception {
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+
+    BuildTarget target = validJavaLibrary.createTarget();
+    BuildRule rule = validJavaLibrary.createRule(target);
+    Path classpath = resolveClasspathPath(rule);
+
+    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters(
+        ImmutableSortedSet.of(classpath)
+    );
+
+    assertHasClasspath(parameters, classpath.toString());
+  }
+
+  @Test
+  public void testWithJavacPluginAndWithDeps_WillResultInBothClasspath() throws Exception {
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+
+    BuildTarget depTarget = validJavaLibrary.createTarget();
+    BuildRule depRule = validJavaLibrary.createRule(depTarget);
+    Path depClasspathPath = resolveClasspathPath(depRule);
+
+    BuildTarget pluginTarget = validJavaLibrary.createTarget();
+    BuildRule plguinRule = validJavaLibrary.createRule(pluginTarget);
+    String pluginClasspath = resolveClasspath(depRule);
+
+    scenario.addStandardJavacPluginTarget(pluginTarget, plguinRule, "MyPlugin");
+
+
+    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters(
+        ImmutableSortedSet.of(depClasspathPath)
+    );
+
+    assertHasClasspath(
+        parameters,
+        depClasspathPath.toString() + ":" + pluginClasspath
+    );
+  }
+
+  private void assertHasProcessor(List<String> params, String processor) {
+    int index = params.indexOf("-processor");
+    if (index >= params.size()) {
+      fail(String.format("No processor argument found in %s.", params));
+    }
+
+    Set<String> processors = ImmutableSet.copyOf(Splitter.on(',').split(params.get(index + 1)));
+    if (!processors.contains(processor)) {
+      fail(String.format("Annotation processor %s not found in %s.", processor, params));
+    }
+  }
+
   private void assertCorrectAnnotationProcessorParameters(ImmutableList<String> parameters) {
     MoreAsserts.assertContainsOne(parameters, "-processorpath");
     MoreAsserts.assertContainsOne(parameters, "-processor");
@@ -251,6 +420,38 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertCorrectAnnotationProcessorParameters(parameters);
     assertHasProcessor(parameters, "MyOtherProcessor");
     assertHasProcessor(parameters, "MyThirdProcessor");
+  }
+
+  /** Verify adding an annotation processor java binary with options. */
+  @Test
+  public void testAddAnnotationProcessorWithOptions() throws Exception {
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+    scenario.addAnnotationProcessorTarget(validJavaBinary, "MyProcessor");
+
+    scenario.getAnnotationProcessingParamsBuilder().addParameters("MyParameter");
+    scenario.getAnnotationProcessingParamsBuilder().addParameters("MyKey=MyValue");
+    scenario.getAnnotationProcessingParamsBuilder().setProcessOnly(true);
+
+    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
+
+    MoreAsserts.assertContainsOne(parameters, "-processorpath");
+    MoreAsserts.assertContainsOne(parameters, "-processor");
+    assertHasProcessor(parameters, "MyProcessor");
+    MoreAsserts.assertContainsOne(parameters, "-s");
+    MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
+    MoreAsserts.assertContainsOne(parameters, "-proc:only");
+
+    assertEquals(
+        "Expected '-processor MyProcessor' parameters",
+        parameters.indexOf("-processor") + 1,
+        parameters.indexOf("MyProcessor"));
+    assertEquals(
+        "Expected '-s " + annotationScenarioGenPath + "' parameters",
+        parameters.indexOf("-s") + 1,
+        parameters.indexOf(annotationScenarioGenPath));
+
+    MoreAsserts.assertContainsOne(parameters, "-AMyParameter");
+    MoreAsserts.assertContainsOne(parameters, "-AMyKey=MyValue");
   }
 
   @Test
@@ -404,53 +605,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .getCoveredByDepFilePredicate(
                 DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)))
             .test(sourcePath));
-  }
-
-  /** Verify adding an annotation processor java binary with options. */
-  @Test
-  public void testAddAnnotationProcessorWithOptions() throws Exception {
-    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
-    scenario.addAnnotationProcessorTarget(validJavaBinary);
-
-    scenario
-        .getAnnotationProcessingParamsBuilder()
-        .setLegacyAnnotationProcessorNames(ImmutableList.of("MyProcessor"));
-    scenario.getAnnotationProcessingParamsBuilder().addParameters("MyParameter");
-    scenario.getAnnotationProcessingParamsBuilder().addParameters("MyKey=MyValue");
-    scenario.getAnnotationProcessingParamsBuilder().setProcessOnly(true);
-
-    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
-
-    MoreAsserts.assertContainsOne(parameters, "-processorpath");
-    MoreAsserts.assertContainsOne(parameters, "-processor");
-    assertHasProcessor(parameters, "MyProcessor");
-    MoreAsserts.assertContainsOne(parameters, "-s");
-    MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
-    MoreAsserts.assertContainsOne(parameters, "-proc:only");
-
-    assertEquals(
-        "Expected '-processor MyProcessor' parameters",
-        parameters.indexOf("-processor") + 1,
-        parameters.indexOf("MyProcessor"));
-    assertEquals(
-        "Expected '-s " + annotationScenarioGenPath + "' parameters",
-        parameters.indexOf("-s") + 1,
-        parameters.indexOf(annotationScenarioGenPath));
-
-    MoreAsserts.assertContainsOne(parameters, "-AMyParameter");
-    MoreAsserts.assertContainsOne(parameters, "-AMyKey=MyValue");
-  }
-
-  private void assertHasProcessor(List<String> params, String processor) {
-    int index = params.indexOf("-processor");
-    if (index >= params.size()) {
-      fail(String.format("No processor argument found in %s.", params));
-    }
-
-    Set<String> processors = ImmutableSet.copyOf(Splitter.on(',').split(params.get(index + 1)));
-    if (!processors.contains(processor)) {
-      fail(String.format("Annotation processor %s not found in %s.", processor, params));
-    }
   }
 
   @Test
@@ -1493,12 +1647,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
 
     public void addStandardJavacPluginTarget(
-        TestBuildTargetTarget processor,
+        BuildTarget target,
+        BuildRule rule,
         String pluginName)
         throws NoSuchBuildTargetException {
-      BuildTarget target = processor.createTarget();
-      BuildRule rule = processor.createRule(target);
-
       JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
       propsBuilder.addProcessorNames(pluginName);
       propsBuilder.addDep(rule);
@@ -1507,10 +1659,15 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       propsBuilder.setSupportsAbiGenerationFromSource(true);
       propsBuilder.setType(Type.JAVAC_PLUGIN);
 
-      annotationProcessorParams.addPluginProperties(propsBuilder.build().resolve());
+      standardJavacPluginParams.addPluginProperties(propsBuilder.build().resolve());
     }
 
     public ImmutableList<String> buildAndGetCompileParameters()
+        throws IOException, NoSuchBuildTargetException {
+      return buildAndGetCompileParameters(ImmutableSortedSet.of());
+    }
+
+    public ImmutableList<String> buildAndGetCompileParameters(ImmutableSortedSet<Path> buildClasspath)
         throws IOException, NoSuchBuildTargetException {
       ProjectFilesystem projectFilesystem =
           TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
@@ -1525,8 +1682,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               .setDebugEnabled(true)
               .build();
 
-      return javacCommand.getOptions(
-          executionContext, /* buildClasspathEntries */ ImmutableSortedSet.of());
+      return javacCommand.getOptions(executionContext, buildClasspath);
     }
 
     private DefaultJavaLibrary createJavaLibraryRule(ProjectFilesystem projectFilesystem)

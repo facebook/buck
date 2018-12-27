@@ -540,6 +540,48 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testJavacPluginCrashesShouldCrashBuck()
+      throws IOException {
+    setUpProjectWorkspaceForScenario("javac_plugin_crashes");
+
+    // Run `buck build` to create the dep file
+    BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
+    // Warm the used classes file
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", mainTarget.getFullyQualifiedName());
+    buildResult.assertFailure("MyPlugin won't let you build this");
+  }
+
+  @Test
+  public void testJavacPluginFileChangeThatDoesNotModifyCodeDoesNotCauseRebuild()
+    throws IOException {
+    setUpProjectWorkspaceForScenario("javac_plugin");
+
+    // Run `buck build` to create the dep file
+    BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
+    // Warm the used classes file
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", mainTarget.getFullyQualifiedName());
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:util");
+
+    // Edit a source file in the javac plugin in a way that doesn't change the ABI
+    workspace.replaceFileContents("JavacPlugin.java", "doStuff();", "doStuff(); /* false */");
+
+    // Run `buck build` again.
+    ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:main");
+    buildResult2.assertSuccess("Successful build should exit with 0.");
+
+    // If all goes well, we'll rebuild //:javac_plugin because of the source change,
+    // and then rebuild //:main because the code of the annotation processor has changed
+    workspace.getBuildLog().assertTargetHadMatchingRuleKey("//:util");
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:main");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:javac_plugin_lib");
+  }
+
+  @Test
   public void testFileChangeThatDoesNotModifyAbiOfAUsedClassAvoidsRebuild() throws IOException {
     setUpProjectWorkspaceForScenario("dep_file_rule_key");
 
