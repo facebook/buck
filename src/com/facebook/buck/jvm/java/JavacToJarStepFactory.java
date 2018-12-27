@@ -255,6 +255,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
   @Override
   public boolean hasAnnotationProcessing() {
-    return !javacOptions.getAnnotationProcessingParams().isEmpty();
+    return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 }

@@ -146,6 +146,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
 
   @Override
   public boolean hasAnnotationProcessing() {
-    return !javacOptions.getAnnotationProcessingParams().isEmpty();
+    return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 }

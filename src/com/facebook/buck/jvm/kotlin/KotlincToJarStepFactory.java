@@ -471,6 +471,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   @Override
   public boolean hasAnnotationProcessing() {
-    return !javacOptions.getAnnotationProcessingParams().isEmpty();
+    return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 }
