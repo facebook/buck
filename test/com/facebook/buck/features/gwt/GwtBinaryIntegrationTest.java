@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.gwt;
 
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -25,7 +26,7 @@ import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class GwtBinaryIntegrationTest {
+public class GwtBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -34,6 +35,7 @@ public class GwtBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "gwt_binary", tmp);
     workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
     workspace.enableDirCache();
 
     workspace.runBuckBuild("//:binary").assertSuccess();

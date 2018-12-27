@@ -100,10 +100,12 @@ public class GwtBinaryDescription
           return ImmutableSet.of();
         }
 
-        // If the java library doesn't generate any output, it doesn't contribute a GwtModule
         JavaLibrary javaLibrary = (JavaLibrary) rule;
+        Iterable<BuildRule> ruleDeps = javaLibrary.getDepsForTransitiveClasspathEntries();
+
+        // If the java library doesn't generate any output, it doesn't contribute a GwtModule
         if (javaLibrary.getSourcePathToOutput() == null) {
-          return rule.getBuildDeps();
+          return ruleDeps;
         }
 
         Optional<SourcePath> generatedCode =
@@ -148,7 +150,7 @@ public class GwtBinaryDescription
         }
 
         // Traverse all of the deps of this rule.
-        return rule.getBuildDeps();
+        return ruleDeps;
       }
     }.start();
 
