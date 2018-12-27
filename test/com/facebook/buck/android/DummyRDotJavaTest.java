@@ -139,7 +139,7 @@ public class DummyRDotJavaTest {
                 new JavacStep(
                         DEFAULT_JAVAC,
                         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
-                            .setAnnotationProcessingParams(JavacPluginParams.EMPTY)
+                            .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
                             .build(),
                         dummyRDotJava.getBuildTarget(),
                         pathResolver,
@@ -163,7 +163,7 @@ public class DummyRDotJavaTest {
         "DummyRDotJava.getBuildSteps() must return these exact steps.",
         expectedStepDescriptions,
         steps,
-        TestExecutionContext.newInstance());
+        TestExecutionContext.newInstance());com.facebook.buck.android.endtoend.AndroidEndToEndTest
 
     assertEquals(
         ImmutableSet.of(rDotJavaBinFolder, Paths.get(rDotJavaOutputJar), rDotJavaAnnotationFolder),

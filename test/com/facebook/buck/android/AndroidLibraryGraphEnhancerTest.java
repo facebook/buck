@@ -190,7 +190,7 @@ public class AndroidLibraryGraphEnhancerTest {
             ImmutableSortedSet.of(resourceRule1, resourceRule2),
             DEFAULT_JAVAC,
             JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
-                .setAnnotationProcessingParams(
+                .setJavaAnnotationProcessorParams(
                     JavacPluginParams.builder().setProcessOnly(true).build())
                 .setSourceLevel("7")
                 .setTargetLevel("7")
@@ -208,7 +208,7 @@ public class AndroidLibraryGraphEnhancerTest {
     assertTrue(dummyRDotJava.isPresent());
     JavacOptions javacOptions =
         ((JavacToJarStepFactory) dummyRDotJava.get().getCompileStepFactory()).getJavacOptions();
-    assertFalse(javacOptions.getAnnotationProcessingParams().getProcessOnly());
+    assertFalse(javacOptions.getJavaAnnotationProcessorParams().getProcessOnly());
     assertEquals("7", javacOptions.getSourceLevel());
   }
 
