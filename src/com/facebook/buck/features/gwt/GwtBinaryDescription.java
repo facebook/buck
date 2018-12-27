@@ -113,46 +113,36 @@ public class GwtBinaryDescription
                     .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
                 : Optional.empty();
 
-        Optional<BuildRule> gwtModule;
-        if (javaLibrary.getSourcePathToOutput() != null) {
-          gwtModule =
-              Optional.of(
-                  graphBuilder.computeIfAbsent(
-                      javaLibrary
-                          .getBuildTarget()
-                          .assertUnflavored()
-                          .withFlavors(JavaLibrary.GWT_MODULE_FLAVOR),
-                      gwtModuleTarget -> {
-                        ImmutableSortedSet<SourcePath> filesForGwtModule =
-                            ImmutableSortedSet.<SourcePath>naturalOrder()
-                                .addAll(javaLibrary.getSources())
-                                .addAll(javaLibrary.getResources())
-                                .build();
-                        ImmutableSortedSet<BuildRule> deps =
-                            ImmutableSortedSet.copyOf(
-                                ruleFinder.filterBuildRuleInputs(filesForGwtModule));
+        BuildRule gwtModule =
+            graphBuilder.computeIfAbsent(
+                javaLibrary
+                    .getBuildTarget()
+                    .assertUnflavored()
+                    .withFlavors(JavaLibrary.GWT_MODULE_FLAVOR),
+                gwtModuleTarget -> {
+                  ImmutableSortedSet<SourcePath> filesForGwtModule =
+                      ImmutableSortedSet.<SourcePath>naturalOrder()
+                          .addAll(javaLibrary.getSources())
+                          .addAll(javaLibrary.getResources())
+                          .build();
+                  ImmutableSortedSet<BuildRule> deps =
+                      ImmutableSortedSet.copyOf(
+                          ruleFinder.filterBuildRuleInputs(filesForGwtModule));
 
-                        return new GwtModule(
-                            gwtModuleTarget,
-                            context.getProjectFilesystem(),
-                            params.withDeclaredDeps(deps).withoutExtraDeps(),
-                            ruleFinder,
-                            filesForGwtModule,
-                            javaLibrary.getResourcesRoot());
-                      }));
-        } else {
-          gwtModule = Optional.empty();
-        }
+                  return new GwtModule(
+                      gwtModuleTarget,
+                      context.getProjectFilesystem(),
+                      params.withDeclaredDeps(deps).withoutExtraDeps(),
+                      ruleFinder,
+                      filesForGwtModule,
+                      javaLibrary.getResourcesRoot());
+                });
 
-        // Note that gwtModule could be absent if javaLibrary is a rule with no srcs of its own,
-        // but a rule that exists only as a collection of deps.
-        if (gwtModule.isPresent()) {
-          extraDeps.add(gwtModule.get());
-          gwtModuleJarsBuilder.add(Objects.requireNonNull(gwtModule.get().getSourcePathToOutput()));
-          if (generatedCode.isPresent()) {
-            extraDeps.add(javaLibrary);
-            gwtModuleJarsBuilder.add(generatedCode.get());
-          }
+        extraDeps.add(gwtModule);
+        gwtModuleJarsBuilder.add(Objects.requireNonNull(gwtModule.getSourcePathToOutput()));
+        if (generatedCode.isPresent()) {
+          extraDeps.add(javaLibrary);
+          gwtModuleJarsBuilder.add(generatedCode.get());
         }
 
         // Traverse all of the deps of this rule.
