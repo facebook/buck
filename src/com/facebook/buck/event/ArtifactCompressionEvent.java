@@ -22,6 +22,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
+/** Event for artifact compression / decompression */
 public abstract class ArtifactCompressionEvent extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
   public enum Operation {
@@ -58,14 +59,17 @@ public abstract class ArtifactCompressionEvent extends AbstractBuckEvent
     return operation;
   }
 
+  /** Create a new Started event for the operation and set of RuleKeys */
   public static Started started(Operation operation, ImmutableSet<RuleKey> ruleKeys) {
     return new Started(operation, ruleKeys);
   }
 
+  /** Create a new Finished event for corresponding Started event */
   public static Finished finished(Started started) {
     return new Finished(started);
   }
 
+  /** Event for when a artifact starts compression/decompression */
   public static class Started extends ArtifactCompressionEvent {
     protected Started(Operation operation, ImmutableSet<RuleKey> ruleKeys) {
       super(EventKey.unique(), operation, ruleKeys);
@@ -79,9 +83,18 @@ public abstract class ArtifactCompressionEvent extends AbstractBuckEvent
     }
   }
 
+  /** Event for when a artifact finishes compression/decompression */
   public static class Finished extends ArtifactCompressionEvent {
     protected Finished(Started started) {
       super(started.getEventKey(), started.getOperation(), started.getRuleKeys());
+      startedTimeStamp = started.getTimestamp();
+    }
+
+    private final long startedTimeStamp;
+
+    /** Returns the timestamp of corresponding started event */
+    public long getStartedTimeStamp() {
+      return startedTimeStamp;
     }
 
     @Override
