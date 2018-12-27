@@ -191,6 +191,14 @@ public class JarBuildStepsFactory
         .orElse(null);
   }
 
+  @Nullable
+  public SourcePath getSourcePathToGeneratedAnnotationPath(
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return getGeneratedAnnotationPath(buildTarget, filesystem)
+        .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
+        .orElse(null);
+  }
+
   @VisibleForTesting
   public ImmutableSortedSet<SourcePath> getCompileTimeClasspathSourcePaths() {
     return dependencyInfos.getCompileTimeClasspathSourcePaths();
@@ -432,6 +440,15 @@ public class JarBuildStepsFactory
     } else {
       throw new IllegalArgumentException();
     }
+  }
+
+  private Optional<Path> getGeneratedAnnotationPath(
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    if (!hasAnnotationProcessing()) {
+      return Optional.empty();
+    }
+
+    return CompilerOutputPaths.getAnnotationPath(filesystem, buildTarget);
   }
 
   private Path getDepFileRelativePath(ProjectFilesystem filesystem, BuildTarget buildTarget) {

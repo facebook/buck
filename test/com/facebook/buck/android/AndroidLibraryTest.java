@@ -53,6 +53,7 @@ public class AndroidLibraryTest {
 
     AndroidLibrary library = (AndroidLibrary) graphBuilder.requireRule(libTarget);
 
-    assertTrue(library.getGeneratedSourcePath().isPresent());
+    assertTrue(library.getGeneratedAnnotationSourcePath().isPresent());
+    assertTrue(library.hasAnnotationProcessing());
   }
 }

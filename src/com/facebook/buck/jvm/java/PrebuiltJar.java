@@ -247,7 +247,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Optional<Path> getGeneratedSourcePath() {
+  public Optional<SourcePath> getGeneratedAnnotationSourcePath() {
     return Optional.empty();
   }
 

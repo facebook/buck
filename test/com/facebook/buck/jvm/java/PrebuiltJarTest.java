@@ -71,6 +71,7 @@ public class PrebuiltJarTest {
 
   @Test
   public void testGetAnnotationProcessingDataIsEmpty() {
-    assertFalse(junitJarRule.getGeneratedSourcePath().isPresent());
+    assertFalse(junitJarRule.getGeneratedAnnotationSourcePath().isPresent());
+    assertFalse(junitJarRule.hasAnnotationProcessing());
   }
 }

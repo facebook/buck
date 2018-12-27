@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -108,15 +107,6 @@ public class GwtBinaryDescription
           return ruleDeps;
         }
 
-        Optional<SourcePath> generatedCode =
-            javaLibrary.hasAnnotationProcessing()
-                ? javaLibrary
-                    .getGeneratedSourcePath()
-                    .map(
-                        path ->
-                            ExplicitBuildTargetSourcePath.of(javaLibrary.getBuildTarget(), path))
-                : Optional.empty();
-
         BuildRule gwtModule =
             graphBuilder.computeIfAbsent(
                 javaLibrary
@@ -144,6 +134,8 @@ public class GwtBinaryDescription
 
         extraDeps.add(gwtModule);
         gwtModuleJarsBuilder.add(Objects.requireNonNull(gwtModule.getSourcePathToOutput()));
+
+        Optional<SourcePath> generatedCode = javaLibrary.getGeneratedAnnotationSourcePath();
         if (generatedCode.isPresent()) {
           extraDeps.add(javaLibrary);
           gwtModuleJarsBuilder.add(generatedCode.get());

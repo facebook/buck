@@ -1061,25 +1061,27 @@ public class TargetsCommand extends AbstractCommand {
           BuildRule rule = graphBuilder.get().requireRule(target);
           builder.setRuleType(rule.getType());
           if (isShowOutput || isShowFullOutput) {
+            SourcePathResolver sourcePathResolver =
+                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder.get()));
             getUserFacingOutputPath(
-                    DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder.get())),
-                    rule,
-                    params.getBuckConfig().getBuckOutCompatLink())
+                    sourcePathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
                 .map(
                     path ->
                         isShowFullOutput ? path : params.getCell().getFilesystem().relativize(path))
-                .ifPresent(path -> builder.setOutputPath(path.toString()));
+                .map(Path::toString)
+                .ifPresent(builder::setOutputPath);
             // If the output dir is requested, also calculate the generated src dir
             if (rule instanceof JavaLibrary) {
               ((JavaLibrary) rule)
-                  .getGeneratedSourcePath()
+                  .getGeneratedAnnotationSourcePath()
+                  .map(sourcePathResolver::getRelativePath)
+                  .map(path -> rule.getProjectFilesystem().resolve(path))
                   .map(
-                      path -> {
-                        Path rootPath = params.getCell().getFilesystem().getRootPath();
-                        Path sameFsPath = rootPath.resolve(path.toString());
-                        Path returnPath = isShowFullOutput ? path : rootPath.relativize(sameFsPath);
-                        return returnPath.toString();
-                      })
+                      path ->
+                          isShowFullOutput
+                              ? path
+                              : params.getCell().getFilesystem().relativize(path))
+                  .map(Path::toString)
                   .ifPresent(builder::setGeneratedSourcePath);
             }
           }

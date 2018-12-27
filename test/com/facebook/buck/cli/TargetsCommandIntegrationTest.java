@@ -56,6 +56,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.thrift.TException;
@@ -128,8 +129,58 @@ public class TargetsCommandIntegrationTest {
         linesToText(
             "//:A " + MorePaths.pathWithPlatformSeparators("buck-out/gen/A/A.txt"),
             "//:B " + MorePaths.pathWithPlatformSeparators("buck-out/gen/B/B.txt"),
-            "//:test-library "
-                + MorePaths.pathWithPlatformSeparators("buck-out/annotation/__test-library_gen__")),
+            "//:test-library"),
+        result.getStdout().trim());
+  }
+
+  @Test
+  public void testConfigurationRulesWithAnnotationProcessor() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "targets_command_annotation_processor", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "//:");
+    result.assertSuccess();
+
+    verifyTestConfigurationRulesWithAnnotationProcessorOutput(
+        result, MorePaths::pathWithPlatformSeparators);
+  }
+
+  @Test
+  public void testConfigurationRulesWithAnnotationProcessorFullOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "targets_command_annotation_processor", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-full-output", "//:");
+    result.assertSuccess();
+
+    verifyTestConfigurationRulesWithAnnotationProcessorOutput(
+        result, s -> MorePaths.pathWithPlatformSeparators(tmp.getRoot().resolve(s)));
+  }
+
+  private static void verifyTestConfigurationRulesWithAnnotationProcessorOutput(
+      ProcessResult result, Function<String, String> resolvePath) {
+    assertEquals(
+        linesToText(
+            "//:annotation_processor",
+            "//:annotation_processor_lib "
+                + resolvePath.apply(
+                    "buck-out/gen/lib__annotation_processor_lib__output/annotation_processor_lib.jar"),
+            "//:test-library",
+            "//:test-library-with-processing "
+                + resolvePath.apply("buck-out/annotation/__test-library-with-processing_gen__"),
+            "//:test-library-with-processing-with-srcs "
+                + resolvePath.apply(
+                    "buck-out/gen/lib__test-library-with-processing-with-srcs__output/test-library-with-processing-with-srcs.jar")
+                + " "
+                + resolvePath.apply(
+                    "buck-out/annotation/__test-library-with-processing-with-srcs_gen__"),
+            "//:test-library-with-srcs "
+                + resolvePath.apply(
+                    "buck-out/gen/lib__test-library-with-srcs__output/test-library-with-srcs.jar")),
         result.getStdout().trim());
   }
 

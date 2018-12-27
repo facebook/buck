@@ -23,7 +23,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 
@@ -81,7 +80,7 @@ public interface JavaLibrary
 
   Optional<String> getResourcesRoot();
 
-  Optional<Path> getGeneratedSourcePath();
+  Optional<SourcePath> getGeneratedAnnotationSourcePath();
 
   boolean hasAnnotationProcessing();
 
