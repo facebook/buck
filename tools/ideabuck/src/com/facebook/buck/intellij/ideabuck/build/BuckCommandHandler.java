@@ -18,8 +18,8 @@ package com.facebook.buck.intellij.ideabuck.build;
 
 import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
 import com.facebook.buck.intellij.ideabuck.api.BuckCellManager.Cell;
+import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
-import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode.TextType;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
@@ -116,7 +116,7 @@ public abstract class BuckCommandHandler {
     this.doStartNotify = doStartNotify;
 
     String buckExecutable =
-        BuckProjectSettingsProvider.getInstance(project).resolveBuckExecutable();
+        BuckExecutableSettingsProvider.getInstance(project).resolveBuckExecutable();
 
     this.project = project;
     this.buckModule = project.getComponent(BuckModule.class);

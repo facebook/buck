@@ -32,7 +32,7 @@ public final class BuckWSServerPortUtils {
   /** Returns the port number of Buck's HTTP server, if it can be determined, else a value < 0. */
   public static int getPort(Project project, String path)
       throws NumberFormatException, IOException, ExecutionException {
-    String exec = BuckProjectSettingsProvider.getInstance(project).resolveBuckExecutable();
+    String exec = BuckExecutableSettingsProvider.getInstance(project).resolveBuckExecutable();
 
     if (Strings.isNullOrEmpty(exec)) {
       throw new RuntimeException("Buck executable is not defined in settings.");

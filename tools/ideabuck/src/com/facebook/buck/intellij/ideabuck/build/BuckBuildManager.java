@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.build;
 
+import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
@@ -141,7 +142,7 @@ public class BuckBuildManager {
     Project project = handler.project();
     BuckDebugPanel buckDebugPanel = BuckUIManager.getInstance(project).getBuckDebugPanel();
 
-    String exec = BuckProjectSettingsProvider.getInstance(project).resolveBuckExecutable();
+    String exec = BuckExecutableSettingsProvider.getInstance(project).resolveBuckExecutable();
     if (exec == null) {
       buckDebugPanel.outputConsoleMessage(
           "Please specify the buck executable path!\n", ConsoleViewContentType.ERROR_OUTPUT);

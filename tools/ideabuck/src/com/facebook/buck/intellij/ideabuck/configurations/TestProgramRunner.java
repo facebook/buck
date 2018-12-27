@@ -16,7 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
-import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.configurations.RunProfileState;
@@ -40,7 +40,7 @@ public class TestProgramRunner extends DefaultProgramRunner {
   }
 
   private void checkBuckSettings(Project project) throws ExecutionException {
-    String exec = BuckProjectSettingsProvider.getInstance(project).resolveBuckExecutable();
+    String exec = BuckExecutableSettingsProvider.getInstance(project).resolveBuckExecutable();
     if (exec == null) {
       throw new ExecutionException(
           "Please specify the buck executable path!\n"
