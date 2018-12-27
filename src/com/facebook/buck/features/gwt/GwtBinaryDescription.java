@@ -110,7 +110,9 @@ public class GwtBinaryDescription
             javaLibrary.hasAnnotationProcessing()
                 ? javaLibrary
                     .getGeneratedSourcePath()
-                    .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
+                    .map(
+                        path ->
+                            ExplicitBuildTargetSourcePath.of(javaLibrary.getBuildTarget(), path))
                 : Optional.empty();
 
         BuildRule gwtModule =
