@@ -57,6 +57,7 @@ public class BuckSettingsConfigurable implements SearchableConfigurable {
     panel =
         new BuckSettingsUI(
             BuckCellSettingsProvider.getInstance(project),
+            BuckExecutableSettingsProvider.getInstance(project),
             BuckProjectSettingsProvider.getInstance(project));
     return panel;
   }

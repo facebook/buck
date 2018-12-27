@@ -25,67 +25,11 @@ import org.junit.Test;
 
 public class BuckProjectSettingsProviderTest {
   @Test
-  public void projectAdbExecutableCanOverrideDefaultAdb() {
-    String defaultAdb = "/path/to/default/adb";
-    String projectAdb = "/custom/override/adb";
-    BuckExecutableDetector buckExecutableDetector =
-        EasyMock.createMock(BuckExecutableDetector.class);
-    EasyMock.expect(buckExecutableDetector.getAdbExecutable()).andReturn(defaultAdb).anyTimes();
-    Project project = EasyMock.createMock(Project.class);
-    EasyMock.expect(project.getBasePath()).andReturn("/path/to/project").anyTimes();
-    EasyMock.replay(buckExecutableDetector, project);
-    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider();
-
-    BuckProjectSettingsProvider projectSettings =
-        new BuckProjectSettingsProvider(project, buckCellSettingsProvider, buckExecutableDetector);
-
-    projectSettings.setAdbExecutableOverride(Optional.empty());
-    Assert.assertEquals(
-        "Should detect adb when not overridden",
-        defaultAdb,
-        projectSettings.resolveAdbExecutable());
-
-    projectSettings.setAdbExecutableOverride(Optional.of(projectAdb));
-    Assert.assertEquals(
-        "Should use project adb when overridden",
-        projectAdb,
-        projectSettings.resolveAdbExecutable());
-  }
-
-  @Test
-  public void projectBuckExecutableCanOverrideDefaultBuck() {
-    String defaultBuck = "/path/to/default/buck";
-    String projectBuck = "/custom/override/buck";
-    BuckExecutableDetector buckExecutableDetector =
-        EasyMock.createMock(BuckExecutableDetector.class);
-    EasyMock.expect(buckExecutableDetector.getBuckExecutable()).andReturn(defaultBuck).anyTimes();
-    Project project = EasyMock.createMock(Project.class);
-    EasyMock.expect(project.getBasePath()).andReturn("/path/to/project").anyTimes();
-    EasyMock.replay(buckExecutableDetector, project);
-    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider();
-
-    BuckProjectSettingsProvider projectSettings =
-        new BuckProjectSettingsProvider(project, buckCellSettingsProvider, buckExecutableDetector);
-
-    projectSettings.setBuckExecutableOverride(Optional.empty());
-    Assert.assertEquals(
-        "Should use application buck when not overridden",
-        defaultBuck,
-        projectSettings.resolveBuckExecutable());
-
-    projectSettings.setBuckExecutableOverride(Optional.of(projectBuck));
-    Assert.assertEquals(
-        "Should use project buck when overridden",
-        projectBuck,
-        projectSettings.resolveBuckExecutable());
-  }
-
-  @Test
   public void migrateCellPrefsOnLoadState() {
     Project project = EasyMock.createMock(Project.class);
-    BuckExecutableDetector buckExecutableDetector =
-        EasyMock.createMock(BuckExecutableDetector.class);
-    EasyMock.replay(project, buckExecutableDetector);
+    BuckExecutableSettingsProvider buckExecutableSettingsProvider =
+        EasyMock.createMock(BuckExecutableSettingsProvider.class);
+    EasyMock.replay(project, buckExecutableSettingsProvider);
 
     BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider();
     BuckProjectSettingsProvider.State state = new BuckProjectSettingsProvider.State();
@@ -94,14 +38,79 @@ public class BuckProjectSettingsProviderTest {
     state.cells = Arrays.asList(cell1, cell2);
 
     BuckProjectSettingsProvider projectSettings =
-        new BuckProjectSettingsProvider(project, buckCellSettingsProvider, buckExecutableDetector);
+        new BuckProjectSettingsProvider(
+            project, buckCellSettingsProvider, buckExecutableSettingsProvider);
     projectSettings.loadState(state);
     Assert.assertEquals(
-        "loadState() should have migrated cell settinsg to the BuckCellSettingsProvider",
+        "loadState() should have migrated cell settings to the BuckCellSettingsProvider",
         Arrays.asList(cell1, cell2),
         buckCellSettingsProvider.getCells());
     Assert.assertNull(
         "BuckProjectSettingsProvider's state should no longer contain cell info",
         projectSettings.getState().cells);
+  }
+
+  @Test
+  public void migrateExecutablePrefsOnLoadState() {
+    Project project = EasyMock.createMock(Project.class);
+    BuckExecutableSettingsProvider executableSettingsProvider =
+        EasyMock.createMock(BuckExecutableSettingsProvider.class);
+    EasyMock.replay(project, executableSettingsProvider);
+
+    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider();
+    BuckExecutableSettingsProvider buckExecutableSettingsProvider =
+        new BuckExecutableSettingsProvider();
+
+    BuckProjectSettingsProvider.State state = new BuckProjectSettingsProvider.State();
+    String adbPath = "/path/to/adb/executable";
+    String buckPath = "/path/to/buck/executable";
+    state.adbExecutable = adbPath;
+    state.buckExecutable = buckPath;
+
+    BuckProjectSettingsProvider projectSettings =
+        new BuckProjectSettingsProvider(
+            project, buckCellSettingsProvider, buckExecutableSettingsProvider);
+    projectSettings.loadState(state);
+    Assert.assertEquals(
+        "Should have migrated adb executable",
+        Optional.of(adbPath),
+        buckExecutableSettingsProvider.getAdbExecutableOverride());
+    Assert.assertEquals(
+        "Should have migrated buck executable",
+        Optional.of(buckPath),
+        buckExecutableSettingsProvider.getBuckExecutableOverride());
+  }
+
+  @Test
+  public void migrateExecutablePrefsOnLoadStateShouldNotOverwriteExistingPrefs() {
+    Project project = EasyMock.createMock(Project.class);
+    BuckExecutableSettingsProvider executableSettingsProvider =
+        EasyMock.createMock(BuckExecutableSettingsProvider.class);
+    EasyMock.replay(project, executableSettingsProvider);
+
+    BuckCellSettingsProvider buckCellSettingsProvider = new BuckCellSettingsProvider();
+    String adbPath = "/path/to/adb/executable";
+    String buckPath = "/path/to/buck/executable";
+    BuckExecutableSettingsProvider buckExecutableSettingsProvider =
+        new BuckExecutableSettingsProvider();
+    buckExecutableSettingsProvider.setAdbExecutableOverride(Optional.of(adbPath));
+    buckExecutableSettingsProvider.setBuckExecutableOverride(Optional.of(buckPath));
+
+    BuckProjectSettingsProvider.State state = new BuckProjectSettingsProvider.State();
+    state.adbExecutable = "/old/path/to/adb";
+    state.buckExecutable = "/old/path/to/buck";
+
+    BuckProjectSettingsProvider projectSettings =
+        new BuckProjectSettingsProvider(
+            project, buckCellSettingsProvider, buckExecutableSettingsProvider);
+    projectSettings.loadState(state);
+    Assert.assertEquals(
+        "Should not migrate adb executable when one is already set",
+        Optional.of(adbPath),
+        buckExecutableSettingsProvider.getAdbExecutableOverride());
+    Assert.assertEquals(
+        "Should not migrate buck executable when one is already set",
+        Optional.of(buckPath),
+        buckExecutableSettingsProvider.getBuckExecutableOverride());
   }
 }

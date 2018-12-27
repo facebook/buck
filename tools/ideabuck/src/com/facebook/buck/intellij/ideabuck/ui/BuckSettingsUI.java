@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.ideabuck.ui;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
 import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.config.BuckExecutableDetector;
+import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -93,13 +94,16 @@ public class BuckSettingsUI extends JPanel {
   private JCheckBox customizedInstallSetting;
   private ListTableModel<BuckCell> cellTableModel;
   private BuckCellSettingsProvider buckCellSettingsProvider;
+  private BuckExecutableSettingsProvider buckExecutableSettingsProvider;
   private BuckProjectSettingsProvider buckProjectSettingsProvider;
   private BuckExecutableDetector executableDetector;
 
   public BuckSettingsUI(
       BuckCellSettingsProvider buckCellSettingsProvider,
+      BuckExecutableSettingsProvider buckExecutableSettingsProvider,
       BuckProjectSettingsProvider buckProjectSettingsProvider) {
     this.buckCellSettingsProvider = buckCellSettingsProvider;
+    this.buckExecutableSettingsProvider = buckExecutableSettingsProvider;
     this.buckProjectSettingsProvider = buckProjectSettingsProvider;
     executableDetector = BuckExecutableDetector.newInstance();
     init();
@@ -571,10 +575,10 @@ public class BuckSettingsUI extends JPanel {
   public boolean isModified() {
     return !Comparing.equal(
             buckPathField.getText().trim(),
-            buckProjectSettingsProvider.getBuckExecutableOverride().orElse(""))
+            buckExecutableSettingsProvider.getBuckExecutableOverride().orElse(""))
         || !Comparing.equal(
             adbPathField.getText().trim(),
-            buckProjectSettingsProvider.getAdbExecutableOverride().orElse(""))
+            buckExecutableSettingsProvider.getAdbExecutableOverride().orElse(""))
         || buckProjectSettingsProvider.isRunAfterInstall() != runAfterInstall.isSelected()
         || buckProjectSettingsProvider.isShowDebugWindow() != showDebug.isSelected()
         || buckProjectSettingsProvider.isMultiInstallMode() != multiInstallMode.isSelected()
@@ -589,8 +593,9 @@ public class BuckSettingsUI extends JPanel {
   }
 
   public void apply() {
-    buckProjectSettingsProvider.setBuckExecutableOverride(textToOptional(buckPathField.getText()));
-    buckProjectSettingsProvider.setAdbExecutableOverride(textToOptional(adbPathField.getText()));
+    buckExecutableSettingsProvider.setBuckExecutableOverride(
+        textToOptional(buckPathField.getText()));
+    buckExecutableSettingsProvider.setAdbExecutableOverride(textToOptional(adbPathField.getText()));
     buckProjectSettingsProvider.setShowDebugWindow(showDebug.isSelected());
     buckProjectSettingsProvider.setRunAfterInstall(runAfterInstall.isSelected());
     buckProjectSettingsProvider.setMultiInstallMode(multiInstallMode.isSelected());
@@ -603,9 +608,8 @@ public class BuckSettingsUI extends JPanel {
   }
 
   public void reset() {
-    adbPathField.setText(buckProjectSettingsProvider.getAdbExecutableOverride().orElse(""));
-    buckPathField.setText(buckProjectSettingsProvider.getBuckExecutableOverride().orElse(""));
-    adbPathField.setText(buckProjectSettingsProvider.getAdbExecutableOverride().orElse(""));
+    adbPathField.setText(buckExecutableSettingsProvider.getAdbExecutableOverride().orElse(""));
+    buckPathField.setText(buckExecutableSettingsProvider.getBuckExecutableOverride().orElse(""));
     showDebug.setSelected(buckProjectSettingsProvider.isShowDebugWindow());
     runAfterInstall.setSelected(buckProjectSettingsProvider.isRunAfterInstall());
     multiInstallMode.setSelected(buckProjectSettingsProvider.isMultiInstallMode());

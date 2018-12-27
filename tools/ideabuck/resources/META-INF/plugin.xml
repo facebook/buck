@@ -363,11 +363,18 @@
       </implementation-class>
     </component>
     <component>
-      <implementation-class>com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider
+      <implementation-class>
+        com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider
       </implementation-class>
     </component>
     <component>
-      <implementation-class>com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider
+      <implementation-class>
+        com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider
+      </implementation-class>
+    </component>
+    <component>
+      <implementation-class>
+        com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider
       </implementation-class>
     </component>
 
