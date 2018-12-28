@@ -16,16 +16,17 @@
 
 package com.facebook.buck.query;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.query.QueryEnvironment.Argument;
+import com.facebook.buck.query.QueryEnvironment.TargetEvaluator;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import java.util.Set;
+import java.util.function.Predicate;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,14 +43,8 @@ public class QueryParserTest {
 
   @Before
   public void makeEnvironment() {
-    QueryEnvironment.TargetEvaluator targetEvaluator =
-        createMock(QueryEnvironment.TargetEvaluator.class);
-    expect(targetEvaluator.getType()).andStubReturn(QueryEnvironment.TargetEvaluator.Type.LAZY);
-    queryEnvironment = createMock(QueryEnvironment.class);
-    expect(queryEnvironment.getFunctions()).andStubReturn(QueryEnvironment.DEFAULT_QUERY_FUNCTIONS);
-    expect(queryEnvironment.getTargetEvaluator()).andReturn(targetEvaluator);
-    replay(targetEvaluator);
-    replay(queryEnvironment);
+    QueryEnvironment.TargetEvaluator targetEvaluator = new TestTargetEvaluator();
+    queryEnvironment = new TestQueryEnvironment(targetEvaluator);
   }
 
   @Test
@@ -121,5 +116,93 @@ public class QueryParserTest {
     thrown.expectMessage("https://buckbuild.com/command/query.html#deps");
     String query = "deps(//foo:bar, //bar:foo)";
     QueryParser.parse(query, queryEnvironment);
+  }
+
+  private static class TestTargetEvaluator implements TargetEvaluator {
+
+    @Override
+    public ImmutableSet<QueryTarget> evaluateTarget(String target) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Type getType() {
+      return TargetEvaluator.Type.LAZY;
+    }
+  }
+
+  private static class TestQueryEnvironment implements QueryEnvironment {
+
+    private final TargetEvaluator targetEvaluator;
+
+    private TestQueryEnvironment(TargetEvaluator targetEvaluator) {
+      this.targetEvaluator = targetEvaluator;
+    }
+
+    @Override
+    public TargetEvaluator getTargetEvaluator() {
+      return targetEvaluator;
+    }
+
+    @Override
+    public Iterable<QueryFunction> getFunctions() {
+      return ImmutableList.of(new DepsFunction(), new RdepsFunction(), new TestsOfFunction());
+    }
+
+    @Override
+    public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<QueryTarget> getInputs(QueryTarget target) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getTargetKind(QueryTarget target) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ImmutableSet<Object> filterAttributeContents(
+        QueryTarget target, String attribute, Predicate<Object> predicate) {
+      throw new UnsupportedOperationException();
+    }
   }
 }
