@@ -15,8 +15,6 @@
  */
 package com.facebook.buck.jvm.kotlin;
 
-import static com.google.common.collect.Iterables.transform;
-
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -40,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /** kotlinc implemented as a separate binary. */
 public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
@@ -47,6 +46,7 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   private static final KotlincVersion DEFAULT_VERSION = KotlincVersion.of("unknown version");
 
   private final Path pathToKotlinc;
+
   private final Supplier<KotlincVersion> version;
 
   public ExternalKotlinc(Path pathToKotlinc) {
@@ -100,6 +100,7 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   public int buildWithClasspath(
       ExecutionContext context,
       BuildTarget invokingRule,
+      ImmutableList<Path> kotlinHomeLibraries,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
       Path pathToSrcsList,
@@ -126,9 +127,10 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
             .add(pathToKotlinc.toString())
             .addAll(options)
             .addAll(
-                transform(
-                    expandedSources,
-                    path -> projectFilesystem.resolve(path).toAbsolutePath().toString()))
+                expandedSources
+                    .stream()
+                    .map(path -> projectFilesystem.resolve(path).toAbsolutePath().toString())
+                    .collect(Collectors.toList()))
             .build();
 
     // Run the command
@@ -186,6 +188,11 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
 
   @Override
   public ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver) {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public ImmutableList<Path> getHomeLibraries(SourcePathResolver sourcePathResolver) {
     return ImmutableList.of();
   }
 

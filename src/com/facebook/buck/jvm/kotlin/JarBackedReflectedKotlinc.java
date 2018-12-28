@@ -16,12 +16,9 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static com.google.common.collect.Iterables.transform;
-
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -31,15 +28,14 @@ import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.File;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -51,7 +47,20 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
   private static final String COMPILER_CLASS = "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler";
   private static final String EXIT_CODE_CLASS = "org.jetbrains.kotlin.cli.common.ExitCode";
-  private static final KotlincVersion VERSION = KotlincVersion.of("in memory");
+
+  private static final String FOLDER_PREFIX = "libexec/lib";
+
+  private static final String KOTLIN_ANNOTATION_PROCESSING =
+      "kotlin-annotation-processing-gradle.jar";
+
+  private static final String KOTLIN_COMPILER_EMBEDDABLE = "kotlin-compiler-embeddable.jar";
+  private static final String KOTLIN_REFLECT = "kotlin-reflect.jar";
+  private static final String KOTLIN_SCRIPT_RUNTIME = "kotlin-script-runtime.jar";
+  private static final String KOTLIN_STDLIB = "kotlin-stdlib.jar";
+
+  private static final ImmutableList<String> HOME_LIBRARIES_JAR =
+      ImmutableList.of(
+          KOTLIN_COMPILER_EMBEDDABLE, KOTLIN_REFLECT, KOTLIN_SCRIPT_RUNTIME, KOTLIN_STDLIB);
 
   private static final Function<Path, URL> PATH_TO_URL =
       p -> {
@@ -65,22 +74,10 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   // Used to hang onto the KotlinDaemonShim for the life of the buckd process
   private static final Map<Set<String>, Object> kotlinShims = new ConcurrentHashMap<>();
 
-  @AddToRuleKey private final ImmutableSet<SourcePath> compilerClassPath;
-  private final Path annotationProcessingClassPath;
-  private final Path standardLibraryClasspath;
+  @AddToRuleKey private final SourcePath kotlinHome;
 
-  JarBackedReflectedKotlinc(
-      ImmutableSet<SourcePath> compilerClassPath,
-      Path annotationProcessingClassPath,
-      Path standardLibraryClasspath) {
-    this.compilerClassPath = compilerClassPath;
-    this.annotationProcessingClassPath = annotationProcessingClassPath;
-    this.standardLibraryClasspath = standardLibraryClasspath;
-  }
-
-  @Override
-  public KotlincVersion getVersion() {
-    return VERSION;
+  JarBackedReflectedKotlinc(SourcePath kotlinHome) {
+    this.kotlinHome = kotlinHome;
   }
 
   @Override
@@ -103,12 +100,31 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
   @Override
   public Path getAnnotationProcessorPath(SourcePathResolver sourcePathResolver) {
-    return annotationProcessingClassPath;
+    return sourcePathResolver
+        .getAbsolutePath(this.kotlinHome)
+        .resolve(FOLDER_PREFIX)
+        .resolve(KOTLIN_ANNOTATION_PROCESSING);
   }
 
   @Override
   public Path getStdlibPath(SourcePathResolver sourcePathResolver) {
-    return standardLibraryClasspath;
+    return sourcePathResolver
+        .getAbsolutePath(this.kotlinHome)
+        .resolve(FOLDER_PREFIX)
+        .resolve(KOTLIN_STDLIB);
+  }
+
+  @Override
+  public ImmutableList<Path> getHomeLibraries(SourcePathResolver sourcePathResolver) {
+    return HOME_LIBRARIES_JAR
+        .stream()
+        .map(
+            jar ->
+                sourcePathResolver
+                    .getAbsolutePath(this.kotlinHome)
+                    .resolve(FOLDER_PREFIX)
+                    .resolve(jar))
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override
@@ -122,9 +138,15 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   }
 
   @Override
+  public KotlincVersion getVersion() {
+    throw new UnsupportedOperationException("In memory kotlinc doesn't have a version");
+  }
+
+  @Override
   public int buildWithClasspath(
       ExecutionContext context,
       BuildTarget invokingRule,
+      ImmutableList<Path> kotlinHomeLibraries,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
       Path pathToSrcsList,
@@ -149,23 +171,23 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
         ImmutableList.<String>builder()
             .addAll(options)
             .addAll(
-                transform(
-                    expandedSources,
-                    path -> projectFilesystem.resolve(path).toAbsolutePath().toString()))
+                expandedSources
+                    .stream()
+                    .map(path -> projectFilesystem.resolve(path).toAbsolutePath().toString())
+                    .collect(Collectors.toList()))
             .build();
 
-    Set<File> compilerIdPaths =
-        compilerClassPath
+    Set<String> kotlinHomeLibrariesStringPaths =
+        kotlinHomeLibraries
             .stream()
-            .map(p -> ((PathSourcePath) p).getRelativePath())
-            .map(Path::toFile)
+            .map(Path::toAbsolutePath)
+            .map(Path::toString)
             .collect(Collectors.toSet());
 
     try {
       Object compilerShim =
           kotlinShims.computeIfAbsent(
-              compilerIdPaths.stream().map(File::getAbsolutePath).collect(Collectors.toSet()),
-              k -> loadCompilerShim(context));
+              kotlinHomeLibrariesStringPaths, k -> loadCompilerShim(context, kotlinHomeLibraries));
 
       Method compile = compilerShim.getClass().getMethod("exec", PrintStream.class, String[].class);
 
@@ -187,7 +209,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
     }
   }
 
-  private Object loadCompilerShim(ExecutionContext context) {
+  private Object loadCompilerShim(ExecutionContext context, List<Path> kotlinHomeLibraries) {
     try {
       ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
       classLoaderCache.addRef();
@@ -195,12 +217,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
       ClassLoader classLoader =
           classLoaderCache.getClassLoaderForClassPath(
               SynchronizedToolProvider.getSystemToolClassLoader(),
-              ImmutableList.copyOf(
-                  compilerClassPath
-                      .stream()
-                      .map(p -> ((PathSourcePath) p).getRelativePath())
-                      .map(PATH_TO_URL)
-                      .iterator()));
+              ImmutableList.copyOf(kotlinHomeLibraries.stream().map(PATH_TO_URL).iterator()));
 
       return classLoader.loadClass(COMPILER_CLASS).newInstance();
     } catch (Exception ex) {

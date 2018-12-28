@@ -33,8 +33,7 @@ public abstract class KotlinTestAssumptions {
   public static void assumeCompilerAvailable(@Nullable BuckConfig config) {
     Throwable exception = null;
     try {
-      new KotlinBuckConfig(config == null ? FakeBuckConfig.builder().build() : config)
-          .getPathToCompilerJar();
+      new KotlinBuckConfig(config == null ? FakeBuckConfig.builder().build() : config);
     } catch (HumanReadableException e) {
       exception = e;
     }

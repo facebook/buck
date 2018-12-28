@@ -3105,33 +3105,19 @@ or the value could be a custom platform flavor:
 
 {call buckconfig.entry}
   {param section: 'kotlin' /}
-  {param name: 'kotlinc' /}
-  {param example_value: '/usr/local/bin/kotlinc' /}
-  {param description}
-    The path to the <code>kotlinc</code> compiler executable to use when external compilation is
-    forced.  This setting has no effect by itself and must be paired with the
-    {sp}{call buckconfig.kotlin_external /} setting.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'kotlin' /}
   {param name: 'external' /}
   {param example_value: 'true' /}
   {param description}
     Forces external compilation via <code>kotlinc</code>.  When external compilation is forced the
     following heuristics are used to locate the <code>kotlinc</code> executable:
     <ul>
-      <li>If the <code>{call buckconfig.kotlin_kotlinc /}</code> setting is specified, the executable specified by that path
-          will be used.
-      </li>
       <li>If the {call buckconfig.kotlin_kotlin_home /} path setting is specified, Buck will look
-          for a <code>bin</code> directory under that path for an executable named
-          {sp}<code>kotlinc</code>.
+          for an executable named {sp}<code>kotlinc</code> first under <code>kotlin_home<code> directory
+          and then under <code>kotlin_home/bin</code> directory.
       </li>
-      <li>If a <code>KOTLIN_HOME</code> environment variable is present, Buck will look for a
-          {sp}<code>bin</code> directory under that path for an executable named
-          {sp}<code>kotlinc</code>.
+      <li>If a <code>KOTLIN_HOME</code> environment variable is present, Buck will look
+          for an executable named {sp}<code>kotlinc</code> first under <code>$KOTLIN_HOME<code> directory
+          and then under <code>$KOTLIN_HOME/bin</code> directory.
       </li>
       <li>Lastly, if none of the above are specified, Buck will look for the <code>kotlinc</code>
           {sp}executable in the paths listed in the <code>PATH</code> environment variable.
@@ -3150,25 +3136,29 @@ or the value could be a custom platform flavor:
     assets (executables and JAR files) can be found.  This path is used in the following ways:
     <ul>
       <li>
-        When in-memory compilation is used, the <code>kotlin-compiler.jar</code> and other related
-        Kotlin JARs required for compilation are located via this path using the following
-        heuristics:
+        When in-memory compilation is used, the <code>kotlin-compiler-embeddable.jar</code> and other
+        related Kotlin JARs required for compilation are expected to be in <code>libexec/lib</code>
+        directory under this path. A build target or a relative path to the project root can be
+        specified here. Other required jars are specified below:
         <ul>
           <li>
-            The root of the directory specified by this path is searched.
+            <code>kotlin-annotation-processing-gradle.jar</code>
           </li>
           <li>
-            If there is a <code>lib</code> directory under this path, it is searched.
+            <code>kotlin-reflect.jar</code>
           </li>
           <li>
-            If there is a <code>libexec</code> directory under this path, it is searched.
+            <code>kotlin-stdlib.jar</code>
+          </li>
+          <li>
+            <code>kotlin-script-runtime.jar</code>
           </li>
         </ul>
       </li>
       <li>
-        If external compilation is called for (see {call buckconfig.kotlin_external /}), a
-        {sp}<code>bin</code> directory under this directory will be searched to locate the
-        {sp}<code>kotlinc</code> executable.
+        If external compilation is called for (see {call buckconfig.kotlin_external /}), Buck will look
+        for an executable named {sp}<code>kotlinc</code> first under <code>kotlin_home<code> directory
+        and then under <code>kotlin_home/bin</code> directory.
       </li>
     </ul>
     If this setting is not specified, the location of the Kotlin home directory can be specified
