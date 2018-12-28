@@ -105,9 +105,9 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   public static String getJoinedClasspath(
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
-      ImmutableList<ResolvedJavacPluginProperties> properties
+      ImmutableList<ResolvedJavacPluginProperties> resolvedProperties
   ) {
-    return properties
+    return resolvedProperties
         .stream()
         .map(properties -> properties.getClasspath(resolver, filesystem))
         .flatMap(Arrays::stream)

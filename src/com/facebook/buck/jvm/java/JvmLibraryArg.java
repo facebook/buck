@@ -34,8 +34,10 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -136,22 +138,14 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
     return true;
   }
 
-  default boolean hasPluginsOf(
+  default List<BuildRule> getPluginsOf(
       BuildRuleResolver resolver,
       final AbstractJavacPluginProperties.Type type) {
     return getPlugins()
         .stream()
         .map(pluginTarget -> resolver.getRule(pluginTarget))
         .filter(pluginRule -> ((JavacPlugin) pluginRule).getUnresolvedProperties().getType() == type)
-        .count() > 1;
-  }
-
-  default boolean hasAnnotationProcessors(BuildRuleResolver resolver) {
-    if (getAnnotationProcessors().isEmpty()
-        && getAnnotationProcessorDeps().isEmpty()) {
-      return hasPluginsOf(resolver, ANNOTATION_PROCESSOR);
-    }
-    return true;
+        .collect(Collectors.toList());
   }
 
   default void addPlugins(
@@ -179,7 +173,7 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
   default JavacPluginParams buildStandardJavacParams(
       BuildTarget owner, BuildRuleResolver resolver) {
 
-    if (!hasPluginsOf(resolver, JAVAC_PLUGIN)) {
+    if (getPluginsOf(resolver, JAVAC_PLUGIN).isEmpty()) {
       return JavacPluginParams.EMPTY;
     }
 
@@ -204,7 +198,9 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
   @Value.Derived
   default JavacPluginParams buildJavaAnnotationProcessorParams(
       BuildTarget owner, BuildRuleResolver resolver) {
-    if (!hasAnnotationProcessors(resolver)) {
+    if (getAnnotationProcessors().isEmpty()
+        && getAnnotationProcessorDeps().isEmpty()
+        && getPluginsOf(resolver, ANNOTATION_PROCESSOR).isEmpty()) {
       return JavacPluginParams.EMPTY;
     }
 
