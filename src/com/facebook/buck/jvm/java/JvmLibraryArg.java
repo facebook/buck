@@ -176,7 +176,7 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
   }
 
   @Value.Derived
-  default JavacPluginParams buildStandardJavacPlugins(
+  default JavacPluginParams buildStandardJavacParams(
       BuildTarget owner, BuildRuleResolver resolver) {
 
     if (!hasPluginsOf(resolver, JAVAC_PLUGIN)) {
@@ -202,7 +202,7 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
   }
 
   @Value.Derived
-  default JavacPluginParams buildAnnotationProcessingParams(
+  default JavacPluginParams buildJavaAnnotationProcessorParams(
       BuildTarget owner, BuildRuleResolver resolver) {
     if (!hasAnnotationProcessors(resolver)) {
       return JavacPluginParams.EMPTY;

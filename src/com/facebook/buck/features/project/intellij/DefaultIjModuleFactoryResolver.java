@@ -121,7 +121,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     JavacPluginParams annotationProcessingParams =
         targetNode
             .getConstructorArg()
-            .buildAnnotationProcessingParams(targetNode.getBuildTarget(), graphBuilder);
+            .buildJavaAnnotationProcessorParams(targetNode.getBuildTarget(), graphBuilder);
     if (annotationProcessingParams == null || annotationProcessingParams.isEmpty()) {
       return Optional.empty();
     }

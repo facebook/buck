@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.jvm.java.AbstractJavacOptions.OPTION_CLASSPATH;
+
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
@@ -221,15 +223,15 @@ public class JavacPipelineState implements RulePipelineState {
                       Arrays.stream(value.split(File.pathSeparator))
                           .map(path -> filesystem.resolve(path).toString())
                           .collect(Collectors.joining(File.pathSeparator)));
-            } else if (option.equals("classpath")) {
+            } else if (option.equals(OPTION_CLASSPATH)) {
               // Build up and set the classpath.
               if (!buildClasspathEntries.isEmpty()) {
                 String joiner = value.equals("''") ? "" : File.pathSeparator + value;
                 String classpath =
                     Joiner.on(File.pathSeparator).join(buildClasspathEntries) + joiner;
-                builder.add("-classpath", classpath);
+                builder.add("-" + OPTION_CLASSPATH, classpath);
               } else {
-                builder.add("-classpath", value);
+                builder.add("-" + OPTION_CLASSPATH, value);
               }
 
             } else {

@@ -54,6 +54,9 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
   // Default combined source and target level.
   public static final String TARGETED_JAVA_VERSION = "7";
 
+  public static final String OPTION_CLASSPATH = "classpath";
+  public static final String OPTION_JAVAC_PLUGIN = "Xplugin";
+
   /** The method in which the compiler output is spooled. */
   public enum SpoolMode {
     /**
@@ -217,22 +220,12 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       // Specify processorpath to search for processors.
       optionsConsumer.addOptionValue(
           "processorpath",
-          annotationProcessors
-              .stream()
-              .map(properties -> properties.getClasspath(pathResolver, filesystem))
-              .flatMap(Arrays::stream)
-              .distinct()
-              .map(
-                  url -> {
-                    try {
-                      return url.toURI();
-                    } catch (URISyntaxException e) {
-                      throw new RuntimeException(e);
-                    }
-                  })
-              .map(Paths::get)
-              .map(Path::toString)
-              .collect(Collectors.joining(File.pathSeparator)));
+          ResolvedJavacPluginProperties.getJoinedClasspath(
+              pathResolver,
+              filesystem,
+              annotationProcessors
+          )
+      );
 
       // Specify names of processors.
       optionsConsumer.addOptionValue(
@@ -261,34 +254,24 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       ImmutableList<ResolvedJavacPluginProperties> javacPlugins =
           standardJavacPluginParams.getPluginProperties();
 
-      // Specify processorpath to search for processors.
+      // Specify classpath to include javac plugins.
       optionsConsumer.addOptionValue(
-          "classpath",
-          javacPlugins
-              .stream()
-              .map(properties -> properties.getClasspath(pathResolver, filesystem))
-              .flatMap(Arrays::stream)
-              .distinct()
-              .map(
-                  url -> {
-                    try {
-                      return url.toURI();
-                    } catch (URISyntaxException e) {
-                      throw new RuntimeException(e);
-                    }
-                  })
-              .map(Paths::get)
-              .map(Path::toString)
-              .collect(Collectors.joining(File.pathSeparator)));
+          OPTION_CLASSPATH,
+          ResolvedJavacPluginProperties.getJoinedClasspath(
+              pathResolver,
+              filesystem,
+              javacPlugins
+          )
+      );
 
       for (ResolvedJavacPluginProperties properties : javacPlugins) {
-        optionsConsumer.addFlag("Xplugin:" + properties.getProcessorNames().first());
+        optionsConsumer.addFlag(OPTION_JAVAC_PLUGIN + File.pathSeparator + properties.getProcessorNames().first());
       }
 
       // Add plugin parameters.
       optionsConsumer.addExtras(standardJavacPluginParams.getParameters());
     } else {
-      optionsConsumer.addOptionValue("classpath", "''");
+      optionsConsumer.addOptionValue(OPTION_CLASSPATH, "''");
     }
 
     // Add extra arguments.
