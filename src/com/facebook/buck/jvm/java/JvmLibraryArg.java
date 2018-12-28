@@ -143,16 +143,15 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
         .stream()
         .map(pluginTarget -> resolver.getRule(pluginTarget))
         .filter(pluginRule -> ((JavacPlugin) pluginRule).getUnresolvedProperties().getType() == type)
-        .count() > 0;
+        .count() > 1;
   }
 
   default boolean hasAnnotationProcessors(BuildRuleResolver resolver) {
     if (getAnnotationProcessors().isEmpty()
-        && getAnnotationProcessorDeps().isEmpty()
-        && getPlugins().isEmpty()) {
-      return false;
+        && getAnnotationProcessorDeps().isEmpty()) {
+      return hasPluginsOf(resolver, ANNOTATION_PROCESSOR);
     }
-    return hasPluginsOf(resolver, ANNOTATION_PROCESSOR);
+    return true;
   }
 
   default void addPlugins(
