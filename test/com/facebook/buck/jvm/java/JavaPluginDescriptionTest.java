@@ -83,18 +83,14 @@ public class JavaPluginDescriptionTest {
 
   @Test
   public void testRaisesExceptionWhenNoPluginNameIsSpecified() {
-
-    // Verify
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Cannot build JavaPluginDescriptionArg, some of required attributes are not set [pluginName]");
 
-    // Given
-    JavaPluginDescriptionArg arg =
-        JavaPluginDescriptionArg.builder()
-            .setName("javac_plugin")
-            .setIsolateClassLoader(false)
-            .setDoesNotAffectAbi(true)
-            .setSupportsAbiGenerationFromSource(true)
-            .build();
+    JavaPluginDescriptionArg.builder()
+        .setName("javac_plugin")
+        .setIsolateClassLoader(false)
+        .setDoesNotAffectAbi(true)
+        .setSupportsAbiGenerationFromSource(true)
+        .build();
   }
 }
