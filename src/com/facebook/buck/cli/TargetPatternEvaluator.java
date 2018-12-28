@@ -46,7 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TargetPatternEvaluator {
+class TargetPatternEvaluator {
   private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
 
   private final Parser parser;
@@ -76,7 +76,7 @@ public class TargetPatternEvaluator {
   }
 
   /** Attempts to parse and load the given collection of patterns. */
-  public void preloadTargetPatterns(Iterable<String> patterns, ListeningExecutorService executor)
+  void preloadTargetPatterns(Iterable<String> patterns, ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, IOException {
     resolveTargetPatterns(patterns, executor);
   }
@@ -126,7 +126,7 @@ public class TargetPatternEvaluator {
     return resolved.build();
   }
 
-  ImmutableSet<QueryTarget> resolveFilePattern(String pattern) throws IOException {
+  private ImmutableSet<QueryTarget> resolveFilePattern(String pattern) throws IOException {
     ImmutableSet<Path> filePaths =
         PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, ImmutableList.of(pattern))
             .relativePathsUnderProjectRoot;
@@ -138,7 +138,7 @@ public class TargetPatternEvaluator {
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
-  ImmutableMap<String, ImmutableSet<QueryTarget>> resolveBuildTargetPatterns(
+  private ImmutableMap<String, ImmutableSet<QueryTarget>> resolveBuildTargetPatterns(
       List<String> patterns, ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, IOException {
 
