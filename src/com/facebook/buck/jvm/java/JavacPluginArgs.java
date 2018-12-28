@@ -22,6 +22,13 @@ import org.immutables.value.Value;
 
 public interface JavacPluginArgs extends CommonDescriptionArg, HasDeclaredDeps {
 
+  /**
+   * A value of false indicates that the plugin will not use a shared class loader to be loaded.
+   * This should be true if the same instance of the plugin has not support to run concurrently
+   * multiple times for different javac calls.
+   *
+   * <p>Defaults to false because that's the "safe" value and optimizes build time.
+   */
   @Value.Default
   default boolean isIsolateClassLoader() {
     return false;
