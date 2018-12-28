@@ -32,7 +32,6 @@ package com.facebook.buck.query;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -255,23 +254,6 @@ public interface QueryEnvironment {
 
   /** Returns the set of query functions implemented by this query environment. */
   Iterable<QueryFunction> getFunctions();
-
-  /** List of the default query functions. */
-  List<QueryFunction> DEFAULT_QUERY_FUNCTIONS =
-      ImmutableList.of(
-          new AllPathsFunction(),
-          new AttrFilterFunction(),
-          new BuildFileFunction(),
-          new DepsFunction(),
-          new DepsFunction.FirstOrderDepsFunction(),
-          new DepsFunction.LookupFunction(),
-          new InputsFunction(),
-          new FilterFunction(),
-          new KindFunction(),
-          new LabelsFunction(),
-          new OwnerFunction(),
-          new RdepsFunction(),
-          new TestsOfFunction());
 
   /** @return the {@link QueryTarget}s expanded from the given variable {@code name}. */
   default ImmutableSet<QueryTarget> resolveTargetVariable(String name) {

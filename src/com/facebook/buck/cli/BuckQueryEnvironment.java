@@ -41,7 +41,16 @@ import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.query.AllPathsFunction;
+import com.facebook.buck.query.AttrFilterFunction;
+import com.facebook.buck.query.BuildFileFunction;
+import com.facebook.buck.query.DepsFunction;
+import com.facebook.buck.query.FilterFunction;
+import com.facebook.buck.query.InputsFunction;
+import com.facebook.buck.query.KindFunction;
+import com.facebook.buck.query.LabelsFunction;
 import com.facebook.buck.query.NoopQueryEvaluator;
+import com.facebook.buck.query.OwnerFunction;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
@@ -49,6 +58,8 @@ import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.QueryTargetAccessor;
+import com.facebook.buck.query.RdepsFunction;
+import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
@@ -87,6 +98,23 @@ import java.util.function.Predicate;
  * <p>The query language is documented at docs/command/query.soy
  */
 public class BuckQueryEnvironment implements QueryEnvironment {
+
+  /** List of the default query functions. */
+  private static final List<QueryFunction> QUERY_FUNCTIONS =
+      ImmutableList.of(
+          new AllPathsFunction(),
+          new AttrFilterFunction(),
+          new BuildFileFunction(),
+          new DepsFunction(),
+          new DepsFunction.FirstOrderDepsFunction(),
+          new DepsFunction.LookupFunction(),
+          new InputsFunction(),
+          new FilterFunction(),
+          new KindFunction(),
+          new LabelsFunction(),
+          new OwnerFunction(),
+          new RdepsFunction(),
+          new TestsOfFunction());
 
   private final Parser parser;
   private final PerBuildState parserState;
@@ -524,7 +552,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   @Override
   public Iterable<QueryFunction> getFunctions() {
-    return DEFAULT_QUERY_FUNCTIONS;
+    return QUERY_FUNCTIONS;
   }
 
   @Override
