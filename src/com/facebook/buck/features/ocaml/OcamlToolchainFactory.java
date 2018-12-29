@@ -28,7 +28,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.rules.tool.config.ToolConfig;
-import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -105,13 +104,6 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
     return section;
   }
 
-  private ImmutableList<OcamlPlatform> getPlatforms(
-      ToolchainCreationContext context, Iterable<CxxPlatform> cxxPlatforms) {
-    return RichStream.from(cxxPlatforms)
-        .map(cxxPlatform -> getPlatform(context, cxxPlatform, getSection(cxxPlatform.getFlavor())))
-        .toImmutableList();
-  }
-
   @Override
   public Optional<OcamlToolchain> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
@@ -122,7 +114,9 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
     CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
 
     FlavorDomain<OcamlPlatform> ocamlPlatforms =
-        FlavorDomain.from("OCaml platform", getPlatforms(context, cxxPlatforms.getValues()));
+        cxxPlatforms.convert(
+            "OCaml platform",
+            cxxPlatform -> getPlatform(context, cxxPlatform, getSection(cxxPlatform.getFlavor())));
     OcamlPlatform defaultOcamlPlatform = ocamlPlatforms.getValue(defaultCxxPlatform.getFlavor());
 
     return Optional.of(OcamlToolchain.of(defaultOcamlPlatform, ocamlPlatforms));
