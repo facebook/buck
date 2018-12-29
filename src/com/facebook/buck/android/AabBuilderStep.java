@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.android.common.SdkConstants;
-import com.android.sdklib.build.ApkBuilder;
+import com.android.common.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.IArchiveBuilder;

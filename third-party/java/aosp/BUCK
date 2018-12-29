@@ -8,6 +8,7 @@ java_library(
     required_for_source_only_abi = True,
     visibility = ["PUBLIC"],
     deps = [
+        "//third-party/java/android:sdklib",
         "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
     ],
