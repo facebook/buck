@@ -39,8 +39,7 @@ public class HaskellPlatformsProviderFactory implements ToolchainFactory<Haskell
         new HaskellPlatformsFactory(context.getBuckConfig(), context.getExecutableFinder());
 
     FlavorDomain<HaskellPlatform> haskellPlatforms =
-        FlavorDomain.from(
-            "Haskell platform", haskellPlatformsFactory.getPlatforms(cxxPlatforms.getValues()));
+        haskellPlatformsFactory.getPlatforms(cxxPlatforms);
     HaskellPlatform defaultHaskellPlatform =
         haskellPlatforms.getValue(defaultCxxPlatform.getFlavor());
 

@@ -17,12 +17,12 @@
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -68,16 +68,17 @@ public class HaskellPlatformsFactory {
         .build();
   }
 
-  public ImmutableList<HaskellPlatform> getPlatforms(Iterable<CxxPlatform> cxxPlatforms) {
-    return RichStream.from(cxxPlatforms)
-        .map(
-            cxxPlatform ->
-                // We special case the "default" C/C++ platform to just use the "haskell" section.
-                cxxPlatform.getFlavor().equals(DefaultCxxPlatforms.FLAVOR)
-                    ? getPlatform(haskellBuckConfig.getDefaultSection(), cxxPlatform)
-                    : getPlatform(
-                        haskellBuckConfig.getSectionForPlatform(cxxPlatform), cxxPlatform))
-        .toImmutableList();
+  /** Maps the cxxPlatforms to corresponding HaskellPlatform. */
+  public FlavorDomain<HaskellPlatform> getPlatforms(FlavorDomain<CxxPlatform> cxxPlatforms) {
+    // Use convert (instead of map) so that if we ever have the haskell platform flavor different
+    // from the underlying c++ platform's flavor this will continue to work correctly.
+    return cxxPlatforms.convert(
+        "Haskell platform",
+        cxxPlatform ->
+            // We special case the "default" C/C++ platform to just use the "haskell" section.
+            cxxPlatform.getFlavor().equals(DefaultCxxPlatforms.FLAVOR)
+                ? getPlatform(haskellBuckConfig.getDefaultSection(), cxxPlatform)
+                : getPlatform(haskellBuckConfig.getSectionForPlatform(cxxPlatform), cxxPlatform));
   }
 
   private ToolProvider getTool(
