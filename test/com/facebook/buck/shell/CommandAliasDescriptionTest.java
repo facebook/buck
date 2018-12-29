@@ -294,7 +294,7 @@ public class CommandAliasDescriptionTest {
 
   @Test
   public void eitherExeOrPlatformExeMustBePresent() {
-    exception.expect(HumanReadableException.class);
+    exception.expect(Exception.class);
     builder().buildResult().getCommandPrefix();
   }
 

@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.replay;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
@@ -77,6 +78,7 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -779,7 +781,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
           /* spoolMode */ Optional.empty(),
           /* postprocessClassesCommands */ ImmutableList.of());
       fail("A non-java library listed as exported dep should have thrown.");
-    } catch (HumanReadableException e) {
+    } catch (Exception e) {
       String expected =
           buildTarget
               + ": exported dep "
@@ -788,7 +790,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               + genrule.getType()
               + ") "
               + "must be a type of java library.";
-      assertEquals(expected, e.getMessage());
+      assertThat(ErrorLogger.getUserFriendlyMessage(e), containsString(expected));
     }
   }
 

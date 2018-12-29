@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.util.concurrent.Parallelizer;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -82,19 +83,23 @@ public class SingleThreadedActionGraphBuilder extends AbstractActionGraphBuilder
     if (rule != null) {
       return rule;
     }
-    rule = mappingFunction.apply(target);
-    checkRuleIsBuiltForCorrectTarget(target, rule);
-    BuildRule oldRule = buildRuleIndex.put(target, rule);
-    Preconditions.checkState(
-        // TODO(jakubzika): Eventually we should be able to remove the oldRule == rule part.
-        // For now we need it to handle cases where a description adds a rule to the index before
-        // returning it.
-        oldRule == null || oldRule == rule,
-        "Multiple rules created for target '%s':\n"
-            + "new rule '%s' does not match existing rule '%s'.",
-        target,
-        rule,
-        oldRule);
+    try {
+      rule = mappingFunction.apply(target);
+      checkRuleIsBuiltForCorrectTarget(target, rule);
+      BuildRule oldRule = buildRuleIndex.put(target, rule);
+      Preconditions.checkState(
+          // TODO(jakubzika): Eventually we should be able to remove the oldRule == rule part.
+          // For now we need it to handle cases where a description adds a rule to the index before
+          // returning it.
+          oldRule == null || oldRule == rule,
+          "Multiple rules created for target '%s':\n"
+              + "new rule '%s' does not match existing rule '%s'.",
+          target,
+          rule,
+          oldRule);
+    } catch (Exception e) {
+      throw new BuckUncheckedExecutionException(e, "When creating rules for %s.", target);
+    }
     return rule;
   }
 
