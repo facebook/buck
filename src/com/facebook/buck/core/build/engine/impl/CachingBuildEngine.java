@@ -311,6 +311,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   @Override
   public void terminateBuildWithFailure(Throwable failure) {
+    // TODO(cjhopman): Change this to only accept specific exception types to enforce that we get
+    // the information that we want.
     if (firstFailure.compareAndSet(null, failure)) {
       forEachPendingBuilder(builder -> builder.cancel(failure));
     }
@@ -528,6 +530,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             remoteBuildRuleCompletionWaiter,
             customBuildRuleStrategy);
     ruleBuilders.add(new WeakReference<>(cachingBuildRuleBuilder));
+    if (firstFailure.get() != null) {
+      cachingBuildRuleBuilder.cancel(firstFailure.get());
+    }
     return cachingBuildRuleBuilder.build();
   }
 
@@ -548,7 +553,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     @Override
-    public void setFirstFailure(Throwable throwable) {
+    public void setFirstFailure(BuildRuleFailedException throwable) {
       if (cachingBuildEngine.firstFailure.get() == null
           && !cachingBuildEngine.isKeepGoingEnabled(buildContext)) {
         cachingBuildEngine.terminateBuildWithFailure(throwable);

@@ -96,7 +96,6 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
@@ -370,9 +369,9 @@ class CachingBuildRuleBuilder {
             Throwable.class,
             throwable -> {
               Objects.requireNonNull(throwable);
-              buildRuleBuilderDelegate.setFirstFailure(throwable);
-              Throwables.throwIfInstanceOf(throwable, Exception.class);
-              throw new RuntimeException(throwable);
+              BuildRuleFailedException failedException = getFailedException(throwable);
+              buildRuleBuilderDelegate.setFirstFailure(failedException);
+              throw failedException;
             });
 
     buildResult =
@@ -396,15 +395,15 @@ class CachingBuildRuleBuilder {
             buildResult,
             Throwable.class,
             thrown -> {
-              LOG.debug(thrown, "Building rule [%s] failed.", rule.getBuildTarget());
-
+              String message = String.format("Building rule [%s] failed.", rule.getBuildTarget());
+              BuildRuleFailedException failedException = getFailedException(thrown);
+              LOG.debug(failedException, message);
               if (consoleLogBuildFailuresInline) {
-                eventBus.post(ConsoleEvent.severe(getErrorMessageIncludingBuildRule()));
+                // TODO(cjhopman): This probably shouldn't be a thing. Why can't we just rely on the
+                // propagated failure being printed?
+                eventBus.post(ConsoleEvent.severe(message));
               }
-
-              thrown = addBuildRuleContextToException(thrown);
-              recordFailureAndCleanUp(thrown);
-
+              recordFailureAndCleanUp(failedException);
               return Futures.immediateFuture(failure(thrown));
             });
 
@@ -1190,7 +1189,7 @@ class CachingBuildRuleBuilder {
     return Futures.immediateFuture(Optional.empty());
   }
 
-  private void recordFailureAndCleanUp(Throwable failure) {
+  private void recordFailureAndCleanUp(BuildRuleFailedException failure) {
     // Make this failure visible for other rules, so that they can stop early.
     buildRuleBuilderDelegate.setFirstFailure(Objects.requireNonNull(failure));
 
@@ -1204,12 +1203,11 @@ class CachingBuildRuleBuilder {
     }
   }
 
-  private Throwable addBuildRuleContextToException(@Nonnull Throwable thrown) {
-    return new BuckUncheckedExecutionException("", thrown, getErrorMessageIncludingBuildRule());
-  }
-
-  private String getErrorMessageIncludingBuildRule() {
-    return String.format("When building rule %s.", rule.getBuildTarget());
+  private BuildRuleFailedException getFailedException(Throwable thrown) {
+    if (thrown instanceof BuildRuleFailedException) {
+      return (BuildRuleFailedException) thrown;
+    }
+    return new BuildRuleFailedException(thrown, rule.getBuildTarget());
   }
 
   /**
@@ -1448,7 +1446,7 @@ class CachingBuildRuleBuilder {
   public interface BuildRuleBuilderDelegate {
     void markRuleAsUsed(BuildRule rule, BuckEventBus eventBus);
 
-    void setFirstFailure(Throwable throwable);
+    void setFirstFailure(BuildRuleFailedException throwable);
 
     ListenableFuture<List<BuildResult>> getDepResults(
         BuildRule rule, ExecutionContext executionContext);

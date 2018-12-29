@@ -29,6 +29,8 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -154,7 +156,6 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.exceptions.ExceptionWithContext;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -176,6 +177,7 @@ import com.google.common.util.concurrent.AbstractListeningExecutorService;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -208,6 +210,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -1055,7 +1058,7 @@ public class CachingBuildEngineTest {
                 .get();
 
         assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
-        assertThat(result.getFailure(), instanceOf(BuckUncheckedExecutionException.class));
+        assertThat(result.getFailure(), instanceOf(BuildRuleFailedException.class));
         Throwable cause = result.getFailure().getCause();
         assertThat(cause, instanceOf(StepFailedException.class));
         assertThat(((StepFailedException) cause).getStep().getShortName(), equalTo(description));
@@ -1116,7 +1119,7 @@ public class CachingBuildEngineTest {
                 .get();
 
         assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
-        assertThat(result.getFailure(), instanceOf(BuckUncheckedExecutionException.class));
+        assertThat(result.getFailure(), instanceOf(BuildRuleFailedException.class));
         Throwable cause = result.getFailure().getCause();
         assertThat(cause, instanceOf(StepFailedException.class));
         assertThat(failedSteps.get(), equalTo(1));
@@ -1231,6 +1234,118 @@ public class CachingBuildEngineTest {
     }
 
     @Test
+    public void testCancelledRulesHaveRuleContextFromFailingRule() throws Exception {
+      class SimpleBuildRule extends AbstractBuildRule {
+        final ImmutableSortedSet<BuildRule> deps;
+        final Supplier<ImmutableList<Step>> stepsSupplier;
+
+        SimpleBuildRule(
+            String buildTarget,
+            ImmutableSortedSet<BuildRule> deps,
+            Supplier<ImmutableList<Step>> stepsSupplier) {
+          super(BuildTargetFactory.newInstance(buildTarget), filesystem);
+          this.deps = deps;
+          this.stepsSupplier = stepsSupplier;
+        }
+
+        @Override
+        public SortedSet<BuildRule> getBuildDeps() {
+          return deps;
+        }
+
+        @Override
+        public ImmutableList<? extends Step> getBuildSteps(
+            BuildContext context, BuildableContext buildableContext) {
+          return stepsSupplier.get();
+        }
+
+        @Nullable
+        @Override
+        public SourcePath getSourcePathToOutput() {
+          return null;
+        }
+      }
+
+      BuildRule rule1 =
+          new SimpleBuildRule(
+              "//:rule1",
+              ImmutableSortedSet.of(),
+              () -> {
+                throw new RuntimeException();
+              });
+      BuildRule rule2 =
+          new SimpleBuildRule(
+              "//:rule2",
+              ImmutableSortedSet.of(),
+              () -> {
+                throw new RuntimeException();
+              });
+      BuildRule rule3 =
+          new SimpleBuildRule(
+              "//:rule3",
+              ImmutableSortedSet.of(),
+              () -> {
+                throw new RuntimeException();
+              });
+
+      BuildRule dependent =
+          new SimpleBuildRule(
+              "//:dep", ImmutableSortedSet.of(rule1, rule2, rule3), ImmutableList::of);
+
+      ListeningExecutorService executor = MoreExecutors.newDirectExecutorService();
+      CachingBuildEngine engine = cachingBuildEngineFactory().setExecutorService(executor).build();
+      Throwable depFailure =
+          engine
+              .build(buildContext, TestExecutionContext.newInstance(), dependent)
+              .getResult()
+              .get()
+              .getFailure();
+
+      BuildResult result1 =
+          engine.build(buildContext, TestExecutionContext.newInstance(), rule1).getResult().get();
+      BuildResult result2 =
+          engine.build(buildContext, TestExecutionContext.newInstance(), rule2).getResult().get();
+      BuildResult result3 =
+          engine.build(buildContext, TestExecutionContext.newInstance(), rule3).getResult().get();
+
+      BuildResult failingResult = null;
+      if (result1.getStatus().equals(BuildRuleStatus.FAIL)) {
+        failingResult = result1;
+        assertEquals(BuildRuleStatus.CANCELED, result2.getStatus());
+        assertEquals(BuildRuleStatus.CANCELED, result3.getStatus());
+      }
+
+      if (result2.getStatus().equals(BuildRuleStatus.FAIL)) {
+        failingResult = result2;
+        assertEquals(BuildRuleStatus.CANCELED, result1.getStatus());
+        assertEquals(BuildRuleStatus.CANCELED, result3.getStatus());
+      }
+
+      if (result3.getStatus().equals(BuildRuleStatus.FAIL)) {
+        failingResult = result3;
+        assertEquals(BuildRuleStatus.CANCELED, result1.getStatus());
+        assertEquals(BuildRuleStatus.CANCELED, result2.getStatus());
+      }
+
+      // One of the three rules should've failed.
+      assertNotNull(failingResult);
+
+      Throwable failure1 = result1.getFailure();
+      Throwable failure2 = result2.getFailure();
+      Throwable failure3 = result3.getFailure();
+
+      // These should all be the same underlying failure.
+      assertSame(failure1, failure2);
+      assertSame(failure2, failure3);
+      assertSame(failure1, depFailure);
+
+      assertThat(depFailure, instanceOf(BuildRuleFailedException.class));
+      assertThat(
+          ((ExceptionWithContext) depFailure).getContext().get(),
+          containsString(failingResult.getRule().toString()));
+    }
+
+    @Test
     public void testExceptionMessagesAreInformative() throws Exception {
       AtomicReference<RuntimeException> throwable = new AtomicReference<>();
       BuildTarget buildTarget = BuildTargetFactory.newInstance("//:rule");
@@ -1262,7 +1377,7 @@ public class CachingBuildEngineTest {
               .getResult()
               .get()
               .getFailure();
-      assertThat(thrown, instanceOf(BuckUncheckedExecutionException.class));
+      assertThat(thrown, instanceOf(BuildRuleFailedException.class));
       assertThat(thrown.getCause(), new IsInstanceOf(IllegalArgumentException.class));
       assertThat(((ExceptionWithContext) thrown).getContext().get(), containsString("//:rule"));
 
@@ -1275,7 +1390,7 @@ public class CachingBuildEngineTest {
               .getResult()
               .get()
               .getFailure();
-      assertThat(thrown, instanceOf(BuckUncheckedExecutionException.class));
+      assertThat(thrown, instanceOf(BuildRuleFailedException.class));
       assertEquals(throwable.get(), thrown.getCause());
       assertThat(((ExceptionWithContext) thrown).getContext().get(), containsString("//:rule"));
     }

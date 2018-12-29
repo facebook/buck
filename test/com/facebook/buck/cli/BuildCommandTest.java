@@ -161,7 +161,7 @@ public class BuildCommandTest {
             "    }",
             "  },",
             "  \"failures\" : {",
-            "    \"//fake:rule2\" : \"some\"",
+            "    \"//fake:rule2\" : \"java.lang.RuntimeException: some\"",
             "  }",
             "}");
     String observedReport =

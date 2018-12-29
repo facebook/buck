@@ -11,6 +11,6 @@
     }
   },
   "failures" : {
-    "//:failing_rule" : "Command failed with exit code 2.\nstderr: \n  When running <genrule>."
+    "//:failing_rule" : "Command failed with exit code 2.\nstderr: \n    When running <genrule>.\n    When building rule //:failing_rule."
   }
 }
