@@ -23,6 +23,7 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.Tree.Kind;
 import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.SimpleTreeVisitor;
@@ -216,8 +217,14 @@ class TreeBackedEnter {
           ((ClassTree) path.getLeaf())
               .getMembers()
               .stream()
+              // Top level blocks (static initializers and anonymous blocks) are only used at
+              // runtime, so we can safely skip them for ABI generation purposes. In Java 9 and
+              // later, it's actually necessary to skip them, as getElement will attempt to
+              // attribute the parent class node when given block nodes, effectively doing an
+              // analyze compiler phase, which we need to avoid. In Java 8 and earlier, getElement
+              // just returns null in these cases.
+              .filter(tree -> tree.getKind() != Kind.BLOCK)
               .map(tree -> javacTrees.getElement(new TreePath(path, tree)))
-              .filter(element -> element != null) // Null can happen for static initializers
               .collect(Collectors.toList());
       Set<? extends Element> fromTreeSet = new HashSet<>(fromTree);
 
