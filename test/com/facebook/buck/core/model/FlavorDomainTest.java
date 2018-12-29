@@ -69,4 +69,56 @@ public class FlavorDomainTest {
       assertTrue(e.getMessage().contains("has no flavor"));
     }
   }
+
+  @Test
+  public void map() {
+    Flavor hello = InternalFlavor.of("hello");
+    Flavor goodbye = InternalFlavor.of("goodbye");
+
+    FlavorDomain<String> domain =
+        new FlavorDomain<>("test", ImmutableMap.of(hello, "hello", goodbye, "goodbye"));
+
+    FlavorDomain<String> mapped = domain.map(s -> s + " world!");
+
+    assertEquals("test", mapped.getName());
+    assertEquals("hello world!", mapped.getValue(hello));
+    assertEquals("goodbye world!", mapped.getValue(goodbye));
+
+    FlavorDomain<Integer> lengths = mapped.map("lengths", String::length);
+
+    assertEquals("lengths", lengths.getName());
+    assertEquals((Integer) 12, lengths.getValue(hello));
+    assertEquals((Integer) 14, lengths.getValue(goodbye));
+  }
+
+  class SimpleFlavorConvertible implements FlavorConvertible {
+    final String value;
+    final String flavor;
+
+    SimpleFlavorConvertible(String value, String flavor) {
+      this.value = value;
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return InternalFlavor.of(flavor);
+    }
+  }
+
+  @Test
+  public void convert() {
+    Flavor hello = InternalFlavor.of("hello");
+    Flavor goodbye = InternalFlavor.of("goodbye");
+
+    FlavorDomain<String> domain =
+        new FlavorDomain<>("test", ImmutableMap.of(hello, "hello", goodbye, "goodbye"));
+
+    FlavorDomain<SimpleFlavorConvertible> converted =
+        domain.convert("newname", s -> new SimpleFlavorConvertible(s, "flavor-" + s));
+
+    assertEquals("newname", converted.getName());
+    assertEquals("hello", converted.getValue(InternalFlavor.of("flavor-hello")).value);
+    assertEquals("goodbye", converted.getValue(InternalFlavor.of("flavor-goodbye")).value);
+  }
 }
