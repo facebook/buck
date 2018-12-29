@@ -485,7 +485,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 new StripLinkable(
                     targetForStripRule,
                     projectFilesystem,
-                    ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(sourcePath)),
+                    ruleFinder,
                     platform.getCxxPlatform().getStrip(),
                     sourcePath,
                     sharedLibrarySoName));

@@ -22,16 +22,20 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.common.BuildableSupport.DepsSupplier;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.SortedSet;
 
@@ -44,26 +48,34 @@ public class StripLinkable extends AbstractBuildRule {
   @AddToRuleKey private final String strippedObjectName;
 
   private final Path resultDir;
-  private final ImmutableSortedSet<BuildRule> buildDeps;
+  private final DepsSupplier depsSupplier;
 
   public StripLinkable(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<BuildRule> buildDeps,
+      SourcePathRuleFinder ruleFinder,
       Tool stripTool,
       SourcePath sourcePathToStrip,
       String strippedObjectName) {
     super(buildTarget, projectFilesystem);
-    this.buildDeps = buildDeps;
     this.stripTool = stripTool;
     this.strippedObjectName = strippedObjectName;
     this.sourcePathToStrip = sourcePathToStrip;
     this.resultDir = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s");
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    depsSupplier.updateRuleFinder(ruleFinder);
   }
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return buildDeps;
+    return depsSupplier.get();
   }
 
   @Override
