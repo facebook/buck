@@ -39,7 +39,6 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestStatusMessage;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
@@ -72,7 +71,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   private volatile Optional<BuildStatus> stampedeBuildStatus = Optional.empty();
 
   public SimpleConsoleEventBusListener(
-      Console console,
+      RenderingConsole console,
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
       boolean hideSucceededRules,
@@ -236,7 +235,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       return;
     }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    formatConsoleEvent(event, lines);
+    lines.addAll(formatConsoleEvent(event));
     printLines(lines);
   }
 
@@ -356,7 +355,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
     if ((BUILT_LOCALLY.equals(finished.getSuccessType().orElse(null)) && !hideSucceededRules)
         || console.getVerbosity().shouldPrintBinaryRunInformation()) {
-      console.getStdErr().println(line);
+      console.logLines(line);
     }
   }
 
@@ -412,7 +411,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       return;
     }
     if (console.getVerbosity().shouldPrintStandardInformation()) {
-      console.getStdErr().println(String.join(System.lineSeparator(), lines));
+      console.logLines(lines);
     }
   }
 

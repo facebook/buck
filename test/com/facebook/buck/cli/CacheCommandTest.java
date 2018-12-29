@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.listener.RenderingConsole;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.io.file.LazyPath;
@@ -191,7 +192,7 @@ public class CacheCommandTest {
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
             emptySuperConsoleConfig,
-            console,
+            new RenderingConsole(clock, console),
             clock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(

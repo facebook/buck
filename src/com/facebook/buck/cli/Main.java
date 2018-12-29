@@ -82,6 +82,7 @@ import com.facebook.buck.event.listener.MachineReadableLoggerListener;
 import com.facebook.buck.event.listener.ParserProfilerLoggerListener;
 import com.facebook.buck.event.listener.ProgressEstimator;
 import com.facebook.buck.event.listener.PublicAnnouncementManager;
+import com.facebook.buck.event.listener.RenderingConsole;
 import com.facebook.buck.event.listener.RuleKeyDiagnosticsListener;
 import com.facebook.buck.event.listener.RuleKeyLoggerListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
@@ -282,8 +283,6 @@ public final class Main {
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
 
   private static final Duration DAEMON_SLAYER_TIMEOUT = Duration.ofDays(1);
-
-  private static final Duration SUPER_CONSOLE_REFRESH_RATE = Duration.ofMillis(100);
 
   private static final Duration HANG_DETECTOR_TIMEOUT = Duration.ofMinutes(5);
 
@@ -2053,11 +2052,12 @@ public final class Main {
       boolean printBuildId,
       Optional<String> buildDetailsTemplate,
       ImmutableList<AdditionalConsoleLineProvider> remoteExecutionConsoleLineProvider) {
+    RenderingConsole renderingConsole = new RenderingConsole(clock, console);
     if (config.isEnabled(console, Platform.detect())) {
       SuperConsoleEventBusListener superConsole =
           new SuperConsoleEventBusListener(
               config,
-              console,
+              renderingConsole,
               clock,
               testResultSummaryVerbosity,
               executionEnvironment,
@@ -2068,12 +2068,10 @@ public final class Main {
               printBuildId,
               buildDetailsTemplate,
               remoteExecutionConsoleLineProvider);
-      superConsole.startRenderScheduler(
-          SUPER_CONSOLE_REFRESH_RATE.toMillis(), TimeUnit.MILLISECONDS);
       return superConsole;
     }
     return new SimpleConsoleEventBusListener(
-        console,
+        renderingConsole,
         clock,
         testResultSummaryVerbosity,
         config.getHideSucceededRulesInLogMode(),

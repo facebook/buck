@@ -35,7 +35,7 @@ public class AbstractConsoleEventBusListenerTest {
 
   private static AbstractConsoleEventBusListener createAbstractConsoleInstance() {
     return new AbstractConsoleEventBusListener(
-        Console.createNullConsole(),
+        new RenderingConsole(FakeClock.doNotCare(), Console.createNullConsole()),
         FakeClock.doNotCare(),
         Locale.US,
         new DefaultExecutionEnvironment(

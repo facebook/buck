@@ -44,7 +44,6 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.i18n.NumberFormatter;
 import com.facebook.buck.util.timing.Clock;
@@ -105,7 +104,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
           });
 
   protected static final long UNFINISHED_EVENT_PAIR = -1;
-  protected final Console console;
+  protected final RenderingConsole console;
   protected final Clock clock;
   protected final Ansi ansi;
   private final Locale locale;
@@ -182,7 +181,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   private final AtomicBoolean topSlowestRulesLogged = new AtomicBoolean(false);
 
   public AbstractConsoleEventBusListener(
-      Console console,
+      RenderingConsole console,
       Clock clock,
       Locale locale,
       ExecutionEnvironment executionEnvironment,
@@ -615,10 +614,10 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   /** Formats a {@link ConsoleEvent} and adds it to {@code lines}. */
-  protected void formatConsoleEvent(ConsoleEvent logEvent, ImmutableList.Builder<String> lines) {
+  protected ImmutableList<String> formatConsoleEvent(ConsoleEvent logEvent) {
     if (logEvent.getMessage() == null) {
       LOG.error("Got logEvent with null message");
-      return;
+      return ImmutableList.of();
     }
     String formattedLine = "";
     if (logEvent.containsAnsiEscapeCodes() || logEvent.getLevel().equals(Level.INFO)) {
@@ -631,8 +630,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (!formattedLine.isEmpty()) {
       // Split log messages at newlines and add each line individually to keep the line count
       // consistent.
-      lines.addAll(Splitter.on(System.lineSeparator()).split(formattedLine));
+      return ImmutableList.copyOf(Splitter.on(System.lineSeparator()).split(formattedLine));
     }
+    return ImmutableList.of();
   }
 
   @Subscribe

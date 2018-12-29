@@ -50,9 +50,7 @@ import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
@@ -60,10 +58,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.text.DateFormat;
@@ -81,11 +77,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -112,10 +104,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       threadsToRunningTestStatusMessageEvent;
   private final ConcurrentMap<Long, ConcurrentLinkedDeque<LeafEvent>> threadsToRunningStep;
 
-  private final ConcurrentLinkedQueue<ConsoleEvent> logEvents;
-
-  private final ScheduledExecutorService renderScheduler;
-
   private final TestResultFormatter testFormatter;
 
   private final AtomicInteger numPassingTests = new AtomicInteger(0);
@@ -140,8 +128,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final int threadLineLimitOnError;
   private final boolean shouldAlwaysSortThreadsByTime;
   private final long buildRuleMinimumDurationMillis;
-
-  private int lastNumLinesPrinted;
 
   private Optional<String> parsingStatus = Optional.empty();
   // Save if Watchman reported zero file changes in case we receive an ActionGraphProvider hit. This
@@ -173,9 +159,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final Optional<String> buildDetailsLine;
   private final ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders;
 
+  private final RenderingConsole renderingConsole;
+
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
-      Console console,
+      RenderingConsole renderingConsole,
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
       ExecutionEnvironment executionEnvironment,
@@ -188,7 +176,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders) {
     this(
         config,
-        console,
+        renderingConsole,
         clock,
         summaryVerbosity,
         executionEnvironment,
@@ -208,7 +196,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @VisibleForTesting
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
-      Console console,
+      RenderingConsole renderingConsole,
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
       ExecutionEnvironment executionEnvironment,
@@ -224,7 +212,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Optional<String> buildDetailsTemplate,
       ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders) {
     super(
-        console,
+        renderingConsole,
         clock,
         locale,
         executionEnvironment,
@@ -240,16 +228,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
     this.threadsToRunningStep = new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
 
-    this.logEvents = new ConcurrentLinkedQueue<>();
-
-    this.renderScheduler =
-        Executors.newScheduledThreadPool(
-            1,
-            new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
     this.testFormatter =
         new TestResultFormatter(
-            console.getAnsi(),
-            console.getVerbosity(),
+            renderingConsole.getAnsi(),
+            renderingConsole.getVerbosity(),
             summaryVerbosity,
             locale,
             Optional.of(testLogPath));
@@ -297,104 +279,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.buildDetailsLine =
         buildDetailsTemplate.map(
             template -> AbstractConsoleEventBusListener.getBuildDetailsLine(buildId, template));
-  }
-
-  /** Schedules a runnable that updates the console output at a fixed interval. */
-  public void startRenderScheduler(long renderInterval, TimeUnit timeUnit) {
-    LOG.debug("Starting render scheduler (interval %d ms)", timeUnit.toMillis(renderInterval));
-    renderScheduler.scheduleAtFixedRate(
-        () -> {
-          try {
-            SuperConsoleEventBusListener.this.render();
-          } catch (Error | RuntimeException e) {
-            LOG.error(e, "Rendering exception");
-            throw e;
-          }
-        }, /* initialDelay */
-        renderInterval, /* period */
-        renderInterval,
-        timeUnit);
-  }
-
-  /** Shuts down the thread pool and cancels the fixed interval runnable. */
-  private synchronized void stopRenderScheduler() {
-    LOG.debug("Stopping render scheduler");
-    renderScheduler.shutdownNow();
-  }
-
-  @VisibleForTesting
-  synchronized void render() {
-    LOG.verbose("Rendering");
-    int previousNumLinesPrinted = lastNumLinesPrinted;
-    ImmutableList<String> lines = createRenderLinesAtTime(clock.currentTimeMillis());
-    ImmutableList<String> logLines = createLogRenderLines();
-    lastNumLinesPrinted = lines.size();
-
-    // Synchronize on the DirtyPrintStreamDecorator to prevent interlacing of output.
-    // We don't log immediately so we avoid locking the console handler to avoid deadlocks.
-    boolean stderrDirty;
-    boolean stdoutDirty;
-    synchronized (console.getStdErr()) {
-      synchronized (console.getStdOut()) {
-        // If another source has written to stderr, stop rendering with the SuperConsole.
-        // We need to do this to keep our updates consistent. We don't do this with stdout
-        // because we don't use it directly except in a couple of cases, where the
-        // synchronization in DirtyPrintStreamDecorator should be sufficient
-        stderrDirty = console.getStdErr().isDirty();
-        stdoutDirty = console.getStdOut().isDirty();
-        if (stderrDirty || stdoutDirty) {
-          stopRenderScheduler();
-        } else if (previousNumLinesPrinted != 0 || !lines.isEmpty() || !logLines.isEmpty()) {
-          String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
-          console.getStdErr().getRawStream().print(fullFrame);
-        }
-      }
-    }
-    if (stderrDirty) {
-      LOG.debug("Stopping console output (stderr was dirty).");
-    }
-  }
-
-  private String renderFullFrame(
-      ImmutableList<String> logLines, ImmutableList<String> lines, int previousNumLinesPrinted) {
-    int currentNumLines = lines.size();
-
-    Iterable<String> renderedLines =
-        Iterables.concat(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle(ansi.clearLine()),
-                logLines,
-                Iterables.cycle(ansi.clearToTheEndOfLine() + System.lineSeparator())),
-            ansi.asNoWrap(
-                MoreIterables.zipAndConcat(
-                    Iterables.cycle(ansi.clearLine()),
-                    lines,
-                    Iterables.cycle(ansi.clearToTheEndOfLine() + System.lineSeparator()))));
-
-    // Number of lines remaining to clear because of old output once we displayed
-    // the new output.
-    int remainingLinesToClear =
-        previousNumLinesPrinted > currentNumLines ? previousNumLinesPrinted - currentNumLines : 0;
-
-    StringBuilder fullFrame = new StringBuilder();
-    // We move the cursor back to the top.
-    for (int i = 0; i < previousNumLinesPrinted; i++) {
-      fullFrame.append(ansi.cursorPreviousLine(1));
-    }
-    // We display the new output.
-    for (String part : renderedLines) {
-      fullFrame.append(part);
-    }
-    // We clear the remaining lines of the old output.
-    for (int i = 0; i < remainingLinesToClear; i++) {
-      fullFrame.append(ansi.clearLine());
-      fullFrame.append(System.lineSeparator());
-    }
-    // We move the cursor at the end of the new output.
-    for (int i = 0; i < remainingLinesToClear; i++) {
-      fullFrame.append(ansi.cursorPreviousLine(1));
-    }
-    return fullFrame.toString();
+    this.renderingConsole = renderingConsole;
+    this.renderingConsole.registerDelegate(this::createRenderLinesAtTime);
+    this.renderingConsole.startRenderScheduler();
   }
 
   /**
@@ -699,22 +586,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
   }
 
-  /** Adds log messages for rendering. */
-  @VisibleForTesting
-  ImmutableList<String> createLogRenderLines() {
-    ImmutableList.Builder<String> logEventLinesBuilder = ImmutableList.builder();
-    ConsoleEvent logEvent;
-    while ((logEvent = logEvents.poll()) != null) {
-      formatConsoleEvent(logEvent, logEventLinesBuilder);
-      if (logEvent.getLevel().equals(Level.WARNING)) {
-        anyWarningsPrinted.set(true);
-      } else if (logEvent.getLevel().equals(Level.SEVERE)) {
-        anyErrorsPrinted.set(true);
-      }
-    }
-    return logEventLinesBuilder.build();
-  }
-
   /**
    * Render lines using the provided {@param renderer}.
    *
@@ -928,11 +799,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       testReportBuilder.addAll(builder.build());
       testOutput = String.join(System.lineSeparator(), testReportBuilder.build());
     }
-    // We're about to write to stdout, so make sure we render the final frame before we do.
-    render();
-    synchronized (console.getStdOut()) {
-      console.getStdOut().println(testOutput);
-    }
+    renderingConsole.printToStdOut(testOutput);
   }
 
   @Subscribe
@@ -969,7 +836,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         numFailingTests.incrementAndGet();
         // We don't use TestResultFormatter.reportResultSummary() here since that also
         // includes the stack trace and stdout/stderr.
-        logEvents.add(
+        logEvent(
             ConsoleEvent.severe(
                 String.format(
                     locale,
@@ -999,7 +866,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     if (console.getVerbosity().isSilent() && !event.getLevel().equals(Level.SEVERE)) {
       return;
     }
-    logEvents.add(event);
+    logEventDirectly(event);
+  }
+
+  private void logEventDirectly(ConsoleEvent logEvent) {
+    renderingConsole.logLines(formatConsoleEvent(logEvent));
+    if (logEvent.getLevel().equals(Level.WARNING)) {
+      anyWarningsPrinted.set(true);
+    } else if (logEvent.getLevel().equals(Level.SEVERE)) {
+      anyErrorsPrinted.set(true);
+    }
   }
 
   @Subscribe
@@ -1011,12 +887,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void forceRender(@SuppressWarnings("unused") FlushConsoleEvent event) {
-    render();
+    renderingConsole.render();
   }
 
   @Override
   public void printSevereWarningDirectly(String line) {
-    logEvents.add(ConsoleEvent.severe(line));
+    logEventDirectly(ConsoleEvent.severe(line));
   }
 
   private void printInfoDirectlyOnce(String line) {
@@ -1024,7 +900,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       return;
     }
     if (!actionGraphCacheMessage.contains(line)) {
-      logEvents.add(ConsoleEvent.info(line));
+      logEventDirectly(ConsoleEvent.info(line));
       actionGraphCacheMessage.add(line);
     }
   }
@@ -1115,8 +991,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Override
   public synchronized void close() throws IOException {
     super.close();
-    stopRenderScheduler();
-    render(); // Ensure final frame is rendered.
+    renderingConsole.close();
   }
 
   @Override

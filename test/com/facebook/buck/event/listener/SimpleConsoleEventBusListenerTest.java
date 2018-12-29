@@ -553,7 +553,7 @@ public class SimpleConsoleEventBusListenerTest {
       boolean hideSucceededRules, boolean printBuildId, Optional<String> buildDetailsTemplate) {
     SimpleConsoleEventBusListener listener =
         new SimpleConsoleEventBusListener(
-            console,
+            new RenderingConsole(fakeClock, console),
             fakeClock,
             TestResultSummaryVerbosity.of(false, false),
             hideSucceededRules,
