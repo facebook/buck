@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatformsProvider> {
@@ -155,15 +156,13 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
         hostFlavor = overrideFlavor;
       }
     }
+    CxxPlatform hostFlavoredPlatform =
+        Objects.requireNonNull(cxxOverridePlatformsMap.get(hostFlavor));
     CxxPlatform hostCxxPlatform;
     if (!cxxBuckConfig.getShouldRemapHostPlatform()) {
-      hostCxxPlatform =
-          CxxPlatform.builder()
-              .from(cxxOverridePlatformsMap.get(hostFlavor))
-              .setFlavor(DefaultCxxPlatforms.FLAVOR)
-              .build();
+      hostCxxPlatform = hostFlavoredPlatform.withFlavor(DefaultCxxPlatforms.FLAVOR);
     } else {
-      hostCxxPlatform = cxxOverridePlatformsMap.get(hostFlavor);
+      hostCxxPlatform = hostFlavoredPlatform;
     }
     return hostCxxPlatform;
   }
