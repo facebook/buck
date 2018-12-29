@@ -1165,7 +1165,7 @@ public class CxxDescriptionEnhancer {
 
   public static Optional<CxxCompilationDatabaseDependencies> createCompilationDatabaseDependencies(
       BuildTarget buildTarget,
-      FlavorDomain<CxxPlatform> platforms,
+      FlavorDomain<?> platforms,
       ActionGraphBuilder graphBuilder,
       ImmutableSortedSet<BuildTarget> deps) {
     Preconditions.checkState(
