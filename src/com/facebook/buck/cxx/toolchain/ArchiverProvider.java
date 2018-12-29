@@ -45,27 +45,66 @@ public interface ArchiverProvider {
     };
   }
 
+  /**
+   * Creates an appropriate ArchiverProvider instance for the given parameters.
+   *
+   * @deprecated Use the non-legacy type.
+   */
+  @Deprecated
+  static ArchiverProvider from(
+      ToolProvider archiver, Platform platform, Optional<LegacyArchiverType> legacyType) {
+    ArchiverProvider.Type archiverType;
+    switch (platform) {
+      case MACOS:
+      case FREEBSD:
+        archiverType = Type.BSD;
+        break;
+      case LINUX:
+        archiverType = Type.GNU;
+        break;
+      case WINDOWS:
+        if (legacyType.isPresent() && legacyType.get().equals(LegacyArchiverType.LLVM_LIB)) {
+          archiverType = Type.WINDOWS_CLANG;
+        } else {
+          archiverType = Type.WINDOWS;
+        }
+        break;
+      case UNKNOWN:
+      default:
+        return new ArchiverProvider() {
+          @Override
+          public Archiver resolve(BuildRuleResolver resolver) {
+            throw new RuntimeException(
+                "Invalid platform for archiver. Must be one of {MACOS, LINUX, WINDOWS}");
+          }
+
+          @Override
+          public Iterable<BuildTarget> getParseTimeDeps() {
+            return ImmutableList.of();
+          }
+        };
+    }
+    return ArchiverProvider.from(archiver, archiverType);
+  }
+
   /** Creates an appropriate ArchiverProvider instance for the given parameters. */
-  static ArchiverProvider from(ToolProvider toolProvider, Platform platform, Optional<Type> type) {
+  static ArchiverProvider from(ToolProvider toolProvider, Type type) {
     return new ArchiverProvider() {
       @Override
       public Archiver resolve(BuildRuleResolver resolver) {
         Tool archiver = toolProvider.resolve(resolver);
-        switch (platform) {
-          case MACOS:
-          case FREEBSD:
+        switch (type) {
+          case BSD:
             return new BsdArchiver(archiver);
-          case LINUX:
+          case GNU:
             return new GnuArchiver(archiver);
           case WINDOWS:
-            if (type.isPresent() && type.get().equals(Type.LLVM_LIB)) {
-              return new ClangWindowsArchiver(archiver);
-            }
             return new WindowsArchiver(archiver);
-          case UNKNOWN:
+          case WINDOWS_CLANG:
+            return new ClangWindowsArchiver(archiver);
           default:
-            throw new RuntimeException(
-                "Invalid platform for archiver. Must be one of {MACOS, LINUX, WINDOWS}");
+            // This shouldn't be reachable.
+            throw new RuntimeException();
         }
       }
 
@@ -81,6 +120,18 @@ public interface ArchiverProvider {
    * llvm-lib.
    */
   enum Type {
+    BSD,
+    GNU,
+    WINDOWS,
+    WINDOWS_CLANG,
+  }
+
+  /**
+   * .buckconfig accepts this and we combine it with the current platform to determine the archiver
+   * type.
+   */
+  // TODO(cjhopman): .buckconfig should be updated to take Type.
+  enum LegacyArchiverType {
     LLVM_LIB,
   }
 }

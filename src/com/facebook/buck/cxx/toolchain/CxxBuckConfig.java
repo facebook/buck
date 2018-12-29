@@ -30,6 +30,7 @@ import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.toolchain.ArchiverProvider.LegacyArchiverType;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
@@ -281,13 +282,16 @@ public class CxxBuckConfig {
   public Optional<ArchiverProvider> getArchiverProvider(Platform defaultPlatform) {
     Optional<ToolProvider> toolProvider =
         delegate.getView(ToolConfig.class).getToolProvider(cxxSection, AR);
-    Optional<ArchiverProvider.Type> type =
-        delegate.getEnum(cxxSection, ARCHIVER_TYPE, ArchiverProvider.Type.class);
+    // TODO(cjhopman): This should probably accept ArchiverProvider.Type, not LegacyArchiverType.
+    Optional<LegacyArchiverType> type =
+        delegate.getEnum(cxxSection, ARCHIVER_TYPE, LegacyArchiverType.class);
     return toolProvider.map(
         archiver -> {
           Optional<Platform> archiverPlatform =
               delegate.getEnum(cxxSection, ARCHIVER_PLATFORM, Platform.class);
-          return ArchiverProvider.from(archiver, archiverPlatform.orElse(defaultPlatform), type);
+
+          Platform platform = archiverPlatform.orElse(defaultPlatform);
+          return ArchiverProvider.from(archiver, platform, type);
         });
   }
 
