@@ -89,7 +89,7 @@ public class HalideLibraryBuilder
                     ImmutableMap.of(
                         HalideBuckConfig.HALIDE_XCODE_COMPILE_SCRIPT_KEY,
                         path.toString(),
-                        String.format("target_%s", CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()),
+                        String.format("target_%s", CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR),
                         "halide-target")))
             .setFilesystem(filesystem)
             .build();

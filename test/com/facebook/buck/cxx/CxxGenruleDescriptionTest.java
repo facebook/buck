@@ -108,7 +108,7 @@ public class CxxGenruleDescriptionTest {
       CxxGenruleBuilder builder =
           new CxxGenruleBuilder(
                   BuildTargetFactory.newInstance(
-                      "//:rule#" + CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()))
+                      "//:rule#" + CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR))
               .setOut("out")
               .setCmd(
                   StringWithMacrosUtils.format(

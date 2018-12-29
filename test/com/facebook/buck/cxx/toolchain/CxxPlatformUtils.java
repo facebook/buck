@@ -59,9 +59,10 @@ public class CxxPlatformUtils {
   public static final DebugPathSanitizer DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER =
       new MungingDebugPathSanitizer(250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
 
+  public static final InternalFlavor DEFAULT_PLATFORM_FLAVOR = InternalFlavor.of("default");
   public static final CxxPlatform DEFAULT_PLATFORM =
       CxxPlatform.builder()
-          .setFlavor(InternalFlavor.of("default"))
+          .setFlavor(DEFAULT_PLATFORM_FLAVOR)
           .setAs(DEFAULT_COMPILER_PROVIDER)
           .setAspp(DEFAULT_PREPROCESSOR_PROVIDER)
           .setCc(DEFAULT_COMPILER_PROVIDER)

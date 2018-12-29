@@ -85,19 +85,19 @@ public class HaskellLibraryDescriptionTest {
     BuildRule staticLib =
         new HaskellLibraryBuilder(
                 baseTarget.withFlavors(
-                    CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                    CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                     HaskellLibraryDescription.Type.STATIC.getFlavor()))
             .build(graphBuilder);
     BuildRule staticPicLib =
         new HaskellLibraryBuilder(
                 baseTarget.withFlavors(
-                    CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                    CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                     HaskellLibraryDescription.Type.STATIC_PIC.getFlavor()))
             .build(graphBuilder);
     BuildRule sharedLib =
         new HaskellLibraryBuilder(
                 baseTarget.withFlavors(
-                    CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                    CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                     HaskellLibraryDescription.Type.SHARED.getFlavor()))
             .build(graphBuilder);
 
@@ -252,8 +252,7 @@ public class HaskellLibraryDescriptionTest {
                 PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
                     .add(
                         Pattern.compile(
-                            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString(),
-                            Pattern.LITERAL),
+                            CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR.toString(), Pattern.LITERAL),
                         ImmutableSortedSet.of(depABuilder.getTarget()))
                     .add(
                         Pattern.compile("matches nothing", Pattern.LITERAL),

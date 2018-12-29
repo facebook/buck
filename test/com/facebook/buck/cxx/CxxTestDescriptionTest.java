@@ -311,8 +311,7 @@ public class CxxTestDescriptionTest {
                 new PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>()
                     .add(
                         Pattern.compile(
-                            Pattern.quote(
-                                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString())),
+                            Pattern.quote(CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR.toString())),
                         ImmutableList.of(
                             StringWithMacrosUtils.format(
                                 "--linker-script=%s", LocationMacro.of(dep.getBuildTarget()))))

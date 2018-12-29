@@ -301,8 +301,7 @@ public class CxxBinaryDescriptionTest {
                 new PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>()
                     .add(
                         Pattern.compile(
-                            Pattern.quote(
-                                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString())),
+                            Pattern.quote(CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR.toString())),
                         ImmutableList.of(
                             StringWithMacrosUtils.format(
                                 "--linker-script=%s", LocationMacro.of(dep.getBuildTarget()))))
@@ -465,7 +464,7 @@ public class CxxBinaryDescriptionTest {
         new FlavorDomain<>(
             "C/C++ Platform",
             ImmutableMap.of(
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 alternatePlatform.getFlavor(),
                 alternatePlatform));
@@ -489,7 +488,7 @@ public class CxxBinaryDescriptionTest {
         new FlavorDomain<>(
             "C/C++ Platform",
             ImmutableMap.of(
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 alternatePlatform.getFlavor(),
                 alternatePlatform));
@@ -515,7 +514,7 @@ public class CxxBinaryDescriptionTest {
         new FlavorDomain<>(
             "C/C++ Platform",
             ImmutableMap.of(
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 alternatePlatform.getFlavor(),
                 alternatePlatform));

@@ -189,7 +189,7 @@ public class CxxPythonExtensionDescriptionTest {
     BuildRule rule =
         graphBuilder.getRule(
             CxxPythonExtensionDescription.getExtensionTarget(
-                target, PY2.getFlavor(), CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
+                target, PY2.getFlavor(), CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR));
     assertThat(
         rule.getBuildDeps(),
         Matchers.hasItems(
@@ -221,7 +221,7 @@ public class CxxPythonExtensionDescriptionTest {
     BuildRule rule =
         graphBuilder.getRule(
             CxxPythonExtensionDescription.getExtensionTarget(
-                target, PY2.getFlavor(), CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
+                target, PY2.getFlavor(), CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR));
     PythonPackageComponents expectedComponents =
         PythonPackageComponents.of(
             ImmutableMap.of(
@@ -537,7 +537,7 @@ public class CxxPythonExtensionDescriptionTest {
             builder
                 .getTarget()
                 .withAppendedFlavors(
-                    CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                    CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                     PY2.getFlavor(),
                     Type.COMPILATION_DATABASE.getFlavor()));
     assertThat(rule, Matchers.instanceOf(CxxCompilationDatabase.class));

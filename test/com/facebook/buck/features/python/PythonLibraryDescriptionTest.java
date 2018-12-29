@@ -118,7 +118,7 @@ public class PythonLibraryDescriptionTest {
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(pyPlatformMatchedSource)))
                     .add(
-                        Pattern.compile("^" + CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor() + "$"),
+                        Pattern.compile("^" + CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR + "$"),
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(cxxPlatformMatchedSource)))
                     .add(
@@ -153,7 +153,7 @@ public class PythonLibraryDescriptionTest {
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(pyPlatformMatchedSource)))
                     .add(
-                        Pattern.compile("^" + CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor() + "$"),
+                        Pattern.compile("^" + CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR + "$"),
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(cxxPlatformMatchedSource)))
                     .add(
@@ -305,8 +305,7 @@ public class PythonLibraryDescriptionTest {
                 PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
                     .add(
                         Pattern.compile(
-                            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString(),
-                            Pattern.LITERAL),
+                            CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR.toString(), Pattern.LITERAL),
                         ImmutableSortedSet.of(libraryABuilder.getTarget()))
                     .add(
                         Pattern.compile("matches nothing", Pattern.LITERAL),

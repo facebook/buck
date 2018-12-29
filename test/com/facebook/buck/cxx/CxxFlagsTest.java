@@ -111,7 +111,7 @@ public class CxxFlagsTest {
                 CxxSource.Type.C,
                 PatternMatchedCollection.<ImmutableList<StringWithMacros>>builder()
                     .add(
-                        Pattern.compile(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().getName()),
+                        Pattern.compile(CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR.getName()),
                         ImmutableList.of(StringWithMacrosUtils.format("foo")))
                     .build()),
             CxxPlatformUtils.DEFAULT_PLATFORM);

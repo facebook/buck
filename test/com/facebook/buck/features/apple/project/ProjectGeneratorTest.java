@@ -17,6 +17,7 @@
 package com.facebook.buck.features.apple.project;
 
 import static com.facebook.buck.apple.AppleBundleDescription.WATCH_OS_FLAVOR;
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR;
 import static com.facebook.buck.features.apple.project.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -2217,7 +2218,7 @@ public class ProjectGeneratorTest {
         requiredBuildTargets,
         hasItem(
             libTarget.withFlavors(
-                HalideLibraryDescription.HALIDE_COMPILE_FLAVOR, DEFAULT_PLATFORM.getFlavor())));
+                HalideLibraryDescription.HALIDE_COMPILE_FLAVOR, DEFAULT_PLATFORM_FLAVOR)));
   }
 
   @Test

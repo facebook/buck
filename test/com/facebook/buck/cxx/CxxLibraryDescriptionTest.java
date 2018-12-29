@@ -335,7 +335,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//:rule")
             .withFlavors(
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                 CxxDescriptionEnhancer.SHARED_FLAVOR,
                 LinkerMapMode.NO_LINKER_MAP.getFlavor());
     CxxLibraryBuilder ruleBuilder =
@@ -364,8 +364,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//:rule")
             .withFlavors(
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
-                CxxDescriptionEnhancer.STATIC_FLAVOR);
+                CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR, CxxDescriptionEnhancer.STATIC_FLAVOR);
     CxxLibraryBuilder ruleBuilder =
         new CxxLibraryBuilder(target)
             .setStaticLibraryBasename(basename)
@@ -706,8 +705,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//:rule")
             .withFlavors(
-                CxxDescriptionEnhancer.SHARED_FLAVOR,
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
+                CxxDescriptionEnhancer.SHARED_FLAVOR, CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR);
     GenruleBuilder depBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep")).setOut("out");
     CxxLibraryBuilder builder =
@@ -737,8 +735,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
             .withFlavors(
-                CxxDescriptionEnhancer.SHARED_FLAVOR,
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
+                CxxDescriptionEnhancer.SHARED_FLAVOR, CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ExportFileBuilder locBuilder = new ExportFileBuilder(location);
     locBuilder.setOut("somewhere.over.the.rainbow");
@@ -772,8 +769,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
             .withFlavors(
-                CxxDescriptionEnhancer.SHARED_FLAVOR,
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
+                CxxDescriptionEnhancer.SHARED_FLAVOR, CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ExportFileBuilder locBuilder = new ExportFileBuilder(location);
     locBuilder.setOut("somewhere.over.the.rainbow");
@@ -783,7 +779,7 @@ public class CxxLibraryDescriptionTest {
     libBuilder.setPlatformLinkerFlags(
         PatternMatchedCollection.<ImmutableList<StringWithMacros>>builder()
             .add(
-                Pattern.compile(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString()),
+                Pattern.compile(CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR.toString()),
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
                         "-Wl,--version-script=%s", LocationMacro.of(location))))
@@ -815,8 +811,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
             .withFlavors(
-                CxxDescriptionEnhancer.SHARED_FLAVOR,
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
+                CxxDescriptionEnhancer.SHARED_FLAVOR, CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ExportFileBuilder locBuilder = new ExportFileBuilder(location);
     locBuilder.setOut("somewhere.over.the.rainbow");
@@ -901,7 +896,7 @@ public class CxxLibraryDescriptionTest {
     libBuilder.setExportedPlatformLinkerFlags(
         PatternMatchedCollection.<ImmutableList<StringWithMacros>>builder()
             .add(
-                Pattern.compile(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString()),
+                Pattern.compile(CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR.toString()),
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
                         "-Wl,--version-script=%s", LocationMacro.of(location))))
@@ -936,7 +931,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
-            .withFlavors(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
+            .withFlavors(CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ExportFileBuilder locBuilder = new ExportFileBuilder(location);
     locBuilder.setOut("somewhere.over.the.rainbow");
@@ -982,8 +977,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
             .withFlavors(
-                CxxDescriptionEnhancer.STATIC_FLAVOR,
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
+                CxxDescriptionEnhancer.STATIC_FLAVOR, CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
@@ -998,8 +992,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
             .withFlavors(
-                CxxDescriptionEnhancer.STATIC_FLAVOR,
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
+                CxxDescriptionEnhancer.STATIC_FLAVOR, CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
@@ -1200,19 +1193,16 @@ public class CxxLibraryDescriptionTest {
   @Test
   public void thinArchiveSettingIsPropagatedToArchive() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM.withArchiveContents(ArchiveContents.THIN);
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.DEFAULT_PLATFORM.withArchiveContents(ArchiveContents.THIN);
     FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ Platforms", cxxPlatform);
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//:rule")
-            .withFlavors(
-                CxxDescriptionEnhancer.STATIC_FLAVOR,
-                cxxPlatform.getFlavor());
+            .withFlavors(CxxDescriptionEnhancer.STATIC_FLAVOR, cxxPlatform.getFlavor());
     CxxLibraryBuilder libBuilder =
         new CxxLibraryBuilder(
-            target,
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            cxxPlatforms);
+            target, new CxxBuckConfig(FakeBuckConfig.builder().build()), cxxPlatforms);
     libBuilder.setSrcs(
         ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of(filesystem, "test.cpp"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
@@ -1251,7 +1241,7 @@ public class CxxLibraryDescriptionTest {
         libraryBuilder
             .getTarget()
             .withAppendedFlavors(
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                 CxxLibraryDescription.Type.STATIC.getFlavor()));
     verifySourcePaths(graphBuilder);
   }
@@ -1272,7 +1262,7 @@ public class CxxLibraryDescriptionTest {
         libraryBuilder
             .getTarget()
             .withAppendedFlavors(
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                 CxxLibraryDescription.Type.STATIC.getFlavor()));
     verifySourcePaths(graphBuilder);
   }
@@ -1294,7 +1284,7 @@ public class CxxLibraryDescriptionTest {
         libraryBuilder
             .getTarget()
             .withAppendedFlavors(
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                 CxxLibraryDescription.Type.SHARED.getFlavor()));
     verifySourcePaths(graphBuilder);
   }
@@ -1310,7 +1300,7 @@ public class CxxLibraryDescriptionTest {
             .setExportedPlatformDeps(
                 PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
                     .add(
-                        Pattern.compile(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString()),
+                        Pattern.compile(CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR.toString()),
                         ImmutableSortedSet.of(depABuilder.getTarget()))
                     .add(Pattern.compile("other"), ImmutableSortedSet.of(depBBuilder.getTarget()))
                     .build());
@@ -1347,7 +1337,7 @@ public class CxxLibraryDescriptionTest {
                 .getTarget()
                 .withFlavors(
                     CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor(),
-                    CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
+                    CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR));
     assertThat(
         RichStream.from(rule.getBuildDeps())
             .map(BuildRule::getBuildTarget)
