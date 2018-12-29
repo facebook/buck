@@ -924,7 +924,7 @@ public final class Main {
       InvocationInfo invocationInfo =
           InvocationInfo.of(
               buildId,
-              superConsoleConfig.isEnabled(console, Platform.detect()),
+              superConsoleConfig.isEnabled(console.getAnsi(), console.getVerbosity()),
               daemon.isPresent(),
               command.getSubCommandNameForLogging(),
               args,
@@ -2053,7 +2053,7 @@ public final class Main {
       Optional<String> buildDetailsTemplate,
       ImmutableList<AdditionalConsoleLineProvider> remoteExecutionConsoleLineProvider) {
     RenderingConsole renderingConsole = new RenderingConsole(clock, console);
-    if (config.isEnabled(console, Platform.detect())) {
+    if (config.isEnabled(console.getAnsi(), console.getVerbosity())) {
       SuperConsoleEventBusListener superConsole =
           new SuperConsoleEventBusListener(
               config,

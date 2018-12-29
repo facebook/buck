@@ -44,6 +44,7 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.i18n.NumberFormatter;
 import com.facebook.buck.util.timing.Clock;
@@ -106,6 +107,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected static final long UNFINISHED_EVENT_PAIR = -1;
   protected final RenderingConsole console;
   protected final Clock clock;
+  protected final Verbosity verbosity;
   protected final Ansi ansi;
   private final Locale locale;
   private final boolean showTextInAllCaps;
@@ -192,6 +194,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.clock = clock;
     this.locale = locale;
     this.ansi = console.getAnsi();
+    this.verbosity = console.getVerbosity();
     this.showTextInAllCaps = showTextInAllCaps;
     this.numberOfSlowRulesToShow = numberOfSlowRulesToShow;
     this.showSlowRulesInConsole = showSlowRulesInConsole;

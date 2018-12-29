@@ -25,7 +25,6 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
@@ -47,20 +46,20 @@ public class SuperConsoleConfigTest {
             Ansi.forceTty());
 
     SuperConsoleConfig enabledConfig = createConfigWithSuperConsoleValue("enabled");
-    assertTrue(enabledConfig.isEnabled(null, Platform.LINUX));
+    assertTrue(enabledConfig.isEnabled(ansiConsole.getAnsi(), ansiConsole.getVerbosity()));
 
     SuperConsoleConfig disabledConfig = createConfigWithSuperConsoleValue("disabled");
-    assertFalse(disabledConfig.isEnabled(null, Platform.LINUX));
+    assertFalse(disabledConfig.isEnabled(nonAnsiConsole.getAnsi(), nonAnsiConsole.getVerbosity()));
 
     SuperConsoleConfig autoConfig = createConfigWithSuperConsoleValue("auto");
-    assertTrue(autoConfig.isEnabled(ansiConsole, Platform.LINUX));
-    assertFalse(autoConfig.isEnabled(nonAnsiConsole, Platform.LINUX));
-    assertTrue(autoConfig.isEnabled(ansiConsole, Platform.WINDOWS));
+    assertTrue(autoConfig.isEnabled(ansiConsole.getAnsi(), ansiConsole.getVerbosity()));
+    assertFalse(autoConfig.isEnabled(nonAnsiConsole.getAnsi(), nonAnsiConsole.getVerbosity()));
+    assertTrue(autoConfig.isEnabled(ansiConsole.getAnsi(), ansiConsole.getVerbosity()));
 
     SuperConsoleConfig emptyConfig = new SuperConsoleConfig(FakeBuckConfig.builder().build());
-    assertTrue(emptyConfig.isEnabled(ansiConsole, Platform.LINUX));
-    assertFalse(emptyConfig.isEnabled(nonAnsiConsole, Platform.LINUX));
-    assertTrue(emptyConfig.isEnabled(ansiConsole, Platform.WINDOWS));
+    assertTrue(emptyConfig.isEnabled(ansiConsole.getAnsi(), ansiConsole.getVerbosity()));
+    assertFalse(emptyConfig.isEnabled(nonAnsiConsole.getAnsi(), nonAnsiConsole.getVerbosity()));
+    assertTrue(emptyConfig.isEnabled(ansiConsole.getAnsi(), ansiConsole.getVerbosity()));
   }
 
   private SuperConsoleConfig createConfigWithSuperConsoleValue(String enabled) {

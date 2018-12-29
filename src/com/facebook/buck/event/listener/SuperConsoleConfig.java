@@ -18,8 +18,8 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Verbosity;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -103,11 +103,9 @@ public class SuperConsoleConfig {
   /**
    * Whether the SuperConsole is enabled
    *
-   * @param console the console configuration being used
-   * @param platform the platform we are running on
-   * @return whether the output should be presented using the super console style
+   * @return whether the output should be presented using the super superConsole style
    */
-  public boolean isEnabled(Console console, Platform platform) {
+  public boolean isEnabled(Ansi ansi, Verbosity verbosity) {
     Mode mode = delegate.getEnum(SECTION_NAME, "superconsole", Mode.class).orElse(Mode.AUTO);
     switch (mode) {
       case ENABLED:
@@ -115,9 +113,9 @@ public class SuperConsoleConfig {
       case DISABLED:
         return false;
       case AUTO:
-        return console.getAnsi().isAnsiTerminal()
-            && !console.getVerbosity().shouldPrintCommand()
-            && console.getVerbosity().shouldPrintStandardInformation();
+        return ansi.isAnsiTerminal()
+            && !verbosity.shouldPrintCommand()
+            && verbosity.shouldPrintStandardInformation();
       default:
         throw new IllegalArgumentException("Unhandled case: " + mode);
     }
