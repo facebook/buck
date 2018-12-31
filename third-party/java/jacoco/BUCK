@@ -12,20 +12,18 @@ java_library(
 
 prebuilt_jar(
     name = "core",
-    binary_jar = "org.jacoco.core-0.8.2.jar",
+    binary_jar = "org.jacoco.core-0.8.3.201812281252.jar",
     licenses = [
         "license.html",
     ],
-    source_jar = "org.jacoco.core-0.8.2-sources.jar",
 )
 
 prebuilt_jar(
     name = "report",
-    binary_jar = "org.jacoco.report-0.8.2.jar",
+    binary_jar = "org.jacoco.report-0.8.3.201812281252.jar",
     licenses = [
         "license.html",
     ],
-    source_jar = "org.jacoco.report-0.8.2-sources.jar",
 )
 
 prebuilt_jar(

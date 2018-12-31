@@ -45,11 +45,11 @@ class ClassReferenceTracker extends ClassVisitor {
   private final Map<String, InnerClassNode> innerClasses = new HashMap<>();
 
   public ClassReferenceTracker() {
-    super(Opcodes.ASM6);
+    super(Opcodes.ASM7);
   }
 
   public ClassReferenceTracker(ClassVisitor cv) {
-    super(Opcodes.ASM6, cv);
+    super(Opcodes.ASM7, cv);
   }
 
   public SortedSet<String> getReferencedClassNames() {
