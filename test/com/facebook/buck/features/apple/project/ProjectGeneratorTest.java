@@ -5900,8 +5900,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testGeneratedProjectForAppleBinaryWithSwiftSources()
-      throws IOException {
+  public void testGeneratedProjectForAppleBinaryWithSwiftSources() throws IOException {
     BuildTarget binBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
     TargetNode<?> appBinaryNode =
         AppleBinaryBuilder.createBuilder(binBuildTarget)
