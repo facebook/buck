@@ -25,7 +25,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.cxx.toolchain.objectfile.LcUuidContentsScrubber;
 import com.facebook.buck.cxx.toolchain.objectfile.OsoSymbolsContentsScrubber;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -55,8 +54,7 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
-    return ImmutableList.of(
-        new OsoSymbolsContentsScrubber(cellRootMap), new LcUuidContentsScrubber());
+    return ImmutableList.of(new OsoSymbolsContentsScrubber(cellRootMap));
   }
 
   @Override

@@ -54,21 +54,6 @@ public class Machos {
 
   private Machos() {}
 
-  static void setUuidIfPresent(MappedByteBuffer map, byte[] uuid) throws MachoException {
-    int commandsCount = getHeader(map).getCommandsCount();
-
-    for (int i = 0; i < commandsCount; i++) {
-      int command = ObjectFileScrubbers.getLittleEndianInt(map);
-      int commandSize = ObjectFileScrubbers.getLittleEndianInt(map);
-      if (LC_UUID == command) {
-        ObjectFileScrubbers.putBytes(map, uuid);
-        return;
-      } else {
-        /* Command body */ ObjectFileScrubbers.getBytes(map, commandSize - 8);
-      }
-    }
-  }
-
   static boolean isMacho(FileChannel file) throws IOException {
     MappedByteBuffer map = file.map(FileChannel.MapMode.READ_ONLY, 0, MH_MAGIC.length);
 
