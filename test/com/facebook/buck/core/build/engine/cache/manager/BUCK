@@ -1,3 +1,16 @@
+java_test(
+    name = "manager",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/build/engine/cache/manager:manager",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/easymock:easymock",
+        "//third-party/java/junit:junit",
+    ],
+)
+
 java_library(
     name = "testutil",
     srcs = glob(

@@ -58,7 +58,7 @@ public abstract class ManifestRuleKeyServiceFactory {
   }
 
   /** Return an implementation of the ManifestRuleKeyService that uses the ManifestService. */
-  public static ManifestRuleKeyService fromManifestService(final ManifestService manifestService) {
-    throw new RuntimeException("Not implemented: " + manifestService);
+  public static ManifestRuleKeyService fromManifestService(ManifestService manifestService) {
+    return new ManifestRuleKeyServiceImpl(manifestService);
   }
 }
