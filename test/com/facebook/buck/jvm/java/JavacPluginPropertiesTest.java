@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.google.common.collect.ImmutableSortedSet;
@@ -32,12 +33,13 @@ public class JavacPluginPropertiesTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
-    FakeJavaLibrary dep =
-        graphBuilder.addToIndex(new FakeJavaLibrary(BuildTargetFactory.newInstance("//:dep")));
-    FakeJavaLibrary processor =
-        graphBuilder.addToIndex(
-            new FakeJavaLibrary(
-                BuildTargetFactory.newInstance("//:processor"), ImmutableSortedSet.of(dep)));
+    FakeJavaLibrary rawDep = new FakeJavaLibrary(BuildTargetFactory.newInstance("//:dep"));
+    BuildRule dep = graphBuilder.computeIfAbsent(rawDep.getBuildTarget(), buildTarget -> rawDep);
+    FakeJavaLibrary rawProcessor =
+        new FakeJavaLibrary(
+            BuildTargetFactory.newInstance("//:processor"), ImmutableSortedSet.of(dep));
+    BuildRule processor =
+        graphBuilder.computeIfAbsent(rawProcessor.getBuildTarget(), buildTarget -> rawProcessor);
 
     JavacPluginProperties props =
         JavacPluginProperties.builder()
