@@ -32,8 +32,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
- * Description of a rule that builds a {@link
- * javax.annotation.processing.Processor} javac plugin.
+ * Description of a rule that builds a {@link javax.annotation.processing.Processor} javac plugin.
  */
 public class JavaAnnotationProcessorDescription
     implements DescriptionWithTargetGraph<JavaAnnotationProcessorDescriptionArg>,
@@ -87,8 +86,7 @@ public class JavaAnnotationProcessorDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJavaAnnotationProcessorDescriptionArg
-      extends JavacPluginArgs {
+  interface AbstractJavaAnnotationProcessorDescriptionArg extends JavacPluginArgs {
 
     Optional<String> getProcessorClass();
 

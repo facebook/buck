@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
@@ -38,11 +37,9 @@ import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class JavacOptionsTest {
@@ -112,9 +109,7 @@ public class JavacOptionsTest {
     ResolvedJavacPluginProperties resolvedProps = new ResolvedJavacPluginProperties(props);
 
     JavacPluginParams params =
-        JavacPluginParams.builder()
-            .addPluginProperties(resolvedProps)
-            .build();
+        JavacPluginParams.builder().addPluginProperties(resolvedProps).build();
 
     JavacOptions options = createStandardBuilder().setStandardJavacPluginParams(params).build();
 
@@ -139,10 +134,7 @@ public class JavacOptionsTest {
         JavacPluginProperties.builder()
             .setType(Type.JAVAC_PLUGIN)
             .setCanReuseClassLoader(true)
-            .addAllClasspathEntries(
-                ImmutableList.of(
-                    someMagicJarPath,
-                    alsoJarPath))
+            .addAllClasspathEntries(ImmutableList.of(someMagicJarPath, alsoJarPath))
             .setDoesNotAffectAbi(true)
             .setSupportsAbiGenerationFromSource(true)
             .addProcessorNames("ThePlugin")
@@ -151,16 +143,13 @@ public class JavacOptionsTest {
     ResolvedJavacPluginProperties resolvedProps = new ResolvedJavacPluginProperties(props);
 
     JavacPluginParams params =
-        JavacPluginParams.builder()
-            .addPluginProperties(resolvedProps)
-            .build();
+        JavacPluginParams.builder().addPluginProperties(resolvedProps).build();
 
     JavacOptions options = createStandardBuilder().setStandardJavacPluginParams(params).build();
 
-    String resolvedSomeMagicPath = filesystem.resolve(
-        someMagicJarPath.getRelativePath()).toString();
-    String resolvedAlsoPath = filesystem.resolve(
-        alsoJarPath.getRelativePath()).toString();
+    String resolvedSomeMagicPath =
+        filesystem.resolve(someMagicJarPath.getRelativePath()).toString();
+    String resolvedAlsoPath = filesystem.resolve(alsoJarPath.getRelativePath()).toString();
 
     assertOptionsHasKeyValue(
         options,
@@ -316,7 +305,8 @@ public class JavacOptionsTest {
     assertThat(visitOptions(options).extras, hasItem(extra));
   }
 
-  private void assertOptionsHasFlagMatching(JavacOptions options, Matcher<Iterable<? super String>> matcher) {
+  private void assertOptionsHasFlagMatching(
+      JavacOptions options, Matcher<Iterable<? super String>> matcher) {
     assertThat(visitOptions(options).flags, matcher);
   }
 

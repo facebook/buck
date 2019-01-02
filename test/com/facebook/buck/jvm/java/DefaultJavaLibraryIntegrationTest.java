@@ -540,8 +540,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testJavacPluginCrashesShouldCrashBuck()
-      throws IOException {
+  public void testJavacPluginCrashesShouldCrashBuck() throws IOException {
     setUpProjectWorkspaceForScenario("javac_plugin_crashes");
 
     // Run `buck build` to create the dep file
@@ -554,7 +553,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testJavacPluginFileChangeThatDoesNotModifyCodeDoesNotCauseRebuild()
-    throws IOException {
+      throws IOException {
     setUpProjectWorkspaceForScenario("javac_plugin");
 
     // Run `buck build` to create the dep file

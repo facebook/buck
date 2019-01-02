@@ -31,13 +31,13 @@ import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginJsr199Fields;
+import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.step.Step;
@@ -258,8 +258,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     switch (annotationProcessingTool) {
       case KAPT:
-        finalJavacOptions =
-            javacOptions.withJavaAnnotationProcessorParams(JavacPluginParams.EMPTY);
+        finalJavacOptions = javacOptions.withJavaAnnotationProcessorParams(JavacPluginParams.EMPTY);
         break;
 
       case JAVAC:

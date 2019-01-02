@@ -26,8 +26,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.java.JavaAnnotationProcessorBuilder;
-import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import java.nio.file.Paths;
 import org.junit.Test;
 
 public class AndroidLibraryTest {

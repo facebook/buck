@@ -218,11 +218,7 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       optionsConsumer.addOptionValue(
           "processorpath",
           ResolvedJavacPluginProperties.getJoinedClasspath(
-              pathResolver,
-              filesystem,
-              annotationProcessors
-          )
-      );
+              pathResolver, filesystem, annotationProcessors));
 
       // Specify names of processors.
       optionsConsumer.addOptionValue(
@@ -254,15 +250,11 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       // Specify classpath to include javac plugins.
       optionsConsumer.addOptionValue(
           OPTION_CLASSPATH,
-          ResolvedJavacPluginProperties.getJoinedClasspath(
-              pathResolver,
-              filesystem,
-              javacPlugins
-          )
-      );
+          ResolvedJavacPluginProperties.getJoinedClasspath(pathResolver, filesystem, javacPlugins));
 
       for (ResolvedJavacPluginProperties properties : javacPlugins) {
-        optionsConsumer.addFlag(OPTION_JAVAC_PLUGIN + File.pathSeparator + properties.getProcessorNames().first());
+        optionsConsumer.addFlag(
+            OPTION_JAVAC_PLUGIN + File.pathSeparator + properties.getProcessorNames().first());
       }
 
       // Add plugin parameters.

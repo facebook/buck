@@ -196,10 +196,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     String realClasspath = params.get(index + 1);
     if (!realClasspath.equals(expectedClasspath)) {
-      fail(String.format(
-          "Expected classpath:\n%s\nIs not equal to the real one in:\n%s.",
-          expectedClasspath,
-          params));
+      fail(
+          String.format(
+              "Expected classpath:\n%s\nIs not equal to the real one in:\n%s.",
+              expectedClasspath, params));
     }
   }
 
@@ -208,11 +208,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   private Path resolveClasspathPath(BuildRule rule) {
-    return rule.getProjectFilesystem().resolve(
-        DefaultSourcePathResolver
-            .from(new SourcePathRuleFinder(graphBuilder))
-            .getAbsolutePath(rule.getSourcePathToOutput())
-    );
+    return rule.getProjectFilesystem()
+        .resolve(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))
+                .getAbsolutePath(rule.getSourcePathToOutput()));
   }
 
   private void assertCorrectStandardJavacPluginParameters(
@@ -227,8 +226,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   private void testValidStandardJavacPluginFrom(
-      ImmutableList<String> pluginNames,
-      ImmutableList<TestBuildTargetTarget> testTargets) throws Exception {
+      ImmutableList<String> pluginNames, ImmutableList<TestBuildTargetTarget> testTargets)
+      throws Exception {
     TestJavaPluginScenario scenario = new TestJavaPluginScenario();
     StringBuilder classpath = new StringBuilder();
 
@@ -252,10 +251,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
   private void testValidStandardJavacPluginFrom(String pluginName, TestBuildTargetTarget target)
       throws Exception {
-    testValidStandardJavacPluginFrom(
-        ImmutableList.of(pluginName),
-        ImmutableList.of(target)
-    );
+    testValidStandardJavacPluginFrom(ImmutableList.of(pluginName), ImmutableList.of(target));
   }
 
   @Test
@@ -277,8 +273,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   public void testMultipleJavacPlugins() throws Exception {
     testValidStandardJavacPluginFrom(
         ImmutableList.of("Prebuilt", "JavaLib", "JavaBin"),
-        ImmutableList.of(validPrebuiltJar, validJavaLibrary, validJavaBinary)
-    );
+        ImmutableList.of(validPrebuiltJar, validJavaLibrary, validJavaBinary));
   }
 
   @Test
@@ -313,9 +308,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     BuildRule rule = validJavaLibrary.createRule(target);
     Path classpath = resolveClasspathPath(rule);
 
-    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters(
-        ImmutableSortedSet.of(classpath)
-    );
+    ImmutableList<String> parameters =
+        scenario.buildAndGetCompileParameters(ImmutableSortedSet.of(classpath));
 
     assertHasClasspath(parameters, classpath.toString());
   }
@@ -334,15 +328,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     scenario.addStandardJavacPluginTarget(pluginTarget, plguinRule, "MyPlugin");
 
+    ImmutableList<String> parameters =
+        scenario.buildAndGetCompileParameters(ImmutableSortedSet.of(depClasspathPath));
 
-    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters(
-        ImmutableSortedSet.of(depClasspathPath)
-    );
-
-    assertHasClasspath(
-        parameters,
-        depClasspathPath.toString() + ":" + pluginClasspath
-    );
+    assertHasClasspath(parameters, depClasspathPath.toString() + ":" + pluginClasspath);
   }
 
   private void assertHasProcessor(List<String> params, String processor) {
@@ -1629,8 +1618,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
 
     public void addAnnotationProcessorTarget(
-        TestBuildTargetTarget processor,
-        String... processorNames)
+        TestBuildTargetTarget processor, String... processorNames)
         throws NoSuchBuildTargetException {
       BuildTarget target = processor.createTarget();
       BuildRule rule = processor.createRule(target);
@@ -1646,10 +1634,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       annotationProcessorParams.addPluginProperties(propsBuilder.build().resolve());
     }
 
-    public void addStandardJavacPluginTarget(
-        BuildTarget target,
-        BuildRule rule,
-        String pluginName)
+    public void addStandardJavacPluginTarget(BuildTarget target, BuildRule rule, String pluginName)
         throws NoSuchBuildTargetException {
       JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
       propsBuilder.addProcessorNames(pluginName);
@@ -1667,8 +1652,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       return buildAndGetCompileParameters(ImmutableSortedSet.of());
     }
 
-    public ImmutableList<String> buildAndGetCompileParameters(ImmutableSortedSet<Path> buildClasspath)
-        throws IOException, NoSuchBuildTargetException {
+    public ImmutableList<String> buildAndGetCompileParameters(
+        ImmutableSortedSet<Path> buildClasspath) throws IOException, NoSuchBuildTargetException {
       ProjectFilesystem projectFilesystem =
           TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
       DefaultJavaLibrary javaLibrary = createJavaLibraryRule(projectFilesystem);

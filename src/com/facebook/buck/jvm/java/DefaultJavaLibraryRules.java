@@ -543,8 +543,7 @@ public abstract class DefaultJavaLibraryRules {
         abiProcessorsOnly(javacOptions.getJavaAnnotationProcessorParams()));
   }
 
-  private JavacPluginParams abiProcessorsOnly(
-      JavacPluginParams annotationProcessingParams) {
+  private JavacPluginParams abiProcessorsOnly(JavacPluginParams annotationProcessingParams) {
     return annotationProcessingParams.withAbiProcessorsOnly();
   }
 
