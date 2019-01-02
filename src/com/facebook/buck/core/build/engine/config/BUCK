@@ -11,6 +11,8 @@ java_immutables_library(
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/resources:resources",
         "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/manifestservice:manifestservice",
+        "//src/com/facebook/buck/util:util",
     ],
     visibility = [
         "PUBLIC",

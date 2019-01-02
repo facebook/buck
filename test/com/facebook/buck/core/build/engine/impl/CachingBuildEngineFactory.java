@@ -156,7 +156,8 @@ public class CachingBuildEngineFactory {
           remoteBuildRuleCompletionWaiter,
           resourceAwareSchedulingInfo,
           RuleKeyDiagnostics.nop(),
-          logBuildRuleFailuresInline);
+          logBuildRuleFailuresInline,
+          Optional.empty());
     }
 
     return new CachingBuildEngine(
@@ -181,7 +182,8 @@ public class CachingBuildEngineFactory {
             buildRuleResolver,
             inputFileSizeLimit,
             new TrackedRuleKeyCache<>(new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker())),
-        remoteBuildRuleCompletionWaiter);
+        remoteBuildRuleCompletionWaiter,
+        Optional.empty());
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {

@@ -150,7 +150,9 @@ public class FetchCommand extends BuildCommand {
                       actionGraphAndBuilder.getActionGraphBuilder(),
                       params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
                       ruleKeyCacheScope.getCache()),
-                  new NoOpRemoteBuildRuleCompletionWaiter());
+                  new NoOpRemoteBuildRuleCompletionWaiter(),
+                  cachingBuildEngineBuckConfig.getManifestServiceIfEnabled(
+                      params.getManifestServiceSupplier()));
           Build build =
               new Build(
                   actionGraphAndBuilder.getActionGraphBuilder(),

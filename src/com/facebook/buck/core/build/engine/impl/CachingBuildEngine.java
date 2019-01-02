@@ -48,6 +48,7 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
@@ -150,6 +151,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
 
+  private final Optional<ManifestService> manifestService;
+
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       Optional<BuildRuleStrategy> customBuildRuleStrategy,
@@ -167,7 +170,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       boolean consoleLogBuildFailuresInline,
       RuleKeyFactories ruleKeyFactories,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
+      Optional<ManifestService> manifestService) {
     this(
         cachingBuildEngineDelegate,
         customBuildRuleStrategy,
@@ -194,7 +198,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 ruleKeyFactories
                     .getDefaultRuleKeyFactory()
                     .buildForDiagnostics(appendable, new StringRuleKeyHasher())),
-        consoleLogBuildFailuresInline);
+        consoleLogBuildFailuresInline,
+        manifestService);
   }
 
   /** This constructor MUST ONLY BE USED FOR TESTS. */
@@ -217,10 +222,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
-      boolean consoleLogBuildFailuresInline) {
+      boolean consoleLogBuildFailuresInline,
+      Optional<ManifestService> manifestService) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
     this.customBuildRuleStrategy = customBuildRuleStrategy;
 
+    this.manifestService = manifestService;
     this.service = service;
     this.stepRunner = stepRunner;
     this.buildMode = buildMode;
@@ -528,7 +535,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildableContext,
             pipelinesRunner,
             remoteBuildRuleCompletionWaiter,
-            customBuildRuleStrategy);
+            customBuildRuleStrategy,
+            manifestService);
     ruleBuilders.add(new WeakReference<>(cachingBuildRuleBuilder));
     if (firstFailure.get() != null) {
       cachingBuildRuleBuilder.cancel(firstFailure.get());

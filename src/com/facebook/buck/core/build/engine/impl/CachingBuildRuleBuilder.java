@@ -41,6 +41,7 @@ import com.facebook.buck.core.build.engine.cache.manager.BuildRuleScopeManager;
 import com.facebook.buck.core.build.engine.cache.manager.DependencyFileRuleKeyManager;
 import com.facebook.buck.core.build.engine.cache.manager.InputBasedRuleKeyManager;
 import com.facebook.buck.core.build.engine.cache.manager.ManifestRuleKeyManager;
+import com.facebook.buck.core.build.engine.cache.manager.ManifestRuleKeyService;
 import com.facebook.buck.core.build.engine.cache.manager.ManifestRuleKeyServiceFactory;
 import com.facebook.buck.core.build.engine.config.ResourceAwareSchedulingInfo;
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine.StepType;
@@ -75,6 +76,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
@@ -214,7 +216,8 @@ class CachingBuildRuleBuilder {
       BuildableContext buildableContext,
       BuildRulePipelinesRunner pipelinesRunner,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
-      Optional<BuildRuleStrategy> customBuildRuleStrategy) {
+      Optional<BuildRuleStrategy> customBuildRuleStrategy,
+      Optional<ManifestService> manifestService) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
     this.buildMode = buildMode;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
@@ -283,6 +286,15 @@ class CachingBuildRuleBuilder {
             rule,
             buildRuleScopeManager,
             inputBasedKey);
+
+    ManifestRuleKeyService manifestRuleKeyService;
+    if (manifestService.isPresent()) {
+      manifestRuleKeyService =
+          ManifestRuleKeyServiceFactory.fromManifestService(manifestService.get());
+    } else {
+      manifestRuleKeyService =
+          ManifestRuleKeyServiceFactory.fromArtifactCache(buildCacheArtifactFetcher, artifactCache);
+    }
     manifestRuleKeyManager =
         new ManifestRuleKeyManager(
             depFiles,
@@ -294,8 +306,7 @@ class CachingBuildRuleBuilder {
             buildCacheArtifactFetcher,
             artifactCache,
             manifestBasedKeySupplier,
-            ManifestRuleKeyServiceFactory.fromArtifactCache(
-                buildCacheArtifactFetcher, artifactCache));
+            manifestRuleKeyService);
     buildCacheArtifactUploader =
         new BuildCacheArtifactUploader(
             defaultKey,

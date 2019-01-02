@@ -158,7 +158,9 @@ final class JavaBuildGraphProcessor {
                       buildRuleResolver,
                       params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
                       ruleKeyCacheScope.getCache()),
-                  new NoOpRemoteBuildRuleCompletionWaiter())) {
+                  new NoOpRemoteBuildRuleCompletionWaiter(),
+                  cachingBuildEngineBuckConfig.getManifestServiceIfEnabled(
+                      params.getManifestServiceSupplier()))) {
         // Create a BuildEngine because we store symbol information as build artifacts.
         BuckEventBus eventBus = params.getBuckEventBus();
         ExecutionContext executionContext =

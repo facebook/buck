@@ -43,6 +43,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
+import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
@@ -246,7 +247,8 @@ public class LocalBuildExecutor implements BuildExecutor {
             args.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
             ruleKeyCacheScope.getCache(),
             ruleKeyLogger),
-        remoteBuildRuleCompletionWaiter);
+        remoteBuildRuleCompletionWaiter,
+        args.getManifestService());
   }
 
   public Build getBuild() {
@@ -313,6 +315,8 @@ abstract class AbstractBuildExecutorArgs {
   public abstract ArtifactCacheFactory getArtifactCacheFactory();
 
   public abstract RuleKeyConfiguration getRuleKeyConfiguration();
+
+  public abstract Optional<ManifestService> getManifestService();
 
   public BuckConfig getBuckConfig() {
     return getRootCell().getBuckConfig();

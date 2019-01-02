@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
+import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
@@ -181,6 +182,10 @@ public abstract class AbstractCommandRunnerParams {
    * @return New instance of {@link BuildExecutorArgs}.
    */
   public BuildExecutorArgs createBuilderArgs() {
+    Optional<ManifestService> manifestService =
+        getBuckConfig()
+            .getView(CachingBuildEngineBuckConfig.class)
+            .getManifestServiceIfEnabled(getManifestServiceSupplier());
     return BuildExecutorArgs.builder()
         .setConsole(getConsole())
         .setBuckEventBus(getBuckEventBus())
@@ -192,6 +197,7 @@ public abstract class AbstractCommandRunnerParams {
         .setBuildInfoStoreManager(getBuildInfoStoreManager())
         .setArtifactCacheFactory(getArtifactCacheFactory())
         .setRuleKeyConfiguration(getRuleKeyConfiguration())
+        .setManifestService(manifestService)
         .build();
   }
 }

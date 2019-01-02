@@ -22,6 +22,9 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
+import java.io.IOException;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -64,6 +67,16 @@ abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckCo
   /** @return the maximum size an artifact can be for the build engine to cache it. */
   public Optional<Long> getBuildArtifactCacheSizeLimit() {
     return getDelegate().getLong("build", "artifact_cache_size_limit");
+  }
+
+  /** @return whether the ManifestService should be used for ManifestRuleKey caching. */
+  public boolean isManifestServiceEnabled() {
+    return getDelegate().getBooleanValue("build", "enable_manifest_service", false);
+  }
+
+  public Optional<ManifestService> getManifestServiceIfEnabled(
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> supplier) {
+    return isManifestServiceEnabled() ? Optional.of(supplier.get()) : Optional.empty();
   }
 
   public ResourceAwareSchedulingInfo getResourceAwareSchedulingInfo() {

@@ -80,6 +80,10 @@ public class ManifestServiceConfig {
     return buckConfig.getValue(MANIFEST_SECTION, "hybrid_thrift_endpoint").orElse("/hybrid_thrift");
   }
 
+  public boolean isEnabledForManifestRuleKeys() {
+    return buckConfig.getBooleanValue(MANIFEST_SECTION, "enable_for_manifest_rule_key", false);
+  }
+
   public int getThreadPoolSize() {
     return buckConfig.getInteger(MANIFEST_SECTION, "http_thread_pool_size").orElse(5);
   }
