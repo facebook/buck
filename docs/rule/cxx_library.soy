@@ -40,7 +40,7 @@ and also provides flags that specify how those files should be built.
 <p>
 Whether a Buck command builds the <code>cxx_library</code>  is 
 determined by the inclusion of a top-level target, such as 
-a {call buck.ruleLink}{param name : 'cxx_binary' /}{/call} or {call buck.ruleLink}{param name : 'android_binary' /}{/call}, that 
+a {call buck.cxx_binary /} or {call buck.android_binary /}, that 
 transitively depends on the <code>cxx_library</code>. The set of
 targets specified to the Buck command (<code>buck build</code>, <code>buck run</code>, etc) must 
 include one of these top-level targets in order for Buck to build 
