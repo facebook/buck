@@ -51,7 +51,7 @@ abstract class AbstractManifestFetchResult {
         "rule cache result should be provided iff there is a dep file rule key");
   }
 
-  /** @return the result fetching the manifest from cache. */
+  /** @return the result of fetching the manifest from cache. */
   abstract CacheResult getManifestCacheResult();
 
   /** @return the error generated when trying to load the manifest. */

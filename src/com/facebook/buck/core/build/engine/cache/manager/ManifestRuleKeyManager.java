@@ -17,7 +17,6 @@
 package com.facebook.buck.core.build.engine.cache.manager;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.manifest.Manifest;
@@ -32,7 +31,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
@@ -71,6 +69,7 @@ public class ManifestRuleKeyManager {
   private final BuildCacheArtifactFetcher buildCacheArtifactFetcher;
   private final ArtifactCache artifactCache;
   private final Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier;
+  private ManifestRuleKeyService manifestRuleKeyService;
 
   public ManifestRuleKeyManager(
       DepFiles depFiles,
@@ -81,7 +80,8 @@ public class ManifestRuleKeyManager {
       RuleKeyFactories ruleKeyFactories,
       BuildCacheArtifactFetcher buildCacheArtifactFetcher,
       ArtifactCache artifactCache,
-      Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier) {
+      Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier,
+      ManifestRuleKeyService manifestRuleKeyService) {
     this.depFiles = depFiles;
     this.rule = rule;
     this.fileHashCache = fileHashCache;
@@ -91,6 +91,7 @@ public class ManifestRuleKeyManager {
     this.buildCacheArtifactFetcher = buildCacheArtifactFetcher;
     this.artifactCache = artifactCache;
     this.manifestBasedKeySupplier = manifestBasedKeySupplier;
+    this.manifestRuleKeyService = manifestRuleKeyService;
   }
 
   public boolean useManifestCaching() {
@@ -112,7 +113,6 @@ public class ManifestRuleKeyManager {
       RuleKey key,
       ImmutableSet<SourcePath> inputs,
       RuleKeyAndInputs manifestKey,
-      ArtifactCache cache,
       long artifactBuildTimeMs)
       throws IOException {
 
@@ -171,13 +171,8 @@ public class ManifestRuleKeyManager {
     // Queue the upload operation and save a future wrapping it.
     resultBuilder.setStoreFuture(
         MoreFutures.addListenableCallback(
-            cache.store(
-                ArtifactInfo.builder()
-                    .addRuleKeys(manifestKey.getRuleKey())
-                    .setManifest(true)
-                    .setBuildTimeMs(artifactBuildTimeMs)
-                    .build(),
-                BorrowablePath.borrowablePath(tempFile)),
+            manifestRuleKeyService.storeManifest(
+                manifestKey.getRuleKey(), tempFile, artifactBuildTimeMs),
             MoreFutures.finallyCallback(
                 () -> {
                   try {
@@ -214,11 +209,11 @@ public class ManifestRuleKeyManager {
         };
 
     return Futures.transformAsync(
-        buildCacheArtifactFetcher.fetch(artifactCache, key, tempPath),
-        (@Nonnull CacheResult cacheResult) -> {
-          if (!cacheResult.getType().isSuccess()) {
+        manifestRuleKeyService.fetchManifest(key, tempPath),
+        (@Nonnull CacheResult fetchResult) -> {
+          if (!fetchResult.getType().isSuccess()) {
             LOG.verbose("%s: cache miss on manifest %s", rule.getBuildTarget(), key);
-            return Futures.immediateFuture(cacheResult);
+            return Futures.immediateFuture(fetchResult);
           }
 
           // Download is successful, so move the manifest into place.
@@ -231,8 +226,9 @@ public class ManifestRuleKeyManager {
 
           LOG.verbose("%s: cache hit on manifest %s", rule.getBuildTarget(), key);
 
-          return Futures.immediateFuture(cacheResult);
-        });
+          return Futures.immediateFuture(fetchResult);
+        },
+        MoreExecutors.directExecutor());
   }
 
   private void ungzip(Path source, Path destination) throws IOException {
@@ -323,7 +319,9 @@ public class ManifestRuleKeyManager {
               (@Nonnull CacheResult ruleCacheResult) -> {
                 manifestFetchResult.setRuleCacheResult(ruleCacheResult);
                 return manifestFetchResult.build();
-              });
-        });
+              },
+              MoreExecutors.directExecutor());
+        },
+        MoreExecutors.directExecutor());
   }
 }

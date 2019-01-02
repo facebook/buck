@@ -41,6 +41,7 @@ import com.facebook.buck.core.build.engine.cache.manager.BuildRuleScopeManager;
 import com.facebook.buck.core.build.engine.cache.manager.DependencyFileRuleKeyManager;
 import com.facebook.buck.core.build.engine.cache.manager.InputBasedRuleKeyManager;
 import com.facebook.buck.core.build.engine.cache.manager.ManifestRuleKeyManager;
+import com.facebook.buck.core.build.engine.cache.manager.ManifestRuleKeyServiceFactory;
 import com.facebook.buck.core.build.engine.config.ResourceAwareSchedulingInfo;
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine.StepType;
 import com.facebook.buck.core.build.engine.manifest.ManifestFetchResult;
@@ -292,7 +293,9 @@ class CachingBuildRuleBuilder {
             ruleKeyFactories,
             buildCacheArtifactFetcher,
             artifactCache,
-            manifestBasedKeySupplier);
+            manifestBasedKeySupplier,
+            ManifestRuleKeyServiceFactory.fromArtifactCache(
+                buildCacheArtifactFetcher, artifactCache));
     buildCacheArtifactUploader =
         new BuildCacheArtifactUploader(
             defaultKey,
@@ -705,7 +708,6 @@ class CachingBuildRuleBuilder {
                     depFileRuleKeyAndInputs.get().getRuleKey(),
                     depFileRuleKeyAndInputs.get().getInputs(),
                     manifestKey.get(),
-                    artifactCache,
                     buildTimeMs);
             this.buildRuleScopeManager.setManifestStoreResult(manifestStoreResult);
             if (manifestStoreResult.getStoreFuture().isPresent()) {

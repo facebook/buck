@@ -14,6 +14,7 @@ java_library(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/manifestservice:manifestservice",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
