@@ -1,0 +1,11 @@
+genrule(
+    name = "foo",
+    out = "foo",
+    cmd = "mkdir $OUT ; echo Hello World! > $OUT/bar.txt",
+)
+
+zip_file(
+    name = "ziptastic",
+    srcs = [":foo"],
+    visibility = ["PUBLIC"],
+)

@@ -17,6 +17,7 @@
 package com.facebook.buck.features.zip.rules;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -33,6 +34,7 @@ import java.nio.file.Paths;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -313,6 +315,28 @@ public class ZipRuleIntegrationTest {
     try (ZipFile zipFile = new ZipFile(zip.toFile())) {
       ZipInspector inspector = new ZipInspector(zip);
       inspector.assertFileContents(Paths.get("cake.txt"), "Guten Tag");
+    }
+  }
+
+  @Test
+  @Ignore
+  public void testShouldIncludeOutputsContainedInBuckOutOfOtherCells() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "zip-crosscell", tmp);
+    workspace.setUp();
+
+    Path childRepoRoot = workspace.getPath("parent/child");
+    ProcessResult buildResult =
+        workspace.runBuckCommand(childRepoRoot, "build", "--show-output", "//:exported-zip");
+    buildResult.assertSuccess();
+
+    String outputRelpathString =
+        workspace.parseShowOutputStdoutAsStrings(buildResult.getStdout()).get("//:exported-zip");
+    Path zip = workspace.getPath("parent/child/" + outputRelpathString);
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      ZipInspector inspector = new ZipInspector(zip);
+      assertThat(inspector.getZipFileEntries().size(), greaterThan(0));
     }
   }
 }

@@ -1,0 +1,4 @@
+export_file(
+    name = "exported-zip",
+    src = "parent//:ziptastic",
+)

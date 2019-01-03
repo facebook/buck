@@ -276,12 +276,23 @@ public class ProjectWorkspace extends AbstractWorkspace {
     ProcessResult buildResult = runBuckBuild(buildArgs.toArray(new String[0]));
     buildResult.assertSuccess();
 
-    // Grab the stdout lines, which have the build outputs.
+    // Build outputs are contained on stdout
+    return parseShowOutputStdoutAsStrings(buildResult.getStdout());
+  }
+
+  /**
+   * Parses the output of a --show-output build command into an easy to use map.
+   *
+   * @param stdout The stdout of the --show-output build command.
+   * @return The map of target => target output string. The value is relative to the Buck root of
+   *     the invoked command.
+   */
+  public ImmutableMap<String, String> parseShowOutputStdoutAsStrings(String stdout) {
     List<String> lines =
         Splitter.on(CharMatcher.anyOf(System.lineSeparator()))
             .trimResults()
             .omitEmptyStrings()
-            .splitToList(buildResult.getStdout());
+            .splitToList(stdout);
 
     Splitter lineSplitter = Splitter.on(' ').trimResults();
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
