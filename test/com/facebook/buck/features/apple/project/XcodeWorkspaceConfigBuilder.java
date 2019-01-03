@@ -90,6 +90,12 @@ public class XcodeWorkspaceConfigBuilder
     return this;
   }
 
+  public XcodeWorkspaceConfigBuilder setNotificationPayloadFile(
+      Optional<String> notificationPayloadFile) {
+    getArgForPopulating().setNotificationPayloadFile(notificationPayloadFile);
+    return this;
+  }
+
   public XcodeWorkspaceConfigBuilder setAdditionalSchemeActions(
       Optional<
               ImmutableMap<

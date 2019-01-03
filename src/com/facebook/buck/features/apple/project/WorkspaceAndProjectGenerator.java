@@ -1150,12 +1150,14 @@ public class WorkspaceAndProjectGenerator {
         additionalSchemeActions = Optional.empty();
     XCScheme.LaunchAction.LaunchStyle launchStyle = XCScheme.LaunchAction.LaunchStyle.AUTO;
     Optional<XCScheme.LaunchAction.WatchInterface> watchInterface = Optional.empty();
+    Optional<String> notificationPayloadFile = Optional.empty();
 
     if (schemeConfigArg.isPresent()) {
       environmentVariables = schemeConfigArg.get().getEnvironmentVariables();
       additionalSchemeActions = schemeConfigArg.get().getAdditionalSchemeActions();
       launchStyle = schemeConfigArg.get().getLaunchStyle().orElse(launchStyle);
       watchInterface = schemeConfigArg.get().getWatchInterface();
+      notificationPayloadFile = schemeConfigArg.get().getNotificationPayloadFile();
     }
 
     return new SchemeGenerator(
@@ -1174,6 +1176,7 @@ public class WorkspaceAndProjectGenerator {
         environmentVariables,
         additionalSchemeActions,
         launchStyle,
-        watchInterface);
+        watchInterface,
+        notificationPayloadFile);
   }
 }

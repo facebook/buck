@@ -81,6 +81,7 @@ class SchemeGenerator {
 
   private Optional<XCScheme> outputScheme = Optional.empty();
   private final Optional<XCScheme.LaunchAction.WatchInterface> watchInterface;
+  private final Optional<String> notificationPayloadFile;
   private final XCScheme.LaunchAction.LaunchStyle launchStyle;
   private final Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>>
       environmentVariables;
@@ -109,7 +110,8 @@ class SchemeGenerator {
                   ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
           additionalSchemeActions,
       XCScheme.LaunchAction.LaunchStyle launchStyle,
-      Optional<XCScheme.LaunchAction.WatchInterface> watchInterface) {
+      Optional<XCScheme.LaunchAction.WatchInterface> watchInterface,
+      Optional<String> notificationPayloadFile) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
     this.watchInterface = watchInterface;
@@ -126,6 +128,7 @@ class SchemeGenerator {
     this.targetToProjectPathMap = targetToProjectPathMap;
     this.environmentVariables = environmentVariables;
     this.additionalSchemeActions = additionalSchemeActions;
+    this.notificationPayloadFile = notificationPayloadFile;
 
     LOG.debug(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
@@ -273,7 +276,8 @@ class SchemeGenerator {
                     additionalCommandsForSchemeAction(
                         SchemeActionType.LAUNCH,
                         AdditionalActions.POST_SCHEME_ACTIONS,
-                        primaryBuildReference)));
+                        primaryBuildReference),
+                    notificationPayloadFile));
 
         profileAction =
             Optional.of(
@@ -490,6 +494,11 @@ class SchemeGenerator {
       if (watchInterfaceValue.isPresent()) {
         launchActionElem.setAttribute("launchAutomaticallySubstyle", watchInterfaceValue.get());
       }
+    }
+
+    Optional<String> notificationPayloadFile = launchAction.getNotificationPayloadFile();
+    if (notificationPayloadFile.isPresent()) {
+      launchActionElem.setAttribute("notificationPayloadFile", notificationPayloadFile.get());
     }
 
     XCScheme.LaunchAction.LaunchStyle launchStyle = launchAction.getLaunchStyle();

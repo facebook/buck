@@ -242,6 +242,7 @@ public class XCScheme {
     private final Optional<WatchInterface> watchInterface;
     private final LaunchStyle launchStyle;
     private final Optional<ImmutableMap<String, String>> environmentVariables;
+    private final Optional<String> notificationPayloadFile;
 
     public LaunchAction(
         BuildableReference buildableReference,
@@ -252,7 +253,8 @@ public class XCScheme {
         LaunchStyle launchStyle,
         Optional<ImmutableMap<String, String>> environmentVariables,
         Optional<ImmutableList<SchemePrePostAction>> preActions,
-        Optional<ImmutableList<SchemePrePostAction>> postActions) {
+        Optional<ImmutableList<SchemePrePostAction>> postActions,
+        Optional<String> notificationPayloadFile) {
       super(preActions, postActions);
       this.buildableReference = buildableReference;
       this.buildConfiguration = buildConfiguration;
@@ -261,6 +263,7 @@ public class XCScheme {
       this.watchInterface = watchInterface;
       this.launchStyle = launchStyle;
       this.environmentVariables = environmentVariables;
+      this.notificationPayloadFile = notificationPayloadFile;
     }
 
     public BuildableReference getBuildableReference() {
@@ -281,6 +284,10 @@ public class XCScheme {
 
     public Optional<WatchInterface> getWatchInterface() {
       return watchInterface;
+    }
+
+    public Optional<String> getNotificationPayloadFile() {
+      return notificationPayloadFile;
     }
 
     public LaunchStyle getLaunchStyle() {

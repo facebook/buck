@@ -121,7 +121,8 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty() /* watchAdapter */);
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* notificationPayloadFile */);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -203,7 +204,8 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty() /* watchAdapter */);
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* notificationPayloadFile */);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -293,7 +295,8 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty() /* watchAdapter */);
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* notificationPayloadFile */);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -371,7 +374,8 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty() /* watchAdapter */);
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* notificationPayloadFile */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -431,7 +435,8 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty() /* watchAdapter */);
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* notificationPayloadFile */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -515,7 +520,8 @@ public class SchemeGeneratorTest {
               Optional.empty(),
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
-              Optional.empty() /* watchAdapter */);
+              Optional.empty(), /* watchAdapter */
+              Optional.empty() /* notificationPayloadFile */);
 
       Path schemePath = schemeGenerator.writeScheme();
       assertThat(
@@ -550,7 +556,8 @@ public class SchemeGeneratorTest {
               Optional.empty(),
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
-              Optional.empty() /* watchAdapter */);
+              Optional.empty(), /* watchAdapter */
+              Optional.empty() /* notificationPayloadFile */);
 
       Path schemePath = schemeGenerator.writeScheme();
       assertThat(
@@ -588,7 +595,8 @@ public class SchemeGeneratorTest {
               Optional.empty(),
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
-              Optional.empty() /* watchAdapter */);
+              Optional.empty(), /* watchAdapter */
+              Optional.empty() /* notificationPayloadFile */);
 
       Path schemePath = schemeGenerator.writeScheme();
       assertThat(
@@ -623,7 +631,8 @@ public class SchemeGeneratorTest {
               Optional.empty(),
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
-              Optional.empty() /* watchAdapter */);
+              Optional.empty(), /* watchAdapter */
+              Optional.empty() /* notificationPayloadFile */);
       Path schemePath = schemeGenerator.writeScheme();
       assertThat(
           projectFilesystem.getLastModifiedTime(schemePath), equalTo(FileTime.fromMillis(49152L)));
@@ -680,7 +689,8 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty() /* watchAdapter */);
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* notificationPayloadFile */);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -786,7 +796,8 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty() /* watchAdapter */);
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* notificationPayloadFile */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -836,7 +847,8 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty() /* watchAdapter */);
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* payloadNotificationFile */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -915,7 +927,8 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             Optional.of(schemeActions),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty() /* watchAdapter */);
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* notificationPayloadFile */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -988,7 +1001,8 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty() /* watchAdapter */);
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* notifcationPayloadFile */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -1048,7 +1062,8 @@ public class SchemeGeneratorTest {
             Optional.of(environmentVariables),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty() /* watchAdapter */);
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* notificationPayloadFile */);
 
     Path schemePath = schemeGenerator.writeScheme();
 

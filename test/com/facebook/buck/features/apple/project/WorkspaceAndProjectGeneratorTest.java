@@ -995,6 +995,7 @@ public class WorkspaceAndProjectGeneratorTest {
             .setExplicitRunnablePath(Optional.of("/some.app"))
             .setLaunchStyle(Optional.of(XCScheme.LaunchAction.LaunchStyle.WAIT))
             .setWatchInterface(Optional.of(WatchInterface.COMPLICATION))
+            .setNotificationPayloadFile(Optional.of("SomeFile.apns"))
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(fooLib, workspaceNode);
@@ -1035,6 +1036,7 @@ public class WorkspaceAndProjectGeneratorTest {
         launchAction.getLaunchStyle(), Matchers.equalTo(XCScheme.LaunchAction.LaunchStyle.WAIT));
     assertThat(
         launchAction.getWatchInterface().get(), Matchers.equalTo(WatchInterface.COMPLICATION));
+    assertThat(launchAction.getNotificationPayloadFile().get(), Matchers.equalTo("SomeFile.apns"));
   }
 
   @Test
