@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,25 +48,31 @@ public class DepsAwareExecutorTest {
     return Arrays.asList(
         new Object[][] {
           {
-            (Function<ForkJoinPool, AbstractDepsAwareExecutor<Object>>)
+            (Function<ForkJoinPool, DepsAwareExecutor<Object, DefaultDepsAwareTask<Object>>>)
                 fjp -> DefaultDepsAwareExecutor.from(fjp)
           },
           {
-            (Function<ForkJoinPool, AbstractDepsAwareExecutor<Object>>)
+            (Function<ForkJoinPool, DepsAwareExecutor<Object, DefaultDepsAwareTask<Object>>>)
                 fjp -> DefaultDepsAwareExecutorWithLocalStack.from(fjp)
+          },
+          {
+            (Function<ForkJoinPool, DepsAwareExecutor<Object, DefaultDepsAwareTask<Object>>>)
+                fjp -> JavaExecutorBackedDefaultDepsAwareExecutor.from(fjp)
           },
         });
   }
 
-  private final Function<ForkJoinPool, AbstractDepsAwareExecutor<Object>> executorConstructor;
+  private final Function<ForkJoinPool, DepsAwareExecutor<Object, DefaultDepsAwareTask<Object>>>
+      executorConstructor;
 
   public DepsAwareExecutorTest(
-      Function<ForkJoinPool, AbstractDepsAwareExecutor<Object>> executorConstructor) {
+      Function<ForkJoinPool, DepsAwareExecutor<Object, DefaultDepsAwareTask<Object>>>
+          executorConstructor) {
     this.executorConstructor = executorConstructor;
   }
 
   private ForkJoinPool pool = new ForkJoinPool(2);
-  private AbstractDepsAwareExecutor<Object> executor;
+  private DepsAwareExecutor<Object, DefaultDepsAwareTask<Object>> executor;
   public @Rule ExpectedException expectedException = ExpectedException.none();
 
   @Before
