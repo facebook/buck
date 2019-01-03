@@ -128,11 +128,16 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//app:TestAppBundle#dwarf-and-dsym,macosx-x86_64,no-include-frameworks");
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            "//app:TestAppBundle#dwarf-and-dsym,macosx-x86_64,no-include-frameworks");
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path testAppBundlePath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s")).resolve("TestApp.app");
+    Path testAppBundlePath =
+        workspace
+            .getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))
+            .resolve("TestApp.app");
     Path testBinaryPath = testAppBundlePath.resolve("Contents/MacOS/TestApp");
     Path transitiveResourcePath = testAppBundlePath.resolve("Contents/Resources/resource_file");
     assertTrue(Files.exists(transitiveResourcePath));

@@ -2320,8 +2320,7 @@ public class ProjectGenerator {
                             "$REPO_ROOT/"
                                 + resolveSourcePath(prebuilt.getConstructorArg().getFramework())
                                     .getParent());
-                        if (prebuilt.getConstructorArg().getPreferredLinkage()
-                            != STATIC) {
+                        if (prebuilt.getConstructorArg().getPreferredLinkage() != STATIC) {
                           // Frameworks that are copied into the binary.
                           iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
                           iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
@@ -3180,7 +3179,7 @@ public class ProjectGenerator {
           CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.RESOURCES));
     } else if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
       PrebuiltAppleFrameworkDescriptionArg frameworkDescriptionArg =
-        (PrebuiltAppleFrameworkDescriptionArg)targetNode.getConstructorArg();
+          (PrebuiltAppleFrameworkDescriptionArg) targetNode.getConstructorArg();
       if (frameworkDescriptionArg.getPreferredLinkage() == STATIC) {
         return Optional.empty();
       }
