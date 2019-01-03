@@ -82,42 +82,43 @@ public class VersionedTargetGraphCache {
         new ExperimentEvent(
             "async_version_tg_builder", versionTargetGraphMode.toString(), "", null, null));
 
-    switch (resolvedMode) {
-      case ENABLED:
-      case ENABLED_LS:
-      case ENABLED_JE:
-        DepsAwareExecutor<TargetNode<?>, ?> executor;
-        if (versionTargetGraphMode == VersionTargetGraphMode.ENABLED) {
+    if (resolvedMode == VersionTargetGraphMode.DISABLED) {
+      return ParallelVersionedTargetGraphBuilder.transform(
+          new VersionUniverseVersionSelector(
+              targetGraphAndBuildTargets.getTargetGraph(), versionUniverses),
+          targetGraphAndBuildTargets,
+          pool,
+          typeCoercerFactory,
+          timeoutSeconds);
+    } else {
+      DepsAwareExecutor<TargetNode<?>, ?> executor;
+      switch (resolvedMode) {
+        case ENABLED:
           executor = DefaultDepsAwareExecutor.from(pool);
-        } else if (versionTargetGraphMode == VersionTargetGraphMode.ENABLED_LS) {
+          break;
+        case ENABLED_LS:
           executor = DefaultDepsAwareExecutorWithLocalStack.from(pool);
-        } else if (versionTargetGraphMode == VersionTargetGraphMode.ENABLED_JE) {
+          break;
+        case ENABLED_JE:
           executor = JavaExecutorBackedDefaultDepsAwareExecutor.from(pool);
-        } else {
-          throw new IllegalStateException();
-        }
-        TargetGraphAndBuildTargets versionedTargetGraph =
-            AsyncVersionedTargetGraphBuilder.transform(
-                new VersionUniverseVersionSelector(
-                    targetGraphAndBuildTargets.getTargetGraph(), versionUniverses),
-                targetGraphAndBuildTargets,
-                executor,
-                typeCoercerFactory,
-                timeoutSeconds);
-        executor.shutdownNow();
-        return versionedTargetGraph;
-      case DISABLED:
-        return ParallelVersionedTargetGraphBuilder.transform(
-            new VersionUniverseVersionSelector(
-                targetGraphAndBuildTargets.getTargetGraph(), versionUniverses),
-            targetGraphAndBuildTargets,
-            pool,
-            typeCoercerFactory,
-            timeoutSeconds);
-      case EXPERIMENT:
-      default:
-        throw new AssertionError(
-            "EXPERIMENT values should have been resolved to ENABLED or DISABLED.");
+          break;
+        case DISABLED:
+          throw new AssertionError("Disabled should be handled already");
+        case EXPERIMENT:
+        default:
+          throw new AssertionError(
+              "EXPERIMENT values should have been resolved to ENABLED or DISABLED.");
+      }
+      TargetGraphAndBuildTargets versionedTargetGraph =
+          AsyncVersionedTargetGraphBuilder.transform(
+              new VersionUniverseVersionSelector(
+                  targetGraphAndBuildTargets.getTargetGraph(), versionUniverses),
+              targetGraphAndBuildTargets,
+              executor,
+              typeCoercerFactory,
+              timeoutSeconds);
+      executor.shutdownNow();
+      return versionedTargetGraph;
     }
   }
 
