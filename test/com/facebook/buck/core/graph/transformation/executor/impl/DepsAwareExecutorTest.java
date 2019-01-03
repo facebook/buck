@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -29,21 +30,47 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Function;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-public class DefaultDepsAwareExecutorTest {
+@RunWith(Parameterized.class)
+public class DepsAwareExecutorTest {
+
+  @Parameterized.Parameters
+  public static Iterable<Object[]> params() {
+    return Arrays.asList(
+        new Object[][] {
+          {
+            (Function<ForkJoinPool, AbstractDepsAwareExecutor<Object>>)
+                fjp -> DefaultDepsAwareExecutor.from(fjp)
+          },
+          {
+            (Function<ForkJoinPool, AbstractDepsAwareExecutor<Object>>)
+                fjp -> DefaultDepsAwareExecutorWithLocalStack.from(fjp)
+          },
+        });
+  }
+
+  private final Function<ForkJoinPool, AbstractDepsAwareExecutor<Object>> executorConstructor;
+
+  public DepsAwareExecutorTest(
+      Function<ForkJoinPool, AbstractDepsAwareExecutor<Object>> executorConstructor) {
+    this.executorConstructor = executorConstructor;
+  }
 
   private ForkJoinPool pool = new ForkJoinPool(2);
-  private DefaultDepsAwareExecutor<Object> executor;
+  private AbstractDepsAwareExecutor<Object> executor;
   public @Rule ExpectedException expectedException = ExpectedException.none();
 
   @Before
   public void setUp() {
-    executor = DefaultDepsAwareExecutor.from(pool);
+    executor = executorConstructor.apply(pool);
   }
 
   @After
