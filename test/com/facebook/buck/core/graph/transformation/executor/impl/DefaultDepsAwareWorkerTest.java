@@ -19,6 +19,8 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareTask.TaskStatus;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -48,12 +50,15 @@ public class DefaultDepsAwareWorkerTest {
   @Test(timeout = 5000)
   public void workerCanRunSingleIndependentWork() throws InterruptedException {
     Semaphore sem = new Semaphore(0);
-    workQueue.put(
+    DefaultDepsAwareTask<?> task =
         DefaultDepsAwareTask.of(
             () -> {
               sem.release();
               return null;
-            }));
+            });
+
+    Verify.verify(task.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
+    workQueue.put(task);
 
     Thread testThread =
         new Thread(
@@ -73,7 +78,7 @@ public class DefaultDepsAwareWorkerTest {
   @Test(timeout = 5000)
   public void workerCanRunDependentWorkFirst() throws InterruptedException {
     AtomicBoolean depTaskDone = new AtomicBoolean();
-    DefaultDepsAwareTask<?> depsAwareTask =
+    DefaultDepsAwareTask<?> depsAwareTask1 =
         DefaultDepsAwareTask.of(
             () -> {
               depTaskDone.set(true);
@@ -81,14 +86,17 @@ public class DefaultDepsAwareWorkerTest {
             });
 
     Semaphore sem = new Semaphore(0);
-    workQueue.put(
+
+    DefaultDepsAwareTask<?> depsAwareTask2 =
         DefaultDepsAwareTask.of(
             () -> {
               assertTrue(depTaskDone.get());
               sem.release();
               return null;
             },
-            () -> ImmutableSet.of(depsAwareTask)));
+            () -> ImmutableSet.of(depsAwareTask1));
+    depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED);
+    workQueue.put(depsAwareTask2);
 
     Thread testThread =
         new Thread(
@@ -119,6 +127,8 @@ public class DefaultDepsAwareWorkerTest {
               throw ex;
             });
 
+    Verify.verify(
+        depsAwareTask.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(depsAwareTask);
 
     Thread testThread =
@@ -150,6 +160,8 @@ public class DefaultDepsAwareWorkerTest {
               throw ex;
             });
 
+    Verify.verify(
+        depsAwareTask1.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(depsAwareTask1);
 
     Thread testThread =
@@ -165,6 +177,9 @@ public class DefaultDepsAwareWorkerTest {
 
     DefaultDepsAwareTask<?> depsAwareTask2 =
         DefaultDepsAwareTask.of(() -> null, () -> ImmutableSet.of(depsAwareTask1));
+
+    Verify.verify(
+        depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(depsAwareTask2);
 
     depsAwareTask2.getResultFuture().get();
@@ -217,10 +232,12 @@ public class DefaultDepsAwareWorkerTest {
               return null;
             });
 
+    Verify.verify(task1.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(task1);
 
     semStart.acquire();
 
+    Verify.verify(task2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(task2);
     testThread2.start();
 
@@ -247,6 +264,7 @@ public class DefaultDepsAwareWorkerTest {
               return null;
             });
 
+    Verify.verify(firstTask.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(firstTask);
 
     Thread testThread =
@@ -272,9 +290,50 @@ public class DefaultDepsAwareWorkerTest {
               return null;
             });
 
+    Verify.verify(
+        taskAfterInterrupt.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(taskAfterInterrupt);
 
     testThread.join();
     assertFalse(taskDone.get());
+  }
+
+  @Test(timeout = 5000)
+  @SuppressWarnings("PMD.EmptyWhileStmt")
+  public void workerIsNotDuplicateScheduled() throws InterruptedException {
+    // This tests that if we schedule multiple works, and one worker is occupied, the other worker
+    // will pick start the other tasks
+    Thread testThread1 =
+        new Thread(
+            () -> {
+              try {
+                worker1.loopForever();
+              } catch (InterruptedException e) {
+                return;
+              }
+            });
+    testThread1.start();
+
+    Semaphore getDepsRan = new Semaphore(0);
+
+    DefaultDepsAwareTask<?> task1 = DefaultDepsAwareTask.of(() -> null);
+    DefaultDepsAwareTask<?> task2 =
+        DefaultDepsAwareTask.of(
+            () -> {
+              while (true) {}
+            },
+            () -> {
+              getDepsRan.release();
+              return ImmutableSet.of(task1);
+            });
+
+    // pretend task1 is scheduled
+    Verify.verify(task1.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
+    Verify.verify(task2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
+    workQueue.put(task2);
+
+    getDepsRan.acquire();
+
+    assertFalse(workQueue.contains(task1));
   }
 }

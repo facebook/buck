@@ -16,8 +16,10 @@
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareTask.TaskStatus;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.function.ThrowingSupplier;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
@@ -84,7 +86,11 @@ public class AbstractDepsAwareExecutor<T> implements DepsAwareExecutor<T, Defaul
     if (isShutdown) {
       throw new RejectedExecutionException("Executor has already been shutdown");
     }
+    if (!task.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED)) {
+      return task.getResultFuture();
+    }
     if (!workQueue.offer(task)) {
+      Verify.verify(task.compareAndSetStatus(TaskStatus.SCHEDULED, TaskStatus.NOT_SCHEDULED));
       throw new RejectedExecutionException("Failed to schedule new work. Queue is full");
     }
     return task.getResultFuture();

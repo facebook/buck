@@ -18,6 +18,7 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.util.function.ThrowingSupplier;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -37,12 +38,14 @@ class DefaultDepsAwareTask<T> extends DepsAwareTask<T, DefaultDepsAwareTask<T>> 
 
   /** Status of this task. */
   enum TaskStatus {
-    NOT_STARTED,
+    NOT_SCHEDULED,
+    SCHEDULED,
     STARTED,
     DONE
   }
 
-  private final AtomicReference<TaskStatus> status = new AtomicReference<>(TaskStatus.NOT_STARTED);
+  private final AtomicReference<TaskStatus> status =
+      new AtomicReference<>(TaskStatus.NOT_SCHEDULED);
 
   private DefaultDepsAwareTask(
       Callable<T> callable,
@@ -77,6 +80,7 @@ class DefaultDepsAwareTask<T> extends DepsAwareTask<T, DefaultDepsAwareTask<T>> 
 
   void call() {
     try {
+      Preconditions.checkState(status.get() == TaskStatus.STARTED);
       result.complete(getCallable().call());
     } catch (Exception e) {
       result.completeExceptionally(e);

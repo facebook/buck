@@ -19,6 +19,8 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareTask.TaskStatus;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -62,6 +64,7 @@ public class DefaultDepsAwareTaskTest {
   public void evaluateCompletesFutureNormally() throws ExecutionException, InterruptedException {
     DefaultDepsAwareTask<Integer> task = DefaultDepsAwareTask.of(() -> 1);
     Future<Integer> f = task.getResultFuture();
+    Verify.verify(task.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.STARTED));
     task.call();
 
     assertTrue(f.isDone());
@@ -80,6 +83,7 @@ public class DefaultDepsAwareTaskTest {
               throw exception;
             });
     Future<Integer> f = task.getResultFuture();
+    Verify.verify(task.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.STARTED));
     task.call();
 
     assertTrue(f.isDone());

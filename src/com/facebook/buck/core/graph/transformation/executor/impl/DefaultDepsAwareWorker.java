@@ -35,6 +35,15 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 class DefaultDepsAwareWorker extends AbstractDepsAwareWorker {
 
+  /**
+   * The {@link TaskStatus} is used to synchronize between tasks.
+   *
+   * <p>{@link DefaultDepsAwareTask}s in the queue should always have a status of {@link
+   * TaskStatus#SCHEDULED}. This is atomically set and used to ensure tasks that are already {@link
+   * TaskStatus#STARTED} is not rescheduled to the front of the queue. Tasks that are already {@link
+   * TaskStatus#SCHEDULED} should not be resubmitted to the queue. Completed tasks should be {@link
+   * TaskStatus#DONE} to avoid recomputation by another worker.
+   */
   DefaultDepsAwareWorker(LinkedBlockingDeque<DefaultDepsAwareTask<?>> sharedQueue) {
     super(sharedQueue);
   }
@@ -46,7 +55,7 @@ class DefaultDepsAwareWorker extends AbstractDepsAwareWorker {
 
   @Override
   protected boolean eval(DefaultDepsAwareTask<?> task) throws InterruptedException {
-    if (!task.compareAndSetStatus(TaskStatus.NOT_STARTED, TaskStatus.STARTED)) {
+    if (!task.compareAndSetStatus(TaskStatus.SCHEDULED, TaskStatus.STARTED)) {
       return false;
     }
 
@@ -65,17 +74,18 @@ class DefaultDepsAwareWorker extends AbstractDepsAwareWorker {
         depsDone = false;
         if (dep.getStatus() == TaskStatus.STARTED) {
           continue;
-        } else {
+        } else if (dep.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED)) {
           sharedQueue.putFirst(dep);
         }
       }
       if (propagateException(task, dep)) {
+        Verify.verify(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
         return true;
       }
     }
 
     if (!depsDone) {
-      Verify.verify(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.NOT_STARTED));
+      Verify.verify(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.SCHEDULED));
       sharedQueue.put(task);
       return false;
     }
