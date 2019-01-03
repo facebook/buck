@@ -22,29 +22,59 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareTask.TaskStatus;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-public class DefaultDepsAwareWorkerTest {
+@RunWith(Parameterized.class)
+public class DepsAwareWorkerTest {
+
+  @Parameterized.Parameters
+  public static Iterable<Object[]> params() {
+    return Arrays.asList(
+        new Object[][] {
+          {
+            (Function<LinkedBlockingDeque<DefaultDepsAwareTask<?>>, AbstractDepsAwareWorker>)
+                defaultDepsAwareTasks -> new DefaultDepsAwareWorker(defaultDepsAwareTasks)
+          },
+          {
+            (Function<LinkedBlockingDeque<DefaultDepsAwareTask<?>>, AbstractDepsAwareWorker>)
+                defaultDepsAwareTasks ->
+                    new DefaultDepsAwareWorkerWithLocalStack(defaultDepsAwareTasks)
+          }
+        });
+  }
+
+  private final Function<LinkedBlockingDeque<DefaultDepsAwareTask<?>>, AbstractDepsAwareWorker>
+      workerConstructor;
+
+  public DepsAwareWorkerTest(
+      Function<LinkedBlockingDeque<DefaultDepsAwareTask<?>>, AbstractDepsAwareWorker>
+          workerConstructor) {
+    this.workerConstructor = workerConstructor;
+  }
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
   private LinkedBlockingDeque<DefaultDepsAwareTask<?>> workQueue;
 
-  private DefaultDepsAwareWorker worker1;
-  private DefaultDepsAwareWorker worker2;
+  private AbstractDepsAwareWorker worker1;
+  private AbstractDepsAwareWorker worker2;
 
   @Before
   public void setUp() {
     workQueue = new LinkedBlockingDeque<>();
-    worker1 = new DefaultDepsAwareWorker(workQueue);
-    worker2 = new DefaultDepsAwareWorker(workQueue);
+    worker1 = workerConstructor.apply(workQueue);
+    worker2 = workerConstructor.apply(workQueue);
   }
 
   @Test(timeout = 5000)
