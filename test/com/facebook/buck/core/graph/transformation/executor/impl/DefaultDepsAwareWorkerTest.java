@@ -171,7 +171,7 @@ public class DefaultDepsAwareWorkerTest {
     testThread.interrupt();
   }
 
-  @Test(timeout = 50000000)
+  @Test(timeout = 5000)
   public void workCanBeExecutedInMultipleThreadSharingQueue() throws InterruptedException {
     // This tests that if we schedule multiple works, and one worker is occupied, the other worker
     // will pick start the other tasks
