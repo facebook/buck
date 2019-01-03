@@ -16,37 +16,21 @@
 
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
-import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
-import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.util.function.ThrowingSupplier;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import java.util.Collection;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.function.Supplier;
 
 /**
  * A specialized Executor that executes {@link DepsAwareTask}. This executor will attempt to
  * maintain maximum concurrency, while completing dependencies of each supplied work first.
  */
-public class DefaultDepsAwareExecutor<T> implements DepsAwareExecutor<T, DefaultDepsAwareTask<T>> {
-
-  private final LinkedBlockingDeque<DefaultDepsAwareTask<?>> workQueue;
-  private final Future<?>[] workers;
-  private volatile boolean isShutdown = false;
-
-  private static final Logger LOG = Logger.get(DefaultDepsAwareExecutor.class);
+public class DefaultDepsAwareExecutor<T> extends AbstractDepsAwareExecutor<T> {
 
   private DefaultDepsAwareExecutor(
       Future<?>[] workers, LinkedBlockingDeque<DefaultDepsAwareTask<?>> workQueue) {
-    this.workers = workers;
-    this.workQueue = workQueue;
+    super(workQueue, workers);
   }
 
   /**
@@ -72,57 +56,6 @@ public class DefaultDepsAwareExecutor<T> implements DepsAwareExecutor<T, Default
     return executor;
   }
 
-  @Override
-  public void shutdownNow() {
-    isShutdown = true;
-    for (int i = 0; i < workers.length; i++) {
-      workers[i].cancel(true);
-    }
-  }
-
-  @Override
-  public boolean isShutdown() {
-    return isShutdown;
-  }
-
-  @Override
-  public DefaultDepsAwareTask<T> createTask(
-      Callable<T> callable, Supplier<ImmutableSet<DefaultDepsAwareTask<T>>> depsSupplier) {
-    return DefaultDepsAwareTask.of(callable, depsSupplier);
-  }
-
-  @Override
-  public DefaultDepsAwareTask<T> createTask(
-      Callable<T> callable,
-      ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<T>>, Exception> depsSupplier) {
-    return DefaultDepsAwareTask.ofThrowing(callable, depsSupplier);
-  }
-
-  @Override
-  public DefaultDepsAwareTask<T> createTask(Callable<T> callable) {
-    return DefaultDepsAwareTask.of(callable);
-  }
-
-  @Override
-  public Future<T> submit(DefaultDepsAwareTask<T> task) {
-    if (isShutdown) {
-      throw new RejectedExecutionException("Executor has already been shutdown");
-    }
-    if (!workQueue.offer(task)) {
-      throw new RejectedExecutionException("Failed to schedule new work. Queue is full");
-    }
-    return task.getResultFuture();
-  }
-
-  @Override
-  public ImmutableList<Future<T>> submitAll(Collection<DefaultDepsAwareTask<T>> tasks) {
-    ImmutableList.Builder<Future<T>> futures = ImmutableList.builderWithExpectedSize(tasks.size());
-    for (DefaultDepsAwareTask<T> w : tasks) {
-      futures.add(submit(w));
-    }
-    return futures.build();
-  }
-
   private static Future<?>[] startWorkers(
       ExecutorService executorService,
       int parallelism,
@@ -133,13 +66,5 @@ public class DefaultDepsAwareExecutor<T> implements DepsAwareExecutor<T, Default
       workers[i] = executorService.submit(() -> runWorker(worker));
     }
     return workers;
-  }
-
-  private static void runWorker(DefaultDepsAwareWorker worker) {
-    try {
-      worker.loopForever();
-    } catch (InterruptedException e) {
-      LOG.info("Worker was interrupted");
-    }
   }
 }
