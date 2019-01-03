@@ -17,7 +17,7 @@
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareTask.TaskStatus;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -55,7 +55,7 @@ class DefaultDepsAwareWorker extends AbstractDepsAwareWorker {
       deps = task.getDependencies();
     } catch (Exception e) {
       task.getFuture().completeExceptionally(e);
-      Preconditions.checkState(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
+      Verify.verify(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
       return true;
     }
 
@@ -75,13 +75,12 @@ class DefaultDepsAwareWorker extends AbstractDepsAwareWorker {
     }
 
     if (!depsDone) {
-      Preconditions.checkState(
-          task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.NOT_STARTED));
+      Verify.verify(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.NOT_STARTED));
       sharedQueue.put(task);
       return false;
     }
     task.call();
-    Preconditions.checkState(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
+    Verify.verify(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
     return true;
   }
 
@@ -93,7 +92,7 @@ class DefaultDepsAwareWorker extends AbstractDepsAwareWorker {
     }
     try {
       depResult.get();
-      Preconditions.checkState(false, "Should have completed exceptionally");
+      Verify.verify(false, "Should have completed exceptionally");
     } catch (ExecutionException e) {
       task.getFuture().completeExceptionally(e.getCause());
     }
