@@ -18,6 +18,7 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutorWithLocalStack;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
@@ -82,7 +83,15 @@ public class VersionedTargetGraphCache {
 
     switch (resolvedMode) {
       case ENABLED:
-        DepsAwareExecutor<TargetNode<?>, ?> executor = DefaultDepsAwareExecutor.from(pool);
+      case ENABLED_LS:
+        DepsAwareExecutor<TargetNode<?>, ?> executor;
+        if (versionTargetGraphMode == VersionTargetGraphMode.ENABLED) {
+          executor = DefaultDepsAwareExecutor.from(pool);
+        } else if (versionTargetGraphMode == VersionTargetGraphMode.ENABLED_LS) {
+          executor = DefaultDepsAwareExecutorWithLocalStack.from(pool);
+        } else {
+          throw new IllegalStateException();
+        }
         TargetGraphAndBuildTargets versionedTargetGraph =
             AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
