@@ -33,31 +33,19 @@ import java.util.concurrent.LinkedBlockingDeque;
  * <p>Blocking operations that are ran in the {@link DefaultDepsAwareTask} will block the thread,
  * and its corresponding worker.
  */
-class DefaultDepsAwareWorker {
-
-  private final LinkedBlockingDeque<DefaultDepsAwareTask<?>> sharedQueue;
+class DefaultDepsAwareWorker extends AbstractDepsAwareWorker {
 
   DefaultDepsAwareWorker(LinkedBlockingDeque<DefaultDepsAwareTask<?>> sharedQueue) {
-    this.sharedQueue = sharedQueue;
+    super(sharedQueue);
   }
 
-  /** Runs the scheduled loop forever until shutdown */
-  void loopForever() throws InterruptedException {
-    while (!Thread.currentThread().isInterrupted()) {
-      loopOnce();
-    }
+  @Override
+  protected DefaultDepsAwareTask<?> takeTask() throws InterruptedException {
+    return sharedQueue.take();
   }
 
-  /** Runs one job, blocking for the task */
-  void loopOnce() throws InterruptedException {
-    boolean completedOne = false;
-    while (!completedOne) {
-      DefaultDepsAwareTask<?> task = sharedQueue.take();
-      completedOne = eval(task);
-    }
-  }
-
-  private boolean eval(DefaultDepsAwareTask<?> task) throws InterruptedException {
+  @Override
+  protected boolean eval(DefaultDepsAwareTask<?> task) throws InterruptedException {
     if (!task.compareAndSetStatus(TaskStatus.NOT_STARTED, TaskStatus.STARTED)) {
       return false;
     }
