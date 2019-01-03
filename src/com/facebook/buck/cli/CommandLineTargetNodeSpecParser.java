@@ -20,12 +20,15 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.file.MorePaths.PathExistResult;
+import com.facebook.buck.io.file.MorePaths.PathExistResultWrapper;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Files;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -88,9 +91,24 @@ public class CommandLineTargetNodeSpecParser {
   private void validateTargetSpec(TargetNodeSpec spec, String buildTarget) {
     Path cellPath = spec.getBuildFileSpec().getCellPath();
     Path basePath = spec.getBuildFileSpec().getBasePath();
-    if (!Files.exists(cellPath.resolve(basePath))) {
-      throw new HumanReadableException(
-          "%s references non-existent directory %s", buildTarget, basePath);
+    Path buildTargetPath = cellPath.resolve(basePath);
+    try {
+      PathExistResultWrapper pathExist =
+          MorePaths.pathExistsCaseSensitive(buildTargetPath, cellPath);
+      if (PathExistResult.NOT_EXIST == pathExist.getResult()) {
+        throw new HumanReadableException(
+            "%s references non-existent directory %s", buildTarget, basePath);
+      }
+
+      if (PathExistResult.EXIST_CASE_MISMATCHED == pathExist.getResult()) {
+        throw new HumanReadableException(
+            "The case of the build path provided (%s) does not match the actual path. "
+                + "This is an issue even on case-insensitive file systems. "
+                + "Please check the spelling of the provided path.",
+            buildTargetPath);
+      }
+    } catch (IOException e) {
+      throw new HumanReadableException(e, e.getMessage());
     }
   }
 

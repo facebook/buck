@@ -29,11 +29,16 @@ import com.google.common.collect.Streams;
 import com.google.common.io.ByteSource;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -394,5 +399,111 @@ public class MorePaths {
    */
   public static boolean isDirectory(Path path, LinkOption... linkOptions) {
     return Files.isDirectory(normalize(path).toAbsolutePath(), linkOptions);
+  }
+
+  /**
+   * Verify a file exists and also check the case of file path which {@link Files#exists(Path,
+   * LinkOption...)} failed to do so for case-insensitive file systems. This method also works for
+   * case-sensitive file systems
+   *
+   * @param path A path to a file
+   * @param rootPath the root path to start with
+   * @return A wrap contains {@link PathExistResult} and paths that actually exist but with case
+   *     mismatched if the input path does not exist. See {@link PathExistResultWrapper} for more
+   *     details.
+   */
+  public static PathExistResultWrapper pathExistsCaseSensitive(Path path, Path rootPath)
+      throws IOException {
+    Path absolutePath = path.isAbsolute() ? path : rootPath.resolve(path);
+    boolean fileExist = Files.exists(absolutePath);
+
+    if (path.equals(rootPath) && fileExist) {
+      return new PathExistResultWrapper(PathExistResult.EXIST_CASE_MATCHED, Optional.empty());
+    }
+
+    Path relativePath = path.isAbsolute() ? rootPath.relativize(path) : path;
+
+    List<Path> currentParentPathIgnoreCaseList = Collections.singletonList(rootPath);
+    Path parentPath = rootPath;
+
+    int nameCount = relativePath.getNameCount();
+
+    for (Path subPath : relativePath) {
+      nameCount--;
+      boolean isLastSubPath = (nameCount == 0);
+      Path currentPath = parentPath.resolve(subPath);
+      String currentFileName = currentPath.getFileName().toString();
+
+      List<Path> nextParentPathIgnoreCaseList = new ArrayList<>();
+      boolean existCurrentPathIgnoreCase = false;
+      for (Path currentParentPathIgnoreCase : currentParentPathIgnoreCaseList) {
+        try (DirectoryStream<Path> stream =
+            Files.newDirectoryStream(
+                currentParentPathIgnoreCase,
+                filePath ->
+                    filePath.getFileName().toString().equalsIgnoreCase(currentFileName)
+                        && (isLastSubPath || Files.isDirectory(filePath)))) {
+          Iterator<Path> it = stream.iterator();
+          if (it.hasNext()) {
+            existCurrentPathIgnoreCase = true;
+            it.forEachRemaining(nextParentPathIgnoreCaseList::add);
+          }
+        }
+      }
+      if (!existCurrentPathIgnoreCase) {
+        return new PathExistResultWrapper(PathExistResult.NOT_EXIST, Optional.empty());
+      }
+      currentParentPathIgnoreCaseList = nextParentPathIgnoreCaseList;
+      parentPath = currentPath;
+    }
+
+    boolean pathExistCaseSensitive =
+        currentParentPathIgnoreCaseList
+            .stream()
+            .anyMatch(filePath -> filePath.toString().equals(absolutePath.toString()));
+
+    return pathExistCaseSensitive
+        ? new PathExistResultWrapper(PathExistResult.EXIST_CASE_MATCHED, Optional.empty())
+        : new PathExistResultWrapper(
+            PathExistResult.EXIST_CASE_MISMATCHED, Optional.of(currentParentPathIgnoreCaseList));
+  }
+
+  /**
+   * A wrap contains {@link PathExistResult} and paths that actually exist but with case mismatched
+   * if the input path does not exist. For the first part, {@link PathExistResult#NOT_EXIST} if the
+   * file does not exist, {@link PathExistResult#EXIST_CASE_MISMATCHED} exist but case mismatched,
+   * or {@link PathExistResult#EXIST_CASE_MATCHED}exist and case matched . For the second part, will
+   * not be Optional.empty() only when the first part returns {@link
+   * PathExistResult#EXIST_CASE_MISMATCHED}, which will give a list of paths that exist but
+   * case-mismatched with the input path
+   */
+  public static class PathExistResultWrapper {
+    private final PathExistResult result;
+    private final Optional<List<Path>> pathsCaseMismatched;
+
+    public PathExistResultWrapper(
+        PathExistResult pathExistResult, Optional<List<Path>> pathsCaseMismatched) {
+      this.result = pathExistResult;
+      this.pathsCaseMismatched = pathsCaseMismatched;
+    }
+
+    public PathExistResult getResult() {
+      return result;
+    }
+
+    public Optional<List<Path>> getCaseMismatchedPaths() {
+      return pathsCaseMismatched;
+    }
+  }
+
+  /**
+   * The return result of a path existence check {@link PathExistResult#NOT_EXIST} if the file does
+   * not exist, {@link PathExistResult#EXIST_CASE_MISMATCHED} exist but case mismatched, or {@link
+   * PathExistResult#EXIST_CASE_MATCHED}exist and case matched
+   */
+  public enum PathExistResult {
+    NOT_EXIST,
+    EXIST_CASE_MATCHED,
+    EXIST_CASE_MISMATCHED
   }
 }

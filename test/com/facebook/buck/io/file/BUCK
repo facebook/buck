@@ -15,6 +15,7 @@ standard_java_test(
         "//third-party/java/guava:guava",
         "//third-party/java/jimfs:jimfs",
         "//third-party/java/junit:junit",
+        "//third-party/java/junitparams:junitparams",
     ],
 )
 
