@@ -159,7 +159,8 @@ public class ThrowingPackageBoundaryCheckerTest {
             + testPath
             + "' and use that in '//a/b:c'\ninstead of directly referencing '"
             + testPath
-            + "'.\n\nThis issue might also be caused by a bug in buckd's caching.\n"
+            + "'.\nMore info at:\nhttps://buckbuild.com/concept/build_rule.html\n"
+            + "\nThis issue might also be caused by a bug in buckd's caching.\n"
             + "Please check whether using `buck kill` resolves it.");
 
     boundaryChecker.enforceBuckPackageBoundaries(
