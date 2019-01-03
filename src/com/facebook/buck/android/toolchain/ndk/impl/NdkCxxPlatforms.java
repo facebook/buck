@@ -526,7 +526,8 @@ public class NdkCxxPlatforms {
                         compilerType.cxx,
                         version,
                         cxxRuntime,
-                        executableFinder))))
+                        executableFinder)),
+                config.shouldCacheLinks()))
         .addAllLdflags(getLdFlags(targetConfiguration, androidConfig))
         .setStrip(getGccTool(toolchainPaths, "strip", version, executableFinder))
         .setSymbolNameTool(

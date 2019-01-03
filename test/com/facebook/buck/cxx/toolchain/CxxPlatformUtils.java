@@ -75,7 +75,7 @@ public class CxxPlatformUtils {
           .setAsmpp(DEFAULT_PREPROCESSOR_PROVIDER)
           .setLd(
               new DefaultLinkerProvider(
-                  LinkerProvider.Type.GNU, new ConstantToolProvider(DEFAULT_TOOL)))
+                  LinkerProvider.Type.GNU, new ConstantToolProvider(DEFAULT_TOOL), true))
           .setStrip(DEFAULT_TOOL)
           .setAr(ArchiverProvider.from(new GnuArchiver(DEFAULT_TOOL)))
           .setArchiveContents(ArchiveContents.NORMAL)
