@@ -20,6 +20,7 @@ import static com.facebook.buck.doctor.DoctorTestUtils.createDoctorConfig;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
@@ -28,7 +29,16 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Paths;
+import java.util.Date;
 import java.util.Optional;
+import okhttp3.Interceptor.Chain;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -98,5 +108,44 @@ public class DoctorReportHelperTest {
 
     Optional<String> issue = helper.promptForIssue();
     assertThat(issue.get(), Matchers.equalTo("Cache error"));
+  }
+
+  @Test
+  public void testCustomDoctorHeaders() throws Exception {
+    TestConsole console = new TestConsole();
+    DoctorConfig doctorConfig =
+        createDoctorConfig(10, "", DoctorProtocolVersion.SIMPLE, "key=>value");
+    DoctorReportHelper helper =
+        new DoctorReportHelper(
+            workspace.asCell().getFilesystem(),
+            (new UserInputFixture("1")).getUserInput(),
+            console,
+            doctorConfig);
+
+    OkHttpClient testClient =
+        new OkHttpClient.Builder()
+            .addInterceptor(
+                (Chain chain) -> {
+                  Request request = chain.request();
+                  assertThat(request.header("key"), Matchers.equalTo("value"));
+                  return new Response.Builder()
+                      .request(request)
+                      .protocol(Protocol.HTTP_1_0)
+                      .message("test")
+                      .body(ResponseBody.create(MediaType.parse("text/plain"), "test"))
+                      .code(200)
+                      .build();
+                })
+            .build();
+
+    helper.uploadRequest(
+        testClient,
+        helper.generateEndpointRequest(
+            BuildLogEntry.builder()
+                .setRelativePath(Paths.get("test"))
+                .setSize(10)
+                .setLastModifiedTime(new Date())
+                .build(),
+            DefectSubmitResult.builder().setRequestProtocol(DoctorProtocolVersion.JSON).build()));
   }
 }

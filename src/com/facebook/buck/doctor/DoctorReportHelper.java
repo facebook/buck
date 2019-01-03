@@ -135,6 +135,17 @@ public class DoctorReportHelper {
   }
 
   public DoctorEndpointResponse uploadRequest(DoctorEndpointRequest request) {
+    OkHttpClient httpClient =
+        new OkHttpClient.Builder()
+            .connectTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
+            .readTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
+            .writeTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
+            .build();
+    return uploadRequest(httpClient, request);
+  }
+
+  @VisibleForTesting
+  DoctorEndpointResponse uploadRequest(OkHttpClient httpClient, DoctorEndpointRequest request) {
     if (!doctorConfig.getEndpointUrl().isPresent()) {
       String errorMsg =
           String.format(
@@ -150,13 +161,6 @@ public class DoctorReportHelper {
       return createErrorDoctorEndpointResponse(
           "Failed to encode request to JSON. " + "Reason: " + e.getMessage());
     }
-
-    OkHttpClient httpClient =
-        new OkHttpClient.Builder()
-            .connectTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
-            .readTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
-            .writeTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
-            .build();
 
     Response httpResponse;
     try {
