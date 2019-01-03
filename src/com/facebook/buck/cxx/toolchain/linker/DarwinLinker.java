@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx.toolchain.linker;
 
-import com.android.annotations.concurrency.Immutable;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
