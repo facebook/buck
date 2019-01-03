@@ -33,6 +33,16 @@ configuration. Build rules are specified in {call buck.build_file /}s.
 </p>
 
 <p>
+<strong>Note:</strong> A build rule must explicitly specify all of its
+required inputs in its arguments in order for Buck to be able to ensure
+that it can build the output in a way that is deterministic and
+reproducible.
+</p>
+
+
+<h2>Buck's collection of build rules</h2>
+
+<p>
 Buck comes with a collection of built-in build rules, as there are many
 common procedures when building software. For example, compiling Java
 code against the Android SDK is a common operation, so Buck provides the 
@@ -48,6 +58,59 @@ are: <strong>C++</strong>, <strong>Java</strong>, <strong>Python</strong> (devel
 and <strong>Android</strong>, <strong>iOS</strong>, <strong>.NET</strong> (target platforms).
 Consult the table of contents to locate the build rules that are
 appropriate for your development project.
+</p>
+
+
+<h2>Source files as inputs to build rules</h2>
+
+<p>
+Most build rules specify source files as inputs. For example, 
+a {call buck.cxx_library /} rule would specify <code>.cpp</code> files 
+as inputs. To support specifying these files, a <code>cxx_library</code> rule 
+provides the <code>srcs</code> argument. Some languages, such as C++, use 
+header files as well. To specify these, <code>cxx_library</code> provides 
+a <code>headers</code> argument. 
+</p>
+
+<p>
+In addition to <code>srcs</code> and <code>headers</code>, 
+some rules provide variants of these arguments&mdash;such 
+as <code>platform_srcs</code> and <code>platform_headers</code>&mdash;to 
+support groups of source files that should be used as inputs only when
+building for specific platforms. 
+(For more information, see the descriptions 
+for <code>platform_srcs</code> and <code>platform_headers</code> in, 
+for example, the topic for {call buck.cxx_library /}.)
+</p>
+
+
+<h3>Package boundaries and access to source files</h3>
+
+<p>
+In Buck, a build file defines a <em>package</em>, which corresponds <em>roughly</em> to 
+the directory that contains the BUCK file and those subdirectories that do not themselves contain 
+BUCK files. (To learn more, see the {call buck.key_concepts_link}{param rendered_text: 'Key Concepts' /}{/call} topic.)
+</p>
+
+<p>
+A rule in a BUCK file cannot specify a source file as an input unless
+that source file is in that BUCK file's package. An exception to this
+restriction exists for header files, but only if a rule in the package
+that contains the header file <em>exports</em> that header file using 
+the <code>exported_headers</code> argument.
+(For more information, see the description for <code>exported_headers</code> in, 
+for example, the topic for {call buck.cxx_library /}.)
+</p>
+
+<p>
+More commonly though, the package for a BUCK file contains all the
+source files required for the rules defined in that BUCK file. 
+Functionality in source files from other packages is made available through 
+the artifacts produced by the rules in the BUCK files for those packages.
+For example, a <code>cxx_binary</code> might use the functionality
+in a <code>cxx_library</code> that is defined in another 
+package. To access that functionality, the <code>cxx_binary</code> would 
+take that <code>cxx_library</code> as a <em>dependency</em>.
 </p>
 
 
@@ -89,15 +152,7 @@ Buck guarantees that any dependencies that a rule lists that are required
 in order to build that rule are built successfully <em>before</em> Buck
 builds the rule itself. Note though that there can be special 
 cases&mdash;such as {call buck.apple_bundle /}&mdash;where 
-listed dependencies do not actually need to be built before the rule
-itself.
-</p>
-
-<p>
-<strong>Note:</strong> A build rule must explicitly specify all of its
-required inputs in its arguments in order for Buck to be able to ensure
-that it can build the output in a way that is deterministic and
-reproducible.
+listed dependencies do not actually need to be built before the rule.
 </p>
 
 
