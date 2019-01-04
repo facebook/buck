@@ -14,6 +14,8 @@ java_library(
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/string:string",
+        "//src/com/facebook/buck/util/types:types",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],

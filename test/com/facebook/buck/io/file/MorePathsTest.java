@@ -37,11 +37,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.hamcrest.Matchers;
+import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -108,7 +112,7 @@ public class MorePathsTest {
 
     Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
 
-    validateSymlinklTarget(
+    validateSymlinkTarget(
         pathToExistingFileUnderProjectRoot,
         pathToDesiredLinkUnderProjectRoot,
         absolutePathToDesiredLinkUnderProjectRoot,
@@ -144,7 +148,7 @@ public class MorePathsTest {
 
     Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
 
-    validateSymlinklTarget(
+    validateSymlinkTarget(
         pathToExistingFileUnderProjectRoot,
         pathToDesiredLinkUnderProjectRoot,
         absolutePathToDesiredLinkUnderProjectRoot,
@@ -181,7 +185,7 @@ public class MorePathsTest {
 
     Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
 
-    validateSymlinklTarget(
+    validateSymlinkTarget(
         pathToExistingFileUnderProjectRoot,
         pathToDesiredLinkUnderProjectRoot,
         absolutePathToDesiredLinkUnderProjectRoot,
@@ -507,7 +511,99 @@ public class MorePathsTest {
         PathExistResult.NOT_EXIST);
   }
 
-  private void validateSymlinklTarget(
+  @Test
+  @Parameters({
+    "Alpha/Beta/Gamma, 2, "
+        + "Alpha/Beta/Gamma, "
+        + "Alpha2/Beta/Gamma, "
+        + "Alpha/Beta2/Gamma, "
+        + "Alpha/Beta/Gamma2,"
+        + "Alpha/Beta/Gamma.h",
+    "Alpha/Beta/Gamma, 1, "
+        + "Alpha/Beta/Gamma, "
+        + "Alpha2/Beta/Gamma, "
+        + "Alpha/Beta2/Gamma, "
+        + "Alpha/Beta/Gamma2 ",
+    "Alpha/Beta/Gamma, 0, Alpha/Beta/Gamma",
+    "Alpha/Beta/Gamma/Delta.txt, 2, "
+        + "Alpha/Beta/Gamma/Delta.txt, "
+        + "Alpha/Beta/Gamma/Delta2.txt, "
+        + "Alpha2/Beta/Gamma/Delta.txt, "
+        + "Alpha/Beta2/Gamma/Delta.txt, "
+        + "Alpha/Beta/Gamma2/Delta2.txt, "
+        + "Alpha/Beta/Gamma2/Delta.txt ",
+    "Alpha/Beta/Gamma/Delta.txt, 1, "
+        + "Alpha/Beta/Gamma/Delta.txt, "
+        + "Alpha/Beta/Gamma/Delta2.txt, "
+        + "Alpha2/Beta/Gamma/Delta.txt, "
+        + "Alpha/Beta2/Gamma/Delta.txt, "
+        + "Alpha/Beta/Gamma2/Delta.txt ",
+    "Alpha/Beta/Gamma/Delta.txt, 0, Alpha/Beta/Gamma/Delta.txt "
+  })
+  public void testGetPathSuggestions(String input, int maxDistance, String... expectedSuggestions)
+      throws IOException {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    tmp.newFolder("Alpha", "Beta", "Gamma");
+    tmp.newFolder("Alpha2", "Beta", "Gamma");
+    tmp.newFolder("Alpha", "Beta2", "Gamma");
+    tmp.newFolder("Alpha", "Beta", "Gamma2");
+    tmp.newFile("Alpha/Beta/Gamma/Delta.txt");
+    tmp.newFile("Alpha/Beta/Gamma/Delta2.txt");
+    tmp.newFile("Alpha2/Beta/Gamma/Delta.txt");
+    tmp.newFile("Alpha/Beta2/Gamma/Delta.txt");
+    tmp.newFile("Alpha/Beta/Gamma2/Delta.txt");
+    tmp.newFile("Alpha/Beta/Gamma2/Delta2.txt");
+    tmp.newFile("Alpha/Beta/Gamma.h");
+    tmp.newFile("Alpha/BetaGamma");
+
+    Path fileToCheck = projectFilesystem.resolve(Paths.get(input));
+
+    List<Pair<Path, Integer>> suggestions =
+        MorePaths.getPathSuggestions(fileToCheck, tmp.getRoot(), maxDistance);
+
+    assertThat(
+        suggestions.stream().map(Pair::getFirst).collect(Collectors.toList()),
+        Matchers.containsInAnyOrder(
+            Arrays.stream(expectedSuggestions)
+                .map(suggestion -> projectFilesystem.resolve(Paths.get(suggestion)))
+                .toArray()));
+    assertThat(suggestions, IsCollectionWithSize.hasSize(expectedSuggestions.length));
+  }
+
+  @Test
+  @Parameters({
+    "AnotherFolder/AnotherFile.txt, 2, " + "anotherFolder/anotherFile.txt",
+    "anotherFolder/anotherFiler.txt, 2, " + "anotherFolder/anotherFile.txt",
+    "anotherFold/anotherFile.txt, 2, " + "anotherFolder/anotherFile.txt",
+    "anotherFold/anotherFiler.txt, 3, " + "anotherFolder/anotherFile.txt"
+  })
+  public void testGetPathSuggestionsWithSymlink(
+      String input, int maxDistance, String... expectedSuggestions) throws IOException {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    tmp.newFolder("folder");
+    tmp.newFolder("anotherFolder");
+    tmp.newFile("folder/file.txt");
+    Path fileExists = Paths.get("folder/file.txt");
+    Path fileLinked = Paths.get("anotherFolder/anotherFile.txt");
+
+    MoreProjectFilesystems.createRelativeSymlink(fileLinked, fileExists, projectFilesystem);
+    Path fileToCheck = projectFilesystem.resolve(Paths.get(input));
+
+    List<Pair<Path, Integer>> suggestions =
+        MorePaths.getPathSuggestions(fileToCheck, tmp.getRoot(), maxDistance);
+
+    assertThat(
+        suggestions.stream().map(Pair::getFirst).collect(Collectors.toList()),
+        Matchers.containsInAnyOrder(
+            Arrays.stream(expectedSuggestions)
+                .map(suggestion -> projectFilesystem.resolve(Paths.get(suggestion)))
+                .toArray()));
+    assertThat(suggestions, IsCollectionWithSize.hasSize(expectedSuggestions.length));
+  }
+
+  private void validateSymlinkTarget(
       Path pathToExistingFileUnderProjectRoot,
       Path pathToDesiredLinkUnderProjectRoot,
       Path absolutePathToDesiredLinkUnderProjectRoot,
