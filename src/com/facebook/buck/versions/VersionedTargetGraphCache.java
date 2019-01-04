@@ -79,8 +79,7 @@ public class VersionedTargetGraphCache {
     }
     Preconditions.checkState(resolvedMode != VersionTargetGraphMode.EXPERIMENT);
     eventBus.post(
-        new ExperimentEvent(
-            "async_version_tg_builder", versionTargetGraphMode.toString(), "", null, null));
+        new ExperimentEvent("async_version_tg_builder", resolvedMode.toString(), "", null, null));
 
     if (resolvedMode == VersionTargetGraphMode.DISABLED) {
       return ParallelVersionedTargetGraphBuilder.transform(
