@@ -92,14 +92,18 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   private static final String NO_REFLECT = "-no-reflect";
   private static final String VERBOSE = "-verbose";
 
+  private final ImmutableSortedSet<Path> kotlinHomeLibraries;
+
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
+      ImmutableSortedSet<Path> kotlinHomeLibraries,
       ImmutableList<String> extraKotlincArguments,
       AnnotationProcessingTool annotationProcessingTool,
       ExtraClasspathProvider extraClassPath,
       Javac javac,
       JavacOptions javacOptions) {
     this.kotlinc = kotlinc;
+    this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.extraKotlincArguments = extraKotlincArguments;
     this.annotationProcessingTool = annotationProcessingTool;
     this.extraClassPath = extraClassPath;
@@ -166,7 +170,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                   Optional.ofNullable(extraClassPath.getExtraClasspath())
                       .orElse(ImmutableList.of()))
               .addAll(declaredClasspathEntries)
-              .addAll(kotlinc.getHomeLibraries(buildContext.getSourcePathResolver()))
+              .addAll(kotlinHomeLibraries)
               .build();
 
       if (generatingCode && annotationProcessingTool.equals(AnnotationProcessingTool.KAPT)) {
@@ -217,7 +221,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               pathToSrcsList,
               allClasspaths,
               kotlinc,
-              kotlinc.getHomeLibraries(buildContext.getSourcePathResolver()),
               ImmutableList.<String>builder()
                   .addAll(extraKotlincArguments)
                   .add(NO_STDLIB)
@@ -349,7 +352,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .addAll(declaredClasspathEntries)
                 .build(),
             kotlinc,
-            kotlinc.getHomeLibraries(resolver),
             ImmutableList.<String>builder()
                 .addAll(extraArguments)
                 .add(MODULE_NAME)
@@ -378,7 +380,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .addAll(declaredClasspathEntries)
                 .build(),
             kotlinc,
-            kotlinc.getHomeLibraries(resolver),
             ImmutableList.<String>builder()
                 .addAll(extraArguments)
                 .add(MODULE_NAME)

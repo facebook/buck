@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -29,8 +28,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.CoreArg;
-import com.facebook.buck.util.Optionals;
-import com.google.common.collect.ImmutableCollection;
 import java.util.Objects;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -65,6 +62,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     CoreArg kotlinArgs = Objects.requireNonNull((CoreArg) args);
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinc(),
+        kotlinBuckConfig.getKotlinHomeLibraries(),
         kotlinArgs.getExtraKotlincArguments(),
         kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
         extraClasspathProviderSupplier.apply(toolchainProvider),
@@ -74,12 +72,5 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
     return javacFactory.create(new SourcePathRuleFinder(resolver), arg);
-  }
-
-  @Override
-  public void addTargetDeps(
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    Optionals.addIfPresent(kotlinBuckConfig.getKotlinHomeTarget(), extraDepsBuilder);
   }
 }

@@ -18,9 +18,11 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,51 +31,151 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class KotlinBuckConfig {
+
+  private static final Logger LOG = Logger.get(KotlinBuckConfig.class);
+
   private static final String SECTION = "kotlin";
-  private static final String KOTLIN_HOME_CONFIG = "kotlin_home";
 
   private static final Path DEFAULT_KOTLIN_COMPILER = Paths.get("kotlinc");
 
   private final BuckConfig delegate;
-  private @Nullable Kotlinc kotlinc;
+  private @Nullable Path kotlinHome;
 
   public KotlinBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
   }
 
   public Kotlinc getKotlinc() {
-    if (kotlinc == null) {
-      if (isExternalCompilation()) {
-        kotlinc = new ExternalKotlinc(getPathToCompilerBinary());
-      } else {
-        Optional<SourcePath> kotlinHomeSourcePath =
-            delegate.getSourcePath(SECTION, KOTLIN_HOME_CONFIG);
-        if (kotlinHomeSourcePath.isPresent()) {
-          kotlinc = new JarBackedReflectedKotlinc(kotlinHomeSourcePath.get());
-        } else {
-          throw new HumanReadableException(
-              "kotlin_home needs to be set when not an external compilation");
-        }
-      }
+    if (isExternalCompilation()) {
+      return new ExternalKotlinc(getPathToCompilerBinary());
+    } else {
+      ImmutableSet<SourcePath> classpathEntries =
+          ImmutableSet.of(
+              delegate.getPathSourcePath(getPathToStdlibJar()),
+              delegate.getPathSourcePath(getPathToReflectJar()),
+              delegate.getPathSourcePath(getPathToScriptRuntimeJar()),
+              delegate.getPathSourcePath(getPathToCompilerJar()));
+
+      return new JarBackedReflectedKotlinc(
+          classpathEntries, getPathToAnnotationProcessingJar(), getPathToStdlibJar());
     }
-    return kotlinc;
   }
 
-  public Optional<BuildTarget> getKotlinHomeTarget() {
-    return delegate.getMaybeBuildTarget(SECTION, KOTLIN_HOME_CONFIG);
+  public ImmutableSortedSet<Path> getKotlinHomeLibraries() {
+    return ImmutableSortedSet.copyOf(
+        ImmutableSortedSet.of(
+            getPathToStdlibJar(),
+            getPathToReflectJar(),
+            getPathToScriptRuntimeJar(),
+            getPathToCompilerJar()));
   }
 
-  private Path getPathToCompilerBinary() {
-    Path kotlinHome = getKotlinHome();
-    Path compilerPath = kotlinHome.resolve("kotlinc");
+  Path getPathToCompilerBinary() {
+    Path compilerPath = getKotlinHome().resolve("kotlinc");
     if (!Files.isExecutable(compilerPath)) {
-      compilerPath = kotlinHome.resolve("bin").resolve("kotlinc");
+      compilerPath = getKotlinHome().resolve(Paths.get("bin", "kotlinc"));
       if (!Files.isExecutable(compilerPath)) {
         throw new HumanReadableException("Could not resolve kotlinc location.");
       }
     }
 
     return new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
+  }
+
+  private Path getPathToJar(String jarName) {
+    Path reflect = getKotlinHome().resolve(jarName + ".jar");
+    if (Files.isRegularFile(reflect)) {
+      return reflect.normalize();
+    }
+
+    reflect = getKotlinHome().resolve(Paths.get("lib", jarName + ".jar"));
+    if (Files.isRegularFile(reflect)) {
+      return reflect.normalize();
+    }
+
+    reflect = getKotlinHome().resolve(Paths.get("libexec", "lib", jarName + ".jar"));
+    if (Files.isRegularFile(reflect)) {
+      return reflect.normalize();
+    }
+
+    throw new HumanReadableException(
+        "Could not resolve " + jarName + " JAR location (kotlin home:" + getKotlinHome() + ").");
+  }
+
+  /**
+   * Get the path to the Kotlin runtime jar.
+   *
+   * @return the Kotlin runtime jar path
+   */
+  Path getPathToStdlibJar() {
+    try {
+      return getPathToJar("kotlin-stdlib");
+    } catch (HumanReadableException e) {
+      // TODO: Check if kt version < 1.1
+      return getPathToJar("kotlin-runtime");
+    }
+  }
+
+  /**
+   * Get the path to the Kotlin reflection jar.
+   *
+   * @return the Kotlin reflection jar path
+   */
+  Path getPathToReflectJar() {
+    return getPathToJar("kotlin-reflect");
+  }
+
+  /**
+   * Get the path to the Kotlin script runtime jar.
+   *
+   * @return the Kotlin script runtime jar path
+   */
+  Path getPathToScriptRuntimeJar() {
+    return getPathToJar("kotlin-script-runtime");
+  }
+
+  /**
+   * Get the path to the Kotlin compiler jar.
+   *
+   * @return the Kotlin compiler jar path
+   */
+  Path getPathToCompilerJar() {
+    try {
+      return getPathToJar("kotlin-compiler-embeddable");
+    } catch (HumanReadableException e) {
+      LOG.warn(
+          "kotlin-compiler-embeddable.jar was not found in "
+              + kotlinHome
+              + " directory, this"
+              + " may result in kapt not working properly. Proceeding with kotlin-compiler.jar");
+      return getPathToJar("kotlin-compiler");
+    }
+  }
+
+  /**
+   * Get the path to the Kotlin annotation processing jar.
+   *
+   * @return the Kotlin annotation processing jar path
+   */
+  Path getPathToAnnotationProcessingJar() {
+    try {
+      return getPathToJar("kotlin-annotation-processing-gradle");
+    } catch (HumanReadableException e) {
+      LOG.warn(
+          "kotlin-annotation-processing-gradle.jar was not found in "
+              + kotlinHome
+              + " directory, searching for kotlin-annotation-processing-maven.jar");
+      try {
+        return getPathToJar("kotlin-annotation-processing-maven");
+      } catch (HumanReadableException er) {
+        LOG.warn(
+            "kotlin-annotation-processing-maven.jar was not found in "
+                + kotlinHome
+                + " directory, this"
+                + " may result in kapt not working properly. Proceeding with kotlin-annotation-processing.jar");
+        return getPathToJar("kotlin-annotation-processing");
+      }
+    }
   }
 
   /**
@@ -101,22 +203,19 @@ public class KotlinBuckConfig {
    * @return the Kotlin home path
    */
   private Path getKotlinHome() {
-    if (!isExternalCompilation()) {
-      throw new HumanReadableException(
-          "kotlinHome path can only be queried when it's an external compilation");
+    if (kotlinHome != null) {
+      return kotlinHome;
     }
 
-    Path kotlinHome;
-
     try {
-      Optional<String> value = delegate.getValue(SECTION, KOTLIN_HOME_CONFIG);
-      if (value.isPresent()) {
-        // try to get kotlin home path from kotlin_home buck config
-        boolean isAbsolute = Paths.get(value.get()).isAbsolute();
-        Optional<Path> homePath = delegate.getPath(SECTION, KOTLIN_HOME_CONFIG, !isAbsolute);
+      // Check the buck configuration for a specified kotlin home
+      Optional<String> value = delegate.getValue(SECTION, "kotlin_home");
 
+      if (value.isPresent()) {
+        boolean isAbsolute = Paths.get(value.get()).isAbsolute();
+        Optional<Path> homePath = delegate.getPath(SECTION, "kotlin_home", !isAbsolute);
         if (homePath.isPresent() && Files.isDirectory(homePath.get())) {
-          kotlinHome = homePath.get().toRealPath().normalize();
+          return homePath.get().toRealPath().normalize();
         } else {
           throw new HumanReadableException(
               "Kotlin home directory (" + homePath + ") specified in .buckconfig was not found.");
@@ -125,7 +224,7 @@ public class KotlinBuckConfig {
         // If the KOTLIN_HOME environment variable is specified we trust it
         String home = delegate.getEnvironment().get("KOTLIN_HOME");
         if (home != null) {
-          kotlinHome = Paths.get(home).normalize();
+          return Paths.get(home).normalize();
         } else {
           // Lastly, we try to resolve from the system PATH
           Optional<Path> compiler =
@@ -136,6 +235,7 @@ public class KotlinBuckConfig {
             if (kotlinHome != null && kotlinHome.endsWith(Paths.get("bin"))) {
               kotlinHome = kotlinHome.getParent().normalize();
             }
+            return kotlinHome;
           } else {
             throw new HumanReadableException(
                 "Could not resolve kotlin home directory, Consider setting KOTLIN_HOME.");
@@ -146,7 +246,5 @@ public class KotlinBuckConfig {
       throw new HumanReadableException(
           "Could not resolve kotlin home directory, Consider setting KOTLIN_HOME.", io);
     }
-
-    return kotlinHome;
   }
 }
