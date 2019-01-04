@@ -71,11 +71,10 @@
     timeout = 90000
 [resources]
     resource_aware_scheduling_enabled = true
-
 [ui]
-  build_rule_minimum_duration_millis=500
-  maximum_target_typo_distance_allowed = 3
-  maximum_target_suggestions_display = 3
+     build_rule_minimum_duration_millis=500
+     maximum_target_typo_distance_allowed = 3
+     maximum_target_suggestions_display = 3
 [parser]
-  default_build_file_syntax=skylark
-  enable_configurable_attributes = true
+     default_build_file_syntax=skylark
+     enable_configurable_attributes = true
