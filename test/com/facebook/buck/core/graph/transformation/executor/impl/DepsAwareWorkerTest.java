@@ -313,7 +313,26 @@ public class DepsAwareWorkerTest {
     testThread.interrupt();
 
     AtomicBoolean taskDone = new AtomicBoolean();
-    DefaultDepsAwareTask taskAfterInterrupt =
+    // create a task that runs in the worker and verifies that it got the interrupted flag.
+    // We could race with the interrupt due to implementation of the LinkedBlockingDeque.
+    DefaultDepsAwareTask<?> waitForInterrupt =
+        DefaultDepsAwareTask.of(
+            () -> {
+              try {
+                while (!Thread.currentThread().isInterrupted()) {
+                  Thread.sleep(50);
+                }
+              } catch (InterruptedException e) {
+                // reset the interrupt flag
+                Thread.currentThread().interrupt();
+              }
+              return null;
+            });
+    Verify.verify(
+        waitForInterrupt.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
+    workQueue.put(waitForInterrupt);
+
+    DefaultDepsAwareTask<?> taskAfterInterrupt =
         DefaultDepsAwareTask.of(
             () -> {
               taskDone.set(true);
