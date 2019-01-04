@@ -93,6 +93,26 @@ public class StackedDownloader implements Downloader {
         } catch (MalformedURLException e) {
           throw new HumanReadableException("Unable to determine path from %s", repo);
         }
+      } else if (repo.startsWith("gradle:")) {
+        try {
+          URL url = OnDiskGradleDownloader.getUrl(repo, config);
+          Objects.requireNonNull(url.getPath());
+
+          downloaders.add(
+              new OnDiskGradleDownloader(
+                  config.resolvePathThatMayBeOutsideTheProjectFilesystem(
+                      Paths.get(url.getPath()))));
+        } catch (FileNotFoundException e) {
+          throw new HumanReadableException(
+              e,
+              "Error occurred when attempting to use %s "
+                  + "as a local Gradle repository as configured in .buckconfig.  See "
+                  + "https://buckbuild.com/concept/buckconfig.html#maven_repositories for how to "
+                  + "configure this setting",
+              repo);
+        } catch (MalformedURLException e) {
+          throw new HumanReadableException("Unable to determine path from %s", repo);
+        }
       } else {
         try {
           downloaders.add(

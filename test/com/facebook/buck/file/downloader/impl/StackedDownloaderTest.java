@@ -122,6 +122,9 @@ public class StackedDownloaderTest {
     Path m2Root = vfs.getPath(jimfAbsolutePath("/home/user/.m2/repository"));
     Files.createDirectories(m2Root);
 
+    Path gradleRoot = vfs.getPath(jimfAbsolutePath("/home/user/.gradle/cache"));
+    Files.createDirectories(gradleRoot);
+
     // Set up a config so we expect to see both a local and a remote maven repo.
     Path projectRoot = vfs.getPath(jimfAbsolutePath("/opt/local/src"));
     Files.createDirectories(projectRoot);
@@ -131,7 +134,8 @@ public class StackedDownloaderTest {
             .setSections(
                 "[maven_repositories]",
                 "local = " + m2Root,
-                "central = https://repo1.maven.org/maven2")
+                "central = https://repo1.maven.org/maven2",
+                "gradle = gradle:/home/user/.gradle/cache")
             .build();
 
     Downloader downloader =
@@ -143,17 +147,21 @@ public class StackedDownloaderTest {
     List<Downloader> downloaders = unpackDownloaders(downloader);
     boolean seenRemote = false;
     boolean seenLocal = false;
+    boolean seenGradle = false;
 
     for (Downloader seen : downloaders) {
       if (seen instanceof RemoteMavenDownloader) {
         seenRemote = true;
       } else if (seen instanceof OnDiskMavenDownloader) {
         seenLocal = true;
+      } else if (seen instanceof OnDiskGradleDownloader) {
+        seenGradle = true;
       }
     }
 
     assertTrue(seenLocal);
     assertTrue(seenRemote);
+    assertTrue(seenGradle);
   }
 
   private static String jimfAbsolutePath(String path) {

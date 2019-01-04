@@ -16,59 +16,27 @@
 
 package com.facebook.buck.file.downloader.impl;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.file.downloader.Downloader;
-import com.facebook.buck.file.downloader.impl.DownloadEvent.Started;
-import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/** A {@link Downloader} that pulls content from the local file system. */
-public class OnDiskMavenDownloader implements Downloader {
-
+/** A {@link Downloader} that pulls content in maven format from the local file system. */
+public class OnDiskMavenDownloader extends AbstractOnDiskDownloader {
   private static final Optional<String> SPOOF_MAVEN_REPO = Optional.of("http://example.com");
-  private final Path root;
 
   public OnDiskMavenDownloader(Path root) throws FileNotFoundException {
-
-    if (!Files.exists(root)) {
-      throw new FileNotFoundException(
-          String.format("Maven root %s doesn't exist", root.toString()));
-    }
-
-    this.root = root;
+    super(root);
   }
 
   @Override
-  public boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
-    if (!"mvn".equals(uri.getScheme())) {
-      return false;
-    }
-
+  public Path getTargetPath(URI uri) {
     // Get the URL that the maven item is located at.
-    uri = MavenUrlDecoder.toHttpUrl(SPOOF_MAVEN_REPO, uri);
+    URI decodedUri = MavenUrlDecoder.toHttpUrl(SPOOF_MAVEN_REPO, uri);
 
-    // The path is absolute, which we don't want. Make it relative by just ignoring the leading
-    // slash.
-    Path target = root.resolve(uri.getPath().substring(1));
-
-    if (!Files.exists(target)) {
-      throw new IOException(String.format("Unable to download %s (derived from %s)", target, uri));
-    }
-
-    Started started = DownloadEvent.started(target.toUri());
-    eventBus.post(started);
-
-    try (InputStream is = new BufferedInputStream(Files.newInputStream(target))) {
-      Files.copy(is, output);
-    } finally {
-      eventBus.post(DownloadEvent.finished(started));
-    }
-    return true;
+    // The path is absolute, which we don't want.
+    // Make it relative by just ignoring the leading slash.
+    return getRoot().resolve(decodedUri.getPath().substring(1));
   }
 }

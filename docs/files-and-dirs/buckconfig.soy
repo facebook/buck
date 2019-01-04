@@ -3588,12 +3588,18 @@ int run_starter(
   {param description}
     This section defines the set of maven repositories that Buck can use when attempting to resolve
     maven artifacts.  It takes the form of key value pairs of a short name for the repo and the URL.
-    The URL may either be an HTTP(S) URL, or point to a directory on your local disk.
+    The URL may either be an:
+    - HTTP(S) URL
+    - point to a directory on your local disk
+    - gradle cache directory. should be prefixed with 'gradle:' and can have an optional 'GRADLE_USER_HOME', which will be picked up from the system env.
+
+    These repos are tried based on the natural ordering of their names.
 
 {literal}<pre class="prettyprint lang-ini">
 [maven_repositories]
   central = https://repo1.maven.org/maven2
   m2 = ~/.m2/repository
+  gradle = gradle:GRADLE_USER_HOME/caches/modules-2/files-2.1/
 </pre>{/literal}
 <p>
 Note that if you are using Buck to talk to Maven and you are using IPv6, you
