@@ -82,8 +82,7 @@ public class BuckCellManagerImplTest extends PlatformTestCase {
 
   @Nonnull
   private BuckCellManagerImpl createBuckCellManager() {
-    return new BuckCellManagerImpl(
-        getProject(), buckCellSettingsProvider, virtualFileManager, pathMacroManager);
+    return new BuckCellManagerImpl(buckCellSettingsProvider, virtualFileManager, pathMacroManager);
   }
 
   public void testGetNamedDefaultCell() {

@@ -39,7 +39,6 @@ public class BuckCellManagerImpl implements BuckCellManager {
 
   private static final Logger LOGGER = Logger.getInstance(BuckCellManagerImpl.class);
 
-  private Project mProject;
   private BuckCellSettingsProvider mBuckCellSettingsProvider;
   private VirtualFileManager mVirtualFileManager;
   private PathMacroManager mPathMacroManager;
@@ -49,18 +48,12 @@ public class BuckCellManagerImpl implements BuckCellManager {
   }
 
   public BuckCellManagerImpl(
-      Project project,
       BuckCellSettingsProvider buckCellSettingsProvider,
       VirtualFileManager virtualFileManager,
       PathMacroManager pathMacroManager) {
-    mProject = project;
     mBuckCellSettingsProvider = buckCellSettingsProvider;
     mVirtualFileManager = virtualFileManager;
     mPathMacroManager = pathMacroManager;
-  }
-
-  public Project getProject() {
-    return mProject;
   }
 
   @Override
