@@ -296,4 +296,55 @@ public class BuckTargetTest {
     BuckTarget resolved = base.relativize(other);
     assertEquals(":qux", resolved.toString());
   }
+
+  @Test
+  public void flattenFullyQualified() {
+    BuckTarget original = assertCanParse("foo//bar:baz/qux");
+    BuckTarget expected = assertCanParse("foo//bar/baz:qux");
+    assertOptionalEquals(expected, original.flatten());
+  }
+
+  @Test
+  public void flattenWithNoCell() {
+    BuckTarget original = assertCanParse("//bar:baz/qux");
+    BuckTarget expected = assertCanParse("//bar/baz:qux");
+    assertOptionalEquals(expected, original.flatten());
+  }
+
+  @Test
+  public void flattenWithEmptyPath() {
+    BuckTarget original = assertCanParse("//:bar/baz/qux");
+    BuckTarget expected = assertCanParse("//bar/baz:qux");
+    assertOptionalEquals(expected, original.flatten());
+  }
+
+  @Test
+  public void flattenPreservesTrailingSlash() {
+    BuckTarget original = assertCanParse("foo//bar:baz/qux/");
+    BuckTarget expected = assertCanParse("foo//bar/baz:qux/");
+    assertOptionalEquals(expected, original.flatten());
+  }
+
+  @Test
+  public void cannotFlattenRelativeTarget() {
+    BuckTarget original = assertCanParse(":foo/bar");
+    assertOptionalEquals(null, original.flatten());
+  }
+
+  @Test
+  public void whenFlatteningMakesNoChange() {
+    String[] targetStrings = {
+      ":foo",
+      "//:foo",
+      "//foo:bar",
+      "//foo/bar:baz",
+      "foo//:bar",
+      "foo//bar:baz",
+      "foo//bar/baz:qux",
+    };
+    for (String targetString : targetStrings) {
+      BuckTarget original = assertCanParse(targetString);
+      assertOptionalEquals(original, original.flatten());
+    }
+  }
 }

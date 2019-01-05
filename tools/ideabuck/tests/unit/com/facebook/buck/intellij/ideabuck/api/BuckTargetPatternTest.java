@@ -711,4 +711,62 @@ public class BuckTargetPatternTest {
     BuckTargetPattern base = assertCanParse("//foo:bar");
     assertEquals(assertCanParse("//foo/..."), base.asRecursivePackageMatchingPattern());
   }
+
+  @Test
+  public void flattenFullyQualified() {
+    BuckTargetPattern original = assertCanParse("foo//bar:baz/qux");
+    BuckTargetPattern expected = assertCanParse("foo//bar/baz:qux");
+    assertOptionalEquals(expected, original.flatten());
+  }
+
+  @Test
+  public void flattenWithNoCell() {
+    BuckTargetPattern original = assertCanParse("//bar:baz/qux");
+    BuckTargetPattern expected = assertCanParse("//bar/baz:qux");
+    assertOptionalEquals(expected, original.flatten());
+  }
+
+  @Test
+  public void flattenWithEmptyPath() {
+    BuckTargetPattern original = assertCanParse("//:bar/baz/qux");
+    BuckTargetPattern expected = assertCanParse("//bar/baz:qux");
+    assertOptionalEquals(expected, original.flatten());
+  }
+
+  @Test
+  public void flattenPreservesTrailingSlash() {
+    BuckTargetPattern original = assertCanParse("foo//bar:baz/qux/");
+    BuckTargetPattern expected = assertCanParse("foo//bar/baz:qux/");
+    assertOptionalEquals(expected, original.flatten());
+  }
+
+  @Test
+  public void cannotFlattenRelativeTarget() {
+    BuckTargetPattern original = assertCanParse(":foo/bar");
+    assertOptionalEquals(null, original.flatten());
+  }
+
+  @Test
+  public void whenFlatteningMakesNoChange() {
+    String[] patternStrings = {
+      ":foo",
+      "//:foo",
+      "//foo:bar",
+      "//foo/bar:baz",
+      "foo//:bar",
+      "foo//bar:baz",
+      "foo//bar/baz:qux",
+    };
+    for (String patternString : patternStrings) {
+      BuckTargetPattern original = assertCanParse(patternString);
+      assertOptionalEquals(original, original.flatten());
+
+      // For patterns that aren't targets, flattening never changes them
+      BuckTargetPattern packageMatching = original.asPackageMatchingPattern();
+      assertOptionalEquals(packageMatching, packageMatching.flatten());
+
+      BuckTargetPattern recursive = original.asRecursivePackageMatchingPattern();
+      assertOptionalEquals(recursive, recursive.flatten());
+    }
+  }
 }

@@ -16,10 +16,13 @@
 
 package com.facebook.buck.intellij.ideabuck.api;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -166,6 +169,40 @@ public class BuckTarget {
     } else {
       return new BuckTarget(null, null, other.ruleName);
     }
+  }
+
+  /**
+   * Returns a syntatically valid (but semantically different) variation of this target, with
+   * hierarchical path elements in the rule name moved to the path. Example, {@code foo//bar:baz/qux
+   * => foo//bar/baz:qux}.
+   *
+   * <p>This conceit is imperfect but somewhat useful to resolve targets targets inside extension
+   * files, as this sometimes allows intrafile targets to be syntactically resolved.
+   *
+   * <p>Note that while some tools will resolve these targets similarly, they are not semantically
+   * interchangeable: {@code foo//bar:baz/qux} refers to a target in the buildfile in {@code
+   * foo/bar}, while {@code foo//bar/baz:qux} refers to a target in the buildfile in {@code
+   * foo/bar/baz}. Furthermore, when using a {@link BuckTarget} to represent the first argument to a
+   * {@code load()} directive, if there were a buildfile present in foo/bar/baz, it would be
+   * incorrect to use {@code foo/bar:baz/qux}, as this would cross a package boundary.
+   */
+  public Optional<BuckTarget> flatten() {
+    if (!ruleName.contains("/")) {
+      return Optional.of(this);
+    }
+    if (cellPath == null) {
+      return Optional.empty();
+    }
+    List<String> pieces = new ArrayList<>();
+    Splitter splitter = Splitter.on('/').omitEmptyStrings();
+    splitter.split(cellPath).forEach(pieces::add);
+    splitter.split(ruleName).forEach(pieces::add);
+    String newRule = pieces.remove(pieces.size() - 1);
+    String newPath = Joiner.on('/').join(pieces);
+    if (ruleName.endsWith("/")) {
+      newRule += '/';
+    }
+    return Optional.of(new BuckTarget(cellName, newPath, newRule));
   }
 
   @Override

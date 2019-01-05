@@ -310,6 +310,20 @@ public class BuckTargetPattern {
     return new BuckTargetPattern(cellName, cellPath, "/...");
   }
 
+  /**
+   * Returns a syntatically valid (but semantically different) variation of this target pattern,
+   * with hierarchical path elements in the rule name moved to the path. Example, {@code
+   * foo//bar:baz/qux => foo//bar/baz:qux}.
+   *
+   * @see {@link BuckTarget#flatten()} for more details.
+   */
+  public Optional<BuckTargetPattern> flatten() {
+    if (suffix == null || !suffix.contains("/") || isRecursivePackageMatching()) {
+      return Optional.of(this);
+    }
+    return asBuckTarget().flatMap(BuckTarget::flatten).map(BuckTarget::asPattern);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
