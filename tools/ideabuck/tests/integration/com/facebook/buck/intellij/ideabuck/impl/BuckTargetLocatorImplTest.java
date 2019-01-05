@@ -117,7 +117,10 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
     return createFile(defaultCell, defaultCellRelativePath);
   }
 
-  private VirtualFile asVirtualFile(Path expectedPath) {
+  private VirtualFile asVirtualFile(@Nullable Path expectedPath) {
+    if (expectedPath == null) {
+      return null;
+    }
     return project.getBaseDir().getFileSystem().refreshAndFindFileByPath(expectedPath.toString());
   }
 
@@ -322,5 +325,109 @@ public class BuckTargetLocatorImplTest extends PlatformTestCase {
 
     // Check that a directory named the same as the buildfile.name doesn't fool us
     checkFindTargetPatternFrom(createFile(cell, "one/x/FOO/y"), "foo//one:x/FOO/y");
+  }
+
+  // Check findBuckFileForVirtualFile and findBuckFileForPath together
+  private void checkFindBuckFile(@Nullable Path expectedBuckFilePath, Path sourceFilePath) {
+    assertOptionalEquals(
+        expectedBuckFilePath, buckTargetLocator.findBuckFileForPath(sourceFilePath));
+    assertOptionalEquals(
+        asVirtualFile(expectedBuckFilePath),
+        buckTargetLocator.findBuckFileForVirtualFile(asVirtualFile(sourceFilePath)));
+  }
+
+  public void testFindBuckFileInDefaultCell() {
+    Path level0BazelFile = createFileInDefaultCell("defs.bzl");
+    Path level1BuildFile = createFileInDefaultCell("a/BUCK");
+    Path level2BazelFile = createFileInDefaultCell("a/b/defs.bzl");
+    Path level3BuildFile = createFileInDefaultCell("a/b/c/BUCK");
+    Path level4BazelFile = createFileInDefaultCell("a/b/c/d/defs.bzl");
+
+    checkFindBuckFile(null, level0BazelFile);
+    checkFindBuckFile(level1BuildFile, level1BuildFile);
+    checkFindBuckFile(level1BuildFile, level2BazelFile);
+    checkFindBuckFile(level3BuildFile, level3BuildFile);
+    checkFindBuckFile(level3BuildFile, level4BazelFile);
+  }
+
+  public void testFindBuckFileInNamedCell() {
+    BuckCell cell = addCell("foo", "foo", "FOO");
+    Path level0BazelFile = createFile(cell, "defs.bzl");
+    Path level1BuildFile = createFile(cell, "a/FOO");
+    Path level2BazelFile = createFile(cell, "a/b/defs.bzl");
+    Path level3BuildFile = createFile(cell, "a/b/c/FOO");
+    Path level4BazelFile = createFile(cell, "a/b/c/d/defs.bzl");
+
+    checkFindBuckFile(null, level0BazelFile);
+    checkFindBuckFile(level1BuildFile, level1BuildFile);
+    checkFindBuckFile(level1BuildFile, level2BazelFile);
+    checkFindBuckFile(level3BuildFile, level3BuildFile);
+    checkFindBuckFile(level3BuildFile, level4BazelFile);
+  }
+
+  /*
+   * To ensure consistency, check the permutations of resolve methods
+   * (for both VirtualFile/Path, and Targets/Patterns) together
+   */
+  private void checkResolveFrom(
+      String expectedPatternString, Path sourcePath, String sourcePatternString) {
+    BuckTargetPattern expectedPattern = unwrap(BuckTargetPattern.parse(expectedPatternString));
+    BuckTargetPattern sourcePattern = unwrap(BuckTargetPattern.parse(sourcePatternString));
+    assertOptionalEquals(expectedPattern, buckTargetLocator.resolve(sourcePath, sourcePattern));
+    assertOptionalEquals(
+        expectedPattern, buckTargetLocator.resolve(asVirtualFile(sourcePath), sourcePattern));
+
+    expectedPattern
+        .asBuckTarget()
+        .ifPresent(
+            expectedTarget -> {
+              sourcePattern
+                  .asBuckTarget()
+                  .ifPresent(
+                      sourceTarget -> {
+                        assertOptionalEquals(
+                            expectedTarget, buckTargetLocator.resolve(sourcePath, sourceTarget));
+                        assertOptionalEquals(
+                            expectedTarget,
+                            buckTargetLocator.resolve(asVirtualFile(sourcePath), sourceTarget));
+                      });
+            });
+  }
+
+  public void testResolveInDefaultCell() {
+    Path level0BazelFile = createFileInDefaultCell("defs.bzl");
+    Path level1BuildFile = createFileInDefaultCell("a/BUCK");
+    Path level2BazelFile = createFileInDefaultCell("a/b/defs.bzl");
+    Path level3BuildFile = createFileInDefaultCell("a/b/c/BUCK");
+    Path level4BazelFile = createFileInDefaultCell("a/b/c/d/defs.bzl");
+
+    checkResolveFrom("//:defs.bzl", level0BazelFile, ":defs.bzl");
+    checkResolveFrom("//a:defs.bzl", level1BuildFile, ":defs.bzl");
+    checkResolveFrom("//a/b:defs.bzl", level2BazelFile, ":defs.bzl");
+    checkResolveFrom("//a/b/c:defs.bzl", level3BuildFile, ":defs.bzl");
+    checkResolveFrom("//a/b/c/d:defs.bzl", level4BazelFile, ":defs.bzl");
+
+    checkResolveFrom("//:a/b/defs.bzl", level0BazelFile, ":a/b/defs.bzl");
+    checkResolveFrom("//a:b/defs.bzl", level1BuildFile, ":b/defs.bzl");
+    checkResolveFrom("//a/b:defs.bzl", level2BazelFile, ":defs.bzl");
+  }
+
+  public void testResolveInNamedCell() {
+    BuckCell cell = addCell("foo", "foo", "FOO");
+    Path level0BazelFile = createFile(cell, "defs.bzl");
+    Path level1BuildFile = createFile(cell, "a/FOO");
+    Path level2BazelFile = createFile(cell, "a/b/defs.bzl");
+    Path level3BuildFile = createFile(cell, "a/b/c/FOO");
+    Path level4BazelFile = createFile(cell, "a/b/c/d/defs.bzl");
+
+    checkResolveFrom("foo//:defs.bzl", level0BazelFile, ":defs.bzl");
+    checkResolveFrom("foo//a:defs.bzl", level1BuildFile, ":defs.bzl");
+    checkResolveFrom("foo//a/b:defs.bzl", level2BazelFile, ":defs.bzl");
+    checkResolveFrom("foo//a/b/c:defs.bzl", level3BuildFile, ":defs.bzl");
+    checkResolveFrom("foo//a/b/c/d:defs.bzl", level4BazelFile, ":defs.bzl");
+
+    checkResolveFrom("foo//:a/b/defs.bzl", level0BazelFile, ":a/b/defs.bzl");
+    checkResolveFrom("foo//a:b/defs.bzl", level1BuildFile, ":b/defs.bzl");
+    checkResolveFrom("foo//a/b:defs.bzl", level2BazelFile, ":defs.bzl");
   }
 }

@@ -175,14 +175,14 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
                             if (packageDir == null) {
                               return null;
                             }
+                            String canonicalPackageDir = packageDir.getCanonicalPath();
+                            if (canonicalPackageDir == null
+                                || canonicalPackageDir.length() < cellRoot.length()) {
+                              return null;
+                            }
                             VirtualFile buckFile = packageDir.findChild(cell.getBuildfileName());
                             if (buckFile != null && buckFile.exists() && !buckFile.isDirectory()) {
                               return buckFile;
-                            }
-                            String canonicalPackageDir = packageDir.getCanonicalPath();
-                            if (canonicalPackageDir == null
-                                || !canonicalPackageDir.startsWith(cellRoot)) {
-                              return null;
                             }
                             packageDir = packageDir.getParent();
                           }
@@ -201,13 +201,13 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
                 if (packageDir == null) {
                   return null;
                 }
+                if (packageDir.getNameCount() < cellRoot.getNameCount()) {
+                  return null;
+                }
                 Path buckPath = packageDir.resolve(cell.getBuildfileName());
                 File buckFile = buckPath.toFile();
                 if (buckFile.exists() && buckFile.isFile()) {
                   return buckPath;
-                }
-                if (buckPath.getNameCount() <= cellRoot.getNameCount()) {
-                  return null;
                 }
                 packageDir = packageDir.getParent();
               }
@@ -219,6 +219,7 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
     if (target.isAbsolute()) {
       return target;
     }
+
     @Nullable
     String defaultCellName = mBuckCellManager.getDefaultCell().flatMap(Cell::getName).orElse(null);
     return BuckTargetPattern.forCellName(defaultCellName).resolve(target);
@@ -229,7 +230,9 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
     if (target.isAbsolute()) {
       return Optional.of(target);
     } else {
-      return findTargetPatternForPath(sourceFile).map(base -> base.resolve(target));
+      return findTargetPatternForPath(sourceFile)
+          .flatMap(BuckTargetPattern::flatten)
+          .map(base -> base.resolve(target));
     }
   }
 
@@ -238,7 +241,9 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
     if (target.isAbsolute()) {
       return Optional.of(target);
     } else {
-      return findTargetPatternForVirtualFile(sourceFile).map(base -> base.resolve(target));
+      return findTargetPatternForVirtualFile(sourceFile)
+          .flatMap(BuckTargetPattern::flatten)
+          .map(base -> base.resolve(target));
     }
   }
 
@@ -257,7 +262,9 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
     if (pattern.isAbsolute()) {
       return Optional.of(pattern);
     } else {
-      return findTargetPatternForPath(sourceFile).map(base -> base.resolve(pattern));
+      return findTargetPatternForPath(sourceFile)
+          .flatMap(BuckTargetPattern::flatten)
+          .map(base -> base.resolve(pattern));
     }
   }
 
@@ -266,7 +273,9 @@ public class BuckTargetLocatorImpl implements BuckTargetLocator {
     if (pattern.isAbsolute()) {
       return Optional.of(pattern);
     } else {
-      return findTargetPatternForVirtualFile(sourceFile).map(base -> base.resolve(pattern));
+      return findTargetPatternForVirtualFile(sourceFile)
+          .flatMap(BuckTargetPattern::flatten)
+          .map(base -> base.resolve(pattern));
     }
   }
 
