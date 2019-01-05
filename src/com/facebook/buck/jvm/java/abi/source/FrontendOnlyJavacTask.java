@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -57,7 +56,7 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
   @Nullable private TreeBackedTypes types;
 
   @Nullable private Iterable<? extends CompilationUnitTree> parsedCompilationUnits;
-  @Nullable private List<TreeBackedTypeElement> topLevelElements;
+  @Nullable private List<Element> topLevelElements;
   private boolean stopCompilationAfterEnter = false;
 
   public FrontendOnlyJavacTask(JavacTask task) {
@@ -79,13 +78,12 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
   }
 
   @Override
-  public Iterable<? extends TypeElement> enter() throws IOException {
-    Iterable<? extends TypeElement> javacTopLevelElements = super.enter();
+  public Iterable<? extends Element> enter() throws IOException {
+    Iterable<? extends Element> javacTopLevelElements = super.enter();
 
     topLevelElements =
         StreamSupport.stream(javacTopLevelElements.spliterator(), false)
             .map(getElements()::getCanonicalElement)
-            .map(element -> (TreeBackedTypeElement) element)
             .collect(Collectors.toList());
 
     return topLevelElements;

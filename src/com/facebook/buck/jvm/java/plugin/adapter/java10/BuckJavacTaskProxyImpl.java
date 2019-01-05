@@ -31,7 +31,6 @@ import java.util.stream.StreamSupport;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Types;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -63,7 +62,7 @@ public class BuckJavacTaskProxyImpl implements BuckJavacTaskProxy {
   }
 
   @Override
-  public Iterable<? extends TypeElement> enter() throws IOException {
+  public Iterable<? extends Element> enter() throws IOException {
     return javacTask.enter();
   }
 

@@ -36,7 +36,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
@@ -90,11 +89,11 @@ public class BuckJavacTask extends JavacTaskWrapper {
     return result;
   }
 
-  public Iterable<? extends TypeElement> enter() throws IOException {
+  public Iterable<? extends Element> enter() throws IOException {
     try {
       @SuppressWarnings("unchecked")
-      Iterable<? extends TypeElement> result =
-          (Iterable<? extends TypeElement>) inner.getClass().getMethod("enter").invoke(inner);
+      Iterable<? extends Element> result =
+          (Iterable<? extends Element>) inner.getClass().getMethod("enter").invoke(inner);
       return result;
     } catch (IllegalAccessException | NoSuchMethodException e) {
       throw new RuntimeException(e);

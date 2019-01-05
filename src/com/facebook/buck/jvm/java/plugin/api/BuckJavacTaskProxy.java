@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Types;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
@@ -63,7 +62,7 @@ public interface BuckJavacTaskProxy extends JavaCompiler.CompilationTask {
 
   Iterable<CompilationUnitTreeProxy> parse() throws IOException;
 
-  Iterable<? extends TypeElement> enter() throws IOException;
+  Iterable<? extends Element> enter() throws IOException;
 
   Iterable<? extends Element> analyze() throws IOException;
 
