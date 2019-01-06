@@ -292,24 +292,32 @@ class BuckTool(object):
 
     def _add_args(self, argv, args):
         """
-        Add new arguments to the beginning of arguments string
-        Adding to the end will mess up with custom test runner params
+        Add new arguments to the end of arguments string
+        But before optional arguments to test runner ("--")
         """
-        if len(argv) < 2:
-            return argv + args
-        return [argv[0]] + args + argv[1:]
+        try:
+            pos = argv.index("--")
+        except ValueError:
+            # "--" not found, just add to the end of the list
+            pos = len(argv)
+
+        return argv[:pos] + args + argv[pos:]
 
     def _add_args_from_env(self, argv):
         """
         Implicitly add command line arguments based on environmental variables. This is a bad
         practice and should be considered for infrastructure / debugging purposes only
         """
+        args = []
 
         if os.environ.get("BUCK_NO_CACHE") == "1" and "--no-cache" not in argv:
-            argv = self._add_args(argv, ["--no-cache"])
+            args.append("--no-cache")
         if os.environ.get("BUCK_CACHE_READONLY") == "1":
-            argv = self._add_args(argv, ["-c", "cache.http_mode=readonly"])
-        return argv
+            args.append("-c")
+            args.append("cache.http_mode=readonly")
+        if len(args) == 0:
+            return argv
+        return self._add_args(argv, args)
 
     def _run_with_nailgun(self, argv, env, java10_test_mode):
         """
