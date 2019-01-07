@@ -27,6 +27,7 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 
 public class FauxScalaLibraryBuilder
@@ -38,7 +39,8 @@ public class FauxScalaLibraryBuilder
 
   private final ProjectFilesystem projectFilesystem;
 
-  private FauxScalaLibraryBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
+  private FauxScalaLibraryBuilder(
+      BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
     super(
         new ScalaLibraryDescription(
             new ToolchainProviderBuilder()
@@ -49,12 +51,13 @@ public class FauxScalaLibraryBuilder
             null,
             null),
         target,
-        projectFilesystem);
+        projectFilesystem,
+        hashCode);
     this.projectFilesystem = projectFilesystem;
   }
 
   public static FauxScalaLibraryBuilder createBuilder(BuildTarget target) {
-    return new FauxScalaLibraryBuilder(target, new FakeProjectFilesystem());
+    return new FauxScalaLibraryBuilder(target, new FakeProjectFilesystem(), null);
   }
 
   public FauxScalaLibraryBuilder addSrc(SourcePath path) {

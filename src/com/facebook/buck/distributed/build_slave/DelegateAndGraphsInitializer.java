@@ -212,7 +212,8 @@ public class DelegateAndGraphsInitializer {
             args.getKnownRuleTypesProvider(),
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(
-                typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY));
+                typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
+            args.getRuleKeyConfiguration());
 
     return new DistBuildTargetGraphCodec(
         Objects.requireNonNull(args.getExecutorService()),

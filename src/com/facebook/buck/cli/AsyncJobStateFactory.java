@@ -98,7 +98,8 @@ public class AsyncJobStateFactory {
             params.getKnownRuleTypesProvider(),
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(
-                typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY));
+                typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
+            params.getRuleKeyConfiguration());
     DistBuildTargetGraphCodec targetGraphCodec =
         new DistBuildTargetGraphCodec(
             executorService,

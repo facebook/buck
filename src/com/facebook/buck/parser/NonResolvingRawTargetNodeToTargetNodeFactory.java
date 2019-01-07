@@ -87,6 +87,7 @@ public class NonResolvingRawTargetNodeToTargetNodeFactory
 
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(
+            rawTargetNode.getHashCode(),
             description,
             constructorArg,
             targetCell.getFilesystem(),

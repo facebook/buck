@@ -100,6 +100,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
 
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(
+            rawTargetNode.getHashCode(),
             description,
             constructorArg,
             targetCell.getFilesystem(),

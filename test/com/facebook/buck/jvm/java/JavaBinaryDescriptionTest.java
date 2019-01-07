@@ -112,7 +112,7 @@ public class JavaBinaryDescriptionTest {
             .setSharedLib(lib);
     JavaLibraryBuilder javaLibBuilder =
         new JavaLibraryBuilder(
-                BuildTargetFactory.newInstance("//:lib"), new FakeProjectFilesystem())
+                BuildTargetFactory.newInstance("//:lib"), new FakeProjectFilesystem(), null)
             .addDep(cxxLibBuilder.getTarget())
             .addSrc(Paths.get("test/source.java"));
     JavaBinaryRuleBuilder javaBinBuilder =

@@ -1064,14 +1064,24 @@ public class TargetsCommandIntegrationTest {
     transitiveResult.assertSuccess();
 
     ImmutableList<String> foundNonTransitiveTargets =
-        extractTargetsFromOutput(nontransitiveResult.getStdout());
+        Arrays.stream(nontransitiveResult.getStdout().split(System.lineSeparator()))
+            .map(line -> line.split("\\s+")[0])
+            .collect(ImmutableList.toImmutableList());
     ImmutableList<String> foundTransitiveTargets =
-        extractTargetsFromOutput(transitiveResult.getStdout());
+        Arrays.stream(transitiveResult.getStdout().split(System.lineSeparator()))
+            .map(line -> line.split("\\s+")[0])
+            .collect(ImmutableList.toImmutableList());
 
     ImmutableMap<String, String> foundNonTransitiveTargetsAndHashes =
-        extractTargetsAndHashesFromOutput(nontransitiveResult.getStdout());
+        Arrays.stream(nontransitiveResult.getStdout().split(System.lineSeparator()))
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    line -> line.split("\\s+")[0], line -> line.split("\\s+")[1]));
     ImmutableMap<String, String> foundTransitiveTargetsAndHashes =
-        extractTargetsAndHashesFromOutput(transitiveResult.getStdout());
+        Arrays.stream(transitiveResult.getStdout().split(System.lineSeparator()))
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    line -> line.split("\\s+")[0], line -> line.split("\\s+")[1]));
 
     assertThat(foundNonTransitiveTargets, Matchers.containsInAnyOrder("//foo:main", "//bar:main"));
     assertThat(
@@ -1120,83 +1130,6 @@ public class TargetsCommandIntegrationTest {
         result.getStderr(),
         containsString(
             "Must specify at least one build target pattern. See https://buckbuild.com/concept/build_target_pattern.html"));
-  }
-
-  @Test
-  public void testTargetHashesAreTheSameWithTheSameConfiguration() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "targets_command_with_configurable_attributes", tmp);
-    workspace.setUp();
-
-    ProcessResult resultWithConfigA1 =
-        workspace.runBuckCommand("targets", "-c", "a.b=a", "--show-target-hash", "//:echo");
-    ProcessResult resultWithConfigA2 =
-        workspace.runBuckCommand("targets", "-c", "a.b=a", "--show-target-hash", "//:echo");
-
-    resultWithConfigA1.assertSuccess();
-    resultWithConfigA2.assertSuccess();
-
-    ImmutableList<String> foundTargetsWithConfigA1 =
-        extractTargetsFromOutput(resultWithConfigA1.getStdout());
-    ImmutableList<String> foundTargetsWithConfigA2 =
-        extractTargetsFromOutput(resultWithConfigA2.getStdout());
-
-    ImmutableMap<String, String> foundTargetsAndHashesWithConfigA1 =
-        extractTargetsAndHashesFromOutput(resultWithConfigA1.getStdout());
-    ImmutableMap<String, String> foundTargetsAndHashesWithConfigA2 =
-        extractTargetsAndHashesFromOutput(resultWithConfigA2.getStdout());
-
-    assertThat(foundTargetsWithConfigA1, Matchers.containsInAnyOrder("//:echo"));
-    assertThat(foundTargetsWithConfigA2, Matchers.containsInAnyOrder("//:echo"));
-    assertEquals(
-        foundTargetsAndHashesWithConfigA1.get("//:echo"),
-        foundTargetsAndHashesWithConfigA2.get("//:echo"));
-  }
-
-  @Test
-  public void testTargetHashesAreDifferentWithDistinctConfiguration() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "targets_command_with_configurable_attributes", tmp);
-    workspace.setUp();
-
-    ProcessResult resultWithConfigA =
-        workspace.runBuckCommand("targets", "-c", "a.b=a", "--show-target-hash", "//:echo");
-    ProcessResult resultWithConfigB =
-        workspace.runBuckCommand("targets", "-c", "a.b=b", "--show-target-hash", "//:echo");
-
-    resultWithConfigA.assertSuccess();
-    resultWithConfigB.assertSuccess();
-
-    ImmutableList<String> foundTargetsWithConfigA =
-        extractTargetsFromOutput(resultWithConfigA.getStdout());
-    ImmutableList<String> foundTargetsWithConfigB =
-        extractTargetsFromOutput(resultWithConfigB.getStdout());
-
-    ImmutableMap<String, String> foundTargetsAndHashesWithConfigA =
-        extractTargetsAndHashesFromOutput(resultWithConfigA.getStdout());
-    ImmutableMap<String, String> foundTargetsAndHashesWithConfigB =
-        extractTargetsAndHashesFromOutput(resultWithConfigB.getStdout());
-
-    assertThat(foundTargetsWithConfigA, Matchers.containsInAnyOrder("//:echo"));
-    assertThat(foundTargetsWithConfigB, Matchers.containsInAnyOrder("//:echo"));
-    assertNotEquals(
-        foundTargetsAndHashesWithConfigA.get("//:echo"),
-        foundTargetsAndHashesWithConfigB.get("//:echo"));
-  }
-
-  private static ImmutableList<String> extractTargetsFromOutput(String output) {
-    return Arrays.stream(output.split(System.lineSeparator()))
-        .map(line -> line.split("\\s+")[0])
-        .collect(ImmutableList.toImmutableList());
-  }
-
-  private static ImmutableMap<String, String> extractTargetsAndHashesFromOutput(String output) {
-    return Arrays.stream(output.split(System.lineSeparator()))
-        .collect(
-            ImmutableMap.toImmutableMap(
-                line -> line.split("\\s+")[0], line -> line.split("\\s+")[1]));
   }
 
   private void assertJsonMatches(

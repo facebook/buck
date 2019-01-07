@@ -425,7 +425,8 @@ public class DistBuildStateTest {
             knownRuleTypesProvider,
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(
-                typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY));
+                typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
+            TestRuleKeyConfigurationFactory.create());
 
     return new DistBuildTargetGraphCodec(
         MoreExecutors.newDirectExecutorService(),

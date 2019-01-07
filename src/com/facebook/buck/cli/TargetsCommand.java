@@ -1220,39 +1220,14 @@ public class TargetsCommand extends AbstractCommand {
     FileHashLoader fileHashLoader = createOrGetFileHashLoader(params);
 
     // Hash each target's rule description and contents of any files.
-    ImmutableMap<BuildTarget, HashCode> buildTargetHashes;
-
-    try (PerBuildState state =
-        PerBuildStateFactory.createFactory(
-                params.getTypeCoercerFactory(),
-                new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
-                params.getKnownRuleTypesProvider(),
-                new ParserPythonInterpreterProvider(
-                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
-                params.getCell().getBuckConfig(),
-                params.getWatchman(),
+    ImmutableMap<BuildTarget, HashCode> buildTargetHashes =
+        new TargetGraphHashing(
                 params.getBuckEventBus(),
-                params.getManifestServiceSupplier(),
-                params.getFileHashCache())
-            .create(
-                params.getParser().getPermState(),
-                executor,
-                params.getCell(),
-                getTargetPlatforms(),
-                getEnableParserProfiling(),
-                SpeculativeParsing.DISABLED)) {
-      buildTargetHashes =
-          new TargetGraphHashing(
-                  params.getBuckEventBus(),
-                  targetGraphWithTests,
-                  fileHashLoader,
-                  targetGraphAndNodesWithTests.getSecond(),
-                  executor,
-                  params.getRuleKeyConfiguration(),
-                  node ->
-                      params.getParser().getTargetNodeRawAttributes(state, params.getCell(), node))
-              .hashTargetGraph();
-    }
+                targetGraphWithTests,
+                fileHashLoader,
+                targetGraphAndNodesWithTests.getSecond(),
+                executor)
+            .hashTargetGraph();
 
     ImmutableMap<BuildTarget, HashCode> finalHashes =
         rehashWithTestsIfNeeded(

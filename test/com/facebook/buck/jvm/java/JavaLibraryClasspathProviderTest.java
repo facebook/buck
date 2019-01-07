@@ -38,6 +38,7 @@ import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -206,7 +207,10 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps((JavaLibrary) z));
 
     JavaLibrary mavenCoord =
-        new JavaLibraryBuilder(BuildTargetFactory.newInstance("//has:output"), filesystem)
+        new JavaLibraryBuilder(
+                BuildTargetFactory.newInstance("//has:output"),
+                filesystem,
+                HashCode.fromString("aaaa"))
             .setMavenCoords("com.example:buck:1.0")
             .addDep(z.getBuildTarget())
             .build(graphBuilder);

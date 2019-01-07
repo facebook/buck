@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
@@ -49,6 +50,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -218,6 +220,7 @@ public class TargetNodeTest {
 
     return new TargetNodeFactory(new DefaultTypeCoercerFactory())
         .createFromObject(
+            Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,
             createPopulatedConstructorArg(buildTarget, rawNode),
             filesystem,
