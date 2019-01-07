@@ -274,25 +274,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     return specs.build();
   }
 
-  /**
-   * @param cellNames
-   * @param buildTargetNames The build targets to parse, represented as strings.
-   * @return A set of {@link BuildTarget}s for the input buildTargetNames.
-   */
-  protected ImmutableSet<BuildTarget> getBuildTargets(
-      CellPathResolver cellNames, Iterable<String> buildTargetNames) {
-    ImmutableSet.Builder<BuildTarget> buildTargets = ImmutableSet.builder();
-
-    // Parse all of the build targets specified by the user.
-    for (String buildTargetName : buildTargetNames) {
-      buildTargets.add(
-          BuildTargetParser.INSTANCE.parse(
-              buildTargetName, BuildTargetPatternParser.fullyQualified(), cellNames));
-    }
-
-    return buildTargets.build();
-  }
-
   protected ExecutionContext getExecutionContext() {
     return executionContext;
   }
