@@ -17,6 +17,12 @@
       <option name="FONT_TYPE" value="2" />
     </value>
   </option>
+  <option name="BUCK.TARGET_PATTERN">
+    <value>
+      <option name="FOREGROUND" value="9876aa" deuteranopia="828eba" protanopia="828eba"/>
+      <option name="FONT_TYPE" value="2" />
+    </value>
+  </option>
   <option name="BUCK.INVALID_TARGET">
     <value>
       <option name="FOREGROUND" value="6a8759" deuteranopia="807d6e" protanopia="807d6e"/>

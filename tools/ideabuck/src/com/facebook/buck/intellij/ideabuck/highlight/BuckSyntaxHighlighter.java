@@ -55,6 +55,8 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
       createTextAttributesKey("BUCK.PROPERTY_LVALUE", DefaultLanguageHighlighterColors.PARAMETER);
   public static final TextAttributesKey BUCK_TARGET =
       createTextAttributesKey("BUCK.TARGET", DefaultLanguageHighlighterColors.STRING);
+  public static final TextAttributesKey BUCK_TARGET_PATTERN =
+      createTextAttributesKey("BUCK.TARGET_PATTERN", DefaultLanguageHighlighterColors.STRING);
   public static final TextAttributesKey BUCK_INVALID_TARGET =
       createTextAttributesKey("BUCK.INVALID_TARGET", DefaultLanguageHighlighterColors.STRING);
   public static final TextAttributesKey BUCK_IDENTIFIER =
