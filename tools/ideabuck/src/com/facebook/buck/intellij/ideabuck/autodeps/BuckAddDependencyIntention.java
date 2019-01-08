@@ -23,7 +23,6 @@ import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckJsonCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckJsonCommandHandler.Callback;
 import com.facebook.buck.intellij.ideabuck.notification.BuckNotification;
-import com.facebook.buck.intellij.ideabuck.util.BuckCellFinder;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -85,8 +84,9 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
       return null;
     }
     Project project = referenceElement.getProject();
-    BuckCellFinder buckCellFinder = BuckCellFinder.getInstance(project);
-    VirtualFile editBuildFile = buckCellFinder.findBuckFile(editSourceFile).orElse(null);
+    BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
+    VirtualFile editBuildFile =
+        buckTargetLocator.findBuckFileForVirtualFile(editSourceFile).orElse(null);
     if (editBuildFile == null) {
       return null;
     }
@@ -94,7 +94,8 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
     if (importSourceFile == null) {
       return null;
     }
-    VirtualFile importBuildFile = buckCellFinder.findBuckFile(importSourceFile).orElse(null);
+    VirtualFile importBuildFile =
+        buckTargetLocator.findBuckFileForVirtualFile(importSourceFile).orElse(null);
     if (importBuildFile == null) {
       return null;
     }
@@ -110,7 +111,6 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
     if (importModule == null) {
       return null;
     }
-    BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
     BuckTarget editSourceTarget =
         buckTargetLocator
             .findTargetPatternForVirtualFile(editSourceFile)
