@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.ideabuck.format;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListElements;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimary;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimaryWithSuffix;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSingleExpression;
@@ -32,6 +33,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.TreeMap;
 import org.jetbrains.annotations.NotNull;
 
@@ -114,15 +116,12 @@ public class DependenciesOptimizer {
                 && !EXPORTED_DEPENDENCIES_KEYWORD.equals(lValue.getText()))) {
           return;
         }
-
-        List<BuckPrimaryWithSuffix> values =
-            property.getSingleExpression().getPrimaryWithSuffixList();
-        for (BuckPrimaryWithSuffix value : values) {
-          BuckList buckList = value.getPrimary().getList();
-          if (buckList != null && buckList.getListElements() != null) {
-            uniqueSort(buckList.getListElements());
-          }
-        }
+        Optional.of(property.getSingleExpression())
+            .map(BuckSingleExpression::getPrimaryWithSuffix)
+            .map(BuckPrimaryWithSuffix::getPrimary)
+            .map(BuckPrimary::getList)
+            .map(BuckList::getListElements)
+            .ifPresent(OptimizerInstance.this::uniqueSort);
       }
     }
 

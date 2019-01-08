@@ -16,13 +16,20 @@
 
 package com.facebook.buck.intellij.ideabuck.annotator;
 
+import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
+import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
 import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
+import com.facebook.buck.intellij.ideabuck.file.BuckFileType;
 import com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighter;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionName;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadArgument;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSingleExpression;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
 import com.facebook.buck.intellij.ideabuck.util.BuckCellFinder;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
@@ -34,6 +41,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
@@ -44,77 +52,112 @@ public class BuckAnnotator implements Annotator {
 
   @Override
   public void annotate(@NotNull PsiElement psiElement, @NotNull AnnotationHolder annotationHolder) {
-    if (annotateIdentifier(psiElement, annotationHolder)) {
-      return;
-    }
-    if (annotateLoadTarget(psiElement, annotationHolder)) {
-      return;
-    }
-    if (annotateSingleExpression(psiElement, annotationHolder)) {
-      return;
+    if (psiElement instanceof BuckFunctionName) {
+      annotateFunctionName((BuckFunctionName) psiElement, annotationHolder);
+    } else if (psiElement instanceof BuckPropertyLvalue) {
+      annotateBuckPropertyLvalue((BuckPropertyLvalue) psiElement, annotationHolder);
+    } else if (psiElement instanceof BuckLoadCall) {
+      annotateLoadCall((BuckLoadCall) psiElement, annotationHolder);
+    } else if (psiElement instanceof BuckSingleExpression) {
+      annotateSingleExpression((BuckSingleExpression) psiElement, annotationHolder);
     }
   }
 
-  private boolean annotateIdentifier(PsiElement psiElement, AnnotationHolder annotationHolder) {
-    if (psiElement.getNode().getElementType() != BuckTypes.IDENTIFIER) {
-      return false;
-    }
-    PsiElement parent = psiElement.getParent();
-    assert parent != null;
-
-    if (BuckPsiUtils.testType(parent, BuckTypes.FUNCTION_NAME)) {
-      Annotation annotation = annotationHolder.createInfoAnnotation(psiElement, null);
-      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_FUNCTION_NAME);
-      return true;
-    }
-    if (BuckPsiUtils.testType(parent, BuckTypes.PROPERTY_LVALUE)) {
-      Annotation annotation = annotationHolder.createInfoAnnotation(psiElement, null);
-      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_PROPERTY_LVALUE);
-      return true;
-    }
-    return false;
+  private void annotateFunctionName(
+      BuckFunctionName functionName, AnnotationHolder annotationHolder) {
+    Optional.of(functionName)
+        .map(BuckFunctionName::getIdentifier)
+        .ifPresent(
+            identifier -> {
+              annotationHolder
+                  .createInfoAnnotation(functionName.getIdentifier(), null)
+                  .setTextAttributes(BuckSyntaxHighlighter.BUCK_FUNCTION_NAME);
+            });
   }
 
-  private boolean annotateLoadTarget(PsiElement psiElement, AnnotationHolder annotationHolder) {
-    if (psiElement.getNode().getElementType() != BuckTypes.LOAD_TARGET_ARGUMENT) {
-      return false;
-    }
-    BuckLoadTargetArgument loadTargetArgument = (BuckLoadTargetArgument) psiElement;
-    Project project = loadTargetArgument.getProject();
-    String target = BuckPsiUtils.getStringValueFromBuckString(loadTargetArgument.getString());
-    VirtualFile sourceFile = loadTargetArgument.getContainingFile().getVirtualFile();
-    BuckCellFinder buckCellFinder = BuckCellFinder.getInstance(project);
-    Optional<VirtualFile> extensionFile = buckCellFinder.findExtensionFile(sourceFile, target);
-    if (extensionFile.isPresent()) {
-      Annotation annotation =
-          annotationHolder.createInfoAnnotation(psiElement, extensionFile.get().getPath());
-      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_FILE_NAME);
-    } else {
-      annotationHolder.createErrorAnnotation(psiElement, "Cannot resolve load target");
-    }
-    return true;
+  private void annotateBuckPropertyLvalue(
+      BuckPropertyLvalue propertyLvalue, AnnotationHolder annotationHolder) {
+    Annotation annotation =
+        annotationHolder.createInfoAnnotation(propertyLvalue.getIdentifier(), null);
+    annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_PROPERTY_LVALUE);
   }
 
-  private boolean annotateSingleExpression(
-      PsiElement psiElement, AnnotationHolder annotationHolder) {
-    if (psiElement.getNode().getElementType() != BuckTypes.SINGLE_EXPRESSION) {
-      return false;
+  private void annotateLoadCall(BuckLoadCall loadCall, AnnotationHolder annotationHolder) {
+    BuckLoadTargetArgument loadTargetArgument = loadCall.getLoadTargetArgument();
+
+    BuckTarget buckTarget =
+        Optional.of(loadTargetArgument.getString())
+            .map(BuckPsiUtils::getStringValueFromBuckString)
+            .flatMap(BuckTarget::parse)
+            .orElse(null);
+    if (buckTarget == null) {
+      annotationHolder
+          .createErrorAnnotation(loadTargetArgument, "Cannot parse as load target")
+          .setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
+      return;
     }
-    BuckSingleExpression singleExpression = (BuckSingleExpression) psiElement;
-    String stringValue = BuckPsiUtils.getStringValueFromExpression(singleExpression);
-    if (stringValue == null) {
-      return false;
+    Project project = loadCall.getProject();
+    BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
+    BuckTarget extensionTarget =
+        Optional.of(loadCall.getContainingFile())
+            .map(PsiFile::getVirtualFile)
+            .flatMap(sourceFile -> buckTargetLocator.resolve(sourceFile, buckTarget))
+            .orElse(null);
+    if (extensionTarget == null) {
+      annotationHolder
+          .createErrorAnnotation(loadTargetArgument, "Cannot resolve load target")
+          .setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
+      return;
     }
-    if (annotateLocalTarget(singleExpression, stringValue, annotationHolder)) {
-      return true;
+    VirtualFile extensionFile =
+        buckTargetLocator.findVirtualFileForExtensionFile(extensionTarget).orElse(null);
+    if (extensionFile == null) {
+      String message =
+          buckTargetLocator
+              .findPathForExtensionFile(extensionTarget)
+              .map(path -> "Cannot find VirtualFile at " + path.toString())
+              .orElse("Cannot resolve path from target");
+      annotationHolder
+          .createErrorAnnotation(loadTargetArgument, message)
+          .setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
+      return;
     }
-    if (annotateAbsoluteTarget(singleExpression, stringValue, annotationHolder)) {
-      return true;
+    if (extensionFile.getFileType() != BuckFileType.INSTANCE) {
+      String message =
+          "Cannot parse file extension for more info (perhaps the file extension is not associated with the ideabuck plugin?)";
+      annotationHolder.createWeakWarningAnnotation(loadTargetArgument, message);
+      return;
     }
-    if (annotateLocalFile(singleExpression, stringValue, annotationHolder)) {
-      return true;
+    PsiFile psiFile = PsiManager.getInstance(project).findFile(extensionFile);
+    if (psiFile == null) {
+      String message = "Cannot get parse tree for file extension.";
+      annotationHolder.createWeakWarningAnnotation(loadTargetArgument, message);
+      return; // Unsure when this would happen...perhaps during indexing?
     }
-    return true;
+    Set<String> availableSymbols = BuckPsiUtils.findSymbolsInPsiTree(psiFile, "").keySet();
+    for (BuckLoadArgument loadArgument : loadCall.getLoadArgumentList()) {
+      BuckString buckString = loadArgument.getString();
+      String symbol = BuckPsiUtils.getStringValueFromBuckString(buckString);
+      if (availableSymbols.contains(symbol)) {
+        annotationHolder
+            .createInfoAnnotation(buckString, null)
+            .setTextAttributes(BuckSyntaxHighlighter.BUCK_IDENTIFIER);
+      } else {
+        annotationHolder
+            .createWarningAnnotation(buckString, "Cannot find symbol ")
+            .setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
+      }
+    }
+  }
+
+  private void annotateSingleExpression(
+      BuckSingleExpression singleExpression, AnnotationHolder annotationHolder) {
+    Optional.of(BuckPsiUtils.getStringValueFromExpression(singleExpression))
+        .map(
+            stringValue ->
+                annotateLocalTarget(singleExpression, stringValue, annotationHolder)
+                    || annotateAbsoluteTarget(singleExpression, stringValue, annotationHolder)
+                    || annotateLocalFile(singleExpression, stringValue, annotationHolder));
   }
 
   /** Annotates targets that refer to this file, as in ":other-target" */

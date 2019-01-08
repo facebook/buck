@@ -34,6 +34,7 @@ java_library(
     srcs = [
         "src/com/facebook/buck/intellij/ideabuck/file/BuckFileType.java",
         "src/com/facebook/buck/intellij/ideabuck/icons/BuckIcons.java",
+        "src/com/facebook/buck/intellij/ideabuck/lang/BuckFile.java",
         "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
         "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementType.java",
         "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckPsiUtils.java",
@@ -76,6 +77,7 @@ java_library(
             "src/com/facebook/buck/intellij/ideabuck/file/BuckFileType.java",
             "src/com/facebook/buck/intellij/ideabuck/icons/BuckIcons.java",
             "src/com/facebook/buck/intellij/ideabuck/lang/psi/*.java",
+            "src/com/facebook/buck/intellij/ideabuck/lang/BuckFile.java",
             "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
         ],
     ),

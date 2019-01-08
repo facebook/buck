@@ -20,6 +20,7 @@ import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.intellij.openapi.fileTypes.LanguageFileType;
 import javax.swing.Icon;
+import org.jetbrains.annotations.NotNull;
 
 /** Buck language type */
 public class BuckFileType extends LanguageFileType {
@@ -32,18 +33,25 @@ public class BuckFileType extends LanguageFileType {
     super(BuckLanguage.INSTANCE);
   }
 
+  @Override
+  @NotNull
   public String getName() {
     return "Buck";
   }
 
+  @Override
+  @NotNull
   public String getDescription() {
     return "Buck file";
   }
 
+  @Override
+  @NotNull
   public String getDefaultExtension() {
     return DEFAULT_EXTENSION;
   }
 
+  @Override
   public Icon getIcon() {
     return BuckIcons.FILE_TYPE;
   }

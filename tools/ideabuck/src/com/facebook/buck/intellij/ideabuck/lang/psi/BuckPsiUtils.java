@@ -16,19 +16,24 @@
 
 package com.facebook.buck.intellij.ideabuck.lang.psi;
 
+import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.jetbrains.annotations.Nullable;
 
 public final class BuckPsiUtils {
+
+  private static final Logger LOG = Logger.getInstance(BuckPsiUtils.class);
 
   public static final TokenSet STRING_LITERALS =
       TokenSet.create(
@@ -99,31 +104,22 @@ public final class BuckPsiUtils {
    */
   @Nullable
   public static String getStringValueFromExpression(BuckSingleExpression expression) {
-    List<BuckPrimaryWithSuffix> values = expression.getPrimaryWithSuffixList();
-    if (values.size() != 1) {
-      return null;
-    }
-    BuckPrimaryWithSuffix buckPrimaryWithSuffix = values.get(0);
-    if (!buckPrimaryWithSuffix.getDotSuffixList().isEmpty()) {
-      return null; // "string {} are unsupported so far".format("methods").trim()
-    }
-    if (!buckPrimaryWithSuffix.getSliceSuffixList().isEmpty()) {
-      return null; // "<<slices>>"[2:-2]
-    }
-    BuckPrimary buckPrimary = buckPrimaryWithSuffix.getPrimary();
-    return getStringValueFromBuckString(buckPrimary.getString());
+    return Optional.of(expression)
+        .map(BuckSingleExpression::getPrimaryWithSuffix)
+        .filter(e -> e.getDotSuffixList().isEmpty()) // "stri{}".format("ng") unsupported
+        .filter(e -> e.getSliceSuffixList().isEmpty()) // "<<slices>>"[2:-2] unsupported
+        .map(BuckPrimaryWithSuffix::getPrimary)
+        .map(BuckPrimary::getString)
+        .map(BuckPsiUtils::getStringValueFromBuckString)
+        .orElse(null);
   }
 
   /**
-   * Returns the text content of the given string (without the appropriate quoting).
+   * Returns the text content of the given element (without the appropriate quoting).
    *
-   * <p>This method accepts elements that are either {@link BuckString} elements or any of the
-   * various {@link #STRING_LITERALS}.
-   *
-   * <p>Note that this method is currently underdeveloped and hacky. It does not apply percent-style
-   * formatting (if such formatting is used, this method returns null), nor does it process escape
-   * sequences (these sequences currently appear in their raw form in the string).
+   * @deprecated Use the variation of this method that accepts a {@link BuckString}.
    */
+  @Deprecated
   @Nullable
   public static String getStringValueFromBuckString(@Nullable PsiElement stringElement) {
     if (stringElement == null) {
@@ -135,7 +131,17 @@ public final class BuckPsiUtils {
     if (!hasElementType(stringElement, BuckTypes.STRING)) {
       return null;
     }
-    BuckString buckString = (BuckString) stringElement;
+    return getStringValueFromBuckString((BuckString) stringElement);
+  }
+
+  /**
+   * Returns the text content of the given string (without the appropriate quoting).
+   *
+   * <p>Note that this method is currently underdeveloped and hacky. It does not apply percent-style
+   * formatting (if such formatting is used, this method returns null), nor does it process escape
+   * sequences (these sequences currently appear in their raw form in the string).
+   */
+  public static String getStringValueFromBuckString(BuckString buckString) {
     if (buckString.getPrimary() != null) {
       return null; // "%s %s" % ("percent", "formatting")
     }
@@ -208,5 +214,99 @@ public final class BuckPsiUtils {
       }
     }
     return targetsByName;
+  }
+
+  private interface SymbolVisitor {
+    void visit(String name, PsiElement element);
+  }
+
+  private static class FoundSymbol extends RuntimeException {
+    public PsiElement element;
+
+    FoundSymbol(PsiElement element) {
+      this.element = element;
+    }
+  }
+
+  /*
+   * A bit hacky:  symbols are either top-level functions, top-level identifiers,
+   * or identifiers loaded from
+   */
+  private static void visitSymbols(PsiElement psiElement, SymbolVisitor visitor) {
+    if (psiElement == null) {
+      return;
+    }
+    Consumer<PsiElement> recurse = e -> visitSymbols(e, visitor);
+    if (psiElement instanceof BuckFile) {
+      Stream.of(((BuckFile) psiElement).getChildren()).forEach(recurse);
+    } else if (psiElement.getNode().getElementType() == BuckTypes.IDENTIFIER) {
+      visitor.visit(psiElement.getText(), psiElement);
+    } else if (psiElement instanceof BuckLoadCall) {
+      ((BuckLoadCall) psiElement).getLoadArgumentList().forEach(recurse);
+    } else if (psiElement instanceof BuckLoadArgument) {
+      PsiElement identifier = ((BuckLoadArgument) psiElement).getIdentifier();
+      if (identifier != null) {
+        recurse.accept(identifier);
+      } else {
+        BuckString nameElement = ((BuckLoadArgument) psiElement).getString();
+        visitor.visit(getStringValueFromBuckString(nameElement), nameElement);
+      }
+    } else if (psiElement instanceof BuckFunctionDefinition) {
+      recurse.accept(((BuckFunctionDefinition) psiElement).getIdentifier());
+    } else if (psiElement instanceof BuckStatement) {
+      recurse.accept(((BuckStatement) psiElement).getSimpleStatement());
+      recurse.accept(((BuckStatement) psiElement).getIfStatement());
+    } else if (psiElement instanceof BuckIfStatement) {
+      ((BuckIfStatement) psiElement).getSingleExpressionList().forEach(recurse);
+      ((BuckIfStatement) psiElement).getSuiteList().forEach(recurse);
+    } else if (psiElement instanceof BuckSimpleStatement) {
+      ((BuckSimpleStatement) psiElement).getSmallStatementList().forEach(recurse);
+    } else if (psiElement instanceof BuckSmallStatement) {
+      recurse.accept(((BuckSmallStatement) psiElement).getAssignmentTarget());
+      ((BuckSmallStatement) psiElement).getAssignmentTargetListList().forEach(recurse);
+    } else if (psiElement instanceof BuckSuite) {
+      recurse.accept(((BuckSuite) psiElement).getSimpleStatement());
+      ((BuckSuite) psiElement).getStatementList().forEach(recurse);
+    } else if (psiElement instanceof BuckAssignmentTarget) {
+      if (((BuckAssignmentTarget) psiElement).getPrimary() == null) {
+        recurse.accept(((BuckAssignmentTarget) psiElement).getIdentifier());
+        recurse.accept(((BuckAssignmentTarget) psiElement).getAssignmentTargetList());
+      }
+    } else if (psiElement instanceof BuckAssignmentTargetList) {
+      ((BuckAssignmentTargetList) psiElement).getAssignmentTargetList().forEach(recurse);
+    } else {
+      LOG.info("Unparsed: " + psiElement.getNode().getElementType());
+    }
+  }
+
+  /**
+   * Returns a mapping from function definitions that start with the given prefix to their target
+   * elements.
+   */
+  public static PsiElement findSymbolInPsiTree(PsiElement root, String name) {
+    try {
+      visitSymbols(
+          root,
+          (elementName, psiElement) -> {
+            if (name.equals(elementName)) {
+              throw new FoundSymbol(psiElement);
+            }
+          });
+      return null;
+    } catch (FoundSymbol e) {
+      return e.element;
+    }
+  }
+  /** Returns a mapping from symbols that start with the given prefix to their target elements. */
+  public static Map<String, PsiElement> findSymbolsInPsiTree(PsiElement root, String namePrefix) {
+    Map<String, PsiElement> results = new HashMap<>();
+    visitSymbols(
+        root,
+        (name, element) -> {
+          if (name.startsWith(namePrefix)) {
+            results.put(name, element);
+          }
+        });
+    return results;
   }
 }

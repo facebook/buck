@@ -20,8 +20,11 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadArgument;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.google.common.annotations.VisibleForTesting;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandlerBase;
 import com.intellij.openapi.editor.Editor;
@@ -50,12 +53,20 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
     if (project.isDefault()) {
       return null;
     }
-    String elementAsString = BuckPsiUtils.getStringValueFromBuckString(element);
-    if (elementAsString == null) {
-      return null;
-    }
     VirtualFile sourceFile = element.getContainingFile().getVirtualFile();
     if (sourceFile == null) {
+      return null;
+    }
+    BuckLoadArgument buckLoadArgument =
+        PsiTreeUtil.getParentOfType(element, BuckLoadArgument.class);
+    if (buckLoadArgument != null) {
+      return resolveAsLoadArgument(project, sourceFile, buckLoadArgument);
+    }
+    if (element.getNode().getElementType() == BuckTypes.IDENTIFIER) {
+      return resolveAsIdentifier(project, element);
+    }
+    String elementAsString = BuckPsiUtils.getStringValueFromBuckString(element);
+    if (elementAsString == null) {
       return null;
     }
     Optional<BuckTargetPattern> targetPattern = BuckTargetPattern.parse(elementAsString);
@@ -71,6 +82,42 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
     } else {
       return resolveAsRelativeFile(project, sourceFile, elementAsString);
     }
+  }
+
+  @Nullable
+  private PsiElement resolveAsLoadArgument(
+      Project project, VirtualFile sourceFile, BuckLoadArgument buckLoadArgument) {
+    BuckLoadCall buckLoadCall = PsiTreeUtil.getParentOfType(buckLoadArgument, BuckLoadCall.class);
+    if (buckLoadCall == null) {
+      return null;
+    }
+    BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
+    return Optional.of(buckLoadCall.getLoadTargetArgument().getString())
+        .map(BuckPsiUtils::getStringValueFromBuckString)
+        .flatMap(BuckTarget::parse)
+        .flatMap(target -> buckTargetLocator.resolve(sourceFile, target))
+        .flatMap(buckTargetLocator::findVirtualFileForExtensionFile)
+        .map(PsiManager.getInstance(project)::findFile)
+        .map(
+            psiFile ->
+                BuckPsiUtils.findSymbolInPsiTree(
+                    psiFile,
+                    BuckPsiUtils.getStringValueFromBuckString(buckLoadArgument.getString())))
+        .orElse(null);
+  }
+
+  @Nullable
+  private PsiElement resolveAsIdentifier(Project project, PsiElement identifier) {
+    PsiElement resolved =
+        BuckPsiUtils.findSymbolInPsiTree(identifier.getContainingFile(), identifier.getText());
+    return Optional.ofNullable(resolved)
+        .map(e -> PsiTreeUtil.getParentOfType(e, BuckLoadArgument.class))
+        .flatMap(
+            buckLoadArgument ->
+                Optional.ofNullable(identifier.getContainingFile().getVirtualFile())
+                    .map(
+                        sourceFile -> resolveAsLoadArgument(project, sourceFile, buckLoadArgument)))
+        .orElse(resolved);
   }
 
   @Nullable

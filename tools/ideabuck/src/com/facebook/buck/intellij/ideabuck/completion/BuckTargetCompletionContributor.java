@@ -18,10 +18,13 @@ package com.facebook.buck.intellij.ideabuck.completion;
 
 import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
 import com.facebook.buck.intellij.ideabuck.api.BuckCellManager.Cell;
+import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.file.BuckFileType;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.intellij.codeInsight.completion.CompletionContributor;
@@ -34,7 +37,9 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -72,16 +77,22 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     String prefix =
         positionStringWithQuotes.substring(
             quotes.length(), parameters.getOffset() - position.getTextOffset());
-    if (prefix.startsWith("@")) {
-      prefix = prefix.substring(1);
-    }
-    doCellNames(position, prefix, result);
     if (BuckPsiUtils.findAncestorWithType(position, BuckTypes.LOAD_TARGET_ARGUMENT) != null) {
       // Inside a load target, extension files are "@this//syntax/points:to/files.bzl"
+      if (prefix.startsWith("@")) {
+        prefix = prefix.substring(1);
+      }
+      doCellNames(position, prefix, result);
       doTargetsForRelativeExtensionFile(virtualFile, prefix, result);
       doPathsForFullyQualifiedExtensionFile(virtualFile, project, prefix, result);
       doTargetsForFullyQualifiedExtensionFile(virtualFile, project, prefix, result);
+    } else if (BuckPsiUtils.findAncestorWithType(position, BuckTypes.LOAD_ARGUMENT) != null) {
+      doSymbolsFromExtensionFile(virtualFile, project, position, prefix, result);
     } else {
+      if (prefix.startsWith("@")) {
+        prefix = prefix.substring(1);
+      }
+      doCellNames(position, prefix, result);
       doTargetsForRelativeBuckTarget(psiFile, prefix, result);
       doPathsForFullyQualifiedBuckTarget(virtualFile, project, prefix, result);
       doTargetsForFullyQualifiedBuckTarget(virtualFile, project, prefix, result);
@@ -242,6 +253,32 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     }
   }
 
+  private void doSymbolsFromExtensionFile(
+      VirtualFile sourceFile,
+      Project project,
+      PsiElement position,
+      String prefix,
+      CompletionResultSet result) {
+    BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
+    Optional.of(position)
+        .map(e -> PsiTreeUtil.getParentOfType(e, BuckLoadCall.class))
+        .map(BuckLoadCall::getLoadTargetArgument)
+        .map(BuckLoadTargetArgument::getString)
+        .map(BuckPsiUtils::getStringValueFromBuckString)
+        .flatMap(BuckTarget::parse)
+        .flatMap(target -> buckTargetLocator.resolve(sourceFile, target))
+        .flatMap(buckTargetLocator::findVirtualFileForExtensionFile)
+        .map(PsiManager.getInstance(project)::findFile)
+        .map(psiFile -> BuckPsiUtils.findSymbolsInPsiTree(psiFile, prefix))
+        .map(Map::keySet)
+        .ifPresent(
+            symbols ->
+                symbols
+                    .stream()
+                    .filter(symbol -> !symbol.startsWith("_")) // do not show private symbols
+                    .forEach(symbol -> addResultForTarget(result, symbol)));
+  }
+
   /** Autocomplete buck targets within this buck file, as in ":targ" => ":target". */
   private void doTargetsForRelativeBuckTarget(
       PsiFile psiFile, String prefixToAutocomplete, CompletionResultSet result) {
@@ -250,8 +287,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     }
     // Autocomplete a target in *this* file
     String targetPrefix = prefixToAutocomplete.substring(1);
-    Map<String, PsiElement> targetsInPsiTree =
-        BuckPsiUtils.findTargetsInPsiTree(psiFile, targetPrefix);
+    Map<String, ?> targetsInPsiTree = BuckPsiUtils.findTargetsInPsiTree(psiFile, targetPrefix);
     for (String name : targetsInPsiTree.keySet()) {
       addResultForTarget(result, name);
     }
@@ -340,7 +376,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     if (targetPsiFile == null) {
       return;
     }
-    Map<String, PsiElement> targetsInPsiTree =
+    Map<String, ?> targetsInPsiTree =
         BuckPsiUtils.findTargetsInPsiTree(targetPsiFile, pattern.getRuleName().orElse(""));
     String cellName = pattern.getCellName().orElse(null);
     String cellPath = pattern.getCellPath().orElse("");

@@ -66,6 +66,7 @@
     DEF = 'def'
     FOR = 'for'
     IN = 'in'
+    IS = 'is'
     AND = 'and'
     OR = 'or'
     NOT = 'not'
@@ -111,24 +112,35 @@ parameter ::= IDENTIFIER ['=' single_expression] | '*' IDENTIFIER | '**' IDENTIF
 
 suite ::= simple_statement | INDENT statement+ DEDENT
 
-statement ::= simple_statement | if_statement | for_statement | LINE_COMMENT
+statement ::= LINE_COMMENT | simple_statement | if_statement | for_statement
 
 simple_statement ::= small_statement (';' small_statement)* ';'?
 
-small_statement ::= expression ('=' | UPDATE_OPS) expression | control_flow_statement | expression
+small_statement ::= assignment_target UPDATE_OPS expression
+                    | (assignment_target_list ('='))* expression
+                    | control_flow_statement
+                    | expression
+
+assignment_target_list ::= assignment_target (',' assignment_target)*
+
+assignment_target ::= primary '.' IDENTIFIER
+                      | primary slice_suffix
+                      | '(' assignment_target_list ')'
+                      | '[' assignment_target_list ']'
+                      | IDENTIFIER
 
 control_flow_statement ::= 'return' [expression] | 'break' | 'continue' | 'pass'
 
 expression ::= single_expression (',' single_expression)*
 
-single_expression ::= (primary_with_suffix (binary_op primary_with_suffix)*
-                      | 'lambda' [parameter_list] ':' single_expression
-                      | 'not' single_expression)
+single_expression ::= unary_op single_expression
+                      | (primary_with_suffix [binary_op single_expression]
+                      | 'lambda' [parameter_list] ':' single_expression)
                       ['if' single_expression 'else' single_expression]
 
 primary_with_suffix ::= primary (dot_suffix | slice_suffix)*
 
-primary ::= NONE | BOOLEAN | NUMBER | function_call | IDENTIFIER | string | list | dict | '(' expression ','? ')' | ('+' | '-') primary_with_suffix
+primary ::= NONE | BOOLEAN | NUMBER | function_call | IDENTIFIER | string | list | dict | '(' expression ','? ')' | unary_op primary_with_suffix
 
 function_call ::=  function_name function_call_suffix
 
@@ -144,10 +156,9 @@ argument ::= [property_lvalue '='] single_expression | '*' single_expression | '
 
 property_lvalue ::= IDENTIFIER
 
-slice_suffix ::= '[' single_expression? ':' single_expression? (':' single_expression?)? ']'
+slice_suffix ::= '[' single_expression? (':' single_expression? (':' single_expression?)?)? ']'
 
-list ::= '[' (list_elements ']' | single_expression comprehension_suffix ']' | ']')
-
+list ::= '[' (list_elements ']' | expression comprehension_suffix ']' | ']')
 list_elements ::= single_expression (',' single_expression)* ','?
 
 comprehension_suffix ::= 'for' loop_variable 'in' single_expression ['if' single_expression] comprehension_suffix*
@@ -157,7 +168,9 @@ dict ::= '{' (dict_entry ((',' dict_entry)* ','? '}' | comprehension_suffix '}')
 
 dict_entry ::= single_expression ':' single_expression
 
-binary_op ::=  'or' | 'and' | '==' | '!=' | '<' | '>' | '<=' | '>=' | 'in' | 'not' 'in'
+unary_op ::= 'not' | '+' | '-' | '~' | '*'
+binary_op ::=  'or' | 'and' | '==' | '!=' | '<' | '>' | '<=' | '>='
+                    | 'in' | 'not' 'in' | 'is' | 'not' 'is'
                     | '|' | '^' | '&' | '-' | '+' | '*' | '%' | '/' | '//'
 
 if_statement ::= 'if' single_expression ':' suite ('elif' single_expression ':' suite)* ['else' ':' suite]
