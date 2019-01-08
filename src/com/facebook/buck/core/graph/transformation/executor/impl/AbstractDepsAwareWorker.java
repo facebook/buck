@@ -34,15 +34,11 @@ abstract class AbstractDepsAwareWorker {
 
   /** Runs one job, blocking for the task */
   void loopOnce() throws InterruptedException {
-    try {
-      boolean completedOne = false;
+    boolean completedOne = false;
 
-      while (!completedOne) {
-        DefaultDepsAwareTask<?> task = takeTask();
-        completedOne = eval(task);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
+    while (!completedOne) {
+      DefaultDepsAwareTask<?> task = takeTask();
+      completedOne = eval(task);
     }
   }
 
