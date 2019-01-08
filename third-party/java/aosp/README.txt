@@ -14,6 +14,9 @@ com.android.tools.layoutlib:layoutlib-api:25.2.0
 copied into a single module which alters certain package paths. For example,
 com.android.SDKConstants becomes com.android.common.SDKConstants. This is done to avoid conflicts
 with different version of those libraries in //third-party/java/android
+4) Apply this patch file `git apply third-party/java/aosp/changes.patch` which fixes 'IllegalArgumentException when targetApi is used in the manifest'.
+Google Issue tracker - https://issuetracker.google.com/issues/114358542.
+Fix in bazel - https://github.com/bazelbuild/bazel/commit/59327306bf7bb6ecc28d8b52c8bbf343361293bf
 
 
 == How to build apksig.jar

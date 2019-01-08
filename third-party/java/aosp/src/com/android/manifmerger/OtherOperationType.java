@@ -26,5 +26,5 @@ public enum OtherOperationType {
     ignore,
 
     // used to direct lint
-    targetAPI
+    targetapi // deliberately lowercase because we do lowercase before valueOf call
 }
