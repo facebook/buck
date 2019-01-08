@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.ideabuck.lang.psi;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
@@ -96,6 +97,20 @@ public final class BuckPsiUtils {
       }
     }
     return null;
+  }
+
+  /** Searches for text in the given element, returning a {@link TextRange} if the text is found. */
+  public static Optional<TextRange> findTextInElement(PsiElement element, String text) {
+    return Optional.of(element)
+        .map(PsiElement::getText)
+        .map(s -> s.indexOf(text))
+        .filter(i -> i >= 0)
+        .map(
+            index -> {
+              int elementStart = element.getTextOffset();
+              int length = text.length();
+              return new TextRange(elementStart + index, elementStart + index + length);
+            });
   }
 
   /**

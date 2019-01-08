@@ -22,6 +22,8 @@
   <change-notes><![CDATA[
 <h3>3.5.5</h3>
 <ul>
+  <li>Misc editor improvements for symbols loaded from extension files
+      and colorization of target patterns.</li>
   <li>Migrate project-level settings for cells and executables from
       <code>.idea/ideabuck.xml<code> to <code>.idea/ideabuck/cells</code>
       and <code>.idea/ideabuck/executables.xml</code>, respectively,

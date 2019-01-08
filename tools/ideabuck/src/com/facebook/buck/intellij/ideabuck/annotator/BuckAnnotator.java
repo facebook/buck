@@ -16,9 +16,10 @@
 
 package com.facebook.buck.intellij.ideabuck.annotator;
 
+import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
 import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
-import com.facebook.buck.intellij.ideabuck.config.BuckCell;
+import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
 import com.facebook.buck.intellij.ideabuck.file.BuckFileType;
 import com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighter;
@@ -30,22 +31,17 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSingleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
-import com.facebook.buck.intellij.ideabuck.util.BuckCellFinder;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /** Annotator for Buck, it helps highlight and annotate any issue in Buck files. */
 public class BuckAnnotator implements Annotator {
@@ -115,7 +111,7 @@ public class BuckAnnotator implements Annotator {
       String message =
           buckTargetLocator
               .findPathForExtensionFile(extensionTarget)
-              .map(path -> "Cannot find VirtualFile at " + path.toString())
+              .map(path -> "Cannot find file at " + path.toString())
               .orElse("Cannot resolve path from target");
       annotationHolder
           .createErrorAnnotation(loadTargetArgument, message)
@@ -152,120 +148,97 @@ public class BuckAnnotator implements Annotator {
 
   private void annotateSingleExpression(
       BuckSingleExpression singleExpression, AnnotationHolder annotationHolder) {
-    Optional.of(BuckPsiUtils.getStringValueFromExpression(singleExpression))
-        .map(
-            stringValue ->
-                annotateLocalTarget(singleExpression, stringValue, annotationHolder)
-                    || annotateAbsoluteTarget(singleExpression, stringValue, annotationHolder)
-                    || annotateLocalFile(singleExpression, stringValue, annotationHolder));
+    Optional.of(singleExpression)
+        .map(BuckPsiUtils::getStringValueFromExpression)
+        .filter(
+            s ->
+                annotateStringAsTargetPattern(singleExpression, s, annotationHolder)
+                    || annotateStringAsLocalFile(singleExpression, s, annotationHolder));
   }
 
   /** Annotates targets that refer to this file, as in ":other-target" */
-  private boolean annotateLocalTarget(
-      BuckSingleExpression targetExpression,
-      String targetValue,
-      AnnotationHolder annotationHolder) {
-    if (!targetValue.startsWith(":")) {
+  private boolean annotateStringAsTargetPattern(
+      BuckSingleExpression expression, String stringValue, AnnotationHolder annotationHolder) {
+    BuckTargetPattern buckTargetPattern = BuckTargetPattern.parse(stringValue).orElse(null);
+    if (buckTargetPattern == null) {
       return false;
     }
-    String target = targetValue.substring(1);
-    if (target.contains(":")) {
-      return false;
-    }
-    Project project = targetExpression.getProject();
-    PsiFile containingFile = targetExpression.getContainingFile();
-    PsiElement targetElement = BuckPsiUtils.findTargetInPsiTree(containingFile, target);
-    if (targetElement != null) {
-      Annotation annotation = annotationHolder.createInfoAnnotation(targetExpression, null);
-      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_TARGET);
-    } else {
-      Annotation annotation =
-          annotationHolder.createWeakWarningAnnotation(
-              targetExpression, "Cannot resolve target \"" + targetValue + "\"");
-      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
-    }
-    logToMessageBus(project);
-    return true;
-  }
-
-  private static final Pattern ABSOLUTE_TARGET_PATTERN =
-      Pattern.compile("@?(?<cell>[-A-Za-z_.]*)//(?<path>[^:]*):(?<name>[^:]*)");
-
-  /** Annotates targets that refer to other files, as in "othercell//path/to:target". */
-  private boolean annotateAbsoluteTarget(
-      BuckSingleExpression targetExpression,
-      String targetValue,
-      AnnotationHolder annotationHolder) {
-    Matcher matcher = ABSOLUTE_TARGET_PATTERN.matcher(targetValue);
-    if (!matcher.matches()) {
-      return false;
-    }
-    Project project = targetExpression.getProject();
-    PsiFile containingFile = targetExpression.getContainingFile();
-    String cellName = matcher.group("cell");
-    VirtualFile sourceFile = containingFile.getVirtualFile();
-    BuckCellFinder buckCellFinder = BuckCellFinder.getInstance(project);
-    @Nullable
-    VirtualFile targetVirtualFile =
-        buckCellFinder.findBuckTargetFile(sourceFile, targetValue).orElse(null);
-    if (targetVirtualFile == null) {
-      BuckCell cell = buckCellFinder.findBuckCellByName(cellName).orElse(null);
-      Annotation annotation;
-      if (cell == null) {
-        annotation =
-            annotationHolder.createWarningAnnotation(
-                targetExpression, "Unrecognized Buck cell: \"" + cellName + "\"");
-      } else {
-        annotation =
-            annotationHolder.createWarningAnnotation(
-                targetExpression, "Cannot find Buck file for \"" + targetValue + "\"");
-      }
-      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
-      logToMessageBus(project);
-      return true;
-    }
-    @Nullable PsiFile targetPsiFile = PsiManager.getInstance(project).findFile(targetVirtualFile);
-    if (targetPsiFile == null) {
-      Annotation annotation =
-          annotationHolder.createWarningAnnotation(
-              targetExpression, "Cannot find Buck file: " + targetVirtualFile.getPath());
-      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
-      logToMessageBus(project);
-      return true;
-    }
-    String targetName = matcher.group("name");
-    if ("".equals(targetName)) {
-      // If the target pattern is "cell/path/to:", that merely requires a Buck file to exist
-    } else {
-      PsiElement targetElement = BuckPsiUtils.findTargetInPsiTree(targetPsiFile, targetName);
-      if (targetElement == null) {
-        String text = targetExpression.getText();
-        TextRange textRange = targetExpression.getTextRange();
-        int colonSeparator = textRange.getStartOffset() + text.indexOf(':');
-        // We found the file, which is good...
-        annotationHolder
-            .createInfoAnnotation(
-                new TextRange(textRange.getStartOffset(), colonSeparator),
-                targetVirtualFile.getPath())
-            .setTextAttributes(BuckSyntaxHighlighter.BUCK_TARGET);
-        // ...but not the target, which is bad.
-        annotationHolder
-            .createWarningAnnotation(
-                new TextRange(colonSeparator, textRange.getEndOffset()),
-                "Cannot resolve target " + targetName)
-            .setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
-        logToMessageBus(project);
+    BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(expression.getProject());
+    if (!buckTargetPattern.isAbsolute()) {
+      VirtualFile sourceFile = expression.getContainingFile().getVirtualFile();
+      if (sourceFile == null) {
         return true;
       }
+      BuckTargetPattern absolutePattern =
+          buckTargetLocator.resolve(sourceFile, buckTargetPattern).orElse(null);
+      if (absolutePattern == null) {
+        Annotation annotation =
+            annotationHolder.createErrorAnnotation(expression, "Cannot resolve target pattern");
+        annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
+        return true;
+      }
+      buckTargetPattern = absolutePattern;
     }
-    Annotation annotation =
-        annotationHolder.createInfoAnnotation(targetExpression, targetVirtualFile.getPath());
-    annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_TARGET);
+    Project project = expression.getProject();
+    VirtualFile targetFile =
+        buckTargetLocator.findVirtualFileForTargetPattern(buckTargetPattern).orElse(null);
+    if (targetFile == null) {
+      BuckCellManager buckCellManager = BuckCellManager.getInstance(project);
+      String cellName = buckTargetPattern.getCellName().orElse(null);
+      if (cellName != null && !buckCellManager.findCellByName(cellName).isPresent()) {
+        String message = "Cannot resolve cell named " + cellName;
+        Annotation annotation =
+            BuckPsiUtils.findTextInElement(expression, cellName)
+                .map(textRange -> annotationHolder.createErrorAnnotation(textRange, message))
+                .orElseGet(() -> annotationHolder.createErrorAnnotation(expression, message));
+        annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
+        return true;
+      }
+      String message =
+          buckTargetLocator
+              .findPathForTargetPattern(buckTargetPattern)
+              .map(path -> "Cannot find file at " + path.toString())
+              .orElse("Cannot resolve path from target pattern");
+      annotationHolder
+          .createErrorAnnotation(expression, message)
+          .setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
+      return true;
+    }
+    BuckTarget buckTarget = buckTargetPattern.asBuckTarget().orElse(null);
+    if (buckTarget == null) {
+      // If this is a target pattern, but not a valid target, color it as such
+      annotationHolder
+          .createInfoAnnotation(expression, targetFile.getPath())
+          .setTextAttributes(BuckSyntaxHighlighter.BUCK_TARGET_PATTERN);
+      return true;
+    }
+    PsiFile psiFile = PsiManager.getInstance(project).findFile(targetFile);
+    if (psiFile == null) {
+      String message = "Cannot get parse tree for " + targetFile.getPath();
+      annotationHolder
+          .createWarningAnnotation(expression, message)
+          .setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
+      return true; // Unsure when this would happen...perhaps during indexing?
+    }
+    PsiElement target = BuckPsiUtils.findTargetInPsiTree(psiFile, buckTarget.getRuleName());
+    if (target == null) {
+      String ruleName = buckTarget.getRuleName();
+      String message = "Cannot resolve rule named " + ruleName;
+      Annotation annotation =
+          BuckPsiUtils.findTextInElement(expression, ":" + ruleName)
+              .map(textRange -> annotationHolder.createWarningAnnotation(textRange, message))
+              .orElseGet(() -> annotationHolder.createWarningAnnotation(expression, message));
+      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_INVALID_TARGET);
+      return true;
+    }
+    annotationHolder
+        .createInfoAnnotation(expression, targetFile.getPath())
+        .setTextAttributes(BuckSyntaxHighlighter.BUCK_TARGET);
     return true;
   }
 
   /** Annotates targets that refer to files relative to this file. */
-  private boolean annotateLocalFile(
+  private boolean annotateStringAsLocalFile(
       BuckSingleExpression targetExpression,
       String targetValue,
       AnnotationHolder annotationHolder) {
