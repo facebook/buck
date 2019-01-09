@@ -271,3 +271,4 @@ standard_java_test(
         "//third-party/java/thrift:libthrift",
     ],
 )
+
