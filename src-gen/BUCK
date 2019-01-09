@@ -5,24 +5,29 @@ java_library(
         "//third-party/java/thrift:libthrift",
     ],
     abi_generation_mode = "source",
-    # Thrift generated code has a dependency on javax.annotation.Generated.
-    # In Java 11, we have to add an explicit module dependency to access this.
-    extra_arguments = select({
-        "DEFAULT": [],
-        "//tools/build/config:java_11": ["--add-modules", "java.xml.ws.annotation"],
-    }),
     visibility = ["PUBLIC"],
     deps = [
         # This dep is looked up at runtime by reflection.
         "//third-party/java/slf4j:slf4j",
         "//third-party/java/slf4j:slf4j-api",
         "//third-party/java/fbthrift:fbthrift",
-    ],
+    ] + select({
+        "DEFAULT": [],
+        # Thrift generated .java files depend on javax.annotation.Generated, which has been removed 
+        # from the JCL in Java 11. Add it back via this third party library.
+        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
+    }),
 )
 
 java_library(
     name = "protobuf",
     srcs = glob(["**/proto/**/*.java"]),
+    deps = select({
+        "DEFAULT": [],
+        # protobuf generated .java files depend on javax.annotation.Generated, which has been removed 
+        # from the JCL in Java 11. Add it back via this third party library.
+        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
+    }),
     exported_deps = [
         "//third-party/java/protobuf:protobuf",
     ],
