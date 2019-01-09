@@ -51,8 +51,7 @@ public class AndroidInstrumentationApkBuilder
             createToolchainProviderForAndroidInstrumentationApk()),
         target,
         new FakeProjectFilesystem(),
-        createToolchainProviderForAndroidInstrumentationApk(),
-        null);
+        createToolchainProviderForAndroidInstrumentationApk());
   }
 
   public static ToolchainProvider createToolchainProviderForAndroidInstrumentationApk() {

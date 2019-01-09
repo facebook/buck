@@ -28,7 +28,6 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
-import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 
 public class GroovyLibraryBuilder
@@ -40,8 +39,7 @@ public class GroovyLibraryBuilder
 
   private final ProjectFilesystem projectFilesystem;
 
-  protected GroovyLibraryBuilder(
-      BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
+  protected GroovyLibraryBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
     super(
         new GroovyLibraryDescription(
             new ToolchainProviderBuilder()
@@ -52,13 +50,12 @@ public class GroovyLibraryBuilder
             new GroovyBuckConfig(FakeBuckConfig.builder().build()),
             null),
         target,
-        projectFilesystem,
-        hashCode);
+        projectFilesystem);
     this.projectFilesystem = projectFilesystem;
   }
 
   public static GroovyLibraryBuilder createBuilder(BuildTarget target) {
-    return new GroovyLibraryBuilder(target, new FakeProjectFilesystem(), null);
+    return new GroovyLibraryBuilder(target, new FakeProjectFilesystem());
   }
 
   public GroovyLibraryBuilder addSrc(SourcePath path) {

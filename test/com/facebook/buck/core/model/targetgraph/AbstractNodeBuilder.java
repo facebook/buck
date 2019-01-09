@@ -16,8 +16,6 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
@@ -45,10 +43,7 @@ import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /**
  * Support class for writing builders for nodes of a {@link TargetGraph} and {@link ActionGraph}
@@ -68,43 +63,27 @@ public abstract class AbstractNodeBuilder<
   protected final BuildTarget target;
   protected final TArgBuilder argBuilder;
   protected final CellPathResolver cellRoots;
-  @Nullable private final HashCode rawHashCode;
   private Optional<ImmutableMap<BuildTarget, Version>> selectedVersions = Optional.empty();
 
   protected AbstractNodeBuilder(TDescription description, BuildTarget target) {
-    this(
-        description,
-        target,
-        new FakeProjectFilesystem(),
-        new ToolchainProviderBuilder().build(),
-        null);
+    this(description, target, new FakeProjectFilesystem(), new ToolchainProviderBuilder().build());
   }
 
   protected AbstractNodeBuilder(
       TDescription description, BuildTarget target, ProjectFilesystem projectFilesystem) {
-    this(description, target, projectFilesystem, new ToolchainProviderBuilder().build(), null);
+    this(description, target, projectFilesystem, new ToolchainProviderBuilder().build());
   }
 
   protected AbstractNodeBuilder(
       TDescription description,
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
-      HashCode hashCode) {
-    this(description, target, projectFilesystem, new ToolchainProviderBuilder().build(), hashCode);
-  }
-
-  protected AbstractNodeBuilder(
-      TDescription description,
-      BuildTarget target,
-      ProjectFilesystem projectFilesystem,
-      ToolchainProvider toolchainProvider,
-      HashCode hashCode) {
+      ToolchainProvider toolchainProvider) {
     this.description = description;
     this.filesystem = projectFilesystem;
     this.toolchainProvider = toolchainProvider;
     this.target = target;
     this.argBuilder = makeArgBuilder(description);
-    this.rawHashCode = hashCode;
 
     this.cellRoots = TestCellPathResolver.get(projectFilesystem);
   }
@@ -167,17 +146,11 @@ public abstract class AbstractNodeBuilder<
 
   public TargetNode<TArg> build(ProjectFilesystem filesystem) {
     try {
-      HashCode hash =
-          rawHashCode == null
-              ? Hashing.sha1().hashString(target.getFullyQualifiedName(), UTF_8)
-              : rawHashCode;
       TargetNodeFactory factory =
           new TargetNodeFactory(TYPE_COERCER_FACTORY, PathExistenceVerificationMode.DO_NOT_VERIFY);
       TArg populatedArg = getPopulatedArg();
       return factory
           .createFromObject(
-              // This hash will do in a pinch.
-              hash,
               description,
               populatedArg,
               filesystem,

@@ -72,6 +72,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
+import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
@@ -93,19 +94,23 @@ import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -114,6 +119,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -182,8 +188,7 @@ public class DefaultParserTest {
   }
 
   /** Helper to construct a PerBuildState and use it to get nodes. */
-  @VisibleForTesting
-  private static ImmutableList<Map<String, Object>> getRawTargetNodes(
+  private static void getRawTargetNodes(
       Parser parser,
       TypeCoercerFactory typeCoercerFactory,
       BuckEventBus eventBus,
@@ -213,8 +218,7 @@ public class DefaultParserTest {
                 ImmutableList.of(),
                 enableProfiling,
                 SpeculativeParsing.DISABLED)) {
-      return ImmutableList.copyOf(
-          DefaultParser.getTargetNodeRawAttributes(state, cell, buildFile).getTargets().values());
+      DefaultParser.getTargetNodeRawAttributes(state, cell, buildFile).getTargets();
     }
   }
 
@@ -2550,12 +2554,75 @@ public class DefaultParserTest {
     TargetGraph targetGraph =
         parser.buildTargetGraph(cell, false, executorService, buildTargetsList);
 
+    ImmutableMap<BuildTarget, Map<String, Object>> attributes =
+        getRawTargetNodes(
+            parser,
+            typeCoercerFactory,
+            eventBus,
+            cell,
+            knownRuleTypesProvider,
+            executorService,
+            executableFinder,
+            buildTargets);
+
     ImmutableMap.Builder<BuildTarget, HashCode> toReturn = ImmutableMap.builder();
     for (TargetNode<?> node : targetGraph.getNodes()) {
-      toReturn.put(node.getBuildTarget(), node.getRawInputsHashCode());
+      Hasher hasher = Hashing.sha1().newHasher();
+      JsonObjectHashing.hashJsonObject(hasher, attributes.get(node.getBuildTarget()));
+      toReturn.put(node.getBuildTarget(), hasher.hash());
     }
 
     return toReturn.build();
+  }
+
+  private static ImmutableMap<BuildTarget, Map<String, Object>> getRawTargetNodes(
+      Parser parser,
+      TypeCoercerFactory typeCoercerFactory,
+      BuckEventBus eventBus,
+      Cell cell,
+      KnownRuleTypesProvider knownRuleTypesProvider,
+      ListeningExecutorService executor,
+      ExecutableFinder executableFinder,
+      BuildTarget... buildTargets)
+      throws BuildFileParseException {
+    ImmutableMap.Builder<BuildTarget, Map<String, Object>> attributesByTarget =
+        ImmutableMap.builder();
+    List<BuildTarget> buildTargetList = Lists.newArrayList(buildTargets);
+    Map<Path, HashCode> hashes = new HashMap<>();
+    buildTargetList.forEach(
+        buildTarget ->
+            hashes.put(
+                buildTarget.getBasePath().resolve("BUCK"),
+                HashCode.fromBytes(buildTarget.getBaseName().getBytes(StandardCharsets.UTF_8))));
+
+    try (PerBuildState state =
+        PerBuildStateFactory.createFactory(
+                typeCoercerFactory,
+                new DefaultConstructorArgMarshaller(typeCoercerFactory),
+                knownRuleTypesProvider,
+                new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
+                cell.getBuckConfig(),
+                WatchmanFactory.NULL_WATCHMAN,
+                eventBus,
+                getManifestSupplier(),
+                new FakeFileHashCache(hashes))
+            .create(
+                parser.getPermState(),
+                executor,
+                cell,
+                ImmutableList.of(),
+                false,
+                SpeculativeParsing.DISABLED)) {
+      for (BuildTarget buildTarget : buildTargets) {
+        attributesByTarget.put(
+            buildTarget,
+            Preconditions.checkNotNull(
+                parser.getTargetNodeRawAttributes(
+                    state, cell, parser.getTargetNode(cell, false, executor, buildTarget))));
+      }
+
+      return attributesByTarget.build();
+    }
   }
 
   static class ParseEventStartedCounter {

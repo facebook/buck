@@ -54,8 +54,7 @@ public class AndroidLibraryBuilder
             javaBuckConfig, JAVA_ONLY_COMPILER_FACTORY, createToolchainProviderForAndroidLibrary()),
         target,
         new FakeProjectFilesystem(),
-        createToolchainProviderForAndroidLibrary(),
-        null);
+        createToolchainProviderForAndroidLibrary());
   }
 
   public static AndroidLibraryBuilder createBuilder(BuildTarget target) {

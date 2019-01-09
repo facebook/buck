@@ -44,7 +44,10 @@ import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.Map;
 import java.util.SortedMap;
@@ -90,6 +93,29 @@ class ParserWithConfigurableAttributes extends DefaultParser {
     Cell owningCell = cell.getCell(buildTarget);
     BuildFileManifest buildFileManifest =
         getTargetNodeRawAttributes(state, owningCell, cell.getAbsolutePathToBuildFile(buildTarget));
+    return getTargetFromManifest(state, cell, targetNode, buildFileManifest);
+  }
+
+  @Override
+  public ListenableFuture<SortedMap<String, Object>> getTargetNodeRawAttributesJob(
+      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
+    Cell owningCell = cell.getCell(targetNode.getBuildTarget());
+    ListenableFuture<BuildFileManifest> buildFileManifestFuture =
+        state.getBuildFileManifestJob(
+            owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
+    return Futures.transform(
+        buildFileManifestFuture,
+        buildFileManifest -> getTargetFromManifest(state, cell, targetNode, buildFileManifest),
+        MoreExecutors.directExecutor());
+  }
+
+  @Nullable
+  private SortedMap<String, Object> getTargetFromManifest(
+      PerBuildState state,
+      Cell cell,
+      TargetNode<?> targetNode,
+      BuildFileManifest buildFileManifest) {
+    BuildTarget buildTarget = targetNode.getBuildTarget();
     String shortName = buildTarget.getShortName();
 
     if (!buildFileManifest.getTargets().containsKey(shortName)) {

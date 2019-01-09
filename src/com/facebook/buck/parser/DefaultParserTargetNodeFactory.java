@@ -16,8 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -30,21 +28,16 @@ import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.ParamInfoException;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.VisibilityPatterns;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -63,7 +56,6 @@ public class DefaultParserTargetNodeFactory
   private final PackageBoundaryChecker packageBoundaryChecker;
   private final TargetNodeListener<TargetNode<?>> nodeListener;
   private final TargetNodeFactory targetNodeFactory;
-  private final RuleKeyConfiguration ruleKeyConfiguration;
   private final BuiltTargetVerifier builtTargetVerifier;
 
   private DefaultParserTargetNodeFactory(
@@ -72,14 +64,12 @@ public class DefaultParserTargetNodeFactory
       PackageBoundaryChecker packageBoundaryChecker,
       TargetNodeListener<TargetNode<?>> nodeListener,
       TargetNodeFactory targetNodeFactory,
-      RuleKeyConfiguration ruleKeyConfiguration,
       BuiltTargetVerifier builtTargetVerifier) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
     this.packageBoundaryChecker = packageBoundaryChecker;
     this.nodeListener = nodeListener;
     this.targetNodeFactory = targetNodeFactory;
-    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.builtTargetVerifier = builtTargetVerifier;
   }
 
@@ -88,23 +78,20 @@ public class DefaultParserTargetNodeFactory
       ConstructorArgMarshaller marshaller,
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
       TargetNodeListener<TargetNode<?>> nodeListener,
-      TargetNodeFactory targetNodeFactory,
-      RuleKeyConfiguration ruleKeyConfiguration) {
+      TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
         knownRuleTypesProvider,
         marshaller,
         new ThrowingPackageBoundaryChecker(buildFileTrees),
         nodeListener,
         targetNodeFactory,
-        ruleKeyConfiguration,
         new BuiltTargetVerifier());
   }
 
   public static ParserTargetNodeFactory<Map<String, Object>> createForDistributedBuild(
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
-      TargetNodeFactory targetNodeFactory,
-      RuleKeyConfiguration ruleKeyConfiguration) {
+      TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
         knownRuleTypesProvider,
         marshaller,
@@ -113,7 +100,6 @@ public class DefaultParserTargetNodeFactory
           // No-op.
         },
         targetNodeFactory,
-        ruleKeyConfiguration,
         new BuiltTargetVerifier());
   }
 
@@ -163,7 +149,6 @@ public class DefaultParserTargetNodeFactory
           target,
           description,
           constructorArg,
-          rawNode,
           declaredDeps.build(),
           visibilityPatterns,
           withinViewPatterns,
@@ -183,7 +168,6 @@ public class DefaultParserTargetNodeFactory
       BuildTarget target,
       BaseDescription<?> description,
       Object constructorArg,
-      Map<String, Object> rawNode,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
@@ -192,7 +176,6 @@ public class DefaultParserTargetNodeFactory
     try (SimplePerfEvent.Scope scope = perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
       TargetNode<?> node =
           targetNodeFactory.createFromObject(
-              hashRawNode(rawNode),
               description,
               constructorArg,
               cell.getFilesystem(),
@@ -205,13 +188,6 @@ public class DefaultParserTargetNodeFactory
       nodeListener.onCreate(buildFile, node);
       return node;
     }
-  }
-
-  private HashCode hashRawNode(Map<String, Object> rawNode) {
-    Hasher hasher = Hashing.sha1().newHasher();
-    hasher.putString(ruleKeyConfiguration.getCoreKey(), UTF_8);
-    JsonObjectHashing.hashJsonObject(hasher, rawNode);
-    return hasher.hash();
   }
 
   private static RuleType parseBuildRuleTypeFromRawRule(

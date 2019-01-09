@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -45,7 +44,6 @@ import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.Hashing;
 import java.nio.file.Paths;
 import java.util.Map;
 import org.hamcrest.Matchers;
@@ -88,7 +86,6 @@ public class GenruleDescriptionTest {
     TargetNode<GenruleDescriptionArg> targetNode =
         new TargetNodeFactory(new DefaultTypeCoercerFactory())
             .createFromObject(
-                Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
                 genruleDescription,
                 constructorArg,
                 projectFilesystem,

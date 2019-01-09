@@ -89,8 +89,7 @@ public class NdkLibraryBuilder
         },
         target,
         filesystem,
-        toolchainProvider,
-        null);
+        toolchainProvider);
   }
 
   public static ToolchainProvider createToolchainProviderForNdkLibrary() {

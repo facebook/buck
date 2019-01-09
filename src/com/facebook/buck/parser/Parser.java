@@ -60,6 +60,9 @@ public interface Parser {
   SortedMap<String, Object> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException;
 
+  ListenableFuture<SortedMap<String, Object>> getTargetNodeRawAttributesJob(
+      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException;
+
   /**
    * @deprecated Prefer {@link #getTargetNodeRawAttributes(PerBuildState, Cell, TargetNode)} and
    *     reusing a PerBuildState instance, especially when calling in a loop.

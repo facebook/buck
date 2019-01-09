@@ -45,8 +45,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -150,6 +152,25 @@ class DefaultParser implements Parser {
     BuildFileManifest buildFileManifest =
         getTargetNodeRawAttributes(
             state, owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
+    return getTargetFromManifest(targetNode, buildFileManifest);
+  }
+
+  @Override
+  public ListenableFuture<SortedMap<String, Object>> getTargetNodeRawAttributesJob(
+      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
+    Cell owningCell = cell.getCell(targetNode.getBuildTarget());
+    ListenableFuture<BuildFileManifest> buildFileManifestFuture =
+        state.getBuildFileManifestJob(
+            owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
+    return Futures.transform(
+        buildFileManifestFuture,
+        buildFileManifest -> getTargetFromManifest(targetNode, buildFileManifest),
+        MoreExecutors.directExecutor());
+  }
+
+  @Nullable
+  private static SortedMap<String, Object> getTargetFromManifest(
+      TargetNode<?> targetNode, BuildFileManifest buildFileManifest) {
     String shortName = targetNode.getBuildTarget().getShortName();
 
     if (!buildFileManifest.getTargets().containsKey(shortName)) {
