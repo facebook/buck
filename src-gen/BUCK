@@ -6,10 +6,10 @@ java_library(
     ],
     abi_generation_mode = "source",
     # Thrift generated code has a dependency on javax.annotation.Generated.
-    # In Java 10, we have to add an explicit module dependency to access this.
+    # In Java 11, we have to add an explicit module dependency to access this.
     extra_arguments = select({
         "DEFAULT": [],
-        "//tools/build/config:java_10": ["--add-modules", "java.xml.ws.annotation"],
+        "//tools/build/config:java_11": ["--add-modules", "java.xml.ws.annotation"],
     }),
     visibility = ["PUBLIC"],
     deps = [

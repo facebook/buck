@@ -30,7 +30,7 @@ import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
 
 /**
- * NOTE: A Java10 copy of this file exists in ../java10/JavacTaskWrapper.java. Please make sure to
+ * NOTE: A Java 11 copy of this file exists in ../java11/JavacTaskWrapper.java. Please make sure to
  * update the other copy when modifying this file.
  */
 abstract class JavacTaskWrapper extends JavacTask {

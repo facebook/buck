@@ -42,7 +42,7 @@ import javax.lang.model.type.WildcardType;
  * javax.lang.model.type.TypeMirror}s, but do not depend on any particular implementation of them
  * (beyond the spec).
  *
- * <p>NOTE: A Java10 copy of this file exists in ../java10/StandaloneTypeMirror.java. Please make
+ * <p>NOTE: A Java 11 copy of this file exists in ../java11/StandaloneTypeMirror.java. Please make
  * sure to update the other copy when modifying this file.
  */
 abstract class StandaloneTypeMirror implements TypeMirror {

@@ -319,7 +319,7 @@ class BuckTool(object):
             return argv
         return self._add_args(argv, args)
 
-    def _run_with_nailgun(self, argv, env, java10_test_mode):
+    def _run_with_nailgun(self, argv, env, java11_test_mode):
         """
         Run the command using nailgun.  If the daemon is busy, block until it becomes free.
         """
@@ -380,7 +380,7 @@ class BuckTool(object):
 
         return exit_code
 
-    def _run_without_nailgun(self, argv, env, java10_test_mode):
+    def _run_without_nailgun(self, argv, env, java11_test_mode):
         """
         Run the command by directly invoking `java` (rather than by sending a command via nailgun)
         """
@@ -393,7 +393,7 @@ class BuckTool(object):
         ]
         command.extend(
             self._get_java_args(
-                self._get_buck_version_uid(), java10_test_mode, extra_default_options
+                self._get_buck_version_uid(), java11_test_mode, extra_default_options
             )
         )
         command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
@@ -408,7 +408,7 @@ class BuckTool(object):
             )
 
     def _execute_command_and_maybe_run_target(
-        self, run_fn, env, argv, java10_test_mode
+        self, run_fn, env, argv, java11_test_mode
     ):
         """
         Run a buck command using the specified `run_fn`.  If the command is "run", get the path,
@@ -439,12 +439,12 @@ class BuckTool(object):
 
             argv = argv[1:]
             if len(argv) == 0 or argv[0] != "run":
-                return run_fn(argv, env, java10_test_mode)
+                return run_fn(argv, env, java11_test_mode)
             else:
                 with tempfile.NamedTemporaryFile(dir=self._tmp_dir) as argsfile:
                     # Splice in location of command file to run outside buckd
                     argv = [argv[0]] + ["--command-args-file", argsfile.name] + argv[1:]
-                    exit_code = run_fn(argv, env, java10_test_mode)
+                    exit_code = run_fn(argv, env, java11_test_mode)
                     if exit_code != 0 or os.path.getsize(argsfile.name) == 0:
                         # Build failed, so there's nothing to run.  Exit normally.
                         return exit_code
@@ -458,7 +458,7 @@ class BuckTool(object):
                     cwd = cmd["cwd"].encode("utf8")
                     raise ExecuteTarget(path, argv, envp, cwd)
 
-    def launch_buck(self, build_id, argv, java10_test_mode):
+    def launch_buck(self, build_id, argv, java11_test_mode):
         with Tracing("BuckTool.launch_buck"):
             with JvmCrashLogger(self, self._buck_project.root):
                 self._reporter.build_id = build_id
@@ -521,7 +521,7 @@ class BuckTool(object):
                     if need_start:
                         self.kill_buckd()
                         if not self.launch_buckd(
-                            java10_test_mode, buck_version_uid=buck_version_uid
+                            java11_test_mode, buck_version_uid=buck_version_uid
                         ):
                             use_buckd = False
                             self._reporter.no_buckd_reason = "daemon_failure"
@@ -540,7 +540,7 @@ class BuckTool(object):
                 self._unpack_modules()
 
                 exit_code = self._execute_command_and_maybe_run_target(
-                    run_fn, env, argv, java10_test_mode
+                    run_fn, env, argv, java11_test_mode
                 )
 
                 # Most shells return process termination with signal as
@@ -552,7 +552,7 @@ class BuckTool(object):
                 return exit_code
 
 
-    def launch_buckd(self, java10_test_mode, buck_version_uid=None):
+    def launch_buckd(self, java11_test_mode, buck_version_uid=None):
         with Tracing("BuckTool.launch_buckd"):
             setup_watchman_watch()
             if buck_version_uid is None:
@@ -595,7 +595,7 @@ class BuckTool(object):
 
             command.extend(
                 self._get_java_args(
-                    buck_version_uid, java10_test_mode, extra_default_options
+                    buck_version_uid, java11_test_mode, extra_default_options
                 )
             )
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
@@ -763,7 +763,7 @@ class BuckTool(object):
                     raise
             return True
 
-    def _get_java_args(self, version_uid, java10_test_mode, extra_default_options=None):
+    def _get_java_args(self, version_uid, java11_test_mode, extra_default_options=None):
         with Tracing("BuckTool._get_java_args"):
             java_args = [
                 "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
@@ -784,11 +784,11 @@ class BuckTool(object):
             if (
                 "BUCK_DEFAULT_FILESYSTEM" not in os.environ
                 and (sys.platform == "darwin" or sys.platform.startswith("linux"))
-                and not java10_test_mode
+                and not java11_test_mode
             ):
                 # Change default filesystem to custom filesystem for memory optimizations
                 # Calls like Paths.get() would return optimized Path implementation
-                # TODO: Temporarily disabled for Java 10/11 due to class loader issues.
+                # TODO: Temporarily disabled for Java 11 due to class loader issues.
                 java_args.append(
                     "-Djava.nio.file.spi.DefaultFileSystemProvider="
                     "com.facebook.buck.cli.bootstrapper.filesystem.BuckFileSystemProvider"
