@@ -769,4 +769,16 @@ public class BuckTargetPatternTest {
       assertOptionalEquals(recursive, recursive.flatten());
     }
   }
+
+  @Test
+  public void toleratesWeirdCasesWithoutCrashing() {
+    assertOptionalEquals(null, BuckTargetPattern.parse(""));
+    assertOptionalEquals(null, BuckTargetPattern.parse(" "));
+    assertOptionalEquals(null, BuckTargetPattern.parse("word"));
+    assertOptionalEquals(null, BuckTargetPattern.parse("path/only"));
+    assertOptionalEquals(null, BuckTargetPattern.parse("/bin:/usr/bin"));
+    assertOptionalEquals(null, BuckTargetPattern.parse("no // spaces : allowed"));
+    assertOptionalEquals(null, BuckTargetPattern.parse("'apos//target:here'"));
+    assertOptionalEquals(null, BuckTargetPattern.parse("\"quot//target:here\""));
+  }
 }

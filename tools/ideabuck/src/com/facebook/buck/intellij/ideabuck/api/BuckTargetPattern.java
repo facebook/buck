@@ -56,25 +56,28 @@ public class BuckTargetPattern {
    *
    * <p>Note that no guarantee is given whether or not the target is *semantically* valid.
    */
-  public static Optional<BuckTargetPattern> parse(String s) {
-    Matcher matcher = PATTERN.matcher(s);
-    if (matcher.matches()) {
-      @Nullable String cell = matcher.group("cell");
-      @Nullable String path = matcher.group("path");
-      @Nullable String suffix = matcher.group("suffix");
-      if (path != null && suffix == null) {
-        // Check for recursive pattern
-        if ("...".equals(path)) {
-          path = "";
-          suffix = "/...";
-        } else if (path.endsWith("/...")) {
-          path = path.substring(0, path.length() - 4);
-          suffix = "/...";
-        }
-      }
-      return Optional.of(new BuckTargetPattern(cell, path, suffix));
-    }
-    return Optional.empty();
+  public static Optional<BuckTargetPattern> parse(String raw) {
+    return Optional.of(raw)
+        .filter(s -> !s.isEmpty())
+        .map(PATTERN::matcher)
+        .filter(Matcher::matches)
+        .map(
+            matcher -> {
+              @Nullable String cell = matcher.group("cell");
+              @Nullable String path = matcher.group("path");
+              @Nullable String suffix = matcher.group("suffix");
+              if (path != null && suffix == null) {
+                // Check for recursive pattern
+                if ("...".equals(path)) {
+                  path = "";
+                  suffix = "/...";
+                } else if (path.endsWith("/...")) {
+                  path = path.substring(0, path.length() - 4);
+                  suffix = "/...";
+                }
+              }
+              return new BuckTargetPattern(cell, path, suffix);
+            });
   }
 
   BuckTargetPattern(@Nullable String cellName, @Nullable String cellPath, @Nullable String suffix) {
