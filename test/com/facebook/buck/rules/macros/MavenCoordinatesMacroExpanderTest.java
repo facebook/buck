@@ -16,29 +16,38 @@
 
 package com.facebook.buck.rules.macros;
 
-import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class MavenCoordinatesMacroExpanderTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private ActionGraphBuilder graphBuilder;
   private MavenCoordinatesMacroExpander expander;
@@ -101,38 +110,62 @@ public class MavenCoordinatesMacroExpanderTest {
   }
 
   @Test
-  public void testExpansionOfMavenCoordinates() throws NoSuchBuildTargetException {
+  public void testExpansionOfMavenCoordinates() throws Exception {
     String mavenCoords = "org.foo:bar:1.0";
     BuildTarget target = BuildTargetFactory.newInstance("//:java");
-
-    JavaLibraryBuilder.createBuilder(target).setMavenCoords(mavenCoords).build(graphBuilder);
+    BuildRule rule =
+        JavaLibraryBuilder.createBuilder(target).setMavenCoords(mavenCoords).build(graphBuilder);
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    MacroHandler macroHandler = new MacroHandler(ImmutableMap.of("maven_coords", expander));
-    try {
-      String expansion =
-          macroHandler.expand(
-              target, createCellRoots(filesystem), graphBuilder, "$(maven_coords //:java)");
-      assertEquals("Return maven coordinates do not match provides ones", mavenCoords, expansion);
-    } catch (MacroException e) {
-      fail(String.format("Unexpected MacroException: %s", e.getMessage()));
-    }
+    CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
+    StringWithMacrosConverter converter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(target)
+            .setCellPathResolver(cellPathResolver)
+            .addExpanders(expander)
+            .build();
+
+    String input = "$(maven_coords //:java)";
+
+    String expansion = coerceAndStringify(filesystem, cellPathResolver, converter, input, rule);
+
+    assertEquals("Return maven coordinates do not match provides ones", mavenCoords, expansion);
   }
 
   @Test
-  public void testMissingBuildRule() throws NoSuchBuildTargetException {
+  public void testMissingBuildRule() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:java");
+    BuildRule rule = JavaLibraryBuilder.createBuilder(target).build(graphBuilder);
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    MacroHandler macroHandler = new MacroHandler(ImmutableMap.of("maven_coords", expander));
-    try {
-      macroHandler.expand(
-          target, createCellRoots(filesystem), graphBuilder, "$(maven_coords //:foo)");
-      fail("Expected MacroException; Rule does not exist");
-    } catch (MacroException e) {
-      assertTrue(
-          "Expected MacroException that indicates target does not exist",
-          e.getMessage().contains("no rule //:foo"));
-    }
+    CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
+    StringWithMacrosConverter converter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(target)
+            .setCellPathResolver(cellPathResolver)
+            .addExpanders(expander)
+            .build();
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("no rule //:foo");
+
+    coerceAndStringify(filesystem, cellPathResolver, converter, "$(maven_coords //:foo)", rule);
+  }
+
+  private String coerceAndStringify(
+      ProjectFilesystem filesystem,
+      CellPathResolver cellPathResolver,
+      StringWithMacrosConverter converter,
+      String input,
+      BuildRule rule)
+      throws CoerceFailedException {
+    StringWithMacros stringWithMacros =
+        (StringWithMacros)
+            new DefaultTypeCoercerFactory()
+                .typeCoercerForType(StringWithMacros.class)
+                .coerce(cellPathResolver, filesystem, rule.getBuildTarget().getBasePath(), input);
+    Arg arg = converter.convert(stringWithMacros, graphBuilder);
+    return Arg.stringify(
+        arg, DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)));
   }
 }

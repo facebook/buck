@@ -16,10 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.macros.MacroException;
-import com.facebook.buck.core.macros.MacroMatchResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -32,7 +29,6 @@ import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.shell.WorkerTool;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -58,54 +54,6 @@ public class WorkerMacroArg extends ProxyArg {
     this.workerTool = workerTool;
     this.startupCommand = startupCommand;
     this.startupEnvironment = startupEnvironment;
-  }
-
-  /** @return a {@link WorkerMacroArg} which wraps the given {@link MacroArg}. */
-  public static WorkerMacroArg fromMacroArg(
-      MacroArg arg,
-      MacroHandler macroHandler,
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String unexpanded)
-      throws MacroException {
-
-    for (MacroMatchResult matchResult : macroHandler.getMacroMatchResults(unexpanded)) {
-      if (macroHandler.getExpander(matchResult.getMacroType()) instanceof WorkerMacroExpander
-          && matchResult.getStartIndex() != 0) {
-        throw new MacroException(
-            String.format("the worker macro in \"%s\" must be at the beginning", unexpanded));
-      }
-    }
-
-    // extract the BuildTargetPaths referenced in any macros
-    ImmutableList.Builder<BuildTarget> targetsBuilder = new ImmutableList.Builder<>();
-    macroHandler.extractParseTimeDeps(
-        target, cellNames, unexpanded, targetsBuilder, new ImmutableSet.Builder<>());
-    ImmutableList<BuildTarget> targets = targetsBuilder.build();
-
-    if (targets.isEmpty()) {
-      throw new MacroException(
-          String.format(
-              "Unable to extract any build targets for the macros " + "used in \"%s\" of target %s",
-              unexpanded, target));
-    }
-    BuildTarget workerTarget = targets.get(0);
-    BuildRule workerRule = resolver.getRule(workerTarget);
-    if (!(workerRule instanceof WorkerTool)) {
-      throw new MacroException(
-          String.format(
-              "%s used in worker macro, \"%s\", of target %s does "
-                  + "not correspond to a worker_tool",
-              workerTarget, unexpanded, target));
-    }
-    WorkerTool workerTool = (WorkerTool) workerRule;
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    Tool exe = workerTool.getTool();
-    ImmutableList<String> startupCommand = exe.getCommandPrefix(pathResolver);
-    ImmutableMap<String, String> startupEnvironment = exe.getEnvironment(pathResolver);
-    return new WorkerMacroArg(arg, workerTarget, workerTool, startupCommand, startupEnvironment);
   }
 
   /** @return a {@link WorkerMacroArg} which wraps the given {@link StringWithMacros}. */

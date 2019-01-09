@@ -21,8 +21,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.macros.MacroException;
-import com.facebook.buck.core.macros.MacroMatchResult;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -34,15 +32,20 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -63,14 +66,13 @@ public class QueryTargetsMacroExpanderTest {
   private CellPathResolver cellNames;
   private BuildRule rule;
   private BuildRule dep;
-  private MacroHandler handler;
-  private HashMapWithStats<MacroMatchResult, Object> cache;
+  private HashMapWithStats<Macro, Object> cache;
+  private StringWithMacrosConverter converter;
 
   @Before
   public void setUp() {
     cache = new HashMapWithStats<>();
     expander = new QueryTargetsMacroExpander(Optional.empty());
-    handler = new MacroHandler(ImmutableMap.of("query_targets", expander));
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
     TargetNode<?> depNode =
@@ -93,6 +95,14 @@ public class QueryTargetsMacroExpanderTest {
 
     dep = graphBuilder.requireRule(depNode.getBuildTarget());
     rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
+
+    converter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(ruleNode.getBuildTarget())
+            .setCellPathResolver(cellNames)
+            .addExpanders(expander)
+            .setPrecomputedWorkCache(cache)
+            .build();
   }
 
   @Test
@@ -177,11 +187,19 @@ public class QueryTargetsMacroExpanderTest {
     assertEquals(getsSoFar + 1, cache.numGets());
   }
 
-  private void assertExpandsTo(String input, BuildRule rule, String expected)
-      throws MacroException {
-
-    String results = handler.expand(rule.getBuildTarget(), cellNames, graphBuilder, input, cache);
-
+  private void assertExpandsTo(String input, BuildRule rule, String expected) throws Exception {
+    String results = coerceAndStringify(input, rule);
     assertEquals(expected, results);
+  }
+
+  private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {
+    StringWithMacros stringWithMacros =
+        (StringWithMacros)
+            new DefaultTypeCoercerFactory()
+                .typeCoercerForType(StringWithMacros.class)
+                .coerce(cellNames, filesystem, rule.getBuildTarget().getBasePath(), input);
+    Arg arg = converter.convert(stringWithMacros, graphBuilder);
+    return Arg.stringify(
+        arg, DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)));
   }
 }
