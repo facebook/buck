@@ -135,6 +135,17 @@ public class DoctorReportHelper {
   }
 
   public DoctorEndpointResponse uploadRequest(DoctorEndpointRequest request) {
+    OkHttpClient httpClient =
+        new OkHttpClient.Builder()
+            .connectTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
+            .readTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
+            .writeTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
+            .build();
+    return uploadRequest(httpClient, request);
+  }
+
+  @VisibleForTesting
+  DoctorEndpointResponse uploadRequest(OkHttpClient httpClient, DoctorEndpointRequest request) {
     if (!doctorConfig.getEndpointUrl().isPresent()) {
       String errorMsg =
           String.format(
@@ -151,13 +162,6 @@ public class DoctorReportHelper {
           "Failed to encode request to JSON. " + "Reason: " + e.getMessage());
     }
 
-    OkHttpClient httpClient =
-        new OkHttpClient.Builder()
-            .connectTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
-            .readTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
-            .writeTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
-            .build();
-
     Response httpResponse;
     try {
       RequestBody requestBody;
@@ -173,9 +177,15 @@ public class DoctorReportHelper {
         requestBody = formBody.build();
       }
 
-      Request httpRequest =
-          new Request.Builder().url(doctorConfig.getEndpointUrl().get()).post(requestBody).build();
-      httpResponse = httpClient.newCall(httpRequest).execute();
+      Request.Builder requestBuilder = new Request.Builder();
+      requestBuilder.url(doctorConfig.getEndpointUrl().get()).post(requestBody);
+
+      for (Map.Entry<String, String> entry :
+          doctorConfig.getEndpointExtraRequestHeaders().entrySet()) {
+        requestBuilder.addHeader(entry.getKey(), entry.getValue());
+      }
+
+      httpResponse = httpClient.newCall(requestBuilder.build()).execute();
     } catch (IOException e) {
       return createErrorDoctorEndpointResponse(
           "Failed to perform the request to "

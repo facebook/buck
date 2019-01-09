@@ -37,6 +37,7 @@ abstract class AbstractDoctorConfig implements ConfigView<BuckConfig> {
   public static final String ENDPOINT_URL_FIELD = "endpoint_url";
   private static final String ENDPOINT_TIMEOUT_MS_FIELD = "endpoint_timeout_ms";
   static final String ENDPOINT_EXTRA_ARGS_FIELD = "endpoint_extra_request_args";
+  public static final String ENDPOINT_EXTRA_HEADERS_FIELD = "endpoint_extra_request_headers";
 
   // Fields for the report upload endpoint.
   public static final String REPORT_UPLOAD_PATH_FIELD = "report_upload_path";
@@ -78,6 +79,11 @@ abstract class AbstractDoctorConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public ImmutableMap<String, String> getEndpointExtraRequestArgs() {
     return getDelegate().getMap(DOCTOR_SECTION, ENDPOINT_EXTRA_ARGS_FIELD);
+  }
+
+  @Value.Lazy
+  public ImmutableMap<String, String> getEndpointExtraRequestHeaders() {
+    return getDelegate().getMap(DOCTOR_SECTION, ENDPOINT_EXTRA_HEADERS_FIELD);
   }
 
   @Value.Lazy
