@@ -56,7 +56,7 @@
     STAR = '*'
     DOUBLE_STAR = '**'
 
-    LINE_COMMENT = 'regexp:#.*'
+    LINE_COMMENT = 'regexp:#[^\r\n]*'
     DOUBLE_QUOTED_STRING="regexp:\"([^\\\"\r\n]|\\[^\r\n])*\"?"
     SINGLE_QUOTED_STRING="regexp:'([^\\\'\r\n]|\\[^\r\n])*'?"
     DOUBLE_QUOTED_DOC_STRING="regexp:\"\"\".*(\"\"\")?"

@@ -46,7 +46,7 @@ EOL="\r"|"\n"|"\r\n"
 LINE_WS=[\ \t\f]
 
 BOOLEAN=(True|False)
-LINE_COMMENT=#.*
+LINE_COMMENT=#[^\r\n]*
 
 ANY_ESCAPE_SEQUENCE = \\[^]
 
