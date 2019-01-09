@@ -26,7 +26,8 @@ public class JavaVersion {
     if (majorVersion == 0) {
       String[] versionParts =
           Objects.requireNonNull(System.getProperty("java.version")).split("\\.");
-      majorVersion = Integer.parseInt((versionParts[0] == "1") ? versionParts[1] : versionParts[0]);
+      majorVersion =
+          Integer.parseInt((versionParts[0].equals("1")) ? versionParts[1] : versionParts[0]);
     }
     return majorVersion;
   }
