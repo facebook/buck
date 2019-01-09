@@ -14,7 +14,7 @@ com.android.tools.layoutlib:layoutlib-api:25.2.0
 copied into a single module which alters certain package paths. For example,
 com.android.SDKConstants becomes com.android.common.SDKConstants. This is done to avoid conflicts
 with different version of those libraries in //third-party/java/android
-
+4) Applied patch from tools-targetApi.patch to fix https://github.com/facebook/buck/issues/2149
 
 == How to build apksig.jar
 1) Download source code from Google Open Source https://android.googlesource.com/platform/tools/apksig/+/master/src/main/java/com/android/apksig

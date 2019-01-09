@@ -1,0 +1,11 @@
+diff --git a/third-party/java/aosp/src/com/android/manifmerger/OtherOperationType.java b/third-party/java/aosp/src/com/android/manifmerger/OtherOperationType.java
+index d0ca70b544..0b7f76885b 100644
+--- a/third-party/java/aosp/src/com/android/manifmerger/OtherOperationType.java
++++ b/third-party/java/aosp/src/com/android/manifmerger/OtherOperationType.java
+@@ -26,5 +26,5 @@ public enum OtherOperationType {
+     ignore,
+
+     // used to direct lint
+-    targetAPI
++    targetApi
+ }
