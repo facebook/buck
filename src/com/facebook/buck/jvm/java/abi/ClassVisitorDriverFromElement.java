@@ -143,6 +143,15 @@ class ClassVisitorDriverFromElement {
               .toArray(size -> new String[size]));
       classVisitorStarted = true;
 
+      // Handle nests in Java 11+. See JEP 181 (https://openjdk.java.net/jeps/181) for details.
+      if (classFileVersion >= Opcodes.V11) {
+        if (e.getNestingKind().isNested()) {
+          visitNestHost(e, visitor);
+        } else {
+          visitNestMembers(e, visitor);
+        }
+      }
+
       visitAnnotations(e, visitor::visitAnnotation);
 
       super.visitType(e, visitor);
@@ -160,6 +169,27 @@ class ClassVisitorDriverFromElement {
       innerClassesTable.reportInnerClassReferences(visitor);
 
       return null;
+    }
+
+    private void visitNestHost(TypeElement e, ClassVisitor visitor) {
+      TypeElement nestHost = e;
+      while (nestHost.getNestingKind().isNested()) {
+        nestHost = (TypeElement) nestHost.getEnclosingElement();
+      }
+
+      visitor.visitNestHost(descriptorFactory.getInternalName(nestHost));
+    }
+
+    private void visitNestMembers(TypeElement e, ClassVisitor visitor) {
+      if (e.getNestingKind().isNested()) {
+        visitor.visitNestMember(descriptorFactory.getInternalName(e));
+      }
+
+      for (Element child : e.getEnclosedElements()) {
+        if (child.getKind().isClass() || child.getKind().isInterface()) {
+          visitNestMembers((TypeElement) child, visitor);
+        }
+      }
     }
 
     private void generateBridges(

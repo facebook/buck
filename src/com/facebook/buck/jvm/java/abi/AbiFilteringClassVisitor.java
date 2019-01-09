@@ -16,6 +16,10 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.google.common.base.Preconditions;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -32,7 +36,10 @@ class AbiFilteringClassVisitor extends ClassVisitor {
   @Nullable private String name;
   @Nullable private String outerName = null;
   private int classAccess;
+  private int classVersion;
   private boolean hasVisibleConstructor = false;
+  private Set<String> includedInnerClasses = new HashSet<>();
+  private List<String> nestMembers = new ArrayList<>();
 
   public AbiFilteringClassVisitor(ClassVisitor cv) {
     this(cv, null);
@@ -53,6 +60,7 @@ class AbiFilteringClassVisitor extends ClassVisitor {
       String[] interfaces) {
     this.name = name;
     classAccess = access;
+    classVersion = version;
     super.visit(version, access, name, signature, superName, interfaces);
   }
 
@@ -66,7 +74,14 @@ class AbiFilteringClassVisitor extends ClassVisitor {
       return;
     }
 
+    includedInnerClasses.add(name);
     super.visitInnerClass(name, outerName, innerName, access);
+  }
+
+  @Override
+  public void visitNestMember(String nestMember) {
+    Preconditions.checkState(classVersion >= Opcodes.V11);
+    nestMembers.add(nestMember);
   }
 
   @Override
@@ -131,6 +146,16 @@ class AbiFilteringClassVisitor extends ClassVisitor {
       }
       super.visitMethod(Opcodes.ACC_PRIVATE, "<init>", desc, null, null);
     }
+
+    // Filter nest members to included inner classes. Other nest members don't matter for ABI
+    // purposes. Even though other members will point to this class as their nest host, this
+    // asymmetry only matters at runtime when access control checks happen.
+    for (String nestMember : nestMembers) {
+      if (includedInnerClasses.contains(nestMember)) {
+        super.visitNestMember(nestMember);
+      }
+    }
+
     super.visitEnd();
   }
 

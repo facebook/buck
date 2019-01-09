@@ -121,6 +121,7 @@ class StubJarClassEntry extends StubJarEntry {
   private static class InnerClassSortingClassVisitor extends ClassVisitor {
     private final String className;
     private final List<InnerClassNode> innerClasses = new ArrayList<>();
+    private final List<String> nestMembers = new ArrayList<>();
 
     private InnerClassSortingClassVisitor(String className, ClassVisitor cv) {
       super(Opcodes.ASM7, cv);
@@ -130,6 +131,11 @@ class StubJarClassEntry extends StubJarEntry {
     @Override
     public void visitInnerClass(String name, String outerName, String innerName, int access) {
       innerClasses.add(new InnerClassNode(name, outerName, innerName, access));
+    }
+
+    @Override
+    public void visitNestMember(String nestMember) {
+      nestMembers.add(nestMember);
     }
 
     @Override
@@ -155,6 +161,8 @@ class StubJarClassEntry extends StubJarEntry {
       for (InnerClassNode innerClass : innerClasses) {
         innerClass.accept(cv);
       }
+
+      nestMembers.stream().sorted().forEach(nestMember -> cv.visitNestMember(nestMember));
 
       super.visitEnd();
     }
