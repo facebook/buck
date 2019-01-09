@@ -420,7 +420,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                     try {
                       success = javacTask.call();
                     } catch (IllegalStateException ex) {
-                      if (ex.getLocalizedMessage().equals("no source files")) {
+                      if (ex.getLocalizedMessage().equals("no source files")
+                          || ex.getLocalizedMessage().equals("error: no source files")) {
                         success = true;
                       }
                     }
