@@ -53,7 +53,7 @@ public abstract class AbstractCxxSource { // NOPMD
     OBJC("objective-c", "objective-c-cpp-output", Optional.of("objective-c-header"), "m"),
     OBJCXX("objective-c++", "objective-c++-cpp-output", Optional.of("objective-c++-header"), "mm"),
     CUDA("cuda", "cuda-cpp-output", "cu"),
-    HIP("hip", "hip-cpp-output", "hcc"),
+    HIP("hip", "hip-cpp-output", "hip"),
 
     C_CPP_OUTPUT("cpp-output", "cpp-output", "i"),
     CXX_CPP_OUTPUT("c++-cpp-output", "c++-cpp-output", "ii"),
