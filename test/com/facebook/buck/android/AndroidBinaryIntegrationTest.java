@@ -643,6 +643,17 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testErrorReportingDuringManifestMerging() throws IOException {
+    ProcessResult processResult =
+        workspace.runBuckBuild("//apps/sample:dump_invalid_merged_manifest");
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "The prefix \"tools\" for attribute \"tools:targetAPI\" "
+                + "associated with an element type \"intent-filter\" is not bound."));
+  }
+
+  @Test
   public void testProguardOutput() throws IOException {
     ImmutableMap<String, Path> outputs =
         workspace.buildMultipleAndReturnOutputs(

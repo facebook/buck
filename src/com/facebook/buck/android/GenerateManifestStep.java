@@ -128,7 +128,8 @@ public class GenerateManifestStep implements Step {
 
       return mergingReport;
     } catch (ManifestMerger2.MergeFailureException e) {
-      throw new HumanReadableException(e, "Error generating manifest file");
+      throw new HumanReadableException(
+          e.getCause(), "Error generating manifest file: %s", e.getMessage());
     }
   }
 
