@@ -29,6 +29,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.Genrule;
@@ -36,7 +37,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Function;
 import org.immutables.value.Value;
 
 /** Rule for generating an apple package via external script. */
@@ -99,9 +99,6 @@ public class ExternallyBuiltApplePackage extends Genrule {
   abstract static class AbstractApplePackageConfigAndPlatformInfo {
     public abstract ApplePackageConfig getConfig();
 
-    @Value.Auxiliary
-    protected abstract Function<String, Arg> getMacroExpander();
-
     /**
      * The apple cxx platform in question.
      *
@@ -142,7 +139,7 @@ public class ExternallyBuiltApplePackage extends Genrule {
     @Value.Derived
     @Value.Auxiliary
     public Arg getExpandedArg() {
-      return getMacroExpander().apply(getConfig().getCommand());
+      return StringArg.of(getConfig().getCommand());
     }
   }
 }

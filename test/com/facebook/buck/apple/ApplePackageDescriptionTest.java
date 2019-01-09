@@ -33,7 +33,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -41,7 +40,6 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
-import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSortedSet;
@@ -101,52 +99,6 @@ public class ApplePackageDescriptionTest {
         hasItem(
             graphBuilder.getRule(
                 bundleBuildTarget.withFlavors(InternalFlavor.of("macosx-x86_64")))));
-  }
-
-  @Test
-  public void descriptionExpandsLocationMacrosAndTracksDependencies() {
-    ApplePackageDescription description = descriptionWithCommand("echo $(location :exportfile)");
-    BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance("//foo:binary");
-    BuildTarget bundleBuildTarget = BuildTargetFactory.newInstance("//foo:bundle");
-    BuildTarget exportFileBuildTarget = BuildTargetFactory.newInstance("//foo:exportfile");
-    TargetGraph graph =
-        TargetGraphFactory.newInstance(
-            new ExportFileBuilder(exportFileBuildTarget).build(),
-            AppleBinaryBuilder.createBuilder(binaryBuildTarget).build(),
-            AppleBundleBuilder.createBuilder(bundleBuildTarget)
-                .setBinary(binaryBuildTarget)
-                .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-                .setInfoPlist(FakeSourcePath.of("Info.plist"))
-                .build());
-
-    ApplePackageDescriptionArg arg =
-        ApplePackageDescriptionArg.builder()
-            .setName("package")
-            .setBundle(bundleBuildTarget)
-            .build();
-
-    BuildTarget packageBuildTarget = BuildTargetFactory.newInstance("//foo:package#macosx-x86_64");
-
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(graph);
-
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create();
-    ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
-    description.findDepsForTargetFromConstructorArgs(
-        packageBuildTarget,
-        TestCellPathResolver.get(projectFilesystem),
-        arg,
-        implicitDeps,
-        ImmutableSortedSet.naturalOrder());
-    graphBuilder.requireAllRules(implicitDeps.build());
-    BuildRule rule =
-        description.createBuildRule(
-            TestBuildRuleCreationContextFactory.create(graph, graphBuilder, projectFilesystem),
-            packageBuildTarget,
-            params,
-            arg);
-
-    assertThat(rule.getBuildDeps(), hasItem(graphBuilder.getRule(exportFileBuildTarget)));
   }
 
   private ApplePackageDescription descriptionWithCommand(String command) {

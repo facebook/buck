@@ -39,7 +39,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
@@ -78,7 +77,6 @@ public class ExternallyBuiltApplePackageTest {
     config =
         ApplePackageConfigAndPlatformInfo.of(
             ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),
-            StringArg::of,
             FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_I386_PLATFORM);
   }
 
