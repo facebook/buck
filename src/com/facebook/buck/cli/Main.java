@@ -85,6 +85,7 @@ import com.facebook.buck.event.listener.PublicAnnouncementManager;
 import com.facebook.buck.event.listener.RenderingConsole;
 import com.facebook.buck.event.listener.RuleKeyDiagnosticsListener;
 import com.facebook.buck.event.listener.RuleKeyLoggerListener;
+import com.facebook.buck.event.listener.SilentConsoleEventBusListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
@@ -2069,6 +2070,10 @@ public final class Main {
               buildDetailsTemplate,
               remoteExecutionConsoleLineProvider);
       return superConsole;
+    }
+    if (renderingConsole.getVerbosity().isSilent()) {
+      return new SilentConsoleEventBusListener(
+          renderingConsole, clock, locale, executionEnvironment);
     }
     return new SimpleConsoleEventBusListener(
         renderingConsole,
