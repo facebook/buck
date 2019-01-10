@@ -567,6 +567,6 @@ public class SimpleConsoleEventBusListenerTest {
             printBuildId,
             buildDetailsTemplate);
 
-    eventBus.register(listener);
+    listener.register(eventBus);
   }
 }

@@ -29,14 +29,19 @@ abstract class AbstractEventInterval {
   @Value.Parameter
   public abstract OptionalLong getFinish();
 
+  /** @return true if this event pair has a start. */
+  public boolean isStarted() {
+    return getStart().isPresent();
+  }
+
   /** @return true if this event pair has a start and an end, false otherwise. */
   public boolean isComplete() {
-    return getStart().isPresent() && getFinish().isPresent();
+    return isStarted() && getFinish().isPresent();
   }
 
   /** @return true if this event pair has been started, but has not yet been finished. */
   public boolean isOngoing() {
-    return getStart().isPresent() && !getFinish().isPresent();
+    return isStarted() && !getFinish().isPresent();
   }
 
   /** @return the start time of this event or -1 if this pair does not contain a start */
