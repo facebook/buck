@@ -81,6 +81,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ExitCode;
@@ -3177,8 +3178,8 @@ public class SuperConsoleEventBusListenerTest {
     if (stderr.isPresent()) {
       assertThat(console.testConsole.getTextWrittenToStdErr(), equalTo(stderr.get()));
     }
-    assertThat(listener.createRenderLinesAtTime(timeMs), equalTo(lines));
-    assertThat(console.getPendingLogLines(), equalTo(logLines));
+    MoreAsserts.assertIterablesEquals(lines, listener.createRenderLinesAtTime(timeMs));
+    MoreAsserts.assertIterablesEquals(logLines, console.getPendingLogLines());
     console.clearPendingLogLines();
   }
 
@@ -3290,7 +3291,7 @@ public class SuperConsoleEventBusListenerTest {
     ImmutableList.Builder<String> lines;
     lines = ImmutableList.builder();
     listener.renderLines(fakeRenderer, lines, maxLines, false);
-    assertThat(lines.build(), equalTo(fullOutput));
+    MoreAsserts.assertIterablesEquals(fullOutput, lines.build());
     assertThat(fakeRenderer.lastSortWasByTime(), is(false));
   }
 
