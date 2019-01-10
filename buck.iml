@@ -21,9 +21,9 @@
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij" />
-      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/java10" />
-      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/source/java10" />
-      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/plugin/adapter/java10" />
+      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/java11" />
+      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/source/java11" />
+      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/plugin/adapter/java11" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/agent/util/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/exopackage/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/testdata" />
