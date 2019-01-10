@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.event.listener.cachestats;
+package com.facebook.buck.event.listener.stats.cache;
 
 import static org.junit.Assert.assertThat;
 

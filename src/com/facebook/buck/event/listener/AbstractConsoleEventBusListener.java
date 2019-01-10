@@ -37,7 +37,7 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.event.listener.cachestats.CacheRateStatsKeeper;
+import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper;
 import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.ParseEvent;

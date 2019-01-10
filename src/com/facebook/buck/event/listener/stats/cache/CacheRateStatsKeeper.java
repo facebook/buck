@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.event.listener.cachestats;
+package com.facebook.buck.event.listener.stats.cache;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
