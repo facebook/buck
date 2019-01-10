@@ -113,6 +113,8 @@ import com.facebook.buck.cxx.CxxLibraryDescription.CommonArg;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
+import com.facebook.buck.cxx.PrebuiltCxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
@@ -2284,8 +2286,31 @@ public class ProjectGenerator {
                     ImmutableSet.of(
                         AppleLibraryDescription.class,
                         CxxLibraryDescription.class,
-                        PrebuiltAppleFrameworkDescription.class))
+                        PrebuiltAppleFrameworkDescription.class,
+                        PrebuiltCxxLibraryDescription.class))
                 .stream())
+        .map(
+            castedNode -> {
+              // If the item itself is a prebuilt library, add it to framework_search_paths.
+              // This is needed for prebuilt framework's headers to be reference-able.
+              TargetNodes.castArg(castedNode, PrebuiltCxxLibraryDescriptionArg.class)
+                  .ifPresent(
+                      prebuilt -> {
+                        SourcePath path = null;
+                        if (prebuilt.getConstructorArg().getSharedLib().isPresent()) {
+                          path = prebuilt.getConstructorArg().getSharedLib().get();
+                        } else if (prebuilt.getConstructorArg().getStaticLib().isPresent()) {
+                          path = prebuilt.getConstructorArg().getStaticLib().get();
+                        } else if (prebuilt.getConstructorArg().getStaticPicLib().isPresent()) {
+                          path = prebuilt.getConstructorArg().getStaticPicLib().get();
+                        }
+                        if (path != null) {
+                          librarySearchPaths.add(
+                              "$REPO_ROOT/" + resolveSourcePath(path).getParent());
+                        }
+                      });
+              return castedNode;
+            })
         // Keep only the ones that may have frameworks and libraries fields.
         .flatMap(
             input ->
@@ -3192,6 +3217,8 @@ public class ProjectGenerator {
     } else if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
       return Optional.of(
           CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS));
+    } else if (targetNode.getDescription() instanceof PrebuiltCxxLibraryDescription) {
+      return Optional.empty();
     } else {
       String message =
           "Unexpected type: "
@@ -3711,6 +3738,33 @@ public class ProjectGenerator {
                         FrameworkPath.ofSourcePath(
                             prebuilt.get().getConstructorArg().getFramework())));
               }
+              Optional<TargetNode<PrebuiltCxxLibraryDescriptionArg>> prebuiltCxxLib =
+                  TargetNodes.castArg(input, PrebuiltCxxLibraryDescriptionArg.class);
+              if (prebuiltCxxLib.isPresent()) {
+                Iterable<FrameworkPath> deps =
+                    Iterables.concat(
+                        prebuiltCxxLib.get().getConstructorArg().getFrameworks(),
+                        prebuiltCxxLib.get().getConstructorArg().getLibraries());
+                if (prebuiltCxxLib.get().getConstructorArg().getSharedLib().isPresent()) {
+                  return Iterables.concat(
+                      deps,
+                      ImmutableList.of(
+                          FrameworkPath.ofSourcePath(
+                              prebuiltCxxLib.get().getConstructorArg().getSharedLib().get())));
+                } else if (prebuiltCxxLib.get().getConstructorArg().getStaticLib().isPresent()) {
+                  return Iterables.concat(
+                      deps,
+                      ImmutableList.of(
+                          FrameworkPath.ofSourcePath(
+                              prebuiltCxxLib.get().getConstructorArg().getStaticLib().get())));
+                } else if (prebuiltCxxLib.get().getConstructorArg().getStaticPicLib().isPresent()) {
+                  return Iterables.concat(
+                      deps,
+                      ImmutableList.of(
+                          FrameworkPath.ofSourcePath(
+                              prebuiltCxxLib.get().getConstructorArg().getStaticPicLib().get())));
+                }
+              }
 
               return ImmutableList.of();
             });
@@ -3767,13 +3821,27 @@ public class ProjectGenerator {
                 ImmutableSet.of(
                     AppleLibraryDescription.class,
                     CxxLibraryDescription.class,
-                    HalideLibraryDescription.class)))
+                    HalideLibraryDescription.class,
+                    PrebuiltCxxLibraryDescription.class,
+                    PrebuiltAppleFrameworkDescription.class)))
         .append(targetNode)
         .transformAndConcat(
-            input ->
-                TargetNodes.castArg(input, CxxLibraryDescription.CommonArg.class)
-                    .map(input1 -> input1.getConstructorArg().getExportedLinkerFlags())
-                    .orElse(ImmutableList.of()))
+            input -> {
+              Optional<ImmutableList<StringWithMacros>> result;
+              result =
+                  TargetNodes.castArg(input, CxxLibraryDescription.CommonArg.class)
+                      .map(input1 -> input1.getConstructorArg().getExportedLinkerFlags());
+              if (result.isPresent()) {
+                return result.get();
+              }
+              result =
+                  TargetNodes.castArg(input, PrebuiltCxxLibraryDescriptionArg.class)
+                      .map(input1 -> input1.getConstructorArg().getExportedLinkerFlags());
+              if (result.isPresent()) {
+                return result.get();
+              }
+              return ImmutableList.of();
+            })
         .toList();
   }
 

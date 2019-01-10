@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
@@ -34,6 +35,8 @@ public class AppleXCodeDescriptionClassSupplier implements XCodeDescriptionClass
         AppleBinaryDescription.class,
         AppleBundleDescription.class,
         AppleTestDescription.class,
-        SwiftLibraryDescription.class);
+        SwiftLibraryDescription.class,
+        PrebuiltAppleFrameworkDescription.class,
+        PrebuiltCxxLibraryDescription.class);
   }
 }
