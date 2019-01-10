@@ -110,19 +110,16 @@ public final class MoreAsserts {
         fail(
             prefixWithUserMessage(
                 userMessage,
-                "Item "
-                    + index
-                    + " does not exist in the "
-                    + "observed list ("
-                    + errmsgPart
-                    + "): "
-                    + expectedIter.next()));
+                "Item %d does not exist in the observed list (%s): %s",
+                index,
+                errmsgPart,
+                expectedIter.next()));
       }
       Object expectedItem = expectedIter.next();
       Object observedItem = observedIter.next();
       assertEquals(
           prefixWithUserMessage(
-              userMessage, "Item " + index + " in the lists should match (" + errmsgPart + ")."),
+              userMessage, "Item %d in the lists should match (%s).", index, errmsgPart),
           expectedItem,
           observedItem);
       ++index;
@@ -131,8 +128,9 @@ public final class MoreAsserts {
       fail(
           prefixWithUserMessage(
               userMessage,
-              "Extraneous item %s in the observed list (" + errmsgPart + "): %s.",
+              "Extraneous item %d in the observed list (%s): %s.",
               index,
+              errmsgPart,
               observedIter.next()));
     }
   }
