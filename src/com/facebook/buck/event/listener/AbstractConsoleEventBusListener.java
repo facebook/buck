@@ -37,8 +37,8 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.event.listener.cachestats.CacheRateStatsKeeper;
+import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
@@ -73,6 +73,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -130,8 +131,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected ConcurrentLinkedDeque<ActionGraphEvent.Started> actionGraphStarted;
   protected ConcurrentLinkedDeque<ActionGraphEvent.Finished> actionGraphFinished;
 
-  protected ConcurrentHashMap<EventKey, EventPair> actionGraphEvents;
-  protected ConcurrentHashMap<EventKey, EventPair> buckFilesParsingEvents;
+  protected ConcurrentHashMap<EventKey, EventInterval> actionGraphEvents;
+  protected ConcurrentHashMap<EventKey, EventInterval> buckFilesParsingEvents;
 
   @Nullable protected volatile BuildEvent.Started buildStarted;
   @Nullable protected volatile BuildEvent.Finished buildFinished;
@@ -322,15 +323,15 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    *
    * @param start the start timestamp (inclusive)
    * @param end the end timestamp (also inclusive)
-   * @param eventPairs the events to filter.
+   * @param eventIntervals the events to filter.
    * @return a list of all events from the given iterable that fall between the given start and end
    *     times. If an event straddles the given start or end, it will be replaced with a proxy event
    *     pair that cuts off at exactly the start or end.
    */
-  protected static Collection<EventPair> getEventsBetween(
-      long start, long end, Iterable<EventPair> eventPairs) {
-    List<EventPair> outEvents = new ArrayList<>();
-    for (EventPair ep : eventPairs) {
+  protected static Collection<EventInterval> getEventsBetween(
+      long start, long end, Iterable<EventInterval> eventIntervals) {
+    List<EventInterval> outEvents = new ArrayList<>();
+    for (EventInterval ep : eventIntervals) {
       long startTime = ep.getStartTime();
       long endTime = ep.getEndTime();
 
@@ -339,15 +340,15 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
           outEvents.add(ep);
         } else if (startTime >= start && startTime <= end) {
           // If the start time is within bounds, but the end time is not, replace with a proxy
-          outEvents.add(EventPair.proxy(startTime, end));
+          outEvents.add(EventInterval.proxy(startTime, end));
         } else if (endTime <= end && endTime >= start) {
           // If the end time is within bounds, but the start time is not, replace with a proxy
-          outEvents.add(EventPair.proxy(start, endTime));
+          outEvents.add(EventInterval.proxy(start, endTime));
         }
       } else if (ep.isOngoing()) {
         // If the event is ongoing, replace with a proxy
-        outEvents.add(EventPair.proxy(startTime, end));
-      } // Ignore the case where we have an end event but not a start. Just drop that EventPair.
+        outEvents.add(EventInterval.proxy(startTime, end));
+      } // Ignore the case where we have an end event but not a start. Just drop that EventInterval.
     }
     return outEvents;
   }
@@ -375,7 +376,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * @return The amount of time between start and finished if finished is present, otherwise {@link
    *     AbstractConsoleEventBusListener#UNFINISHED_EVENT_PAIR}.
    */
-  protected long logEventPair(
+  protected long logEventInterval(
       String prefix,
       Optional<String> suffix,
       long currentMillis,
@@ -388,13 +389,23 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (startEvent == null) {
       return UNFINISHED_EVENT_PAIR;
     }
-    EventPair pair =
-        EventPair.builder()
-            .setStart(startEvent)
-            .setFinish(Optional.ofNullable(finishedEvent))
+    EventInterval interval =
+        EventInterval.builder()
+            .setStart(startEvent.getTimestamp())
+            .setFinish(
+                finishedEvent == null
+                    ? OptionalLong.empty()
+                    : OptionalLong.of(finishedEvent.getTimestamp()))
             .build();
-    return logEventPair(
-        prefix, suffix, currentMillis, offsetMs, ImmutableList.of(pair), progress, minimum, lines);
+    return logEventInterval(
+        prefix,
+        suffix,
+        currentMillis,
+        offsetMs,
+        ImmutableList.of(interval),
+        progress,
+        minimum,
+        lines);
   }
 
   /**
@@ -417,7 +428,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * @param prefix Prefix to print for this event pair.
    * @param suffix Suffix to print for this event pair.
    * @param currentMillis The current time in milliseconds.
-   * @param eventPairs the collection of start/end events to measure elapsed time.
+   * @param eventIntervals the collection of start/end events to measure elapsed time.
    * @param lines The builder to append lines to.
    * @return True if all events are finished, false otherwise
    */
@@ -425,12 +436,12 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       String prefix,
       Optional<String> suffix,
       long currentMillis,
-      Collection<EventPair> eventPairs,
+      Collection<EventInterval> eventIntervals,
       Optional<Double> progress,
       Optional<Long> minimum,
       ImmutableList.Builder<String> lines) {
 
-    EventPair startAndFinish = getStartAndFinish(eventPairs);
+    EventInterval startAndFinish = getStartAndFinish(eventIntervals);
 
     if (!startAndFinish.getStart().isPresent()) {
       // nothing to display, event has not even started yet
@@ -475,27 +486,28 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * @param offsetMs Offset to remove from calculated time. Set this to a non-zero value if the
    *     event pair would contain another event. For example, build time includes parse time, but to
    *     make the events easier to reason about it makes sense to pull parse time out of build time.
-   * @param eventPairs the collection of start/end events to sum up when calculating elapsed time.
+   * @param eventIntervals the collection of start/end events to sum up when calculating elapsed
+   *     time.
    * @param lines The builder to append lines to.
    * @return The summed time between start and finished events if each start event has a matching
    *     finished event, otherwise {@link AbstractConsoleEventBusListener#UNFINISHED_EVENT_PAIR}.
    */
   @Deprecated
-  protected long logEventPair(
+  protected long logEventInterval(
       String prefix,
       Optional<String> suffix,
       long currentMillis,
       long offsetMs,
-      Collection<EventPair> eventPairs,
+      Collection<EventInterval> eventIntervals,
       Optional<Double> progress,
       Optional<Long> minimum,
       ImmutableList.Builder<String> lines) {
-    if (eventPairs.isEmpty()) {
+    if (eventIntervals.isEmpty()) {
       return UNFINISHED_EVENT_PAIR;
     }
 
-    long completedRunTimesMs = getTotalCompletedTimeFromEventPairs(eventPairs);
-    long currentlyRunningTime = getWorkingTimeFromLastStartUntilNow(eventPairs, currentMillis);
+    long completedRunTimesMs = getTotalCompletedTimeFromEventIntervals(eventIntervals);
+    long currentlyRunningTime = getWorkingTimeFromLastStartUntilNow(eventIntervals, currentMillis);
     boolean stillRunning = currentlyRunningTime >= 0;
     String parseLine = prefix;
     long elapsedTimeMs = completedRunTimesMs - offsetMs;
@@ -526,21 +538,20 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * Calculate event pair that start and end the sequence. If there is any ongoing event, end event
    * would be empty.
    *
-   * @param eventPairs the collection of event starts/stops.
+   * @param eventIntervals the collection of event starts/stops.
    * @return The pair of events, start event is the earliest start event, end event is the latest
    *     finish event, or empty if there are ongoing events, i.e. not completed pairs
    */
-  private static EventPair getStartAndFinish(Collection<EventPair> eventPairs) {
+  private static EventInterval getStartAndFinish(Collection<EventInterval> eventIntervals) {
 
-    Optional<BuckEventExternalInterface> start = Optional.empty();
-    Optional<BuckEventExternalInterface> end = Optional.empty();
+    OptionalLong start = OptionalLong.empty();
+    OptionalLong end = OptionalLong.empty();
     boolean anyOngoing = false;
 
-    for (EventPair pair : eventPairs) {
-      Optional<BuckEventExternalInterface> candidate = pair.getStart();
+    for (EventInterval pair : eventIntervals) {
+      OptionalLong candidate = pair.getStart();
       if (!start.isPresent()
-          || (candidate.isPresent()
-              && candidate.get().getTimestamp() < start.get().getTimestamp())) {
+          || (candidate.isPresent() && candidate.getAsLong() < start.getAsLong())) {
         start = candidate;
       }
 
@@ -551,35 +562,35 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       candidate = pair.getFinish();
       if (!candidate.isPresent()) {
         anyOngoing = true;
-        end = Optional.empty();
+        end = OptionalLong.empty();
         continue;
       }
 
-      if (!end.isPresent() || candidate.get().getTimestamp() > end.get().getTimestamp()) {
+      if (!end.isPresent() || candidate.getAsLong() > end.getAsLong()) {
         end = candidate;
       }
     }
-    return EventPair.of(start, end);
+    return EventInterval.of(start, end);
   }
 
   /**
    * Takes a collection of start and finished events. If there are any events that have a start, but
    * no finished time, the collection is considered ongoing.
    *
-   * @param eventPairs the collection of event starts/stops.
+   * @param eventIntervals the collection of event starts/stops.
    * @param currentMillis the current time.
    * @return -1 if all events are completed, otherwise the time elapsed between the latest event and
    *     currentMillis.
    */
   @Deprecated
   protected static long getWorkingTimeFromLastStartUntilNow(
-      Collection<EventPair> eventPairs, long currentMillis) {
+      Collection<EventInterval> eventIntervals, long currentMillis) {
     // We examine all events to determine whether we have any incomplete events and also
     // to get the latest timestamp available (start or stop).
     long latestTimestamp = 0L;
     long earliestOngoingStart = Long.MAX_VALUE;
     boolean anyEventIsOngoing = false;
-    for (EventPair pair : eventPairs) {
+    for (EventInterval pair : eventIntervals) {
       if (pair.isOngoing()) {
         anyEventIsOngoing = true;
         if (pair.getStartTime() < earliestOngoingStart) {
@@ -598,14 +609,15 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * Get the summed elapsed time from all matched event pairs. Does not consider unmatched event
    * pairs. Pairs are determined by their {@link com.facebook.buck.event.EventKey}.
    *
-   * @param eventPairs a set of paired events (incomplete events are okay).
+   * @param eventIntervals a set of paired events (incomplete events are okay).
    * @return the sum of all times between matched event pairs.
    */
-  protected static long getTotalCompletedTimeFromEventPairs(Collection<EventPair> eventPairs) {
+  protected static long getTotalCompletedTimeFromEventIntervals(
+      Collection<EventInterval> eventIntervals) {
     long totalTime = 0L;
     // Flatten the event groupings into a timeline, so that we don't over count parallel work.
     RangeSet<Long> timeline = TreeRangeSet.create();
-    for (EventPair pair : eventPairs) {
+    for (EventInterval pair : eventIntervals) {
       if (pair.isComplete() && pair.getElapsedTimeMs() > 0) {
         timeline.add(Range.open(pair.getStartTime(), pair.getEndTime()));
       }
@@ -646,21 +658,23 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   public static void aggregateStartedEvent(
-      ConcurrentHashMap<EventKey, EventPair> map, BuckEvent started) {
+      ConcurrentHashMap<EventKey, EventInterval> map, BuckEvent started) {
     map.compute(
         started.getEventKey(),
         (key, pair) ->
-            pair == null ? EventPair.builder().setStart(started).build() : pair.withStart(started));
+            pair == null
+                ? EventInterval.builder().setStart(started.getTimestamp()).build()
+                : pair.withStart(started.getTimestamp()));
   }
 
   public static void aggregateFinishedEvent(
-      ConcurrentHashMap<EventKey, EventPair> map, BuckEvent finished) {
+      ConcurrentHashMap<EventKey, EventInterval> map, BuckEvent finished) {
     map.compute(
         finished.getEventKey(),
         (key, pair) ->
             pair == null
-                ? EventPair.builder().setFinish(finished).build()
-                : pair.withFinish(finished));
+                ? EventInterval.builder().setFinish(finished.getTimestamp()).build()
+                : pair.withFinish(finished.getTimestamp()));
   }
 
   @Subscribe

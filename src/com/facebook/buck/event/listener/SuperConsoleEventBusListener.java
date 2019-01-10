@@ -44,6 +44,7 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.cachestats.CacheRateStatsKeeper;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
+import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -297,7 +298,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       lines.add(buildIdLine.get());
     }
 
-    logEventPair(
+    logEventInterval(
         "Processing filesystem changes",
         Optional.empty(),
         currentTimeMillis,
@@ -328,7 +329,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             Optional.of(this.minimumDurationMillisecondsToShowActionGraph),
             lines);
 
-    logEventPair(
+    logEventInterval(
         "Generating project",
         Optional.empty(),
         currentTimeMillis,
@@ -363,7 +364,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           .getMessage()
           .ifPresent(msg -> lines.add(ansi.asInformationText(msg)));
       long distBuildMs =
-          logEventPair(
+          logEventInterval(
               "Distributed Build",
               getOptionalDistBuildLineSuffix(),
               currentTimeMillis,
@@ -400,16 +401,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     long buildStartedTime = buildStarted.getTimestamp();
     long buildFinishedTime =
         buildFinished != null ? buildFinished.getTimestamp() : currentTimeMillis;
-    Collection<EventPair> filteredBuckFilesParsingEvents =
+    Collection<EventInterval> filteredBuckFilesParsingEvents =
         getEventsBetween(buildStartedTime, buildFinishedTime, buckFilesParsingEvents.values());
-    Collection<EventPair> filteredActionGraphEvents =
+    Collection<EventInterval> filteredActionGraphEvents =
         getEventsBetween(buildStartedTime, buildFinishedTime, actionGraphEvents.values());
     long offsetMs =
-        getTotalCompletedTimeFromEventPairs(filteredBuckFilesParsingEvents)
-            + getTotalCompletedTimeFromEventPairs(filteredActionGraphEvents);
+        getTotalCompletedTimeFromEventIntervals(filteredBuckFilesParsingEvents)
+            + getTotalCompletedTimeFromEventIntervals(filteredActionGraphEvents);
 
     long totalBuildMs =
-        logEventPair(
+        logEventInterval(
             localBuildLinePrefix,
             getOptionalBuildLineSuffix(),
             currentTimeMillis,
@@ -437,7 +438,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
 
     long testRunTime =
-        logEventPair(
+        logEventInterval(
             "Testing",
             renderTestSuffix(),
             currentTimeMillis,
@@ -462,7 +463,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
     }
 
-    logEventPair(
+    logEventInterval(
         "Installing",
         /* suffix */ Optional.empty(),
         currentTimeMillis,

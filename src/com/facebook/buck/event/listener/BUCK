@@ -3,6 +3,9 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "listener",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/event/listener/util:util",
+    ],
     tests = [
         "//test/com/facebook/buck/event/listener/integration:integration",
     ],

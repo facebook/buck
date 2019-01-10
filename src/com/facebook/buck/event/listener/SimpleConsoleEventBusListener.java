@@ -36,6 +36,7 @@ import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestStatusMessage;
@@ -174,10 +175,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     long currentMillis = clock.currentTimeMillis();
     long buildStartedTime = buildStarted != null ? buildStarted.getTimestamp() : Long.MAX_VALUE;
     long buildFinishedTime = buildFinished != null ? buildFinished.getTimestamp() : currentMillis;
-    Collection<EventPair> processingEvents =
+    Collection<EventInterval> processingEvents =
         getEventsBetween(buildStartedTime, buildFinishedTime, actionGraphEvents.values());
-    long offsetMs = getTotalCompletedTimeFromEventPairs(processingEvents);
-    logEventPair(
+    long offsetMs = getTotalCompletedTimeFromEventIntervals(processingEvents);
+    logEventInterval(
         "BUILDING",
         getOptionalBuildLineSuffix(),
         currentMillis,
@@ -216,7 +217,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       return;
     }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    logEventPair(
+    logEventInterval(
         "INSTALLING",
         /* suffix */ Optional.empty(),
         clock.currentTimeMillis(),

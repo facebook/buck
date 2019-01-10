@@ -13,22 +13,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.event.listener;
+package com.facebook.buck.event.listener.util;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.event.external.events.BuckEventExternalInterface;
-import java.util.Optional;
+import java.util.OptionalLong;
 import org.immutables.value.Value;
 
 /** Utility class to help match up start and end events */
 @Value.Immutable(copy = true)
 @BuckStyleImmutable
-abstract class AbstractEventPair {
+abstract class AbstractEventInterval {
   @Value.Parameter
-  public abstract Optional<BuckEventExternalInterface> getStart();
+  public abstract OptionalLong getStart();
 
   @Value.Parameter
-  public abstract Optional<BuckEventExternalInterface> getFinish();
+  public abstract OptionalLong getFinish();
 
   /** @return true if this event pair has a start and an end, false otherwise. */
   public boolean isComplete() {
@@ -42,12 +41,12 @@ abstract class AbstractEventPair {
 
   /** @return the start time of this event or -1 if this pair does not contain a start */
   public long getStartTime() {
-    return getStart().isPresent() ? getStart().get().getTimestamp() : -1;
+    return getStart().orElse(-1);
   }
 
   /** @return the end time of this event or -1 if this pair does not contain an end */
   public long getEndTime() {
-    return getFinish().isPresent() ? getFinish().get().getTimestamp() : -1;
+    return getFinish().orElse(-1);
   }
 
   /**
@@ -69,7 +68,7 @@ abstract class AbstractEventPair {
    * @param end the end time of the resulting pair
    * @return an event pair made from two proxy (synthetic) events
    */
-  public static EventPair proxy(long start, long end) {
-    return EventPair.of(Optional.of(ProxyBuckEvent.of(start)), Optional.of(ProxyBuckEvent.of(end)));
+  public static EventInterval proxy(long start, long end) {
+    return EventInterval.of(OptionalLong.of(start), OptionalLong.of(end));
   }
 }

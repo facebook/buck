@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
@@ -28,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalLong;
 import org.junit.Test;
 
 /** Test static helper functions in {@link AbstractConsoleEventBusListener} */
@@ -67,13 +69,13 @@ public class AbstractConsoleEventBusListenerTest {
 
   @Test
   public void testGetEventsBetween() {
-    EventPair zeroToOneHundred = EventPair.proxy(0, 100);
-    EventPair oneToTwoHundred = EventPair.proxy(100, 200);
-    EventPair twoToThreeHundred = EventPair.proxy(200, 300);
-    EventPair threeToFourHundred = EventPair.proxy(300, 400);
-    EventPair fourToFiveHundred = EventPair.proxy(400, 500);
-    List<EventPair> events =
-        ImmutableList.<EventPair>builder()
+    EventInterval zeroToOneHundred = EventInterval.proxy(0, 100);
+    EventInterval oneToTwoHundred = EventInterval.proxy(100, 200);
+    EventInterval twoToThreeHundred = EventInterval.proxy(200, 300);
+    EventInterval threeToFourHundred = EventInterval.proxy(300, 400);
+    EventInterval fourToFiveHundred = EventInterval.proxy(400, 500);
+    List<EventInterval> events =
+        ImmutableList.<EventInterval>builder()
             .add(zeroToOneHundred)
             .add(oneToTwoHundred)
             .add(twoToThreeHundred)
@@ -81,7 +83,7 @@ public class AbstractConsoleEventBusListenerTest {
             .add(fourToFiveHundred)
             .build();
 
-    Collection<EventPair> fiftyToThreeHundred =
+    Collection<EventInterval> fiftyToThreeHundred =
         AbstractConsoleEventBusListener.getEventsBetween(50, 300, events);
 
     // First event should have been replaced by a proxy
@@ -90,7 +92,7 @@ public class AbstractConsoleEventBusListenerTest {
         fiftyToThreeHundred.contains(zeroToOneHundred));
     assertTrue(
         "0-100 event straddled a boundary, should have been replaced by a proxy of 50-100",
-        fiftyToThreeHundred.contains(EventPair.proxy(50, 100)));
+        fiftyToThreeHundred.contains(EventInterval.proxy(50, 100)));
 
     // Second and third events should be present in their entirety
     assertTrue(
@@ -106,7 +108,7 @@ public class AbstractConsoleEventBusListenerTest {
         fiftyToThreeHundred.contains(threeToFourHundred));
     assertTrue(
         "Fourth event (300-400) starts on a boundary, so it should have been proxied",
-        fiftyToThreeHundred.contains(EventPair.proxy(300, 300)));
+        fiftyToThreeHundred.contains(EventInterval.proxy(300, 300)));
 
     // Fifth event should be left out
     assertFalse(
@@ -116,8 +118,8 @@ public class AbstractConsoleEventBusListenerTest {
 
   @Test
   public void testGetWorkingTimeFromLastStartUntilNowIsNegOneForClosedPairs() {
-    EventPair closed = EventPair.proxy(100, 500);
-    List<EventPair> events = ImmutableList.of(closed);
+    EventInterval closed = EventInterval.proxy(100, 500);
+    List<EventInterval> events = ImmutableList.of(closed);
     long timeUntilNow =
         AbstractConsoleEventBusListener.getWorkingTimeFromLastStartUntilNow(events, 600);
     assertEquals("Time should be -1 since there's no ongoing events", -1L, timeUntilNow);
@@ -126,8 +128,8 @@ public class AbstractConsoleEventBusListenerTest {
   @Test
   public void testGetWorkingTimeFromLastStartUntilNowIsUntilNowForOpenPairs() {
     // Test overlapping ongoing events do not get measured twice
-    EventPair ongoing1 = EventPair.of(Optional.of(ProxyBuckEvent.of(100)), Optional.empty());
-    EventPair ongoing2 = EventPair.of(Optional.of(ProxyBuckEvent.of(200)), Optional.empty());
+    EventInterval ongoing1 = EventInterval.of(OptionalLong.of(100), OptionalLong.empty());
+    EventInterval ongoing2 = EventInterval.of(OptionalLong.of(200), OptionalLong.empty());
     long timeUntilNow =
         AbstractConsoleEventBusListener.getWorkingTimeFromLastStartUntilNow(
             ImmutableList.of(ongoing1, ongoing2), 300);
@@ -136,14 +138,14 @@ public class AbstractConsoleEventBusListenerTest {
     // Test completed events are correctly accounted when getting ongoing time
     // If there are completed events, we don't want to overcount the time spent,
     // so ongoing time is always calculated from the last timestamp in the set.
-    EventPair closed = EventPair.proxy(300, 400);
+    EventInterval closed = EventInterval.proxy(300, 400);
     timeUntilNow =
         AbstractConsoleEventBusListener.getWorkingTimeFromLastStartUntilNow(
             ImmutableList.of(ongoing1, closed), 600);
     assertEquals("Time should only be counted from the last closed event", 200L, timeUntilNow);
 
     // Test that finished-only events do not count as ongoing
-    EventPair finishOnly = EventPair.of(Optional.empty(), Optional.of(ProxyBuckEvent.of(100)));
+    EventInterval finishOnly = EventInterval.of(OptionalLong.empty(), OptionalLong.of(100));
     timeUntilNow =
         AbstractConsoleEventBusListener.getWorkingTimeFromLastStartUntilNow(
             ImmutableList.of(finishOnly), 600);
@@ -151,20 +153,20 @@ public class AbstractConsoleEventBusListenerTest {
   }
 
   @Test
-  public void testGetTotalCompletedTimeFromEventPairs() {
+  public void testGetTotalCompletedTimeFromEventIntervals() {
     // Test events with a gap in between do not count the gap
-    EventPair zeroToOneHundred = EventPair.proxy(0, 100);
-    EventPair oneToThreeHundred = EventPair.proxy(100, 300);
-    EventPair twoToThreeHundred = EventPair.proxy(200, 300);
+    EventInterval zeroToOneHundred = EventInterval.proxy(0, 100);
+    EventInterval oneToThreeHundred = EventInterval.proxy(100, 300);
+    EventInterval twoToThreeHundred = EventInterval.proxy(200, 300);
 
     long timeElapsed =
-        AbstractConsoleEventBusListener.getTotalCompletedTimeFromEventPairs(
+        AbstractConsoleEventBusListener.getTotalCompletedTimeFromEventIntervals(
             ImmutableList.of(zeroToOneHundred, twoToThreeHundred));
     assertEquals("We should not add up time when there are no spanning events", 200L, timeElapsed);
 
     // Test overlapping events do not double-count
     timeElapsed =
-        AbstractConsoleEventBusListener.getTotalCompletedTimeFromEventPairs(
+        AbstractConsoleEventBusListener.getTotalCompletedTimeFromEventIntervals(
             ImmutableList.of(oneToThreeHundred, twoToThreeHundred));
     assertEquals("We should not double count when two event pairs overlap", 200L, timeElapsed);
   }
