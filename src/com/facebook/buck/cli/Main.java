@@ -2277,13 +2277,26 @@ public final class Main {
       if (socketPath.startsWith("local:")) {
         socketPath = socketPath.substring("local:".length());
       }
+      SecurityManager securityManager = System.getSecurityManager();
       NGServer server =
           new NGServer(
               new NGListeningAddress(socketPath),
               1, // store only 1 NGSession in a pool to avoid excessive memory usage
               heartbeatTimeout);
       daemonKillers = new DaemonKillers(housekeepingExecutorService, server, Paths.get(socketPath));
-      server.run();
+      try {
+        server.run();
+      } catch (RuntimeException e) {
+        // server.run() might throw (for example, if this process loses the race with another
+        // process to become the daemon for a given Buck root). Letting the exception go would
+        // kill this thread, but other non-daemon threads have already been started and we haven't
+        // yet installed the unhandled exception handler that would call System.exit, so this
+        // process would live forever as a zombie. We catch the exception, re-instate the original
+        // security manager (because NailGun has replaced it with one that blocks System.exit, and
+        // doesn't restore the original if an exception occurs), and exit.
+        System.setSecurityManager(securityManager);
+        LOG.error(e, "Exception thrown in NailGun server.");
+      }
       System.exit(0);
     }
 
