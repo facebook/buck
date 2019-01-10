@@ -32,6 +32,7 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -67,9 +68,16 @@ public class ArtifactUploader {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       long buildTimeMs) {
-    NamedTemporaryFile archive =
-        getTemporaryArtifactArchive(
-            buildTarget, projectFilesystem, ruleKeys, eventBus, pathsToIncludeInArchive);
+    NamedTemporaryFile archive;
+    try {
+      archive =
+          getTemporaryArtifactArchive(
+              buildTarget, projectFilesystem, ruleKeys, eventBus, pathsToIncludeInArchive);
+    } catch (BuckUncheckedExecutionException e) {
+      LOG.error(e.getMessage());
+      LOG.debug(e.toString() + "\n" + Throwables.getStackTraceAsString(e));
+      return Futures.immediateFuture(null);
+    }
 
     // Store the artifact, including any additional metadata.
     ListenableFuture<Void> storeFuture =
