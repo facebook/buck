@@ -31,7 +31,6 @@ import com.intellij.codeInsight.completion.CompletionContributor;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.icons.AllIcons.Nodes;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -104,12 +103,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
   }
 
   private void addResultForFile(CompletionResultSet result, VirtualFile file, String name) {
-    if (file.isDirectory()) {
-      result.addElement(LookupElementBuilder.create(name).withIcon(Nodes.Folder));
-    } else {
-      // TODO: get filetype for file
-      result.addElement(LookupElementBuilder.create(name).withIcon(BuckIcons.FILE_TYPE));
-    }
+    result.addElement(LookupElementBuilder.create(name).withIcon(file.getFileType().getIcon()));
   }
 
   private void doCellNames(PsiElement position, String prefix, CompletionResultSet result) {
