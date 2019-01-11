@@ -179,7 +179,6 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     }
     String cellName = matcher.group("cell");
     String cellPath = matcher.group("path");
-    String partial = matcher.group("partial");
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
     VirtualFile targetDirectory =
         BuckTargetPattern.parse(cellName + "//" + cellPath)
@@ -195,6 +194,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     } else {
       partialPrefix = cellName + "//" + cellPath;
     }
+    String partial = matcher.group("partial");
     for (VirtualFile child : targetDirectory.getChildren()) {
       String name = child.getName();
       if (!name.startsWith(partial)) {
@@ -229,7 +229,6 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     String cellName = matcher.group("cell");
     String cellPath = matcher.group("path");
     String extPath = matcher.group("extpath");
-    String partial = matcher.group("partial");
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
     VirtualFile targetDirectory =
         BuckTargetPattern.parse(cellName + "//" + cellPath + "/" + extPath)
@@ -245,9 +244,10 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     } else {
       partialPrefix = cellName + "//" + cellPath + ":" + extPath;
     }
+    String partial = matcher.group("partial");
     for (VirtualFile child : targetDirectory.getChildren()) {
       String name = child.getName();
-      if (name.startsWith(partial) && name.endsWith(".bzl")) {
+      if (!child.isDirectory() && name.startsWith(partial) && name.endsWith(".bzl")) {
         addResultForFile(result, child, partialPrefix + name);
       }
     }
@@ -311,7 +311,6 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     }
     String cellName = matcher.group("cell");
     String cellPath = matcher.group("path");
-    String partial = matcher.group("partial");
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
 
     BuckTargetPattern targetPattern =
@@ -339,6 +338,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     } else {
       partialPrefix = cellName + "//" + cellPath;
     }
+    String partial = matcher.group("partial");
     for (VirtualFile child : targetDirectory.getChildren()) {
       String name = child.getName();
       if (!name.startsWith(partial)) {
