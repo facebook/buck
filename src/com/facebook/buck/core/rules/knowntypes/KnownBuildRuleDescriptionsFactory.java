@@ -17,9 +17,9 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
@@ -30,15 +30,14 @@ import org.pf4j.PluginManager;
 
 /** Loads all known build rule types from plugins. */
 class KnownBuildRuleDescriptionsFactory {
-
-  static ImmutableList<DescriptionWithTargetGraph<?>> createBuildDescriptions(
+  static ImmutableList<Description<?>> createBuildDescriptions(
       BuckConfig config,
       ProcessExecutor processExecutor,
       ToolchainProvider toolchainProvider,
       PluginManager pluginManager,
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory) {
 
-    ImmutableList.Builder<DescriptionWithTargetGraph<?>> builder = ImmutableList.builder();
+    ImmutableList.Builder<Description<?>> builder = ImmutableList.builder();
 
     SandboxExecutionStrategy sandboxExecutionStrategy =
         sandboxExecutionStrategyFactory.create(processExecutor, config);

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import java.util.Collection;
 import java.util.Collections;
 import org.pf4j.Extension;
@@ -27,8 +27,7 @@ import org.pf4j.Extension;
 public class VersionDescriptionsProvider implements DescriptionProvider {
 
   @Override
-  public Collection<DescriptionWithTargetGraph<?>> getDescriptions(
-      DescriptionCreationContext context) {
+  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     return Collections.singletonList(VersionedAliasDescription.of());
   }
 }

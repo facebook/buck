@@ -16,9 +16,9 @@
 
 package com.facebook.buck.features.go;
 
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import java.util.Arrays;
@@ -29,8 +29,7 @@ import org.pf4j.Extension;
 public class GoDescriptionsProvider implements DescriptionProvider {
 
   @Override
-  public Collection<DescriptionWithTargetGraph<?>> getDescriptions(
-      DescriptionCreationContext context) {
+  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     GoBuckConfig goBuckConfig = new GoBuckConfig(context.getBuckConfig());
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(context.getBuckConfig());
     ToolchainProvider toolchainProvider = context.getToolchainProvider();

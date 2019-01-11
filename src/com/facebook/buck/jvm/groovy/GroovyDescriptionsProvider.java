@@ -17,9 +17,9 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import java.util.Arrays;
@@ -30,8 +30,7 @@ import org.pf4j.Extension;
 public class GroovyDescriptionsProvider implements DescriptionProvider {
 
   @Override
-  public Collection<DescriptionWithTargetGraph<?>> getDescriptions(
-      DescriptionCreationContext context) {
+  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
     BuckConfig config = context.getBuckConfig();
     GroovyBuckConfig groovyBuckConfig = new GroovyBuckConfig(config);

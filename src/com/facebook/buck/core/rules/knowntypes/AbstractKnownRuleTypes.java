@@ -17,10 +17,10 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
@@ -37,7 +37,7 @@ import org.immutables.value.Value;
 public abstract class AbstractKnownRuleTypes {
 
   @Value.Parameter
-  public abstract ImmutableList<DescriptionWithTargetGraph<?>> getKnownBuildDescriptions();
+  public abstract ImmutableList<Description<?>> getKnownBuildDescriptions();
 
   @Value.Parameter
   public abstract ImmutableList<ConfigurationRuleDescription<?>>

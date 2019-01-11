@@ -16,9 +16,9 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,8 +28,7 @@ import org.pf4j.Extension;
 public class RustDescriptionsProvider implements DescriptionProvider {
 
   @Override
-  public Collection<DescriptionWithTargetGraph<?>> getDescriptions(
-      DescriptionCreationContext context) {
+  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
     RustBuckConfig rustBuckConfig = new RustBuckConfig(context.getBuckConfig());
 

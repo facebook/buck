@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
@@ -49,7 +50,7 @@ public class DefaultKnownRuleTypesFactory implements KnownRuleTypesFactory {
 
   @Override
   public KnownRuleTypes create(Cell cell) {
-    ImmutableList<DescriptionWithTargetGraph<?>> knownBuildRuleDescriptions =
+    ImmutableList<Description<?>> knownBuildRuleDescriptions =
         KnownBuildRuleDescriptionsFactory.createBuildDescriptions(
             cell.getBuckConfig(),
             executor,
