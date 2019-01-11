@@ -18,7 +18,7 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
-import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareTask.TaskStatus;
+import com.facebook.buck.core.graph.transformation.executor.impl.AbstractDepsAwareTask.TaskStatus;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;

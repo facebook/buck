@@ -16,14 +16,9 @@
 
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
-import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.util.function.ThrowingSupplier;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 /**
@@ -34,18 +29,7 @@ import java.util.function.Supplier;
  * <p>This work is contains additional functionality for integrating with the implementation of
  * {@link com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor}.
  */
-class DefaultDepsAwareTask<T> extends DepsAwareTask<T, DefaultDepsAwareTask<T>> {
-
-  /** Status of this task. */
-  enum TaskStatus {
-    NOT_SCHEDULED,
-    SCHEDULED,
-    STARTED,
-    DONE
-  }
-
-  private final AtomicReference<TaskStatus> status =
-      new AtomicReference<>(TaskStatus.NOT_SCHEDULED);
+class DefaultDepsAwareTask<T> extends AbstractDepsAwareTask<T, DefaultDepsAwareTask<T>> {
 
   private DefaultDepsAwareTask(
       Callable<T> callable,
@@ -72,30 +56,5 @@ class DefaultDepsAwareTask<T> extends DepsAwareTask<T, DefaultDepsAwareTask<T>> 
       Callable<U> callable,
       ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<U>>, Exception> depsSupplier) {
     return new DefaultDepsAwareTask<>(callable, depsSupplier);
-  }
-
-  ImmutableSet<DefaultDepsAwareTask<T>> getDependencies() throws Exception {
-    return getDepsSupplier().get();
-  }
-
-  void call() {
-    try {
-      Preconditions.checkState(status.get() == TaskStatus.STARTED);
-      result.complete(getCallable().call());
-    } catch (Exception e) {
-      result.completeExceptionally(e);
-    }
-  }
-
-  TaskStatus getStatus() {
-    return Objects.requireNonNull(status.get());
-  }
-
-  boolean compareAndSetStatus(TaskStatus expect, TaskStatus update) {
-    return status.compareAndSet(expect, update);
-  }
-
-  CompletableFuture<T> getFuture() {
-    return result;
   }
 }

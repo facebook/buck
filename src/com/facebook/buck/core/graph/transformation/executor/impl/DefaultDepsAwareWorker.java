@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
-import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareTask.TaskStatus;
+import com.facebook.buck.core.graph.transformation.executor.impl.AbstractDepsAwareTask.TaskStatus;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import java.util.concurrent.CompletableFuture;
