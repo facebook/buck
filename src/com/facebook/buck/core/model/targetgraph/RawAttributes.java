@@ -18,7 +18,6 @@ package com.facebook.buck.core.model.targetgraph;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Objects;
-import javax.annotation.Nullable;
 
 /**
  * Wrapper around {@code Map<String, Object>} that provides convenient methods to access values with
@@ -33,20 +32,6 @@ public class RawAttributes {
 
   public ImmutableMap<String, Object> getAll() {
     return attributes;
-  }
-
-  /** @return the attribute value or <code>null</code> if such attribute doesn't exist */
-  public @Nullable <T> T get(String attributeName) {
-    @SuppressWarnings("unchecked")
-    T value = (T) attributes.get(attributeName);
-    return value;
-  }
-
-  /** @return the attribute value of the given default value if such attribute doesn't exist */
-  public <T> T get(String attributeName, T defaultValue) {
-    @SuppressWarnings("unchecked")
-    T value = (T) attributes.get(attributeName);
-    return value == null ? defaultValue : value;
   }
 
   @Override

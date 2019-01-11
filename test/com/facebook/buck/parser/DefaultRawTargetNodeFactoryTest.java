@@ -97,9 +97,10 @@ public class DefaultRawTargetNodeFactoryTest {
     assertEquals(
         ImmutableList.of(
             BuildTargetFactory.newInstance("//a/b:d"), BuildTargetFactory.newInstance("//a/b:e")),
-        attributes.get("deps"));
+        attributes.getAll().get("deps"));
 
-    SelectorList<List<SourcePath>> resources = attributes.get("resources");
+    SelectorList<List<SourcePath>> resources =
+        (SelectorList<List<SourcePath>>) attributes.getAll().get("resources");
     assertEquals(1, resources.getSelectors().size());
     Selector<List<SourcePath>> selector = resources.getSelectors().get(0);
     assertEquals(
