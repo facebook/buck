@@ -33,7 +33,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  * <p>Blocking operations that are ran in the {@link DefaultDepsAwareTask} will block the thread,
  * and its corresponding worker.
  */
-class DefaultDepsAwareWorker extends AbstractDepsAwareWorker {
+class DefaultDepsAwareWorker extends AbstractDepsAwareWorker<DefaultDepsAwareTask<?>> {
 
   /**
    * The {@link TaskStatus} is used to synchronize between tasks.

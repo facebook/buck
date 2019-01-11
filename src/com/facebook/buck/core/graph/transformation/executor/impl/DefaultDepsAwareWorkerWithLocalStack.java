@@ -37,7 +37,8 @@ import java.util.concurrent.LinkedBlockingDeque;
  * <p>Blocking operations that are ran in the {@link DefaultDepsAwareTask} will block the thread,
  * and its corresponding worker.
  */
-class DefaultDepsAwareWorkerWithLocalStack extends AbstractDepsAwareWorker {
+class DefaultDepsAwareWorkerWithLocalStack
+    extends AbstractDepsAwareWorker<DefaultDepsAwareTask<?>> {
 
   private final Deque<DefaultDepsAwareTask<?>> localStack = new ArrayDeque<>();
 

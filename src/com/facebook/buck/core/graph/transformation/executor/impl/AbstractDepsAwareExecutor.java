@@ -42,7 +42,7 @@ public class AbstractDepsAwareExecutor<T> implements DepsAwareExecutor<T, Defaul
     this.workers = workers;
   }
 
-  protected static void runWorker(AbstractDepsAwareWorker worker) {
+  protected static void runWorker(AbstractDepsAwareWorker<DefaultDepsAwareTask<?>> worker) {
     try {
       worker.loopForever();
     } catch (InterruptedException e) {

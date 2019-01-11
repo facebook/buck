@@ -17,11 +17,11 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 
 import java.util.concurrent.LinkedBlockingDeque;
 
-abstract class AbstractDepsAwareWorker {
+abstract class AbstractDepsAwareWorker<TaskType> {
 
-  protected final LinkedBlockingDeque<DefaultDepsAwareTask<?>> sharedQueue;
+  protected final LinkedBlockingDeque<TaskType> sharedQueue;
 
-  AbstractDepsAwareWorker(LinkedBlockingDeque<DefaultDepsAwareTask<?>> sharedQueue) {
+  AbstractDepsAwareWorker(LinkedBlockingDeque<TaskType> sharedQueue) {
     this.sharedQueue = sharedQueue;
   }
 
@@ -37,17 +37,17 @@ abstract class AbstractDepsAwareWorker {
     boolean completedOne = false;
 
     while (!completedOne) {
-      DefaultDepsAwareTask<?> task = takeTask();
+      TaskType task = takeTask();
       completedOne = eval(task);
     }
   }
 
-  protected abstract DefaultDepsAwareTask<?> takeTask() throws InterruptedException;
+  protected abstract TaskType takeTask() throws InterruptedException;
 
   /**
    * Performs the actual evaluation of the task.
    *
    * <p>The implementation must ensure that the task status is properly set.
    */
-  protected abstract boolean eval(DefaultDepsAwareTask<?> task) throws InterruptedException;
+  protected abstract boolean eval(TaskType task) throws InterruptedException;
 }
