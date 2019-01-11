@@ -70,7 +70,7 @@ public class AbstractDepsAwareExecutor<T> implements DepsAwareExecutor<T, Defaul
   }
 
   @Override
-  public DefaultDepsAwareTask<T> createTask(
+  public DefaultDepsAwareTask<T> createThrowingTask(
       Callable<T> callable,
       ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<T>>, Exception> depsSupplier) {
     return DefaultDepsAwareTask.ofThrowing(callable, depsSupplier);

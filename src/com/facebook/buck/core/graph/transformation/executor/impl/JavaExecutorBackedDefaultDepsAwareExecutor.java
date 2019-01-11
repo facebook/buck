@@ -80,7 +80,7 @@ public class JavaExecutorBackedDefaultDepsAwareExecutor<T>
   }
 
   @Override
-  public DefaultDepsAwareTask<T> createTask(
+  public DefaultDepsAwareTask<T> createThrowingTask(
       Callable<T> callable,
       ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<T>>, Exception> depsSupplier) {
     return DefaultDepsAwareTask.ofThrowing(callable, depsSupplier);

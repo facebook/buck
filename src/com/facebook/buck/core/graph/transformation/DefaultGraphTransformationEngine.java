@@ -227,7 +227,7 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
             LOG.verbose("Result cache miss. Computing transformation for requested key: %s", key);
             ImmutableMap.Builder<ComputeKey, Future<ComputeResult>> depResults =
                 ImmutableMap.builder();
-            return executor.createTask(
+            return executor.createThrowingTask(
                 () -> computeForKey(key, collectDeps(depResults.build())),
                 MoreSuppliers.memoize(
                     () -> computeDepsForKey(transformer.discoverDeps(key), depResults),
