@@ -102,7 +102,8 @@ public class BuckConfig {
             "public_announcements",
             "log_build_id_to_console_enabled",
             "build_details_template"));
-    ignoreFieldsForDaemonRestartBuilder.put("project", ImmutableSet.of("ide_prompt"));
+    ignoreFieldsForDaemonRestartBuilder.put(
+        "project", ImmutableSet.of("ide_prompt", "ide_force_kill"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "ui",
         ImmutableSet.of(
