@@ -18,6 +18,7 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -45,6 +46,9 @@ abstract class AbstractDepsAwareTask<T, TaskType extends AbstractDepsAwareTask<T
       result.complete(getCallable().call());
     } catch (Exception e) {
       result.completeExceptionally(e);
+    } finally {
+
+      Verify.verify(compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
     }
   }
 

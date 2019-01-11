@@ -104,7 +104,6 @@ class DefaultDepsAwareWorkerWithLocalStack
       return false;
     }
     task.call();
-    Preconditions.checkState(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
     return true;
   }
 

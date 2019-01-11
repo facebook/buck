@@ -90,7 +90,6 @@ class DefaultDepsAwareWorker extends AbstractDepsAwareWorker<DefaultDepsAwareTas
       return false;
     }
     task.call();
-    Verify.verify(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
     return true;
   }
 

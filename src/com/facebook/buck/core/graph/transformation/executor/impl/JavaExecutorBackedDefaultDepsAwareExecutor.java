@@ -144,6 +144,5 @@ public class JavaExecutorBackedDefaultDepsAwareExecutor<T>
     }
 
     task.call();
-    Verify.verify(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
   }
 }
