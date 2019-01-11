@@ -10,9 +10,6 @@ b, c = "b", "c"
 a1 = a2 = "a"
 [b1, c1] = (b2, c2) = b3, c3 = "b", "c"
 
-# Splatting
-a, b = *("a", "b")
-
 # Slicing
 a[0] = "a0"
 a[:] = ["replace", "all"]

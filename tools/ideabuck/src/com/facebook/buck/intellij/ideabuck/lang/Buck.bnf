@@ -108,7 +108,7 @@ function_definition ::= 'def' IDENTIFIER '(' parameter_list? ')' ':' suite
 
 parameter_list ::= parameter (',' parameter)* ','?
 
-parameter ::= IDENTIFIER ['=' single_expression] | '*' IDENTIFIER | '**' IDENTIFIER
+parameter ::= '**' IDENTIFIER | '*' IDENTIFIER | IDENTIFIER ['=' single_expression]
 
 suite ::= simple_statement | INDENT statement+ DEDENT
 
@@ -152,7 +152,7 @@ function_call_suffix ::= '(' argument_list? ')'
 
 argument_list ::= argument (',' argument)* ','?
 
-argument ::= [property_lvalue '='] single_expression | '*' single_expression | '**' single_expression
+argument ::= '**' single_expression | '*' single_expression | [property_lvalue '='] single_expression
 
 property_lvalue ::= IDENTIFIER
 
@@ -168,7 +168,7 @@ dict ::= '{' (dict_entry ((',' dict_entry)* ','? '}' | comprehension_suffix '}')
 
 dict_entry ::= single_expression ':' single_expression
 
-unary_op ::= 'not' | '+' | '-' | '~' | '*'
+unary_op ::= 'not' | '+' | '-' | '~'
 binary_op ::=  'or' | 'and' | '==' | '!=' | '<' | '>' | '<=' | '>='
                     | 'in' | 'not' 'in' | 'is' | 'not' 'is'
                     | '|' | '^' | '&' | '-' | '+' | '*' | '%' | '/' | '//'
