@@ -3903,12 +3903,71 @@ Pkg.Revision = 13.1.3345770
 
 {call buckconfig.entry}
   {param section: 'project' /}
+  {param name: 'ide_force_kill' /}
+  {param description}
+    <p>
+      Configures how the <code>buck project</code> command responds if an
+      instance of Apple's Xcode IDE is running. 
+    </p>
+
+<p>
+<pre class="prettyprint lang-ini">
+{literal}
+[project]
+  ide_force_kill = never
+{/literal}
+</pre>
+</p>
+
+    <p>
+      Possible values are:
+    </p>
+
+    <ul>
+      <li>
+        <code>always</code> : Always terminate Xcode. Do not ask first.
+      </li>
+
+      <li>
+        <code>never</code>  : Never terminate Xcode.
+      </li>
+
+      <li>
+        <code>prompt</code> : Ask the user whether to terminate Xcode.
+        This is the default.
+      </li>
+    </ul>
+
+    <p>
+      To specify that Buck should respond in a way that is different
+      than the <code>.buckconfig</code> setting, use the
+      <code>--config</code> command-line option. 
+    <p>
+
+<pre>
+{literal}
+buck project --config project.ide_force_kill=always
+{/literal}
+</pre>
+</p>
+
+    <p>
+      For more information about the <code>--config</code> option, see 
+      the {call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: '<strong>Common Parameters</strong>' /}{/call} topic.
+    </p>
+
+
+  {/param}
+
+{/call}
+ {call buckconfig.entry}
+  {param section: 'project' /}
   {param name: 'initial_targets' /}
   {param example_value: '//java/com/facebook/schema:generate_thrift_jar' /}
   {param description}
     A space-separated list of {call buck.build_target /}s to run when {call buck.cmd_project /} is
     executed.  This is often a list of {call buck.genrule /}s whose outputs need to exist in order
-    for an IDE to be ale to build a project without the help of Buck.
+    for an IDE to be able to build a project without the help of Buck.
   {/param}
 {/call}
 
