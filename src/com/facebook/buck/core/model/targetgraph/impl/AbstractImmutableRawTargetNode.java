@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.HashCode;
 import org.immutables.value.Value;
 
 /** Immutable implementation of {@link RawTargetNode}. */
@@ -49,10 +48,4 @@ public abstract class AbstractImmutableRawTargetNode implements RawTargetNode {
   @Override
   @Value.Parameter
   public abstract ImmutableSet<VisibilityPattern> getWithinViewPatterns();
-
-  @Override
-  @Value.Lazy
-  public HashCode getHashCode() {
-    return HashCode.fromInt(hashCode());
-  }
 }
