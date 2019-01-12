@@ -32,6 +32,37 @@
     </context>
   </template>
 
+  <template
+    name="read_config2"
+    value="read_config(&quot;$section$&quot;, &quot;$field$&quot;)$END$"
+    description="Expand read_config() function"
+    toReformat="false"
+
+    toShortenFQNames="false">
+    <variable name="section" expression="" defaultValue="&quot;section&quot;" alwaysStopAt="true"/>
+    <variable name="field" expression="" defaultValue="&quot;field&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="BUCK_EXPRESSION" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="read_config3"
+    value="read_config(&quot;$section$&quot;, &quot;$field$&quot;, $default$)$END$"
+    description="Expand read_config() function with a default value"
+    toReformat="false"
+
+    toShortenFQNames="false">
+    <variable name="section" expression="" defaultValue="&quot;section&quot;" alwaysStopAt="true"/>
+    <variable name="field" expression="" defaultValue="&quot;field&quot;" alwaysStopAt="true"/>
+    <variable name="default" expression="" defaultValue="&quot;None&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="BUCK_EXPRESSION" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
   <!-- Some of the most common named arguments for rules -->
 
   <template
