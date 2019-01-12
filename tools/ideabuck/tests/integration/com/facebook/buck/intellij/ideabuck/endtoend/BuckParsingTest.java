@@ -40,6 +40,10 @@ public class BuckParsingTest extends ParsingTestCase {
     doTest(true);
   }
 
+  public void testEmpty() {
+    doTest();
+  }
+
   public void testSimple1() {
     doTest();
   }
