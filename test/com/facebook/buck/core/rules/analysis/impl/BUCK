@@ -20,6 +20,8 @@ java_test(
     srcs = glob(["*Test.java"]),
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
+        "//src/com/facebook/buck/core/rules/analysis/computation:computation",
         "//src/com/facebook/buck/core/rules/analysis/impl:impl",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//test/com/facebook/buck/core/cell:testutil",
