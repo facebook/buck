@@ -100,47 +100,28 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
         CoercedTypeCache.instantiateSkeleton(dtoClass, buildTarget);
     ImmutableMap<String, ParamInfo> allParamInfo =
         CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
-    ImmutableMap<String, Object> configuredAttributes =
-        configureRawTargetNodeAttributes(
-            selectorListResolver,
-            configurationContext,
-            buildTarget,
-            convertRawAttributes(cellPathResolver, filesystem, buildTarget, dtoClass, attributes));
     for (ParamInfo info : allParamInfo.values()) {
-      Object argumentValue = configuredAttributes.get(info.getName());
-      if (argumentValue == null) {
+      Object attribute = attributes.get(info.getName());
+      if (attribute == null) {
         continue;
       }
-      info.setCoercedValue(dtoAndBuild.getFirst(), argumentValue);
+      Object attributeWithSelectableValue =
+          createCoercedAttributeWithSelectableValue(
+              cellPathResolver, filesystem, buildTarget, info, attribute);
+      Object configuredAttributeValue =
+          configureAttributeValue(
+              configurationContext,
+              selectorListResolver,
+              buildTarget,
+              info.getName(),
+              attributeWithSelectableValue);
+      if (configuredAttributeValue != null) {
+        info.setCoercedValue(dtoAndBuild.getFirst(), configuredAttributeValue);
+      }
     }
     T dto = dtoAndBuild.getSecond().apply(dtoAndBuild.getFirst());
     collectDeclaredDeps(cellPathResolver, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
-  }
-
-  private ImmutableMap<String, Object> convertRawAttributes(
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      Class<?> dtoClass,
-      Map<String, ?> rawAttributes)
-      throws CoerceFailedException {
-    ImmutableMap<String, ParamInfo> allParamInfo =
-        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
-    ImmutableMap.Builder<String, Object> populatedAttributesBuilder = ImmutableMap.builder();
-    for (Map.Entry<String, ?> rawAttribute : rawAttributes.entrySet()) {
-      String attributeName = rawAttribute.getKey();
-      ParamInfo paramInfo = allParamInfo.get(attributeName);
-      if (paramInfo == null) {
-        continue;
-      }
-      Object rawValue = rawAttribute.getValue();
-      Object value =
-          createCoercedAttributeWithSelectableValue(
-              cellRoots, filesystem, buildTarget, paramInfo, rawValue);
-      populatedAttributesBuilder.put(attributeName, value);
-    }
-    return populatedAttributesBuilder.build();
   }
 
   private Object createCoercedAttributeWithSelectableValue(
@@ -166,30 +147,6 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       coercer = argumentInfo.getTypeCoercer();
     }
     return coercer.coerce(cellRoots, filesystem, buildTarget.getBasePath(), rawValue);
-  }
-
-  private ImmutableMap<String, Object> configureRawTargetNodeAttributes(
-      SelectorListResolver selectorListResolver,
-      SelectableConfigurationContext configurationContext,
-      BuildTarget buildTarget,
-      ImmutableMap<String, ?> rawTargetNodeAttributes) {
-
-    ImmutableMap.Builder<String, Object> configuredAttributes = ImmutableMap.builder();
-
-    for (Map.Entry<String, ?> entry : rawTargetNodeAttributes.entrySet()) {
-      Object value =
-          configureAttributeValue(
-              configurationContext,
-              selectorListResolver,
-              buildTarget,
-              entry.getKey(),
-              entry.getValue());
-      if (value != null) {
-        configuredAttributes.put(entry.getKey(), value);
-      }
-    }
-
-    return configuredAttributes.build();
   }
 
   @SuppressWarnings("unchecked")
