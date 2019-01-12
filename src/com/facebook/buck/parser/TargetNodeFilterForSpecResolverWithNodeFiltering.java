@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -40,12 +39,12 @@ class TargetNodeFilterForSpecResolverWithNodeFiltering<T extends HasBuildTarget>
   }
 
   @Override
-  public ImmutableMap<BuildTarget, Optional<T>> filter(TargetNodeSpec spec, Iterable<T> nodes) {
+  public ImmutableMap<BuildTarget, T> filter(TargetNodeSpec spec, Iterable<T> nodes) {
     return filter
         .filter(spec, nodes)
         .entrySet()
         .stream()
-        .filter(entry -> !entry.getValue().isPresent() || nodeFilter.test(entry.getValue().get()))
+        .filter(entry -> nodeFilter.test(entry.getValue()))
         .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 }

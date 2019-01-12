@@ -509,28 +509,25 @@ class DefaultParser implements Parser {
   @VisibleForTesting
   static BuildTarget applyDefaultFlavors(
       BuildTarget target,
-      Optional<TargetNode<?>> targetNode,
+      TargetNode<?> targetNode,
       TargetNodeSpec.TargetType targetType,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
     if (target.isFlavored()
-        || !targetNode.isPresent()
         || (targetType == TargetNodeSpec.TargetType.MULTIPLE_TARGETS
             && applyDefaultFlavorsMode == ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
         || applyDefaultFlavorsMode == ParserConfig.ApplyDefaultFlavorsMode.DISABLED) {
       return target;
     }
 
-    TargetNode<?> node = targetNode.get();
-
     ImmutableSortedSet<Flavor> defaultFlavors = ImmutableSortedSet.of();
-    if (node.getConstructorArg() instanceof HasDefaultFlavors) {
-      defaultFlavors = ((HasDefaultFlavors) node.getConstructorArg()).getDefaultFlavors();
+    if (targetNode.getConstructorArg() instanceof HasDefaultFlavors) {
+      defaultFlavors = ((HasDefaultFlavors) targetNode.getConstructorArg()).getDefaultFlavors();
       LOG.debug("Got default flavors %s from args of %s", defaultFlavors, target);
     }
 
-    if (node.getDescription() instanceof ImplicitFlavorsInferringDescription) {
+    if (targetNode.getDescription() instanceof ImplicitFlavorsInferringDescription) {
       defaultFlavors =
-          ((ImplicitFlavorsInferringDescription) node.getDescription())
+          ((ImplicitFlavorsInferringDescription) targetNode.getDescription())
               .addImplicitFlavors(defaultFlavors);
       LOG.debug("Got default flavors %s from description of %s", defaultFlavors, target);
     }

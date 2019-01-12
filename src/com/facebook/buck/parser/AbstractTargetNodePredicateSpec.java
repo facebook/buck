@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Matches all {@link TargetNode} objects in a repository that match the specification. */
@@ -43,13 +42,12 @@ abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
   }
 
   @Override
-  public ImmutableMap<BuildTarget, Optional<TargetNode<?>>> filter(Iterable<TargetNode<?>> nodes) {
-    ImmutableMap.Builder<BuildTarget, Optional<TargetNode<?>>> resultBuilder =
-        ImmutableMap.builder();
+  public ImmutableMap<BuildTarget, TargetNode<?>> filter(Iterable<TargetNode<?>> nodes) {
+    ImmutableMap.Builder<BuildTarget, TargetNode<?>> resultBuilder = ImmutableMap.builder();
 
     for (TargetNode<?> node : nodes) {
       if (!onlyTests() || node.getRuleType().isTestRule()) {
-        resultBuilder.put(node.getBuildTarget(), Optional.of(node));
+        resultBuilder.put(node.getBuildTarget(), node);
       }
     }
 

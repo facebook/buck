@@ -51,7 +51,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /** Responsible for discovering all the build targets that match a set of {@link TargetNodeSpec}. */
@@ -230,9 +229,8 @@ public class TargetSpecResolver {
       FlavorEnhancer<T> flavorEnhancer,
       TargetNodeFilterForSpecResolver<T> targetNodeFilter) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    ImmutableMap<BuildTarget, Optional<T>> partialTargets =
-        targetNodeFilter.filter(spec, targetNodes);
-    for (Map.Entry<BuildTarget, Optional<T>> partialTarget : partialTargets.entrySet()) {
+    ImmutableMap<BuildTarget, T> partialTargets = targetNodeFilter.filter(spec, targetNodes);
+    for (Map.Entry<BuildTarget, T> partialTarget : partialTargets.entrySet()) {
       BuildTarget target =
           flavorEnhancer.enhanceFlavors(
               partialTarget.getKey(), partialTarget.getValue(), spec.getTargetType());
@@ -244,7 +242,7 @@ public class TargetSpecResolver {
   /** Allows to change flavors of some targets while performing the resolution. */
   public interface FlavorEnhancer<T extends HasBuildTarget> {
     BuildTarget enhanceFlavors(
-        BuildTarget target, Optional<T> targetNode, TargetNodeSpec.TargetType targetType);
+        BuildTarget target, T targetNode, TargetNodeSpec.TargetType targetType);
   }
 
   /** Provides target nodes of a given type. */
@@ -257,6 +255,6 @@ public class TargetSpecResolver {
 
   /** Performs filtering of target nodes using a given {@link TargetNodeSpec}. */
   public interface TargetNodeFilterForSpecResolver<T extends HasBuildTarget> {
-    ImmutableMap<BuildTarget, Optional<T>> filter(TargetNodeSpec spec, Iterable<T> nodes);
+    ImmutableMap<BuildTarget, T> filter(TargetNodeSpec spec, Iterable<T> nodes);
   }
 }
