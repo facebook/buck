@@ -17,13 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
@@ -33,7 +30,6 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -66,31 +62,15 @@ public class AuditInputCommand extends AbstractCommand {
     return arguments;
   }
 
-  public ImmutableList<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
-    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
-  }
-
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // TargetNodes for the specified BuildTargetPaths.
-    ImmutableSet<String> fullyQualifiedBuildTargets =
-        ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
+    ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, getArguments());
 
-    if (fullyQualifiedBuildTargets.isEmpty()) {
+    if (targets.isEmpty()) {
       throw new CommandLineException("must specify at least one build target");
     }
-
-    ImmutableSet<BuildTarget> targets =
-        getArgumentsFormattedAsBuildTargets(params.getBuckConfig())
-            .stream()
-            .map(
-                input ->
-                    BuildTargetParser.INSTANCE.parse(
-                        input,
-                        BuildTargetPatternParser.fullyQualified(),
-                        params.getCell().getCellPathResolver()))
-            .collect(ImmutableSet.toImmutableSet());
 
     LOG.debug("Getting input for targets: %s", targets);
 

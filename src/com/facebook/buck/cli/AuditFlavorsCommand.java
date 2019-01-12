@@ -16,15 +16,12 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -69,22 +66,9 @@ public class AuditFlavorsCommand extends AbstractCommand {
     return arguments;
   }
 
-  private ImmutableList<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
-    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
-  }
-
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
-    ImmutableSet<BuildTarget> targets =
-        getArgumentsFormattedAsBuildTargets(params.getBuckConfig())
-            .stream()
-            .map(
-                input ->
-                    BuildTargetParser.INSTANCE.parse(
-                        input,
-                        BuildTargetPatternParser.fullyQualified(),
-                        params.getCell().getCellPathResolver()))
-            .collect(ImmutableSet.toImmutableSet());
+    ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, getArguments());
 
     if (targets.isEmpty()) {
       throw new CommandLineException("must specify at least one build target");
