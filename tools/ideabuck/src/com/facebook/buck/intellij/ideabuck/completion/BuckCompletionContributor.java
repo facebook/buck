@@ -39,15 +39,11 @@ public class BuckCompletionContributor extends CompletionContributor {
   // TODO(#7908512): Need to pull those information from Buck.
   private static final ImmutableList<String> sPropertyNames =
       ImmutableList.of(
-          "name",
           "res",
           "binary_jar",
-          "srcs",
-          "deps",
           "manifest",
           "manifest_skeleton",
           "package_type",
-          "visibility",
           "aar",
           "src_target",
           "src_roots",
@@ -55,10 +51,8 @@ public class BuckCompletionContributor extends CompletionContributor {
           "source_under_test",
           "test_library_project_dir",
           "contacts",
-          "exported_deps",
           "excludes",
           "main",
-          "resources",
           "javadoc_url",
           "store",
           "properties",
