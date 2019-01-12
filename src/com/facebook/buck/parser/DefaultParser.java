@@ -30,7 +30,6 @@ import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.AbstractParserConfig.ApplyDefaultFlavorsMode;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -74,7 +73,6 @@ class DefaultParser implements Parser {
   protected final PerBuildStateFactory perBuildStateFactory;
   protected final DaemonicParserState permState;
   protected final TargetSpecResolver targetSpecResolver;
-  protected final Watchman watchman;
   protected final BuckEventBus eventBus;
   protected final Supplier<ImmutableList<String>> targetPlatforms;
 
@@ -82,11 +80,9 @@ class DefaultParser implements Parser {
       DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
       TargetSpecResolver targetSpecResolver,
-      Watchman watchman,
       BuckEventBus eventBus,
       Supplier<ImmutableList<String>> targetPlatforms) {
     this.perBuildStateFactory = perBuildStateFactory;
-    this.watchman = watchman;
     this.permState = daemonicParserState;
     this.targetSpecResolver = targetSpecResolver;
     this.eventBus = eventBus;
@@ -427,9 +423,7 @@ class DefaultParser implements Parser {
     return ImmutableSet.copyOf(
         Iterables.concat(
             targetSpecResolver.resolveTargetSpecs(
-                eventBus,
                 rootCell,
-                watchman,
                 targetNodeSpecs,
                 (buildTarget, targetNode, targetType) ->
                     applyDefaultFlavors(
@@ -481,9 +475,7 @@ class DefaultParser implements Parser {
       TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
           createTargetNodeProviderForSpecResolver(state);
       return targetSpecResolver.resolveTargetSpecs(
-          eventBus,
           rootCell,
-          watchman,
           specs,
           (buildTarget, targetNode, targetType) ->
               applyDefaultFlavors(buildTarget, targetNode, targetType, applyDefaultFlavorsMode),

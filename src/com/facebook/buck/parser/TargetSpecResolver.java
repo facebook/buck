@@ -56,14 +56,20 @@ import java.util.concurrent.ExecutionException;
 /** Responsible for discovering all the build targets that match a set of {@link TargetNodeSpec}. */
 public class TargetSpecResolver {
 
+  private final BuckEventBus eventBus;
+  private final Watchman watchman;
+
+  public TargetSpecResolver(BuckEventBus eventBus, Watchman watchman) {
+    this.eventBus = eventBus;
+    this.watchman = watchman;
+  }
+
   /**
    * @return a list of sets of build targets where each set contains all build targets that match a
    *     corresponding {@link TargetNodeSpec}.
    */
   public <T extends HasBuildTarget> ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      BuckEventBus eventBus,
       Cell rootCell,
-      Watchman watchman,
       Iterable<? extends TargetNodeSpec> specs,
       FlavorEnhancer<T> flavorEnhancer,
       TargetNodeProviderForSpecResolver<T> targetNodeProvider,
@@ -74,8 +80,7 @@ public class TargetSpecResolver {
     // when returning results.
     ImmutableList<TargetNodeSpec> orderedSpecs = ImmutableList.copyOf(specs);
 
-    Multimap<Path, Integer> perBuildFileSpecs =
-        groupSpecsByBuildFile(eventBus, rootCell, watchman, orderedSpecs);
+    Multimap<Path, Integer> perBuildFileSpecs = groupSpecsByBuildFile(rootCell, orderedSpecs);
 
     // Kick off parse futures for each build file.
     ArrayList<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures =
@@ -111,10 +116,7 @@ public class TargetSpecResolver {
   // Resolve all the build files from all the target specs.  We store these into a multi-map which
   // maps the path to the build file to the index of it's spec file in the ordered spec list.
   private Multimap<Path, Integer> groupSpecsByBuildFile(
-      BuckEventBus eventBus,
-      Cell rootCell,
-      Watchman watchman,
-      ImmutableList<TargetNodeSpec> orderedSpecs)
+      Cell rootCell, ImmutableList<TargetNodeSpec> orderedSpecs)
       throws IOException, InterruptedException {
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     ParserConfig.BuildFileSearchMethod buildFileSearchMethod =

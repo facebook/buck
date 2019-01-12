@@ -58,7 +58,6 @@ public class ParserFactory {
               manifestServiceSupplier,
               fileHashCache),
           targetSpecResolver,
-          watchman,
           eventBus,
           targetPlatforms);
     } else {
@@ -74,7 +73,6 @@ public class ParserFactory {
               manifestServiceSupplier,
               fileHashCache),
           targetSpecResolver,
-          watchman,
           eventBus,
           targetPlatforms);
     }

@@ -121,7 +121,7 @@ public class TargetSpecResolverTest {
             getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()));
 
-    targetNodeTargetSpecResolver = new TargetSpecResolver();
+    targetNodeTargetSpecResolver = new TargetSpecResolver(eventBus, WatchmanFactory.NULL_WATCHMAN);
     parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory);
     flavorEnhancer = (target, targetNode, targetType) -> target;
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
@@ -229,9 +229,7 @@ public class TargetSpecResolverTest {
             false,
             SpeculativeParsing.DISABLED);
     return targetNodeTargetSpecResolver.resolveTargetSpecs(
-        eventBus,
         cell,
-        WatchmanFactory.NULL_WATCHMAN,
         specs,
         flavorEnhancer,
         new TargetNodeProviderForSpecResolver<TargetNode<?>>() {

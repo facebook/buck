@@ -31,7 +31,6 @@ import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.AbstractParserConfig.ApplyDefaultFlavorsMode;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
@@ -69,16 +68,9 @@ class ParserWithConfigurableAttributes extends DefaultParser {
       DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
       TargetSpecResolver targetSpecResolver,
-      Watchman watchman,
       BuckEventBus eventBus,
       Supplier<ImmutableList<String>> targetPlatforms) {
-    super(
-        daemonicParserState,
-        perBuildStateFactory,
-        targetSpecResolver,
-        watchman,
-        eventBus,
-        targetPlatforms);
+    super(daemonicParserState, perBuildStateFactory, targetSpecResolver, eventBus, targetPlatforms);
   }
 
   /**
@@ -238,9 +230,7 @@ class ParserWithConfigurableAttributes extends DefaultParser {
       TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
           createTargetNodeProviderForSpecResolver(state);
       return targetSpecResolver.resolveTargetSpecs(
-          eventBus,
           rootCell,
-          watchman,
           specs,
           (buildTarget, targetNode, targetType) ->
               applyDefaultFlavors(buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
@@ -286,9 +276,7 @@ class ParserWithConfigurableAttributes extends DefaultParser {
     return ImmutableSet.copyOf(
         Iterables.concat(
             targetSpecResolver.resolveTargetSpecs(
-                eventBus,
                 rootCell,
-                watchman,
                 targetNodeSpecs,
                 (buildTarget, targetNode, targetType) ->
                     applyDefaultFlavors(

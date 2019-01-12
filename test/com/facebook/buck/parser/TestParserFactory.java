@@ -81,8 +81,7 @@ public class TestParserFactory {
     return new DefaultParser(
         new DaemonicParserState(parserConfig.getNumParsingThreads()),
         perBuildStateFactory,
-        new TargetSpecResolver(),
-        WatchmanFactory.NULL_WATCHMAN,
+        new TargetSpecResolver(eventBus, WatchmanFactory.NULL_WATCHMAN),
         eventBus,
         ImmutableList::of);
   }
