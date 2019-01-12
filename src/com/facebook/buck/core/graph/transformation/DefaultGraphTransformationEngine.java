@@ -126,8 +126,8 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
   }
 
   @Override
-  public void shutdownNow() {
-    impl.shutdownNow();
+  public void close() {
+    impl.close();
   }
 
   @Override
@@ -194,8 +194,8 @@ public final class DefaultGraphTransformationEngine<ComputeKey, ComputeResult>
       this.executor = executor;
     }
 
-    public void shutdownNow() {
-      executor.shutdownNow();
+    public void close() {
+      executor.close();
     }
 
     private Future<ComputeResult> compute(ComputeKey key) {

@@ -64,7 +64,7 @@ public class JavaExecutorBackedDefaultDepsAwareExecutor<T>
   }
 
   @Override
-  public void shutdownNow() {
+  public void close() {
     isShutdown = true;
   }
 

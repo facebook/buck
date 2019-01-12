@@ -60,7 +60,7 @@ public class VersionedTargetGraphBuilderTest {
 
   @After
   public void tearDown() {
-    executor.shutdownNow();
+    executor.close();
     executorPool.shutdownNow();
   }
 

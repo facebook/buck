@@ -88,7 +88,7 @@ public class DefaultGraphTransformationEngineTest {
 
   @After
   public void cleanUp() {
-    executor.shutdownNow();
+    executor.close();
   }
 
   /**
@@ -151,7 +151,7 @@ public class DefaultGraphTransformationEngineTest {
     assertEquals((Long) 19L, engine.computeUnchecked(1L));
     assertComputationIndexBecomesEmpty(engine.impl.computationIndex);
 
-    executor.shutdownNow();
+    executor.close();
 
     DefaultGraphTransformationEngine<Long, Long> engine2 =
         new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), executor);

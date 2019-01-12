@@ -138,8 +138,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
       }
     }
 
-    asyncTransformationEngine.shutdownNow();
-    versionInfoAsyncTransformationEngine.shutdownNow();
+    asyncTransformationEngine.close();
+    versionInfoAsyncTransformationEngine.close();
     versionInfoExecutor.shutdownNow();
 
     long end = System.currentTimeMillis();

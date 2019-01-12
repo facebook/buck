@@ -40,16 +40,17 @@ import java.util.function.Supplier;
  * synchronization between different instances of {@link DepsAwareTask} other than that its
  * dependencies will be completed before the callable is evaluated.
  */
-public interface DepsAwareExecutor<
-    ResultType, TaskType extends DepsAwareTask<ResultType, TaskType>> {
+public interface DepsAwareExecutor<ResultType, TaskType extends DepsAwareTask<ResultType, TaskType>>
+    extends AutoCloseable {
 
   /**
    * Shuts down the executor workers immediately. This does not shutdown the underlying executor
    * backing the {@link DepsAwareExecutor}
    */
-  void shutdownNow();
+  @Override
+  void close();
 
-  /** @return true iff {@link #shutdownNow()} has been called */
+  /** @return true iff {@link #close()} has been called */
   boolean isShutdown();
 
   /** @return a new {@link DepsAwareTask} that can be executed in this executor */

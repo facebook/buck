@@ -51,7 +51,7 @@ public class AbstractDepsAwareExecutor<T> implements DepsAwareExecutor<T, Defaul
   }
 
   @Override
-  public void shutdownNow() {
+  public void close() {
     isShutdown = true;
     for (int i = 0; i < workers.length; i++) {
       workers[i].cancel(true);

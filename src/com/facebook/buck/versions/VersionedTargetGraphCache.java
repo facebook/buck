@@ -90,34 +90,36 @@ public class VersionedTargetGraphCache {
           typeCoercerFactory,
           timeoutSeconds);
     } else {
-      DepsAwareExecutor<TargetNode<?>, ?> executor;
-      switch (resolvedMode) {
-        case ENABLED:
-          executor = DefaultDepsAwareExecutor.from(pool);
-          break;
-        case ENABLED_LS:
-          executor = DefaultDepsAwareExecutorWithLocalStack.from(pool);
-          break;
-        case ENABLED_JE:
-          executor = JavaExecutorBackedDefaultDepsAwareExecutor.from(pool);
-          break;
-        case DISABLED:
-          throw new AssertionError("Disabled should be handled already");
-        case EXPERIMENT:
-        default:
-          throw new AssertionError(
-              "EXPERIMENT values should have been resolved to ENABLED or DISABLED.");
+      try (DepsAwareExecutor<TargetNode<?>, ?> executor =
+          getDepsAwareExecutor(resolvedMode, pool)) {
+        TargetGraphAndBuildTargets versionedTargetGraph =
+            AsyncVersionedTargetGraphBuilder.transform(
+                new VersionUniverseVersionSelector(
+                    targetGraphAndBuildTargets.getTargetGraph(), versionUniverses),
+                targetGraphAndBuildTargets,
+                executor,
+                typeCoercerFactory,
+                timeoutSeconds);
+        return versionedTargetGraph;
       }
-      TargetGraphAndBuildTargets versionedTargetGraph =
-          AsyncVersionedTargetGraphBuilder.transform(
-              new VersionUniverseVersionSelector(
-                  targetGraphAndBuildTargets.getTargetGraph(), versionUniverses),
-              targetGraphAndBuildTargets,
-              executor,
-              typeCoercerFactory,
-              timeoutSeconds);
-      executor.shutdownNow();
-      return versionedTargetGraph;
+    }
+  }
+
+  private DepsAwareExecutor<TargetNode<?>, ?> getDepsAwareExecutor(
+      VersionTargetGraphMode resolvedMode, ForkJoinPool pool) {
+    switch (resolvedMode) {
+      case ENABLED:
+        return DefaultDepsAwareExecutor.from(pool);
+      case ENABLED_LS:
+        return DefaultDepsAwareExecutorWithLocalStack.from(pool);
+      case ENABLED_JE:
+        return JavaExecutorBackedDefaultDepsAwareExecutor.from(pool);
+      case DISABLED:
+        throw new AssertionError("Disabled should be handled already");
+      case EXPERIMENT:
+      default:
+        throw new AssertionError(
+            "EXPERIMENT values should have been resolved to ENABLED or DISABLED.");
     }
   }
 

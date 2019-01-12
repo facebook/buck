@@ -29,10 +29,11 @@ import java.util.concurrent.Future;
  * request dependent results of other transformations through {@link
  * GraphTransformer#discoverDeps(Object)}
  */
-public interface GraphTransformationEngine<ComputeKey, ComputeResult> {
+public interface GraphTransformationEngine<ComputeKey, ComputeResult> extends AutoCloseable {
 
   /** Shuts down the engine and the backing executor */
-  void shutdownNow();
+  @Override
+  void close();
 
   /**
    * Asynchronously computes the result for the given key

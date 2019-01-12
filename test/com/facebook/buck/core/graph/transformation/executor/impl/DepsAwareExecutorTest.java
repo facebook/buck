@@ -82,7 +82,7 @@ public class DepsAwareExecutorTest {
 
   @After
   public void cleanUp() {
-    executor.shutdownNow();
+    executor.close();
   }
 
   @Test
@@ -127,7 +127,7 @@ public class DepsAwareExecutorTest {
   public void submitRejectsAfterShutdown() {
     expectedException.expect(RejectedExecutionException.class);
 
-    executor.shutdownNow();
+    executor.close();
     assertTrue(executor.isShutdown());
     executor.submit(DefaultDepsAwareTask.of(() -> null));
   }
@@ -165,7 +165,7 @@ public class DepsAwareExecutorTest {
 
     task1Sem.acquire();
 
-    executor.shutdownNow();
+    executor.close();
     assertTrue(executor.isShutdown());
 
     f1.get();
