@@ -155,11 +155,12 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
 
     ParserTargetNodeFactory<RawTargetNode> nonResolvingRawTargetNodeToTargetNodeFactory =
         new NonResolvingRawTargetNodeToTargetNodeFactory(
-            knownRuleTypesProvider,
-            marshaller,
-            targetNodeFactory,
-            packageBoundaryChecker,
-            symlinkCheckers);
+            DefaultParserTargetNodeFactory.createForParser(
+                knownRuleTypesProvider,
+                marshaller,
+                daemonicParserState.getBuildFileTrees(),
+                symlinkCheckers,
+                targetNodeFactory));
 
     // This pipeline uses a direct executor instead of pipelineExecutorService to avoid
     // deadlocks happening when too many node are requested from targetNodeParsePipeline.
