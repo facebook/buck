@@ -187,10 +187,12 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private ProjectBuildFileParser addCachingDecoratorIfEnabled(
       BuckConfig buckConfig,
       SkylarkProjectBuildFileParser skylarkParser,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem,
+      BuckEventBus eventBus) {
     AbstractParserCacheConfig parserCacheConfig = buckConfig.getView(ParserCacheConfig.class);
     if (parserCacheConfig.isParserCacheEnabled()) {
-      ParserCache parserCache = ParserCache.of(buckConfig, filesystem, manifestServiceSupplier);
+      ParserCache parserCache =
+          ParserCache.of(buckConfig, filesystem, manifestServiceSupplier, eventBus);
       return CachingProjectBuildFileParserDecorator.of(
           parserCache, skylarkParser, buckConfig.getConfig(), filesystem, fileHashCache);
     }
@@ -224,7 +226,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                           eventBus,
                           buildFileParserOptions,
                           parserConfig.getSkylarkGlobHandler()),
-                      cell.getFilesystem())),
+                      cell.getFilesystem(),
+                      eventBus)),
               defaultBuildFileSyntax);
     } else {
       switch (defaultBuildFileSyntax) {
@@ -238,7 +241,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                       eventBus,
                       buildFileParserOptions,
                       parserConfig.getSkylarkGlobHandler()),
-                  cell.getFilesystem());
+                  cell.getFilesystem(),
+                  eventBus);
           break;
         case PYTHON_DSL:
           parser =

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
@@ -112,7 +113,8 @@ public class CachingProjectBuildFileParserDecoratorTest {
     BuckConfig buckConfig = getConfig(filesystem, "readwrite");
     ProjectBuildFileParser cachingParser =
         CachingProjectBuildFileParserDecorator.of(
-            ParserCache.of(buckConfig, filesystem, getManifestSupplier()),
+            ParserCache.of(
+                buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance()),
             fakeParser,
             buckConfig.getConfig(),
             filesystem,
@@ -129,7 +131,8 @@ public class CachingProjectBuildFileParserDecoratorTest {
     expectedException.expect(IllegalStateException.class);
     BuckConfig emptyBuckConfig = FakeBuckConfig.builder().build();
     CachingProjectBuildFileParserDecorator.of(
-        ParserCache.of(emptyBuckConfig, filesystem, getManifestSupplier()),
+        ParserCache.of(
+            emptyBuckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance()),
         fakeParser,
         emptyBuckConfig.getConfig(),
         filesystem,
@@ -142,7 +145,8 @@ public class CachingProjectBuildFileParserDecoratorTest {
     BuckConfig buckConfig = getConfig(filesystem, "readonly");
     ProjectBuildFileParser cachingParser =
         CachingProjectBuildFileParserDecorator.of(
-            ParserCache.of(buckConfig, filesystem, getManifestSupplier()),
+            ParserCache.of(
+                buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance()),
             fakeParser,
             buckConfig.getConfig(),
             filesystem,
@@ -160,7 +164,8 @@ public class CachingProjectBuildFileParserDecoratorTest {
     BuckConfig buckConfig = getConfig(filesystem, "writeonly");
     ProjectBuildFileParser cachingParser =
         CachingProjectBuildFileParserDecorator.of(
-            ParserCache.of(buckConfig, filesystem, getManifestSupplier()),
+            ParserCache.of(
+                buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance()),
             fakeParser,
             buckConfig.getConfig(),
             filesystem,

@@ -17,6 +17,9 @@
 package com.facebook.buck.parser.cache.impl;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -34,9 +37,13 @@ import java.util.Optional;
 /** This class implements the caching behavior for parsing build specs. */
 public class ParserCache {
   private final ParserCacheStorage parserCacheStorage;
+  private final BuckEventBus eventBus;
+  private final PerfEventId eventIdGet = PerfEventId.of("ParseFileCacheGet");
+  private final PerfEventId eventIdStore = PerfEventId.of("ParseFileCacheStore");
 
-  private ParserCache(ParserCacheStorage parserCacheStorage) {
+  private ParserCache(ParserCacheStorage parserCacheStorage, BuckEventBus eventBus) {
     this.parserCacheStorage = parserCacheStorage;
+    this.eventBus = eventBus;
   }
 
   /**
@@ -48,10 +55,12 @@ public class ParserCache {
   public static ParserCache of(
       BuckConfig buckConfig,
       ProjectFilesystem filesystem,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
+      BuckEventBus eventBus) {
     return new ParserCache(
         ParserCacheStorageFactory.createParserCacheStorage(
-            buckConfig, filesystem, manifestServiceSupplier));
+            buckConfig, filesystem, manifestServiceSupplier),
+        eventBus);
   }
 
   @VisibleForTesting
@@ -73,9 +82,12 @@ public class ParserCache {
       HashCode weakFingerprint,
       HashCode strongFingerprint)
       throws InterruptedException, IOException {
-    byte[] serializedManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
-    parserCacheStorage.storeBuildFileManifest(
-        weakFingerprint, strongFingerprint, serializedManifest);
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(eventBus, eventIdStore, "path", buildFile.toString())) {
+      byte[] serializedManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
+      parserCacheStorage.storeBuildFileManifest(
+          weakFingerprint, strongFingerprint, serializedManifest);
+    }
   }
 
   /**
@@ -94,16 +106,20 @@ public class ParserCache {
       HashCode strongFingerprint)
       throws IOException, InterruptedException, BuildFileParseException {
 
-    // Try to retrieve a cached build file manifest
-    Optional<BuildFileManifest> cachedManifest =
-        parserCacheStorage.getBuildFileManifest(weakFingerprint, strongFingerprint);
-    if (cachedManifest.isPresent()
-        && parser.globResultsMatchCurrentState(buildFile, cachedManifest.get().getGlobManifest())) {
-      // There is a match only if the glob state on disk is the same as the recorded globs and
-      // results.
-      return cachedManifest;
-    }
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(eventBus, eventIdGet, "path", buildFile.toString())) {
+      // Try to retrieve a cached build file manifest
+      Optional<BuildFileManifest> cachedManifest =
+          parserCacheStorage.getBuildFileManifest(weakFingerprint, strongFingerprint);
+      if (cachedManifest.isPresent()
+          && parser.globResultsMatchCurrentState(
+              buildFile, cachedManifest.get().getGlobManifest())) {
+        // There is a match only if the glob state on disk is the same as the recorded globs and
+        // results.
+        return cachedManifest;
+      }
 
-    return Optional.empty();
+      return Optional.empty();
+    }
   }
 }

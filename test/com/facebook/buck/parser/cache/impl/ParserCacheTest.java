@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.artifact_cache.thrift.Manifest;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
@@ -207,7 +208,9 @@ public class ParserCacheTest {
   public void testHybridStorageInstantiatedWhenLocalAndRemoteStoragesEnabled()
       throws IOException, ExecutionException, InterruptedException, ParserCacheException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "readwrite", "readwrite");
-    ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
+    ParserCache parserCache =
+        ParserCache.of(
+            buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance());
     assertTrue(parserCache.getParserCacheStorage() instanceof HybridCacheStorage);
   }
 
@@ -215,7 +218,9 @@ public class ParserCacheTest {
   public void testRemoteStorageInstantiatedWhenRemoteOnlyEnabled()
       throws IOException, ExecutionException, InterruptedException, ParserCacheException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "none", "readwrite");
-    ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
+    ParserCache parserCache =
+        ParserCache.of(
+            buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance());
     assertTrue(parserCache.getParserCacheStorage() instanceof RemoteManifestServiceCacheStorage);
   }
 
@@ -223,7 +228,9 @@ public class ParserCacheTest {
   public void testLocalStorageInstantiatedWhenLocalOnlyEnabled()
       throws IOException, ExecutionException, InterruptedException, ParserCacheException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "readwrite", "none");
-    ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
+    ParserCache parserCache =
+        ParserCache.of(
+            buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance());
     assertTrue(parserCache.getParserCacheStorage() instanceof LocalCacheStorage);
   }
 
@@ -231,7 +238,9 @@ public class ParserCacheTest {
   public void testCacheWhenGetAllIncludesThrowsBuildFileParseException()
       throws IOException, ExecutionException, InterruptedException, ParserCacheException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "none", "readwrite");
-    ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
+    ParserCache parserCache =
+        ParserCache.of(
+            buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance());
     Path buildPath = filesystem.getPath("Foo/Bar");
     assertFalse(
         parserCache
@@ -252,7 +261,9 @@ public class ParserCacheTest {
 
     filesystem.createNewFile(filesystem.getPath("Includes1"));
     filesystem.createNewFile(filesystem.getPath("Includes2"));
-    ParserCache parserCache = ParserCache.of(buckConfig, filesystem, getManifestSupplier());
+    ParserCache parserCache =
+        ParserCache.of(
+            buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance());
     GlobSpec globSpec =
         GlobSpec.builder()
             .setExclude(ImmutableList.of("excludeSpec"))
