@@ -125,9 +125,8 @@ public class BuildFileManifestPojoizer {
             + parserObj.getClass().toString());
   }
 
-  @SuppressWarnings("unchecked")
   private ImmutableList<Object> convertIterableToPojo(Object object) {
-
+    @SuppressWarnings("unchecked")
     Iterable<Object> iterable = (Iterable<Object>) object;
 
     ImmutableList.Builder<Object> builder =
@@ -149,8 +148,8 @@ public class BuildFileManifestPojoizer {
     return needConversion ? builder.build() : (ImmutableList<Object>) iterable;
   }
 
-  @SuppressWarnings("unchecked")
   private ImmutableSet<Object> convertSetToPojo(Object object) {
+    @SuppressWarnings("unchecked")
     Set<Object> set = (Set<Object>) object;
 
     boolean needConversion;
@@ -176,8 +175,8 @@ public class BuildFileManifestPojoizer {
     return needConversion ? builder.build() : (ImmutableSet<Object>) set;
   }
 
-  @SuppressWarnings("unchecked")
   private ImmutableMap<Object, Object> convertMapToPojo(Object object) {
+    @SuppressWarnings("unchecked")
     Map<Object, Object> map = (Map<Object, Object>) object;
 
     boolean needConversion;
