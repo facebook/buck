@@ -150,11 +150,27 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public BuildFileManifest getBuildFileManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     ParseResult parseResult = parseBuildFile(buildFile);
 
+    // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.
+    // ParseResult.getRawRules() returns ImmutableMap<String, Map<String, Object>>, so it is
+    // a safe downcast here
+    @SuppressWarnings("unchecked")
+    ImmutableMap<String, Map<String, Object>> targets =
+        (ImmutableMap<String, Map<String, Object>>)
+            getBuildFileManifestPojoizer().convertToPojo(parseResult.getRawRules());
+
+    return BuildFileManifest.of(
+        targets,
+        ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
+        parseResult.getReadConfigurationOptions(),
+        Optional.empty(),
+        parseResult.getGlobManifestWithResult());
+  }
+
+  private static BuildFileManifestPojoizer getBuildFileManifestPojoizer() {
     // Convert Skylark-specific classes to Buck API POJO classes to decouple them from parser
     // implementation. BuildFileManifest should only have POJO classes.
     BuildFileManifestPojoizer pojoizer = BuildFileManifestPojoizer.of();
@@ -165,6 +181,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               com.google.devtools.build.lib.syntax.SelectorList skylarkSelectorList =
                   (com.google.devtools.build.lib.syntax.SelectorList) obj;
               // recursively convert list elements
+              @SuppressWarnings("unchecked")
               ImmutableList<Object> elements =
                   (ImmutableList<Object>) pojoizer.convertToPojo(skylarkSelectorList.getElements());
               return ImmutableListWithSelects.of(elements, skylarkSelectorList.getType());
@@ -176,6 +193,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               com.google.devtools.build.lib.syntax.SelectorValue skylarkSelectorValue =
                   (com.google.devtools.build.lib.syntax.SelectorValue) obj;
               // recursively convert dictionary elements
+              @SuppressWarnings("unchecked")
               ImmutableMap<String, Object> dictionary =
                   (ImmutableMap<String, Object>)
                       pojoizer.convertToPojo(skylarkSelectorValue.getDictionary());
@@ -190,20 +208,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               // recursively convert set elements
               return pojoizer.convertToPojo(skylarkNestedSet.toCollection());
             }));
-
-    // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.
-    // ParseResult.getRawRules() returns ImmutableMap<String, Map<String, Object>>, so it is
-    // a safe downcast here
-    ImmutableMap<String, Map<String, Object>> targets =
-        (ImmutableMap<String, Map<String, Object>>)
-            pojoizer.convertToPojo(parseResult.getRawRules());
-
-    return BuildFileManifest.of(
-        targets,
-        ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
-        parseResult.getReadConfigurationOptions(),
-        Optional.empty(),
-        parseResult.getGlobManifestWithResult());
+    return pojoizer;
   }
 
   /**
