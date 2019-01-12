@@ -31,12 +31,9 @@ import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
-import com.facebook.buck.core.select.SelectorKey;
-import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
-import com.facebook.buck.core.select.TestSelectorListFactory;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -52,7 +49,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -62,7 +58,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.stream.Collectors;
 import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Rule;
@@ -638,11 +633,14 @@ public class ConstructorArgMarshallerImmutableTest {
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
                 ImmutableList.of(new TestSelectable(selectableTarget, true))));
-    SelectorList<String> selectorList =
-        TestSelectorListFactory.createSelectorListForCoercer(
-            new StringTypeCoercer(),
-            ImmutableMap.of("DEFAULT", "string1", "//x:y", "string2"),
-            ImmutableMap.of("DEFAULT", "string3", "//x:y", "string4"));
+    ImmutableListWithSelects selectorList =
+        ImmutableListWithSelects.of(
+            ImmutableList.of(
+                ImmutableSelectorValue.of(
+                    ImmutableMap.of("DEFAULT", "string1", "//x:y", "string2"), ""),
+                ImmutableSelectorValue.of(
+                    ImmutableMap.of("DEFAULT", "string3", "//x:y", "string4"), "")),
+            ImmutableMap.class);
     SelectableConfigurationContext selectableConfigurationContext =
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
@@ -653,6 +651,7 @@ public class ConstructorArgMarshallerImmutableTest {
     DtoWithString dto =
         marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
+            filesystem,
             selectorListResolver,
             selectableConfigurationContext,
             TARGET,
@@ -665,7 +664,7 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void populateWithConfiguringAttributesCopiesValuesToImmutable() {
+  public void populateWithConfiguringAttributesCopiesValuesToImmutable() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     SelectableConfigurationContext selectableConfigurationContext =
@@ -674,6 +673,7 @@ public class ConstructorArgMarshallerImmutableTest {
     DtoWithString dto =
         marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
+            filesystem,
             selectorListResolver,
             selectableConfigurationContext,
             TARGET,
@@ -685,7 +685,7 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void populateWithConfiguringAttributesCollectsDeclaredDeps() {
+  public void populateWithConfiguringAttributesCollectsDeclaredDeps() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     SelectableConfigurationContext selectableConfigurationContext =
@@ -694,17 +694,18 @@ public class ConstructorArgMarshallerImmutableTest {
     BuildTarget dep = BuildTargetFactory.newInstance("//a/b:c");
     marshaller.populateWithConfiguringAttributes(
         createCellRoots(filesystem),
+        filesystem,
         selectorListResolver,
         selectableConfigurationContext,
         TARGET,
         DtoWithDepsAndNotDeps.class,
         declaredDeps,
-        ImmutableMap.<String, Object>of("deps", ImmutableList.of(dep)));
+        ImmutableMap.<String, Object>of("deps", ImmutableList.of("//a/b:c")));
     assertEquals(ImmutableSet.of(dep), declaredDeps.build());
   }
 
   @Test
-  public void populateWithConfiguringAttributesSkipsMissingValues() {
+  public void populateWithConfiguringAttributesSkipsMissingValues() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     SelectableConfigurationContext selectableConfigurationContext =
@@ -712,6 +713,7 @@ public class ConstructorArgMarshallerImmutableTest {
     DtoWithOptionalSetOfStrings dto =
         marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
+            filesystem,
             selectorListResolver,
             selectableConfigurationContext,
             TARGET,
@@ -719,58 +721,6 @@ public class ConstructorArgMarshallerImmutableTest {
             ImmutableSet.builder(),
             ImmutableMap.of());
     assertFalse(dto.getStrings().isPresent());
-  }
-
-  @Test
-  public void convertRawAttributesReturnsEmptyListOnEmptyInput() throws CoerceFailedException {
-    ImmutableMap<String, Object> attributes =
-        marshaller.convertRawAttributes(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            DtoWithString.class,
-            ImmutableMap.of());
-
-    assertTrue(attributes.isEmpty());
-  }
-
-  @Test
-  public void convertRawAttributesCoercesSimpleTypes() throws CoerceFailedException {
-    ImmutableMap<String, Object> attributes =
-        marshaller.convertRawAttributes(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            DtoWithFakeDeps.class,
-            ImmutableMap.of("deps", Lists.newArrayList("//a:b")));
-
-    @SuppressWarnings({"unchecked"})
-    Iterable<BuildTarget> deps = (Iterable<BuildTarget>) attributes.get("deps");
-    assertEquals("//a:b", deps.iterator().next().getFullyQualifiedName());
-  }
-
-  @Test
-  public void convertRawAttributesCoercesSelectableValues() throws CoerceFailedException {
-    ImmutableListWithSelects selectorList =
-        ImmutableListWithSelects.of(
-            ImmutableList.of(
-                ImmutableSelectorValue.of(ImmutableMap.of("//a:c", "b", "DEFAULT", "c"), "")),
-            ImmutableMap.class);
-    ImmutableMap<String, Object> attributes =
-        marshaller.convertRawAttributes(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            DtoWithString.class,
-            ImmutableMap.of("string", selectorList));
-
-    @SuppressWarnings({"unchecked"})
-    SelectorList<String> string = (SelectorList<String>) attributes.get("string");
-    Map<SelectorKey, ?> conditions = string.getSelectors().get(0).getConditions();
-    assertEquals(
-        Lists.newArrayList("//a:c", "DEFAULT"),
-        conditions.keySet().stream().map(Object::toString).collect(Collectors.toList()));
-    assertEquals(Lists.newArrayList("b", "c"), conditions.values());
   }
 
   @BuckStyleImmutable

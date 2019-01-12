@@ -33,7 +33,6 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -83,33 +82,26 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
         knownRuleTypesProvider.get(cell).getDescription(rawTargetNode.getRuleType());
     Cell targetCell = cell.getCell(target);
 
-    ImmutableMap<String, Object> populatedAttributes;
-    try (SimplePerfEvent.Scope scope =
-        perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
-      populatedAttributes =
-          marshaller.convertRawAttributes(
-              targetCell.getCellPathResolver(),
-              targetCell.getFilesystem(),
-              target,
-              description.getConstructorArgType(),
-              rawTargetNode.getAttributes().getAll());
-    } catch (CoerceFailedException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-
     SelectableConfigurationContext configurationContext =
         DefaultSelectableConfigurationContext.of(
             cell.getBuckConfig(), constraintResolver, targetPlatform.get());
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
-    Object constructorArg =
-        marshaller.populateWithConfiguringAttributes(
-            cell.getCellPathResolver(),
-            selectorListResolver,
-            configurationContext,
-            target,
-            description.getConstructorArgType(),
-            declaredDeps,
-            populatedAttributes);
+    Object constructorArg;
+    try (SimplePerfEvent.Scope scope =
+        perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
+      constructorArg =
+          marshaller.populateWithConfiguringAttributes(
+              targetCell.getCellPathResolver(),
+              targetCell.getFilesystem(),
+              selectorListResolver,
+              configurationContext,
+              target,
+              description.getConstructorArgType(),
+              declaredDeps,
+              rawTargetNode.getAttributes().getAll());
+    } catch (CoerceFailedException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    }
 
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(

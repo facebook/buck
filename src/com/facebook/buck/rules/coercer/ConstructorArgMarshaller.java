@@ -73,31 +73,19 @@ public interface ConstructorArgMarshaller {
       throws ParamInfoException;
 
   /**
-   * Creates a constructor argument using configured attributes.
+   * Creates a constructor argument using raw attributes that may contain configurable attributes.
    *
    * @param attributes configured attributes that cannot contain selectable values (instances of
    *     {@link SelectorList})
    */
   <T> T populateWithConfiguringAttributes(
       CellPathResolver cellPathResolver,
+      ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       Class<T> dtoClass,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
-      ImmutableMap<String, ?> attributes);
-
-  /**
-   * Creates a map with coerced attributes using raw attributes.
-   *
-   * @param rawAttributes raw attributes that can contain selectable values (instances of {@link
-   *     SelectorList})
-   */
-  ImmutableMap<String, Object> convertRawAttributes(
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      Class<?> dtoClass,
-      Map<String, Object> rawAttributes)
+      ImmutableMap<String, ?> attributes)
       throws CoerceFailedException;
 }

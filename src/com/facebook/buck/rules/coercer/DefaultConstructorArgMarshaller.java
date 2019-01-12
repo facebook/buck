@@ -88,19 +88,24 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
   @Override
   public <T> T populateWithConfiguringAttributes(
       CellPathResolver cellPathResolver,
+      ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       Class<T> dtoClass,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
-      ImmutableMap<String, ?> attributes) {
+      ImmutableMap<String, ?> attributes)
+      throws CoerceFailedException {
     Pair<Object, Function<Object, T>> dtoAndBuild =
         CoercedTypeCache.instantiateSkeleton(dtoClass, buildTarget);
     ImmutableMap<String, ParamInfo> allParamInfo =
         CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
     ImmutableMap<String, Object> configuredAttributes =
         configureRawTargetNodeAttributes(
-            selectorListResolver, configurationContext, buildTarget, attributes);
+            selectorListResolver,
+            configurationContext,
+            buildTarget,
+            convertRawAttributes(cellPathResolver, filesystem, buildTarget, dtoClass, attributes));
     for (ParamInfo info : allParamInfo.values()) {
       Object argumentValue = configuredAttributes.get(info.getName());
       if (argumentValue == null) {
@@ -113,18 +118,17 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     return dto;
   }
 
-  @Override
-  public ImmutableMap<String, Object> convertRawAttributes(
+  private ImmutableMap<String, Object> convertRawAttributes(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       Class<?> dtoClass,
-      Map<String, Object> rawAttributes)
+      Map<String, ?> rawAttributes)
       throws CoerceFailedException {
     ImmutableMap<String, ParamInfo> allParamInfo =
         CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
     ImmutableMap.Builder<String, Object> populatedAttributesBuilder = ImmutableMap.builder();
-    for (Map.Entry<String, Object> rawAttribute : rawAttributes.entrySet()) {
+    for (Map.Entry<String, ?> rawAttribute : rawAttributes.entrySet()) {
       String attributeName = rawAttribute.getKey();
       ParamInfo paramInfo = allParamInfo.get(attributeName);
       if (paramInfo == null) {
