@@ -15,4 +15,21 @@
     </context>
   </template>
 
+  <!-- Common expressions -->
+
+  <template
+    name="glob"
+    value="glob([&quot;$include$&quot;,], exclude = [&quot;$exclude$&quot;], include_dotfiles=$dotfiles$)"
+    description="Expand glob() function with default named parameters"
+    toReformat="false"
+    toShortenFQNames="false">
+    <variable name="include" expression="" defaultValue="&quot;**/*.java&quot;" alwaysStopAt="true"/>
+    <variable name="exclude" expression="" defaultValue="" alwaysStopAt="true"/>
+    <variable name="dotfiles" expression="" defaultValue="&quot;False&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="BUCK_EXPRESSION" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
 </templateSet>

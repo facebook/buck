@@ -47,7 +47,6 @@ public class BuckCompletionContributor extends CompletionContributor {
           "manifest",
           "manifest_skeleton",
           "package_type",
-          "glob",
           "visibility",
           "aar",
           "src_target",
@@ -108,7 +107,6 @@ public class BuckCompletionContributor extends CompletionContributor {
           "python_binary",
           "python_library",
           "python_test",
-          "glob",
           "include_defs",
           "robolectric_test",
           "keystore");
