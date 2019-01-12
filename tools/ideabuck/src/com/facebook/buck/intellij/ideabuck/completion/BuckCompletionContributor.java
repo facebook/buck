@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.completion;
 
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.google.common.collect.ImmutableList;
 import com.intellij.codeInsight.completion.CompletionContributor;
@@ -26,7 +27,11 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.patterns.PlatformPatterns;
+import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /** Auto-completion for keywords and rule names */
 public class BuckCompletionContributor extends CompletionContributor {
@@ -124,6 +129,12 @@ public class BuckCompletionContributor extends CompletionContributor {
     @Override
     protected void addCompletions(
         CompletionParameters parameters, ProcessingContext context, CompletionResultSet result) {
+      Optional.of(parameters.getPosition())
+          .map(PsiElement::getContainingFile)
+          .map(psiFile -> BuckPsiUtils.findSymbolsInPsiTree(psiFile, ""))
+          .map(Map::keySet)
+          .map(Set::stream)
+          .ifPresent(names -> names.map(LookupElementBuilder::create).forEach(result::addElement));
       for (String card : sPropertyNames) {
         result.addElement(LookupElementBuilder.create(card));
       }
