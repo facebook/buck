@@ -18,11 +18,12 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
@@ -85,8 +86,10 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
   }
 
   @Override
-  public <T> T populateFromConfiguredAttributes(
+  public <T> T populateWithConfiguringAttributes(
       CellPathResolver cellPathResolver,
+      SelectorListResolver selectorListResolver,
+      SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       Class<T> dtoClass,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
@@ -95,15 +98,14 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
         CoercedTypeCache.instantiateSkeleton(dtoClass, buildTarget);
     ImmutableMap<String, ParamInfo> allParamInfo =
         CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
+    ImmutableMap<String, Object> configuredAttributes =
+        configureRawTargetNodeAttributes(
+            selectorListResolver, configurationContext, buildTarget, attributes);
     for (ParamInfo info : allParamInfo.values()) {
-      Object argumentValue = attributes.get(info.getName());
+      Object argumentValue = configuredAttributes.get(info.getName());
       if (argumentValue == null) {
         continue;
       }
-      Preconditions.checkArgument(
-          !(argumentValue instanceof SelectorList),
-          "Attribute \"%s\" is not resolved",
-          info.getName());
       info.setCoercedValue(dtoAndBuild.getFirst(), argumentValue);
     }
     T dto = dtoAndBuild.getSecond().apply(dtoAndBuild.getFirst());
@@ -160,5 +162,49 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       coercer = argumentInfo.getTypeCoercer();
     }
     return coercer.coerce(cellRoots, filesystem, buildTarget.getBasePath(), rawValue);
+  }
+
+  private ImmutableMap<String, Object> configureRawTargetNodeAttributes(
+      SelectorListResolver selectorListResolver,
+      SelectableConfigurationContext configurationContext,
+      BuildTarget buildTarget,
+      ImmutableMap<String, ?> rawTargetNodeAttributes) {
+
+    ImmutableMap.Builder<String, Object> configuredAttributes = ImmutableMap.builder();
+
+    for (Map.Entry<String, ?> entry : rawTargetNodeAttributes.entrySet()) {
+      Object value =
+          configureAttributeValue(
+              configurationContext,
+              selectorListResolver,
+              buildTarget,
+              entry.getKey(),
+              entry.getValue());
+      if (value != null) {
+        configuredAttributes.put(entry.getKey(), value);
+      }
+    }
+
+    return configuredAttributes.build();
+  }
+
+  @SuppressWarnings("unchecked")
+  @Nullable
+  private <T> T configureAttributeValue(
+      SelectableConfigurationContext configurationContext,
+      SelectorListResolver selectorListResolver,
+      BuildTarget buildTarget,
+      String attributeName,
+      Object rawAttributeValue) {
+    T value;
+    if (rawAttributeValue instanceof SelectorList) {
+      SelectorList<T> selectorList = (SelectorList<T>) rawAttributeValue;
+      value =
+          selectorListResolver.resolveList(
+              configurationContext, buildTarget, attributeName, selectorList);
+    } else {
+      value = (T) rawAttributeValue;
+    }
+    return value;
   }
 }

@@ -22,18 +22,29 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
+import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
+import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
+import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.SelectorListResolver;
+import com.facebook.buck.core.select.TestSelectable;
+import com.facebook.buck.core.select.TestSelectableResolver;
+import com.facebook.buck.core.select.TestSelectorListFactory;
+import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.parser.DefaultSelectableConfigurationContext;
 import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.google.common.base.Preconditions;
@@ -44,7 +55,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -622,27 +632,50 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void populateFromCoercedAttributesThrowsOnSelectorList() {
+  public void populateWithConfiguringAttributesResolvesConfigurableAttributes() throws Exception {
+    BuildTarget selectableTarget = BuildTargetFactory.newInstance("//x:y");
+    SelectorListResolver selectorListResolver =
+        new DefaultSelectorListResolver(
+            new TestSelectableResolver(
+                ImmutableList.of(new TestSelectable(selectableTarget, true))));
     SelectorList<String> selectorList =
-        new SelectorList<>(new StringTypeCoercer(), Collections.emptyList());
+        TestSelectorListFactory.createSelectorListForCoercer(
+            new StringTypeCoercer(),
+            ImmutableMap.of("DEFAULT", "string1", "//x:y", "string2"),
+            ImmutableMap.of("DEFAULT", "string3", "//x:y", "string4"));
+    SelectableConfigurationContext selectableConfigurationContext =
+        DefaultSelectableConfigurationContext.of(
+            FakeBuckConfig.builder().build(),
+            new RuleBasedConstraintResolver(DummyConfigurationRule::of),
+            new ConstraintBasedPlatform(ImmutableSet.of()));
+    ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
-    expected.expect(IllegalArgumentException.class);
-    expected.expectMessage("Attribute \"string\" is not resolved");
+    DtoWithString dto =
+        marshaller.populateWithConfiguringAttributes(
+            createCellRoots(filesystem),
+            selectorListResolver,
+            selectableConfigurationContext,
+            TARGET,
+            DtoWithString.class,
+            declaredDeps,
+            ImmutableMap.<String, Object>of("string", selectorList));
 
-    marshaller.populateFromConfiguredAttributes(
-        createCellRoots(filesystem),
-        TARGET,
-        DtoWithString.class,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("string", selectorList));
+    assertEquals("string2string4", dto.getString());
+    assertTrue(declaredDeps.build().isEmpty());
   }
 
   @Test
-  public void populateFromCoercedAttributesCopiesValuesToImmutable() {
+  public void populateWithConfiguringAttributesCopiesValuesToImmutable() {
+    SelectorListResolver selectorListResolver =
+        new DefaultSelectorListResolver(new TestSelectableResolver());
+    SelectableConfigurationContext selectableConfigurationContext =
+        new SelectableConfigurationContext() {};
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     DtoWithString dto =
-        marshaller.populateFromConfiguredAttributes(
+        marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
+            selectorListResolver,
+            selectableConfigurationContext,
             TARGET,
             DtoWithString.class,
             declaredDeps,
@@ -652,11 +685,17 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void populateFromCoercedAttributesCollectsDeclaredDeps() {
+  public void populateWithConfiguringAttributesCollectsDeclaredDeps() {
+    SelectorListResolver selectorListResolver =
+        new DefaultSelectorListResolver(new TestSelectableResolver());
+    SelectableConfigurationContext selectableConfigurationContext =
+        new SelectableConfigurationContext() {};
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     BuildTarget dep = BuildTargetFactory.newInstance("//a/b:c");
-    marshaller.populateFromConfiguredAttributes(
+    marshaller.populateWithConfiguringAttributes(
         createCellRoots(filesystem),
+        selectorListResolver,
+        selectableConfigurationContext,
         TARGET,
         DtoWithDepsAndNotDeps.class,
         declaredDeps,
@@ -665,10 +704,16 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void populateFromCoercedAttributesSkipsMissingValues() {
+  public void populateWithConfiguringAttributesSkipsMissingValues() {
+    SelectorListResolver selectorListResolver =
+        new DefaultSelectorListResolver(new TestSelectableResolver());
+    SelectableConfigurationContext selectableConfigurationContext =
+        new SelectableConfigurationContext() {};
     DtoWithOptionalSetOfStrings dto =
-        marshaller.populateFromConfiguredAttributes(
+        marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
+            selectorListResolver,
+            selectableConfigurationContext,
             TARGET,
             DtoWithOptionalSetOfStrings.class,
             ImmutableSet.builder(),

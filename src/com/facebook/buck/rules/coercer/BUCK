@@ -14,6 +14,7 @@ java_library(
     name = "interface",
     srcs = INTERFACE_SRCS,
     exported_deps = [
+        "//src/com/facebook/buck/core/select:select",
         "//src/com/facebook/buck/rules/coercer/concat:concat",
     ],
     visibility = ["PUBLIC"],
@@ -21,7 +22,6 @@ java_library(
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/model:model",
-        "//src/com/facebook/buck/core/select:select",
         "//src/com/facebook/buck/core/sourcepath:sourcepath",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/io:io",

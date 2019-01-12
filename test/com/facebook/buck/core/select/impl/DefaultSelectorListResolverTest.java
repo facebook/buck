@@ -30,13 +30,13 @@ import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
+import com.facebook.buck.core.select.TestSelectorListFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
 import com.facebook.buck.rules.coercer.ListTypeCoercer;
-import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -280,31 +280,14 @@ public class DefaultSelectorListResolverTest {
     }
   }
 
-  private <T> SelectorList<T> createSelectorListForCoercer(
-      TypeCoercer<T> elementTypeCoercer, Map<String, ?>... selectors) throws CoerceFailedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SelectorFactory selectorFactory = new SelectorFactory(new BuildTargetTypeCoercer()::coerce);
-    ImmutableList.Builder<Selector<T>> selectorBuilder = ImmutableList.builder();
-    for (Map<String, ?> selectorAttributes : selectors) {
-      Selector<T> selector =
-          selectorFactory.createSelector(
-              TestCellPathResolver.get(projectFilesystem),
-              projectFilesystem,
-              projectFilesystem.getRootPath(),
-              selectorAttributes,
-              elementTypeCoercer);
-      selectorBuilder.add(selector);
-    }
-    return new SelectorList<>(elementTypeCoercer, selectorBuilder.build());
-  }
-
   private SelectorList<Flavor> createSelectorListForFlavors(Map<String, ?>... selectors)
       throws CoerceFailedException {
-    return createSelectorListForCoercer(new FlavorTypeCoercer(), selectors);
+    return TestSelectorListFactory.createSelectorListForCoercer(new FlavorTypeCoercer(), selectors);
   }
 
   private SelectorList<ImmutableList<Flavor>> createSelectorListForListsOfFlavors(
       Map<String, ?>... selectors) throws CoerceFailedException {
-    return createSelectorListForCoercer(new ListTypeCoercer<>(new FlavorTypeCoercer()), selectors);
+    return TestSelectorListFactory.createSelectorListForCoercer(
+        new ListTypeCoercer<>(new FlavorTypeCoercer()), selectors);
   }
 }

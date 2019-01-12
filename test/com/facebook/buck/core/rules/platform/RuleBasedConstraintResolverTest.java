@@ -21,9 +21,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
-import com.facebook.buck.core.rules.config.ConfigurationRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -102,13 +99,5 @@ public class RuleBasedConstraintResolverTest {
     assertEquals(constraintSetting, constraintValue.getConstraintSetting());
     assertEquals(constraintSettingTarget, constraintSetting.getBuildTarget());
     assertEquals(constraintValueTarget, constraintValue.getBuildTarget());
-  }
-
-  @BuckStyleImmutable
-  @Value.Immutable(builder = false, copy = false)
-  abstract static class AbstractDummyConfigurationRule implements ConfigurationRule {
-    @Override
-    @Value.Parameter
-    public abstract BuildTarget getBuildTarget();
   }
 }

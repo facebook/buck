@@ -17,7 +17,6 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -28,7 +27,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
-import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -39,10 +37,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 
 /** Creates {@link TargetNode} from {@link RawTargetNode}. */
 public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory<RawTargetNode> {
@@ -101,15 +97,19 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
 
+    SelectableConfigurationContext configurationContext =
+        DefaultSelectableConfigurationContext.of(
+            cell.getBuckConfig(), constraintResolver, targetPlatform.get());
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     Object constructorArg =
-        marshaller.populateFromConfiguredAttributes(
+        marshaller.populateWithConfiguringAttributes(
             cell.getCellPathResolver(),
+            selectorListResolver,
+            configurationContext,
             target,
             description.getConstructorArgType(),
             declaredDeps,
-            configureRawTargetNodeAttributes(
-                cell.getBuckConfig(), selectorListResolver, target, populatedAttributes));
+            populatedAttributes);
 
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(
@@ -131,52 +131,5 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
     }
 
     return targetNode;
-  }
-
-  private ImmutableMap<String, Object> configureRawTargetNodeAttributes(
-      BuckConfig buckConfig,
-      SelectorListResolver selectorListResolver,
-      BuildTarget buildTarget,
-      ImmutableMap<String, Object> rawTargetNodeAttributes) {
-    SelectableConfigurationContext configurationContext =
-        DefaultSelectableConfigurationContext.of(
-            buckConfig, constraintResolver, targetPlatform.get());
-
-    ImmutableMap.Builder<String, Object> configuredAttributes = ImmutableMap.builder();
-
-    for (Map.Entry<String, ?> entry : rawTargetNodeAttributes.entrySet()) {
-      Object value =
-          configureAttributeValue(
-              configurationContext,
-              selectorListResolver,
-              buildTarget,
-              entry.getKey(),
-              entry.getValue());
-      if (value != null) {
-        configuredAttributes.put(entry.getKey(), value);
-      }
-    }
-
-    return configuredAttributes.build();
-  }
-
-  @SuppressWarnings("unchecked")
-  @Nullable
-  private <T> T configureAttributeValue(
-      SelectableConfigurationContext configurationContext,
-      SelectorListResolver selectorListResolver,
-      BuildTarget buildTarget,
-      String attributeName,
-      Object rawAttributeValue) {
-    T value;
-    if (rawAttributeValue instanceof SelectorList) {
-      SelectorList<T> selectorList = (SelectorList<T>) rawAttributeValue;
-      value =
-          selectorListResolver.resolveList(
-              configurationContext, buildTarget, attributeName, selectorList);
-    } else {
-      value = (T) rawAttributeValue;
-    }
-    return value;
   }
 }

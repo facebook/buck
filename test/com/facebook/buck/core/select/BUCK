@@ -8,10 +8,13 @@ java_library(
     ),
     exported_deps = [
         "//src/com/facebook/buck/core/select:select",
+        "//src/com/facebook/buck/rules/coercer:coercer",
     ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/select/impl:impl",
+        "//test/com/facebook/buck/core/cell:testutil",
         "//third-party/java/guava:guava",
     ],
 )

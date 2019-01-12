@@ -18,7 +18,9 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
@@ -76,8 +78,10 @@ public interface ConstructorArgMarshaller {
    * @param attributes configured attributes that cannot contain selectable values (instances of
    *     {@link SelectorList})
    */
-  <T> T populateFromConfiguredAttributes(
+  <T> T populateWithConfiguringAttributes(
       CellPathResolver cellPathResolver,
+      SelectorListResolver selectorListResolver,
+      SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       Class<T> dtoClass,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
