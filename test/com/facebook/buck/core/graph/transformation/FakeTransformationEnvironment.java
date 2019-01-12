@@ -13,30 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.core.graph.transformation;
 
 import com.google.common.collect.ImmutableMap;
 
-/**
- * A computation environment that {@link GraphTransformer} can access. This class provides ability
- * of {@link GraphTransformer}s to access their dependencies.
- */
-class DefaultTransformationEnvironment<ComputeKey, ComputeResult>
-    implements TransformationEnvironment<ComputeKey, ComputeResult> {
-
-  private final ImmutableMap<ComputeKey, ComputeResult> deps;
+public class FakeTransformationEnvironment<ComputeKey, ComputeValue>
+    extends DefaultTransformationEnvironment<ComputeKey, ComputeValue> {
 
   /**
    * Package protected constructor so only {@link DefaultGraphTransformationEngine} can create the
    * environment
    */
-  DefaultTransformationEnvironment(ImmutableMap<ComputeKey, ComputeResult> deps) {
-    this.deps = deps;
-  }
-
-  @Override
-  public ImmutableMap<ComputeKey, ComputeResult> getDeps() {
-    return deps;
+  public FakeTransformationEnvironment(ImmutableMap<ComputeKey, ComputeValue> deps) {
+    super(deps);
   }
 }
