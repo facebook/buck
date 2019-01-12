@@ -31,7 +31,9 @@ import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
+import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -84,8 +86,22 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
     BaseDescription<?> description =
         knownRuleTypesProvider.get(cell).getDescription(rawTargetNode.getRuleType());
     Cell targetCell = cell.getCell(target);
-    ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
+    ImmutableMap<String, Object> populatedAttributes;
+    try (SimplePerfEvent.Scope scope =
+        perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
+      populatedAttributes =
+          marshaller.convertRawAttributes(
+              targetCell.getCellPathResolver(),
+              targetCell.getFilesystem(),
+              target,
+              description.getConstructorArgType(),
+              rawTargetNode.getAttributes().getAll());
+    } catch (CoerceFailedException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    }
+
+    ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     Object constructorArg =
         marshaller.populateFromConfiguredAttributes(
             cell.getCellPathResolver(),
@@ -93,10 +109,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
             description.getConstructorArgType(),
             declaredDeps,
             configureRawTargetNodeAttributes(
-                cell.getBuckConfig(),
-                selectorListResolver,
-                target,
-                rawTargetNode.getAttributes().getAll()));
+                cell.getBuckConfig(), selectorListResolver, target, populatedAttributes));
 
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(

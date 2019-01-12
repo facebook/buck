@@ -26,7 +26,9 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
+import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -74,16 +76,29 @@ public class NonResolvingRawTargetNodeToTargetNodeFactory
     BaseDescription<?> description =
         knownRuleTypesProvider.get(cell).getDescription(rawTargetNode.getRuleType());
     Cell targetCell = cell.getCell(target);
-    ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
+    ImmutableMap<String, Object> populatedAttributes;
+    try (SimplePerfEvent.Scope scope =
+        perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
+      populatedAttributes =
+          marshaller.convertRawAttributes(
+              targetCell.getCellPathResolver(),
+              targetCell.getFilesystem(),
+              target,
+              description.getConstructorArgType(),
+              rawTargetNode.getAttributes().getAll());
+    } catch (CoerceFailedException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    }
+
+    ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     Object constructorArg =
         marshaller.populateFromConfiguredAttributes(
             cell.getCellPathResolver(),
             target,
             description.getConstructorArgType(),
             declaredDeps,
-            assertRawTargetNodeAttributesNotConfigurable(
-                target, rawTargetNode.getAttributes().getAll()));
+            assertRawTargetNodeAttributesNotConfigurable(target, populatedAttributes));
 
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(

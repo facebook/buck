@@ -148,8 +148,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             eventBus,
             buildFileRawNodeParsePipeline,
             buildTargetRawNodeParsePipeline,
-            new DefaultRawTargetNodeFactory(
-                knownRuleTypesProvider, marshaller, new BuiltTargetVerifier()));
+            new DefaultRawTargetNodeFactory(knownRuleTypesProvider, new BuiltTargetVerifier()));
 
     PackageBoundaryChecker packageBoundaryChecker =
         new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
