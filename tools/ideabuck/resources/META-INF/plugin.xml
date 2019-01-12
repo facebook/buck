@@ -287,6 +287,15 @@
       implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor"/>
     <additionalTextAttributes scheme="Default" file="colorSchemes/BuckDefault.xml"/>
     <additionalTextAttributes scheme="Darcula" file="colorSchemes/BuckDarcula.xml"/>
+
+    <defaultLiveTemplatesProvider
+      implementation="com.facebook.buck.intellij.ideabuck.completion.BuckLiveTemplatesProvider"/>
+    <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$Generic"/>
+    <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$Declaration"/>
+    <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$InString"/>
+    <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$NamedArgument"/>
+    <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$SingleExpression"/>
+    <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$Statement"/>
   </extensions>
 
   <extensions defaultExtensionNs="com.android.project">

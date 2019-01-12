@@ -97,7 +97,6 @@ public class BuckCompletionContributor extends CompletionContributor {
           "java_binary",
           "java_library",
           "java_test",
-          "load",
           "prebuilt_jar",
           "prebuilt_native_library",
           "prebuilt_python_library",

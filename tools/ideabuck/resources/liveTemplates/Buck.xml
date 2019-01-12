@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templateSet group="Buck">
+
+  <!-- Top-level declarations -->
+  <template
+    name="load" value="load(&quot;$location$&quot;, &quot;$symbol$&quot;)$END$"
+    description="Insert load() directive to import a symbol from an extension file"
+    toReformat="false"
+    toShortenFQNames="false">
+    <variable name="location" expression="" defaultValue="" alwaysStopAt="true"/>
+    <variable name="symbol" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context>
+      <option name="BUCK_DECLARATION" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+</templateSet>
