@@ -72,6 +72,9 @@ public class BuckParserDefinition implements ParserDefinition {
 
   public ParserDefinition.SpaceRequirements spaceExistanceTypeBetweenTokens(
       ASTNode left, ASTNode right) {
+    if (left.getElementType().equals(BuckTypes.LINE_COMMENT)) {
+      return SpaceRequirements.MUST_LINE_BREAK;
+    }
     return SpaceRequirements.MAY;
   }
 
