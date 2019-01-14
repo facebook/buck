@@ -579,8 +579,8 @@ public class GenruleTest {
             "android",
             Paths.get(""),
             Collections.emptyList(),
-            () -> new SimpleTool(""),
-            () -> new SimpleTool(""),
+            () -> new SimpleTool("aapt"),
+            () -> new SimpleTool("aapt2"),
             Paths.get(""),
             Paths.get(""),
             Paths.get("zipalign"),
@@ -612,6 +612,8 @@ public class GenruleTest {
 
     assertEquals(Paths.get(".").toString(), env.get("DX"));
     assertEquals(Paths.get("zipalign").toString(), env.get("ZIPALIGN"));
+    assertEquals("aapt", env.get("AAPT"));
+    assertEquals("aapt2", env.get("AAPT2"));
     assertEquals(sdkDir.toString(), env.get("ANDROID_HOME"));
     assertEquals(ndkDir.toString(), env.get("NDK_HOME"));
   }

@@ -261,6 +261,12 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         target -> {
           environmentVariablesBuilder.put("DX", target.getDxExecutable().toString());
           environmentVariablesBuilder.put("ZIPALIGN", target.getZipalignExecutable().toString());
+          environmentVariablesBuilder.put(
+              "AAPT",
+              String.join(" ", target.getAaptExecutable().get().getCommandPrefix(pathResolver)));
+          environmentVariablesBuilder.put(
+              "AAPT2",
+              String.join(" ", target.getAapt2Executable().get().getCommandPrefix(pathResolver)));
         });
 
     // TODO(t5302074): This shouldn't be necessary. Speculatively disabling.
