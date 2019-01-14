@@ -12,12 +12,15 @@ genrule(
 genrule(
     name = "generate_flex",
     srcs = [
-        "resources/idea-flex.skeleton",
         "src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex",
     ],
     out = ".",
-    cmd = "$(exe //third-party/java/grammar-kit:jflex) -sliceandcharat -skel " +
-          "resources/idea-flex.skeleton -d $OUT src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex",
+    cmd = (
+        "$(exe //third-party/java/grammar-kit:jflex)" +
+        " -skel $(location //third-party/java/grammar-kit:idea-flex.skeleton)/idea-flex.skeleton" +
+        " -d $OUT/com/facebook/buck/intellij/ideabuck/lang" +
+        " src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex"
+    ),
 )
 
 zip_file(

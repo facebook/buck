@@ -12,9 +12,9 @@ java_binary(
 
 java_binary(
     name = "jflex",
-    main_class = "JFlex.Main",
+    main_class = "jflex.Main",
     visibility = [
-        "PUBLIC",
+        "//tools/ideabuck/...",
     ],
     deps = [
         ":jflex_prebuilt",
@@ -31,7 +31,20 @@ prebuilt_jar(
     binary_jar = "light-psi-all.jar",
 )
 
+# JFlex artifacts downloaded by the IntelliJ GrammarKit plugin (v2017.1.7),
+# using the "Run JFlex Generator..." action (enabled in '*.flex' files).
+
 prebuilt_jar(
     name = "jflex_prebuilt",
-    binary_jar = "JFlex.jar",
+    binary_jar = "jflex-1.7.0-2.jar",
+)
+
+filegroup(
+    name = "idea-flex.skeleton",
+    srcs = [
+        "idea-flex.skeleton",
+    ],
+    visibility = [
+        "//tools/ideabuck/...",
+    ],
 )
