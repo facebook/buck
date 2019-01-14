@@ -1073,7 +1073,7 @@ class BuildFileProcessor(object):
             cell_root = self._cell_roots.get(cell_name)
             if cell_root is None:
                 raise KeyError(
-                    "include_defs argument {} references an unknown cell named {}"
+                    "include_defs argument {} references an unknown cell named {} "
                     "known cells: {!r}".format(name, cell_name, self._cell_roots)
                 )
             return BuildInclude(
@@ -1128,7 +1128,7 @@ class BuildFileProcessor(object):
             cell_root = self._cell_roots.get(cell_name)
             if cell_root is None:
                 raise KeyError(
-                    "load label {} references an unknown cell named {}"
+                    "load label {} references an unknown cell named {} "
                     "known cells: {!r}".format(label, cell_name, self._cell_roots)
                 )
             return BuildInclude(
