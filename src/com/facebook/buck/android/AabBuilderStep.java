@@ -156,6 +156,7 @@ public class AabBuilderStep implements Step {
           fakeResApk,
           null,
           null,
+          null,
           verboseStream
       );
       addModuleFiles(moduleBuilder, moduleInfo, addedFiles, addedSourceFiles);
