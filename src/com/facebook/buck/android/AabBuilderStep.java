@@ -33,6 +33,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.test.selectors.Nullable;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -147,7 +148,7 @@ public class AabBuilderStep implements Step {
       ExecutionContext context,
       Path moduleGenPath,
       File fakeResApk,
-      PrintStream verboseStream,
+      @Nullable PrintStream verboseStream,
       ModuleInfo moduleInfo,
       Set<String> addedFiles,
       Set<Path> addedSourceFiles)

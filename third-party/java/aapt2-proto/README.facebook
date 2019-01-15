@@ -1,0 +1,5 @@
+Bundletool is a command-line tool to manipulate and build Android App Bundles - https://g.co/androidappbundle
+This is used by bundle tool to generate all the bundle configuration files
+
+Acquired from https://mvnrepository.com/artifact/com.android.tools.build/aapt2-proto
+Release Number: 0.3.1
