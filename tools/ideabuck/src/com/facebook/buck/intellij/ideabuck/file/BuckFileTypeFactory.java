@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.file;
 
+import com.intellij.openapi.fileTypes.ExtensionFileNameMatcher;
 import com.intellij.openapi.fileTypes.FileNameMatcherEx;
 import com.intellij.openapi.fileTypes.FileTypeConsumer;
 import com.intellij.openapi.fileTypes.FileTypeFactory;
@@ -41,5 +42,6 @@ public class BuckFileTypeFactory extends FileTypeFactory {
                 || Comparing.equal(fileName, buildFileName, true);
           }
         });
+    fileTypeConsumer.consume(BuckFileType.INSTANCE, new ExtensionFileNameMatcher("bzl"));
   }
 }
