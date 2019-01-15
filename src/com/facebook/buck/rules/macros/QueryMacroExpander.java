@@ -17,14 +17,12 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.query.NoopQueryEvaluator;
-import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
@@ -32,8 +30,6 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -50,38 +46,6 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
 
   public QueryMacroExpander(Optional<TargetGraph> targetGraph) {
     this.targetGraph = targetGraph;
-  }
-
-  private Stream<BuildTarget> extractTargets(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      Optional<ActionGraphBuilder> graphBuilder,
-      T input) {
-    GraphEnhancementQueryEnvironment env =
-        new GraphEnhancementQueryEnvironment(
-            graphBuilder,
-            targetGraph,
-            TYPE_COERCER_FACTORY,
-            cellNames,
-            BuildTargetPatternParser.forBaseName(target.getBaseName()),
-            ImmutableSet.of());
-    try {
-      QueryExpression parsedExp = QueryExpression.parse(input.getQuery().getQuery(), env);
-      return parsedExp
-          .getTargets(env)
-          .stream()
-          .map(
-              queryTarget -> {
-                Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-                return ((QueryBuildTarget) queryTarget).getBuildTarget();
-              });
-    } catch (QueryException e) {
-      throw new HumanReadableException(
-          e,
-          "Error executing query in macro for target %s: %s",
-          target,
-          e.getHumanReadableErrorMessage());
-    }
   }
 
   Stream<QueryTarget> resolveQuery(
@@ -132,18 +96,6 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
   }
 
   abstract boolean detectsTargetGraphOnlyDeps();
-
-  @Override
-  public void extractParseTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      T input,
-      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extractTargets(target, cellNames, Optional.empty(), input)
-        .forEach(
-            (detectsTargetGraphOnlyDeps() ? targetGraphOnlyDepsBuilder : buildDepsBuilder)::add);
-  }
 
   protected static final class QueryResults {
     ImmutableList<QueryTarget> results;

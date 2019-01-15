@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -71,15 +70,5 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     return expand(pathResolver, input, resolve(graphBuilder, input));
-  }
-
-  @Override
-  public void extractParseTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      M input,
-      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    buildDepsBuilder.add(input.getTarget());
   }
 }

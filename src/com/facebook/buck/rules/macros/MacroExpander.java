@@ -19,14 +19,11 @@ package com.facebook.buck.rules.macros;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.WriteToFileArg;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -69,20 +66,6 @@ public interface MacroExpander {
   default Arg makeExpandToFileArg(BuildTarget target, String prefix, Arg delegate) {
     return new WriteToFileArg(target, prefix, delegate);
   }
-
-  /**
-   * @return names of additional {@link TargetNode}s which must be followed by the parser to support
-   *     this macro when constructing the target graph. To be used by {@link
-   *     ImplicitDepsInferringDescription#findDepsForTargetFromConstructorArgs} to extract implicit
-   *     dependencies hidden behind macros.
-   */
-  void extractParseTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ImmutableList<String> input,
-      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
-      throws MacroException;
 
   /** @return something that should be added to the rule key of the rule that expands this macro. */
   Object extractRuleKeyAppendables(

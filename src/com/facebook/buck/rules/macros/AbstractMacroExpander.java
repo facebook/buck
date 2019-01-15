@@ -20,7 +20,6 @@ import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
@@ -35,30 +34,6 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
   protected abstract T parse(
       BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException;
-
-  @Override
-  public final void extractParseTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ImmutableList<String> input,
-      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
-      throws MacroException {
-    extractParseTimeDepsFrom(
-        target,
-        cellNames,
-        parse(target, cellNames, input),
-        buildDepsBuilder,
-        targetGraphOnlyDepsBuilder);
-  }
-
-  @SuppressWarnings("unused")
-  public void extractParseTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      T input,
-      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 
   /** @return the precomputed work that can be re-used between invocations */
   @Override

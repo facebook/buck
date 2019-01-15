@@ -434,16 +434,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         throws MacroException {
       return expand(graphBuilder, resolve(graphBuilder, input.getTargets()), input.getFilter());
     }
-
-    @Override
-    public void extractParseTimeDepsFrom(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        M input,
-        ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-        ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-      buildDepsBuilder.addAll(input.getTargets());
-    }
   }
 
   /**
