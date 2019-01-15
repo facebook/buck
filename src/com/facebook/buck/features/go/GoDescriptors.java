@@ -45,6 +45,7 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.HasSourcePath;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.annotations.VisibleForTesting;
@@ -372,6 +373,15 @@ abstract class GoDescriptors {
             StringArg.from(
                 Iterables.concat(
                     platform.getExternalLinkerFlags(), extraFlags.build(), externalLinkerFlags)));
+
+    // collect build rules from args (required otherwise referenced sources
+    // won't build before linking)
+    for (Arg arg : cxxLinkerArgs) {
+      if (HasSourcePath.class.isInstance(arg)) {
+        SourcePath pth = ((HasSourcePath) arg).getPath();
+        extraDeps.addAll(ruleFinder.filterBuildRuleInputs(pth));
+      }
+    }
 
     if (!linkMode.isPresent()) {
       linkMode =
