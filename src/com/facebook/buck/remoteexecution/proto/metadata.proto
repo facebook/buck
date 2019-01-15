@@ -43,9 +43,18 @@ message BuckInfo {
   string build_id = 1;
 }
 
+// Data about the client that wants to start the session - will be ignored if
+// the RESessionID is already known.
+message CreatorInfo {
+  string username = 1;
+  // Freeform string that a client (e.g. an IDE, CI) may set to identify itself.
+  string client_type = 2;
+}
+
 // This is propagated in GRPC header "re-metadata-bin".
 message RemoteExecutionMetadata {
   RESessionID re_session_id = 1;
   BuckInfo buck_info = 2;
   TraceInfo trace_info = 3;
+  CreatorInfo creator_info = 4;
 }

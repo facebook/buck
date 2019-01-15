@@ -47,4 +47,17 @@ public interface RemoteExecutionMetadataOrBuilder extends
    * <code>.facebook.remote_execution.TraceInfo trace_info = 3;</code>
    */
   com.facebook.buck.remoteexecution.proto.TraceInfoOrBuilder getTraceInfoOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.CreatorInfo creator_info = 4;</code>
+   */
+  boolean hasCreatorInfo();
+  /**
+   * <code>.facebook.remote_execution.CreatorInfo creator_info = 4;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.CreatorInfo getCreatorInfo();
+  /**
+   * <code>.facebook.remote_execution.CreatorInfo creator_info = 4;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.CreatorInfoOrBuilder getCreatorInfoOrBuilder();
 }
