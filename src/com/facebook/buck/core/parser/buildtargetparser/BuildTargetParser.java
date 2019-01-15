@@ -52,23 +52,6 @@ public class BuildTargetParser {
   }
 
   /**
-   * @param buildTargetName either a fully-qualified or relative target name.
-   * @param buildTargetPatternParser defines how targets should be interpreted, such as the base
-   *     name of the target or whether wildcards are allowed.
-   * @see #parse(CellPathResolver, String, String, boolean)
-   */
-  public BuildTarget parse(
-      String buildTargetName,
-      BuildTargetPatternParser<?> buildTargetPatternParser,
-      CellPathResolver cellPathResolver) {
-    return parse(
-        cellPathResolver,
-        buildTargetName,
-        buildTargetPatternParser.getBaseName(),
-        buildTargetPatternParser.isWildCardAllowed());
-  }
-
-  /**
    * Creates a {@link BuildTarget} with the given fully qualified target name.
    *
    * @param buildTargetName a fully-qualified build target name.

@@ -150,10 +150,7 @@ public class BuildTargetParserTest {
   @Test
   public void testParseBuildFile() {
     BuildTarget buildTarget =
-        parser.parse(
-            ":assets",
-            BuildTargetPatternParser.forBaseName("//facebook/orca"),
-            createCellRoots(null));
+        parser.parse(createCellRoots(null), ":assets", "//facebook/orca", false);
     assertEquals("//facebook/orca", buildTarget.getBaseName());
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
   }
@@ -164,7 +161,11 @@ public class BuildTargetParserTest {
     BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.forVisibilityArgument();
     BuildTarget target =
-        parser.parse("//java/com/example:", buildTargetPatternParser, createCellRoots(null));
+        parser.parse(
+            createCellRoots(null),
+            "//java/com/example:",
+            buildTargetPatternParser.getBaseName(),
+            buildTargetPatternParser.isWildCardAllowed());
     assertEquals(
         "A build target that ends with a colon should be treated as a wildcard build target "
             + "when parsed in the context of a visibility argument.",

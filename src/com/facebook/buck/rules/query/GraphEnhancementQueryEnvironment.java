@@ -253,7 +253,9 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
             .collect(ImmutableSet.toImmutableSet());
       }
       try {
-        BuildTarget buildTarget = BuildTargetParser.INSTANCE.parse(target, context, cellNames);
+        BuildTarget buildTarget =
+            BuildTargetParser.INSTANCE.parse(
+                cellNames, target, context.getBaseName(), context.isWildCardAllowed());
         return ImmutableSet.of(QueryBuildTarget.of(buildTarget));
       } catch (BuildTargetParseException e) {
         throw new QueryException(e, "Unable to parse pattern %s", target);

@@ -76,7 +76,11 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
     while (matcher.find()) {
       builder.append(queryString, lastEnd, matcher.start());
       BuildTarget target =
-          BuildTargetParser.INSTANCE.parse(matcher.group(), pattern, cellPathResolver);
+          BuildTargetParser.INSTANCE.parse(
+              cellPathResolver,
+              matcher.group(),
+              pattern.getBaseName(),
+              pattern.isWildCardAllowed());
       Optional<BuildTarget> translated = translator.translate(cellPathResolver, pattern, target);
       builder.append(translated.orElse(target).getFullyQualifiedName());
       lastEnd = matcher.end();

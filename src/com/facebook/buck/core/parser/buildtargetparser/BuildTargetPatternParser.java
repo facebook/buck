@@ -46,7 +46,7 @@ public abstract class BuildTargetPatternParser<T> {
     return baseName;
   }
 
-  protected boolean isWildCardAllowed() {
+  public boolean isWildCardAllowed() {
     return false;
   }
 
@@ -66,7 +66,9 @@ public abstract class BuildTargetPatternParser<T> {
       return createWildCardPattern(cellNames, buildTargetPattern);
     }
 
-    BuildTarget target = BuildTargetParser.INSTANCE.parse(buildTargetPattern, this, cellNames);
+    BuildTarget target =
+        BuildTargetParser.INSTANCE.parse(
+            cellNames, buildTargetPattern, baseName, isWildCardAllowed());
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
       return createForChildren(target.getCellPath(), target.getBasePath());
     } else {
@@ -200,7 +202,7 @@ public abstract class BuildTargetPatternParser<T> {
     }
 
     @Override
-    protected boolean isWildCardAllowed() {
+    public boolean isWildCardAllowed() {
       return true;
     }
   }

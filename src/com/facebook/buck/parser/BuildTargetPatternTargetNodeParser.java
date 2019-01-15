@@ -43,7 +43,7 @@ public class BuildTargetPatternTargetNodeParser extends BuildTargetPatternParser
   }
 
   @Override
-  protected boolean isWildCardAllowed() {
+  public boolean isWildCardAllowed() {
     return true;
   }
 }
