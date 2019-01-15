@@ -1,0 +1,20 @@
+# This file contains Kotlin code with a Kotlin annotation
+# processed by a Kotlin annotation processor that generates
+# .kt files. This exists to verify that this entire graph
+# of pure Kotlin code never ends up generating a JavacStep
+# with no .java files (which would break when used with
+# /usr/bin/javac).
+
+kotlin_library(
+    name = "example",
+    srcs = [
+        "Example.kt",
+    ],
+    annotation_processing_tool = "kapt",
+    plugins = [
+        "//com/example/ap/kotlinap:ap",
+    ],
+    deps = [
+        "//com/example/ap/kotlinannotation:annotation-lib",
+    ],
+)

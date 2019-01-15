@@ -16,13 +16,27 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
+import java.util.Set;
+import java.util.jar.JarFile;
+import java.util.stream.Collectors;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,6 +62,72 @@ public class KotlinLibraryIntegrationTest {
   public void shouldCompileKotlinClass() throws Exception {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
     buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldCompileKotlinClassWithExternalJavac() throws Exception {
+    overrideToolsJavacInBuckConfig();
+
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void compileKotlinClassWithAnnotationProcessorThatGeneratesJavaCode() throws Exception {
+    buildKotlinLibraryThatContainsNoJavaCodeButMustCompileGeneratedJavaCode();
+  }
+
+  @Test
+  public void compileKotlinClassWithAnnotationProcessorThatGeneratesJavaCodeWithExternalJavac()
+      throws Exception {
+    overrideToolsJavacInBuckConfig();
+    buildKotlinLibraryThatContainsNoJavaCodeButMustCompileGeneratedJavaCode();
+  }
+
+  private void buildKotlinLibraryThatContainsNoJavaCodeButMustCompileGeneratedJavaCode()
+      throws IOException {
+    Path jarFile = workspace.buildAndReturnOutput("//com/example/ap/kotlinapgenjava:example");
+    assertTrue(jarFile.getFileName().toString().endsWith(".jar"));
+
+    try (JarFile jf = new JarFile(jarFile.toString())) {
+      Set<String> entries =
+          jf.stream().map(Functions.toStringFunction()).collect(Collectors.toSet());
+      assertEquals(
+          ImmutableSet.of(
+              "META-INF/",
+              "META-INF/MANIFEST.MF",
+              "META-INF/main.kotlin_module",
+              "com/",
+              "com/example/",
+              "com/example/ap/",
+              "com/example/ap/kotlinapgenjava/",
+              "com/example/ap/kotlinapgenjava/Example.class",
+              "com/example/ap/kotlinapgenjava/Example_.class"),
+          entries);
+    }
+  }
+
+  @Test
+  public void pureTreeOfKotlinCodeWithAnnotationProcessorsShouldNotMakeAnInvalidJavacCall()
+      throws Exception {
+    overrideToolsJavacInBuckConfig();
+    Path jarFile = workspace.buildAndReturnOutput("//com/example/ap/purekotlinap:example");
+    assertNotNull(
+        new JarFile(jarFile.toString()).getEntry("com/example/ap/purekotlinap/Example_.class"));
+  }
+
+  private void overrideToolsJavacInBuckConfig() throws IOException {
+    ExecutableFinder exeFinder = new ExecutableFinder();
+    Optional<Path> javac =
+        exeFinder.getOptionalExecutable(Paths.get("javac"), EnvVariablesProvider.getSystemEnv());
+    Assume.assumeTrue(javac.isPresent());
+
+    // If javac is found on the $PATH, add a section to .buckconfig to override tools.javac.
+    // This is a regression test to ensure kotlin_library() works with an external javac; in
+    // particular, when there are no .java files in the srcs of the rule.
+    String buckconfig = workspace.getFileContents(".buckconfig");
+    String amendedBuckconfig = buckconfig + String.format("[tools]\njavac = %s", javac.get());
+    workspace.writeContentsToPath(amendedBuckconfig, ".buckconfig");
   }
 
   @Test(timeout = 100000)

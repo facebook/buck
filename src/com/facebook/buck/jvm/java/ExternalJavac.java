@@ -119,8 +119,6 @@ public class ExternalJavac implements Javac {
         Preconditions.checkArgument(
             abiGenerationMode == AbiGenerationMode.CLASS,
             "Cannot compile ABI jars with external javac");
-        ImmutableList.Builder<String> command = ImmutableList.builder();
-        command.addAll(javac.get().getCommandPrefix(sourcePathResolver));
         ImmutableList<Path> expandedSources;
         try {
           expandedSources =
@@ -133,6 +131,19 @@ public class ExternalJavac implements Javac {
           throw new HumanReadableException(
               "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
         }
+
+        // For consistency with javax.tools.JavaCompiler, if no sources are specified, then do
+        // nothing. Although it seems reasonable to treat this case as an error, we have a situation
+        // in KotlincToJarStepFactory where we need to categorically add a JavacStep in the event
+        // that an annotation processor for the kotlin_library() dynamically generates some .java
+        // files that need to be compiled. Often, the annotation processors will do no such thing
+        // and the JavacStep that was added will have no work to do.
+        if (expandedSources.isEmpty()) {
+          return 0;
+        }
+
+        ImmutableList.Builder<String> command = ImmutableList.builder();
+        command.addAll(javac.get().getCommandPrefix(sourcePathResolver));
 
         try {
           FluentIterable<String> escapedPaths =

@@ -253,6 +253,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     ImmutableSortedSet<Path> sources = sourceBuilder.build();
 
+    // Note that this filters out only .kt files, so this keeps both .java and .src.zip files.
     ImmutableSortedSet<Path> javaSourceFiles =
         ImmutableSortedSet.copyOf(
             sources
