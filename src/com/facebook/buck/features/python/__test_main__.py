@@ -58,6 +58,10 @@ try:
     from importlib.machinery import SourceFileLoader
 except ImportError:
     SourceFileLoader = None
+try:
+    import pytest
+except ImportError:
+    pytest = None
 
 
 EXIT_CODE_SUCCESS = 0
@@ -573,6 +577,12 @@ class MainProgram(object):
             help="Configure log levels for specific logger categories",
         )
         op.add_option(
+            "--test-runner",
+            action="append",
+            default="pyunit3",
+            help="Set specific test runner",
+        )
+        op.add_option(
             "-q",
             "--quiet",
             action="count",
@@ -704,14 +714,17 @@ class MainProgram(object):
         if sys.version_info[0] > 2 or sys.version_info[1] > 6:
             unittest.installHandler()
 
-        # Run the tests
-        runner = BuckTestRunner(
-            self,
-            test_suite,
-            verbosity=self.options.verbosity,
-            show_output=self.options.show_output,
-        )
-        result = runner.run(test_suite)
+        if (pytest):
+          raise ValueError("pytest")
+        else:
+          # Run the tests
+          runner = BuckTestRunner(
+              self,
+              test_suite,
+              verbosity=self.options.verbosity,
+              show_output=self.options.show_output,
+          )
+          result = runner.run(test_suite)
 
         if self.options.collect_coverage and self.options.show_output:
             self.cov.stop()

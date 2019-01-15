@@ -77,6 +77,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> contacts;
   private final ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage;
   private final ImmutableSet<SourcePath> additionalCoverageTargets;
+  private final String testRunner;
 
   private PythonTest(
       BuildTarget buildTarget,
@@ -91,7 +92,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       ImmutableSet<SourcePath> additionalCoverageTargets,
       Optional<Long> testRuleTimeoutMs,
-      ImmutableSet<String> contacts) {
+      ImmutableSet<String> contacts,
+      String testRunner) {
     super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
     this.originalDeclaredDeps = originalDeclaredDeps;
@@ -103,6 +105,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.additionalCoverageTargets = additionalCoverageTargets;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.contacts = contacts;
+    this.testRunner = testRunner;
   }
 
   public static PythonTest from(
@@ -116,7 +119,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       ImmutableSet<SourcePath> additionalCoverageTargets,
       Optional<Long> testRuleTimeoutMs,
-      ImmutableSet<String> contacts) {
+      ImmutableSet<String> contacts,
+      String testRunner) {
 
     return new PythonTest(
         buildTarget,
@@ -131,7 +135,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         neededCoverage,
         additionalCoverageTargets,
         testRuleTimeoutMs,
-        contacts);
+        contacts,
+        testRunner);
   }
 
   @Override
@@ -168,7 +173,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getMergedEnv(buildContext.getSourcePathResolver()),
                 options.getTestSelectorList(),
                 testRuleTimeoutMs,
-                getProjectFilesystem().resolve(getPathToTestOutputResult())))
+                getProjectFilesystem().resolve(getPathToTestOutputResult()),
+                testRunner))
         .build();
   }
 
@@ -270,7 +276,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
-        .setType("pyunit")
+        .setType(testRunner)
         .setNeededCoverage(neededCoverage)
         .addAllCommand(
             binary.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))

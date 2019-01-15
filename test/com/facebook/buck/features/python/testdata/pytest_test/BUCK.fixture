@@ -1,0 +1,34 @@
+python_test(
+    name = "test-success",
+    srcs = [
+        "test_success.py",
+    ],
+    test_runner = "pytest",
+    deps = [
+      ":pytest",
+    ],
+)
+
+python_test(
+    name = "test-failure",
+    srcs = [
+        "test_failure.py",
+    ],
+    test_runner = "pytest",
+    deps = [
+      ":pytest",
+    ],
+)
+
+prebuilt_python_library(
+    name = "pytest",
+    binary_src = glob(["dist/pytest-*.whl"])[0],
+    deps = [
+      ":py",
+    ],
+)
+
+prebuilt_python_library(
+    name = "py",
+    binary_src = glob(["dist/py-*.whl"])[0],
+)

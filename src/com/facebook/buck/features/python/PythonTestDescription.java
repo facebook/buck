@@ -429,7 +429,7 @@ public class PythonTestDescription
                     target -> additionalCoverageTargets.contains(target.getUnflavoredBuildTarget()))
                 .map(target -> DefaultBuildTargetSourcePath.of(target))
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-
+    
     // Generate and return the python test rule, which depends on the python binary rule above.
     return PythonTest.from(
         buildTarget,
@@ -444,7 +444,8 @@ public class PythonTestDescription
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
             .orElse(cxxBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
-        args.getContacts());
+        args.getContacts(),
+        args.getTestRunner().orElse("pyunit"));
   }
 
   @Override
@@ -500,5 +501,7 @@ public class PythonTestDescription
     // targets that builds foo.so so that buck can resolve its binary path and
     // export the downstream testing framework to consume
     ImmutableSet<BuildTarget> getAdditionalCoverageTargets();
+
+    Optional<String> getTestRunner();
   }
 }

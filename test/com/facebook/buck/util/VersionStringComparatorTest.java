@@ -30,7 +30,8 @@ public class VersionStringComparatorTest {
   @Test
   public void testIsValidVersionString() {
     String[] validVersions = {
-      "4", "4.2", "4.2.2", "4_rc1", "4.2_rc1", "4.2.2_rc1", "r9c", "r10e-rc4"
+        "4", "4.2", "4.2.2", "4_rc1", "4.2_rc1", "4.2.2_rc1", "r9c", "r10e-rc4",
+        "19.0.5160253-beta2", "5160253-beta2"
     };
 
     for (String validVersion : validVersions) {

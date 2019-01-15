@@ -49,6 +49,7 @@ public class PythonRunTestsStep implements Step {
   private final TestSelectorList testSelectorList;
   private final Optional<Long> testRuleTimeoutMs;
   private final Path resultsOutputPath;
+  private final String testRunner;
 
   private final Consumer<Process> timeoutHandler =
       input -> {
@@ -64,7 +65,8 @@ public class PythonRunTestsStep implements Step {
       ImmutableMap<String, String> environment,
       TestSelectorList testSelectorList,
       Optional<Long> testRuleTimeoutMs,
-      Path resultsOutputPath) {
+      Path resultsOutputPath,
+      String testRunner) {
     this.workingDirectory = workingDirectory;
     this.testName = testName;
     this.commandPrefix = commandPrefix;
@@ -72,6 +74,7 @@ public class PythonRunTestsStep implements Step {
     this.testSelectorList = testSelectorList;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.resultsOutputPath = resultsOutputPath;
+    this.testRunner = testRunner;
 
     this.timedOut = false;
   }
@@ -101,6 +104,7 @@ public class PythonRunTestsStep implements Step {
             .setCommand(
                 ImmutableList.<String>builder()
                     .addAll(commandPrefix)
+                    .add("--test-runner", testRunner)
                     .add("-l", "-L", "buck")
                     .build())
             .setDirectory(workingDirectory)
