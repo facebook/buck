@@ -114,7 +114,6 @@ import com.facebook.buck.log.ConsoleHandlerState;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
-import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.manifestservice.ManifestServiceConfig;
 import com.facebook.buck.parser.DaemonicParserState;
@@ -123,9 +122,11 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.TargetSpecResolver;
+import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionConsoleLineProvider;
 import com.facebook.buck.remoteexecution.RemoteExecutionEventListener;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -1135,7 +1136,7 @@ public final class Main {
                       .getEventListeners(executors, scheduledExecutorPool.get())
                   : ImmutableList.of();
 
-          Optional<TraceInfoProvider> traceInfoProvider = Optional.empty();
+          MetadataProvider metadataProvider = MetadataProviderFactory.emptyMetadataProvider();
           if (isRemoteExecutionBuild(command, buckConfig)) {
             List<BuckEventListener> remoteExecutionsListeners = Lists.newArrayList();
             if (remoteExecutionListener.isPresent()) {
@@ -1335,7 +1336,7 @@ public final class Main {
                         pluginManager,
                         moduleManager,
                         forkJoinPoolSupplier,
-                        traceInfoProvider,
+                        metadataProvider,
                         manifestServiceSupplier));
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));

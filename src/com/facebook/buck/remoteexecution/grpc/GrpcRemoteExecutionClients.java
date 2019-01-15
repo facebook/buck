@@ -23,11 +23,11 @@ import build.bazel.remote.execution.v2.ExecutionGrpc;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.ContentAddressedStorage;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionService;
+import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.bytestream.ByteStreamGrpc;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
@@ -37,11 +37,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
-import io.grpc.Metadata;
-import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.immutables.value.Value;
 
@@ -66,7 +63,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       String instanceName,
       ManagedChannel executionEngineChannel,
       ManagedChannel casChannel,
-      Optional<TraceInfoProvider> traceInfoProvider,
+      MetadataProvider metadataProvider,
       BuckEventBus buckEventBus) {
     this.executionEngineChannel = executionEngineChannel;
     this.casChannel = casChannel;
@@ -80,16 +77,9 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
             PROTOCOL,
             buckEventBus);
     ExecutionStub executionStub = ExecutionGrpc.newStub(executionEngineChannel);
-    if (traceInfoProvider.isPresent()) {
-      Metadata headers = new Metadata();
-      headers.put(
-          Metadata.Key.of("trace-id", Metadata.ASCII_STRING_MARSHALLER),
-          traceInfoProvider.get().getTraceId());
-      executionStub = MetadataUtils.attachHeaders(executionStub, headers);
-    }
     this.executionService =
         new GrpcRemoteExecutionService(
-            executionStub, byteStreamStub, instanceName, traceInfoProvider);
+            executionStub, byteStreamStub, instanceName, metadataProvider);
   }
 
   private static String getReadResourceName(String instanceName, Protocol.Digest digest) {

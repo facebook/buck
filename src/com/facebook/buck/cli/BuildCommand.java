@@ -740,7 +740,7 @@ public class BuildCommand extends AbstractCommand {
             getBuildEngineMode(),
             ruleKeyLogger,
             remoteBuildRuleCompletionWaiter,
-            params.getTraceInfoProvider());
+            params.getMetadataProvider());
 
     // TODO(buck_team): use try-with-resources instead
     try {

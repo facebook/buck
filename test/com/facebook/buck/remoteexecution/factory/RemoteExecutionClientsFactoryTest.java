@@ -22,13 +22,13 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionClients;
 import com.facebook.buck.remoteexecution.util.OutOfProcessIsolatedExecutionClients;
 import com.facebook.buck.util.timing.FakeClock;
 import java.io.IOException;
-import java.util.Optional;
 import org.junit.Test;
 
 public class RemoteExecutionClientsFactoryTest {
@@ -101,6 +101,8 @@ public class RemoteExecutionClientsFactoryTest {
 
   private RemoteExecutionClients createClients(BuckConfig config) throws IOException {
     return new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
-        .create(new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")), Optional.empty());
+        .create(
+            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")),
+            MetadataProviderFactory.emptyMetadataProvider());
   }
 }

@@ -44,6 +44,7 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.TestParserFactory;
+import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -336,7 +337,7 @@ public class CleanCommandTest {
         pluginManager,
         TestBuckModuleManagerFactory.create(pluginManager),
         Main.getForkJoinPoolSupplier(buckConfig),
-        Optional.empty(),
+        MetadataProviderFactory.emptyMetadataProvider(),
         getManifestSupplier());
   }
 }

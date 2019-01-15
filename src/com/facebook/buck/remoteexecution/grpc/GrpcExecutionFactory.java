@@ -17,8 +17,9 @@
 package com.facebook.buck.remoteexecution.grpc;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.TraceInfoProvider;
+import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
+import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
 import com.google.common.io.Closer;
@@ -58,7 +59,11 @@ public class GrpcExecutionFactory {
     ManagedChannel channel = InProcessChannelBuilder.forName("unique").build();
 
     return new GrpcRemoteExecutionClients(
-        "in-process", channel, channel, Optional.empty(), buckEventBus) {
+        "in-process",
+        channel,
+        channel,
+        MetadataProviderFactory.emptyMetadataProvider(),
+        buckEventBus) {
       @Override
       public void close() throws IOException {
         try (Closer closer = Closer.create()) {
@@ -86,7 +91,7 @@ public class GrpcExecutionFactory {
       Optional<Path> certPath,
       Optional<Path> keyPath,
       Optional<Path> caPath,
-      Optional<TraceInfoProvider> traceInfoProvider,
+      MetadataProvider metadataProvider,
       BuckEventBus buckEventBus)
       throws SSLException {
 
@@ -106,7 +111,7 @@ public class GrpcExecutionFactory {
     }
 
     return new GrpcRemoteExecutionClients(
-        "buck", executionEngineChannel, casChannel, traceInfoProvider, buckEventBus);
+        "buck", executionEngineChannel, casChannel, metadataProvider, buckEventBus);
   }
 
   private static ManagedChannel createInsecureChannel(String host, int port) {

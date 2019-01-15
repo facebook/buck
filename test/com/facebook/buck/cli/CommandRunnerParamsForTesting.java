@@ -40,6 +40,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.TestParserFactory;
+import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -148,7 +149,7 @@ public class CommandRunnerParamsForTesting {
         pluginManager,
         TestBuckModuleManagerFactory.create(pluginManager),
         Main.getForkJoinPoolSupplier(config),
-        Optional.empty(),
+        MetadataProviderFactory.emptyMetadataProvider(),
         getManifestSupplier());
   }
 

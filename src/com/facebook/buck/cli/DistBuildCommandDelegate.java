@@ -636,7 +636,7 @@ public class DistBuildCommandDelegate {
             buildCommand.getBuildEngineMode(),
             ruleKeyLogger,
             remoteBuildRuleCompletionWaiter,
-            params.getTraceInfoProvider());
+            params.getMetadataProvider());
     localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
     builder.shutdown();
   }

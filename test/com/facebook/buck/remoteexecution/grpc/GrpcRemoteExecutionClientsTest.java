@@ -25,6 +25,7 @@ import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionImplBase;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
@@ -56,7 +57,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -92,7 +92,9 @@ public class GrpcRemoteExecutionClientsTest {
     server = serverBuilder.build().start();
     ManagedChannel channel = InProcessChannelBuilder.forName(serverName).directExecutor().build();
 
-    clients = new GrpcRemoteExecutionClients("buck", channel, channel, Optional.empty(), eventBus);
+    clients =
+        new GrpcRemoteExecutionClients(
+            "buck", channel, channel, MetadataProviderFactory.emptyMetadataProvider(), eventBus);
   }
 
   @After

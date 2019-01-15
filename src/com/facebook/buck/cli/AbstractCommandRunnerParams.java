@@ -33,9 +33,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.InvocationInfo;
-import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -170,7 +170,7 @@ public abstract class AbstractCommandRunnerParams {
   public abstract CloseableMemoizedSupplier<ForkJoinPool> getPoolSupplier();
 
   @Value.Parameter
-  public abstract Optional<TraceInfoProvider> getTraceInfoProvider();
+  public abstract MetadataProvider getMetadataProvider();
 
   @Value.Parameter
   public abstract ThrowingCloseableMemoizedSupplier<ManifestService, IOException>

@@ -21,7 +21,6 @@ import build.bazel.remote.execution.v2.ExecuteRequest;
 import build.bazel.remote.execution.v2.ExecuteResponse;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.Protocol;
 import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.Protocol.OutputFile;
@@ -30,17 +29,16 @@ import com.facebook.buck.remoteexecution.RemoteExecutionService;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputDirectory;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputFile;
+import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.longrunning.Operation;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import io.grpc.Metadata;
-import io.grpc.Metadata.Key;
-import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.List;
@@ -53,41 +51,27 @@ import javax.annotation.Nullable;
 /** Implementation of the GRPC client for the Remote Execution service. */
 public class GrpcRemoteExecutionService implements RemoteExecutionService {
   private static final Logger LOG = Logger.get(GrpcRemoteExecutionService.class);
-
-  private static final Key<? super String> TRACE_ID_KEY =
-      Metadata.Key.of("trace-id", Metadata.ASCII_STRING_MARSHALLER);
-  private static final Key<? super String> EDGE_ID_KEY =
-      Metadata.Key.of("edge-id", Metadata.ASCII_STRING_MARSHALLER);
   private final ExecutionStub executionStub;
   private final ByteStreamStub byteStreamStub;
   private final String instanceName;
-  private final Optional<TraceInfoProvider> traceInfoProvider;
+  private final MetadataProvider metadataProvider;
 
   public GrpcRemoteExecutionService(
       ExecutionStub executionStub,
       ByteStreamStub byteStreamStub,
       String instanceName,
-      Optional<TraceInfoProvider> traceInfoProvider) {
+      MetadataProvider metadataProvider) {
     this.executionStub = executionStub;
     this.byteStreamStub = byteStreamStub;
     this.instanceName = instanceName;
-    this.traceInfoProvider = traceInfoProvider;
+    this.metadataProvider = metadataProvider;
   }
 
-  private ExecutionStub getStubWithTraceInfo(Protocol.Digest actionDigest) {
-    if (!traceInfoProvider.isPresent()) {
-      return executionStub;
-    }
-
-    Metadata extraHeaders = new Metadata();
-    String traceId = traceInfoProvider.get().getTraceId();
-    extraHeaders.put(TRACE_ID_KEY, traceId);
-    String edgeId =
-        traceInfoProvider
-            .get()
-            .getEdgeId(RemoteExecutionActionEvent.actionDigestToString(actionDigest));
-    extraHeaders.put(EDGE_ID_KEY, edgeId);
-    return MetadataUtils.attachHeaders(executionStub, extraHeaders);
+  private ExecutionStub getStubWithMetadata(Protocol.Digest actionDigest) {
+    return GrpcHeaderHandler.getStubWithMetadata(
+        executionStub,
+        metadataProvider.getForAction(
+            RemoteExecutionActionEvent.actionDigestToString(actionDigest)));
   }
 
   @Override
@@ -95,7 +79,7 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
       throws IOException, InterruptedException {
     SettableFuture<Operation> future = SettableFuture.create();
 
-    getStubWithTraceInfo(actionDigest)
+    getStubWithMetadata(actionDigest)
         .execute(
             ExecuteRequest.newBuilder()
                 .setInstanceName(instanceName)
@@ -140,7 +124,8 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
           } catch (InvalidProtocolBufferException e) {
             throw new BuckUncheckedExecutionException(e);
           }
-        });
+        },
+        MoreExecutors.directExecutor());
   }
 
   private ExecutionResult getExecutionResult(ActionResult actionResult) {

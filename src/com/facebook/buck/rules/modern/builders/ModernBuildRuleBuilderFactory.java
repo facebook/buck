@@ -25,9 +25,9 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.factory.RemoteExecutionClientsFactory;
+import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.modern.config.HybridLocalBuildStrategyConfig;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleStrategyConfig;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
@@ -50,7 +50,7 @@ public class ModernBuildRuleBuilderFactory {
       CellPathResolver cellResolver,
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
-      Optional<TraceInfoProvider> traceInfoProvider) {
+      MetadataProvider metadataProvider) {
     try {
       RemoteExecutionClientsFactory remoteExecutionFactory =
           new RemoteExecutionClientsFactory(remoteExecutionConfig);
@@ -72,7 +72,7 @@ public class ModernBuildRuleBuilderFactory {
                   cellResolver,
                   hashLoader,
                   eventBus,
-                  traceInfoProvider));
+                  metadataProvider));
         case REMOTE:
         case GRPC_REMOTE:
         case DEBUG_GRPC_SERVICE_IN_PROCESS:
@@ -81,7 +81,7 @@ public class ModernBuildRuleBuilderFactory {
               RemoteExecutionStrategy.createRemoteExecutionStrategy(
                   eventBus,
                   remoteExecutionConfig.getStrategyConfig(),
-                  remoteExecutionFactory.create(eventBus, traceInfoProvider),
+                  remoteExecutionFactory.create(eventBus, metadataProvider),
                   new SourcePathRuleFinder(resolver),
                   cellResolver,
                   rootCell,
@@ -102,7 +102,7 @@ public class ModernBuildRuleBuilderFactory {
       CellPathResolver cellResolver,
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
-      Optional<TraceInfoProvider> traceInfoProvider) {
+      MetadataProvider metadataProvider) {
     BuildRuleStrategy delegate =
         getBuildStrategy(
                 hybridLocalConfig.getDelegateConfig(),
@@ -112,7 +112,7 @@ public class ModernBuildRuleBuilderFactory {
                 cellResolver,
                 hashLoader,
                 eventBus,
-                traceInfoProvider)
+                metadataProvider)
             .orElseThrow(
                 () -> new HumanReadableException("Delegate config configured incorrectly."));
     return new HybridLocalStrategy(

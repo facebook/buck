@@ -41,10 +41,10 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -82,7 +82,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
   private final Optional<BuildType> buildEngineMode;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
-  private final Optional<TraceInfoProvider> traceInfoProvider;
+  private final MetadataProvider metadataProvider;
 
   private final CachingBuildEngine cachingBuildEngine;
   private final Build build;
@@ -102,7 +102,7 @@ public class LocalBuildExecutor implements BuildExecutor {
       Optional<BuildType> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
-      Optional<TraceInfoProvider> traceInfoProvider) {
+      MetadataProvider metadataProvider) {
     this.actionGraphAndBuilder = actionGraphAndBuilder;
     this.executorService = executorService;
     this.args = args;
@@ -111,7 +111,7 @@ public class LocalBuildExecutor implements BuildExecutor {
     this.ruleKeyLogger = ruleKeyLogger;
     this.ruleKeyCacheScope = ruleKeyRuleKeyCacheScope;
     this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
-    this.traceInfoProvider = traceInfoProvider;
+    this.metadataProvider = metadataProvider;
 
     // Init resources.
     this.cachingBuildEngine = createCachingBuildEngine();
@@ -226,7 +226,7 @@ public class LocalBuildExecutor implements BuildExecutor {
             args.getRootCell().getCellPathResolver(),
             cachingBuildEngineDelegate.getFileHashCache(),
             args.getBuckEventBus(),
-            traceInfoProvider),
+            metadataProvider),
         executorService,
         new DefaultStepRunner(),
         buildEngineMode.orElse(engineConfig.getBuildEngineMode()),
