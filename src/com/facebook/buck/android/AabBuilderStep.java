@@ -70,7 +70,7 @@ public class AabBuilderStep implements Step {
 
   /**
    * @param modulesInfo A set of ModuleInfo containing information about modules to be built within
-   * this bundle
+   *     this bundle
    * @param pathToOutputAabFile Path to output our APK to.
    * @param debugMode Whether or not to run ApkBuilder with debug mode turned on.
    */
@@ -103,8 +103,9 @@ public class AabBuilderStep implements Step {
 
     for (ModuleInfo moduleInfo : modulesInfo) {
       Path moduleGenPath = getPathForModule(moduleInfo);
-      StepExecutionResult moduleBuildResult = addModule(context, moduleGenPath, fakeResApk, output,
-          moduleInfo, addedFiles, addedSourceFiles);
+      StepExecutionResult moduleBuildResult =
+          addModule(
+              context, moduleGenPath, fakeResApk, output, moduleInfo, addedFiles, addedSourceFiles);
       if (!moduleBuildResult.isSuccess()) {
         return moduleBuildResult;
       }
@@ -147,18 +148,14 @@ public class AabBuilderStep implements Step {
       Path moduleGenPath,
       File fakeResApk,
       PrintStream verboseStream,
-      ModuleInfo moduleInfo, Set<String> addedFiles, Set<Path> addedSourceFiles)
+      ModuleInfo moduleInfo,
+      Set<String> addedFiles,
+      Set<Path> addedSourceFiles)
       throws IOException {
 
     try {
-      ApkBuilder moduleBuilder = new ApkBuilder(
-          moduleGenPath.toFile(),
-          fakeResApk,
-          null,
-          null,
-          null,
-          verboseStream
-      );
+      ApkBuilder moduleBuilder =
+          new ApkBuilder(moduleGenPath.toFile(), fakeResApk, null, null, null, verboseStream);
       addModuleFiles(moduleBuilder, moduleInfo, addedFiles, addedSourceFiles);
       // Build the APK
       moduleBuilder.sealApk();
@@ -176,7 +173,9 @@ public class AabBuilderStep implements Step {
 
   private void addModuleFiles(
       ApkBuilder moduleBuilder,
-      ModuleInfo moduleInfo, Set<String> addedFiles, Set<Path> addedSourceFiles)
+      ModuleInfo moduleInfo,
+      Set<String> addedFiles,
+      Set<Path> addedSourceFiles)
       throws ApkCreationException, DuplicateFileException, SealedApkException, IOException {
 
     moduleBuilder.setDebugMode(debugMode);
@@ -193,7 +192,8 @@ public class AabBuilderStep implements Step {
           addFile(
               moduleBuilder,
               filesystem.getPathForRelativePath(dexFile),
-              Paths.get(BundleModule.ASSETS_DIRECTORY.toString()).resolve(dexFile.getFileName())
+              Paths.get(BundleModule.ASSETS_DIRECTORY.toString())
+                  .resolve(dexFile.getFileName())
                   .toString(),
               addedFiles,
               addedSourceFiles);
@@ -304,22 +304,17 @@ public class AabBuilderStep implements Step {
         return;
       }
       for (File contentFile : files) {
-        processFileForResource(
-            builder, contentFile, path, addedFiles, addedSourceFiles);
+        processFileForResource(builder, contentFile, path, addedFiles, addedSourceFiles);
       }
     } else if (!file.isDirectory() && ApkBuilder.checkFileForPackaging(file.getName())) {
       if (file.getName().endsWith(".dex")) {
-        addFile(
-            builder,
-            file.toPath(),
-            getDexFileName(addedFiles),
-            addedFiles,
-            addedSourceFiles);
+        addFile(builder, file.toPath(), getDexFileName(addedFiles), addedFiles, addedSourceFiles);
       } else if (file.getName().equals(BundleModule.MANIFEST_FILENAME)) {
         addFile(
             builder,
             file.toPath(),
-            Paths.get(BundleModule.MANIFEST_DIRECTORY.toString()).resolve(file.getName())
+            Paths.get(BundleModule.MANIFEST_DIRECTORY.toString())
+                .resolve(file.getName())
                 .toString(),
             addedFiles,
             addedSourceFiles);
@@ -341,8 +336,7 @@ public class AabBuilderStep implements Step {
     String possibleName = Paths.get("dex").resolve("classes.dex").toString();
     while (addedFiles.contains(possibleName)) {
       ind++;
-      possibleName =
-          Paths.get("dex").resolve("classes" + ind + ".dex").toString();
+      possibleName = Paths.get("dex").resolve("classes" + ind + ".dex").toString();
     }
     return possibleName;
   }
@@ -352,10 +346,7 @@ public class AabBuilderStep implements Step {
   }
 
   private void addNativeLibraries(
-      ApkBuilder builder,
-      File nativeFolder,
-      Set<String> addedFiles,
-      Set<Path> addedSourceFiles)
+      ApkBuilder builder, File nativeFolder, Set<String> addedFiles, Set<Path> addedSourceFiles)
       throws ApkCreationException, SealedApkException, DuplicateFileException {
     if (!nativeFolder.isDirectory()) {
       if (nativeFolder.exists()) {
@@ -429,7 +420,7 @@ public class AabBuilderStep implements Step {
 
   private String resolveFileInModule(ZipEntry entry) {
     String location;
-    String fileSeparator="/";
+    String fileSeparator = "/";
     String empty = "";
 
     if (entry.getName().equals(BundleModule.MANIFEST_FILENAME)) {
@@ -439,8 +430,7 @@ public class AabBuilderStep implements Step {
         || entry.getName().startsWith(BundleModule.RESOURCES_DIRECTORY.toString() + fileSeparator)
         || entry.getName().startsWith(BundleModule.ASSETS_DIRECTORY.toString() + fileSeparator)
         || entry.getName().startsWith(BundleModule.DEX_DIRECTORY.toString() + fileSeparator)
-        || entry.getName().endsWith(".pb")
-    ) {
+        || entry.getName().endsWith(".pb")) {
       // They are already in the right folder
       location = empty;
 
