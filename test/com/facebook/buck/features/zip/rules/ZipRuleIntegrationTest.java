@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -28,13 +29,13 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.hamcrest.Matchers;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -319,8 +320,9 @@ public class ZipRuleIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testShouldIncludeOutputsContainedInBuckOutOfOtherCells() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "zip-crosscell", tmp);

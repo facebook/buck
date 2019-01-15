@@ -61,7 +61,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     return new DefaultProjectFilesystem(
         root.getFileSystem(),
         root,
-        extractIgnorePaths(root, config, buckPaths),
+        extractIgnorePaths(root, config, buckPaths, embeddedCellBuckOutInfo),
         buckPaths,
         ProjectFilesystemDelegateFactory.newInstance(root, config),
         getWindowsFSInstance());
@@ -78,7 +78,10 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   private static ImmutableSet<PathMatcher> extractIgnorePaths(
-      Path root, Config config, BuckPaths buckPaths) {
+      Path root,
+      Config config,
+      BuckPaths buckPaths,
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
     ImmutableSet.Builder<PathMatcher> builder = ImmutableSet.builder();
 
     FileSystem rootFs = root.getFileSystem();
@@ -97,15 +100,23 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
         DefaultProjectFilesystem.getCacheDir(root, config.getValue("cache", "dir"), buckPaths);
     addPathMatcherRelativeToRepo(root, builder, cacheDir);
 
+    Optional<Path> mainCellBuckOut = getMainCellBuckOut(root, embeddedCellBuckOutInfo);
+
     config
         .getListWithoutComments(projectKey, ignoreKey)
         .forEach(
             input -> {
               // We don't really want to ignore the output directory when doing things like
-              // filesystem
-              // walks, so return null
+              // filesystem walks, so return null
               if (buckPaths.getBuckOut().toString().equals(input)) {
                 return; // root.getFileSystem().getPathMatcher("glob:**");
+              }
+
+              // For the same reason as above, we don't really want to ignore the buck-out of other
+              // cells either. They may contain artifacts that we want to use in this cell.
+              // TODO: The below does this for the root cell, but this should be true of all cells.
+              if (mainCellBuckOut.isPresent() && mainCellBuckOut.get().toString().equals(input)) {
+                return;
               }
 
               if (GLOB_CHARS.matcher(input).find()) {
@@ -134,11 +145,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     BuckPaths buckPaths = BuckPaths.createDefaultBuckPaths(rootPath);
     Optional<String> configuredBuckOut = config.getValue("project", "buck_out");
     if (embeddedCellBuckOutInfo.isPresent()) {
-      Path cellBuckOut =
-          embeddedCellBuckOutInfo
-              .get()
-              .getEmbeddedCellsBuckOutBaseDir()
-              .resolve(embeddedCellBuckOutInfo.get().getCellName());
+      Path cellBuckOut = embeddedCellBuckOutInfo.get().getCellBuckOut();
       buckPaths =
           buckPaths
               .withConfiguredBuckOut(rootPath.relativize(cellBuckOut))
@@ -149,6 +156,23 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
               rootPath.getFileSystem().getPath(configuredBuckOut.get()));
     }
     return buckPaths;
+  }
+
+  /** Returns a root-relative path to the main cell's buck-out when using embedded cell buck out */
+  private static Optional<Path> getMainCellBuckOut(
+      Path root, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfoOptional) {
+    if (!embeddedCellBuckOutInfoOptional.isPresent()) {
+      return Optional.empty();
+    }
+
+    EmbeddedCellBuckOutInfo embeddedCellBuckOutInfo = embeddedCellBuckOutInfoOptional.get();
+
+    Path mainCellBuckOut =
+        embeddedCellBuckOutInfo
+            .getMainCellRoot()
+            .resolve(embeddedCellBuckOutInfo.getMainCellBuckPaths().getBuckOut());
+
+    return Optional.of(root.relativize(mainCellBuckOut));
   }
 
   @Override

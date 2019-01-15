@@ -123,8 +123,8 @@ public class LocalCellProviderFactory {
                   embeddedCellBuckOutInfo =
                       Optional.of(
                           EmbeddedCellBuckOutInfo.of(
-                              rootFilesystem.resolve(
-                                  rootFilesystem.getBuckPaths().getEmbeddedCellsBuckOutBaseDir()),
+                              rootFilesystem.resolve(rootFilesystem.getRootPath()),
+                              rootFilesystem.getBuckPaths(),
                               canonicalCellName.get()));
                 }
                 ProjectFilesystem cellFilesystem =
