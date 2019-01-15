@@ -303,7 +303,7 @@ public class DistBuildSlaveExecutor {
         .stream()
         .map(
             target ->
-                BuildTargetParser.fullyQualifiedNameToBuildTarget(
+                BuildTargetParser.INSTANCE.parseFullyQualified(
                     args.getRootCell().getCellPathResolver(), target))
         .collect(Collectors.toList());
   }

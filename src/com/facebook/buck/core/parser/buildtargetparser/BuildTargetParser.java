@@ -190,16 +190,4 @@ public class BuildTargetParser {
       start = end + 1;
     }
   }
-
-  /**
-   * Converts a string (fully qualified target name) into {@link BuildTarget} objects.
-   *
-   * @param cellNames - {@link CellPathResolver} to map cell names to paths.
-   * @param buildTarget - a fully qualified target-name string.
-   * @return - corresponding {@link BuildTarget} object.
-   */
-  public static BuildTarget fullyQualifiedNameToBuildTarget(
-      CellPathResolver cellNames, String buildTarget) {
-    return BuildTargetParser.INSTANCE.parseFullyQualified(cellNames, buildTarget);
-  }
 }

@@ -135,7 +135,7 @@ public class LocalBuildExecutor implements BuildExecutor {
         FluentIterable.from(targetsToBuild)
             .transform(
                 targetName ->
-                    BuildTargetParser.fullyQualifiedNameToBuildTarget(
+                    BuildTargetParser.INSTANCE.parseFullyQualified(
                         args.getRootCell().getCellPathResolver(), targetName)),
         pathToBuildReport);
   }
@@ -200,7 +200,7 @@ public class LocalBuildExecutor implements BuildExecutor {
         Iterables.transform(
             targetsToBuild,
             targetName ->
-                BuildTargetParser.fullyQualifiedNameToBuildTarget(
+                BuildTargetParser.INSTANCE.parseFullyQualified(
                     args.getRootCell().getCellPathResolver(), targetName)));
   }
 

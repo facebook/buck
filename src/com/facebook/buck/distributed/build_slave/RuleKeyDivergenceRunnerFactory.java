@@ -194,7 +194,7 @@ public class RuleKeyDivergenceRunnerFactory {
         .stream()
         .map(
             target ->
-                BuildTargetParser.fullyQualifiedNameToBuildTarget(
+                BuildTargetParser.INSTANCE.parseFullyQualified(
                     rootCell.getCellPathResolver(), target))
         .collect(Collectors.toList());
   }
