@@ -903,7 +903,11 @@ public class ProjectGeneratorTest {
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
     assertThat(headerSymlinkTrees, hasSize(2));
     assertEquals("buck-out/gen/_p/CwkbTNOBmb-pub", headerSymlinkTrees.get(0).toString());
-    assertTrue(projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("lib/lib.h")));
+
+    Path umbrellaHeaderPath = headerSymlinkTrees.get(0).resolve("lib/lib.h");
+    Optional<String> umbrellaContents = projectFilesystem.readFileIfItExists(umbrellaHeaderPath);
+    assertTrue(umbrellaContents.isPresent());
+    assertFalse(umbrellaContents.get().contains("lib-Swift.h"));
   }
 
   @Test

@@ -28,7 +28,14 @@ public class UmbrellaHeader {
   }
 
   public String render() {
-    return headerNames.stream()
+    String swiftGeneratedHeader = String.format("%s-Swift.h", targetName);
+    return headerNames
+        .stream()
+        // Remove the Target-Swift.h header file from the list of header names.
+        // The umbrella header should not import the generated Objective-C header.
+        // It is the job of the module map to make sure that Swift code is accessible
+        // to Objective-C via the Target-Swift.h header file.
+        .filter(x -> !x.equals(swiftGeneratedHeader))
         .map(x -> String.format("#import <%s/%s>\n", targetName, x))
         .reduce("", String::concat);
   }
