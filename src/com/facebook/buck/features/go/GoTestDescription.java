@@ -310,6 +310,7 @@ public class GoTestDescription
             graphBuilder,
             goBuckConfig,
             args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
+            args.getLinkMode(),
             ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
             createResourcesSymlinkTree ? args.getResources() : ImmutableSortedSet.of(),
             args.getCompilerFlags(),
@@ -476,31 +477,21 @@ public class GoTestDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGoTestDescriptionArg
-      extends CommonDescriptionArg, HasContacts, HasDeclaredDeps, HasSrcs, HasTestTimeout {
-    Optional<Flavor> getPlatform();
-
+      extends CommonDescriptionArg,
+          HasContacts,
+          HasDeclaredDeps,
+          HasSrcs,
+          HasTestTimeout,
+          HasGoLinkable {
     Optional<BuildTarget> getLibrary();
 
     Optional<String> getPackageName();
 
     Optional<GoTestCoverStep.Mode> getCoverageMode();
 
-    Optional<Linker.LinkableDepType> getLinkStyle();
-
-    ImmutableList<String> getCompilerFlags();
-
-    ImmutableList<String> getAssemblerFlags();
-
-    ImmutableList<String> getLinkerFlags();
-
-    ImmutableList<String> getExternalLinkerFlags();
-
     @Value.Default
     default boolean getRunTestSeparately() {
       return false;
     }
-
-    @Value.NaturalOrder
-    ImmutableSortedSet<SourcePath> getResources();
   }
 }

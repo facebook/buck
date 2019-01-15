@@ -67,6 +67,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       GoCompile mainObject,
       Tool linker,
       Linker cxxLinker,
+      GoLinkStep.LinkMode linkMode,
       ImmutableList<String> linkerFlags,
       ImmutableList<Arg> cxxLinkerArgs,
       GoPlatform platform) {
@@ -82,8 +83,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
         BuildTargetPaths.getGenPath(
             getProjectFilesystem(), buildTarget, "%s/" + buildTarget.getShortName());
     this.linkerFlags = linkerFlags;
-    this.linkMode =
-        (cxxLinkerArgs.size() > 0) ? GoLinkStep.LinkMode.EXTERNAL : GoLinkStep.LinkMode.INTERNAL;
+    this.linkMode = linkMode;
   }
 
   private SymlinkTreeStep getResourceSymlinkTree(

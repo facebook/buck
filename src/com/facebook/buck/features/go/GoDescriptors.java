@@ -269,6 +269,7 @@ abstract class GoDescriptors {
       ActionGraphBuilder graphBuilder,
       GoBuckConfig goBuckConfig,
       Linker.LinkableDepType linkStyle,
+      Optional<GoLinkStep.LinkMode> linkMode,
       ImmutableSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
       List<String> compilerFlags,
@@ -362,6 +363,24 @@ abstract class GoDescriptors {
                   absBinaryDir.relativize(sharedLibraries.getRoot()).toString())));
     }
 
+    ImmutableList<Arg> cxxLinkerArgs =
+        getCxxLinkerArgs(
+            graphBuilder,
+            platform.getCxxPlatform(),
+            cgoLinkables,
+            linkStyle,
+            StringArg.from(
+                Iterables.concat(
+                    platform.getExternalLinkerFlags(), extraFlags.build(), externalLinkerFlags)));
+
+    if (!linkMode.isPresent()) {
+      linkMode =
+          Optional.of(
+              (cxxLinkerArgs.size() > 0)
+                  ? GoLinkStep.LinkMode.EXTERNAL
+                  : GoLinkStep.LinkMode.INTERNAL);
+    }
+
     Linker cxxLinker = platform.getCxxPlatform().getLd().resolve(graphBuilder);
     return new GoBinary(
         buildTarget,
@@ -379,15 +398,9 @@ abstract class GoDescriptors {
         library,
         platform.getLinker(),
         cxxLinker,
+        linkMode.get(),
         ImmutableList.copyOf(linkerFlags),
-        getCxxLinkerArgs(
-            graphBuilder,
-            platform.getCxxPlatform(),
-            cgoLinkables,
-            linkStyle,
-            StringArg.from(
-                Iterables.concat(
-                    platform.getExternalLinkerFlags(), extraFlags.build(), externalLinkerFlags))),
+        cxxLinkerArgs,
         platform);
   }
 
@@ -433,6 +446,7 @@ abstract class GoDescriptors {
                   graphBuilder,
                   goBuckConfig,
                   Linker.LinkableDepType.STATIC_PIC,
+                  Optional.empty(),
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),
                   ImmutableSortedSet.of(),
                   ImmutableList.of(),

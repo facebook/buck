@@ -59,6 +59,19 @@ Buck currently supports Go version 1.10.
 {/template}
 
 /***/
+{template .link_mode_arg}
+{call buck.arg}
+  {param name : 'link_mode' /}
+  {param default: '' /}
+  {param desc}
+  Determines the link mode (equivalent of <code>-mode</code>). Can be one of the following
+  values: <code>internal</code>, <code>external</code>.
+  If no value is provided, the mode is set automatically depending on the other args.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .cgo_compiler_flags_arg}
 {call buck.arg}
   {param name : 'cgo_compiler_flags_arg' /}
