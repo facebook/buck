@@ -21,7 +21,6 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -59,8 +58,7 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
       throw new MacroException(String.format("expected a single argument: %s", input));
     }
     try {
-      return BuildTargetParser.INSTANCE.parse(
-          input.get(0), BuildTargetPatternParser.forBaseName(target.getBaseName()), cellNames);
+      return BuildTargetParser.INSTANCE.parse(cellNames, input.get(0), target.getBaseName(), false);
     } catch (BuildTargetParseException e) {
       throw new MacroException(e.getMessage(), e);
     }

@@ -27,7 +27,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
@@ -139,10 +138,8 @@ public class LocalCellProviderFactory {
                         rootConfig.getPlatform(),
                         rootConfig.getEnvironment(),
                         target ->
-                            BuildTargetParser.INSTANCE.parse(
-                                target,
-                                BuildTargetPatternParser.fullyQualified(),
-                                cellPathResolver));
+                            BuildTargetParser.INSTANCE.parseFullyQualified(
+                                cellPathResolver, target));
 
                 RuleKeyConfiguration ruleKeyConfiguration =
                     ConfigRuleKeyConfigurationFactory.create(buckConfig, moduleManager);

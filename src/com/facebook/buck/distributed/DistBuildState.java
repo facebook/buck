@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
@@ -253,9 +252,7 @@ public class DistBuildState {
         Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(environment),
-        target ->
-            BuildTargetParser.INSTANCE.parse(
-                target, BuildTargetPatternParser.fullyQualified(), cellPathResolver));
+        target -> BuildTargetParser.INSTANCE.parseFullyQualified(cellPathResolver, target));
   }
 
   public ImmutableMap<Integer, Cell> getCells() {

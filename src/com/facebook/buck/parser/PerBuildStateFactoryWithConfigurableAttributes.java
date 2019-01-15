@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -266,10 +265,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     String targetPlatformName = targetPlatforms.get(0);
     ConfigurationRule configurationRule =
         configurationRuleResolver.getRule(
-            BuildTargetParser.INSTANCE.parse(
-                targetPlatformName,
-                BuildTargetPatternParser.fullyQualified(),
-                rootCell.getCellPathResolver()));
+            BuildTargetParser.INSTANCE.parseFullyQualified(
+                rootCell.getCellPathResolver(), targetPlatformName));
 
     if (!(configurationRule instanceof PlatformRule)) {
       throw new HumanReadableException(

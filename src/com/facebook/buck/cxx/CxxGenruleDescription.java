@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -407,8 +406,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
       while (itr.hasNext()) {
         targets.add(
-            BuildTargetParser.INSTANCE.parse(
-                itr.next(), BuildTargetPatternParser.forBaseName(target.getBaseName()), cellNames));
+            BuildTargetParser.INSTANCE.parse(cellNames, itr.next(), target.getBaseName(), false));
       }
 
       return create(getInputClass(), filter, targets.build());

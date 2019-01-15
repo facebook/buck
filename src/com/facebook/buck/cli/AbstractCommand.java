@@ -24,7 +24,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.config.RuleKeyConfig;
@@ -394,10 +393,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
         .stream()
         .map(
             input ->
-                BuildTargetParser.INSTANCE.parse(
-                    input,
-                    BuildTargetPatternParser.fullyQualified(),
-                    params.getCell().getCellPathResolver()))
+                BuildTargetParser.INSTANCE.parseFullyQualified(
+                    params.getCell().getCellPathResolver(), input))
         .collect(ImmutableSet.toImmutableSet());
   }
 

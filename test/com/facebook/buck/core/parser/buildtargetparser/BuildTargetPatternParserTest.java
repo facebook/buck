@@ -144,17 +144,13 @@ public class BuildTargetPatternParserTest {
               assertTrue(
                   "from root matching something in non-root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parse(
-                          "//lib:lib",
-                          BuildTargetPatternParser.fullyQualified(),
-                          otherCellPathResolver)));
+                      BuildTargetParser.INSTANCE.parseFullyQualified(
+                          otherCellPathResolver, "//lib:lib")));
               assertFalse(
                   "from root failing to match something in root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parse(
-                          "//lib:lib",
-                          BuildTargetPatternParser.fullyQualified(),
-                          rootCellPathResolver)));
+                      BuildTargetParser.INSTANCE.parseFullyQualified(
+                          rootCellPathResolver, "//lib:lib")));
             });
 
     // Non-root cell visibility from root cell.
@@ -166,17 +162,13 @@ public class BuildTargetPatternParserTest {
               assertTrue(
                   "from non-root matching something in root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parse(
-                          "//lib:lib",
-                          BuildTargetPatternParser.fullyQualified(),
-                          rootCellPathResolver)));
+                      BuildTargetParser.INSTANCE.parseFullyQualified(
+                          rootCellPathResolver, "//lib:lib")));
               assertFalse(
                   "from non-root matching something in non-root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parse(
-                          "//lib:lib",
-                          BuildTargetPatternParser.fullyQualified(),
-                          otherCellPathResolver)));
+                      BuildTargetParser.INSTANCE.parseFullyQualified(
+                          otherCellPathResolver, "//lib:lib")));
             });
   }
 

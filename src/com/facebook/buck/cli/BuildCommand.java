@@ -32,7 +32,6 @@ import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -697,10 +696,8 @@ public class BuildCommand extends AbstractCommand {
 
     // If the user specified an explicit build target, use that.
     BuildTarget explicitTarget =
-        BuildTargetParser.INSTANCE.parse(
-            justBuildTarget,
-            BuildTargetPatternParser.fullyQualified(),
-            params.getCell().getCellPathResolver());
+        BuildTargetParser.INSTANCE.parseFullyQualified(
+            params.getCell().getCellPathResolver(), justBuildTarget);
     Iterable<BuildRule> actionGraphRules =
         Objects.requireNonNull(actionGraphAndBuilder.getActionGraph().getNodes());
     ImmutableSet<BuildTarget> actionGraphTargets =

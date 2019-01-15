@@ -44,7 +44,6 @@ import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -685,9 +684,7 @@ public final class Main {
               architecture,
               platform,
               clientEnvironment,
-              target ->
-                  BuildTargetParser.INSTANCE.parse(
-                      target, BuildTargetPatternParser.fullyQualified(), cellPathResolver));
+              target -> BuildTargetParser.INSTANCE.parseFullyQualified(cellPathResolver, target));
       // Set so that we can use some settings when we print out messages to users
       parsedRootConfig = Optional.of(buckConfig);
       warnAboutConfigFileOverrides(filesystem.getRootPath(), buckConfig, console);
