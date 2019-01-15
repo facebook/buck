@@ -78,6 +78,8 @@ public class ElfDynamicSection {
     DT_FINI_ARRAYSZ(28, Type.OTHER),
     DT_RUNPATH(29, Type.STRING),
     DT_FLAGS(30, Type.OTHER),
+    DT_PREINIT_ARRAY(32, Type.OTHER),
+    DT_PREINIT_ARRAYSZ(33, Type.OTHER),
     DT_GNU_HASH(0x6ffffef5, Type.OTHER),
     DT_TLSDESC_PLT(0x6ffffef6, Type.OTHER),
     DT_TLSDESC_GOT(0x6ffffef7, Type.OTHER),
