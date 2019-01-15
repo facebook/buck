@@ -1039,23 +1039,16 @@ public class AppleDescriptions {
                 "Path cannot be null for AppleBundle [%s].",
                 appleBundle);
 
-        if (AppleBundleExtension.APPEX.toFileExtension().equals(appleBundle.getExtension())
-            || AppleBundleExtension.APP.toFileExtension().equals(appleBundle.getExtension())) {
-          Path destinationPath;
-
+        if (AppleBundleExtension.APP.toFileExtension().equals(appleBundle.getExtension())) {
           String platformName = appleBundle.getPlatformName();
-
-          if ((platformName.equals(ApplePlatform.WATCHOS.getName())
-                  || platformName.equals(ApplePlatform.WATCHSIMULATOR.getName()))
-              && appleBundle.getExtension().equals(AppleBundleExtension.APP.toFileExtension())) {
-            destinationPath = destinations.getWatchAppPath();
+          if (platformName.equals(ApplePlatform.WATCHOS.getName()) ||
+              platformName.equals(ApplePlatform.WATCHSIMULATOR.getName())) {
+            extensionBundlePaths.put(sourcePath, destinations.getWatchAppPath().toString());
           } else if (appleBundle.isLegacyWatchApp()) {
-            destinationPath = destinations.getResourcesPath();
-          } else {
-            destinationPath = destinations.getPlugInsPath();
+            extensionBundlePaths.put(sourcePath, destinations.getResourcesPath().toString());
           }
-
-          extensionBundlePaths.put(sourcePath, destinationPath.toString());
+        } else if (AppleBundleExtension.APPEX.toFileExtension().equals(appleBundle.getExtension())) {
+          extensionBundlePaths.put(sourcePath, destinations.getPlugInsPath().toString());
         } else if (AppleBundleExtension.FRAMEWORK
             .toFileExtension()
             .equals(appleBundle.getExtension())) {
