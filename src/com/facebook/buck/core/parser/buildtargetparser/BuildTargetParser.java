@@ -52,23 +52,53 @@ public class BuildTargetParser {
   }
 
   /**
-   * @param buildTargetName either a fully-qualified name or relative to the {@link
-   *     BuildTargetPatternParser}. For example, inside {@code first-party/orca/orcaapp/BUCK}, which
-   *     can be obtained by calling {@code ParseContext.forBaseName("first-party/orca/orcaapp")},
-   *     {@code //first-party/orca/orcaapp:assets} and {@code :assets} refer to the same target.
-   *     However, from the command line the context is obtained by calling {@link
-   *     BuildTargetPatternParser#fullyQualified()} and relative names are not recognized.
-   * @param buildTargetPatternParser how targets should be interpreted, such in the context of a
-   *     specific build file or only as fully-qualified names (as is the case for targets from the
-   *     command line).
+   * @param buildTargetName either a fully-qualified or relative target name.
+   * @param buildTargetPatternParser defines how targets should be interpreted, such as the base
+   *     name of the target or whether wildcards are allowed.
+   * @see #parse(CellPathResolver, String, String, boolean)
    */
   public BuildTarget parse(
       String buildTargetName,
       BuildTargetPatternParser<?> buildTargetPatternParser,
-      CellPathResolver cellNames) {
+      CellPathResolver cellPathResolver) {
+    return parse(
+        cellPathResolver,
+        buildTargetName,
+        buildTargetPatternParser.getBaseName(),
+        buildTargetPatternParser.isWildCardAllowed());
+  }
 
-    if (buildTargetName.endsWith(BUILD_RULE_SEPARATOR)
-        && !buildTargetPatternParser.isWildCardAllowed()) {
+  /**
+   * Creates a {@link BuildTarget} with the given fully qualified target name.
+   *
+   * @param buildTargetName a fully-qualified build target name.
+   * @see #parse(CellPathResolver, String, String, boolean)
+   */
+  public BuildTarget parseFullyQualified(
+      CellPathResolver cellPathResolver, String buildTargetName) {
+    return parse(cellPathResolver, buildTargetName, "", false);
+  }
+
+  /**
+   * Creates {@link BuildTarget} using a target name.
+   *
+   * <p>The target name can either be fully-qualified or relative. Relative target names are
+   * resolved using the provided base name (which can also be empty when relative target name is at
+   * the root of a cell). For example, a target name with base name "java/com/company" and relative
+   * name "app" is equal to the fully-qualified target name "java/com/company:app".
+   *
+   * @param buildTargetName either a fully-qualified or relative target name.
+   * @param buildTargetBaseName the base name of the target.
+   * @param allowWildCards whether to allow a colon at the end of the target name. This is used when
+   *     parsing target name patterns.
+   */
+  public BuildTarget parse(
+      CellPathResolver cellPathResolver,
+      String buildTargetName,
+      String buildTargetBaseName,
+      boolean allowWildCards) {
+
+    if (buildTargetName.endsWith(BUILD_RULE_SEPARATOR) && !allowWildCards) {
       throw new BuildTargetParseException(
           String.format("%s cannot end with a colon", buildTargetName));
     }
@@ -96,8 +126,7 @@ public class BuildTargetParser {
               "%s must contain exactly one colon (found %d)", buildTargetName, parts.size() - 1));
     }
 
-    String baseName =
-        parts.get(0).isEmpty() ? buildTargetPatternParser.getBaseName() : parts.get(0);
+    String baseName = parts.get(0).isEmpty() ? buildTargetBaseName : parts.get(0);
     String shortName = parts.get(1);
     Iterable<String> flavorNames = new HashSet<>();
     int hashIndex = shortName.indexOf('#');
@@ -113,7 +142,7 @@ public class BuildTargetParser {
 
     Path cellPath;
     try {
-      cellPath = cellNames.getCellPathOrThrow(givenCellName);
+      cellPath = cellPathResolver.getCellPathOrThrow(givenCellName);
     } catch (UnknownCellException e) {
       throw new BuildTargetParseException(
           String.format("When parsing %s: %s", buildTargetName, e.getHumanReadableErrorMessage()));
@@ -128,7 +157,7 @@ public class BuildTargetParser {
             // owning cell.
             .setCellPath(cellPath)
             // We are setting the cell name so we can print it later
-            .setCell(cellNames.getCanonicalCellName(cellPath));
+            .setCell(cellPathResolver.getCanonicalCellName(cellPath));
 
     UnflavoredBuildTarget unflavoredBuildTarget = unflavoredBuilder.build();
     return flavoredTargetCache.intern(
@@ -188,7 +217,6 @@ public class BuildTargetParser {
    */
   public static BuildTarget fullyQualifiedNameToBuildTarget(
       CellPathResolver cellNames, String buildTarget) {
-    return BuildTargetParser.INSTANCE.parse(
-        buildTarget, BuildTargetPatternParser.fullyQualified(), cellNames);
+    return BuildTargetParser.INSTANCE.parseFullyQualified(cellNames, buildTarget);
   }
 }
