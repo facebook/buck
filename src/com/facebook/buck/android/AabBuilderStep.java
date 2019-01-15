@@ -72,7 +72,7 @@ public class AabBuilderStep implements Step {
   /**
    * @param modulesInfo A set of ModuleInfo containing information about modules to be built within
    *     this bundle
-   * @param pathToOutputAabFile Path to output our APK to.
+   * @param pathToOutputAabFile Path to output our AAB to.
    * @param debugMode Whether or not to run ApkBuilder with debug mode turned on.
    */
   public AabBuilderStep(
