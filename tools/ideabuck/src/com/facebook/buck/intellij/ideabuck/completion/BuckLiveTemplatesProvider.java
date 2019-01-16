@@ -25,7 +25,7 @@ public class BuckLiveTemplatesProvider implements DefaultLiveTemplatesProvider {
 
   @Override
   public String[] getDefaultLiveTemplateFiles() {
-    return new String[] {"/liveTemplates/Buck.xml"};
+    return new String[] {"/liveTemplates/Buck"};
   }
 
   @Nullable
