@@ -60,4 +60,30 @@ public interface RemoteExecutionMetadataOrBuilder extends
    * <code>.facebook.remote_execution.CreatorInfo creator_info = 4;</code>
    */
   com.facebook.buck.remoteexecution.proto.CreatorInfoOrBuilder getCreatorInfoOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.ExecutionEngineInfo engine_info = 5;</code>
+   */
+  boolean hasEngineInfo();
+  /**
+   * <code>.facebook.remote_execution.ExecutionEngineInfo engine_info = 5;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ExecutionEngineInfo getEngineInfo();
+  /**
+   * <code>.facebook.remote_execution.ExecutionEngineInfo engine_info = 5;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ExecutionEngineInfoOrBuilder getEngineInfoOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.WorkerInfo worker_info = 6;</code>
+   */
+  boolean hasWorkerInfo();
+  /**
+   * <code>.facebook.remote_execution.WorkerInfo worker_info = 6;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.WorkerInfo getWorkerInfo();
+  /**
+   * <code>.facebook.remote_execution.WorkerInfo worker_info = 6;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.WorkerInfoOrBuilder getWorkerInfoOrBuilder();
 }

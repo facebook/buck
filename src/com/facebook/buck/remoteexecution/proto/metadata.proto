@@ -51,10 +51,25 @@ message CreatorInfo {
   string client_type = 2;
 }
 
+// Information related with the ExecutionEngine involved in this request.
+message ExecutionEngineInfo {
+  string hostname = 1;
+}
+
+// Information related to any Worker involved in this request.
+message WorkerInfo {
+  string hostname = 1;
+
+  // Absolute path in the FS where the execution is running.
+  string execution_path = 2;
+}
+
 // This is propagated in GRPC header "re-metadata-bin".
 message RemoteExecutionMetadata {
   RESessionID re_session_id = 1;
   BuckInfo buck_info = 2;
   TraceInfo trace_info = 3;
   CreatorInfo creator_info = 4;
+  ExecutionEngineInfo engine_info = 5;
+  WorkerInfo worker_info = 6;
 }
