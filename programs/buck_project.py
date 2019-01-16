@@ -72,6 +72,7 @@ class BuckProject:
         self.buckd_pid_file = os.path.join(self.buckd_dir, "pid")
         self.buckd_stdout = os.path.join(self.buckd_dir, "stdout")
         self.buckd_stderr = os.path.join(self.buckd_dir, "stderr")
+        self.buckd_jvm_args_file = os.path.join(self.buckd_dir, "buckjavaargs.running")
 
         buck_javaargs_path = os.path.join(self.root, ".buckjavaargs")
         self.buck_javaargs = get_file_contents_if_exists(buck_javaargs_path)
@@ -105,6 +106,10 @@ class BuckProject:
         except TypeError:
             return None
 
+    def get_running_buckd_jvm_args(self):
+        args_string = get_file_contents_if_exists(self.buckd_jvm_args_file)
+        return args_string.split("\n") if args_string is not None else []
+
     def get_buckd_stdout(self):
         return self.buckd_stdout
 
@@ -132,6 +137,9 @@ class BuckProject:
 
     def save_buckd_pid(self, pid):
         write_contents_to_file(self.buckd_pid_file, str(pid))
+
+    def save_buckd_jvm_args(self, args):
+        write_contents_to_file(self.buckd_jvm_args_file, "\n".join(args))
 
     @staticmethod
     def from_current_dir():

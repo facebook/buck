@@ -505,6 +505,8 @@ class BuckTool(object):
                 if use_buckd:
                     need_start = True
                     running_version = self._buck_project.get_running_buckd_version()
+                    running_jvm_args = self._buck_project.get_running_buckd_jvm_args()
+                    jvm_args = self._get_java_args(buck_version_uid, java11_test_mode)
                     if running_version is None:
                         logging.info("Starting new Buck daemon...")
                     elif running_version != buck_version_uid:
@@ -515,13 +517,19 @@ class BuckTool(object):
                         logging.info(
                             "Unable to connect to Buck daemon, restarting it..."
                         )
+                    elif jvm_args != running_jvm_args:
+                        logging.info(
+                            "Restarting Buck daemon because JVM args have changed..."
+                        )
                     else:
                         need_start = False
 
                     if need_start:
                         self.kill_buckd()
                         if not self.launch_buckd(
-                            java11_test_mode, buck_version_uid=buck_version_uid
+                            java11_test_mode,
+                            jvm_args,
+                            buck_version_uid=buck_version_uid,
                         ):
                             use_buckd = False
                             self._reporter.no_buckd_reason = "daemon_failure"
@@ -552,7 +560,7 @@ class BuckTool(object):
                 return exit_code
 
 
-    def launch_buckd(self, java11_test_mode, buck_version_uid=None):
+    def launch_buckd(self, java11_test_mode, jvm_args, buck_version_uid=None):
         with Tracing("BuckTool.launch_buckd"):
             setup_watchman_watch()
             if buck_version_uid is None:
@@ -593,11 +601,8 @@ class BuckTool(object):
                 "-XX:MaxHeapFreeRatio=40",
             ]
 
-            command.extend(
-                self._get_java_args(
-                    buck_version_uid, java11_test_mode, extra_default_options
-                )
-            )
+            command.extend(extra_default_options)
+            command.extend(jvm_args)
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
             command.append("com.facebook.buck.cli.Main$DaemonBootstrap")
             command.append(self._buck_project.get_buckd_transport_address())
@@ -643,6 +648,9 @@ class BuckTool(object):
             )
 
             self._buck_project.save_buckd_version(buck_version_uid)
+            self._buck_project.save_buckd_jvm_args(
+                self._get_java_args(buck_version_uid, java11_test_mode)
+            )
 
             # Give Java some time to create the listening socket.
 
