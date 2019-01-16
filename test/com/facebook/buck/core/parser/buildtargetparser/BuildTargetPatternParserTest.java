@@ -73,14 +73,6 @@ public class BuildTargetPatternParserTest {
             createCellRoots(filesystem), "//test/com/facebook/buck/parser/..."));
   }
 
-  @Test(expected = BuildTargetParseException.class)
-  public void testParseWildcardWithInvalidContext() throws NoSuchBuildTargetException {
-    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
-        BuildTargetPatternParser.fullyQualified();
-
-    buildTargetPatternParser.parse(createCellRoots(filesystem), "//...");
-  }
-
   @Test
   public void testParseRootPattern() throws NoSuchBuildTargetException {
     BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =

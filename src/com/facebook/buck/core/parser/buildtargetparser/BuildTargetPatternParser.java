@@ -127,11 +127,6 @@ public abstract class BuildTargetPatternParser<T> {
     return new VisibilityContext();
   }
 
-  /** Used when parsing fully-qualified target names only, such as from the command line. */
-  public static BuildTargetPatternParser<BuildTargetPattern> fullyQualified() {
-    return new FullyQualifiedContext();
-  }
-
   /**
    * @return description of the target name and context being parsed when an error was encountered.
    *     Examples are ":azzetz in build file //first-party/orca/orcaapp/BUCK" and
@@ -163,17 +158,6 @@ public abstract class BuildTargetPatternParser<T> {
     public BuildTargetPattern createForSingleton(BuildTarget target) {
       return SingletonBuildTargetPattern.of(
           target.getUnflavoredBuildTarget().getCellPath(), target.getFullyQualifiedName());
-    }
-  }
-
-  /**
-   * When parsing a build target for the visibility argument in a build file, targets must be
-   * fully-qualified, but wildcards are allowed.
-   */
-  private static class FullyQualifiedContext extends BuildTargetPatternBaseParser {
-
-    public FullyQualifiedContext() {
-      super("");
     }
   }
 
