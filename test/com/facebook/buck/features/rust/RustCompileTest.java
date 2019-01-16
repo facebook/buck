@@ -16,11 +16,13 @@
 
 package com.facebook.buck.features.rust;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -78,6 +80,22 @@ public class RustCompileTest {
             "//:myname",
             ImmutableSortedSet.of(FakeSourcePath.of("main.rs"), FakeSourcePath.of("myname.rs")));
     linkable.getCrateRoot();
+  }
+
+  @Test
+  public void flavorToRustTriple() {
+    assertEquals(
+        "aarch64-apple-ios",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("iphoneos-arm64")));
+    assertEquals(
+        "armv7-apple-ios",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("iphoneos-armv7")));
+    assertEquals(
+        "x86_64-apple-ios",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("iphonesimulator-x86_64")));
+    assertEquals(
+        "i386-apple-ios",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("iphonesimulator-i386")));
   }
 
   private static Tool fakeTool() {

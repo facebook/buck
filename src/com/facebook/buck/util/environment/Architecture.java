@@ -68,6 +68,10 @@ public enum Architecture {
     return detect(System.getProperties());
   }
 
+  public static Architecture fromName(String name) {
+    return nameToValueMap.getOrDefault(name, UNKNOWN);
+  }
+
   @Override
   public String toString() {
     return name;
