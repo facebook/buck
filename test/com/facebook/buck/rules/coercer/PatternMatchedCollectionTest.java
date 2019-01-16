@@ -22,8 +22,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
@@ -38,8 +36,6 @@ public class PatternMatchedCollectionTest {
 
   private static final CellPathResolver CELL_PATH_RESOLVER =
       TestCellPathResolver.get(new FakeProjectFilesystem());
-  private static final BuildTargetPatternParser<BuildTargetPattern> PATTERN =
-      BuildTargetPatternParser.fullyQualified();
 
   @Test
   public void translatedTargets() {
@@ -54,7 +50,7 @@ public class PatternMatchedCollectionTest {
             .build();
     assertThat(
         translator
-            .translate(CELL_PATH_RESOLVER, PATTERN, collection)
+            .translate(CELL_PATH_RESOLVER, "", collection)
             .map(PatternMatchedCollection::getValues),
         Matchers.equalTo(Optional.of(ImmutableList.of(newTarget))));
   }
@@ -69,7 +65,7 @@ public class PatternMatchedCollectionTest {
             .add(Pattern.compile("something"), target)
             .build();
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, PATTERN, collection),
+        translator.translate(CELL_PATH_RESOLVER, "", collection),
         Matchers.equalTo(Optional.empty()));
   }
 }

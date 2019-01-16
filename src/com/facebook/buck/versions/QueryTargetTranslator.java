@@ -19,8 +19,6 @@ package com.facebook.buck.versions;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
@@ -40,7 +38,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
   @Override
   public Optional<Query> translateTargets(
       CellPathResolver cellPathResolver,
-      BuildTargetPatternParser<BuildTargetPattern> pattern,
+      String targetBaseName,
       TargetNodeTranslator translator,
       Query query) {
 
@@ -48,7 +46,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
     ImmutableList<BuildTarget> targets;
     try {
       targets =
-          QueryUtils.extractBuildTargets(cellPathResolver, pattern, query)
+          QueryUtils.extractBuildTargets(cellPathResolver, targetBaseName, query)
               .collect(ImmutableList.toImmutableList());
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing/executing query from deps", e);
@@ -77,11 +75,9 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
       builder.append(queryString, lastEnd, matcher.start());
       BuildTarget target =
           BuildTargetParser.INSTANCE.parse(
-              cellPathResolver,
-              matcher.group(),
-              pattern.getBaseName(),
-              pattern.isWildCardAllowed());
-      Optional<BuildTarget> translated = translator.translate(cellPathResolver, pattern, target);
+              cellPathResolver, matcher.group(), targetBaseName, false);
+      Optional<BuildTarget> translated =
+          translator.translate(cellPathResolver, targetBaseName, target);
       builder.append(translated.orElse(target).getFullyQualifiedName());
       lastEnd = matcher.end();
     }

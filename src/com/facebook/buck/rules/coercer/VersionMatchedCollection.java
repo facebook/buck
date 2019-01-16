@@ -19,8 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
@@ -122,14 +120,12 @@ public class VersionMatchedCollection<T>
 
   @Override
   public Optional<VersionMatchedCollection<T>> translateTargets(
-      CellPathResolver cellPathResolver,
-      BuildTargetPatternParser<BuildTargetPattern> pattern,
-      TargetNodeTranslator translator) {
+      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
     boolean translated = false;
     ImmutableList.Builder<Pair<ImmutableMap<BuildTarget, Version>, T>> newValues =
         ImmutableList.builder();
     for (Pair<ImmutableMap<BuildTarget, Version>, T> p : values) {
-      Optional<T> newVal = translator.translate(cellPathResolver, pattern, p.getSecond());
+      Optional<T> newVal = translator.translate(cellPathResolver, targetBaseName, p.getSecond());
       if (newVal.isPresent()) {
         newValues.add(new Pair<>(p.getFirst(), newVal.get()));
         translated = true;

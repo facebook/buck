@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryException;
@@ -60,7 +59,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             targetGraph,
             TYPE_COERCER_FACTORY,
             cellNames,
-            BuildTargetPatternParser.forBaseName(target.getBaseName()),
+            target.getBaseName(),
             ImmutableSet.of());
     try {
       QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);

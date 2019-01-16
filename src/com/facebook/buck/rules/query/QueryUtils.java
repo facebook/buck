@@ -21,8 +21,6 @@ import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasProvidedDepsQuery;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
@@ -109,7 +107,7 @@ public final class QueryUtils {
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             cellRoots,
-            BuildTargetPatternParser.forBaseName(target.getBaseName()),
+            target.getBaseName(),
             declaredDeps);
     try {
       QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
@@ -131,17 +129,14 @@ public final class QueryUtils {
   }
 
   public static Stream<BuildTarget> extractBuildTargets(
-      CellPathResolver cellPathResolver,
-      BuildTargetPatternParser<BuildTargetPattern> parserPattern,
-      Query query)
-      throws QueryException {
+      CellPathResolver cellPathResolver, String targetBaseName, Query query) throws QueryException {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.empty(),
             Optional.empty(),
             TYPE_COERCER_FACTORY,
             cellPathResolver,
-            parserPattern,
+            targetBaseName,
             ImmutableSet.of());
     QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
     return parsedExp
@@ -157,8 +152,7 @@ public final class QueryUtils {
   public static Stream<BuildTarget> extractParseTimeTargets(
       BuildTarget target, CellPathResolver cellNames, Query query) {
     try {
-      return extractBuildTargets(
-          cellNames, BuildTargetPatternParser.forBaseName(target.getBaseName()), query);
+      return extractBuildTargets(cellNames, target.getBaseName(), query);
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing/executing query from deps for " + target, e);
     }

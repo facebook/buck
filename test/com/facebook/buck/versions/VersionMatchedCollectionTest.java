@@ -22,8 +22,6 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
@@ -50,8 +48,6 @@ public class VersionMatchedCollectionTest {
 
   private static final CellPathResolver CELL_PATH_RESOLVER =
       TestCellPathResolver.get(new FakeProjectFilesystem());
-  private static final BuildTargetPatternParser<BuildTargetPattern> PATTERN =
-      BuildTargetPatternParser.fullyQualified();
 
   @Test
   public void testGetMatchingValues() {
@@ -110,7 +106,7 @@ public class VersionMatchedCollectionTest {
         VersionMatchedCollection.<BuildTarget>builder().add(ImmutableMap.of(), target).build();
     assertThat(
         translator
-            .translate(CELL_PATH_RESOLVER, PATTERN, collection)
+            .translate(CELL_PATH_RESOLVER, "", collection)
             .map(VersionMatchedCollection::getValues),
         Matchers.equalTo(Optional.of(ImmutableList.of(newTarget))));
   }
@@ -128,7 +124,7 @@ public class VersionMatchedCollectionTest {
             .build();
     assertThat(
         translator
-            .translate(CELL_PATH_RESOLVER, PATTERN, collection)
+            .translate(CELL_PATH_RESOLVER, "", collection)
             .map(VersionMatchedCollection::getValuePairs),
         Matchers.equalTo(
             Optional.of(ImmutableList.of(new Pair<>(ImmutableMap.of(target, V1), newTarget)))));
@@ -142,7 +138,7 @@ public class VersionMatchedCollectionTest {
     VersionMatchedCollection<BuildTarget> collection =
         VersionMatchedCollection.<BuildTarget>builder().add(ImmutableMap.of(), target).build();
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, PATTERN, collection),
+        translator.translate(CELL_PATH_RESOLVER, "", collection),
         Matchers.equalTo(Optional.empty()));
   }
 }

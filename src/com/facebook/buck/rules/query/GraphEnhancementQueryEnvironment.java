@@ -22,8 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
@@ -89,12 +87,12 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
       Optional<TargetGraph> targetGraph,
       TypeCoercerFactory typeCoercerFactory,
       CellPathResolver cellNames,
-      BuildTargetPatternParser<BuildTargetPattern> context,
+      String targetBaseName,
       Set<BuildTarget> declaredDeps) {
     this.graphBuilder = graphBuilder;
     this.targetGraph = targetGraph;
     this.typeCoercerFactory = typeCoercerFactory;
-    this.targetEvaluator = new TargetEvaluator(cellNames, context, declaredDeps);
+    this.targetEvaluator = new TargetEvaluator(cellNames, targetBaseName, declaredDeps);
   }
 
   @Override
@@ -232,15 +230,13 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
   private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator {
     private final CellPathResolver cellNames;
-    private final BuildTargetPatternParser<BuildTargetPattern> context;
+    private final String targetBaseName;
     private final ImmutableSet<BuildTarget> declaredDeps;
 
     private TargetEvaluator(
-        CellPathResolver cellNames,
-        BuildTargetPatternParser<BuildTargetPattern> context,
-        Set<BuildTarget> declaredDeps) {
+        CellPathResolver cellNames, String targetBaseName, Set<BuildTarget> declaredDeps) {
       this.cellNames = cellNames;
-      this.context = context;
+      this.targetBaseName = targetBaseName;
       this.declaredDeps = ImmutableSet.copyOf(declaredDeps);
     }
 
@@ -254,8 +250,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
       }
       try {
         BuildTarget buildTarget =
-            BuildTargetParser.INSTANCE.parse(
-                cellNames, target, context.getBaseName(), context.isWildCardAllowed());
+            BuildTargetParser.INSTANCE.parse(cellNames, target, targetBaseName, false);
         return ImmutableSet.of(QueryBuildTarget.of(buildTarget));
       } catch (BuildTargetParseException e) {
         throw new QueryException(e, "Unable to parse pattern %s", target);

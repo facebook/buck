@@ -17,8 +17,6 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import java.util.Optional;
@@ -33,9 +31,7 @@ public abstract class QueryMacro implements Macro {
 
   @Override
   public final Optional<Macro> translateTargets(
-      CellPathResolver cellPathResolver,
-      BuildTargetPatternParser<BuildTargetPattern> pattern,
-      TargetNodeTranslator translator) {
-    return translator.translate(cellPathResolver, pattern, getQuery()).map(this::withQuery);
+      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
+    return translator.translate(cellPathResolver, targetBaseName, getQuery()).map(this::withQuery);
   }
 }

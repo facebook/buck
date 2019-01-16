@@ -18,8 +18,6 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import java.util.Objects;
 import java.util.Optional;
@@ -35,10 +33,10 @@ public abstract class BuildTargetMacro implements Macro {
 
   @Override
   public final Optional<Macro> translateTargets(
-      CellPathResolver cellPathResolver,
-      BuildTargetPatternParser<BuildTargetPattern> pattern,
-      TargetNodeTranslator translator) {
-    return translator.translate(cellPathResolver, pattern, getTarget()).map(this::withTarget);
+      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
+    return translator
+        .translate(cellPathResolver, targetBaseName, getTarget())
+        .map(this::withTarget);
   }
 
   // TODO: remove this logic when cell path is removed from BuildTarget

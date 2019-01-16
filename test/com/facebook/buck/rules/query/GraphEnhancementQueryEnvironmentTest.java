@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
@@ -69,7 +68,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
-            BuildTargetPatternParser.forBaseName(target.getBaseName()),
+            target.getBaseName(),
             ImmutableSet.of());
     try {
       envWithoutDeps.getTargetsMatchingPattern("::");
@@ -88,7 +87,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
-            BuildTargetPatternParser.forBaseName(target.getBaseName()),
+            target.getBaseName(),
             ImmutableSet.of());
 
     // No deps in == no deps out
@@ -117,7 +116,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
-            BuildTargetPatternParser.forBaseName(target.getBaseName()),
+            target.getBaseName(),
             ImmutableSet.of(dep1, dep2));
 
     // Check that the macro resolves
@@ -158,7 +157,7 @@ public class GraphEnhancementQueryEnvironmentTest {
         Optional.of(targetGraph),
         TYPE_COERCER_FACTORY,
         cellRoots,
-        BuildTargetPatternParser.forBaseName(libNode.getBuildTarget().getBaseName()),
+        libNode.getBuildTarget().getBaseName(),
         ImmutableSet.of(sublibNode.getBuildTarget()));
   }
 

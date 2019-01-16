@@ -18,8 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
@@ -44,11 +42,9 @@ abstract class AbstractNeededCoverageSpec implements TargetTranslatable<NeededCo
 
   @Override
   public Optional<NeededCoverageSpec> translateTargets(
-      CellPathResolver cellPathResolver,
-      BuildTargetPatternParser<BuildTargetPattern> pattern,
-      TargetNodeTranslator translator) {
+      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
     Optional<BuildTarget> newBuildTarget =
-        translator.translate(cellPathResolver, pattern, getBuildTarget());
+        translator.translate(cellPathResolver, targetBaseName, getBuildTarget());
     return newBuildTarget.map(
         buildTarget ->
             NeededCoverageSpec.of(getNeededCoverageRatioPercentage(), buildTarget, getPathName()));

@@ -18,8 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -145,13 +143,11 @@ abstract class AbstractSourceSortedSet implements TargetTranslatable<SourceSorte
 
   @Override
   public Optional<SourceSortedSet> translateTargets(
-      CellPathResolver cellPathResolver,
-      BuildTargetPatternParser<BuildTargetPattern> pattern,
-      TargetNodeTranslator translator) {
+      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
     Optional<Optional<ImmutableSortedMap<String, SourcePath>>> namedSources =
-        translator.translate(cellPathResolver, pattern, getNamedSources());
+        translator.translate(cellPathResolver, targetBaseName, getNamedSources());
     Optional<Optional<ImmutableSortedSet<SourcePath>>> unNamedSources =
-        translator.translate(cellPathResolver, pattern, getUnnamedSources());
+        translator.translate(cellPathResolver, targetBaseName, getUnnamedSources());
     if (!namedSources.isPresent() && !unNamedSources.isPresent()) {
       return Optional.empty();
     }

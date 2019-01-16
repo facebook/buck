@@ -24,8 +24,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -45,8 +43,6 @@ public class SourceSortedSetTest {
 
   private static final CellPathResolver CELL_PATH_RESOLVER =
       TestCellPathResolver.get(new FakeProjectFilesystem());
-  private static final BuildTargetPatternParser<BuildTargetPattern> PATTERN =
-      BuildTargetPatternParser.fullyQualified();
 
   @Test
   public void translatedNamedSourcesTargets() {
@@ -58,7 +54,7 @@ public class SourceSortedSetTest {
     assertThat(
         translator.translate(
             CELL_PATH_RESOLVER,
-            PATTERN,
+            "",
             SourceSortedSet.ofNamedSources(
                 ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)))),
         Matchers.equalTo(
@@ -76,8 +72,7 @@ public class SourceSortedSetTest {
         SourceSortedSet.ofNamedSources(
             ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)));
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, PATTERN, list),
-        Matchers.equalTo(Optional.empty()));
+        translator.translate(CELL_PATH_RESOLVER, "", list), Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -90,7 +85,7 @@ public class SourceSortedSetTest {
     assertThat(
         translator.translate(
             CELL_PATH_RESOLVER,
-            PATTERN,
+            "",
             SourceSortedSet.ofUnnamedSources(
                 ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)))),
         Matchers.equalTo(
@@ -108,8 +103,7 @@ public class SourceSortedSetTest {
         SourceSortedSet.ofUnnamedSources(
             ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)));
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, PATTERN, list),
-        Matchers.equalTo(Optional.empty()));
+        translator.translate(CELL_PATH_RESOLVER, "", list), Matchers.equalTo(Optional.empty()));
   }
 
   @Test

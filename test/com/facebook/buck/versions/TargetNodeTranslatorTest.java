@@ -24,8 +24,6 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
@@ -45,8 +43,6 @@ public class TargetNodeTranslatorTest {
 
   private static final CellPathResolver CELL_PATH_RESOLVER =
       TestCellPathResolver.get(new FakeProjectFilesystem());
-  private static final BuildTargetPatternParser<BuildTargetPattern> PATTERN =
-      BuildTargetPatternParser.fullyQualified();
 
   @Test
   public void translate() {
@@ -153,7 +149,7 @@ public class TargetNodeTranslatorTest {
           }
         };
     assertThat(
-        translator.translatePair(CELL_PATH_RESOLVER, PATTERN, new Pair<>("hello", a)),
+        translator.translatePair(CELL_PATH_RESOLVER, "", new Pair<>("hello", a)),
         Matchers.equalTo(Optional.of(new Pair<>("hello", b))));
   }
 
@@ -176,7 +172,7 @@ public class TargetNodeTranslatorTest {
         };
     assertThat(
         translator.translateBuildTargetSourcePath(
-            CELL_PATH_RESOLVER, PATTERN, DefaultBuildTargetSourcePath.of(a)),
+            CELL_PATH_RESOLVER, "", DefaultBuildTargetSourcePath.of(a)),
         Matchers.equalTo(Optional.of(DefaultBuildTargetSourcePath.of(b))));
   }
 
@@ -200,7 +196,7 @@ public class TargetNodeTranslatorTest {
     assertThat(
         translator.translateSourceWithFlags(
             CELL_PATH_RESOLVER,
-            PATTERN,
+            "",
             SourceWithFlags.of(DefaultBuildTargetSourcePath.of(a), ImmutableList.of("-flag"))),
         Matchers.equalTo(
             Optional.of(
@@ -220,7 +216,7 @@ public class TargetNodeTranslatorTest {
           @Override
           public Optional<Integer> translateTargets(
               CellPathResolver cellPathResolver,
-              BuildTargetPatternParser<BuildTargetPattern> pattern,
+              String targetBaseName,
               TargetNodeTranslator translator,
               Integer val) {
             return Optional.of(0);
@@ -231,7 +227,6 @@ public class TargetNodeTranslatorTest {
             new DefaultTypeCoercerFactory(),
             ImmutableList.of(integerTranslator),
             ImmutableMap.of());
-    assertThat(
-        translator.translate(CELL_PATH_RESOLVER, PATTERN, 12), Matchers.equalTo(Optional.of(0)));
+    assertThat(translator.translate(CELL_PATH_RESOLVER, "", 12), Matchers.equalTo(Optional.of(0)));
   }
 }

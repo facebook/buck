@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -107,7 +106,7 @@ public class QueryCacheTest {
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             TestCellPathResolver.get(new FakeProjectFilesystem()),
-            BuildTargetPatternParser.forBaseName(targetA.getBaseName()),
+            targetA.getBaseName(),
             ImmutableSet.of());
 
     QueryCache cache = new QueryCache();
@@ -171,7 +170,7 @@ public class QueryCacheTest {
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             TestCellPathResolver.get(new FakeProjectFilesystem()),
-            BuildTargetPatternParser.forBaseName(fooTarget.getBaseName()),
+            fooTarget.getBaseName(),
             foo.getDeclaredDeps());
 
     GraphEnhancementQueryEnvironment barEnv =
@@ -180,7 +179,7 @@ public class QueryCacheTest {
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             TestCellPathResolver.get(new FakeProjectFilesystem()),
-            BuildTargetPatternParser.forBaseName(barTarget.getBaseName()),
+            barTarget.getBaseName(),
             bar.getDeclaredDeps());
 
     QueryCache cache = new QueryCache();

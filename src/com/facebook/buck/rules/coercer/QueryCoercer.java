@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
@@ -47,10 +46,7 @@ public class QueryCoercer implements TypeCoercer<Query> {
             Optional.empty(),
             typeCoercerFactory,
             cellPathResolver,
-            query
-                .getBaseName()
-                .map(BuildTargetPatternParser::forBaseName)
-                .orElseGet(BuildTargetPatternParser::fullyQualified),
+            query.getBaseName().orElse(""),
             ImmutableSet.of());
     QueryExpression parsedExp;
     try {
