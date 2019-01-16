@@ -119,6 +119,7 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
     }
   }
 
+  /** Performance event that tracks current memory usage of Buck */
   public static class MemoryPerfStatsEvent extends PerfStatsEvent {
     private final long freeMemoryBytes;
     private final long totalMemoryBytes;
@@ -126,6 +127,19 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
     private final long timeSpentInGcMs;
     private final Map<String, Long> currentMemoryBytesUsageByPool;
 
+    /**
+     * Construct a new memory performance tracking object
+     *
+     * @param freeMemoryBytes Memory in bytes available for JVM to use for new allocations
+     * @param totalMemoryBytes Memory in bytes that JVM allocated at the moment, both used and
+     *     unused
+     * @param maxMemoryBytes Maximum amount of memory in bytes that JVM can allocate (-Xmx
+     *     parameter)
+     * @param timeSpentInGcMs Total amount of milliseconds spent doing garbage collection till
+     *     now
+     * @param currentMemoryBytesUsageByPool A map of JVM memory pool name to the amount of memory
+     *     used by that pool
+     */
     public MemoryPerfStatsEvent(
         long freeMemoryBytes,
         long totalMemoryBytes,
@@ -139,22 +153,27 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
       this.currentMemoryBytesUsageByPool = currentMemoryBytesUsageByPool;
     }
 
+    /** @return Memory in bytes available for JVM to use for new allocations */
     public long getFreeMemoryBytes() {
       return freeMemoryBytes;
     }
 
+    /** @return Memory in bytes that JVM allocated at the moment, both used and unused */
     public long getTotalMemoryBytes() {
       return totalMemoryBytes;
     }
 
+    /** @return Maximum amount of memory in bytes that JVM can allocate (-Xmx parameter) */
     public long getMaxMemoryBytes() {
       return maxMemoryBytes;
     }
 
+    /** @return Total amount of milliseconds spent doing garbage collection till now */
     public long getTimeSpentInGcMs() {
       return timeSpentInGcMs;
     }
 
+    /** @return A map of JVM memory pool name to the amount of memory used by that pool */
     public Map<String, Long> getCurrentMemoryBytesUsageByPool() {
       return currentMemoryBytesUsageByPool;
     }
