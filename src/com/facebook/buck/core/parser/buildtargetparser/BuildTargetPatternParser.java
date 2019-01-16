@@ -21,7 +21,6 @@ import com.facebook.buck.core.cell.UnknownCellException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -123,16 +122,6 @@ public abstract class BuildTargetPatternParser<T> {
     return createForDescendants(cellPath, basePath);
   }
 
-  /**
-   * Used when parsing target names relative to another target, such as in a build file.
-   *
-   * @param baseName name such as {@code //first-party/orca}
-   */
-  public static BuildTargetPatternParser<BuildTargetPattern> forBaseName(String baseName) {
-    Objects.requireNonNull(Strings.emptyToNull(baseName));
-    return new BuildFileContext(baseName);
-  }
-
   /** Used when parsing target names in the {@code visibility} argument to a build rule. */
   public static BuildTargetPatternParser<BuildTargetPattern> forVisibilityArgument() {
     return new VisibilityContext();
@@ -174,13 +163,6 @@ public abstract class BuildTargetPatternParser<T> {
     public BuildTargetPattern createForSingleton(BuildTarget target) {
       return SingletonBuildTargetPattern.of(
           target.getUnflavoredBuildTarget().getCellPath(), target.getFullyQualifiedName());
-    }
-  }
-
-  private static class BuildFileContext extends BuildTargetPatternBaseParser {
-
-    public BuildFileContext(String basePath) {
-      super(basePath);
     }
   }
 
