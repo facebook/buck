@@ -22,7 +22,6 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -34,16 +33,6 @@ public abstract class BuildTargetPatternParser<T> {
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
   private static final String BUILD_RULE_SEPARATOR = ":";
-
-  private final String baseName;
-
-  protected BuildTargetPatternParser(String baseName) {
-    this.baseName = Objects.requireNonNull(baseName);
-  }
-
-  public String getBaseName() {
-    return baseName;
-  }
 
   /**
    * 1. //src/com/facebook/buck/cli:cli will be converted to a single build target 2.
@@ -61,8 +50,7 @@ public abstract class BuildTargetPatternParser<T> {
       return createWildCardPattern(cellNames, buildTargetPattern);
     }
 
-    BuildTarget target =
-        BuildTargetParser.INSTANCE.parse(cellNames, buildTargetPattern, baseName, true);
+    BuildTarget target = BuildTargetParser.INSTANCE.parse(cellNames, buildTargetPattern, "", true);
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
       return createForChildren(target.getCellPath(), target.getBasePath());
     } else {
@@ -128,11 +116,7 @@ public abstract class BuildTargetPatternParser<T> {
 
   protected abstract T createForSingleton(BuildTarget target);
 
-  private abstract static class BuildTargetPatternBaseParser
-      extends BuildTargetPatternParser<BuildTargetPattern> {
-    public BuildTargetPatternBaseParser(String baseName) {
-      super(baseName);
-    }
+  private static class VisibilityContext extends BuildTargetPatternParser<BuildTargetPattern> {
 
     @Override
     public BuildTargetPattern createForDescendants(Path cellPath, Path basePath) {
@@ -148,13 +132,6 @@ public abstract class BuildTargetPatternParser<T> {
     public BuildTargetPattern createForSingleton(BuildTarget target) {
       return SingletonBuildTargetPattern.of(
           target.getUnflavoredBuildTarget().getCellPath(), target.getFullyQualifiedName());
-    }
-  }
-
-  private static class VisibilityContext extends BuildTargetPatternBaseParser {
-
-    public VisibilityContext() {
-      super("");
     }
   }
 }

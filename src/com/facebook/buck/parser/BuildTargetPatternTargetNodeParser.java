@@ -22,10 +22,6 @@ import java.nio.file.Path;
 
 public class BuildTargetPatternTargetNodeParser extends BuildTargetPatternParser<TargetNodeSpec> {
 
-  public BuildTargetPatternTargetNodeParser() {
-    super(/* baseName */ "");
-  }
-
   @Override
   public TargetNodeSpec createForDescendants(Path cellPath, Path basePath) {
     return TargetNodePredicateSpec.of(

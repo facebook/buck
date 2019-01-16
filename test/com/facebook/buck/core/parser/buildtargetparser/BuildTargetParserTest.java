@@ -157,15 +157,7 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseWithVisibilityContext() {
-    // Invoke the BuildTargetParser using the VISIBILITY context.
-    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
-        BuildTargetPatternParser.forVisibilityArgument();
-    BuildTarget target =
-        parser.parse(
-            createCellRoots(null),
-            "//java/com/example:",
-            buildTargetPatternParser.getBaseName(),
-            true);
+    BuildTarget target = parser.parse(createCellRoots(null), "//java/com/example:", "", true);
     assertEquals(
         "A build target that ends with a colon should be treated as a wildcard build target "
             + "when parsed in the context of a visibility argument.",
