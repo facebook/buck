@@ -201,11 +201,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   public ImmutableSet<SourcePath> getOutputDirs() {
-    return ImmutableSet.of(
-        ExplicitBuildTargetSourcePath.of(
-            getBuildTarget(), getOutputDir().resolve(Type.HTML.toString())),
-        ExplicitBuildTargetSourcePath.of(
-            getBuildTarget(), getOutputDir().resolve(Type.HOOGLE.toString())));
+    return ImmutableSet.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputDir()));
   }
 
   @Override
@@ -227,8 +223,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), dir)));
-    steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context, Type.HTML));
-    steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context, Type.HOOGLE));
+    steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context));
 
     buildableContext.recordArtifact(dir);
     return steps.build();
@@ -249,12 +244,10 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
   private class HaddockStep extends ShellStep {
 
     private BuildContext buildContext;
-    private Type type;
 
-    public HaddockStep(Path rootPath, BuildContext buildContext, Type type) {
+    public HaddockStep(Path rootPath, BuildContext buildContext) {
       super(rootPath);
       this.buildContext = buildContext;
-      this.type = type;
     }
 
     @Override
@@ -265,29 +258,18 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
           .build();
     }
 
-    protected ImmutableList<String> getTypeFlags() {
-      switch (type) {
-        case HTML:
-          return ImmutableList.<String>builder()
-              .add("--html")
-              .add("--use-contents", "index.html")
-              .add("--use-index", "doc-index.html")
-              .build();
-        case HOOGLE:
-          return ImmutableList.<String>builder().add("--hoogle").build();
-        default:
-          return ImmutableList.of();
-      }
+    protected ImmutableList<String> getRenderFlags() {
+      return ImmutableList.<String>builder()
+          .add("--use-index", "doc-index.html")
+          .add("--use-contents", "index.html")
+          .add("--html")
+          .add("--hoogle")
+          .build();
     }
 
     protected ImmutableList<String> getOutputDirFlags() {
       ImmutableList.Builder<String> flags = ImmutableList.builder();
-      if (type == Type.HTML) {
-        flags.add("--dump-interface", getInterface().toString());
-      }
-      flags.add(
-          "--odir",
-          getProjectFilesystem().resolve(getOutputDir()).resolve(type.toString()).toString());
+      flags.add("--odir", getProjectFilesystem().resolve(getOutputDir()).toString());
       return flags.build();
     }
 
@@ -340,7 +322,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
       return ImmutableList.<String>builder()
           .addAll(haddockTool.getCommandPrefix(resolver))
-          .addAll(getTypeFlags())
+          .addAll(getRenderFlags())
           .add("--no-tmp-comp-dir")
           .add("--no-warnings")
           .addAll(
@@ -349,6 +331,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
                   RichStream.from(interfaces)
                       .map(sp -> resolver.getRelativePath(sp).toString())
                       .toImmutableList()))
+          .add("--dump-interface", getInterface().toString())
           .addAll(haddockFlags)
           .addAll(MoreIterables.zipAndConcat(Iterables.cycle("--optghc"), cmdArgs.build()))
           .add("--package-name", packageInfo.getName())
@@ -371,10 +354,5 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
   public HaskellPlatform getPlatform() {
     return platform;
-  }
-
-  public enum Type {
-    HTML,
-    HOOGLE
   }
 }
