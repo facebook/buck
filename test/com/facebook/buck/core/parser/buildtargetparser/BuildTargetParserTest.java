@@ -165,7 +165,7 @@ public class BuildTargetParserTest {
             createCellRoots(null),
             "//java/com/example:",
             buildTargetPatternParser.getBaseName(),
-            buildTargetPatternParser.isWildCardAllowed());
+            true);
     assertEquals(
         "A build target that ends with a colon should be treated as a wildcard build target "
             + "when parsed in the context of a visibility argument.",

@@ -45,10 +45,6 @@ public abstract class BuildTargetPatternParser<T> {
     return baseName;
   }
 
-  public boolean isWildCardAllowed() {
-    return false;
-  }
-
   /**
    * 1. //src/com/facebook/buck/cli:cli will be converted to a single build target 2.
    * //src/com/facebook/buck/cli: will match all in the same directory. 3.
@@ -66,8 +62,7 @@ public abstract class BuildTargetPatternParser<T> {
     }
 
     BuildTarget target =
-        BuildTargetParser.INSTANCE.parse(
-            cellNames, buildTargetPattern, baseName, isWildCardAllowed());
+        BuildTargetParser.INSTANCE.parse(cellNames, buildTargetPattern, baseName, true);
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
       return createForChildren(target.getCellPath(), target.getBasePath());
     } else {
@@ -76,11 +71,6 @@ public abstract class BuildTargetPatternParser<T> {
   }
 
   private T createWildCardPattern(CellPathResolver cellNames, String buildTargetPatternWithCell) {
-    if (!isWildCardAllowed()) {
-      throw new BuildTargetParseException(
-          String.format("'%s' cannot end with '...'", buildTargetPatternWithCell));
-    }
-
     Path cellPath;
     String buildTargetPattern;
     int index = buildTargetPatternWithCell.indexOf(BUILD_RULE_PREFIX);
@@ -165,11 +155,6 @@ public abstract class BuildTargetPatternParser<T> {
 
     public VisibilityContext() {
       super("");
-    }
-
-    @Override
-    public boolean isWildCardAllowed() {
-      return true;
     }
   }
 }

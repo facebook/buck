@@ -41,9 +41,4 @@ public class BuildTargetPatternTargetNodeParser extends BuildTargetPatternParser
   public TargetNodeSpec createForSingleton(BuildTarget target) {
     return BuildTargetSpec.from(target);
   }
-
-  @Override
-  public boolean isWildCardAllowed() {
-    return true;
-  }
 }
