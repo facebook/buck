@@ -27,6 +27,7 @@ import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -59,7 +60,7 @@ public abstract class TargetNodeTranslator {
   public abstract Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
       BuildTarget target);
 
-  public <A> Optional<Optional<A>> translateOptional(
+  private <A> Optional<Optional<A>> translateOptional(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       Optional<A> val) {
@@ -73,7 +74,7 @@ public abstract class TargetNodeTranslator {
     return Optional.of(inner);
   }
 
-  public <A> Optional<ImmutableList<A>> translateList(
+  private <A> Optional<ImmutableList<A>> translateList(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       ImmutableList<A> val) {
@@ -87,7 +88,7 @@ public abstract class TargetNodeTranslator {
     return modified ? Optional.of(builder.build()) : Optional.empty();
   }
 
-  public <A> Optional<ImmutableSet<A>> translateSet(
+  private <A> Optional<ImmutableSet<A>> translateSet(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       ImmutableSet<A> val) {
@@ -101,7 +102,7 @@ public abstract class TargetNodeTranslator {
     return modified ? Optional.of(builder.build()) : Optional.empty();
   }
 
-  public <A extends Comparable<?>> Optional<ImmutableSortedSet<A>> translateSortedSet(
+  private <A extends Comparable<?>> Optional<ImmutableSortedSet<A>> translateSortedSet(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       ImmutableSortedSet<A> val) {
@@ -115,7 +116,7 @@ public abstract class TargetNodeTranslator {
     return modified ? Optional.of(builder.build()) : Optional.empty();
   }
 
-  public <A extends Comparable<?>, B> Optional<ImmutableMap<A, B>> translateMap(
+  private <A extends Comparable<?>, B> Optional<ImmutableMap<A, B>> translateMap(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       ImmutableMap<A, B> val) {
@@ -130,7 +131,7 @@ public abstract class TargetNodeTranslator {
     return modified ? Optional.of(builder.build()) : Optional.empty();
   }
 
-  public <A extends Comparable<?>, B> Optional<ImmutableSortedMap<A, B>> translateSortedMap(
+  private <A extends Comparable<?>, B> Optional<ImmutableSortedMap<A, B>> translateSortedMap(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       ImmutableSortedMap<A, B> val) {
@@ -145,7 +146,8 @@ public abstract class TargetNodeTranslator {
     return modified ? Optional.of(builder.build()) : Optional.empty();
   }
 
-  public <A, B> Optional<Pair<A, B>> translatePair(
+  @VisibleForTesting
+  <A, B> Optional<Pair<A, B>> translatePair(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       Pair<A, B> val) {
@@ -157,7 +159,8 @@ public abstract class TargetNodeTranslator {
     return Optional.of(new Pair<>(first.orElse(val.getFirst()), second.orElse(val.getSecond())));
   }
 
-  public Optional<DefaultBuildTargetSourcePath> translateBuildTargetSourcePath(
+  @VisibleForTesting
+  Optional<DefaultBuildTargetSourcePath> translateBuildTargetSourcePath(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       DefaultBuildTargetSourcePath val) {
@@ -166,7 +169,8 @@ public abstract class TargetNodeTranslator {
     return translatedTarget.map(DefaultBuildTargetSourcePath::of);
   }
 
-  public Optional<SourceWithFlags> translateSourceWithFlags(
+  @VisibleForTesting
+  Optional<SourceWithFlags> translateSourceWithFlags(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       SourceWithFlags val) {
@@ -248,7 +252,7 @@ public abstract class TargetNodeTranslator {
     }
   }
 
-  public boolean translateConstructorArg(
+  private boolean translateConstructorArg(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       Object constructorArg,
