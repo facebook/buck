@@ -1041,13 +1041,15 @@ public class AppleDescriptions {
 
         if (AppleBundleExtension.APP.toFileExtension().equals(appleBundle.getExtension())) {
           String platformName = appleBundle.getPlatformName();
-          if (platformName.equals(ApplePlatform.WATCHOS.getName()) ||
-              platformName.equals(ApplePlatform.WATCHSIMULATOR.getName())) {
+          if (platformName.equals(ApplePlatform.WATCHOS.getName())
+              || platformName.equals(ApplePlatform.WATCHSIMULATOR.getName())) {
             extensionBundlePaths.put(sourcePath, destinations.getWatchAppPath().toString());
           } else if (appleBundle.isLegacyWatchApp()) {
             extensionBundlePaths.put(sourcePath, destinations.getResourcesPath().toString());
           }
-        } else if (AppleBundleExtension.APPEX.toFileExtension().equals(appleBundle.getExtension())) {
+        } else if (AppleBundleExtension.APPEX
+            .toFileExtension()
+            .equals(appleBundle.getExtension())) {
           extensionBundlePaths.put(sourcePath, destinations.getPlugInsPath().toString());
         } else if (AppleBundleExtension.FRAMEWORK
             .toFileExtension()
