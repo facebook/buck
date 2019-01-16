@@ -45,6 +45,14 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
 
   abstract String getGuavaJarPath();
 
+  /**
+   * @return If true, suspend the JVM to allow a debugger to attach after launch. Defaults to false.
+   */
+  @Value.Default
+  boolean isDebugEnabled() {
+    return false;
+  }
+
   abstract String getAndroidToolsCommonJarPath();
 
   abstract Optional<String> getDeviceSerial();
@@ -103,6 +111,10 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
       args.add(
           "--instrumentation-apk-path",
           getInstrumentationApkPath().get().toFile().getAbsolutePath());
+    }
+
+    if (isDebugEnabled()) {
+      args.add("--debug");
     }
   }
 }

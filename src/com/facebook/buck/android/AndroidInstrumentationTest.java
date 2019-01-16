@@ -198,7 +198,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             Optional.of(device.getSerialNumber()),
             Optional.empty(),
             getFilterString(options),
-            Optional.empty()));
+            Optional.empty(),
+            executionContext.isDebugEnabled()));
 
     return steps.build();
   }
@@ -227,7 +228,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       Optional<String> deviceSerial,
       Optional<Path> instrumentationApkPath,
       Optional<String> classFilterArg,
-      Optional<Path> apkUnderTestPath) {
+      Optional<Path> apkUnderTestPath,
+      boolean debugEnabled) {
     String packageName =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apk.getApkInfo());
     String testRunner =
@@ -246,6 +248,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             .setDirectoryForTestResults(directoryForTestResults)
             .setInstrumentationApkPath(instrumentationApkPath)
             .setTestPackage(packageName)
+            .setDebugEnabled(debugEnabled)
             .setTestRunner(testRunner)
             .setTestRunnerClasspath(TESTRUNNER_CLASSES)
             .setDdmlibJarPath(ddmlib)
@@ -363,7 +366,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
                     .getSourcePathResolver()
                     .getAbsolutePath(apk.getApkInfo().getApkPath())),
             Optional.empty(),
-            apkUnderTestPath);
+            apkUnderTestPath,
+            executionContext.isDebugEnabled());
 
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())

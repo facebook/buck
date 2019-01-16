@@ -47,6 +47,10 @@ public class InstrumentationStep extends ShellStep {
 
     jvmArgs.formatCommandLineArgsToList(args);
 
+    if (jvmArgs.isDebugEnabled()) {
+      warnUser(context, "Debugging. Suspending JVM. Connect android debugger to proceed.");
+    }
+
     return args.build();
   }
 
@@ -58,5 +62,9 @@ public class InstrumentationStep extends ShellStep {
   @Override
   protected Optional<Long> getTimeout() {
     return testRuleTimeoutMs;
+  }
+
+  private void warnUser(ExecutionContext context, String message) {
+    context.getStdErr().println(context.getAnsi().asWarningText(message));
   }
 }

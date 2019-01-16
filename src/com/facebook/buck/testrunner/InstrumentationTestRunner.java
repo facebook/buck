@@ -39,6 +39,7 @@ public class InstrumentationTestRunner {
   private final File outputDirectory;
   private final boolean attemptUninstall;
   private final Map<String, String> extraInstrumentationArguments;
+  private final boolean debug;
   @Nullable private final String instrumentationApkPath;
   @Nullable private final String apkUnderTestPath;
 
@@ -51,6 +52,7 @@ public class InstrumentationTestRunner {
       String instrumentationApkPath,
       String apkUnderTestPath,
       boolean attemptUninstall,
+      boolean debug,
       Map<String, String> extraInstrumentationArguments) {
     this.adbExecutablePath = adbExecutablePath;
     this.deviceSerial = deviceSerial;
@@ -61,6 +63,7 @@ public class InstrumentationTestRunner {
     this.apkUnderTestPath = apkUnderTestPath;
     this.attemptUninstall = attemptUninstall;
     this.extraInstrumentationArguments = extraInstrumentationArguments;
+    this.debug = debug;
   }
 
   public static InstrumentationTestRunner fromArgs(String... args) {
@@ -71,6 +74,7 @@ public class InstrumentationTestRunner {
     String testRunner = null;
     String instrumentationApkPath = null;
     boolean attemptUninstall = false;
+    boolean debug = false;
     Map<String, String> extraInstrumentationArguments = new HashMap<String, String>();
 
     for (int i = 0; i < args.length; i++) {
@@ -99,6 +103,9 @@ public class InstrumentationTestRunner {
           break;
         case "--attempt-uninstall":
           attemptUninstall = true;
+          break;
+        case "--debug":
+          debug = true;
           break;
         case "--extra-instrumentation-argument":
           String rawArg = args[++i];
@@ -147,6 +154,7 @@ public class InstrumentationTestRunner {
         instrumentationApkPath,
         apkUnderTestPath,
         attemptUninstall,
+        debug,
         extraInstrumentationArguments);
   }
 
@@ -172,6 +180,9 @@ public class InstrumentationTestRunner {
 
       for (Map.Entry<String, String> entry : this.extraInstrumentationArguments.entrySet()) {
         runner.addInstrumentationArg(entry.getKey(), entry.getValue());
+      }
+      if (debug) {
+        runner.setDebug(true);
       }
       BuckXmlTestRunListener listener = new BuckXmlTestRunListener();
       ITestRunListener trimLineListener =
