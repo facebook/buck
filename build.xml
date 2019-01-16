@@ -127,7 +127,14 @@
     <include name="remote-apis/remote-apis.jar" />
   </fileset>
 
+
+  <patternset id="third-party.jars.private">
+
+
+  </patternset>
+
   <fileset dir="${third-party.dir}/java" id="third-party.jars">
+    <patternset refid="third-party.jars.private"/>
     <include name="ObjCBridge/ObjCBridge.jar" />
     <include name="android/common-25.3.0.jar" />
     <include name="android/layoutlib-api-25.3.0.jar" />
