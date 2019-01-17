@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.graph.transformation;
 
-import java.util.Set;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Interface for transformations with the {@link GraphTransformationEngine}.
@@ -54,5 +54,5 @@ public interface GraphTransformer<Key, Result> {
    * @param key the current key to transform
    * @return a set of keys that the transformation of the current key depends on
    */
-  Set<Key> discoverDeps(Key key) throws Exception;
+  ImmutableSet<Key> discoverDeps(Key key) throws Exception;
 }

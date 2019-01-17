@@ -27,7 +27,6 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.util.concurrent.Futures;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -259,7 +258,7 @@ public class DefaultGraphTransformationEngineTest {
           }
 
           @Override
-          public Set<Long> discoverDeps(Long aLong) {
+          public ImmutableSet<Long> discoverDeps(Long aLong) {
             return ImmutableSet.of();
           }
         };
@@ -285,7 +284,7 @@ public class DefaultGraphTransformationEngineTest {
           }
 
           @Override
-          public Set<Long> discoverDeps(Long aLong) throws Exception {
+          public ImmutableSet<Long> discoverDeps(Long aLong) throws Exception {
             throw exception;
           }
         };

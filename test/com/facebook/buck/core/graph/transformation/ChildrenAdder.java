@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.graph.transformation;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.graph.MutableGraph;
-import java.util.Set;
 
 /**
  * Demonstration of usage of {@link GraphTransformer}.
@@ -39,7 +39,7 @@ class ChildrenAdder implements GraphTransformer<Long, Long> {
   }
 
   @Override
-  public Set<Long> discoverDeps(Long key) {
-    return input.successors(key);
+  public ImmutableSet<Long> discoverDeps(Long key) {
+    return ImmutableSet.copyOf(input.successors(key));
   }
 }
