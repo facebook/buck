@@ -16,7 +16,9 @@
 
 package com.facebook.buck.features.halide;
 
+import com.facebook.buck.apple.AppleCustomLinkingDepsDescription;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -71,7 +73,9 @@ import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 public class HalideLibraryDescription
-    implements DescriptionWithTargetGraph<HalideLibraryDescriptionArg>, Flavored {
+    implements DescriptionWithTargetGraph<HalideLibraryDescriptionArg>,
+        Flavored,
+        AppleCustomLinkingDepsDescription {
 
   public static final Flavor HALIDE_COMPILER_FLAVOR = InternalFlavor.of("halide-compiler");
   public static final Flavor HALIDE_COMPILE_FLAVOR = InternalFlavor.of("halide-compile");
@@ -365,6 +369,11 @@ public class HalideLibraryDescription
   private CxxPlatformsProvider getCxxPlatformsProvider() {
     return toolchainProvider.getByName(
         CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildTarget> getCustomLinkingDeps(CommonDescriptionArg args) {
+    return ((HalideLibraryDescriptionArg) args).getDeps();
   }
 
   @BuckStyleImmutable

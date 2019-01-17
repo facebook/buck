@@ -549,6 +549,21 @@ public class ProjectIntegrationTest {
     runXcodebuild(workspace, "Apps/App.xcworkspace", "App");
   }
 
+  @Test
+  public void testHalide() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "project_halide", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
   private void runXcodebuild(ProjectWorkspace workspace, String workspacePath, String schemeName)
       throws IOException, InterruptedException {
     ProcessExecutor.Result processResult =

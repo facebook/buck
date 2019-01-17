@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -216,6 +217,17 @@ public final class AppleBuildRules {
             exportedDeps = newExportedDeps;
           }
 
+          ImmutableSortedSet.Builder<TargetNode<?>> customLinkingDepsBuilder =
+              ImmutableSortedSet.naturalOrder();
+          if (node.getDescription() instanceof AppleCustomLinkingDepsDescription) {
+            ImmutableSortedSet<BuildTarget> customLinkingDepsTargets =
+                ((AppleCustomLinkingDepsDescription) node.getDescription())
+                    .getCustomLinkingDeps((CommonDescriptionArg) node.getConstructorArg());
+            Iterable<TargetNode<?>> nodes = targetGraph.getAll(customLinkingDepsTargets);
+            customLinkingDepsBuilder.addAll(nodes);
+          }
+          ImmutableSortedSet<TargetNode<?>> customLinkingDeps = customLinkingDepsBuilder.build();
+
           LOG.verbose("Default deps for node %s mode %s: %s", node, mode, defaultDeps);
           if (!exportedDeps.isEmpty()) {
             LOG.verbose("Exported deps for node %s mode %s: %s", node, mode, exportedDeps);
@@ -230,6 +242,8 @@ public final class AppleBuildRules {
                   boolean nodeIsAppleLibrary =
                       node.getDescription() instanceof AppleLibraryDescription;
                   boolean nodeIsCxxLibrary = node.getDescription() instanceof CxxLibraryDescription;
+                  boolean nodeHasCustomDependencies =
+                      node.getDescription() instanceof AppleCustomLinkingDepsDescription;
                   if (nodeIsAppleLibrary || nodeIsCxxLibrary) {
                     if (AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(
                         (TargetNode<CxxLibraryDescription.CommonArg>) node)) {
@@ -237,6 +251,8 @@ public final class AppleBuildRules {
                     } else {
                       deps = defaultDeps;
                     }
+                  } else if (nodeHasCustomDependencies) {
+                    deps = customLinkingDeps;
                   } else if (shouldStopRecursiveDependenciesTraversalAtNodeType(
                       node.getDescription())) {
                     // TODO(yiding): This seems unnecessary as descriptions matching the predicate
