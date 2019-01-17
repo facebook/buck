@@ -17,6 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -53,6 +55,12 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
     return false;
   }
 
+  /** @return If true, code coverage is enabled */
+  @Value.Default
+  boolean isCodeCoverageEnabled() {
+    return false;
+  }
+
   abstract String getAndroidToolsCommonJarPath();
 
   abstract Optional<String> getDeviceSerial();
@@ -66,7 +74,8 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
   /** @return The filesystem path to the compiled Buck test runner classes. */
   abstract Path getTestRunnerClasspath();
 
-  public void formatCommandLineArgsToList(ImmutableList.Builder<String> args) {
+  public void formatCommandLineArgsToList(
+      ProjectFilesystem filesystem, ImmutableList.Builder<String> args) {
     // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
     // to find the test runner classes, so propagate these down via the relevant properties.
     args.add(String.format("-Dbuck.testrunner_classes=%s", getTestRunnerClasspath()));
@@ -115,6 +124,16 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
 
     if (isDebugEnabled()) {
       args.add("--debug");
+    }
+
+    if (isCodeCoverageEnabled()) {
+      args.add("--code-coverage");
+      String codeCoverageOutputFile =
+          String.format(
+              "%s/%s",
+              JacocoConstants.getJacocoOutputDir(filesystem),
+              JacocoConstants.JACOCO_EXEC_COVERAGE_FILE);
+      args.add("--code-coverage-output-file", codeCoverageOutputFile);
     }
   }
 }

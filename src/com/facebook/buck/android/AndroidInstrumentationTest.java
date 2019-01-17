@@ -199,7 +199,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             Optional.empty(),
             getFilterString(options),
             Optional.empty(),
-            executionContext.isDebugEnabled()));
+            executionContext.isDebugEnabled(),
+            executionContext.isCodeCoverageEnabled()));
 
     return steps.build();
   }
@@ -229,7 +230,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       Optional<Path> instrumentationApkPath,
       Optional<String> classFilterArg,
       Optional<Path> apkUnderTestPath,
-      boolean debugEnabled) {
+      boolean debugEnabled,
+      boolean codeCoverageEnabled) {
     String packageName =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apk.getApkInfo());
     String testRunner =
@@ -248,6 +250,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             .setDirectoryForTestResults(directoryForTestResults)
             .setInstrumentationApkPath(instrumentationApkPath)
             .setTestPackage(packageName)
+            .setCodeCoverageEnabled(codeCoverageEnabled)
             .setDebugEnabled(debugEnabled)
             .setTestRunner(testRunner)
             .setTestRunnerClasspath(TESTRUNNER_CLASSES)
@@ -367,7 +370,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
                     .getAbsolutePath(apk.getApkInfo().getApkPath())),
             Optional.empty(),
             apkUnderTestPath,
-            executionContext.isDebugEnabled());
+            executionContext.isDebugEnabled(),
+            executionContext.isCodeCoverageEnabled());
 
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
