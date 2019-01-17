@@ -19,8 +19,6 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import com.facebook.buck.core.graph.transformation.executor.impl.AbstractDepsAwareTask.TaskStatus;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
@@ -90,21 +88,6 @@ class DefaultDepsAwareWorker<T> extends AbstractDepsAwareWorker<DefaultDepsAware
       return false;
     }
     task.call();
-    return true;
-  }
-
-  private boolean propagateException(DefaultDepsAwareTask<T> task, DefaultDepsAwareTask<T> dep)
-      throws InterruptedException {
-    CompletableFuture<T> depResult = dep.getFuture();
-    if (!depResult.isCompletedExceptionally()) {
-      return false;
-    }
-    try {
-      depResult.get();
-      Verify.verify(false, "Should have completed exceptionally");
-    } catch (ExecutionException e) {
-      task.getFuture().completeExceptionally(e.getCause());
-    }
     return true;
   }
 }

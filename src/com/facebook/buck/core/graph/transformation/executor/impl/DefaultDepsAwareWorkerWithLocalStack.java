@@ -22,8 +22,6 @@ import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
@@ -104,21 +102,6 @@ class DefaultDepsAwareWorkerWithLocalStack<T>
       return false;
     }
     task.call();
-    return true;
-  }
-
-  private boolean propagateException(DefaultDepsAwareTask<T> task, DefaultDepsAwareTask<T> dep)
-      throws InterruptedException {
-    CompletableFuture<T> depResult = dep.getFuture();
-    if (!depResult.isCompletedExceptionally()) {
-      return false;
-    }
-    try {
-      depResult.get();
-      Preconditions.checkState(false, "Should have completed exceptionally");
-    } catch (ExecutionException e) {
-      task.getFuture().completeExceptionally(e.getCause());
-    }
     return true;
   }
 }
