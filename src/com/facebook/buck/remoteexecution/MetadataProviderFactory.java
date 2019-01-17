@@ -16,13 +16,22 @@
 
 package com.facebook.buck.remoteexecution;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
+import com.facebook.buck.remoteexecution.proto.BuckInfo;
+import com.facebook.buck.remoteexecution.proto.CreatorInfo;
+import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.remoteexecution.proto.TraceInfo;
+import java.util.UUID;
 
 /** Static class providing factory methods for instances of MetadataProviders. */
 public class MetadataProviderFactory {
+
+  private static final String DEFAULT_CLIENT_TYPE = "buck";
+  private static final String RE_SESSION_ID_PREFIX = "reSessionID";
+
   private MetadataProviderFactory() {
     // static class.
   }
@@ -33,6 +42,45 @@ public class MetadataProviderFactory {
       @Override
       public RemoteExecutionMetadata get() {
         return RemoteExecutionMetadata.newBuilder().build();
+      }
+
+      @Override
+      public RemoteExecutionMetadata getForAction(String actionDigest) {
+        return get();
+      }
+    };
+  }
+
+  /**
+   * @return Metadata provider that provides minimal amount information that should be passed along
+   *     remote execution requests.
+   */
+  public static MetadataProvider minimalMetadataProviderForBuild(BuildId buildId, String username) {
+    return new MetadataProvider() {
+      final RemoteExecutionMetadata metadata;
+
+      {
+        // TODO(msienkiewicz): Allow overriding RE Session ID, client type, username with config
+        // flags/env vars.
+        String reSessionIDRaw = RE_SESSION_ID_PREFIX + UUID.randomUUID();
+        RESessionID reSessionID = RESessionID.newBuilder().setId(reSessionIDRaw).build();
+        BuckInfo buckInfo = BuckInfo.newBuilder().setBuildId(buildId.toString()).build();
+        CreatorInfo creatorInfo =
+            CreatorInfo.newBuilder()
+                .setClientType(DEFAULT_CLIENT_TYPE)
+                .setUsername(username)
+                .build();
+        metadata =
+            RemoteExecutionMetadata.newBuilder()
+                .setReSessionId(reSessionID)
+                .setBuckInfo(buckInfo)
+                .setCreatorInfo(creatorInfo)
+                .build();
+      }
+
+      @Override
+      public RemoteExecutionMetadata get() {
+        return metadata;
       }
 
       @Override

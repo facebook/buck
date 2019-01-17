@@ -1133,7 +1133,9 @@ public final class Main {
                       .getEventListeners(executors, scheduledExecutorPool.get())
                   : ImmutableList.of();
 
-          MetadataProvider metadataProvider = MetadataProviderFactory.emptyMetadataProvider();
+          MetadataProvider metadataProvider =
+              MetadataProviderFactory.minimalMetadataProviderForBuild(
+                  buildId, executionEnvironment.getUsername());
           if (isRemoteExecutionBuild(command, buckConfig)) {
             List<BuckEventListener> remoteExecutionsListeners = Lists.newArrayList();
             if (remoteExecutionListener.isPresent()) {
