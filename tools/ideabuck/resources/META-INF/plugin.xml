@@ -1,22 +1,12 @@
 <idea-plugin>
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.6.1-SNAPSHOT</version>
+  <version>3.6.1</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
   <description><![CDATA[
     An IntelliJ plugin for <a href="https://buckbuild.com">the Buck build system.</a>
-    <h3>Features:</h3>
-    <ul>
-      <li>Syntax highlighting for BUCK file</li>
-      <li>Keywords auto completion</li>
-      <li>Go to buck file with one click</li>
-      <li>Go to to paths of dependencies with one click</li>
-      <li>Buck file formatter</li>
-      <li>Buck line commenter</li>
-      <li>Buck dependencies sorter</li>
-    </ul>
   ]]></description>
 
   <change-notes><![CDATA[
