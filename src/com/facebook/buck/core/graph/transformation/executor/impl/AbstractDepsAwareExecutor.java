@@ -29,14 +29,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.function.Supplier;
 
-public class AbstractDepsAwareExecutor<T> implements DepsAwareExecutor<T, DefaultDepsAwareTask<T>> {
+abstract class AbstractDepsAwareExecutor<T>
+    implements DepsAwareExecutor<T, DefaultDepsAwareTask<T>> {
 
   private static final Logger LOG = Logger.get(AbstractDepsAwareExecutor.class);
   protected final BlockingDeque<DefaultDepsAwareTask<?>> workQueue;
   protected final Future<?>[] workers;
   private volatile boolean isShutdown = false;
 
-  public AbstractDepsAwareExecutor(
+  protected AbstractDepsAwareExecutor(
       BlockingDeque<DefaultDepsAwareTask<?>> workQueue, Future<?>[] workers) {
     this.workQueue = workQueue;
     this.workers = workers;
