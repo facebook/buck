@@ -384,4 +384,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     builder.add(apk.getBuildTarget());
     return builder.build();
   }
+
+  public HasInstallableApk getApk() {
+    return apk;
+  }
 }

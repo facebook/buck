@@ -16,6 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AndroidBinary;
+import com.facebook.buck.android.AndroidInstrumentationApk;
+import com.facebook.buck.android.AndroidInstrumentationTest;
+import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -574,6 +578,33 @@ public class TestRunning {
             ImmutableSortedSet<BuildTarget> depTests = ((JavaLibraryWithTests) dep).getTests();
             if (depTests.contains(test.getBuildTarget())) {
               rulesUnderTest.add(dep);
+            }
+          }
+        }
+      }
+      if (test instanceof AndroidInstrumentationTest) {
+        // Look at the transitive dependencies for `tests` attribute that refers to this test.
+        AndroidInstrumentationTest androidInstrumentationTest = (AndroidInstrumentationTest) test;
+
+        HasInstallableApk apk = androidInstrumentationTest.getApk();
+        if (apk instanceof AndroidBinary) {
+          AndroidBinary androidBinary = (AndroidBinary) apk;
+          Iterable<JavaLibrary> transitiveDeps = androidBinary.getTransitiveClasspathDeps();
+
+          if (androidBinary instanceof AndroidInstrumentationApk) {
+            transitiveDeps =
+                Iterables.concat(
+                    transitiveDeps,
+                    ((AndroidInstrumentationApk) androidBinary)
+                        .getApkUnderTest()
+                        .getTransitiveClasspathDeps());
+          }
+          for (JavaLibrary dep : transitiveDeps) {
+            if (dep instanceof JavaLibraryWithTests) {
+              ImmutableSortedSet<BuildTarget> depTests = ((JavaLibraryWithTests) dep).getTests();
+              if (depTests.contains(test.getBuildTarget())) {
+                rulesUnderTest.add(dep);
+              }
             }
           }
         }
