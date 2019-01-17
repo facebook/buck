@@ -31,19 +31,26 @@ import java.util.Set;
  * </ul>
  *
  * @param <Key> The types of Keys used to query for the result on the graph computation
- * @param <Result> The result of the computation given a specific key
+ * @param <Result> The result of the computation given a specific key.
  */
 public interface GraphTransformer<Key, Result> {
 
   /**
+   * Perform a transformation identified by key {@link Key} into a final type {@link Result}. This
+   * transformation should be performed synchronously.
+   *
    * @param key The Key of the requested result
-   * @param env The execution environment containining results of keys from {@link
+   * @param env The execution environment containing results of keys from {@link
    *     #discoverDeps(Object)}
-   * @return a future of the result requested
+   * @return The result of the transformation
    */
   Result transform(Key key, TransformationEnvironment<Key, Result> env) throws Exception;
 
   /**
+   * Compute dependent keys required to compute given key. The results of those computations will be
+   * available in {@link #transform(Object, TransformationEnvironment)} as a part of {@link
+   * TransformationEnvironment}
+   *
    * @param key the current key to transform
    * @return a set of keys that the transformation of the current key depends on
    */
