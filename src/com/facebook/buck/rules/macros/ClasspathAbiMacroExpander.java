@@ -27,7 +27,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.WriteToFileArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import java.io.File;
@@ -63,11 +62,6 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
               rule.getBuildTarget()));
     }
     return (HasClasspathEntries) rule;
-  }
-
-  @Override
-  public Arg makeExpandToFileArg(BuildTarget target, String prefix, Arg delegate) {
-    return new ClassPathWriteToFileArg(target, prefix, delegate);
   }
 
   /**
@@ -127,18 +121,6 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
             .collect(ImmutableList.toImmutableList());
 
     return new AbiJarPathArg(jarPaths);
-  }
-
-  private static class ClassPathWriteToFileArg extends WriteToFileArg {
-
-    ClassPathWriteToFileArg(BuildTarget target, String prefix, Arg delegate) {
-      super(target, prefix, delegate);
-    }
-
-    @Override
-    protected String getContent(SourcePathResolver pathResolver) {
-      return "'" + super.getContent(pathResolver) + "'";
-    }
   }
 
   private class AbiJarPathArg implements Arg {
