@@ -17,10 +17,15 @@
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
+import com.facebook.buck.util.function.ThrowingSupplier;
+import com.google.common.collect.ImmutableSet;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.function.Supplier;
 
 /**
  * A specialized Executor that executes {@link DepsAwareTask}. This executor will attempt to
@@ -29,10 +34,11 @@ import java.util.concurrent.LinkedBlockingDeque;
  * <p>This implementation uses workers that keep a local stack of tasks to avoid contention in the
  * global queue.
  */
-public class DefaultDepsAwareExecutorWithLocalStack<T> extends AbstractDepsAwareExecutor<T> {
+public class DefaultDepsAwareExecutorWithLocalStack<T>
+    extends AbstractDepsAwareExecutor<T, DefaultDepsAwareTask<T>> {
 
   private DefaultDepsAwareExecutorWithLocalStack(
-      Future<?>[] workers, LinkedBlockingDeque<DefaultDepsAwareTask<?>> workQueue) {
+      Future<?>[] workers, BlockingDeque<DefaultDepsAwareTask<T>> workQueue) {
     super(workQueue, workers);
   }
 
@@ -52,7 +58,7 @@ public class DefaultDepsAwareExecutorWithLocalStack<T> extends AbstractDepsAware
   public static <U> DefaultDepsAwareExecutorWithLocalStack<U> from(
       ExecutorService executorService, int parallelism) {
 
-    LinkedBlockingDeque<DefaultDepsAwareTask<?>> workQueue = new LinkedBlockingDeque<>();
+    LinkedBlockingDeque<DefaultDepsAwareTask<U>> workQueue = new LinkedBlockingDeque<>();
     Future<?>[] workers = startWorkers(executorService, parallelism, workQueue);
     DefaultDepsAwareExecutorWithLocalStack<U> executor =
         new DefaultDepsAwareExecutorWithLocalStack<>(workers, workQueue);
@@ -60,14 +66,32 @@ public class DefaultDepsAwareExecutorWithLocalStack<T> extends AbstractDepsAware
     return executor;
   }
 
-  private static Future<?>[] startWorkers(
+  @Override
+  public DefaultDepsAwareTask<T> createTask(
+      Callable<T> callable, Supplier<ImmutableSet<DefaultDepsAwareTask<T>>> depsSupplier) {
+    return DefaultDepsAwareTask.of(callable, depsSupplier);
+  }
+
+  @Override
+  public DefaultDepsAwareTask<T> createThrowingTask(
+      Callable<T> callable,
+      ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<T>>, Exception> depsSupplier) {
+    return DefaultDepsAwareTask.ofThrowing(callable, depsSupplier);
+  }
+
+  @Override
+  public DefaultDepsAwareTask<T> createTask(Callable<T> callable) {
+    return DefaultDepsAwareTask.of(callable);
+  }
+
+  private static <U> Future<?>[] startWorkers(
       ExecutorService executorService,
       int parallelism,
-      LinkedBlockingDeque<DefaultDepsAwareTask<?>> workQueue) {
+      LinkedBlockingDeque<DefaultDepsAwareTask<U>> workQueue) {
     Future<?>[] workers = new Future<?>[parallelism];
     for (int i = 0; i < workers.length; i++) {
-      DefaultDepsAwareWorkerWithLocalStack worker =
-          new DefaultDepsAwareWorkerWithLocalStack(workQueue);
+      DefaultDepsAwareWorkerWithLocalStack<U> worker =
+          new DefaultDepsAwareWorkerWithLocalStack<>(workQueue);
       workers[i] = executorService.submit(() -> runWorker(worker));
     }
     return workers;

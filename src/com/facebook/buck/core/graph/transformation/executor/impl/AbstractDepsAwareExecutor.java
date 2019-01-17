@@ -18,32 +18,27 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.AbstractDepsAwareTask.TaskStatus;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.function.Supplier;
 
-abstract class AbstractDepsAwareExecutor<T>
-    implements DepsAwareExecutor<T, DefaultDepsAwareTask<T>> {
+abstract class AbstractDepsAwareExecutor<T, TaskType extends AbstractDepsAwareTask<T, TaskType>>
+    implements DepsAwareExecutor<T, TaskType> {
 
   private static final Logger LOG = Logger.get(AbstractDepsAwareExecutor.class);
-  protected final BlockingDeque<DefaultDepsAwareTask<?>> workQueue;
+  protected final BlockingDeque<TaskType> workQueue;
   protected final Future<?>[] workers;
   private volatile boolean isShutdown = false;
 
-  protected AbstractDepsAwareExecutor(
-      BlockingDeque<DefaultDepsAwareTask<?>> workQueue, Future<?>[] workers) {
+  protected AbstractDepsAwareExecutor(BlockingDeque<TaskType> workQueue, Future<?>[] workers) {
     this.workQueue = workQueue;
     this.workers = workers;
   }
 
-  protected static void runWorker(AbstractDepsAwareWorker<DefaultDepsAwareTask<?>> worker) {
+  protected static void runWorker(AbstractDepsAwareWorker<?> worker) {
     try {
       worker.loopForever();
     } catch (InterruptedException e) {
@@ -65,25 +60,7 @@ abstract class AbstractDepsAwareExecutor<T>
   }
 
   @Override
-  public DefaultDepsAwareTask<T> createTask(
-      Callable<T> callable, Supplier<ImmutableSet<DefaultDepsAwareTask<T>>> depsSupplier) {
-    return DefaultDepsAwareTask.of(callable, depsSupplier);
-  }
-
-  @Override
-  public DefaultDepsAwareTask<T> createThrowingTask(
-      Callable<T> callable,
-      ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<T>>, Exception> depsSupplier) {
-    return DefaultDepsAwareTask.ofThrowing(callable, depsSupplier);
-  }
-
-  @Override
-  public DefaultDepsAwareTask<T> createTask(Callable<T> callable) {
-    return DefaultDepsAwareTask.of(callable);
-  }
-
-  @Override
-  public Future<T> submit(DefaultDepsAwareTask<T> task) {
+  public Future<T> submit(TaskType task) {
     if (isShutdown) {
       throw new RejectedExecutionException("Executor has already been shutdown");
     }
@@ -98,9 +75,9 @@ abstract class AbstractDepsAwareExecutor<T>
   }
 
   @Override
-  public ImmutableList<Future<T>> submitAll(Collection<DefaultDepsAwareTask<T>> tasks) {
+  public ImmutableList<Future<T>> submitAll(Collection<TaskType> tasks) {
     ImmutableList.Builder<Future<T>> futures = ImmutableList.builderWithExpectedSize(tasks.size());
-    for (DefaultDepsAwareTask<T> w : tasks) {
+    for (TaskType w : tasks) {
       futures.add(submit(w));
     }
     return futures.build();

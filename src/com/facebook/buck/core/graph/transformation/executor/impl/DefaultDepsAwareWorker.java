@@ -33,7 +33,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  * <p>Blocking operations that are ran in the {@link DefaultDepsAwareTask} will block the thread,
  * and its corresponding worker.
  */
-class DefaultDepsAwareWorker extends AbstractDepsAwareWorker<DefaultDepsAwareTask<?>> {
+class DefaultDepsAwareWorker<T> extends AbstractDepsAwareWorker<DefaultDepsAwareTask<T>> {
 
   /**
    * The {@link TaskStatus} is used to synchronize between tasks.
@@ -44,22 +44,22 @@ class DefaultDepsAwareWorker extends AbstractDepsAwareWorker<DefaultDepsAwareTas
    * TaskStatus#SCHEDULED} should not be resubmitted to the queue. Completed tasks should be {@link
    * TaskStatus#DONE} to avoid recomputation by another worker.
    */
-  DefaultDepsAwareWorker(LinkedBlockingDeque<DefaultDepsAwareTask<?>> sharedQueue) {
+  DefaultDepsAwareWorker(LinkedBlockingDeque<DefaultDepsAwareTask<T>> sharedQueue) {
     super(sharedQueue);
   }
 
   @Override
-  protected DefaultDepsAwareTask<?> takeTask() throws InterruptedException {
+  protected DefaultDepsAwareTask<T> takeTask() throws InterruptedException {
     return sharedQueue.take();
   }
 
   @Override
-  protected boolean eval(DefaultDepsAwareTask<?> task) throws InterruptedException {
+  protected boolean eval(DefaultDepsAwareTask<T> task) throws InterruptedException {
     if (!task.compareAndSetStatus(TaskStatus.SCHEDULED, TaskStatus.STARTED)) {
       return false;
     }
 
-    ImmutableSet<? extends DefaultDepsAwareTask<?>> deps;
+    ImmutableSet<? extends DefaultDepsAwareTask<T>> deps;
     try {
       deps = task.getDependencies();
     } catch (Exception e) {
@@ -69,7 +69,7 @@ class DefaultDepsAwareWorker extends AbstractDepsAwareWorker<DefaultDepsAwareTas
     }
 
     boolean depsDone = true;
-    for (DefaultDepsAwareTask<?> dep : deps) {
+    for (DefaultDepsAwareTask<T> dep : deps) {
       if (dep.getStatus() != TaskStatus.DONE) {
         depsDone = false;
         if (dep.getStatus() == TaskStatus.STARTED) {
@@ -93,9 +93,9 @@ class DefaultDepsAwareWorker extends AbstractDepsAwareWorker<DefaultDepsAwareTas
     return true;
   }
 
-  private boolean propagateException(DefaultDepsAwareTask<?> task, DefaultDepsAwareTask<?> dep)
+  private boolean propagateException(DefaultDepsAwareTask<T> task, DefaultDepsAwareTask<T> dep)
       throws InterruptedException {
-    CompletableFuture<?> depResult = dep.getFuture();
+    CompletableFuture<T> depResult = dep.getFuture();
     if (!depResult.isCompletedExceptionally()) {
       return false;
     }

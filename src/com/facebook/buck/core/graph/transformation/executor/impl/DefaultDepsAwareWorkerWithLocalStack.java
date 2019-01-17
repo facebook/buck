@@ -37,17 +37,17 @@ import java.util.concurrent.LinkedBlockingDeque;
  * <p>Blocking operations that are ran in the {@link DefaultDepsAwareTask} will block the thread,
  * and its corresponding worker.
  */
-class DefaultDepsAwareWorkerWithLocalStack
-    extends AbstractDepsAwareWorker<DefaultDepsAwareTask<?>> {
+class DefaultDepsAwareWorkerWithLocalStack<T>
+    extends AbstractDepsAwareWorker<DefaultDepsAwareTask<T>> {
 
-  private final Deque<DefaultDepsAwareTask<?>> localStack = new ArrayDeque<>();
+  private final Deque<DefaultDepsAwareTask<T>> localStack = new ArrayDeque<>();
 
-  DefaultDepsAwareWorkerWithLocalStack(LinkedBlockingDeque<DefaultDepsAwareTask<?>> sharedQueue) {
+  DefaultDepsAwareWorkerWithLocalStack(LinkedBlockingDeque<DefaultDepsAwareTask<T>> sharedQueue) {
     super(sharedQueue);
   }
 
   @Override
-  protected DefaultDepsAwareTask<?> takeTask() throws InterruptedException {
+  protected DefaultDepsAwareTask<T> takeTask() throws InterruptedException {
     if (localStack.isEmpty()) {
       return sharedQueue.take();
     }
@@ -55,7 +55,7 @@ class DefaultDepsAwareWorkerWithLocalStack
   }
 
   @Override
-  protected boolean eval(DefaultDepsAwareTask<?> task) throws InterruptedException {
+  protected boolean eval(DefaultDepsAwareTask<T> task) throws InterruptedException {
     /**
      * The {@link TaskStatus} is used to synchronize between tasks.
      *
@@ -69,7 +69,7 @@ class DefaultDepsAwareWorkerWithLocalStack
       return false;
     }
 
-    ImmutableSet<? extends DefaultDepsAwareTask<?>> deps;
+    ImmutableSet<? extends DefaultDepsAwareTask<T>> deps;
     try {
       deps = task.getDependencies();
     } catch (Exception e) {
@@ -79,7 +79,7 @@ class DefaultDepsAwareWorkerWithLocalStack
     }
 
     boolean depsDone = true;
-    for (DefaultDepsAwareTask<?> dep : deps) {
+    for (DefaultDepsAwareTask<T> dep : deps) {
       if (dep.getStatus() != TaskStatus.DONE) {
         depsDone = false;
         if (dep.getStatus() == TaskStatus.STARTED) {
@@ -107,9 +107,9 @@ class DefaultDepsAwareWorkerWithLocalStack
     return true;
   }
 
-  private boolean propagateException(DefaultDepsAwareTask<?> task, DefaultDepsAwareTask<?> dep)
+  private boolean propagateException(DefaultDepsAwareTask<T> task, DefaultDepsAwareTask<T> dep)
       throws InterruptedException {
-    CompletableFuture<?> depResult = dep.getFuture();
+    CompletableFuture<T> depResult = dep.getFuture();
     if (!depResult.isCompletedExceptionally()) {
       return false;
     }

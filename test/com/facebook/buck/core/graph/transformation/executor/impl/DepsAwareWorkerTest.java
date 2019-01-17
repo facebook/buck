@@ -44,13 +44,17 @@ public class DepsAwareWorkerTest {
     return Arrays.asList(
         new Object[][] {
           {
-            (Function<LinkedBlockingDeque<DefaultDepsAwareTask<?>>, AbstractDepsAwareWorker>)
-                defaultDepsAwareTasks -> new DefaultDepsAwareWorker(defaultDepsAwareTasks)
+            (Function<
+                    LinkedBlockingDeque<DefaultDepsAwareTask<? super Object>>,
+                    AbstractDepsAwareWorker<?>>)
+                defaultDepsAwareTasks -> new DefaultDepsAwareWorker<Object>(defaultDepsAwareTasks)
           },
           {
-            (Function<LinkedBlockingDeque<DefaultDepsAwareTask<?>>, AbstractDepsAwareWorker>)
+            (Function<
+                    LinkedBlockingDeque<DefaultDepsAwareTask<? super Object>>,
+                    AbstractDepsAwareWorker<?>>)
                 defaultDepsAwareTasks ->
-                    new DefaultDepsAwareWorkerWithLocalStack(defaultDepsAwareTasks)
+                    new DefaultDepsAwareWorkerWithLocalStack<Object>(defaultDepsAwareTasks)
           }
         });
   }
@@ -67,8 +71,8 @@ public class DepsAwareWorkerTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
   private LinkedBlockingDeque<DefaultDepsAwareTask<?>> workQueue;
 
-  private AbstractDepsAwareWorker worker1;
-  private AbstractDepsAwareWorker worker2;
+  private AbstractDepsAwareWorker<?> worker1;
+  private AbstractDepsAwareWorker<?> worker2;
 
   @Before
   public void setUp() {
