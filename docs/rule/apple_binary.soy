@@ -32,8 +32,8 @@
 <p>
 An <code>apple_binary()</code> rule builds a native executable&mdash;such as an iOS or OSX app&mdash;from 
 the supplied set of Objective-C/C++ source files and dependencies. It is similar to
-a <a href="{ROOT}rule/cxx_binary.html"><code>cxx_binary()</code> rule</a> with which it shares many
-attributes. In addition to those common attributes, <code>apple_binary()</code> has a some additional attributes 
+a {call buck.cxx_binary /} rule with which it shares many attributes. In addition 
+to those common attributes, <code>apple_binary()</code> has a some additional attributes 
 that are specific to binaries intended to be built using the Apple toolchain. 
 Note, however, that <code>apple_binary()</code> and <code>cxx_binary()</code> differ 
 in the way that they import header files, in order to better accommodate existing conventions. 

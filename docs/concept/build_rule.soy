@@ -107,7 +107,7 @@ More commonly though, the package for a BUCK file contains all the
 source files required for the rules defined in that BUCK file. 
 Functionality in source files from other packages is made available through 
 the artifacts produced by the rules in the BUCK files for those packages.
-For example, a <code>cxx_binary</code> might use the functionality
+For example, a {call buck.cxx_binary /} might use the functionality
 in a <code>cxx_library</code> that is defined in another 
 package. To access that functionality, the <code>cxx_binary</code> would 
 take that <code>cxx_library</code> as a <em>dependency</em>.
