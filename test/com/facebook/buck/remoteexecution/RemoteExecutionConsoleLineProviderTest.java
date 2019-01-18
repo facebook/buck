@@ -17,6 +17,8 @@
 package com.facebook.buck.remoteexecution;
 
 import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.proto.RESessionID;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import java.util.List;
@@ -26,11 +28,17 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class RemoteExecutionConsoleLineProviderTest {
+  private String reSessionID = "reSessionID-FOO123";
   private TestStatsProvider statsProvider;
+  private RemoteExecutionMetadata remoteExecutionMetadata;
 
   @Before
   public void setUp() {
     this.statsProvider = new TestStatsProvider();
+    this.remoteExecutionMetadata =
+        RemoteExecutionMetadata.newBuilder()
+            .setReSessionId(RESessionID.newBuilder().setId(reSessionID).build())
+            .build();
   }
 
   @Test
@@ -39,14 +47,15 @@ public class RemoteExecutionConsoleLineProviderTest {
     statsProvider.casDownloads = 21;
     statsProvider.actionsPerState.put(State.ACTION_SUCCEEDED, 84);
     RemoteExecutionConsoleLineProvider provider =
-        new RemoteExecutionConsoleLineProvider(statsProvider);
+        new RemoteExecutionConsoleLineProvider(statsProvider, remoteExecutionMetadata);
     List<String> lines = provider.createConsoleLinesAtTime(0);
-    Assert.assertEquals(2, lines.size());
+    Assert.assertEquals(3, lines.size());
+    Assert.assertEquals("[RE] Metadata: Session ID=[reSessionID-FOO123]", lines.get(0));
     Assert.assertEquals(
         "[RE] Actions: Local=0 Remote=[wait=0 del=0 comp=0 upl=0 exec=0 dwl=0 suc=84 fail=0 cncl=0]",
-        lines.get(0));
+        lines.get(1));
     Assert.assertEquals(
-        "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(1));
+        "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(2));
   }
 
   private static final class TestStatsProvider implements RemoteExecutionStatsProvider {

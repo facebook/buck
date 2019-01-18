@@ -20,6 +20,6 @@ import com.google.common.collect.ImmutableList;
 
 /** Provides additional output lines to the Console. */
 public interface AdditionalConsoleLineProvider {
-  /** Returns console lines representing the current state of Remote Execution. */
+  /** Returns additional console lines representing the current state of running a command. */
   ImmutableList<String> createConsoleLinesAtTime(long currentTimeMillis);
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.remoteexecution;
 
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -31,9 +32,12 @@ import java.util.Objects;
 public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLineProvider {
 
   private final RemoteExecutionStatsProvider statsProvider;
+  private final String reSessionID;
 
-  public RemoteExecutionConsoleLineProvider(RemoteExecutionStatsProvider statsProvider) {
+  public RemoteExecutionConsoleLineProvider(
+      RemoteExecutionStatsProvider statsProvider, RemoteExecutionMetadata remoteExecutionMetadata) {
     this.statsProvider = statsProvider;
+    this.reSessionID = remoteExecutionMetadata.getReSessionId().getId();
   }
 
   @Override
@@ -44,6 +48,9 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
     if (!hasFirstRemoteActionStarted(actionsPerState)) {
       return lines.build();
     }
+
+    String metadataLine = String.format("[RE] Metadata: Session ID=[%s]", reSessionID);
+    lines.add(metadataLine);
 
     String actionsLine =
         String.format(

@@ -30,7 +30,7 @@ import java.util.UUID;
 public class MetadataProviderFactory {
 
   private static final String DEFAULT_CLIENT_TYPE = "buck";
-  private static final String RE_SESSION_ID_PREFIX = "reSessionID";
+  private static final String RE_SESSION_ID_PREFIX = "reSessionID-";
 
   private MetadataProviderFactory() {
     // static class.

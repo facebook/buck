@@ -935,6 +935,9 @@ public final class Main {
           remoteExecutionConfig.isSuperConsoleEnabled()
               ? Optional.of(new RemoteExecutionEventListener())
               : Optional.empty();
+      MetadataProvider metadataProvider =
+          MetadataProviderFactory.minimalMetadataProviderForBuild(
+              buildId, executionEnvironment.getUsername());
 
       try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
               GlobalStateManager.singleton()
@@ -1033,7 +1036,7 @@ public final class Main {
                     buckConfig.isLogBuildIdToConsoleEnabled(),
                     buckConfig.getBuildDetailsTemplate(),
                     createAdditionalConsoleLinesProviders(
-                        remoteExecutionListener, remoteExecutionConfig));
+                        remoteExecutionListener, remoteExecutionConfig, metadataProvider));
             // This makes calls to LOG.error(...) post to the EventBus, instead of writing to
             // stderr.
             Closeable logErrorToEventBus =
@@ -1133,9 +1136,6 @@ public final class Main {
                       .getEventListeners(executors, scheduledExecutorPool.get())
                   : ImmutableList.of();
 
-          MetadataProvider metadataProvider =
-              MetadataProviderFactory.minimalMetadataProviderForBuild(
-                  buildId, executionEnvironment.getUsername());
           if (isRemoteExecutionBuild(command, buckConfig)) {
             List<BuckEventListener> remoteExecutionsListeners = Lists.newArrayList();
             if (remoteExecutionListener.isPresent()) {
@@ -1455,12 +1455,15 @@ public final class Main {
 
   private ImmutableList<AdditionalConsoleLineProvider> createAdditionalConsoleLinesProviders(
       Optional<RemoteExecutionEventListener> remoteExecutionListener,
-      RemoteExecutionConfig remoteExecutionConfig) {
+      RemoteExecutionConfig remoteExecutionConfig,
+      MetadataProvider metadataProvider) {
     if (!remoteExecutionListener.isPresent() || !remoteExecutionConfig.isSuperConsoleEnabled()) {
       return ImmutableList.of();
     }
 
-    return ImmutableList.of(new RemoteExecutionConsoleLineProvider(remoteExecutionListener.get()));
+    return ImmutableList.of(
+        new RemoteExecutionConsoleLineProvider(
+            remoteExecutionListener.get(), metadataProvider.get()));
   }
 
   /** Struct for the multiple values returned by {@link #getParserAndCaches}. */
