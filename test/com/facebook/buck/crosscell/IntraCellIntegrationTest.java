@@ -25,12 +25,16 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -104,5 +108,35 @@ public class IntraCellIntegrationTest {
     assertEquals(
         childCell.getFilesystem().getBuckPaths().getGenDir().toString(),
         "../buck-out/cells/child/gen");
+  }
+
+  @Test
+  public void testBuckdPicksUpChangesInChildCell() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "intracell/visibility", tmp);
+    workspace.setUp();
+
+    String target = "//:reexported-dummy.c";
+
+    Map<String, Map<String, String>> childLocalConfigs =
+        ImmutableMap.of(
+            "log", ImmutableMap.of("jul_build_log", "true"),
+            "project", ImmutableMap.of("embedded_cell_buck_out_enabled", "true"));
+    workspace.writeContentsToPath(
+        workspace.convertToBuckConfig(childLocalConfigs), "child-repo/.buckconfig.local");
+
+    Path childRepoRoot = workspace.getPath("child-repo");
+
+    ProcessResult buildResult = workspace.runBuckdCommand(childRepoRoot, "build", target);
+    buildResult.assertSuccess();
+    workspace.getBuildLog(childRepoRoot).assertTargetBuiltLocally(target);
+
+    // Now change the contents of the file and rebuild
+    workspace.replaceFileContents("child-repo/dummy.c", "exitCode = 0", "exitCode = 1");
+
+    ProcessResult rebuildResult = workspace.runBuckdCommand(childRepoRoot, "build", target);
+    rebuildResult.assertSuccess();
+    workspace.getBuildLog(childRepoRoot).assertTargetBuiltLocally(target);
   }
 }

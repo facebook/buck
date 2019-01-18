@@ -140,7 +140,13 @@ public abstract class AbstractWorkspace {
     writeContentsToPath(convertToBuckConfig(localConfigs), ".buckconfig.local");
   }
 
-  protected static String convertToBuckConfig(Map<String, Map<String, String>> configs) {
+  /**
+   * Converts a map object into a format understood as a buckconfig (aka ini)
+   *
+   * @param configs The map of section => key => value.
+   * @return The ini string suitable to be written as a .buckconfig (or .buckconfig.local)
+   */
+  public static String convertToBuckConfig(Map<String, Map<String, String>> configs) {
     StringBuilder contents = new StringBuilder();
     for (Map.Entry<String, Map<String, String>> section : configs.entrySet()) {
       contents.append("[").append(section.getKey()).append("]\n\n");

@@ -126,7 +126,11 @@ import org.pf4j.PluginManager;
  */
 public class ProjectWorkspace extends AbstractWorkspace {
 
-  private static final String PATH_TO_BUILD_LOG = "buck-out/bin/build.log";
+  /**
+   * For this file to be generated, log.jul_build_log needs to be set to true. This is done by
+   * default in setUp()
+   */
+  public static final String PATH_TO_BUILD_LOG = "buck-out/bin/build.log";
 
   public static final String TEST_CELL_LOCATION =
       "test/com/facebook/buck/testutil/integration/testlibs";
@@ -431,19 +435,31 @@ public class ProjectWorkspace extends AbstractWorkspace {
     }
   }
 
+  public ProcessResult runBuckdCommand(Path repoRoot, String... args) throws IOException {
+    try (TestContext context = new TestContext()) {
+      return runBuckdCommand(repoRoot, context, args);
+    }
+  }
+
   public ProcessResult runBuckdCommand(NGContext context, String... args) throws IOException {
-    return runBuckdCommand(context, new CapturingPrintStream(), args);
+    return runBuckdCommand(destPath, context, new CapturingPrintStream(), args);
+  }
+
+  public ProcessResult runBuckdCommand(Path repoRoot, NGContext context, String... args)
+      throws IOException {
+    return runBuckdCommand(repoRoot, context, new CapturingPrintStream(), args);
   }
 
   public ProcessResult runBuckdCommand(
-      NGContext context, CapturingPrintStream stderr, String... args) throws IOException {
+      Path repoRoot, NGContext context, CapturingPrintStream stderr, String... args)
+      throws IOException {
     assumeTrue(
         "watchman must exist to run buckd",
         new ExecutableFinder(Platform.detect())
             .getOptionalExecutable(Paths.get("watchman"), EnvVariablesProvider.getSystemEnv())
             .isPresent());
     return runBuckCommandWithEnvironmentOverridesAndContext(
-        destPath, Optional.of(context), ImmutableMap.of(), stderr, args);
+        repoRoot, Optional.of(context), ImmutableMap.of(), stderr, args);
   }
 
   public ProcessResult runBuckCommandWithEnvironmentOverridesAndContext(
@@ -630,8 +646,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public BuckBuildLog getBuildLog() throws IOException {
+    return getBuildLog(getDestPath());
+  }
+
+  public BuckBuildLog getBuildLog(Path root) throws IOException {
     return BuckBuildLog.fromLogContents(
-        getDestPath(), Files.readAllLines(getPath(PATH_TO_BUILD_LOG), UTF_8));
+        root, Files.readAllLines(root.resolve(PATH_TO_BUILD_LOG), UTF_8));
   }
 
   public Config getConfig() throws IOException, InterruptedException {
