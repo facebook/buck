@@ -6,6 +6,10 @@ go_binary(
 
 cgo_library(
     name = "cgo",
-    srcs = ["cgosrc.go"],
+    srcs = [
+        "cgosrc.go",
+        "hello.c",
+    ],
+    headers = ["hello.h"],
     deps = ["//src/cxx:lib"],
 )

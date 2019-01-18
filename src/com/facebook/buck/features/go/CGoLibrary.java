@@ -56,11 +56,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Streams;
+import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * The CGoLibrary represents cgo build process which outputs the linkable object that is appended to
@@ -126,6 +128,20 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             cxxDeps,
             headers);
 
+    ImmutableSet.Builder<SourcePath> cxxSourcesFromArg = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> goSourcesFromArg = ImmutableSet.builder();
+
+    for (SourceWithFlags srcWithFlags : args.getSrcs()) {
+      SourcePath pth = srcWithFlags.getSourcePath();
+      String ext = Files.getFileExtension(pathResolver.getAbsolutePath(pth).toString());
+
+      if (CxxSource.Type.fromExtension(ext).equals(Optional.of(CxxSource.Type.C))) {
+        cxxSourcesFromArg.add(pth);
+      } else if (ext.equals("go")) {
+        goSourcesFromArg.add(pth);
+      }
+    }
+
     CGoGenSource genSource =
         (CGoGenSource)
             graphBuilder.computeIfAbsent(
@@ -136,10 +152,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                         projectFilesystem,
                         ruleFinder,
                         pathResolver,
-                        args.getSrcs()
-                            .stream()
-                            .map(x -> x.getSourcePath())
-                            .collect(ImmutableSet.toImmutableSet()),
+                        goSourcesFromArg.build(),
                         headerSymlinkTree,
                         cgo,
                         args.getCgoCompilerFlags(),
@@ -177,6 +190,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                                 genSource.getExportHeader())
                             .build(),
                         new ImmutableList.Builder<SourcePath>()
+                            .addAll(cxxSourcesFromArg.build())
                             .addAll(genSource.getCFiles())
                             .addAll(genSource.getCgoFiles())
                             .build(),
@@ -196,8 +210,18 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                     platform,
                     // take first source file in the list to infer the package
                     // name via go list
-                    args.getSrcs().first().getSourcePath(),
+                    goSourcesFromArg.build().iterator().next(),
                     Objects.requireNonNull(cgoBin.getSourcePathToOutput())));
+
+    // filter out compiled object only for the sources we are interested in
+    ImmutableList<String> linkableObjectFiles =
+        Stream.concat(
+                cxxSourcesFromArg
+                    .build()
+                    .stream()
+                    .map(x -> pathResolver.getAbsolutePath(x).getFileName().toString()),
+                ImmutableList.of(".cgo2.c", "_cgo_export.c").stream())
+            .collect(ImmutableList.toImmutableList());
 
     // generate final object file (equivalent of _all.o) which includes:
     //  * _cgo_export.o
@@ -213,9 +237,10 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                     .map(FileListableLinkerInputArg.class::cast)
                     .filter(
                         arg -> {
-                          String fileName =
-                              pathResolver.getAbsolutePath(arg.getPath()).getFileName().toString();
-                          return fileName.contains(".cgo2.c") || fileName.contains("_cgo_export.c");
+                          Path pth = pathResolver.getAbsolutePath(arg.getPath());
+                          String fileName = pth.getFileName().toString();
+                          return pth.toString().contains("cgo-first-step")
+                              && linkableObjectFiles.stream().anyMatch(x -> fileName.contains(x));
                         })
                     .collect(ImmutableList.toImmutableList()))
             .build();
