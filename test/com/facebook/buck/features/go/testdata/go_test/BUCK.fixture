@@ -28,6 +28,17 @@ go_test(
 )
 
 go_test(
+    name = "test-with-env",
+    srcs = [
+        "env_test.go",
+    ],
+    env = {
+        "FOO": "BAR",
+    },
+    deps = [":base"],
+)
+
+go_test(
     name = "test-success-internal",
     srcs = ["lib_test.go"],
     library = ":lib",

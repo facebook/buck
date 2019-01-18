@@ -36,6 +36,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.features.go.GoTestCoverStep.Mode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -62,6 +63,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -86,6 +88,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> labels;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
+  private final ImmutableMap<String, Arg> env;
   private final boolean runTestsSeparately;
   private final ImmutableSortedSet<SourcePath> resources;
   private final Mode coverageMode;
@@ -98,6 +101,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       Optional<Long> testRuleTimeoutMs,
+      ImmutableMap<String, Arg> env,
       boolean runTestsSeparately,
       ImmutableSortedSet<SourcePath> resources,
       Mode coverageMode) {
@@ -106,6 +110,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.labels = labels;
     this.contacts = contacts;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.env = env;
     this.runTestsSeparately = runTestsSeparately;
     this.resources = resources;
     this.coverageMode = coverageMode;
@@ -153,7 +158,11 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem(),
                 getPathToTestWorkingDirectory(),
                 args.build(),
-                testMain.getExecutableCommand().getEnvironment(resolver),
+                Stream.of(
+                        testMain.getExecutableCommand().getEnvironment(resolver),
+                        Arg.stringify(env, resolver))
+                    .flatMap(m -> m.entrySet().stream())
+                    .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue)),
                 getPathToTestExitCode(),
                 processTimeoutMs,
                 getPathToTestResults()))

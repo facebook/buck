@@ -195,6 +195,12 @@ public class GoTestIntegrationTest {
     assertFalse(result.getStderr().contains("MalformedInputException"));
   }
 
+  @Test
+  public void testGoTestWithEnv() throws IOException {
+    ProcessResult result = workspace.runBuckCommand("test", "//:test-with-env");
+    result.assertSuccess();
+  }
+
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
     assertTrue(Files.isSymbolicLink(link));
     assertTrue(Files.isSameFile(target, Files.readSymbolicLink(link)));
