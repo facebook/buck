@@ -26,6 +26,7 @@ import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.RemoteExecutionService;
+import com.facebook.buck.remoteexecution.grpc.GrpcHeaderHandler.StubAndResponseMetadata;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputDirectory;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputFile;
@@ -51,6 +52,7 @@ import javax.annotation.Nullable;
 /** Implementation of the GRPC client for the Remote Execution service. */
 public class GrpcRemoteExecutionService implements RemoteExecutionService {
   private static final Logger LOG = Logger.get(GrpcRemoteExecutionService.class);
+
   private final ExecutionStub executionStub;
   private final ByteStreamStub byteStreamStub;
   private final String instanceName;
@@ -67,19 +69,18 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
     this.metadataProvider = metadataProvider;
   }
 
-  private ExecutionStub getStubWithMetadata(Protocol.Digest actionDigest) {
-    return GrpcHeaderHandler.getStubWithMetadata(
-        executionStub,
-        metadataProvider.getForAction(
-            RemoteExecutionActionEvent.actionDigestToString(actionDigest)));
-  }
-
   @Override
   public ListenableFuture<ExecutionResult> execute(Protocol.Digest actionDigest)
       throws IOException, InterruptedException {
     SettableFuture<Operation> future = SettableFuture.create();
 
-    getStubWithMetadata(actionDigest)
+    StubAndResponseMetadata<ExecutionStub> stubAndMetadata =
+        GrpcHeaderHandler.wrapStubToSendAndReceiveMetadata(
+            executionStub,
+            metadataProvider.getForAction(
+                RemoteExecutionActionEvent.actionDigestToString(actionDigest)));
+    stubAndMetadata
+        .getStub()
         .execute(
             ExecuteRequest.newBuilder()
                 .setInstanceName(instanceName)
@@ -96,7 +97,12 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
 
               @Override
               public void onError(Throwable t) {
-                future.setException(t);
+                String msg =
+                    String.format(
+                        "Failed execution request with metadata=[%s] and exception=[%s].",
+                        stubAndMetadata.getMetadata(), t.toString());
+                LOG.error(msg);
+                future.setException(new IOException(msg, t));
               }
 
               @Override
@@ -110,12 +116,17 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
         operation -> {
           Objects.requireNonNull(operation);
           if (operation.hasError()) {
-            throw new RuntimeException("Execution failed: " + operation.getError().getMessage());
+            throw new RuntimeException(
+                String.format(
+                    "Execution failed due to an infra error with Status=[{}].",
+                    operation.getError().toString()));
           }
 
           if (!operation.hasResponse()) {
             throw new RuntimeException(
-                "Invalid operation response: missing ExecutionResponse object");
+                String.format(
+                    "Invalid operation response: missing ExecutionResponse object. Response=[{}].",
+                    operation.toString()));
           }
 
           try {
