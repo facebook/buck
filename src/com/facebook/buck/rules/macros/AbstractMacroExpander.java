@@ -36,17 +36,6 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
       throws MacroException;
 
   /** @return the precomputed work that can be re-used between invocations */
-  @Override
-  public final P precomputeWork(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      ImmutableList<String> input)
-      throws MacroException {
-    return precomputeWorkFrom(target, cellNames, graphBuilder, parse(target, cellNames, input));
-  }
-
-  /** @return the precomputed work that can be re-used between invocations */
   public abstract P precomputeWorkFrom(
       BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
       throws MacroException;

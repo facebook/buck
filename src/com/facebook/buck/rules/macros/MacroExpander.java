@@ -33,12 +33,4 @@ public interface MacroExpander {
       ImmutableList<String> input,
       Object precomputedWork)
       throws MacroException;
-
-  /** @return cache-able work that can be re-used for the various extract/expand functions */
-  Object precomputeWork(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      ImmutableList<String> input)
-      throws MacroException;
 }
