@@ -74,15 +74,4 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
       T input,
       P precomputedWork)
       throws MacroException;
-
-  @Override
-  public final Object extractRuleKeyAppendables(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      ImmutableList<String> input,
-      Object precomputedWork)
-      throws MacroException {
-    return expand(target, cellNames, graphBuilder, input, precomputedWork);
-  }
 }

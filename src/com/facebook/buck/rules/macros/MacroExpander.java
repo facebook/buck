@@ -34,15 +34,6 @@ public interface MacroExpander {
       Object precomputedWork)
       throws MacroException;
 
-  /** @return something that should be added to the rule key of the rule that expands this macro. */
-  Object extractRuleKeyAppendables(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      ImmutableList<String> input,
-      Object precomputedWork)
-      throws MacroException;
-
   /** @return cache-able work that can be re-used for the various extract/expand functions */
   Object precomputeWork(
       BuildTarget target,

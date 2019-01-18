@@ -25,12 +25,9 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -45,7 +42,6 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -65,7 +61,6 @@ public class QueryTargetsMacroExpanderTest {
   private ActionGraphBuilder graphBuilder;
   private CellPathResolver cellNames;
   private BuildRule rule;
-  private BuildRule dep;
   private HashMapWithStats<Macro, Object> cache;
   private StringWithMacrosConverter converter;
 
@@ -93,7 +88,6 @@ public class QueryTargetsMacroExpanderTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
     graphBuilder = new TestActionGraphBuilder(targetGraph, filesystem);
 
-    dep = graphBuilder.requireRule(depNode.getBuildTarget());
     rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
 
     converter =
@@ -119,50 +113,6 @@ public class QueryTargetsMacroExpanderTest {
         "$(query_targets 'set(//exciting:target //exciting:dep)')",
         rule,
         "//exciting:dep //exciting:target");
-  }
-
-  @Test
-  public void extractBuildTimeDeps() throws Exception {
-    Object precomputed =
-        expander.precomputeWork(
-            dep.getBuildTarget(), cellNames, graphBuilder, ImmutableList.of("set(//exciting:dep)"));
-    // No build time deps for targets macro
-    assertEquals(
-        ImmutableList.of(),
-        BuildableSupport.deriveDeps(
-                new AddsToRuleKey() {
-                  @AddToRuleKey
-                  Object object =
-                      expander.extractRuleKeyAppendables(
-                          dep.getBuildTarget(),
-                          cellNames,
-                          graphBuilder,
-                          ImmutableList.of("set(//exciting:dep)"),
-                          precomputed);
-                },
-                new SourcePathRuleFinder(graphBuilder))
-            .collect(ImmutableList.toImmutableList()));
-    Object precomputed2 =
-        expander.precomputeWork(
-            dep.getBuildTarget(),
-            cellNames,
-            graphBuilder,
-            ImmutableList.of("classpath(//exciting:target)"));
-    assertEquals(
-        ImmutableList.of(),
-        BuildableSupport.deriveDeps(
-                new AddsToRuleKey() {
-                  @AddToRuleKey
-                  Object object =
-                      expander.extractRuleKeyAppendables(
-                          dep.getBuildTarget(),
-                          cellNames,
-                          graphBuilder,
-                          ImmutableList.of("classpath(//exciting:target)"),
-                          precomputed2);
-                },
-                new SourcePathRuleFinder(graphBuilder))
-            .collect(ImmutableList.toImmutableList()));
   }
 
   @Test
