@@ -221,7 +221,14 @@ public class ManifestRuleKeyManager {
           rule.getProjectFilesystem().deleteFileAtPathIfExists(path);
 
           Path tempManifestPath = Files.createTempFile("buck.", "MANIFEST");
-          ungzip(tempPath.get(), tempManifestPath);
+          try {
+            ungzip(tempPath.get(), tempManifestPath);
+          } catch (Exception e) {
+            LOG.error(
+                "%s: zip error on manifest, key %s, path %s",
+                rule.getBuildTarget(), key, tempManifestPath);
+            throw e;
+          }
           rule.getProjectFilesystem().move(tempManifestPath, path);
 
           LOG.verbose("%s: cache hit on manifest %s", rule.getBuildTarget(), key);
