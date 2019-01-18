@@ -31,6 +31,7 @@ import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.facebook.infer.annotation.PropagatesNullable;
 import com.google.common.annotations.VisibleForTesting;
@@ -232,8 +233,13 @@ public class BuckConfig {
 
   /** @return the parsed BuildTarget in the given section and field, if set. */
   public Optional<BuildTarget> getBuildTarget(String section, String field) {
-    Optional<String> target = getValue(section, field);
-    return target.map(this::getBuildTargetForFullyQualifiedTarget);
+    try {
+      Optional<String> target = getValue(section, field);
+      return target.map(this::getBuildTargetForFullyQualifiedTarget);
+    } catch (Exception e) {
+      throw new BuckUncheckedExecutionException(
+          e, "When trying to parse configuration %s.%s as a build target.", section, field);
+    }
   }
 
   /**
