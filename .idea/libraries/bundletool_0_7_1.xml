@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="bundletool-0.7.1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/bundletool/bundletool-0.7.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
